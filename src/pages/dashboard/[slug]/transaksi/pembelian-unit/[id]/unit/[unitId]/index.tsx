@@ -5,7 +5,8 @@ import { ArrowLeft, DollarSignIcon, FileText, ListTodoIcon, Loader2, MoreVertica
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { usePurchaseById } from '@/hooks/useUnitTransaction';
 import { useTypeUnits } from '@/hooks/useTypeUnit';
-import { useCreateUnitItemDetail, useDeleteUnitItemDetail, useUnitItemDetails, useUnitTransactionItemById, useUpdateUnitItemDetail } from '@/hooks/useUnitItemDetail';
+import { useCreateUnitItemDetail, useDeleteUnitItemDetail, useImportUnitItemDetails, useUnitItemDetails, useUnitTransactionItemById, useUpdateUnitItemDetail } from '@/hooks/useUnitItemDetail';
+import { DataImportModal } from '@/components/features/master-data/DataImportModal';
 import { UnitTransactionItemDetail } from '@/@types/unit-transaction.types';
 import { formatCurrency } from '@/lib/utils/currency';
 import { Button } from '@/components/ui/button';
@@ -42,8 +43,10 @@ export default function UnitPurchaseDetailPage() {
   const createMutation = useCreateUnitItemDetail();
   const updateMutation = useUpdateUnitItemDetail();
   const deleteMutation = useDeleteUnitItemDetail();
+  const importMutation = useImportUnitItemDetails();
 
   const [openForm, setOpenForm] = useState(false);
+  const [openImport, setOpenImport] = useState(false);
   const [editingItem, setEditingItem] = useState<UnitTransactionItemDetail | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<UnitTransactionItemDetail | null>(null);
   const [formValues, setFormValues] = useState({
@@ -144,6 +147,14 @@ export default function UnitPurchaseDetailPage() {
     }
   };
 
+  const handleImport = async (file: File) => {
+    try {
+      await importMutation.mutateAsync({ unitItemId, file });
+    } catch (err: any) {
+      throw new Error(parseApiError(err));
+    }
+  };
+
   if (purchaseLoading || unitItemLoading) {
     return (
       <DashboardLayout>
@@ -185,12 +196,12 @@ export default function UnitPurchaseDetailPage() {
           <Card className="border-slate-200">
             <CardContent className="p-5 space-y-2">
 
-                     <div className="flex items-center gap-3">
-            <div className="p-2 rounded-md bg-blue-50">
-              <FileText className="h-5 w-5 text-blue-500" />
-            </div>
-            <h3 className="text-sm font-semibold text-slate-700">Informasi Invoice</h3>
-          </div>
+              <div className="flex items-center gap-3">
+                <div className="p-2 rounded-md bg-blue-50">
+                  <FileText className="h-5 w-5 text-blue-500" />
+                </div>
+                <h3 className="text-sm font-semibold text-slate-700">Informasi Invoice</h3>
+              </div>
               <div className="text-sm text-slate-600">
                 <p>Nomor Pembelian</p>
                 <p className="font-semibold text-slate-900">{purchase.code}</p>
@@ -201,10 +212,10 @@ export default function UnitPurchaseDetailPage() {
               </div>
             </CardContent>
           </Card>
-    
+
           <Card className="border-slate-200">
             <CardContent className="p-5 space-y-2">
-                          <div className="flex items-center gap-3">
+              <div className="flex items-center gap-3">
                 <div className="p-2 rounded-md bg-green-50">
                   <DollarSignIcon className="h-5 w-5 text-green-500" />
                 </div>
@@ -227,7 +238,7 @@ export default function UnitPurchaseDetailPage() {
 
           <Card className="border-slate-200">
             <CardContent className="p-5 space-y-2">
-                          <div className="flex items-center gap-3">
+              <div className="flex items-center gap-3">
                 <div className="p-2 rounded-md bg-yellow-50">
                   <ListTodoIcon className="h-5 w-5 text-yellow-500" />
                 </div>
@@ -265,13 +276,13 @@ export default function UnitPurchaseDetailPage() {
                 <p className="text-xs text-slate-500">Rincian lengkap unit yang dibeli</p>
               </div>
               <div className="flex items-center gap-2">
-                <Button size="sm" variant="outline" onClick={() => toast.info('Import Excel akan diimplementasikan pada phase berikutnya')}>
+                <Button size="sm" variant="outline" onClick={() => setOpenImport(true)}>
                   <Upload className="h-4 w-4 mr-2" />
                   Import
                 </Button>
                 <Button size="sm" className="bg-slate-900 hover:bg-slate-800 text-white" onClick={openCreateForm}>
                   <Plus className="h-4 w-4 mr-2" />
-                  Add Unit
+                  Tambah Detail Unit
                 </Button>
               </div>
             </div>
@@ -388,6 +399,16 @@ export default function UnitPurchaseDetailPage() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <DataImportModal
+        open={openImport}
+        onOpenChange={setOpenImport}
+        title="Import Detail Unit"
+        description="Unggah file .xlsx untuk mengimport detail unit (Warna, No Mesin, No Rangka)."
+        onImport={handleImport}
+        isPending={importMutation.isPending}
+        templateUrl="https://docs.google.com/spreadsheets/d/1UdemvHlkJrmTD3mK5N4hcI5OfwQi2T2yw-vZxwrmcGg/edit?usp=sharing"
+      />
     </DashboardLayout>
   );
 }
