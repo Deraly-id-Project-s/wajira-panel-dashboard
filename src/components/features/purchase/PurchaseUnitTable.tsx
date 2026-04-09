@@ -103,7 +103,16 @@ export default function PurchaseUnitTable({ purchaseId, slug }: Props) {
       cell: ({ row }) => {
         const unitTypeId = row.original.unit_type_id;
         const name = typeUnits?.data?.find((type) => String(type.id) === String(unitTypeId))?.name;
-        return <div className="text-left font-semibold text-slate-900">{name ?? unitTypeId ?? '-'}</div>;
+
+        return (
+          <button
+            type="button"
+            className="font-medium text-blue-600 hover:text-blue-800 hover:underline transition-colors duration-200"
+            onClick={() => router.push(`/dashboard/${slug}/transaksi/pembelian-unit/${unitTypeId}`)}
+          >
+            {name ?? unitTypeId ?? '-'}
+          </button>
+        )
       },
     },
     {
