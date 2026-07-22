@@ -206,6 +206,16 @@ export const getGeneralMenus = (slug: string): MenuItem[] => {
       ],
     },
     {
+      label: 'Settings',
+      icon: Shield, // re-using Shield or another icon
+      children: [
+        {
+          label: 'Pajak',
+          href: settings('/tax'),
+        },
+      ],
+    },
+    {
       label: 'Manajemen Pengguna',
       icon: Shield,
       children: [

@@ -1,97 +1,86 @@
-import type { Tax, TaxListParams, TaxListResponse, TaxPayload, TaxVersion } from '@/@types/tax.types';
-import type { PaginationParams } from '@/@types/pagination.types';
 import { apiClient } from '@/lib/api/client';
-import { buildLaravelPaginationQuery } from '@/lib/api/pagination';
-import { ApiResponseError, ApiValidationError, ensureSuccess, toPaginatedResult, type LaravelApiResponse } from '@/lib/api/response';
 
-const basePath = '/wapi/settings/tax';
+export interface TaxVersion {
+  id: number;
+  tax_id: number;
+  name: string;
+  rate: number;
+  effective_from: string | null;
+  effective_until: string | null;
+  is_default: number | boolean;
+  is_lock?: number | boolean;
+  created_at?: string;
+  updated_at?: string;
+}
 
-const mapTax = (item: any): Tax => ({
-  id: Number(item.id ?? 0),
-  code: item.code ?? '',
-  name: item.name ?? '',
-  is_lock: item.is_lock ?? 0,
-  created_at: item.created_at ?? null,
-  tax_versions: Array.isArray(item.tax_versions)
-    ? item.tax_versions.map((v: any) => ({
-        id: Number(v.id ?? 0),
-        tax_id: Number(v.tax_id ?? 0),
-        name: v.name ?? '',
-        is_default: v.is_default ?? 0,
-      }))
-    : [],
-});
+export interface Tax {
+  id: number;
+  code: string;
+  name: string;
+  is_lock: number | boolean;
+  created_at: string;
+  updated_at?: string;
+  tax_versions?: TaxVersion[];
+}
 
-export const getTaxList = async (params: TaxListParams): Promise<TaxListResponse> => {
-  const response = await apiClient.get<LaravelApiResponse<any>>(basePath, {
-    params: {
-      ...buildLaravelPaginationQuery(params),
-      search: params.search,
-    },
+export interface PaginatedResponse<T> {
+  current_page: number;
+  data: T[];
+  first_page_url: string;
+  from: number;
+  last_page: number;
+  last_page_url: string;
+  links: any[];
+  next_page_url: string | null;
+  path: string;
+  per_page: number;
+  prev_page_url: string | null;
+  to: number;
+  total: number;
+}
+
+export interface ApiResponse<T> {
+  status: boolean;
+  message: string;
+  errors: any;
+  data: T;
+}
+
+export const getTaxes = async (page: number = 1, perPage: number = 25, search: string = '') => {
+  const response = await apiClient.get<ApiResponse<PaginatedResponse<Tax>>>(`/wapi/settings/tax`, {
+    params: { page, limit: perPage, search },
   });
-
-  const payload = ensureSuccess(response.data);
-  return toPaginatedResult(payload, mapTax);
+  return response.data;
 };
 
-export const getTaxById = async (id: string | number): Promise<Tax> => {
-  const response = await apiClient.get<LaravelApiResponse<any>>(`${basePath}/${id}`);
-  return mapTax(ensureSuccess(response.data));
+export const getTaxDetail = async (id: number) => {
+  const response = await apiClient.get<ApiResponse<Tax>>(`/wapi/settings/tax/${id}`);
+  return response.data;
 };
 
-export const createTax = async (payload: TaxPayload): Promise<Tax> => {
-  try {
-    const body = new FormData();
-    body.append('code', payload.code);
-    body.append('name', payload.name);
-
-    const response = await apiClient.post<LaravelApiResponse<any>>(basePath, body, {
-      headers: { 'Content-Type': 'multipart/form-data' },
-    });
-    return mapTax(ensureSuccess(response.data));
-  } catch (error) {
-    if (error instanceof ApiValidationError) throw error;
-    throw error;
-  }
+export const getDefaultTaxByCode = async (taxCode: string) => {
+  const response = await apiClient.get<ApiResponse<TaxVersion>>(`/wapi/settings/tax/${taxCode}/default`);
+  return response.data;
 };
 
-export const updateTax = async (id: string | number, payload: TaxPayload): Promise<Tax> => {
-  try {
-    const body = new FormData();
-    body.append('_method', 'PUT');
-    body.append('code', payload.code);
-    body.append('name', payload.name);
-
-    const response = await apiClient.post<LaravelApiResponse<any>>(`${basePath}/${id}`, body, {
-      headers: { 'Content-Type': 'multipart/form-data' },
-    });
-    return mapTax(ensureSuccess(response.data));
-  } catch (error) {
-    if (error instanceof ApiValidationError) throw error;
-    throw error;
-  }
+export const createTax = async (data: { code: string; name: string }) => {
+  const formData = new FormData();
+  formData.append('code', data.code);
+  formData.append('name', data.name);
+  const response = await apiClient.post<ApiResponse<Tax>>(`/wapi/settings/tax`, formData);
+  return response.data;
 };
 
-export const deleteTax = async (id: string | number): Promise<void> => {
-  const response = await apiClient.delete<LaravelApiResponse<null>>(`${basePath}/${id}`);
-  if (!response.data.status) {
-    throw new ApiResponseError(response.data.message ?? 'Failed to delete tax');
-  }
+export const updateTax = async (id: number, data: { code: string; name: string }) => {
+  const formData = new FormData();
+  formData.append('code', data.code);
+  formData.append('name', data.name);
+  formData.append('_method', 'PUT');
+  const response = await apiClient.post<ApiResponse<Tax>>(`/wapi/settings/tax/${id}`, formData);
+  return response.data;
 };
 
-const mapTaxVersion = (item: any): TaxVersion => ({
-  id: Number(item.id ?? 0),
-  tax_id: Number(item.tax_id ?? 0),
-  name: item.name ?? '',
-  is_default: item.is_default ?? 0,
-});
-
-export const getTaxDefault = async (code: string): Promise<TaxVersion | null> => {
-  try {
-    const response = await apiClient.get<LaravelApiResponse<any>>(`${basePath}/${code}/default`);
-    const data = ensureSuccess(response.data);
-    return data ? mapTaxVersion(data) : null;
-  } catch {
-    return null;
-  }
+export const deleteTax = async (id: number) => {
+  const response = await apiClient.delete<ApiResponse<any>>(`/wapi/settings/tax/${id}`);
+  return response.data;
 };
