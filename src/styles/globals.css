@@ -97,6 +97,17 @@
   --radius-4xl: calc(var(--radius) + 16px);
 }
 
+/* Claymorphism Shadows */
+@utility shadow-clay-sm {
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05), inset 0 2px 4px rgba(255, 255, 255, 0.6);
+}
+@utility shadow-clay {
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.08), inset 0 4px 8px rgba(255, 255, 255, 0.7);
+}
+@utility shadow-clay-lg {
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1), inset 0 6px 12px rgba(255, 255, 255, 0.8);
+}
+
 body {
   background: var(--background);
   color: var(--foreground);
