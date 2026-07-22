@@ -96,7 +96,7 @@ export default function TransaksiRefundJualPage() {
         cell: (item) => <RefundStatusBadge status={item.status === 'approve' || item.status === 'reject' ? item.status : 'waiting'} />,
       },
       {
-        header: 'ACTION',
+        header: 'aksi',
         alignment: 'left',
         sticky: 'right',
         cell: (item) => (

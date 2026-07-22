@@ -54,7 +54,7 @@ const headers = [
   { key: 'invoice', label: 'INV EKSPEDISI', align: 'right' },
   { key: 'ppn', label: 'PPN', align: 'right' },
   { key: 'status', label: 'STATUS', align: 'center' },
-  { key: 'action', label: 'ACTION', align: 'center' },
+  { key: 'action', label: 'aksi', align: 'center' },
 ];
 
 export const OrderListTable = React.memo(function OrderListTable({
@@ -124,146 +124,146 @@ export const OrderListTable = React.memo(function OrderListTable({
       </div>
 
       <div className="rounded-xl border border-gray-200 bg-white overflow-x-auto shadow-none">
-          <Table className="min-w-[1180px]">
-            <TableHeader className="bg-[#f8f9fa] border-b border-gray-200">
-              <TableRow className="border-slate-200">
-                {headers.map((header) => (
-                  <TableHead
-                    key={header.key}
-                    className={cn(
-                      'whitespace-nowrap px-4 py-4 text-xs font-semibold uppercase text-slate-500',
-                      header.align === 'left' && 'text-left',
-                      header.align === 'center' && 'text-center',
-                      header.align === 'right' && 'text-right',
-                      header.key === 'action' && 'w-[80px] sticky right-0 bg-[#f8f9fa] z-10 border-l border-slate-200 shadow-[-4px_0_6px_-4px_rgba(0,0,0,0.05)]'
-                    )}
-                    style={header.minWidth ? { minWidth: header.minWidth } : undefined}
-                  >
-                    {header.label}
-                  </TableHead>
-                ))}
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {isLoading
-                ? Array.from({ length: Math.min(perPage, 5) }).map((_, index) => (
-                  <TableRow key={`skeleton-${index}`} className="group border-slate-100">
-                    {headers.map((header) => (
-                      <TableCell key={header.key} className={cn("text-center px-4 py-4", header.key === 'action' && "sticky right-0 bg-white group-hover:bg-slate-50 z-10 border-l border-slate-200 shadow-[-4px_0_6px_-4px_rgba(0,0,0,0.05)]")}>
-                        <div className="h-4 min-w-[90px] animate-pulse rounded bg-slate-100" />
-                      </TableCell>
-                    ))}
-                  </TableRow>
-                ))
-                : null}
-
-              {!isLoading && data.length === 0 ? (
-                <TableRow className="group">
-                  <TableCell colSpan={100} className="py-16 h-28 text-center text-sm text-slate-500">
-                    <div className="flex flex-col items-center justify-center gap-2">
-                      <div className="rounded-full bg-slate-50 p-4 mb-2">
-                        <Search className="h-8 w-8 text-slate-400" />
-                      </div>
-                      <p className="text-base font-semibold text-slate-900">Tidak ada data ditemukan</p>
-                      <p className="text-sm text-slate-500">Belum ada data atau coba gunakan kata kunci pencarian lain.</p>
-                    </div>
-                  </TableCell>
+        <Table className="min-w-[1180px]">
+          <TableHeader className="bg-[#f8f9fa] border-b border-gray-200">
+            <TableRow className="border-slate-200">
+              {headers.map((header) => (
+                <TableHead
+                  key={header.key}
+                  className={cn(
+                    'whitespace-nowrap px-4 py-4 text-xs font-semibold uppercase text-slate-500',
+                    header.align === 'left' && 'text-left',
+                    header.align === 'center' && 'text-center',
+                    header.align === 'right' && 'text-right',
+                    header.key === 'action' && 'w-[80px] sticky right-0 bg-[#f8f9fa] z-10 border-l border-slate-200 shadow-[-4px_0_6px_-4px_rgba(0,0,0,0.05)]'
+                  )}
+                  style={header.minWidth ? { minWidth: header.minWidth } : undefined}
+                >
+                  {header.label}
+                </TableHead>
+              ))}
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {isLoading
+              ? Array.from({ length: Math.min(perPage, 5) }).map((_, index) => (
+                <TableRow key={`skeleton-${index}`} className="group border-slate-100">
+                  {headers.map((header) => (
+                    <TableCell key={header.key} className={cn("text-center px-4 py-4", header.key === 'action' && "sticky right-0 bg-white group-hover:bg-slate-50 z-10 border-l border-slate-200 shadow-[-4px_0_6px_-4px_rgba(0,0,0,0.05)]")}>
+                      <div className="h-4 min-w-[90px] animate-pulse rounded bg-slate-100" />
+                    </TableCell>
+                  ))}
                 </TableRow>
-              ) : null}
+              ))
+              : null}
 
-              {!isLoading
-                ? data.map((item) => {
-                  const primaryTarif = getPrimaryTarifItem(item);
+            {!isLoading && data.length === 0 ? (
+              <TableRow className="group">
+                <TableCell colSpan={100} className="py-16 h-28 text-center text-sm text-slate-500">
+                  <div className="flex flex-col items-center justify-center gap-2">
+                    <div className="rounded-full bg-slate-50 p-4 mb-2">
+                      <Search className="h-8 w-8 text-slate-400" />
+                    </div>
+                    <p className="text-base font-semibold text-slate-900">Tidak ada data ditemukan</p>
+                    <p className="text-sm text-slate-500">Belum ada data atau coba gunakan kata kunci pencarian lain.</p>
+                  </div>
+                </TableCell>
+              </TableRow>
+            ) : null}
 
-                  return (
-                    <TableRow key={item.id} className="group border-slate-100 transition-colors hover:bg-slate-50/70">
-                      <TableCell className="px-4 py-4 text-left text-sm text-slate-700">{item.code || '-'}</TableCell>
-                      <TableCell className="min-w-[180px] px-4 py-4 text-left text-sm text-slate-700">{item.customer?.name || '-'}</TableCell>
+            {!isLoading
+              ? data.map((item) => {
+                const primaryTarif = getPrimaryTarifItem(item);
 
-                      <TableCell className="px-4 py-4 text-left text-sm text-slate-700">
-                        {item.tarifs.length > 1 ? (
-                          <div className="flex flex-col items-start text-left gap-1">
-                            {item.tarifs.map((t, idx) => (
-                              <div key={t.id || idx} className="whitespace-nowrap">
-                                <span>{idx + 1}. {t.loadingIn || '-'}</span>
-                              </div>
-                            ))}
-                          </div>
-                        ) : (
-                          primaryTarif?.loadingIn || item.loadingIn || '-'
-                        )}
-                      </TableCell>
+                return (
+                  <TableRow key={item.id} className="group border-slate-100 transition-colors hover:bg-slate-50/70">
+                    <TableCell className="px-4 py-4 text-left text-sm text-slate-700">{item.code || '-'}</TableCell>
+                    <TableCell className="min-w-[180px] px-4 py-4 text-left text-sm text-slate-700">{item.customer?.name || '-'}</TableCell>
 
-                      <TableCell className="min-w-[180px] px-4 py-4 text-left text-sm text-slate-700">
-                        {item.tarifs.length > 1 ? (
-                          <div className="flex flex-col items-start text-left gap-1">
-                            {item.tarifs.map((t, idx) => (
-                              <div key={t.id || idx}>
-                                <span>{idx + 1}. {t.deliveryDestination || '-'}</span>
-                              </div>
-                            ))}
-                          </div>
-                        ) : (
-                          primaryTarif?.deliveryDestination || '-'
-                        )}
-                      </TableCell>
+                    <TableCell className="px-4 py-4 text-left text-sm text-slate-700">
+                      {item.tarifs.length > 1 ? (
+                        <div className="flex flex-col items-start text-left gap-1">
+                          {item.tarifs.map((t, idx) => (
+                            <div key={t.id || idx} className="whitespace-nowrap">
+                              <span>{idx + 1}. {t.loadingIn || '-'}</span>
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        primaryTarif?.loadingIn || item.loadingIn || '-'
+                      )}
+                    </TableCell>
 
-                      <TableCell className="px-4 py-4 text-left text-sm text-slate-700">
-                        {item.tarifs.length > 1 ? (
-                          <div className="flex flex-col items-start text-left gap-1">
-                            {item.tarifs.map((t, idx) => (
-                              <div key={t.id || idx} className="whitespace-nowrap">
-                                <span>{idx + 1}. {t.loadingOut || '-'}</span>
-                              </div>
-                            ))}
-                          </div>
-                        ) : (
-                          primaryTarif?.loadingOut || item.loadingOut || '-'
-                        )}
-                      </TableCell>
+                    <TableCell className="min-w-[180px] px-4 py-4 text-left text-sm text-slate-700">
+                      {item.tarifs.length > 1 ? (
+                        <div className="flex flex-col items-start text-left gap-1">
+                          {item.tarifs.map((t, idx) => (
+                            <div key={t.id || idx}>
+                              <span>{idx + 1}. {t.deliveryDestination || '-'}</span>
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        primaryTarif?.deliveryDestination || '-'
+                      )}
+                    </TableCell>
 
-                      <TableCell className="px-4 py-4 text-center text-sm text-slate-700">{getOrderVehicleTypeLabel(item, primaryTarif)}</TableCell>
-                      <TableCell className="px-4 py-4 text-right text-sm text-slate-700">{formatOrderCurrency(item.ujDriver)}</TableCell>
-                      <TableCell className="px-4 py-4 text-right text-sm text-slate-700">
-                        {formatOrderCurrency(item.billInvoice)}
-                      </TableCell>
-                      <TableCell className="px-4 py-4 text-right text-sm text-slate-700">{formatOrderCurrency(item.ppn)}</TableCell>
-                      <TableCell className="px-4 py-4 text-center">
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <button
-                              type="button"
-                              className={cn(
-                                'inline-flex items-center justify-center rounded-full border px-3 py-1 text-xs font-medium cursor-pointer transition-colors hover:opacity-80 focus:outline-none focus:ring-2 focus:ring-slate-400 focus:ring-offset-2',
-                                getOrderStatusBadgeClassName(item.status)
-                              )}
+                    <TableCell className="px-4 py-4 text-left text-sm text-slate-700">
+                      {item.tarifs.length > 1 ? (
+                        <div className="flex flex-col items-start text-left gap-1">
+                          {item.tarifs.map((t, idx) => (
+                            <div key={t.id || idx} className="whitespace-nowrap">
+                              <span>{idx + 1}. {t.loadingOut || '-'}</span>
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        primaryTarif?.loadingOut || item.loadingOut || '-'
+                      )}
+                    </TableCell>
+
+                    <TableCell className="px-4 py-4 text-center text-sm text-slate-700">{getOrderVehicleTypeLabel(item, primaryTarif)}</TableCell>
+                    <TableCell className="px-4 py-4 text-right text-sm text-slate-700">{formatOrderCurrency(item.ujDriver)}</TableCell>
+                    <TableCell className="px-4 py-4 text-right text-sm text-slate-700">
+                      {formatOrderCurrency(item.billInvoice)}
+                    </TableCell>
+                    <TableCell className="px-4 py-4 text-right text-sm text-slate-700">{formatOrderCurrency(item.ppn)}</TableCell>
+                    <TableCell className="px-4 py-4 text-center">
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <button
+                            type="button"
+                            className={cn(
+                              'inline-flex items-center justify-center rounded-full border px-3 py-1 text-xs font-medium cursor-pointer transition-colors hover:opacity-80 focus:outline-none focus:ring-2 focus:ring-slate-400 focus:ring-offset-2',
+                              getOrderStatusBadgeClassName(item.status)
+                            )}
+                          >
+                            {getOrderStatusLabel(item.status)}
+                          </button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="center" className="w-[140px] rounded-xl">
+                          <div className="px-2 py-1.5 text-xs font-semibold text-slate-500">Ubah Status</div>
+                          <DropdownMenuSeparator />
+                          {ORDER_LIST_STATUS_OPTIONS.map((option) => (
+                            <DropdownMenuItem
+                              key={option.value}
+                              disabled={item.status === option.value}
+                              onSelect={(e) => {
+                                e.preventDefault();
+                                if (item.status !== option.value && onUpdateStatus) {
+                                  onUpdateStatus(item, option.value);
+                                }
+                              }}
+                              className={cn('cursor-pointer rounded-lg', item.status === option.value && 'bg-slate-100 opacity-50')}
                             >
-                              {getOrderStatusLabel(item.status)}
-                            </button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="center" className="w-[140px] rounded-xl">
-                            <div className="px-2 py-1.5 text-xs font-semibold text-slate-500">Ubah Status</div>
-                            <DropdownMenuSeparator />
-                            {ORDER_LIST_STATUS_OPTIONS.map((option) => (
-                              <DropdownMenuItem
-                                key={option.value}
-                                disabled={item.status === option.value}
-                                onSelect={(e) => {
-                                  e.preventDefault();
-                                  if (item.status !== option.value && onUpdateStatus) {
-                                    onUpdateStatus(item, option.value);
-                                  }
-                                }}
-                                className={cn('cursor-pointer rounded-lg', item.status === option.value && 'bg-slate-100 opacity-50')}
-                              >
-                                {option.label}
-                              </DropdownMenuItem>
-                            ))}
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                      </TableCell>
-                      <TableCell className="px-4 py-4 text-center sticky right-0 bg-white group-hover:bg-gray-50 z-10 border-l border-slate-200 shadow-[-4px_0_6px_-4px_rgba(0,0,0,0.05)]">
-                        <div className="flex justify-center">
+                              {option.label}
+                            </DropdownMenuItem>
+                          ))}
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </TableCell>
+                    <TableCell className="px-4 py-4 text-center sticky right-0 bg-white group-hover:bg-gray-50 z-10 border-l border-slate-200 shadow-[-4px_0_6px_-4px_rgba(0,0,0,0.05)]">
+                      <div className="flex justify-center">
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
                             <Button type="button" variant="ghost" size="icon" className="h-9 w-9 cursor-pointer rounded-full">
@@ -303,14 +303,14 @@ export const OrderListTable = React.memo(function OrderListTable({
                             </DropdownMenuItem>
                           </DropdownMenuContent>
                         </DropdownMenu>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  );
-                })
-                : null}
-            </TableBody>
-          </Table>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                );
+              })
+              : null}
+          </TableBody>
+        </Table>
       </div>
 
       <div className="flex flex-col gap-4 text-sm text-slate-500 lg:flex-row lg:items-center lg:justify-between px-1">

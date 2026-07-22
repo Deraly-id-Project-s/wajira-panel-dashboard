@@ -55,7 +55,7 @@ export const AccountGroupCreatePage = () => {
 
   return (
     <DashboardLayout>
-      <div className="space-y-6">
+      <div className="space-y-2">
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-2xl font-semibold">Tambah Grup Akun</h1>
@@ -63,7 +63,7 @@ export const AccountGroupCreatePage = () => {
           </div>
         </div>
 
-        <Card className="p-6">
+        <Card>
           <AccountGroupForm form={form} onSubmit={handleSubmit} onCancel={onCancel} isSubmitting={createMutation.isPending} />
         </Card>
       </div>

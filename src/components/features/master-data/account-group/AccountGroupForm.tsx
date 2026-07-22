@@ -18,15 +18,15 @@ export const AccountGroupForm = ({ form, onSubmit, onCancel, isSubmitting = fals
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="flex-1 flex flex-col overflow-hidden">
-        <div className="flex-1 overflow-y-auto px-6 py-5 space-y-4">
+        <div className="flex-1 overflow-y-auto px-6 space-y-4">
           <FormField
             control={form.control}
             name="group_code"
             render={({ field }) => (
-              <FormItem className="space-y-2">
+              <FormItem>
                 <FormLabel className="text-[14px] font-medium text-[#171717]">Kode Grup<RequiredMark /></FormLabel>
                 <FormControl>
-                  <Input placeholder="Masukkan kode grup" className="h-12 rounded-xl border-[#E4E4E7] px-4 text-[15px] placeholder:text-[#A1A1AA]" {...field} />
+                  <Input placeholder="Masukkan kode grup" className="rounded-md border-[#E4E4E7] px-4 text-[15px] placeholder:text-[#A1A1AA]" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -37,10 +37,10 @@ export const AccountGroupForm = ({ form, onSubmit, onCancel, isSubmitting = fals
             control={form.control}
             name="description"
             render={({ field }) => (
-              <FormItem className="space-y-2">
+              <FormItem>
                 <FormLabel className="text-[14px] font-medium text-[#171717]">Deskripsi</FormLabel>
                 <FormControl>
-                  <Textarea placeholder="Tambahkan catatan" className="min-h-[100px] rounded-xl border-[#E4E4E7] px-4 py-3 text-[15px] placeholder:text-[#A1A1AA] resize-none" {...field} />
+                  <Textarea placeholder="Tambahkan catatan" className="rounded-md border-[#E4E4E7] px-4 text-[15px] placeholder:text-[#A1A1AA] resize-none" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -49,10 +49,10 @@ export const AccountGroupForm = ({ form, onSubmit, onCancel, isSubmitting = fals
         </div>
 
         <div className="shrink-0 flex gap-3 px-6 py-4 border-t bg-gray-50">
-          <Button type="button" variant="outline" className="flex-1 h-11 rounded-xl border-[#D4D4D8] text-[15px] text-[#171717]" onClick={onCancel} disabled={isSubmitting}>
+          <Button type="button" variant="outline" className="flex-1 rounded-md border-[#D4D4D8] text-[15px] text-[#171717]" onClick={onCancel} disabled={isSubmitting}>
             Batal
           </Button>
-          <Button type="submit" className="flex-1 h-11 rounded-xl bg-[#1F3B5B] text-[15px] font-medium text-white hover:bg-[#19314b]" disabled={isSubmitting}>
+          <Button type="submit" className="flex-1 rounded-md bg-[#1F3B5B] text-[15px] font-medium text-white hover:bg-[#19314b]" disabled={isSubmitting}>
             {isSubmitting ? 'Menyimpan...' : submitLabel}
           </Button>
         </div>

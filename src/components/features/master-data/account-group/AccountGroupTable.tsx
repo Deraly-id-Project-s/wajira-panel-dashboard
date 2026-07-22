@@ -80,7 +80,7 @@ export const AccountGroupTable = ({ data, meta, isLoading = false, onEdit, onDel
         ),
       },
       {
-        header: 'ACTION',
+        header: 'aksi',
         alignment: 'center',
         sticky: 'right',
         cell: (item) => (

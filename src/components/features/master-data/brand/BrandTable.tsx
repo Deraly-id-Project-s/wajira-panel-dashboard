@@ -70,7 +70,7 @@ export const BrandTable = ({
                 ),
             },
             {
-                header: 'ACTION',
+                header: 'aksi',
                 alignment: 'center',
                 sticky: 'right',
                 cell: (item) => (

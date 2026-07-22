@@ -127,7 +127,7 @@ export default function WithholdingTaxTable({
         cell: (item) => formatDate(item.payment_date),
       },
       {
-        header: 'ACTION',
+        header: 'aksi',
         alignment: 'left',
         sticky: 'right',
         cell: (item) => (

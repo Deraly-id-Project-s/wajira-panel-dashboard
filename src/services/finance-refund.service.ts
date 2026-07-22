@@ -35,22 +35,22 @@ const mapFinanceRefund = (item: any): FinanceRefundRecord => {
     refundAmount: toNumber(refundDetail.refund_amount ?? refundDetail.total_refund ?? item.refund_amount ?? item.total_refund),
     totalTransaction: toNumber(
       transaction?.grand_total ??
-        transaction?.total_amount ??
-        transaction?.total_price ??
-        transaction?.bruto_amount ??
-        refundDetail.total_transaction ??
-        refundDetail.total_price ??
-        item.total_transaction ??
-        item.total_price ??
-        refundDetail.refund_amount ??
-        refundDetail.total_refund ??
-        item.refund_amount ??
-        item.total_refund
+      transaction?.total_amount ??
+      transaction?.total_price ??
+      transaction?.bruto_amount ??
+      refundDetail.total_transaction ??
+      refundDetail.total_price ??
+      item.total_transaction ??
+      item.total_price ??
+      refundDetail.refund_amount ??
+      refundDetail.total_refund ??
+      item.refund_amount ??
+      item.total_refund
     ),
     note: refundDetail.note || item.note || '',
     status: normalizeRefundStatus(item.status),
     cashId: item.cash_id ? toString(item.cash_id) : undefined,
-    cashName: item.cash?.description || item.cash?.name || item.cash_account?.description || item.cash_account?.name || undefined,
+    cashName: item.cash?.cash_name || undefined,
     transactionId: toString(refundDetail.unit_transaction_id ?? transaction?.id),
     transactionCode: transaction?.code || refundDetail.sales_number || refundDetail.purchase_number || '-',
     transactionType,

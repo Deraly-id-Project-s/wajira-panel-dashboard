@@ -113,7 +113,7 @@ export function AccountTable({
         cell: (account) => getAccountCategoryLabel(account.category),
       },
       {
-        header: 'ACTION',
+        header: 'aksi',
         alignment: 'center',
         sticky: 'right',
         cell: (account) => (

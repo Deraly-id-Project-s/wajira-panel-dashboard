@@ -7,8 +7,12 @@ import FinanceRefundApprovalModal from '@/components/features/finance-refund/Fin
 import { RefundStatusBadge } from '@/components/features/refund/RefundStatusBadge';
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { formatCurrency } from '@/lib/utils/currency';
 import { getVisiblePageNumbers } from '@/lib/api/pagination';
+import { CopyBox } from '@/components/ui/copy-box';
+import { ReferenceLink } from '@/components/ui/reference-link';
+import { useRouter } from 'next/router';
+import { currenciesFormat } from '@/components/ui/currenciesFormat';
+import { TextTruncate } from '@/components/ui/text-truncate';
 
 interface FinanceRefundTableProps {
   data: FinanceRefundRecord[];
@@ -36,6 +40,11 @@ const getColumnAlignment = (columnId: string): 'left' | 'center' => {
 export default function FinanceRefundTable({ data, meta, page, isLoading = false, transactionType, onPageChange }: FinanceRefundTableProps) {
   const [sorting, setSorting] = useState<SortingState>([{ id: 'refundDate', desc: true }]);
   const [selectedRefund, setSelectedRefund] = useState<FinanceRefundRecord | null>(null);
+  const router = useRouter();
+  const { slug } = router.query;
+  const slugStr = typeof slug === 'string' ? slug : '';
+
+  console.log(data);
 
   const columns = useMemo<ColumnDef<FinanceRefundRecord>[]>(
     () => {
@@ -43,12 +52,23 @@ export default function FinanceRefundTable({ data, meta, page, isLoading = false
         {
           accessorKey: 'refundCode',
           header: 'KODE REFUND',
-          cell: ({ row }) => <span className="text-slate-800 font-normal">{row.original.refundCode}</span>,
+          cell: ({ row }) => <CopyBox text={row.original.refundCode} />,
         },
         {
           accessorKey: 'transactionCode',
           header: transactionType === 'sales' ? 'NO PENJUALAN' : 'NO PEMBELIAN',
-          cell: ({ row }) => <span className="text-slate-800 font-normal">{row.original.transactionCode}</span>,
+          cell: ({ row }) => (
+            <ReferenceLink
+              href={`/dashboard/${slugStr}/transaksi/pembelian-unit/${row?.original?.transactionId}`}
+            >
+              {row?.original?.transactionCode}
+            </ReferenceLink>
+          )
+        },
+        {
+          accessorKey: 'partnerName',
+          header: transactionType === 'sales' ? 'NAMA CUSTOMER' : 'NAMA SUPPLIER',
+          cell: ({ row }) => <ReferenceLink href={`/dashboard/${slugStr}/master/supplier?search=${row?.original?.partnerName}`}>{row?.original?.partnerName}</ReferenceLink>,
         },
         {
           accessorKey: 'refundDate',
@@ -56,33 +76,32 @@ export default function FinanceRefundTable({ data, meta, page, isLoading = false
           cell: ({ row }) => <span className="text-slate-800 font-normal">{formatDate(row.original.refundDate)}</span>,
         },
         {
-          accessorKey: 'partnerName',
-          header: transactionType === 'sales' ? 'NAMA CUSTOMER' : 'NAMA SUPPLIER',
-          cell: ({ row }) => <span className="text-slate-800 font-normal">{row.original.partnerName}</span>,
-        },
-        {
           accessorKey: 'totalTransaction',
           header: transactionType === 'sales' ? 'TOTAL PENJUALAN' : 'TOTAL PEMBELIAN',
           cell: ({ row }) => (
             <span className="text-slate-800 font-normal">
-              {formatCurrency(row.original.totalTransaction ?? 0)}
+              {currenciesFormat('idr', row.original.totalTransaction ?? 0)}
             </span>
           ),
         },
         {
           accessorKey: 'refundAmount',
           header: 'TOTAL REFUND',
-          cell: ({ row }) => <span className="text-slate-800 font-normal">{formatCurrency(row.original.refundAmount)}</span>,
+          cell: ({ row }) => <span className="text-slate-800 font-normal">{currenciesFormat('idr', row.original.refundAmount)}</span>,
         },
         {
           accessorKey: 'cashName',
           header: transactionType === 'sales' ? 'KAS KELUAR' : 'KAS MASUK',
-          cell: ({ row }) => <span className="text-slate-800 font-normal">{row.original.cashName || '-'}</span>,
+          cell: ({ row }) => row?.original?.cashName ? (
+            <ReferenceLink href={`/dashboard/${slugStr}/master/kas?search=${row?.original?.cashName}`}>
+              {row?.original?.cashName}
+            </ReferenceLink >
+          ) : <span>-</span>
         },
         {
           accessorKey: 'note',
           header: 'KETERANGAN',
-          cell: ({ row }) => <span className="text-slate-500 font-normal text-xs line-clamp-2 max-w-xs">{row.original.note || '-'}</span>,
+          cell: ({ row }) => <TextTruncate maxLength={20} text={row.original.note || '-'}></TextTruncate>,
         },
       ];
 
@@ -94,7 +113,7 @@ export default function FinanceRefundTable({ data, meta, page, isLoading = false
         },
         {
           id: 'actions',
-          header: 'ACTION',
+          header: 'aksi',
           cell: ({ row }) => (
             <Button
               size="sm"
@@ -105,7 +124,7 @@ export default function FinanceRefundTable({ data, meta, page, isLoading = false
                 setSelectedRefund(row.original);
               }}
             >
-              Approval
+              Setujui
             </Button>
           ),
         }
@@ -153,9 +172,8 @@ export default function FinanceRefundTable({ data, meta, page, isLoading = false
                         {header.isPlaceholder ? null : (
                           <button
                             type="button"
-                            className={`flex items-center gap-1 select-none w-full px-4 py-4 text-xs font-semibold uppercase ${
-                              isSortable ? 'cursor-pointer group' : 'cursor-default'
-                            } ${isSortedActive ? 'text-slate-900' : 'text-slate-500 hover:text-slate-900'} ${justifyClass}`}
+                            className={`flex items-center gap-1 select-none w-full px-4 py-4 text-xs font-semibold uppercase ${isSortable ? 'cursor-pointer group' : 'cursor-default'
+                              } ${isSortedActive ? 'text-slate-900' : 'text-slate-500 hover:text-slate-900'} ${justifyClass}`}
                             onClick={header.column.getToggleSortingHandler()}
                             disabled={!isSortable}
                           >
@@ -181,11 +199,11 @@ export default function FinanceRefundTable({ data, meta, page, isLoading = false
               {isLoading ? (
                 <TableRow className="group">
                   <TableCell colSpan={columns.length} className="py-16 h-40 text-center text-slate-500">
-    <div className="flex flex-col items-center justify-center gap-3 opacity-0 animate-in fade-in duration-500">
-        <Loader2 className="h-6 w-6 animate-spin text-indigo-500" />
-        <span className="text-sm font-medium text-slate-500">Memuat data...</span>
-    </div>
-</TableCell>
+                    <div className="flex flex-col items-center justify-center gap-3 opacity-0 animate-in fade-in duration-500">
+                      <Loader2 className="h-6 w-6 animate-spin text-indigo-500" />
+                      <span className="text-sm font-medium text-slate-500">Memuat data...</span>
+                    </div>
+                  </TableCell>
                 </TableRow>
               ) : table.getRowModel().rows.length > 0 ? (
                 table.getRowModel().rows.map((row) => (
@@ -209,13 +227,13 @@ export default function FinanceRefundTable({ data, meta, page, isLoading = false
                 <TableRow className="group">
                   <TableCell colSpan={100} className="py-16 h-40 text-center text-slate-500">
                     <div className="flex flex-col items-center justify-center gap-2">
-                        <div className="rounded-full bg-slate-50 p-4 mb-2">
-                            <Search className="h-8 w-8 text-slate-400" />
-                        </div>
-                        <p className="text-base font-semibold text-slate-900">Tidak ada data ditemukan</p>
-                        <p className="text-sm text-slate-500">Belum ada data atau coba gunakan kata kunci pencarian lain.</p>
+                      <div className="rounded-full bg-slate-50 p-4 mb-2">
+                        <Search className="h-8 w-8 text-slate-400" />
+                      </div>
+                      <p className="text-base font-semibold text-slate-900">Tidak ada data ditemukan</p>
+                      <p className="text-sm text-slate-500">Belum ada data atau coba gunakan kata kunci pencarian lain.</p>
                     </div>
-                </TableCell>
+                  </TableCell>
                 </TableRow>
               )}
             </TableBody>

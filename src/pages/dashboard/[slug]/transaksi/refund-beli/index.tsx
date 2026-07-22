@@ -108,7 +108,7 @@ export default function TransaksiRefundBeliPage() {
         cell: (item) => item.total_qty + ' Unit',
       },
       {
-        header: 'ACTION',
+        header: 'aksi',
         alignment: 'left',
         sticky: 'right',
         cell: (item) => (

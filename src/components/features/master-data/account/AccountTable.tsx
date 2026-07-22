@@ -80,7 +80,7 @@ export const AccountTable = ({ data, meta, search, page, perPage, isLoading = fa
         ),
       },
       {
-        header: 'ACTION',
+        header: 'aksi',
         alignment: 'center',
         sticky: 'right',
         cell: (item) => (

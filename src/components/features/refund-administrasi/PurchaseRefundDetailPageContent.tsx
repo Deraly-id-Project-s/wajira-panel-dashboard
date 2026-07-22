@@ -130,7 +130,7 @@ export default function PurchaseRefundDetailPageContent({ transactionId, refundI
         )
       },
       {
-        header: 'ACTION',
+        header: 'aksi',
         alignment: 'left',
         sticky: 'right',
         cell: (payment) => (

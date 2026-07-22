@@ -74,7 +74,7 @@ export default function UnitPurchaseDetailPage() {
         cell: (details: any) => details.color,
       },
       {
-        header: 'ACTION',
+        header: 'aksi',
         alignment: 'left' as const,
         sticky: 'right' as const,
         cell: (details: any) => (
