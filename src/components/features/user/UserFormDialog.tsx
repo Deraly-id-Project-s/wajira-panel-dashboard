@@ -16,6 +16,9 @@ import { toast } from 'sonner';
 import { Eye, EyeOff, Info } from 'lucide-react';
 import { Switch } from '@/components/ui/switch';
 import RequiredMark from '@/components/ui/required-mark';
+import { useQuery } from '@tanstack/react-query';
+import { fetchUserCompanies } from '@/services/company.service';
+import { MultiSelect } from '@/components/ui/multi-select';
 
 interface Props {
   open: boolean;
@@ -34,6 +37,10 @@ export function UserFormDialog({ open, onOpenChange, user }: Props) {
   const activateMutation = useActivateUser();
   const deactivateMutation = useDeactivateUser();
   const { data: roleOptions = [], isLoading: isRolesLoading } = useRoles();
+  const { data: companyOptions = [], isLoading: isCompaniesLoading } = useQuery({
+    queryKey: ['user-companies'],
+    queryFn: fetchUserCompanies,
+  });
 
   // Using a union type for potential values
   const form = useForm<CreateUserFormValues | UpdateUserFormValues>({
@@ -48,6 +55,7 @@ export function UserFormDialog({ open, onOpenChange, user }: Props) {
       password: '',
       password_confirmation: '',
       is_active: true,
+      company_ids: [],
     },
   });
 
@@ -66,6 +74,7 @@ export function UserFormDialog({ open, onOpenChange, user }: Props) {
           password: '', // Password always empty on edit start
           password_confirmation: '',
           is_active: Boolean(user.isActive),
+          company_ids: user.companies?.map((c) => Number(c.id)) || [],
         });
       } else {
         // Create Mode: Reset all
@@ -79,6 +88,7 @@ export function UserFormDialog({ open, onOpenChange, user }: Props) {
           password: '',
           password_confirmation: '',
           is_active: true,
+          company_ids: [],
         });
       }
     }
@@ -147,7 +157,7 @@ export function UserFormDialog({ open, onOpenChange, user }: Props) {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-[500px]">
+      <DialogContent className="max-w-[800px] sm:max-w-[700px]">
         <DialogHeader>
           <DialogTitle>{isEdit ? 'Ubah Data Pengguna' : 'Tambah Data Pengguna'}</DialogTitle>
           <DialogDescription className="hidden">Form untuk {isEdit ? 'mengubah' : 'menambah'} data user</DialogDescription>
@@ -275,6 +285,29 @@ export function UserFormDialog({ open, onOpenChange, user }: Props) {
                       ))}
                     </SelectContent>
                   </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="company_ids"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Perusahaan</FormLabel>
+                  <FormControl>
+                    <MultiSelect
+                      options={companyOptions.map((company) => ({
+                        label: company.name,
+                        value: Number(company.id),
+                      }))}
+                      value={field.value || []}
+                      onChange={field.onChange}
+                      placeholder={isCompaniesLoading ? 'Memuat perusahaan...' : 'Pilih perusahaan'}
+                      disabled={isBusy || isCompaniesLoading}
+                    />
+                  </FormControl>
                   <FormMessage />
                 </FormItem>
               )}

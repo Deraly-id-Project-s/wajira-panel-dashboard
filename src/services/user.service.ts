@@ -31,6 +31,8 @@ type UserApiModel = {
   created_at?: string;
   updated_at?: string;
   roles?: UserRoleApiModel[];
+  companies?: Array<{ id: number; name: string; slug: string }>;
+  company_list?: string;
 };
 
 type UsersResponse = LaravelApiResponse<UserApiModel[] | UserApiModel>;
@@ -59,6 +61,12 @@ const mapUser = (payload: UserApiModel): User => ({
     created_at: role.created_at,
     updated_at: role.updated_at,
   })),
+  companies: payload.companies?.map((company) => ({
+    id: company.id,
+    name: company.name,
+    slug: company.slug,
+  })),
+  company_list: payload.company_list,
 });
 
 const buildPayload = (payload: CreateUserRequest | UpdateUserRequest, opts?: { asUpdate?: boolean }) => {
@@ -73,6 +81,9 @@ const buildPayload = (payload: CreateUserRequest | UpdateUserRequest, opts?: { a
   if (payload.roles !== undefined) body.append('roles', payload.roles);
   if (payload.password) body.append('password', payload.password);
   if ((payload as any).password_confirmation) body.append('password_confirmation', (payload as any).password_confirmation);
+  if ((payload as any).company_ids !== undefined) {
+    body.append('company_ids', JSON.stringify((payload as any).company_ids));
+  }
 
   return body;
 };

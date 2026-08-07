@@ -21,6 +21,7 @@ const baseUserShape = {
   lastname: z.string().optional(),
   roles: z.string().optional(),
   is_active: z.union([z.string(), z.boolean()]).optional(),
+  company_ids: z.array(z.number()).optional(),
 };
 
 // Create: password wajib

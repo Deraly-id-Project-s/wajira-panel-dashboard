@@ -1,6 +1,7 @@
 import { useCallback, useMemo, useState } from 'react';
 import { User } from '@/@types/user.types';
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from '@/components/ui/dropdown-menu';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { MoreVertical, Plus, Info } from 'lucide-react';
 import { useTableSort } from '@/hooks/useTableSort';
@@ -45,7 +46,8 @@ export function UserTable({ data, onEdit, onDelete, onAdd, isLoading, canCreate,
       const matchUsername = user.username?.toLowerCase().includes(lower);
       const matchName = user.name?.toLowerCase().includes(lower);
       const matchRoles = user.roles?.some((r) => r.name.toLowerCase().includes(lower));
-      return matchUsername || matchName || matchRoles;
+      const matchCompanies = user.company_list?.toLowerCase().includes(lower);
+      return matchUsername || matchName || matchRoles || matchCompanies;
     });
   }, [data, search]);
 
@@ -121,6 +123,25 @@ export function UserTable({ data, onEdit, onDelete, onAdd, isLoading, canCreate,
         sortable: true,
         alignment: 'left',
         className: 'w-[25%]',
+      },
+      {
+        header: 'Perusahaan',
+        accessorKey: 'company_list',
+        alignment: 'left',
+        cell: (item) => {
+          if (!item.company_list) return '-';
+          const list = item.company_list.split(',').map((name) => name.trim()).filter(Boolean);
+          if (list.length === 0) return '-';
+          return (
+            <div className="flex flex-wrap gap-1.5 items-center">
+              {list.map((name) => (
+                <Badge key={name} variant="outline" className="bg-slate-50 border-slate-200 text-slate-700 font-normal py-0.5 px-2 text-[11px] rounded-md">
+                  {name}
+                </Badge>
+              ))}
+            </div>
+          );
+        },
       },
       {
         header: 'Hak Akses',
