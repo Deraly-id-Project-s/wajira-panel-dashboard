@@ -64,7 +64,7 @@ export function TransactionTable({ data, isLoading }: TransactionTableProps) {
         cell: (item) => currenciesFormat('idr', item.total)
       }
     ],
-    []
+    [slug]
   );
 
   return (
