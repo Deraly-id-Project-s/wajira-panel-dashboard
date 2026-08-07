@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { getLaporanPengiriman, PengirimanParams, PengirimanItem } from '@/services/laporan-pengiriman.service';
 import { toast } from 'sonner';
+import { useCompany } from '@/contexts/CompanyContext';
 
 export type ReportType = 'per-nota' | 'per-tipe' | 'per-customer';
 
@@ -44,6 +45,8 @@ export const useLaporanPengiriman = (): UseLaporanPengirimanReturn => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  const { companyId } = useCompany();
+
   const [currentPage, setCurrentPage] = useState(1);
   const [currentPerPage, setCurrentPerPage] = useState(25);
   const [type, setType] = useState<string | null>('sales');
@@ -59,6 +62,7 @@ export const useLaporanPengiriman = (): UseLaporanPengirimanReturn => {
         page: currentPage,
         type: type || 'sales',
         per_page: currentPerPage,
+        company_id: companyId ? Number(companyId) : undefined,
       };
 
       // Disable backend date matching/person matching to apply frontend matching
@@ -107,7 +111,7 @@ export const useLaporanPengiriman = (): UseLaporanPengirimanReturn => {
     } finally {
       setIsLoading(false);
     }
-  }, [currentPage, currentPerPage, startDate, endDate, currentSearch, type]);
+  }, [currentPage, currentPerPage, type, startDate, endDate, currentSearch, companyId]);
 
   useEffect(() => {
     fetchData();

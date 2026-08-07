@@ -350,6 +350,7 @@ export const getPengeluaranUnits = async (params: PengeluaranUnitListParams = {}
       sort_direction: params.sortDirection ?? 'desc',
       start_date: params.start_date || undefined,
       end_date: params.end_date || undefined,
+      company_id: params.company_id || undefined,
     },
   });
 

@@ -8,6 +8,7 @@ import PenerimaanUnitFormDialog from '@/components/features/penerimaan-unit/Pene
 import { useWarehouseActivities } from '@/hooks/useWarehouseActivity';
 import { usePermissionGuard } from '@/hooks/usePermissionGuard';
 import { PageHeader } from '@/components/ui/page-header';
+import { useCompany } from '@/contexts/CompanyContext';
 
 export default function PenerimaanUnitPage() {
   const [search, setSearch] = useState('');
@@ -17,12 +18,17 @@ export default function PenerimaanUnitPage() {
   const [startDate, setStartDate] = useState<string | null>(null);
   const [endDate, setEndDate] = useState<string | null>(null);
 
+  const { companyId } = useCompany();
+
   const { data: activities, isLoading, isError, error } = useWarehouseActivities({
     activityType: 'receipt',
-    perPage: 10000,
+    company_id: companyId ? Number(companyId) : null,
+    perPage: 25,
   });
 
   const { hasPermission } = usePermissionGuard();
+  const canCreate = hasPermission('warehouse:create');
+  const canEdit = hasPermission('warehouse:edit') || hasPermission('warehouse:activity');
 
   const allData = useMemo(() => activities?.data ?? [], [activities?.data]);
 
@@ -116,6 +122,8 @@ export default function PenerimaanUnitPage() {
                 setPerPage(pp);
                 setCurrentPage(1);
               }}
+              canCreate={canCreate}
+              canEdit={canEdit}
               onPageChange={setCurrentPage}
               startDate={startDate}
               endDate={endDate}

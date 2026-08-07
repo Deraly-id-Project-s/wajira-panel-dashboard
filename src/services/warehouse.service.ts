@@ -311,6 +311,7 @@ export const getWarehouseActivities = async (params: WarehouseActivityListParams
       page: params.page,
       per_page: params.perPage,
       search: params.search || undefined,
+      company_id: params.company_id || undefined,
     },
   });
 

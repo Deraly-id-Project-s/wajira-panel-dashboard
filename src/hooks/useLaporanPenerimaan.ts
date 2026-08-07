@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { getLaporanPenerimaan, PenerimaanParams, PenerimaanItem } from '@/services/laporan-penerimaan.service';
 import { toast } from 'sonner';
+import { useCompany } from '@/contexts/CompanyContext';
 
 export type ReportType = 'per-nota' | 'per-tipe' | 'per-supplier';
 
@@ -44,6 +45,8 @@ export const useLaporanPenerimaan = (): UseLaporanPenerimaanReturn => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  const { companyId } = useCompany();
+
   // Filter states
   const [currentPage, setCurrentPage] = useState(1);
   const [currentPerPage, setCurrentPerPage] = useState(25);
@@ -60,6 +63,7 @@ export const useLaporanPenerimaan = (): UseLaporanPenerimaanReturn => {
         page: currentPage,
         type: type || 'purchase',
         per_page: currentPerPage,
+        company_id: companyId ? Number(companyId) : undefined,
       };
 
       // Fallbacks to avoid sending parameters that might break backend routing, rely on Client Side Filtering
@@ -107,7 +111,7 @@ export const useLaporanPenerimaan = (): UseLaporanPenerimaanReturn => {
     } finally {
       setIsLoading(false);
     }
-  }, [currentPage, currentPerPage, startDate, endDate, currentSearch, type]);
+  }, [currentPage, currentPerPage, type, startDate, endDate, currentSearch, companyId]);
 
   useEffect(() => {
     fetchData();

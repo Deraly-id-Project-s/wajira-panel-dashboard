@@ -56,6 +56,8 @@ interface Props {
   startDate?: string | null;
   endDate?: string | null;
   onDateRangeChange?: (start: string | null, end: string | null) => void;
+  canCreate?: boolean;
+  canEdit?: boolean;
 }
 
 export default function PenerimaanUnitTable({
@@ -70,6 +72,8 @@ export default function PenerimaanUnitTable({
   headerActions,
   startDate,
   endDate,
+  canCreate,
+  canEdit,
   onDateRangeChange,
 }: Props) {
   console.log(data)
@@ -160,13 +164,15 @@ export default function PenerimaanUnitTable({
         }
         return (
           <div className="flex items-center gap-1.5">
-            <button
-              onClick={() => handleOpenStateDialog(item.id, item.state || 'draft', item.state_note)}
-              className="p-1 rounded-md hover:bg-slate-100 text-slate-500 hover:text-slate-800 transition-colors cursor-pointer"
-              title="Ubah Status"
-            >
-              <Pencil className="h-3 w-3" />
-            </button>
+            {canEdit && (
+              <button
+                onClick={() => handleOpenStateDialog(item.id, item.state || 'draft', item.state_note)}
+                className="p-1 rounded-md hover:bg-slate-100 text-slate-500 hover:text-slate-800 transition-colors cursor-pointer"
+                title="Ubah Status"
+              >
+                <Pencil className="h-3 w-3" />
+              </button>
+            )}
             <Badge variant="outline" className={`font-semibold ${bg}`}>
               {text}
             </Badge>
@@ -218,6 +224,7 @@ export default function PenerimaanUnitTable({
               Detail
             </DropdownMenuItem>
             <DropdownMenuItem
+              disabled={!canEdit}
               onClick={() => handleOpenStateDialog(item.id, item.state || 'draft', item.state_note)}
               className="rounded-lg px-3 py-2 text-sm text-slate-900 focus:bg-slate-50 cursor-pointer"
             >

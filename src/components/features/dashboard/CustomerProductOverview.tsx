@@ -94,7 +94,7 @@ export function CustomerOverviewCard({ data, isLoading }: CustomerOverviewCardPr
 
   return (
     <Card className="rounded-[20px] border border-slate-200 bg-white p-7 shadow-sm">
-      <h3 className="mb-8 text-center text-[17px] font-bold text-slate-900">Customer Overview</h3>
+      <h3 className="mb-8 text-center text-[17px] font-bold text-slate-900">Overview Customer</h3>
       <div className="mb-8 grid grid-cols-3 gap-4 items-start">
         <StatItem label="Jumlah Customer" value={data.totalCustomers.toString()} />
         <StatItem
@@ -175,7 +175,7 @@ export function ProductOverviewCard({ data, isLoading }: ProductOverviewCardProp
   return (
     <Card className="rounded-[20px] border border-slate-200 bg-white p-7 shadow-sm h-full flex flex-col justify-between">
       <div>
-        <h3 className="mb-6 text-center text-[17px] font-bold text-slate-900">Produk Overview</h3>
+        <h3 className="mb-6 text-center text-[17px] font-bold text-slate-900">Overview Produk</h3>
 
         {/* Donut Chart Component */}
         <div className="mb-6 flex flex-col items-center justify-center">

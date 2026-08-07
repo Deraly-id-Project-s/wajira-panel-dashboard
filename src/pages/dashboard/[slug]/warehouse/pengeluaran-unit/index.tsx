@@ -8,9 +8,11 @@ import { PageHeader } from '@/components/ui/page-header';
 import { usePengeluaranUnits } from '@/hooks/usePengeluaranUnit';
 import { usePermissionGuard } from '@/hooks/usePermissionGuard';
 import { LoadingState } from '@/components/ui/loading-state';
+import { useCompany } from '@/contexts/CompanyContext';
 
 export default function PengeluaranUnitPage() {
   const router = useRouter();
+  const { companyId } = useCompany();
   const { hasPermission } = usePermissionGuard();
   const canEdit = hasPermission('warehouse:edit');
   const canDelete = hasPermission('warehouse:delete');
@@ -40,8 +42,9 @@ export default function PengeluaranUnitPage() {
       sortDirection: 'desc' as const,
       start_date: startDate,
       end_date: endDate,
+      company_id: companyId ? Number(companyId) : null,
     }),
-    [page, perPage, search, startDate, endDate],
+    [page, perPage, search, startDate, endDate, companyId],
   );
 
   const { data, isLoading, isError, error, refetch, isFetching } = usePengeluaranUnits(query);
@@ -92,6 +95,8 @@ export default function PengeluaranUnitPage() {
             setPerPage(value);
             setPage(1);
           }}
+          canEdit={canEdit}
+          canDelete={canDelete}
           onPageChange={setPage}
           startDate={startDate}
           endDate={endDate}

@@ -8,6 +8,7 @@ export interface SalesTransactionParams {
     person_id?: number;
     search?: string;
     sort_order?: 'asc' | 'desc';
+    company_id?: string | number | null;
 }
 
 export interface SalesTransactionItem {

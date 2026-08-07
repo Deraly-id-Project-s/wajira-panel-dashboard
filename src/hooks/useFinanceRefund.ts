@@ -20,7 +20,11 @@ export const useFinanceRefundList = (params: FinanceRefundQueryParams) => {
 
   return useQuery({
     queryKey: companyId ? financeRefundKeys.list(companyId, params) : ['finance-refunds', 'unscoped', params],
-    queryFn: () => financeRefundService.getRefundList(params),
+    queryFn: () =>
+      financeRefundService.getRefundList({
+        ...params,
+        company_id: companyId ?? undefined,
+      }),
     placeholderData: (previous) => previous,
     refetchOnWindowFocus: false,
     staleTime: 1000 * 60 * 2,
@@ -51,10 +55,10 @@ export const useApproveFinanceRefund = (transactionType: RefundTransactionType) 
             data: current.data.map((item: FinanceRefundRecord) =>
               item.id === refundId
                 ? {
-                    ...item,
-                    status: payload.status,
-                    cashId: payload.cash_id,
-                  }
+                  ...item,
+                  status: payload.status,
+                  cashId: payload.cash_id,
+                }
                 : item,
             ),
           };
