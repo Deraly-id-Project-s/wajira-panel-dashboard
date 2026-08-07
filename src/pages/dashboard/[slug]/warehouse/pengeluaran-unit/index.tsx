@@ -19,6 +19,8 @@ export default function PengeluaranUnitPage() {
   const [perPage, setPerPage] = useState(25);
   const [searchInput, setSearchInput] = useState('');
   const [search, setSearch] = useState('');
+  const [startDate, setStartDate] = useState<string | null>(null);
+  const [endDate, setEndDate] = useState<string | null>(null);
 
   useEffect(() => {
     const timeout = window.setTimeout(() => {
@@ -36,8 +38,10 @@ export default function PengeluaranUnitPage() {
       search: search || undefined,
       sortBy: 'created_at',
       sortDirection: 'desc' as const,
+      start_date: startDate,
+      end_date: endDate,
     }),
-    [page, perPage, search],
+    [page, perPage, search, startDate, endDate],
   );
 
   const { data, isLoading, isError, error, refetch, isFetching } = usePengeluaranUnits(query);
@@ -72,14 +76,6 @@ export default function PengeluaranUnitPage() {
         <PageHeader
           title="Data Pengeluaran Unit"
           subtitle="Kelola dan lacak semua data pengeluaran stock unit"
-        // actions={
-        //   canCreate && (
-        //     <Button onClick={() => router.push(`/dashboard/${router.query.slug}/warehouse/pengeluaran-unit/create`)} className="w-full sm:w-auto bg-[#1e3a5f] hover:bg-[#152e4d]">
-        //       <Plus className="mr-2 h-4 w-4" />
-        //       Tambah
-        //     </Button>
-        //   )
-        // }
         />
 
         <PengeluaranUnitTable
@@ -97,8 +93,15 @@ export default function PengeluaranUnitPage() {
             setPage(1);
           }}
           onPageChange={setPage}
+          startDate={startDate}
+          endDate={endDate}
+          onDateRangeChange={(start, end) => {
+            setStartDate(start);
+            setEndDate(end);
+            setPage(1);
+          }}
           onRetry={() => {
-            void refetch();
+            refetch().catch(() => undefined);
           }}
         />
       </div>

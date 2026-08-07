@@ -27,6 +27,8 @@ export const sparepartTransactionService = {
       sparepart_id?: number | string;
       billing_type?: 'cash' | 'credit';
       company_id?: number | string;
+      start_date?: string | null;
+      end_date?: string | null;
     } = {}
   ): Promise<SparepartTransactionResponse> {
     const response = await apiClient.get<LaravelApiResponse<any>>(basePath, {
@@ -43,6 +45,8 @@ export const sparepartTransactionService = {
         sparepart_id: params.sparepart_id || undefined,
         billing_type: params.billing_type || undefined,
         company_id: params.company_id || undefined,
+        start_date: params.start_date || undefined,
+        end_date: params.end_date || undefined,
       },
     });
 

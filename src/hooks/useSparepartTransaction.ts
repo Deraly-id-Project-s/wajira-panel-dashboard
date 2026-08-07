@@ -32,6 +32,8 @@ export function useSparepartTransactions(
     sparepart_id?: number | string;
     billing_type?: 'cash' | 'credit';
     company_id?: number | string | null;
+    start_date?: string | null;
+    end_date?: string | null;
   }
 ) {
   return useQuery({

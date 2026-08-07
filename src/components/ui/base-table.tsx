@@ -8,6 +8,9 @@ import { ArrowDown, ArrowUp, ArrowUpDown, Search, Info } from 'lucide-react';
 import { LoadingState } from '@/components/ui/loading-state';
 import { cn } from '@/lib/utils';
 import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from '@/components/ui/tooltip';
+import { DatePickerWithRange } from '@/components/ui/date-range-picker';
+import { DateRange } from 'react-day-picker';
+import { format } from 'date-fns';
 
 export interface ColumnDef<T> {
   header: React.ReactNode;
@@ -66,6 +69,12 @@ export interface BaseTableProps<T> {
   isCheckboxDisabled?: (item: T) => boolean;
   footer?: React.ReactNode;
   onRowClick?: (item: T) => void;
+
+  // Date picker range props
+  addDateRangePicker?: boolean;
+  startDate?: string | null;
+  endDate?: string | null;
+  onDateRangeChange?: (start: string | null, end: string | null) => void;
 }
 
 export default function BaseTable<T>({
@@ -95,11 +104,30 @@ export default function BaseTable<T>({
   isCheckboxDisabled,
   footer,
   onRowClick,
+  addDateRangePicker = false,
+  startDate,
+  endDate,
+  onDateRangeChange,
 }: BaseTableProps<T>) {
   const [localSearch, setLocalSearch] = useState(search || '');
   const [internalSort, setInternalSort] = useState<{ key: string; direction: 'asc' | 'desc' } | null>(
     defaultSort || null
   );
+
+  const dateRange = useMemo<DateRange | undefined>(() => {
+    if (!startDate && !endDate) return undefined;
+    return {
+      from: startDate ? new Date(startDate) : undefined,
+      to: endDate ? new Date(endDate) : undefined,
+    };
+  }, [startDate, endDate]);
+
+  const handleDateRangeChange = (range: DateRange | undefined) => {
+    if (!onDateRangeChange) return;
+    const start = range?.from ? format(range.from, 'yyyy-MM-dd') : null;
+    const end = range?.to ? format(range.to, 'yyyy-MM-dd') : null;
+    onDateRangeChange(start, end);
+  };
 
   const getRowIdInternal = useCallback((item: T) => {
     if (getRowId) return getRowId(item);
@@ -257,8 +285,8 @@ export default function BaseTable<T>({
     ));
   };
 
-  const hasControls = Boolean(onSearchChange || headerActions || showLimitChange);
-  const showDefaultControls = Boolean(onSearchChange || showLimitChange);
+  const hasControls = Boolean(onSearchChange || headerActions || showLimitChange || addDateRangePicker);
+  const showDefaultControls = Boolean(onSearchChange || showLimitChange || addDateRangePicker);
 
   return (
     <div className="space-y-4">
@@ -277,6 +305,14 @@ export default function BaseTable<T>({
                     onChange={(e) => setLocalSearch(e.target.value)}
                   />
                 </div>
+              )}
+
+              {addDateRangePicker && (
+                <DatePickerWithRange
+                  date={dateRange}
+                  onChange={handleDateRangeChange}
+                  className="w-full sm:w-auto min-w-[260px]"
+                />
               )}
 
               {showLimitChange && onPerPageChange && (

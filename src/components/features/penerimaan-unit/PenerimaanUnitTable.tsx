@@ -53,6 +53,9 @@ interface Props {
   onPerPageChange?: (value: number) => void;
   onPageChange?: (page: number) => void;
   headerActions?: React.ReactNode;
+  startDate?: string | null;
+  endDate?: string | null;
+  onDateRangeChange?: (start: string | null, end: string | null) => void;
 }
 
 export default function PenerimaanUnitTable({
@@ -65,6 +68,9 @@ export default function PenerimaanUnitTable({
   onPerPageChange,
   onPageChange,
   headerActions,
+  startDate,
+  endDate,
+  onDateRangeChange,
 }: Props) {
   console.log(data)
   const router = useRouter();
@@ -238,6 +244,10 @@ export default function PenerimaanUnitTable({
         meta={meta}
         onPageChange={onPageChange}
         headerActions={headerActions}
+        addDateRangePicker={true}
+        startDate={startDate}
+        endDate={endDate}
+        onDateRangeChange={onDateRangeChange}
       />
 
       {/* DIALOG UPDATE STATUS */}

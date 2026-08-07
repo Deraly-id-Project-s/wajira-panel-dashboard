@@ -98,6 +98,8 @@ export interface WithholdingTaxListParams extends PaginationParams {
   no_invoice?: string;
   order_by?: string;
   order_dir?: 'asc' | 'desc';
+  start_date?: string | null;
+  end_date?: string | null;
 }
 
 export type WithholdingTaxListResponse = PaginatedResult<WithholdingTaxItem>;

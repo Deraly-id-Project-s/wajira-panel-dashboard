@@ -39,6 +39,9 @@ export interface SalesTableProps {
   canCreate?: boolean;
   onSearchChange?: (value: string) => void;
   loading?: boolean;
+  startDate?: string | null;
+  endDate?: string | null;
+  onDateRangeChange?: (start: string | null, end: string | null) => void;
 }
 
 export function SalesTable({
@@ -55,6 +58,9 @@ export function SalesTable({
   canDelete,
   canCreate,
   onSearchChange,
+  startDate,
+  endDate,
+  onDateRangeChange,
 }: SalesTableProps) {
   const router = useRouter();
   const [localSearch, setLocalSearch] = useState(search || '');
@@ -457,6 +463,10 @@ export function SalesTable({
         }}
         onPageChange={handlePageChange}
         headerActions={headerActions}
+        addDateRangePicker={true}
+        startDate={startDate}
+        endDate={endDate}
+        onDateRangeChange={onDateRangeChange}
       />
 
       {/* Vehicle Search Modal */}

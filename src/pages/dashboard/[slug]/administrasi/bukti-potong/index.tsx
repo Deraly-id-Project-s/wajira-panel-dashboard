@@ -60,6 +60,9 @@ export default function BuktiPotongPage() {
     return () => window.clearTimeout(timeout);
   }, [searchInput]);
 
+  const [startDate, setStartDate] = useState<string | null>(null);
+  const [endDate, setEndDate] = useState<string | null>(null);
+
   const { data, isLoading: isInitialLoading, isFetching, isError, error, refetch } = useWithholdingTaxes({
     source: sourceFilter,
     company_id: companyNumber,
@@ -68,6 +71,8 @@ export default function BuktiPotongPage() {
     ...(searchValue ? { withholding_number: searchValue } : {}),
     order_by: orderBy,
     order_dir: orderSort,
+    start_date: startDate,
+    end_date: endDate,
   });
 
   const isLoading = isInitialLoading || isFetching;
@@ -232,6 +237,13 @@ export default function BuktiPotongPage() {
             onSortChange={handleSortChange}
             currentSortBy={orderBy}
             currentSortDirection={orderSort}
+            startDate={startDate}
+            endDate={endDate}
+            onDateRangeChange={(start, end) => {
+              setStartDate(start);
+              setEndDate(end);
+              setPage(1);
+            }}
           />
         </div>
 

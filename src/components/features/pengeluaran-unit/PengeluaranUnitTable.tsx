@@ -51,6 +51,9 @@ interface Props {
   onPerPageChange: (value: number) => void;
   onPageChange: (value: number) => void;
   onRetry: () => void;
+  startDate?: string | null;
+  endDate?: string | null;
+  onDateRangeChange?: (start: string | null, end: string | null) => void;
 }
 
 const formatDate = (value: string): string => {
@@ -70,6 +73,9 @@ export default function PengeluaranUnitTable({
   onSearchChange,
   onPerPageChange,
   onPageChange,
+  startDate,
+  endDate,
+  onDateRangeChange,
 }: Props) {
   const router = useRouter();
   const slugValue = Array.isArray(router.query.slug) ? router.query.slug[0] : router.query.slug;
@@ -245,6 +251,10 @@ export default function PengeluaranUnitTable({
         onPerPageChange={onPerPageChange}
         meta={meta}
         onPageChange={onPageChange}
+        addDateRangePicker={true}
+        startDate={startDate}
+        endDate={endDate}
+        onDateRangeChange={onDateRangeChange}
       />
 
       {/* DIALOG UPDATE STATUS */}

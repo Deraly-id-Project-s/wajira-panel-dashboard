@@ -14,6 +14,8 @@ export default function PenerimaanUnitPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [perPage, setPerPage] = useState(25);
   const [openForm, setOpenForm] = useState(false);
+  const [startDate, setStartDate] = useState<string | null>(null);
+  const [endDate, setEndDate] = useState<string | null>(null);
 
   const { data: activities, isLoading, isError, error } = useWarehouseActivities({
     activityType: 'receipt',
@@ -25,16 +27,38 @@ export default function PenerimaanUnitPage() {
   const allData = useMemo(() => activities?.data ?? [], [activities?.data]);
 
   const filteredData = useMemo(() => {
-    if (!search) return allData;
-    const lowerSearch = search.toLowerCase();
-    return allData.filter((item) => {
-      const matchNo = item.noPenerimaan?.toLowerCase().includes(lowerSearch);
-      const matchSupplier = item.supplier?.toLowerCase().includes(lowerSearch);
-      const matchKet = item.keterangan?.toLowerCase().includes(lowerSearch);
-      const matchDate = item.tanggal?.toLowerCase().includes(lowerSearch);
-      return matchNo || matchSupplier || matchKet || matchDate;
-    });
-  }, [allData, search]);
+    let result = allData;
+    if (startDate) {
+      const start = new Date(startDate);
+      // Set to midnight
+      start.setHours(0, 0, 0, 0);
+      result = result.filter(item => {
+        if (!item.tanggal) return false;
+        const itemDate = new Date(item.tanggal);
+        return itemDate >= start;
+      });
+    }
+    if (endDate) {
+      const end = new Date(endDate);
+      end.setHours(23, 59, 59, 999);
+      result = result.filter(item => {
+        if (!item.tanggal) return false;
+        const itemDate = new Date(item.tanggal);
+        return itemDate <= end;
+      });
+    }
+    if (search) {
+      const lowerSearch = search.toLowerCase();
+      result = result.filter((item) => {
+        const matchNo = item.noPenerimaan?.toLowerCase().includes(lowerSearch);
+        const matchSupplier = item.supplier?.toLowerCase().includes(lowerSearch);
+        const matchKet = item.keterangan?.toLowerCase().includes(lowerSearch);
+        const matchDate = item.tanggal?.toLowerCase().includes(lowerSearch);
+        return matchNo || matchSupplier || matchKet || matchDate;
+      });
+    }
+    return result;
+  }, [allData, search, startDate, endDate]);
 
   const totalItems = filteredData.length;
   const totalPages = Math.max(1, Math.ceil(totalItems / perPage));
@@ -93,6 +117,13 @@ export default function PenerimaanUnitPage() {
                 setCurrentPage(1);
               }}
               onPageChange={setCurrentPage}
+              startDate={startDate}
+              endDate={endDate}
+              onDateRangeChange={(start, end) => {
+                setStartDate(start);
+                setEndDate(end);
+                setCurrentPage(1);
+              }}
             // headerActions={
             //   canCreate && (
             //     <Button onClick={() => setOpenForm(true)} className="w-full sm:w-auto bg-[#1e3a5f] hover:bg-[#152e4d]">

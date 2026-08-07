@@ -9,7 +9,7 @@ const salesKeys = {
   detail: (companyId: string, id: string) => companyQueryKeys.detail(companyId, 'sales-transactions', id),
 };
 
-export const useSalesList = (options: { page?: number; perPage?: number; search?: string; status?: string } = {}) => {
+export const useSalesList = (options: { page?: number; perPage?: number; search?: string; status?: string; start_date?: string | null; end_date?: string | null } = {}) => {
   const { companyId } = useCompany();
 
   return useQuery({
@@ -19,6 +19,8 @@ export const useSalesList = (options: { page?: number; perPage?: number; search?
           perPage: options.perPage,
           search: options.search,
           status: options.status,
+          start_date: options.start_date,
+          end_date: options.end_date,
         })
       : ['sales-transactions', 'unscoped', options],
     queryFn: () => salesService.getSalesList(companyId ?? undefined, options),
