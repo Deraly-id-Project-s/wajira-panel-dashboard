@@ -375,7 +375,7 @@ export default function PengeluaranUnitDetailTable({ data, isRefundActivity, act
                   <SelectContent>
                     <SelectItem value="purchase_order">Purchase Order (PO)</SelectItem>
                     <SelectItem value="in_transit">In Transit (Dalam Perjalanan)</SelectItem>
-                    <SelectItem value="receipt">Receipt (Diterima / Tersedia)</SelectItem>
+                    <SelectItem value="receipt">Receipt (Dikeluarkan / Dikirim)</SelectItem>
                   </SelectContent>
                 </Select>
               </div>

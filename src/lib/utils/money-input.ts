@@ -1,6 +1,6 @@
 function normalizeUsdString(value: string): string {
   // Strip currency symbol and spaces
-  let cleaned = value.replace(/[^0-9.,]/g, '');
+  const cleaned = value.replace(/[^0-9.,]/g, '');
   // For USD, standard thousands separator is comma. We strip all commas.
   return cleaned.replace(/,/g, '');
 }
