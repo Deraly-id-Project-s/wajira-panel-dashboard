@@ -440,4 +440,17 @@ export const dashboardService = {
       return { summary: { total_sales_transactions: 0, total_purchase_transactions: 0 }, trend: [] };
     }
   },
+
+  async refreshCache(companyId: string): Promise<boolean> {
+    try {
+      const response = await apiClient.get<{ status: boolean; data: any }>(
+        '/wapi/stats/refresh-cache',
+        { params: { company_id: companyId } }
+      );
+      return response.data?.status === true;
+    } catch (err) {
+      console.warn('[DashboardService] Failed to refresh cache:', err);
+      throw err;
+    }
+  },
 };

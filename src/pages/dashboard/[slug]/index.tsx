@@ -5,7 +5,7 @@ import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { PageHeader } from '@/components/common/PageHeader';
 import { DatePickerWithRange } from '@/components/ui/date-range-picker';
 import { Button } from '@/components/ui/button';
-import { Eye, FileDown, FileCheck, FileText, FileSpreadsheet, FileX, FileUp, FileEdit } from 'lucide-react';
+import { Eye, FileDown, FileCheck, FileText, FileSpreadsheet, FileX, FileUp, FileEdit, RotateCw } from 'lucide-react';
 
 import { FinanceOverview } from '@/components/features/dashboard/FinanceOverview';
 import { FinanceChart } from '@/components/features/dashboard/FinanceChart';
@@ -16,9 +16,11 @@ import { UnitTransactionTrendChart } from '@/components/features/dashboard/chart
 import { TransactionTable } from '@/components/features/dashboard/TransactionTable';
 import { useDashboardData } from '@/hooks/useDashboardData';
 import { useCompany } from '@/contexts/CompanyContext';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from '@/lib/api/client';
 import { Card } from '@/components/ui/card';
+import { toast } from 'sonner';
+import { dashboardService } from '@/lib/api/dashboard.service';
 import { LoadingState } from '@/components/ui/loading-state';
 
 interface StatDetail {
@@ -253,9 +255,11 @@ function VehicleRegistrationOverview({
 }
 
 export default function DashboardPage() {
+  const queryClient = useQueryClient();
   const [dateRangeState, setDateRangeState] = useState<DateRange | undefined>(undefined);
   const [activeDateRange, setActiveDateRange] = useState<{ start: string | null; end: string | null }>({ start: null, end: null });
   const [isFiltering, setIsFiltering] = useState(false);
+  const [isRefreshingCache, setIsRefreshingCache] = useState(false);
 
   const { companyId } = useCompany();
   const { data, isLoading, isError } = useDashboardData(activeDateRange.start, activeDateRange.end);
@@ -266,6 +270,20 @@ export default function DashboardPage() {
     const endDate = dateRangeState?.to ? format(dateRangeState.to, 'yyyy-MM-dd') : null;
     setActiveDateRange({ start: startDate, end: endDate });
     setTimeout(() => setIsFiltering(false), 100);
+  };
+
+  const handleRefreshCache = async () => {
+    if (!companyId) return;
+    setIsRefreshingCache(true);
+    try {
+      await dashboardService.refreshCache(companyId);
+      toast.success('Cache berhasil diperbarui');
+      queryClient.invalidateQueries();
+    } catch {
+      toast.error('Gagal memperbarui cache');
+    } finally {
+      setIsRefreshingCache(false);
+    }
   };
 
   const isLoadingDisplay = isLoading || isFiltering;
@@ -286,6 +304,15 @@ export default function DashboardPage() {
             >
               {isLoadingDisplay ? <LoadingState variant="inline" text={null} /> : <Eye className="h-4 w-4" />}
               Show
+            </Button>
+            <Button
+              variant="outline"
+              className="bg-[#f8f9fa] shadow-sm text-gray-700 gap-2 shrink-0 hover:bg-slate-100"
+              onClick={handleRefreshCache}
+              disabled={isRefreshingCache || isLoadingDisplay}
+            >
+              <RotateCw className={`h-4 w-4 ${isRefreshingCache ? 'animate-spin' : ''}`} />
+              Refresh Cache
             </Button>
           </div>
         </div>
