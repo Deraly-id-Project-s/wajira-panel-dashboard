@@ -1,7 +1,8 @@
 import { useState, useEffect, useMemo } from 'react';
 import { format } from 'date-fns';
 import { id as idLocale } from 'date-fns/locale/id';
-import { Wallet, Trash, Search } from 'lucide-react';
+import { Wallet, Trash, Search, Upload, CheckCircle2 } from 'lucide-react';
+import { cn } from '@/lib/utils';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -418,7 +419,7 @@ export function SalesPaymentForm({
                             <div className="border-b px-4 py-3">
                                 <h3 className="text-sm font-semibold text-muted-foreground">Catatan</h3>
                             </div>
-                            <div className="flex flex-col gap-4 p-4 md:flex-row md:items-end">
+                            <div className="flex flex-col gap-4 p-4">
                                 <FormField
                                     control={form.control}
                                     name="note"
@@ -439,24 +440,48 @@ export function SalesPaymentForm({
                                 <FormField
                                     control={form.control}
                                     name="paymentProof"
-                                    render={({ field: { value, onChange, ...field } }) => (
-                                        <FormItem className="flex-1 space-y-2">
-                                            <FormLabel className="text-sm font-medium">Bukti Pembayaran (Opsional)</FormLabel>
-                                            <FormControl>
-                                                <Input
-                                                    type="file"
-                                                    disabled={billing && billingRemaining === 0 || isPaidAndValid}
-                                                    onChange={(e) => {
-                                                        const file = e.target.files?.[0];
-                                                        if (file) onChange(file);
-                                                    }}
-                                                    {...field}
-                                                    value={undefined}
-                                                />
-                                            </FormControl>
-                                            <FormMessage />
-                                        </FormItem>
-                                    )}
+                                    render={({ field: { value, onChange, ...field } }) => {
+                                        const file = value as File | undefined;
+                                        const isDisabled = billing && billingRemaining === 0 || isPaidAndValid;
+                                        return (
+                                            <FormItem className="flex-1 space-y-2">
+                                                <FormLabel className="text-sm font-medium">Bukti Pembayaran (Opsional)</FormLabel>
+                                                <FormControl>
+                                                    <label className={cn(
+                                                        "block cursor-pointer rounded-lg border border-dashed px-4 py-6 text-center text-sm transition-all duration-200",
+                                                        isDisabled && "opacity-60 cursor-not-allowed pointer-events-none",
+                                                        file
+                                                            ? "border-emerald-300 bg-emerald-50/50 text-emerald-700 hover:border-emerald-400 hover:bg-emerald-50"
+                                                            : "border-slate-300 bg-slate-50 text-slate-600 hover:border-slate-400 hover:bg-slate-100"
+                                                    )}>
+                                                        {file ? (
+                                                            <>
+                                                                <CheckCircle2 className="mx-auto mb-2 h-7 w-7 text-emerald-500 animate-in zoom-in duration-200" />
+                                                                <span className="block font-semibold text-emerald-700 max-w-[250px] mx-auto truncate">{file.name}</span>
+                                                                <span className="mt-1 block text-xs text-emerald-600">Klik untuk mengganti file</span>
+                                                            </>
+                                                        ) : (
+                                                            <>
+                                                                <Upload className="mx-auto mb-2 h-7 w-7 text-slate-400" />
+                                                                <span className="block font-medium">Pilih file bukti</span>
+                                                                <span className="mt-1 block text-xs text-slate-500">Klik untuk mencari file</span>
+                                                            </>
+                                                        )}
+                                                        <input autoComplete="off"
+                                                            type="file"
+                                                            disabled={isDisabled}
+                                                            onChange={(e) => {
+                                                                const fileObj = e.target.files?.[0];
+                                                                if (fileObj) onChange(fileObj);
+                                                            }}
+                                                            className="hidden"
+                                                        />
+                                                    </label>
+                                                </FormControl>
+                                                <FormMessage />
+                                            </FormItem>
+                                        );
+                                    }}
                                 />
                             </div>
                         </div>
