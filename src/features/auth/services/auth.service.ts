@@ -65,7 +65,7 @@ export class AuthService {
     if (data.avatar) body.append('avatar', data.avatar);
     body.append('_method', 'PUT');
 
-    const response = await apiClient.post<ProfileResponse>(`/wapi/users/${id}`, body, {
+    const response = await apiClient.post<ProfileResponse>(`/wapi/auth/me`, body, {
       headers: { 'Content-Type': 'multipart/form-data' },
     });
 

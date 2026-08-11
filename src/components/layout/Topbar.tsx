@@ -16,6 +16,7 @@ import { fetchUserCompanies, Company } from '@/services/company.service';
 import { useCompanyMenu } from '@/hooks/use-company-menu';
 import { MenuItem } from '@/types/menu.types';
 import { cn } from '@/lib/utils';
+import { ParsedImage } from '@/components/ui/parsed-image';
 
 const RECENT_STORAGE_KEY = 'global-search-recent';
 
@@ -309,8 +310,16 @@ export function Topbar() {
                     {isProfileLoading ? '' : userId}
                   </span>
                 </div>
-                <div className="flex h-9 w-9 md:h-10 md:w-10 items-center justify-center rounded-full bg-slate-50 text-[13px] font-bold text-black border border-gray-100">
-                  {initials}
+                <div className="flex h-9 w-9 md:h-10 md:w-10 items-center justify-center rounded-full bg-slate-50 text-[13px] font-bold text-black border border-gray-100 overflow-hidden">
+                  {user?.avatar ? (
+                    <ParsedImage
+                      src={user.avatar}
+                      alt="Avatar"
+                      className="h-full w-full object-cover"
+                    />
+                  ) : (
+                    initials
+                  )}
                 </div>
               </button>
             </DropdownMenuTrigger>
