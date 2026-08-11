@@ -1,7 +1,7 @@
 import React from 'react';
 import { getParsedImageUrl } from '@/lib/utils/image';
 
-interface ParsedImageProps extends React.ImgHTMLAttributes<HTMLImageElement> {
+interface ParsedImageProps extends Omit<React.ImgHTMLAttributes<HTMLImageElement>, 'src'> {
   src?: string | null;
 }
 
