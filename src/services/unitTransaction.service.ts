@@ -515,13 +515,15 @@ const mapUnitTransactionDetail = (item: UnitTransactionApiModel): UnitTransactio
 };
 
 export const unitTransactionService = {
-  async getUnitTransactions(params: PaginationParams & { company_id?: string | number; status?: string } = {}): Promise<UnitTransactionResponse> {
+  async getUnitTransactions(params: PaginationParams & { company_id?: string | number; status?: string; start_date?: string | null; end_date?: string | null } = {}): Promise<UnitTransactionResponse> {
     const requestParams = {
       company_id: params.company_id,
       page: params.page ?? 1,
       per_page: params.perPage ?? 10,
       search: params.search || undefined,
       status: params.status || undefined,
+      start_date: params.start_date || undefined,
+      end_date: params.end_date || undefined,
       sort_order: 'desc',
       type: 'purchase',
     };

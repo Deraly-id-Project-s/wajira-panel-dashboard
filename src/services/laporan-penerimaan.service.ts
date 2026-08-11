@@ -9,6 +9,7 @@ export interface PenerimaanParams {
   person_id?: number;
   unit_type_id?: number;
   sort_dir?: 'asc' | 'desc';
+  company_id?: string | number | null;
 }
 
 export interface PenerimaanItem {

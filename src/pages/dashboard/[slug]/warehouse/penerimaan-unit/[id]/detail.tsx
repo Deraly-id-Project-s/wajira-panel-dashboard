@@ -28,6 +28,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
+import { usePermissionGuard } from '@/hooks/usePermissionGuard';
 
 export default function PenerimaanUnitDetailPage() {
   const router = useRouter();
@@ -40,6 +41,9 @@ export default function PenerimaanUnitDetailPage() {
       router.push(`/dashboard/${slug}/warehouse/penerimaan-unit`);
     }
   }, [detailData, isLoading, router, slug]);
+
+  const { hasPermission } = usePermissionGuard();
+  const canEdit = hasPermission('warehouse:edit') || hasPermission('warehouse:activity');
 
   const details = detailData?.unit_transaction_details ?? [];
 
@@ -165,13 +169,15 @@ export default function PenerimaanUnitDetailPage() {
                 <div className="flex items-center justify-between">
                   <span className="text-xs text-slate-400">Status Penerimaan</span>
                   <span className="font-semibold text-slate-900 flex items-center gap-1.5">
-                    <button
-                      onClick={() => setIsUpdateStateDialogOpen(true)}
-                      className="p-1 rounded-md hover:bg-slate-100 text-slate-500 hover:text-slate-800 transition-colors cursor-pointer"
-                      title="Ubah Status Penerimaan"
-                    >
-                      <Pencil className="h-3.5 w-3.5" />
-                    </button>
+                    {canEdit && (
+                      <button
+                        onClick={() => setIsUpdateStateDialogOpen(true)}
+                        className="p-1 rounded-md hover:bg-slate-100 text-slate-500 hover:text-slate-800 transition-colors cursor-pointer"
+                        title="Ubah Status Penerimaan"
+                      >
+                        <Pencil className="h-3.5 w-3.5" />
+                      </button>
+                    )}
                     {detailData?.state ? (
                       <Badge variant="outline" className={`font-semibold ${stateInfo.bg}`}>
                         {stateInfo.text}

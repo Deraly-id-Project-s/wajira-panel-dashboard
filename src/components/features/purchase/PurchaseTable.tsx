@@ -32,6 +32,9 @@ export interface PurchaseTableProps {
   canCreate?: boolean;
   onSearchChange?: (value: string) => void;
   loading?: boolean;
+  startDate?: string | null;
+  endDate?: string | null;
+  onDateRangeChange?: (start: string | null, end: string | null) => void;
 }
 
 export default function PurchaseTable({
@@ -48,6 +51,9 @@ export default function PurchaseTable({
   canDelete,
   canCreate,
   onSearchChange,
+  startDate,
+  endDate,
+  onDateRangeChange,
 }: PurchaseTableProps) {
   const router = useRouter();
   const [localSearch, setLocalSearch] = useState(search || '');
@@ -423,6 +429,10 @@ export default function PurchaseTable({
         }}
         onPageChange={handlePageChange}
         headerActions={headerActions}
+        addDateRangePicker={true}
+        startDate={startDate}
+        endDate={endDate}
+        onDateRangeChange={onDateRangeChange}
       />
 
       {/* Vehicle Search Modal */}

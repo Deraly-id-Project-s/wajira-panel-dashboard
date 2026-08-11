@@ -32,6 +32,9 @@ export interface SalesSparepartTableProps {
   canCreate?: boolean;
   onSearchChange?: (value: string) => void;
   loading?: boolean;
+  startDate?: string | null;
+  endDate?: string | null;
+  onDateRangeChange?: (start: string | null, end: string | null) => void;
 }
 
 export default function SalesSparepartTable({
@@ -48,6 +51,9 @@ export default function SalesSparepartTable({
   canDelete,
   canCreate,
   onSearchChange,
+  startDate,
+  endDate,
+  onDateRangeChange,
 }: SalesSparepartTableProps) {
   const router = useRouter();
   const [localSearch, setLocalSearch] = useState(search || '');
@@ -317,6 +323,10 @@ export default function SalesSparepartTable({
         }}
         onPageChange={handlePageChange}
         headerActions={headerActions}
+        addDateRangePicker={true}
+        startDate={startDate}
+        endDate={endDate}
+        onDateRangeChange={onDateRangeChange}
       />
     </div>
   );

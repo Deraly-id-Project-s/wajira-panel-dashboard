@@ -49,6 +49,7 @@ export interface FinanceRefundQueryParams {
   search?: string;
   status?: RefundApprovalStatus | 'all';
   transactionType?: RefundTransactionType;
+  company_id?: number | string | null;
 }
 
 export interface UpdateFinanceRefundPayload {

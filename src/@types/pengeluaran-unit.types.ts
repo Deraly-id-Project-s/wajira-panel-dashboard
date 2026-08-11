@@ -62,6 +62,9 @@ export interface PengeluaranUnitListParams {
   search?: string;
   sortBy?: string;
   sortDirection?: SortDirection;
+  start_date?: string | null;
+  end_date?: string | null;
+  company_id?: number | null;
 }
 
 export interface PengeluaranUnitListResult {

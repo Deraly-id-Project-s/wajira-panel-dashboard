@@ -22,6 +22,8 @@ export interface User {
   createdAt?: string;
   updatedAt?: string;
   roles?: UserRoleItem[];
+  companies?: Array<{ id: number; name: string; slug: string }>;
+  company_list?: string;
 }
 
 export interface UserListParams {

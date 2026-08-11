@@ -32,9 +32,9 @@ export interface WarehouseBlock {
   warehouse_sub_block_count?: number | string;
 }
 
-export const getWarehouseBlocks = async (page: number = 1, perPage: number = 25, search: string = '') => {
+export const getWarehouseBlocks = async (page: number = 1, perPage: number = 25, search: string = '', companyId?: string | null) => {
   const response = await apiClient.get<ApiResponse<PaginatedResponse<WarehouseBlock>>>(`/wapi/master-data/warehouse-block`, {
-    params: { page, limit: perPage, search },
+    params: { page, limit: perPage, company_id: companyId, search },
   });
   return response.data;
 };
@@ -55,7 +55,7 @@ export const createWarehouseBlock = async (data: CreateUpdateWarehouseBlockDTO) 
   formData.append('warehouse_id', String(data.warehouse_id));
   formData.append('name', data.name);
   formData.append('description', data.description);
-  
+
   const response = await apiClient.post<ApiResponse<WarehouseBlock>>(`/wapi/master-data/warehouse-block`, formData);
   return response.data;
 };
@@ -66,7 +66,7 @@ export const updateWarehouseBlock = async (id: number, data: CreateUpdateWarehou
   formData.append('name', data.name);
   formData.append('description', data.description);
   formData.append('_method', 'PUT');
-  
+
   const response = await apiClient.post<ApiResponse<WarehouseBlock>>(`/wapi/master-data/warehouse-block/${id}`, formData);
   return response.data;
 };

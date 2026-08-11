@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { getLaporanPembelian, PurchaseTransactionParams, PurchaseTransactionItem } from '@/services/laporan-pembelian.service';
 import { toast } from 'sonner';
+import { useCompany } from '@/contexts/CompanyContext';
 
 export type ReportType = 'per-nota' | 'per-type' | 'per-supplier';
 
@@ -46,6 +47,8 @@ export const useLaporanPembelian = (): UseLaporanPembelianReturn => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  const { companyId } = useCompany();
+
   // Filter states
   const [currentPage, setCurrentPage] = useState(1);
   const [currentPerPage, setCurrentPerPage] = useState(25);
@@ -65,6 +68,7 @@ export const useLaporanPembelian = (): UseLaporanPembelianReturn => {
       const params: PurchaseTransactionParams = {
         page: currentPage,
         per_page: currentPerPage,
+        company_id: companyId ? Number(companyId) : undefined,
       };
       
       // CATATAN: Backend rute ini mengalami HTTP 500 Error ketika menerima parameter start_date/person_id.
@@ -133,7 +137,7 @@ export const useLaporanPembelian = (): UseLaporanPembelianReturn => {
         setIsLoading(false);
       }
     }
-  }, [currentPage, currentPerPage, startDate, endDate, selectedSupplier, currentSearch]);
+  }, [currentPage, currentPerPage, startDate, endDate, selectedSupplier, currentSearch, companyId]);
 
   useEffect(() => {
     fetchData();

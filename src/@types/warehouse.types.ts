@@ -58,6 +58,7 @@ export interface WarehouseActivityListParams {
   page?: number;
   perPage?: number;
   search?: string;
+  company_id?: number | null;
   activityType?: 'receipt' | 'issue' | string;
 }
 

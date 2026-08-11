@@ -9,12 +9,12 @@ export function formatMoneyInput(value: string | number, currency: 'IDR' | 'USD'
   if (currency === 'USD') {
     const normalized = normalizeUsdString(String(value));
     if (!normalized) return '';
-    
+
     const parts = normalized.split('.');
     const integerPart = parts[0] ? Number(parts[0]).toLocaleString('en-US') : '';
     const formatted = parts.length > 1 ? `${integerPart}.${parts[1]}` : integerPart;
-    
-    if (!formatted && String(value).includes('.')) return '$ 0.'; 
+
+    if (!formatted && String(value).includes('.')) return '$ 0.';
     if (!formatted) return '';
     return `$ ${formatted}`;
   }

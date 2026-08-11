@@ -9,8 +9,10 @@ import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { PageHeader } from '@/components/ui/page-header';
 import Head from 'next/head';
 import { usePermissionGuard } from '@/hooks/usePermissionGuard';
+import { useCompany } from '@/contexts/CompanyContext';
 
 export default function WarehouseBlockPage() {
+  const { companyId } = useCompany();
   const router = useRouter();
   const slug = router.query.slug as string;
   const queryClient = useQueryClient();
@@ -37,8 +39,9 @@ export default function WarehouseBlockPage() {
   const [selectedBlock, setSelectedBlock] = useState<WarehouseBlock | undefined>();
 
   const { data, isLoading } = useQuery({
-    queryKey: ['warehouse-blocks', page, perPage, debouncedSearch],
-    queryFn: () => getWarehouseBlocks(page, perPage, debouncedSearch),
+    queryKey: ['warehouse-blocks', page, perPage, debouncedSearch, companyId],
+    queryFn: () => getWarehouseBlocks(page, perPage, debouncedSearch, companyId),
+    enabled: !!companyId,
   });
 
   const createMutation = useMutation({

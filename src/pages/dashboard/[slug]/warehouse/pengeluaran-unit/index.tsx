@@ -8,9 +8,11 @@ import { PageHeader } from '@/components/ui/page-header';
 import { usePengeluaranUnits } from '@/hooks/usePengeluaranUnit';
 import { usePermissionGuard } from '@/hooks/usePermissionGuard';
 import { LoadingState } from '@/components/ui/loading-state';
+import { useCompany } from '@/contexts/CompanyContext';
 
 export default function PengeluaranUnitPage() {
   const router = useRouter();
+  const { companyId } = useCompany();
   const { hasPermission } = usePermissionGuard();
   const canEdit = hasPermission('warehouse:edit');
   const canDelete = hasPermission('warehouse:delete');
@@ -19,6 +21,8 @@ export default function PengeluaranUnitPage() {
   const [perPage, setPerPage] = useState(25);
   const [searchInput, setSearchInput] = useState('');
   const [search, setSearch] = useState('');
+  const [startDate, setStartDate] = useState<string | null>(null);
+  const [endDate, setEndDate] = useState<string | null>(null);
 
   useEffect(() => {
     const timeout = window.setTimeout(() => {
@@ -36,8 +40,11 @@ export default function PengeluaranUnitPage() {
       search: search || undefined,
       sortBy: 'created_at',
       sortDirection: 'desc' as const,
+      start_date: startDate,
+      end_date: endDate,
+      company_id: companyId ? Number(companyId) : null,
     }),
-    [page, perPage, search],
+    [page, perPage, search, startDate, endDate, companyId],
   );
 
   const { data, isLoading, isError, error, refetch, isFetching } = usePengeluaranUnits(query);
@@ -72,14 +79,6 @@ export default function PengeluaranUnitPage() {
         <PageHeader
           title="Data Pengeluaran Unit"
           subtitle="Kelola dan lacak semua data pengeluaran stock unit"
-        // actions={
-        //   canCreate && (
-        //     <Button onClick={() => router.push(`/dashboard/${router.query.slug}/warehouse/pengeluaran-unit/create`)} className="w-full sm:w-auto bg-[#1e3a5f] hover:bg-[#152e4d]">
-        //       <Plus className="mr-2 h-4 w-4" />
-        //       Tambah
-        //     </Button>
-        //   )
-        // }
         />
 
         <PengeluaranUnitTable
@@ -96,9 +95,18 @@ export default function PengeluaranUnitPage() {
             setPerPage(value);
             setPage(1);
           }}
+          canEdit={canEdit}
+          canDelete={canDelete}
           onPageChange={setPage}
+          startDate={startDate}
+          endDate={endDate}
+          onDateRangeChange={(start, end) => {
+            setStartDate(start);
+            setEndDate(end);
+            setPage(1);
+          }}
           onRetry={() => {
-            void refetch();
+            refetch().catch(() => undefined);
           }}
         />
       </div>

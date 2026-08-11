@@ -4,23 +4,33 @@ import { useCompany } from '@/contexts/CompanyContext';
 import { companyQueryKeys } from '@/lib/query/company-key';
 
 const unitTransactionKeys = {
-  list: (companyId: string | number, options: { page?: number; perPage?: number; search?: string; status?: string }) =>
+  list: (companyId: string | number, options: { page?: number; perPage?: number; search?: string; status?: string; start_date?: string | null; end_date?: string | null }) =>
     companyQueryKeys.list(companyId, 'unit-transactions', {
       page: options.page,
       perPage: options.perPage,
       search: options.search,
       status: options.status,
+      start_date: options.start_date,
+      end_date: options.end_date,
     }),
   detail: (companyId: string | number, id: string) => companyQueryKeys.detail(companyId, 'unit-transactions', id),
   purchaseDetail: (companyId: string | number, id: string) => companyQueryKeys.detail(companyId, 'purchase-by-id', id),
 };
 
-export const useUnitTransactions = (options: { page?: number; perPage?: number; search?: string; status?: string } = {}) => {
+export const useUnitTransactions = (options: { page?: number; perPage?: number; search?: string; status?: string; start_date?: string | null; end_date?: string | null } = {}) => {
   const { companyId } = useCompany();
 
   return useQuery({
     queryKey: companyId ? unitTransactionKeys.list(companyId, options) : ['unit-transactions', 'unscoped', options],
-    queryFn: () => unitTransactionService.getUnitTransactions({ page: options.page, perPage: options.perPage, search: options.search, status: options.status, company_id: companyId ?? undefined }),
+    queryFn: () => unitTransactionService.getUnitTransactions({
+      page: options.page,
+      perPage: options.perPage,
+      search: options.search,
+      status: options.status,
+      start_date: options.start_date,
+      end_date: options.end_date,
+      company_id: companyId ?? undefined
+    }),
     placeholderData: (previousData) => previousData,
     refetchOnWindowFocus: true,
     refetchOnReconnect: true,

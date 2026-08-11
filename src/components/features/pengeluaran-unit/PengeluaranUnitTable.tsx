@@ -51,6 +51,11 @@ interface Props {
   onPerPageChange: (value: number) => void;
   onPageChange: (value: number) => void;
   onRetry: () => void;
+  startDate?: string | null;
+  endDate?: string | null;
+  canEdit: boolean;
+  canDelete: boolean;
+  onDateRangeChange?: (start: string | null, end: string | null) => void;
 }
 
 const formatDate = (value: string): string => {
@@ -70,6 +75,11 @@ export default function PengeluaranUnitTable({
   onSearchChange,
   onPerPageChange,
   onPageChange,
+  startDate,
+  endDate,
+  canEdit,
+  canDelete,
+  onDateRangeChange,
 }: Props) {
   const router = useRouter();
   const slugValue = Array.isArray(router.query.slug) ? router.query.slug[0] : router.query.slug;
@@ -168,13 +178,15 @@ export default function PengeluaranUnitTable({
         }
         return (
           <div className="flex items-center gap-1.5">
-            <button
-              onClick={() => handleOpenStateDialog(item.id, item.state || 'draft', item.state_note)}
-              className="p-1 rounded-md hover:bg-slate-100 text-slate-500 hover:text-slate-800 transition-colors cursor-pointer"
-              title="Ubah Status"
-            >
-              <Pencil className="h-3 w-3" />
-            </button>
+            {canEdit && (
+              <button
+                onClick={() => handleOpenStateDialog(item.id, item.state || 'draft', item.state_note)}
+                className="p-1 rounded-md hover:bg-slate-100 text-slate-500 hover:text-slate-800 transition-colors cursor-pointer"
+                title="Ubah Status"
+              >
+                <Pencil className="h-3 w-3" />
+              </button>
+            )}
             <Badge variant="outline" className={`font-semibold ${bg}`}>
               {text}
             </Badge>
@@ -221,6 +233,7 @@ export default function PengeluaranUnitTable({
               Detail
             </DropdownMenuItem>
             <DropdownMenuItem
+              disabled={!canEdit}
               onClick={() => handleOpenStateDialog(item.id, item.state || 'draft', item.state_note)}
               className="rounded-lg px-3 py-2 text-sm text-slate-900 focus:bg-slate-50 cursor-pointer"
             >
@@ -245,6 +258,10 @@ export default function PengeluaranUnitTable({
         onPerPageChange={onPerPageChange}
         meta={meta}
         onPageChange={onPageChange}
+        addDateRangePicker={true}
+        startDate={startDate}
+        endDate={endDate}
+        onDateRangeChange={onDateRangeChange}
       />
 
       {/* DIALOG UPDATE STATUS */}

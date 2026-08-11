@@ -72,6 +72,7 @@ export const financeRefundService = {
         search: params.search || undefined,
         status: params.status && params.status !== 'all' ? params.status : undefined,
         refund_type: params.transactionType || undefined,
+        company_id: params.company_id || undefined,
       },
     });
 

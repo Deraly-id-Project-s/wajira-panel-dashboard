@@ -38,14 +38,14 @@ const DeleteFinanceRefundAction = ({ item, transactionType }: { item: FinanceRef
             <Trash2 className="h-4 w-4" />
           </Button>
         </TooltipTrigger>
-        <TooltipContent 
-          side="top" 
-          align="center" 
+        <TooltipContent
+          side="top"
+          align="center"
           sideOffset={10}
           collisionPadding={10}
-          className="w-[280px] sm:w-[320px] max-w-[calc(100vw-2rem)] bg-white text-slate-800 p-3 sm:p-4 shadow-2xl border border-slate-200 z-[9999] pointer-events-auto break-words whitespace-normal" 
+          className="w-[280px] sm:w-[320px] max-w-[calc(100vw-2rem)] bg-white text-slate-800 p-3 sm:p-4 shadow-2xl border border-slate-200 z-[9999] pointer-events-auto break-words whitespace-normal"
           onPointerDownOutside={() => setIsOpen(false)}
-          onMouseLeave={() => {}}
+          onMouseLeave={() => { }}
         >
           <div className="space-y-3">
             <p className="text-sm font-medium">Konfirmasi Hapus</p>
@@ -95,6 +95,8 @@ interface FinanceRefundTableProps {
   isLoading?: boolean;
   transactionType: RefundTransactionType;
   onPageChange: (page: number) => void;
+  canEdit?: boolean;
+  canDelete?: boolean;
 }
 
 const formatDate = (value: string) => {
@@ -104,7 +106,7 @@ const formatDate = (value: string) => {
   return date.toLocaleDateString('id-ID');
 };
 
-export default function FinanceRefundTable({ data, meta, page, isLoading = false, transactionType, onPageChange }: FinanceRefundTableProps) {
+export default function FinanceRefundTable({ data, meta, page, isLoading = false, transactionType, onPageChange, canEdit, canDelete }: FinanceRefundTableProps) {
   const [selectedRefund, setSelectedRefund] = useState<FinanceRefundRecord | null>(null);
   const router = useRouter();
   const { slug } = router.query;
@@ -197,11 +199,12 @@ export default function FinanceRefundTable({ data, meta, page, isLoading = false
           <div className="flex flex-col items-center justify-center gap-2 py-1 min-w-[120px]">
             <Button
               size="sm"
+              disabled={!canEdit}
               variant={item.status === 'approve' ? 'outline' : 'default'}
               className={cn(
                 "h-8 text-xs font-semibold w-full font-sans transition-colors shadow-none whitespace-nowrap",
-                item.status === 'approve' 
-                  ? "border-emerald-200 text-emerald-700 bg-emerald-50 hover:bg-emerald-100 hover:text-emerald-800" 
+                item.status === 'approve'
+                  ? "border-emerald-200 text-emerald-700 bg-emerald-50 hover:bg-emerald-100 hover:text-emerald-800"
                   : "bg-blue-600 hover:bg-blue-700 text-white"
               )}
               onClick={(e) => {
@@ -211,12 +214,12 @@ export default function FinanceRefundTable({ data, meta, page, isLoading = false
             >
               {item.status === 'approve' ? 'Sudah disetujui' : 'Setujui'}
             </Button>
-            <DeleteFinanceRefundAction item={item} transactionType={transactionType} />
+            {canDelete && <DeleteFinanceRefundAction item={item} transactionType={transactionType} />}
           </div>
         ),
       }
     ],
-    [transactionType, slugStr],
+    [transactionType, slugStr, canDelete, canEdit],
   );
 
   return (

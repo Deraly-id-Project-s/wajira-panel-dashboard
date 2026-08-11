@@ -10,6 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useDebouncedValue } from '@/hooks/useDebouncedValue';
 import { useQueryParamsTable } from '@/hooks/useQueryParamsTable';
 import { useFinanceRefundList } from '@/hooks/useFinanceRefund';
+import { usePermissionGuard } from '@/hooks/usePermissionGuard';
 
 interface FinanceRefundPageProps {
   title: string;
@@ -24,6 +25,10 @@ export function FinanceRefundPage({ title, description, transactionType }: Finan
   });
   const status = getParam('status', 'all') as 'all' | 'waiting' | 'approve' | 'reject';
   const debouncedSearch = useDebouncedValue(search, 400);
+
+  const { hasPermission } = usePermissionGuard();
+  const canEdit = hasPermission('finance:edit');
+  const canDelete = hasPermission('finance:delete');
 
   const refundQuery = useFinanceRefundList({
     page,
@@ -94,6 +99,8 @@ export function FinanceRefundPage({ title, description, transactionType }: Finan
             data={data}
             meta={refundQuery.data?.meta}
             page={page}
+            canEdit={canEdit}
+            canDelete={canDelete}
             isLoading={refundQuery.isLoading}
             transactionType={transactionType}
             onPageChange={setPage}

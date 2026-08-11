@@ -56,6 +56,8 @@ export const getWithholdingTaxList = async (params: WithholdingTaxListParams): P
       no_invoice: params.no_invoice,
       order_by: params.order_by ?? 'created_at',
       order_dir: params.order_dir ?? 'desc',
+      start_date: params.start_date || undefined,
+      end_date: params.end_date || undefined,
     },
   });
 

@@ -348,6 +348,9 @@ export const getPengeluaranUnits = async (params: PengeluaranUnitListParams = {}
       search: params.search?.trim() || undefined,
       sort_by: params.sortBy ?? 'created_at',
       sort_direction: params.sortDirection ?? 'desc',
+      start_date: params.start_date || undefined,
+      end_date: params.end_date || undefined,
+      company_id: params.company_id || undefined,
     },
   });
 

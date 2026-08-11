@@ -108,7 +108,7 @@ const unwrapDetail = (payload: SalesApiModel | { data?: SalesApiModel }): SalesA
 export const salesService = {
   async getSalesList(
     companyId?: string | number,
-    options: { page?: number; perPage?: number; search?: string; status?: string } = {},
+    options: { page?: number; perPage?: number; search?: string; status?: string; start_date?: string | null; end_date?: string | null } = {},
   ) {
     let rows: SalesApiModel[] = [];
     let responseData: LaravelPagination<SalesApiModel> | null = null;
@@ -120,6 +120,8 @@ export const salesService = {
       per_page: options.perPage ?? 10,
       search: options.search || undefined,
       status: options.status || undefined,
+      start_date: options.start_date || undefined,
+      end_date: options.end_date || undefined,
     };
 
     try {

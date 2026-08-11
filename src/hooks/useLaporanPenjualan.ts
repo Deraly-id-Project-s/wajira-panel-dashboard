@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { getLaporanPenjualan, SalesTransactionParams, SalesTransactionItem } from '@/services/laporan-penjualan.service';
 import { toast } from 'sonner';
+import { useCompany } from '@/contexts/CompanyContext';
 
 export type ReportType = 'per-nota' | 'per-type' | 'per-customer';
 
@@ -46,6 +47,8 @@ export const useLaporanPenjualan = (): UseLaporanPenjualanReturn => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  const { companyId } = useCompany();
+
   // Filter states
   const [currentPage, setCurrentPage] = useState(1);
   const [currentPerPage, setCurrentPerPage] = useState(25);
@@ -65,6 +68,7 @@ export const useLaporanPenjualan = (): UseLaporanPenjualanReturn => {
       const params: SalesTransactionParams = {
         page: currentPage,
         per_page: currentPerPage,
+        company_id: companyId ? Number(companyId) : undefined,
       };
       
       // CATATAN: Backend rute ini mengalami HTTP 500 Error ketika menerima parameter start_date/person_id.
@@ -131,7 +135,7 @@ export const useLaporanPenjualan = (): UseLaporanPenjualanReturn => {
         setIsLoading(false);
       }
     }
-  }, [currentPage, currentPerPage, startDate, endDate, selectedCustomer, currentSearch]);
+  }, [currentPage, currentPerPage, startDate, endDate, selectedCustomer, currentSearch, companyId]);
 
   useEffect(() => {
     fetchData();

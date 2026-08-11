@@ -27,8 +27,16 @@ export default function SalesPage() {
   const [page, setPage] = useState(1);
   const [perPage, setPerPage] = useState(25);
   const [search, setSearch] = useState('');
+  const [startDate, setStartDate] = useState<string | null>(null);
+  const [endDate, setEndDate] = useState<string | null>(null);
 
-  const { data, isLoading, isFetching } = useSalesList({ page, perPage, search });
+  const { data, isLoading, isFetching } = useSalesList({
+    page,
+    perPage,
+    search,
+    start_date: startDate,
+    end_date: endDate,
+  });
   const deleteMutation = useDeleteSales();
   const [selectedId, setSelectedId] = useState<string | null>(null);
 
@@ -75,6 +83,13 @@ export default function SalesPage() {
           loading={isLoading || isFetching}
           search={search}
           onSearchChange={(val) => { setSearch(val); setPage(1); }}
+          startDate={startDate}
+          endDate={endDate}
+          onDateRangeChange={(start, end) => {
+            setStartDate(start);
+            setEndDate(end);
+            setPage(1);
+          }}
         />
 
         <DeleteSalesDialog open={!!selectedId} onClose={() => setSelectedId(null)} onConfirm={handleDelete} loading={deleteMutation.isPending} />

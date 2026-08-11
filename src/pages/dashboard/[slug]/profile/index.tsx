@@ -12,15 +12,10 @@ import {
 import { useAuthMe } from '@/features/auth/hooks/use-auth-me';
 import { AuthService } from '@/features/auth/services/auth.service';
 import { toast } from 'sonner';
-import Image from 'next/image';
 import { LoadingState } from '@/components/ui/loading-state';
+import { ParsedImage } from '@/components/ui/parsed-image';
+import { getParsedImageUrl } from '@/lib/utils/image';
 
-const getAvatarUrl = (path?: string | null) => {
-    if (!path) return null;
-    if (path.startsWith('http://') || path.startsWith('https://')) return path;
-    const base = process.env.NEXT_PUBLIC_API_URL ?? 'https://api-finance.wajiracorps.co.id';
-    return `${base.replace(/\/$/, '')}/storage/${path.replace(/^\/+/, '')}`;
-};
 
 export default function ProfilePage() {
     const { data: profileData, isLoading, refetch } = useAuthMe();
@@ -134,11 +129,9 @@ export default function ProfilePage() {
                             <div className="flex flex-col items-center">
                                 {(avatarPreview || user?.avatar) ? (
                                     <div className="mb-5 flex justify-center">
-                                        <Image
-                                            src={avatarPreview || getAvatarUrl(user?.avatar)!}
+                                        <ParsedImage
+                                            src={avatarPreview || user?.avatar}
                                             alt="Avatar"
-                                            width={100}
-                                            height={100}
                                             className="h-28 w-28 rounded-full object-cover border-4 border-slate-200 shadow-sm"
                                         />
                                     </div>

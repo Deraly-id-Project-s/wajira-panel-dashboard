@@ -34,6 +34,9 @@ export interface PurchaseSparepartTableProps {
   canCreate?: boolean;
   onSearchChange?: (value: string) => void;
   loading?: boolean;
+  startDate?: string | null;
+  endDate?: string | null;
+  onDateRangeChange?: (start: string | null, end: string | null) => void;
 }
 
 export default function PurchaseSparepartTable({
@@ -50,6 +53,9 @@ export default function PurchaseSparepartTable({
   canDelete,
   canCreate,
   onSearchChange,
+  startDate,
+  endDate,
+  onDateRangeChange,
 }: PurchaseSparepartTableProps) {
   const router = useRouter();
   const [localSearch, setLocalSearch] = useState(search || '');
@@ -333,6 +339,10 @@ export default function PurchaseSparepartTable({
         }}
         onPageChange={handlePageChange}
         headerActions={headerActions}
+        addDateRangePicker={true}
+        startDate={startDate}
+        endDate={endDate}
+        onDateRangeChange={onDateRangeChange}
       />
     </div>
   );
