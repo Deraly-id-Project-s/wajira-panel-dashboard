@@ -25,8 +25,8 @@ const statusConfig: Record<string, { label: string; className: string }> = {
   normal: { label: 'Normal', className: 'border-emerald-200 bg-emerald-50 text-emerald-700 font-semibold' },
   minor_damage: { label: 'Minor Damage', className: 'border-amber-200 bg-amber-50 text-amber-700 font-semibold' },
   major_damage: { label: 'Major Damage', className: 'border-red-200 bg-red-50 text-red-700 font-semibold' },
-  returned: { label: 'Returned', className: 'border-purple-200 bg-purple-50 text-purple-700 font-semibold' },
-  refunded: { label: 'Refunded', className: 'border-orange-200 bg-orange-50 text-orange-700 font-semibold' },
+  returned: { label: 'Retur Beli', className: 'border-purple-200 bg-purple-50 text-purple-700 font-semibold' },
+  refunded: { label: 'Refund Jual', className: 'border-orange-200 bg-orange-50 text-orange-700 font-semibold' },
   lost: { label: 'Lost', className: 'border-rose-200 bg-rose-50 text-rose-700 font-semibold' },
   in_repair: { label: 'In Repair', className: 'border-blue-200 bg-blue-50 text-blue-700 font-semibold' },
 
@@ -151,9 +151,11 @@ export default function StockUnitTable({
           className: 'border-slate-200 bg-slate-50 text-slate-700 font-semibold',
         };
 
+        const isRefund = item?.status === 'returned' || item?.status === 'refunded';
+
         return (
           <Badge variant="outline" className={cn('capitalize font-semibold', match.className)}>
-            {item?.isSoldUnit ? 'Terkirim' : match.name}
+            {stateVal === 'receipt' ? (isRefund ? 'Dikembalikan' : (item?.isSoldUnit ? 'Dikirim' : 'Diterima')) : match.label}
           </Badge>
         );
       }

@@ -204,11 +204,11 @@ export default function PengeluaranUnitDetailTable({ data, isRefundActivity, act
           let background = 'border-slate-200 bg-slate-50 text-slate-700';
           switch (item?.status) {
             case 'returned':
-              text = 'Returned';
+              text = 'Retur Beli';
               background = 'border-purple-200 bg-purple-50 text-purple-700 font-semibold';
               break;
             case 'refunded':
-              text = 'Refunded';
+              text = 'Refund Jual';
               background = 'border-orange-200 bg-orange-50 text-orange-700 font-semibold';
               break;
             case 'normal':
@@ -253,7 +253,7 @@ export default function PengeluaranUnitDetailTable({ data, isRefundActivity, act
 
           return (
             <Badge variant="outline" className={cn('capitalize font-semibold', match.className)}>
-              {item?.isSoldUnit ? (isRefundActivity ? 'Dikembalikan' : 'Diterima') : match.name}
+              {item?.state === 'receipt' ? (isRefundActivity ? 'Dikembalikan' : (item?.isSoldUnit ? 'Dikirim' : 'Diterima')) : match.label}
             </Badge>
           );
         }

@@ -208,9 +208,11 @@ export default function UnitPurchaseDetailPage() {
             className: 'border-slate-200 bg-slate-50 text-slate-700',
           };
 
+          const isRefund = details?.status === 'returned' || details?.status === 'refunded';
+
           return (
             <Badge variant="outline" className={cn('capitalize font-semibold', match.className)}>
-              {match.name ?? match.label}
+              {stateVal === 'receipt' ? (isRefund ? 'Dikembalikan' : 'Diterima') : match.label}
             </Badge>
           );
         }
