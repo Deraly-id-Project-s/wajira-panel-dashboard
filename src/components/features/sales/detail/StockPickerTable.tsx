@@ -222,10 +222,11 @@ export function StockPickerTable({
           label: stateVal.replace(/_/g, ' '),
           className: 'border-slate-200 bg-slate-50 text-slate-700',
         };
+        const isRefund = item?.status === 'returned' || item?.status === 'refunded';
 
         return (
           <Badge variant="outline" className={cn('capitalize font-semibold', match.className)}>
-            {match.name ?? match.label}
+            {stateVal === 'receipt' ? (isRefund ? 'Dikembalikan' : 'Diterima') : match.label}
           </Badge>
         );
       }

@@ -23,10 +23,11 @@ interface Props {
   data?: WarehouseActivityUnitDetail[];
   personId?: string;
   activityState?: string;
+  isRefundActivity?: boolean;
   isLoading?: boolean;
 }
 
-export default function PenerimaanUnitDetailTable({ data, activityState, isLoading = false }: Props) {
+export default function PenerimaanUnitDetailTable({ data, activityState, isRefundActivity = false, isLoading = false }: Props) {
   const router = useRouter();
   const slug = typeof router.query.slug === 'string' ? router.query.slug : '';
   const [search, setSearch] = useState('');
@@ -253,13 +254,13 @@ export default function PenerimaanUnitDetailTable({ data, activityState, isLoadi
 
           return (
             <Badge variant="outline" className={cn('capitalize font-semibold', match.className)}>
-              {item?.isSoldUnit ? 'Terkirim' : match.name}
+              {item?.state === 'receipt' ? (isRefundActivity ? 'Dikembalikan' : (item?.isSoldUnit ? 'Dikirim' : 'Diterima')) : match.label}
             </Badge>
           );
         }
       }
     ],
-    [slug]
+    [slug, isRefundActivity]
   );
 
   return (

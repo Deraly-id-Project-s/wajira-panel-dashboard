@@ -261,9 +261,11 @@ export default function StockDetailTab({ perPage, machineNumber: initialMachineN
             className: 'border-slate-200 bg-slate-50 text-slate-700 font-semibold',
           };
 
+          const isRefund = item?.status === 'returned' || item?.status === 'refunded';
+
           return (
             <Badge variant="outline" className={cn('capitalize font-semibold', match.className)}>
-              {item?.isSoldUnit ? 'Terkirim' : match.name}
+              {stateVal === 'receipt' ? (isRefund ? 'Dikembalikan' : (item?.isSoldUnit ? 'Dikirim' : 'Diterima')) : match.label}
             </Badge>
           );
         },

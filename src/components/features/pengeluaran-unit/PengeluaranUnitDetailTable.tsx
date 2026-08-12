@@ -253,7 +253,7 @@ export default function PengeluaranUnitDetailTable({ data, isRefundActivity, act
 
           return (
             <Badge variant="outline" className={cn('capitalize font-semibold', match.className)}>
-              {isRefundActivity ? 'Dikembalikan' : (item?.isSoldUnit ? 'Dikirim' : 'Diterima')}
+              {item?.state === 'receipt' ? (isRefundActivity ? 'Dikembalikan' : (item?.isSoldUnit ? 'Dikirim' : 'Diterima')) : match.label}
             </Badge>
           );
         }
