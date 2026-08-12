@@ -262,10 +262,11 @@ export default function StockDetailTab({ perPage, machineNumber: initialMachineN
           };
 
           const isRefund = item?.status === 'returned' || item?.status === 'refunded';
+          const isReceipt = (stateVal as string) === 'receipt' || (stateVal as string) === 'inbound_receipt';
 
           return (
             <Badge variant="outline" className={cn('capitalize font-semibold', match.className)}>
-              {stateVal === 'receipt' ? (isRefund ? 'Dikembalikan' : (item?.isSoldUnit ? 'Dikirim' : 'Diterima')) : match.label}
+              {isReceipt ? (isRefund ? 'Dikembalikan' : (item?.isSoldUnit ? 'Dikirim' : 'Diterima')) : match.label}
             </Badge>
           );
         },
