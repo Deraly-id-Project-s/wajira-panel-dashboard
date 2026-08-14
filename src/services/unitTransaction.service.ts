@@ -81,8 +81,10 @@ type UnitTransactionApiModel = {
     cash_id?: number | string;
     warehouse_id?: number | string;
     unit_transaction_id?: number | string;
+    sparepart_transaction_id?: number | string;
     activity_number?: string;
     activity_type?: string;
+    type?: string;
     activity_date?: string;
     description?: string;
     state?: string;
@@ -502,8 +504,10 @@ const mapUnitTransactionDetail = (item: UnitTransactionApiModel): UnitTransactio
         cash_id: item.warehouse_activity.cash_id ? toNumber(item.warehouse_activity.cash_id) : null,
         warehouse_id: toNumber(item.warehouse_activity.warehouse_id),
         unit_transaction_id: item.warehouse_activity.unit_transaction_id ? toNumber(item.warehouse_activity.unit_transaction_id) : null,
+        sparepart_transaction_id: item.warehouse_activity.sparepart_transaction_id ? toNumber(item.warehouse_activity.sparepart_transaction_id) : null,
         activity_number: item.warehouse_activity.activity_number ?? '',
         activity_type: item.warehouse_activity.activity_type ?? '',
+        type: item.warehouse_activity.type ?? 'unit-type',
         activity_date: item.warehouse_activity.activity_date ?? '',
         description: item.warehouse_activity.description ?? null,
         state: item.warehouse_activity.state ?? '',

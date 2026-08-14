@@ -33,7 +33,7 @@ function CompanySelector({ companies, companyId, setCompanyId }: { companies: Co
   return (
     <Popover open={isOpen} onOpenChange={setIsOpen}>
       <PopoverTrigger asChild>
-        <button className="flex w-full items-center justify-between rounded-md border border-gray-300 bg-white px-3 py-1.5 text-left shadow-sm hover:bg-gray-50 transition-colors">
+        <button className="flex w-full items-center justify-between rounded-md border cursor-pointer border-gray-300 bg-white px-3 py-1.5 text-left shadow-sm hover:bg-gray-50 transition-colors">
           <div className="flex flex-col overflow-hidden">
             <span className="text-[10px] uppercase font-semibold text-gray-400">Company</span>
             <span className="font-medium text-gray-900 truncate uppercase">{selectedCompany ? selectedCompany.name : 'Select Company'}</span>
@@ -48,7 +48,7 @@ function CompanySelector({ companies, companyId, setCompanyId }: { companies: Co
             <button
               key={company.id}
               onClick={() => handleSelectCompany(company)}
-              className={cn('flex w-full items-center justify-between rounded-md px-2 py-2 text-sm hover:bg-gray-100', String(company.id) === String(companyId) && 'bg-gray-100')}
+              className={cn('flex cursor-pointer w-full items-center justify-between rounded-md px-2 py-2 text-sm hover:bg-gray-100', String(company.id) === String(companyId) && 'bg-gray-100')}
             >
               <span className="uppercase">{company.name}</span>
               {String(company.id) === String(companyId) && <Check className="h-4 w-4 text-primary" />}
@@ -131,10 +131,10 @@ export function Sidebar() {
       <div className={cn("flex-1 overflow-y-auto py-6", isDesktopCollapsed ? "px-2" : "px-4")}>
         <div className="mb-4 flex items-center justify-between text-sm font-semibold text-gray-500">
           {!isDesktopCollapsed && <span className="uppercase text-xs tracking-wider">Main Menu</span>}
-          <button 
-             onClick={() => setIsDesktopCollapsed(!isDesktopCollapsed)}
-             className={cn("p-1.5 rounded-md hover:bg-gray-200 text-gray-400 hover:text-gray-600 transition-colors", isDesktopCollapsed && "mx-auto")}
-             title="Toggle Sidebar"
+          <button
+            onClick={() => setIsDesktopCollapsed(!isDesktopCollapsed)}
+            className={cn("p-1.5 rounded-md hover:bg-gray-200 text-gray-400 hover:text-gray-600 transition-colors", isDesktopCollapsed && "mx-auto")}
+            title="Toggle Sidebar"
           >
             {isDesktopCollapsed ? <PanelLeftOpen className="w-[18px] h-[18px]" /> : <PanelLeftClose className="w-[18px] h-[18px]" />}
           </button>

@@ -5,10 +5,12 @@ import { useSparepartTransaction, useUpdateSparepartTransaction } from '@/hooks/
 import { useRouter } from 'next/router';
 import { toast } from 'sonner';
 import { LoadingState } from '@/components/ui/loading-state';
+import { useCompany } from '@/contexts/CompanyContext';
 
 export default function EditSalesSparepartPage() {
   const router = useRouter();
   const { slug, id } = router.query;
+  const { companyId } = useCompany();
 
   const { data: transaction, isLoading } = useSparepartTransaction(id as string, !!id);
   const updateMutation = useUpdateSparepartTransaction();
@@ -19,7 +21,7 @@ export default function EditSalesSparepartPage() {
 
   const handleSubmit = async (data: any) => {
     try {
-      await updateMutation.mutateAsync({
+      const sparepartTransactionResponse = await updateMutation.mutateAsync({
         id: id as string,
         payload: {
           ...data,
@@ -27,7 +29,7 @@ export default function EditSalesSparepartPage() {
         }
       });
       toast.success('Penjualan Sparepart berhasil diperbarui');
-      router.push(`/dashboard/${slug}/transaksi/penjualan-sparepart`);
+      router.push(`/dashboard/${slug}/transaksi/penjualan-sparepart/${sparepartTransactionResponse?.id}`);
     } catch {
       toast.error('Gagal memperbarui Penjualan Sparepart');
     }
@@ -57,7 +59,6 @@ export default function EditSalesSparepartPage() {
           {!isLoading && transaction ? (
             <SalesSparepartForm
               defaultValues={{
-                warehouse_id: transaction.warehouse_id,
                 person_id: transaction.person_id,
                 sparepart_id: transaction.sparepart_id,
                 qty: transaction.qty,
@@ -71,6 +72,7 @@ export default function EditSalesSparepartPage() {
               }}
               onSubmit={handleSubmit}
               onCancel={handleCancel}
+              companyId={companyId}
             />
           ) : null}
         </div>

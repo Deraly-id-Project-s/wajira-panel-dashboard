@@ -76,6 +76,7 @@ export default function PenerimaanUnitFormDialog({ open, onClose }: Props) {
         activity_type: 'receipt',
         activity_date: form.tanggal,
         description: form.keterangan || `Penerimaan ${generatedAccountCode} - ${selectedSupplier?.name ?? '-'}`,
+        type: 'unit-type',
       });
 
       toast.success('Data berhasil disimpan');

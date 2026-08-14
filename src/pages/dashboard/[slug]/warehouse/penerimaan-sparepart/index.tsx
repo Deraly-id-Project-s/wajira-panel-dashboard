@@ -1,20 +1,16 @@
-'use client';
 import { LoadingState } from '@/components/ui/loading-state';
-
-import { useMemo, useState } from 'react';
+import { useState, useMemo } from 'react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
-import PenerimaanUnitTable from '@/components/features/penerimaan-unit/PenerimaanUnitTable';
-import PenerimaanUnitFormDialog from '@/components/features/penerimaan-unit/PenerimaanUnitFormDialog';
+import { PageHeader } from '@/components/ui/page-header';
+import PenerimaanSparepartTable from '@/components/features/penerimaan-sparepart/PenerimaanSparepartTable';
 import { useWarehouseActivities } from '@/hooks/useWarehouseActivity';
 import { usePermissionGuard } from '@/hooks/usePermissionGuard';
-import { PageHeader } from '@/components/ui/page-header';
 import { useCompany } from '@/contexts/CompanyContext';
 
-export default function PenerimaanUnitPage() {
+export default function PenerimaanSparepartPage() {
   const [search, setSearch] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [perPage, setPerPage] = useState(25);
-  const [openForm, setOpenForm] = useState(false);
   const [startDate, setStartDate] = useState<string | null>(null);
   const [endDate, setEndDate] = useState<string | null>(null);
 
@@ -22,7 +18,7 @@ export default function PenerimaanUnitPage() {
 
   const { data: activities, isLoading, isError, error, isFetching } = useWarehouseActivities({
     activityType: 'receipt',
-    type: 'unit-type',
+    type: 'sparepart',
     page: currentPage,
     perPage,
     search: search || undefined,
@@ -32,7 +28,6 @@ export default function PenerimaanUnitPage() {
   });
 
   const { hasPermission } = usePermissionGuard();
-  const canCreate = hasPermission('warehouse:create');
   const canEdit = hasPermission('warehouse:edit') || hasPermission('warehouse:activity');
 
   const data = activities?.data ?? [];
@@ -46,24 +41,13 @@ export default function PenerimaanUnitPage() {
   const apiErrorMessage = useMemo(() => {
     if (!isError) return '';
     const err = error as { message?: string } | null;
-    return err?.message || 'Gagal memuat data penerimaan unit';
+    return err?.message || 'Gagal memuat data penerimaan sparepart';
   }, [error, isError]);
-
-  if (isLoading) {
-    return (
-      <DashboardLayout>
-        <LoadingState variant="page" />
-      </DashboardLayout>
-    );
-  }
 
   return (
     <DashboardLayout>
       <div className="space-y-6">
-        <PageHeader
-          title="Penerimaan Unit"
-          subtitle="Kelola dan lacak semua data penerimaan stock unit"
-        />
+        <PageHeader title="Penerimaan Sparepart" subtitle="Kelola dan lacak semua data penerimaan stock sparepart" />
 
         <div className="space-y-4">
           {isLoading ? (
@@ -71,7 +55,7 @@ export default function PenerimaanUnitPage() {
           ) : isError ? (
             <div className="bg-white rounded-md border p-8 text-center text-red-500">{apiErrorMessage}</div>
           ) : (
-            <PenerimaanUnitTable
+            <PenerimaanSparepartTable
               data={data}
               meta={meta}
               isLoading={isLoading || isFetching}
@@ -85,7 +69,6 @@ export default function PenerimaanUnitPage() {
                 setPerPage(pp);
                 setCurrentPage(1);
               }}
-              canCreate={canCreate}
               canEdit={canEdit}
               onPageChange={setCurrentPage}
               startDate={startDate}
@@ -98,8 +81,6 @@ export default function PenerimaanUnitPage() {
             />
           )}
         </div>
-
-        <PenerimaanUnitFormDialog open={openForm} onClose={() => setOpenForm(false)} />
       </div>
     </DashboardLayout>
   );

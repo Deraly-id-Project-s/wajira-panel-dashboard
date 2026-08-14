@@ -14,6 +14,8 @@ export const useStockUnits = (
     is_sold_unit?: boolean | string;
     status?: string;
     specified?: string;
+    activity_type?: string;
+    unit_transaction_item_id?: number | string;
   },
 ) =>
   useQuery({

@@ -5,7 +5,7 @@ import { useRouter } from 'next/router';
 import BaseTable, { ColumnDef } from '@/components/ui/base-table';
 import { WarehouseActivity } from '@/@types/warehouse.types';
 import { PaginationMeta } from '@/@types/pagination.types';
-import { MoreVertical, Pencil } from 'lucide-react';
+import { MoreVertical, Pencil, Eye } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -14,8 +14,8 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { format } from 'date-fns';
 import { id } from 'date-fns/locale';
-import { ReferenceLink } from '@/components/ui/reference-link';
 import { CopyBox } from '@/components/ui/copy-box';
+import { ReferenceLink } from '@/components/ui/reference-link';
 import { Badge } from '@/components/ui/badge';
 import { TextTruncate } from '@/components/ui/text-truncate';
 import { Button } from '@/components/ui/button';
@@ -40,50 +40,38 @@ import { toast } from 'sonner';
 
 interface Props {
   data: WarehouseActivity[];
-  meta: PaginationMeta;
-  search: string;
-  perPage: number;
-  page: number;
-  isLoading: boolean;
-  isError: boolean;
-  errorMessage?: string;
-  onSearchChange: (value: string) => void;
-  onPerPageChange: (value: number) => void;
-  onPageChange: (value: number) => void;
-  onRetry: () => void;
+  meta?: PaginationMeta;
+  isLoading?: boolean;
+  search?: string;
+  onSearchChange?: (value: string) => void;
+  perPage?: number;
+  onPerPageChange?: (value: number) => void;
+  onPageChange?: (page: number) => void;
+  headerActions?: React.ReactNode;
   startDate?: string | null;
   endDate?: string | null;
-  canEdit: boolean;
-  canDelete: boolean;
   onDateRangeChange?: (start: string | null, end: string | null) => void;
+  canCreate?: boolean;
+  canEdit?: boolean;
 }
 
-const formatDate = (value: string): string => {
-  if (!value) return '-';
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return value;
-  return format(date, 'dd MMMM yyyy', { locale: id });
-};
-
-export default function PengeluaranUnitTable({
+export default function PenerimaanSparepartTable({
   data,
   meta,
-  search,
-  perPage,
-  page,
   isLoading,
+  search,
   onSearchChange,
+  perPage = 25,
   onPerPageChange,
   onPageChange,
+  headerActions,
   startDate,
   endDate,
   canEdit,
-  canDelete,
   onDateRangeChange,
 }: Props) {
   const router = useRouter();
-  const slugValue = Array.isArray(router.query.slug) ? router.query.slug[0] : router.query.slug;
-  const slug = slugValue ? String(slugValue) : '';
+  const slug = typeof router.query.slug === 'string' ? router.query.slug : '';
 
   const [editingActivity, setEditingActivity] = useState<{ id: string | number; state: 'draft' | 'process' | 'done'; state_note?: string } | null>(null);
   const [selectedState, setSelectedState] = useState<'draft' | 'process' | 'done'>('draft');
@@ -113,10 +101,10 @@ export default function PengeluaranUnitTable({
         state: selectedState,
         state_note: stateNote,
       });
-      toast.success('Status pengeluaran berhasil diperbarui');
+      toast.success('Status penerimaan berhasil diperbarui');
       setEditingActivity(null);
     } catch (err: any) {
-      toast.error(err?.message || 'Gagal memperbarui status pengeluaran');
+      toast.error(err?.message || 'Gagal memperbarui status penerimaan');
     }
   };
 
@@ -126,39 +114,44 @@ export default function PengeluaranUnitTable({
     setEditingActivity({ id: activityId, state: cleanState, state_note: stateNote });
   };
 
-  const resolveBasePath = (): string => {
-    if (slug) {
-      return `/dashboard/${slug}/warehouse/pengeluaran-unit`;
-    }
-    const cleanPath = router.asPath.split('?')[0];
-    if (cleanPath.includes('/warehouse/pengeluaran-unit')) {
-      return cleanPath.replace(/\/+$/, '');
-    }
-    return '/dashboard/warehouse/pengeluaran-unit';
-  };
-
-  const navigateToDetail = (id: string | number): void => {
-    const base = resolveBasePath();
-    void router.push(`${base}/${id}/detail`);
+  const formatDate = (val?: string) => {
+    if (!val) return '-';
+    const date = new Date(val);
+    if (Number.isNaN(date.getTime())) return val;
+    return format(date, 'dd MMMM yyyy', { locale: id });
   };
 
   const columns: ColumnDef<WarehouseActivity>[] = [
     {
-      header: 'NO PENGELUARAN',
+      header: 'NO PENERIMAAN',
       accessorKey: 'activity_number',
-      alignment: 'left',
       sortable: true,
-      cell: (item) => <CopyBox text={item.activity_number || '-'} />,
+      alignment: 'left',
+      cell: (item) => <CopyBox text={item?.activity_number || item?.noPenerimaan || '-'} />,
     },
     {
       header: 'TANGGAL',
       accessorKey: 'activity_date',
-      alignment: 'left',
       sortable: true,
-      cell: (item) => formatDate(item.activity_date),
+      alignment: 'left',
+      cell: (item) => formatDate(item?.activity_date || item?.tanggal),
     },
     {
-      header: 'STATUS PENGELUARAN',
+      header: 'SUPPLIER',
+      accessorKey: 'supplier',
+      sortable: true,
+      alignment: 'left',
+      cell: (item) =>
+        item?.person ? (
+          <ReferenceLink href={`/dashboard/${slug}/master/supplier?search=${item?.person?.name}`}>
+            {item.person?.name || item.supplier}
+          </ReferenceLink>
+        ) : (
+          '-'
+        ),
+    },
+    {
+      header: 'STATUS PENERIMAAN',
       accessorKey: 'state',
       sortable: true,
       alignment: 'left',
@@ -195,24 +188,11 @@ export default function PengeluaranUnitTable({
       },
     },
     {
-      header: 'CUSTOMER',
-      accessorKey: 'person.name',
-      alignment: 'left',
-      sortable: true,
-      cell: (item) => (
-        item?.person ? (
-          <ReferenceLink href={`/dashboard/${slug}/master/customer?search=${item.person?.name ?? '-'}`}>
-            {item.person?.name ?? '-'}
-          </ReferenceLink>
-        ) : '-'
-      ),
-    },
-    {
       header: 'KETERANGAN',
       accessorKey: 'description',
-      alignment: 'left',
       sortable: true,
-      cell: (item) => <TextTruncate text={item.description || '-'} maxLength={20} />,
+      alignment: 'left',
+      cell: (item) => <TextTruncate text={item.description || item.keterangan || '-'} maxLength={20} />,
     },
     {
       header: 'Aksi',
@@ -227,7 +207,11 @@ export default function PengeluaranUnitTable({
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="min-w-[150px] rounded-md border-slate-200 p-1.5 shadow-lg">
             <DropdownMenuItem
-              onClick={() => navigateToDetail(item.id)}
+              onClick={() => {
+                if (slug) {
+                  router.push(`/dashboard/${slug}/warehouse/penerimaan-sparepart/${item.id}/detail`);
+                }
+              }}
               className="rounded-lg px-3 py-2 text-sm text-slate-900 focus:bg-slate-50 cursor-pointer"
             >
               Detail
@@ -251,6 +235,7 @@ export default function PengeluaranUnitTable({
         data={data}
         columns={columns}
         loading={isLoading}
+        searchPlaceholder="Cari penerimaan..."
         search={search}
         onSearchChange={onSearchChange}
         showLimitChange
@@ -258,6 +243,7 @@ export default function PengeluaranUnitTable({
         onPerPageChange={onPerPageChange}
         meta={meta}
         onPageChange={onPageChange}
+        headerActions={headerActions}
         addDateRangePicker={true}
         startDate={startDate}
         endDate={endDate}
@@ -268,9 +254,9 @@ export default function PengeluaranUnitTable({
       <Dialog open={!!editingActivity} onOpenChange={(open) => !open && setEditingActivity(null)}>
         <DialogContent className="sm:max-w-[425px] p-6 rounded-2xl">
           <DialogHeader>
-            <DialogTitle className="text-lg font-bold text-slate-800">Ubah Status Pengeluaran</DialogTitle>
+            <DialogTitle className="text-lg font-bold text-slate-800">Ubah Status Penerimaan</DialogTitle>
             <DialogDescription className="text-xs text-slate-500">
-              Pilih status baru untuk aktivitas pengeluaran unit ini.
+              Pilih status baru untuk aktivitas penerimaan sparepart ini.
             </DialogDescription>
           </DialogHeader>
 
@@ -285,24 +271,9 @@ export default function PengeluaranUnitTable({
                   <SelectValue placeholder="Pilih status" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="draft">
-                    <div className="flex flex-col text-left py-1">
-                      <span className="font-medium text-slate-800 text-sm">Draft (Draf)</span>
-                      <span className="text-[11px] text-slate-500 font-normal">Dokumen baru dibuat dan belum diproses</span>
-                    </div>
-                  </SelectItem>
-                  <SelectItem value="process">
-                    <div className="flex flex-col text-left py-1">
-                      <span className="font-medium text-slate-800 text-sm">Process (Proses)</span>
-                      <span className="text-[11px] text-slate-500 font-normal">Sedang dalam proses pengerjaan/pengeluaran barang</span>
-                    </div>
-                  </SelectItem>
-                  <SelectItem value="done">
-                    <div className="flex flex-col text-left py-1">
-                      <span className="font-medium text-slate-800 text-sm">Done (Selesai)</span>
-                      <span className="text-[11px] text-slate-500 font-normal">Aktivitas pengeluaran unit telah selesai dilakukan</span>
-                    </div>
-                  </SelectItem>
+                  <SelectItem value="draft">Draft</SelectItem>
+                  <SelectItem value="process">Proses</SelectItem>
+                  <SelectItem value="done">Selesai</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -325,7 +296,7 @@ export default function PengeluaranUnitTable({
             <Button
               onClick={handleUpdateState}
               disabled={updateStateMutation.isPending}
-              className="bg-primary text-primary-foreground hover:bg-primary/90 rounded-lg px-5"
+              className="bg-[#1e3a5f] text-white hover:bg-[#152e4d] rounded-lg px-5"
             >
               {updateStateMutation.isPending ? 'Menyimpan...' : 'Simpan'}
             </Button>

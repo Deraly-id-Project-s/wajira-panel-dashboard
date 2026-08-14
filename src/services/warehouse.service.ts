@@ -65,6 +65,7 @@ type WarehouseActivityApiModel = {
   activity_number?: string;
   activity_date?: string;
   activity_type?: string;
+  type?: string;
   description?: string;
   warehouse?: {
     id?: string | number;
@@ -129,7 +130,9 @@ const mapActivity = (item: WarehouseActivityApiModel): WarehouseActivity => {
   return {
     id,
     activity_number: item.activity_number ?? '-',
+    activityNumber: item.activity_number ?? '-',
     activity_date: tanggal,
+    activityDate: tanggal,
     activity_type: item.activity_type,
     description: item.description,
     warehouse: item.warehouse
@@ -151,6 +154,7 @@ const mapActivity = (item: WarehouseActivityApiModel): WarehouseActivity => {
     keterangan,
     isRefundActivity,
     state_note,
+    type: item.type,
   };
 };
 
@@ -301,6 +305,10 @@ const normalizeCreateUpdatePayload = (payload: CreateWarehouseActivityPayload | 
     body.append('supplier', payload.supplier_name);
   }
 
+  if ('type' in payload && payload.type) {
+    body.append('type', payload.type);
+  }
+
   return body;
 };
 
@@ -308,10 +316,13 @@ export const getWarehouseActivities = async (params: WarehouseActivityListParams
   const response = await apiClient.get<LaravelApiResponse<unknown>>(basePath, {
     params: {
       activity_type: params.activityType ?? 'receipt',
+      type: params.type || undefined,
       page: params.page,
       per_page: params.perPage,
       search: params.search || undefined,
       company_id: params.company_id || undefined,
+      start_date: params.start_date || undefined,
+      end_date: params.end_date || undefined,
     },
   });
 
@@ -382,6 +393,7 @@ export const getWarehouseActivityById = async (id: string): Promise<WarehouseAct
   return {
     ...mapped,
     unit_transaction_details: mappedDetails,
+    sparepart_transaction: (activity as any).sparepart_transaction || null,
   };
 };
 
@@ -392,6 +404,7 @@ export const createWarehouseActivity = async (payload: CreateWarehouseActivityPa
     description: payload.description,
     person_id: payload.person_id,
     supplier_name: payload.supplier_name,
+    type: payload.type,
   });
 
   const response = await apiClient.post<LaravelApiResponse<unknown>>(basePath, body, {
@@ -436,6 +449,9 @@ export const createWarehouseData = async (payload: CreateWarehouseDataPayload): 
   form.append('warehouse_id', String(payload.warehouse_id));
   form.append('activity_type', payload.activity_type);
   form.append('activity_date', payload.activity_date);
+  if (payload.type) {
+    form.append('type', payload.type);
+  }
   if (payload.description) {
     form.append('description', payload.description);
   }
@@ -461,4 +477,43 @@ export const updateWarehouseActivityState = async (
     { state, state_note }
   );
   return ensureSuccess(response.data);
+};
+
+export interface ProcessSparepartStockPayload {
+  person_id: number | null;
+  cash_id: number | null;
+  warehouse_id: number | null;
+  type: string | null;
+  unit_transaction_id: number | null;
+  sparepart_transaction_id: number | null;
+  activity_type: string;
+  activity_date: string;
+  description: string | null;
+  state: string | null;
+}
+
+export const processSparepartStock = async (
+  activityId: string | number,
+  activityType: 'receipt' | 'issue' | string,
+  payload: ProcessSparepartStockPayload
+): Promise<void> => {
+  const endpoint = activityType === 'receipt' ? 'receipt-stock' : 'dispatch-stock';
+  const body = new URLSearchParams();
+
+  if (payload.person_id !== null && payload.person_id !== undefined) body.append('person_id', String(payload.person_id));
+  if (payload.cash_id !== null && payload.cash_id !== undefined) body.append('cash_id', String(payload.cash_id));
+  if (payload.warehouse_id !== null && payload.warehouse_id !== undefined) body.append('warehouse_id', String(payload.warehouse_id));
+  if (payload.type !== null && payload.type !== undefined) body.append('type', String(payload.type));
+  if (payload.unit_transaction_id !== null && payload.unit_transaction_id !== undefined) body.append('unit_transaction_id', String(payload.unit_transaction_id));
+  if (payload.sparepart_transaction_id !== null && payload.sparepart_transaction_id !== undefined) body.append('sparepart_transaction_id', String(payload.sparepart_transaction_id));
+  body.append('activity_type', payload.activity_type);
+  body.append('activity_date', payload.activity_date);
+  if (payload.description !== null && payload.description !== undefined) body.append('description', payload.description);
+  if (payload.state !== null && payload.state !== undefined) body.append('state', payload.state);
+
+  await apiClient.put<LaravelApiResponse<unknown>>(`${basePath}/${activityId}/${endpoint}`, body, {
+    headers: {
+      'Content-Type': 'application/x-www-form-urlencoded',
+    },
+  });
 };

@@ -4,10 +4,12 @@ import { PurchaseSparepartForm } from '@/components/features/sparepart-transacti
 import { useCreateSparepartTransaction } from '@/hooks/useSparepartTransaction';
 import { useRouter } from 'next/router';
 import { toast } from 'sonner';
+import { useCompany } from '@/contexts/CompanyContext';
 
 export default function CreatePurchaseSparepartPage() {
   const router = useRouter();
   const { slug } = router.query;
+  const { companyId } = useCompany();
   const createMutation = useCreateSparepartTransaction();
 
   const handleCancel = () => {
@@ -16,12 +18,12 @@ export default function CreatePurchaseSparepartPage() {
 
   const handleSubmit = async (data: any) => {
     try {
-      await createMutation.mutateAsync({
+      const sparepartTransactionResponse = await createMutation.mutateAsync({
         ...data,
         type: 'purchase',
       });
       toast.success('Pembelian Sparepart berhasil ditambahkan');
-      router.push(`/dashboard/${slug}/transaksi/pembelian-sparepart`);
+      router.push(`/dashboard/${slug}/transaksi/pembelian-sparepart/${sparepartTransactionResponse?.id}`);
     } catch {
       toast.error('Gagal menambahkan Pembelian Sparepart');
     }
@@ -43,6 +45,7 @@ export default function CreatePurchaseSparepartPage() {
           <PurchaseSparepartForm
             onSubmit={handleSubmit}
             onCancel={handleCancel}
+            companyId={companyId}
           />
         </div>
       </div>

@@ -7,38 +7,37 @@ import { Button } from '@/components/ui/button';
 import { Save } from 'lucide-react';
 import { purchaseSparepartSchema, PurchaseSparepartFormData } from './purchase-sparepart.schema';
 import { Textarea } from '@/components/ui/textarea';
-import { useWarehouseOptions } from '@/hooks/usePengeluaranUnit';
 import { useSuppliers } from '@/hooks/useSupplier';
 import { useSpareparts } from '@/hooks/useSparepart';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { useCompany } from '@/contexts/CompanyContext';
 import { useEffect, useState } from 'react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
 import { cn } from '@/lib/utils';
 import { ChevronsUpDown, Check } from 'lucide-react';
+import { useCompany } from '@/contexts/CompanyContext';
 
 interface Props {
   defaultValues?: Partial<PurchaseSparepartFormData>;
   onSubmit: (data: PurchaseSparepartFormData) => void;
   onCancel: () => void;
   readOnly?: boolean;
+  companyId?: string | null;
 }
 
-export function PurchaseSparepartForm({ defaultValues, onSubmit, onCancel, readOnly }: Props) {
-  const { companyId } = useCompany();
-  const { data: warehouses } = useWarehouseOptions();
+export function PurchaseSparepartForm({ defaultValues, onSubmit, onCancel, readOnly, companyId: propCompanyId }: Props) {
+  const { companyId: contextCompanyId } = useCompany();
+  const companyId = propCompanyId || contextCompanyId;
   const { data: suppliers } = useSuppliers({ company_id: companyId ?? undefined, sort_order: 'asc' });
   const { data: spareparts } = useSpareparts(companyId ?? undefined);
 
-  const [openWarehouse, setOpenWarehouse] = useState(false);
   const [openSupplier, setOpenSupplier] = useState(false);
   const [openSparepart, setOpenSparepart] = useState(false);
 
   const form = useForm<PurchaseSparepartFormData>({
     resolver: zodResolver(purchaseSparepartSchema) as any,
     defaultValues: {
-      warehouse_id: defaultValues?.warehouse_id || 0,
+      company_id: String(companyId || defaultValues?.company_id || ''),
       person_id: defaultValues?.person_id || 0,
       sparepart_id: defaultValues?.sparepart_id || 0,
       qty: defaultValues?.qty || 1,
@@ -51,11 +50,11 @@ export function PurchaseSparepartForm({ defaultValues, onSubmit, onCancel, readO
       note: defaultValues?.note || '',
     },
   });
-  
+
   useEffect(() => {
     if (defaultValues) {
       form.reset({
-        warehouse_id: defaultValues.warehouse_id || 0,
+        company_id: String(companyId || defaultValues.company_id || ''),
         person_id: defaultValues.person_id || 0,
         sparepart_id: defaultValues.sparepart_id || 0,
         qty: defaultValues.qty || 1,
@@ -68,7 +67,7 @@ export function PurchaseSparepartForm({ defaultValues, onSubmit, onCancel, readO
         note: defaultValues.note || '',
       });
     }
-  }, [defaultValues, form]);
+  }, [defaultValues, form, companyId]);
 
   const qty = form.watch('qty') || 0;
   const price = form.watch('price') || 0;
@@ -102,57 +101,8 @@ export function PurchaseSparepartForm({ defaultValues, onSubmit, onCancel, readO
             </FormItem>
           )} />
 
-          <FormField control={form.control} name="warehouse_id" render={({ field }) => (
-             <FormItem>
-              <FormLabel>Gudang</FormLabel>
-              <Popover open={openWarehouse} onOpenChange={setOpenWarehouse}>
-                <FormControl>
-                  <PopoverTrigger asChild>
-                    <button
-                      type="button"
-                      role="combobox"
-                      aria-controls="warehouse-popover"
-                      aria-expanded={openWarehouse}
-                      disabled={readOnly}
-                      className={cn("flex h-10 w-full items-center justify-between rounded-md border border-slate-300 bg-background px-3 py-2 text-sm ring-offset-background disabled:cursor-not-allowed disabled:opacity-50", !field.value && "text-muted-foreground")}
-                    >
-                      <span className="truncate">
-                        {field.value ? warehouses?.find((w: any) => String(w.id) === String(field.value))?.name : "Pilih Gudang"}
-                      </span>
-                      <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                    </button>
-                  </PopoverTrigger>
-                </FormControl>
-                <PopoverContent className="w-[--radix-popover-trigger-width] p-0" align="start">
-                  <Command>
-                    <CommandInput placeholder="Cari Gudang..." />
-                    <CommandList>
-                      <CommandEmpty>Gudang tidak ditemukan.</CommandEmpty>
-                      <CommandGroup>
-                        {warehouses?.map((w: any) => (
-                          <CommandItem
-                            key={w.id}
-                            value={`${w.name} ${w.id}`}
-                            onSelect={() => {
-                              form.setValue("warehouse_id", Number(w.id));
-                              setOpenWarehouse(false);
-                            }}
-                          >
-                            <Check className={cn("mr-2 h-4 w-4", String(field.value) === String(w.id) ? "opacity-100" : "opacity-0")} />
-                            {w.name}
-                          </CommandItem>
-                        ))}
-                      </CommandGroup>
-                    </CommandList>
-                  </Command>
-                </PopoverContent>
-              </Popover>
-              <FormMessage />
-            </FormItem>
-          )} />
-
           <FormField control={form.control} name="person_id" render={({ field }) => (
-             <FormItem>
+            <FormItem>
               <FormLabel>Supplier</FormLabel>
               <Popover open={openSupplier} onOpenChange={setOpenSupplier}>
                 <FormControl>
@@ -202,9 +152,9 @@ export function PurchaseSparepartForm({ defaultValues, onSubmit, onCancel, readO
           )} />
 
           <FormField control={form.control} name="sparepart_id" render={({ field }) => (
-             <FormItem>
+            <FormItem>
               <FormLabel>Sparepart</FormLabel>
-               <Popover open={openSparepart} onOpenChange={setOpenSparepart}>
+              <Popover open={openSparepart} onOpenChange={setOpenSparepart}>
                 <FormControl>
                   <PopoverTrigger asChild>
                     <button
@@ -217,9 +167,9 @@ export function PurchaseSparepartForm({ defaultValues, onSubmit, onCancel, readO
                     >
                       <span className="truncate">
                         {field.value ? (() => {
-                           const sp = spareparts?.data?.find((s: any) => String(s.id) === String(field.value));
-                           return sp ? `${sp.name} (${sp.code})` : "Pilih Sparepart";
-                         })() : "Pilih Sparepart"}
+                          const sp = spareparts?.data?.find((s: any) => String(s.id) === String(field.value));
+                          return sp ? `${sp.name} (${sp.code})` : "Pilih Sparepart";
+                        })() : "Pilih Sparepart"}
                       </span>
                       <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                     </button>
@@ -254,8 +204,8 @@ export function PurchaseSparepartForm({ defaultValues, onSubmit, onCancel, readO
             </FormItem>
           )} />
 
-           <FormField control={form.control} name="billing_type" render={({ field }) => (
-             <FormItem>
+          <FormField control={form.control} name="billing_type" render={({ field }) => (
+            <FormItem>
               <FormLabel>Tipe Pembayaran</FormLabel>
               <Select onValueChange={field.onChange} value={field.value || 'cash'} disabled={readOnly}>
                 <FormControl>
@@ -269,9 +219,7 @@ export function PurchaseSparepartForm({ defaultValues, onSubmit, onCancel, readO
               <FormMessage />
             </FormItem>
           )} />
-        </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <FormField control={form.control} name="qty" render={({ field }) => (
             <FormItem>
               <FormLabel>QTY (Jumlah Barang)</FormLabel>
@@ -279,14 +227,16 @@ export function PurchaseSparepartForm({ defaultValues, onSubmit, onCancel, readO
               <FormMessage />
             </FormItem>
           )} />
+        </div>
 
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <FormField control={form.control} name="price" render={({ field }) => (
             <FormItem>
               <FormLabel>Harga Satuan</FormLabel>
               <FormControl>
-                <MoneyInput 
+                <MoneyInput
                   name={field.name}
-                  value={field.value} 
+                  value={field.value}
                   onChangeValue={field.onChange}
                   disabled={readOnly}
                 />
@@ -308,13 +258,13 @@ export function PurchaseSparepartForm({ defaultValues, onSubmit, onCancel, readO
           <FormItem>
             <FormLabel>Total Bruto</FormLabel>
             <FormControl>
-               <MoneyInput disabled value={bruto} onChangeValue={() => {}} />
+              <MoneyInput disabled value={bruto} onChangeValue={() => { }} />
             </FormControl>
           </FormItem>
           <FormItem>
             <FormLabel>Total Netto</FormLabel>
             <FormControl>
-               <MoneyInput disabled value={netto} onChangeValue={() => {}} />
+              <MoneyInput disabled value={netto} onChangeValue={() => { }} />
             </FormControl>
           </FormItem>
         </div>
@@ -328,12 +278,12 @@ export function PurchaseSparepartForm({ defaultValues, onSubmit, onCancel, readO
         )} />
 
         <div className="flex justify-center items-center gap-4 pt-10">
-           <Button type="button" variant="outline" onClick={onCancel} disabled={form.formState.isSubmitting} className="min-w-[120px] h-10 border-slate-300">Batal</Button>
-           {!readOnly && (
-             <Button type="submit" disabled={form.formState.isSubmitting} className="min-w-[120px] h-10 bg-[#1e293b] hover:bg-[#0f172a] text-white">
-               {form.formState.isSubmitting ? 'Menyimpan...' : <><Save className="w-4 h-4 mr-2" /> Simpan</>}
-             </Button>
-           )}
+          <Button type="button" variant="outline" onClick={onCancel} disabled={form.formState.isSubmitting} className="min-w-[120px] h-10 border-slate-300">Batal</Button>
+          {!readOnly && (
+            <Button type="submit" disabled={form.formState.isSubmitting} className="min-w-[120px] h-10 bg-[#1e293b] hover:bg-[#0f172a] text-white">
+              {form.formState.isSubmitting ? 'Menyimpan...' : <><Save className="w-4 h-4 mr-2" /> Simpan</>}
+            </Button>
+          )}
         </div>
       </form>
     </Form>
