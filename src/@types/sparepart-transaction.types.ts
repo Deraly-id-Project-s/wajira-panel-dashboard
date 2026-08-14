@@ -71,7 +71,8 @@ export interface SparepartTransactionResponse {
 }
 
 export interface CreateSparepartTransactionPayload {
-  warehouse_id: number;
+  warehouse_id?: number;
+  company_id: number;
   person_id: number;
   sparepart_id: number;
   type: string;
@@ -87,7 +88,8 @@ export interface CreateSparepartTransactionPayload {
 }
 
 export interface UpdateSparepartTransactionPayload {
-  warehouse_id: number;
+  warehouse_id?: number;
+  company_id?: number;
   person_id: number;
   sparepart_id: number;
   type: string;

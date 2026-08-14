@@ -64,7 +64,12 @@ export const sparepartTransactionService = {
 
   async createSparepartTransaction(payload: CreateSparepartTransactionPayload): Promise<SparepartTransaction> {
     const form = new FormData();
-    form.append('warehouse_id', String(payload.warehouse_id));
+    if (payload.warehouse_id !== undefined && payload.warehouse_id !== null) {
+      form.append('warehouse_id', String(payload.warehouse_id));
+    }
+    if (payload.company_id !== undefined && payload.company_id !== null) {
+      form.append('company_id', String(payload.company_id));
+    }
     form.append('person_id', String(payload.person_id));
     form.append('sparepart_id', String(payload.sparepart_id));
     form.append('type', payload.type);
@@ -90,7 +95,12 @@ export const sparepartTransactionService = {
   async updateSparepartTransaction(id: string, payload: UpdateSparepartTransactionPayload): Promise<SparepartTransaction> {
     const form = new FormData();
     form.append('_method', 'PUT');
-    form.append('warehouse_id', String(payload.warehouse_id));
+    if (payload.warehouse_id !== undefined && payload.warehouse_id !== null) {
+      form.append('warehouse_id', String(payload.warehouse_id));
+    }
+    if (payload.company_id !== undefined && payload.company_id !== null) {
+      form.append('company_id', String(payload.company_id));
+    }
     form.append('person_id', String(payload.person_id));
     form.append('sparepart_id', String(payload.sparepart_id));
     form.append('type', payload.type);

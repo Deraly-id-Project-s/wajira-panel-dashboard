@@ -1,7 +1,7 @@
 import { z } from 'zod';
 
 export const purchaseSparepartSchema = z.object({
-  warehouse_id: z.string().or(z.number()).transform(val => Number(val)).refine(val => val > 0, "Gudang wajib diisi"),
+  company_id: z.string().or(z.number()).transform(val => String(val)),
   person_id: z.string().or(z.number()).transform(val => Number(val)).refine(val => val > 0, "Supplier wajib diisi"),
   sparepart_id: z.string().or(z.number()).transform(val => Number(val)).refine(val => val > 0, "Sparepart wajib diisi"),
   qty: z.coerce.number().min(1, "Minimal kuantitas adalah 1"),

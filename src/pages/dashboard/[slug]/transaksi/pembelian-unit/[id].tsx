@@ -15,7 +15,7 @@ import { usePurchaseUnitItems } from '@/hooks/useUnitTransactionItem';
 import { useTypeUnits } from '@/hooks/useTypeUnit';
 import { unitItemDetailService } from '@/services/unitItemDetail.service';
 import { warehouseActivityService } from '@/services/warehouseActivity.service';
-import { CreditCard, AlertTriangle, CheckCircle2, Info } from 'lucide-react';
+import { CreditCard, AlertTriangle, CheckCircle2, Info, Edit } from 'lucide-react';
 import { toast } from 'sonner';
 import { usePermissionGuard } from '@/hooks/usePermissionGuard';
 import { TextTruncate } from '@/components/ui/text-truncate';
@@ -363,6 +363,13 @@ export default function PurchaseDetailPage() {
                 onClick={() => setIsReceiveDialogOpen(true)}
               >
                 {receiveButtonText}
+              </Button>
+              <Button
+                variant="outline"
+                disabled={!canEdit}
+                onClick={() => router.push(`/dashboard/${slug}/transaksi/pembelian-unit/edit/${purchase?.id}`)}>
+                <Edit className="mr-2 h-4 w-4" />
+                Edit Data
               </Button>
             </>
           }
