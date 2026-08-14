@@ -20,64 +20,27 @@ export default function PenerimaanUnitPage() {
 
   const { companyId } = useCompany();
 
-  const { data: activities, isLoading, isError, error } = useWarehouseActivities({
+  const { data: activities, isLoading, isError, error, isFetching } = useWarehouseActivities({
     activityType: 'receipt',
+    type: 'unit-type',
+    page: currentPage,
+    perPage,
+    search: search || undefined,
+    start_date: startDate,
+    end_date: endDate,
     company_id: companyId ? Number(companyId) : null,
-    perPage: 25,
   });
 
   const { hasPermission } = usePermissionGuard();
   const canCreate = hasPermission('warehouse:create');
   const canEdit = hasPermission('warehouse:edit') || hasPermission('warehouse:activity');
 
-  const allData = useMemo(() => activities?.data ?? [], [activities?.data]);
-
-  const filteredData = useMemo(() => {
-    let result = allData;
-    if (startDate) {
-      const start = new Date(startDate);
-      // Set to midnight
-      start.setHours(0, 0, 0, 0);
-      result = result.filter(item => {
-        if (!item.tanggal) return false;
-        const itemDate = new Date(item.tanggal);
-        return itemDate >= start;
-      });
-    }
-    if (endDate) {
-      const end = new Date(endDate);
-      end.setHours(23, 59, 59, 999);
-      result = result.filter(item => {
-        if (!item.tanggal) return false;
-        const itemDate = new Date(item.tanggal);
-        return itemDate <= end;
-      });
-    }
-    if (search) {
-      const lowerSearch = search.toLowerCase();
-      result = result.filter((item) => {
-        const matchNo = item.noPenerimaan?.toLowerCase().includes(lowerSearch);
-        const matchSupplier = item.supplier?.toLowerCase().includes(lowerSearch);
-        const matchKet = item.keterangan?.toLowerCase().includes(lowerSearch);
-        const matchDate = item.tanggal?.toLowerCase().includes(lowerSearch);
-        return matchNo || matchSupplier || matchKet || matchDate;
-      });
-    }
-    return result;
-  }, [allData, search, startDate, endDate]);
-
-  const totalItems = filteredData.length;
-  const totalPages = Math.max(1, Math.ceil(totalItems / perPage));
-  const safeCurrentPage = Math.min(currentPage, totalPages);
-  const startIndex = totalItems === 0 ? 0 : (safeCurrentPage - 1) * perPage;
-  const endIndex = Math.min(startIndex + perPage, totalItems);
-  const data = filteredData.slice(startIndex, endIndex);
-
-  const meta = {
-    currentPage: safeCurrentPage,
+  const data = activities?.data ?? [];
+  const meta = activities?.meta ?? {
+    currentPage,
     perPage,
-    lastPage: totalPages,
-    total: totalItems,
+    lastPage: 1,
+    total: 0,
   };
 
   const apiErrorMessage = useMemo(() => {
@@ -111,7 +74,7 @@ export default function PenerimaanUnitPage() {
             <PenerimaanUnitTable
               data={data}
               meta={meta}
-              isLoading={isLoading}
+              isLoading={isLoading || isFetching}
               search={search}
               onSearchChange={(v) => {
                 setSearch(v);
@@ -132,14 +95,6 @@ export default function PenerimaanUnitPage() {
                 setEndDate(end);
                 setCurrentPage(1);
               }}
-            // headerActions={
-            //   canCreate && (
-            //     <Button onClick={() => setOpenForm(true)} className="w-full sm:w-auto bg-[#1e3a5f] hover:bg-[#152e4d]">
-            //       <Plus className="h-4 w-4 mr-2" />
-            //       Tambah Data Penerimaan Unit
-            //     </Button>
-            //   )
-            // }
             />
           )}
         </div>

@@ -64,6 +64,8 @@ export const getStockUnits = async (
     is_forecast?: boolean | string;
     is_sold_unit?: boolean | string;
     specified?: string;
+    activity_type?: string;
+    unit_transaction_item_id?: number | string;
   },
 ) => {
   const queryParams: Record<string, unknown> = {
@@ -76,6 +78,8 @@ export const getStockUnits = async (
     chassis_number: params.chassis_number,
     color: params.color,
     specified: params.specified,
+    activity_type: params.activity_type,
+    unit_transaction_item_id: params.unit_transaction_item_id,
   };
 
   if (params.in_stock !== undefined) {

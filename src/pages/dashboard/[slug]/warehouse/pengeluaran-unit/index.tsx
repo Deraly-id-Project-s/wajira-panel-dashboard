@@ -5,7 +5,7 @@ import { useRouter } from 'next/router';
 import PengeluaranUnitTable from '@/components/features/pengeluaran-unit/PengeluaranUnitTable';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { PageHeader } from '@/components/ui/page-header';
-import { usePengeluaranUnits } from '@/hooks/usePengeluaranUnit';
+import { useWarehouseActivities } from '@/hooks/useWarehouseActivity';
 import { usePermissionGuard } from '@/hooks/usePermissionGuard';
 import { LoadingState } from '@/components/ui/loading-state';
 import { useCompany } from '@/contexts/CompanyContext';
@@ -33,21 +33,16 @@ export default function PengeluaranUnitPage() {
     return () => window.clearTimeout(timeout);
   }, [searchInput]);
 
-  const query = useMemo(
-    () => ({
-      page,
-      perPage,
-      search: search || undefined,
-      sortBy: 'created_at',
-      sortDirection: 'desc' as const,
-      start_date: startDate,
-      end_date: endDate,
-      company_id: companyId ? Number(companyId) : null,
-    }),
-    [page, perPage, search, startDate, endDate, companyId],
-  );
-
-  const { data, isLoading, isError, error, refetch, isFetching } = usePengeluaranUnits(query);
+  const { data, isLoading, isError, error, refetch, isFetching } = useWarehouseActivities({
+    activityType: 'issue',
+    type: 'unit-type',
+    page,
+    perPage,
+    search: search || undefined,
+    start_date: startDate,
+    end_date: endDate,
+    company_id: companyId ? Number(companyId) : null,
+  });
 
   const meta = data?.meta ?? {
     currentPage: page,
