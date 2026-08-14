@@ -50,7 +50,7 @@ export function SalesSparepartForm({ defaultValues, onSubmit, onCancel, readOnly
       note: defaultValues?.note || '',
     },
   });
-  
+
   useEffect(() => {
     if (defaultValues) {
       form.reset({
@@ -101,10 +101,8 @@ export function SalesSparepartForm({ defaultValues, onSubmit, onCancel, readOnly
             </FormItem>
           )} />
 
-
-
           <FormField control={form.control} name="person_id" render={({ field }) => (
-             <FormItem>
+            <FormItem>
               <FormLabel>Customer</FormLabel>
               <Popover open={openCustomer} onOpenChange={setOpenCustomer}>
                 <FormControl>
@@ -154,9 +152,9 @@ export function SalesSparepartForm({ defaultValues, onSubmit, onCancel, readOnly
           )} />
 
           <FormField control={form.control} name="sparepart_id" render={({ field }) => (
-             <FormItem>
+            <FormItem>
               <FormLabel>Sparepart</FormLabel>
-               <Popover open={openSparepart} onOpenChange={setOpenSparepart}>
+              <Popover open={openSparepart} onOpenChange={setOpenSparepart}>
                 <FormControl>
                   <PopoverTrigger asChild>
                     <button
@@ -169,9 +167,9 @@ export function SalesSparepartForm({ defaultValues, onSubmit, onCancel, readOnly
                     >
                       <span className="truncate">
                         {field.value ? (() => {
-                           const sp = spareparts?.data?.find((s: any) => String(s.id) === String(field.value));
-                           return sp ? `${sp.name} (${sp.code})` : "Pilih Sparepart";
-                         })() : "Pilih Sparepart"}
+                          const sp = spareparts?.data?.find((s: any) => String(s.id) === String(field.value));
+                          return sp ? `${sp.name} (${sp.code})` : "Pilih Sparepart";
+                        })() : "Pilih Sparepart"}
                       </span>
                       <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                     </button>
@@ -206,8 +204,8 @@ export function SalesSparepartForm({ defaultValues, onSubmit, onCancel, readOnly
             </FormItem>
           )} />
 
-           <FormField control={form.control} name="billing_type" render={({ field }) => (
-             <FormItem>
+          <FormField control={form.control} name="billing_type" render={({ field }) => (
+            <FormItem>
               <FormLabel>Tipe Pembayaran</FormLabel>
               <Select onValueChange={field.onChange} value={field.value || 'cash'} disabled={readOnly}>
                 <FormControl>
@@ -221,24 +219,24 @@ export function SalesSparepartForm({ defaultValues, onSubmit, onCancel, readOnly
               <FormMessage />
             </FormItem>
           )} />
-        </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <FormField control={form.control} name="qty" render={({ field }) => (
             <FormItem>
               <FormLabel>QTY (Jumlah Barang)</FormLabel>
-              <FormControl><Input type="number" {...field} disabled={readOnly} /></FormControl>
+              <FormControl><Input type="number" placeholder='1' {...field} disabled={readOnly} /></FormControl>
               <FormMessage />
             </FormItem>
           )} />
+        </div>
 
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <FormField control={form.control} name="price" render={({ field }) => (
             <FormItem>
               <FormLabel>Harga Satuan</FormLabel>
               <FormControl>
-                <MoneyInput 
+                <MoneyInput
                   name={field.name}
-                  value={field.value} 
+                  value={field.value}
                   onChangeValue={field.onChange}
                   disabled={readOnly}
                 />
@@ -260,13 +258,13 @@ export function SalesSparepartForm({ defaultValues, onSubmit, onCancel, readOnly
           <FormItem>
             <FormLabel>Total Bruto</FormLabel>
             <FormControl>
-               <MoneyInput disabled value={bruto} onChangeValue={() => {}} />
+              <MoneyInput disabled value={bruto} onChangeValue={() => { }} />
             </FormControl>
           </FormItem>
           <FormItem>
             <FormLabel>Total Netto</FormLabel>
             <FormControl>
-               <MoneyInput disabled value={netto} onChangeValue={() => {}} />
+              <MoneyInput disabled value={netto} onChangeValue={() => { }} />
             </FormControl>
           </FormItem>
         </div>
@@ -280,12 +278,12 @@ export function SalesSparepartForm({ defaultValues, onSubmit, onCancel, readOnly
         )} />
 
         <div className="flex justify-center items-center gap-4 pt-10">
-           <Button type="button" variant="outline" onClick={onCancel} disabled={form.formState.isSubmitting} className="min-w-[120px] h-10 border-slate-300">Batal</Button>
-           {!readOnly && (
-             <Button type="submit" disabled={form.formState.isSubmitting} className="min-w-[120px] h-10 bg-[#1e293b] hover:bg-[#0f172a] text-white">
-               {form.formState.isSubmitting ? 'Menyimpan...' : <><Save className="w-4 h-4 mr-2" /> Simpan</>}
-             </Button>
-           )}
+          <Button type="button" variant="outline" onClick={onCancel} disabled={form.formState.isSubmitting} className="min-w-[120px] h-10 border-slate-300">Batal</Button>
+          {!readOnly && (
+            <Button type="submit" disabled={form.formState.isSubmitting} className="min-w-[120px] h-10 bg-[#1e293b] hover:bg-[#0f172a] text-white">
+              {form.formState.isSubmitting ? 'Menyimpan...' : <><Save className="w-4 h-4 mr-2" /> Simpan</>}
+            </Button>
+          )}
         </div>
       </form>
     </Form>

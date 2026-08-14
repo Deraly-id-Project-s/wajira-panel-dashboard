@@ -477,3 +477,42 @@ export const updateWarehouseActivityState = async (
   );
   return ensureSuccess(response.data);
 };
+
+export interface ProcessSparepartStockPayload {
+  person_id: number | null;
+  cash_id: number | null;
+  warehouse_id: number | null;
+  type: string | null;
+  unit_transaction_id: number | null;
+  sparepart_transaction_id: number | null;
+  activity_type: string;
+  activity_date: string;
+  description: string | null;
+  state: string | null;
+}
+
+export const processSparepartStock = async (
+  activityId: string | number,
+  activityType: 'receipt' | 'issue' | string,
+  payload: ProcessSparepartStockPayload
+): Promise<void> => {
+  const endpoint = activityType === 'receipt' ? 'receipt-stock' : 'dispatch-stock';
+  const body = new URLSearchParams();
+
+  if (payload.person_id !== null && payload.person_id !== undefined) body.append('person_id', String(payload.person_id));
+  if (payload.cash_id !== null && payload.cash_id !== undefined) body.append('cash_id', String(payload.cash_id));
+  if (payload.warehouse_id !== null && payload.warehouse_id !== undefined) body.append('warehouse_id', String(payload.warehouse_id));
+  if (payload.type !== null && payload.type !== undefined) body.append('type', String(payload.type));
+  if (payload.unit_transaction_id !== null && payload.unit_transaction_id !== undefined) body.append('unit_transaction_id', String(payload.unit_transaction_id));
+  if (payload.sparepart_transaction_id !== null && payload.sparepart_transaction_id !== undefined) body.append('sparepart_transaction_id', String(payload.sparepart_transaction_id));
+  body.append('activity_type', payload.activity_type);
+  body.append('activity_date', payload.activity_date);
+  if (payload.description !== null && payload.description !== undefined) body.append('description', payload.description);
+  if (payload.state !== null && payload.state !== undefined) body.append('state', payload.state);
+
+  await apiClient.put<LaravelApiResponse<unknown>>(`${basePath}/${activityId}/${endpoint}`, body, {
+    headers: {
+      'Content-Type': 'application/x-www-form-urlencoded',
+    },
+  });
+};

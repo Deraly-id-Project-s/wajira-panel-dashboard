@@ -3,7 +3,7 @@ import { useRouter } from 'next/router';
 import { toast } from 'sonner';
 import { ChevronRight, ArrowLeft, FileText, Package, Pencil } from 'lucide-react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
-import { useWarehouseActivityDetail, useWarehouseActivityStateUpdate } from '@/hooks/useWarehouseActivity';
+import { useWarehouseActivityDetail, useWarehouseActivityStateUpdate, useProcessSparepartStock } from '@/hooks/useWarehouseActivity';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { CopyBox } from '@/components/ui/copy-box';
@@ -48,8 +48,10 @@ export default function PengeluaranSparepartDetailPage() {
   const [isUpdateStateDialogOpen, setIsUpdateStateDialogOpen] = useState(false);
   const [selectedState, setSelectedState] = useState<'draft' | 'process' | 'done'>('draft');
   const [stateNote, setStateNote] = useState('');
+  const [isProcessing, setIsProcessing] = useState(false);
 
   const updateStateMutation = useWarehouseActivityStateUpdate();
+  const processStockMutation = useProcessSparepartStock();
 
   useEffect(() => {
     if (detailData?.state) {
@@ -77,6 +79,34 @@ export default function PengeluaranSparepartDetailPage() {
       setIsUpdateStateDialogOpen(false);
     } catch (err: any) {
       toast.error(err?.message || 'Gagal memperbarui status pengeluaran');
+    }
+  };
+
+  const handleProcessStock = async () => {
+    if (!id || !detailData) return;
+    setIsProcessing(true);
+    try {
+      await processStockMutation.mutateAsync({
+        activityId: id,
+        activityType: 'issue',
+        payload: {
+          person_id: detailData.person_id ? Number(detailData.person_id) : null,
+          cash_id: detailData.cash_id ? Number(detailData.cash_id) : null,
+          warehouse_id: detailData.warehouse_id ? Number(detailData.warehouse_id) : null,
+          type: detailData.type || null,
+          unit_transaction_id: detailData.unit_transaction_id ? Number(detailData.unit_transaction_id) : null,
+          sparepart_transaction_id: detailData.sparepart_transaction_id ? Number(detailData.sparepart_transaction_id) : null,
+          activity_type: 'issue',
+          activity_date: detailData.activity_date || new Date().toISOString(),
+          description: detailData.description || null,
+          state: 'done',
+        },
+      });
+      toast.success('Stok sparepart berhasil diproses');
+    } catch (err: any) {
+      toast.error(err?.message || 'Gagal memproses stok sparepart');
+    } finally {
+      setIsProcessing(false);
     }
   };
 
@@ -128,6 +158,16 @@ export default function PengeluaranSparepartDetailPage() {
               </div>
             </div>
           </div>
+
+          {detailData?.state !== 'done' && (
+            <Button
+              onClick={handleProcessStock}
+              disabled={isProcessing}
+              className="bg-emerald-600 hover:bg-emerald-700 text-white font-medium px-5 h-10 rounded-lg shadow-sm flex items-center gap-2 cursor-pointer"
+            >
+              {isProcessing ? 'Memproses...' : 'Proses Pengeluaran'}
+            </Button>
+          )}
         </div>
 
         <div className="grid grid-cols-1 gap-6 md:grid-cols-2">

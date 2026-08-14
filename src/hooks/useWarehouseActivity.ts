@@ -15,6 +15,8 @@ import {
   updateWarehouseActivity,
   deleteWarehouseActivity,
   updateWarehouseActivityState,
+  processSparepartStock,
+  ProcessSparepartStockPayload,
 } from '@/services/warehouse.service';
 
 const warehouseActivitiesKey = 'warehouse-activities';
@@ -111,6 +113,26 @@ export const useWarehouseActivityStateUpdate = () => {
       queryClient.invalidateQueries({ queryKey: ['sales-by-id'] });
       queryClient.invalidateQueries({ queryKey: ['purchase-by-id'] });
       queryClient.invalidateQueries({ queryKey: ['pengeluaran-unit'] });
+    },
+  });
+};
+
+export const useProcessSparepartStock = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({
+      activityId,
+      activityType,
+      payload,
+    }: {
+      activityId: string | number;
+      activityType: 'receipt' | 'issue' | string;
+      payload: ProcessSparepartStockPayload;
+    }) => processSparepartStock(activityId, activityType, payload),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: [warehouseActivitiesKey] });
+      queryClient.invalidateQueries({ queryKey: [warehouseActivitiesKey, 'detail', String(variables.activityId)] });
     },
   });
 };
