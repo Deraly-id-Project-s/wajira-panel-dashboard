@@ -39,6 +39,7 @@ export interface WarehouseActivity {
   keterangan: string;
   isRefundActivity?: boolean;
   state_note?: string;
+  type?: 'unit-type' | 'sparepart' | string;
 }
 
 export interface WarehouseActivityListResponse {
@@ -60,6 +61,9 @@ export interface WarehouseActivityListParams {
   search?: string;
   company_id?: number | null;
   activityType?: 'receipt' | 'issue' | string;
+  type?: 'unit-type' | 'sparepart' | string;
+  start_date?: string | null;
+  end_date?: string | null;
 }
 
 export interface CreateWarehouseActivityPayload {
@@ -69,6 +73,7 @@ export interface CreateWarehouseActivityPayload {
   activity_type?: 'receipt' | 'issue' | string;
   person_id?: string;
   supplier_name?: string;
+  type?: 'unit-type' | 'sparepart' | string;
 }
 
 export interface UpdateWarehouseActivityPayload {
@@ -78,6 +83,7 @@ export interface UpdateWarehouseActivityPayload {
   description?: string;
   person_id?: string;
   supplier_name?: string;
+  type?: 'unit-type' | 'sparepart' | string;
 }
 
 export interface CreateWarehouseDataPayload {
@@ -86,4 +92,5 @@ export interface CreateWarehouseDataPayload {
   activity_type: 'receipt' | 'issue';
   activity_date: string;
   description?: string;
+  type?: 'unit-type' | 'sparepart' | string;
 }

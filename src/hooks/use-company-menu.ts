@@ -74,7 +74,8 @@ export function useCompanyMenu(companies: Company[]): { menus: MenuItem[], isLoa
                                 child.label.toLowerCase() !== 'perlengkapan masuk' &&
                                 child.label.toLowerCase() !== 'perlengkapan keluar' &&
                                 child.label.toLowerCase() !== 'stock perlengkapan' &&
-                                child.label.toLowerCase() !== 'stok perlengkapan'
+                                child.label.toLowerCase() !== 'stok perlengkapan' &&
+                                child.label.toLowerCase() !== 'perlengkapan'
                         ),
                     };
                 }

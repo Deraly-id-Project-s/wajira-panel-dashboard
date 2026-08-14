@@ -113,29 +113,55 @@ export const getGeneralMenus = (slug: string): MenuItem[] => {
       icon: Warehouse,
       children: [
         {
-          label: 'Stok Unit',
-          href: base('/warehouse/stock-unit'),
+          label: 'Unit Tipe',
+          children: [
+            {
+              label: 'Stok Unit',
+              href: base('/warehouse/stock-unit'),
+            },
+            {
+              label: 'Penerimaan Unit',
+              href: base('/warehouse/penerimaan-unit'),
+            },
+            {
+              label: 'Pengeluaran Unit',
+              href: base('/warehouse/pengeluaran-unit'),
+            },
+          ]
         },
         {
-          label: 'Penerimaan Unit',
-          href: base('/warehouse/penerimaan-unit'),
+          label: 'Sparepart',
+          children: [
+            {
+              label: 'Stok Sparepart',
+              href: base('/warehouse/stock-sparepart'),
+            },
+            {
+              label: 'Penerimaan Sparepart',
+              href: base('/warehouse/penerimaan-sparepart'),
+            },
+            {
+              label: 'Pengeluaran Sparepart',
+              href: base('/warehouse/pengeluaran-sparepart'),
+            },
+          ]
         },
         {
-          label: 'Pengeluaran Unit',
-          href: base('/warehouse/pengeluaran-unit'),
-        },
-        {
-          label: 'Stock Perlengkapan',
-          href: base('/warehouse/stock-perlengkapan'),
-        },
-        {
-          label: 'Perlengkapan Masuk',
-          href: base('/warehouse/perlengkapan-masuk'),
-        },
-
-        {
-          label: 'Perlengkapan Keluar',
-          href: base('/warehouse/perlengkapan-keluar'),
+          label: 'Perlengkapan',
+          children: [
+            {
+              label: 'Stock Perlengkapan',
+              href: base('/warehouse/stock-perlengkapan'),
+            },
+            {
+              label: 'Perlengkapan Masuk',
+              href: base('/warehouse/perlengkapan-masuk'),
+            },
+            {
+              label: 'Perlengkapan Keluar',
+              href: base('/warehouse/perlengkapan-keluar'),
+            },
+          ]
         },
       ],
     },
