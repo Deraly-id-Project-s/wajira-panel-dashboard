@@ -392,6 +392,7 @@ export const getWarehouseActivityById = async (id: string): Promise<WarehouseAct
   return {
     ...mapped,
     unit_transaction_details: mappedDetails,
+    sparepart_transaction: (activity as any).sparepart_transaction || null,
   };
 };
 
