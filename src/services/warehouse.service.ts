@@ -151,6 +151,7 @@ const mapActivity = (item: WarehouseActivityApiModel): WarehouseActivity => {
     state,
     tanggal,
     supplier,
+    keterangan,
     isRefundActivity,
     state_note,
     type: item.type,

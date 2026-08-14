@@ -24,7 +24,9 @@ export interface WarehouseActivityUnitDetail {
 export interface WarehouseActivity {
   id: string;
   activity_number: string;
+  activityNumber?: string;
   activity_date: string;
+  activityDate?: string;
   activity_type?: string;
   description?: string;
   warehouse?: {

@@ -78,7 +78,6 @@ export default function StockSparepartPage() {
     setInStock(tempInStock === 'all' ? undefined : tempInStock === 'true');
     setSpecified(tempSpecified === 'all' ? undefined : tempSpecified);
     setHookPage(1);
-    setTablePage(1);
     setIsFilterModalOpen(false);
   };
 
@@ -96,7 +95,6 @@ export default function StockSparepartPage() {
     setInStock(undefined);
     setSpecified(undefined);
     setHookPage(1);
-    setTablePage(1);
     setIsFilterModalOpen(false);
   };
 
@@ -111,18 +109,6 @@ export default function StockSparepartPage() {
   }), [hookPage, hookPerPage, search, stockState, inStock, activityType, specified]);
 
   const { data, isLoading, isError } = useStockSpareparts(companyId, params);
-
-  // State for the table's pagination display, derived from hook data
-  const [tablePage, setTablePage] = useState(1);
-  const [tablePerPage, setTablePerPage] = useState(25);
-  const [tableTotalData, setTableTotalData] = useState(0);
-
-  useEffect(() => {
-    if (data) {
-      setTablePage(data.meta?.currentPage || 1);
-      setTableTotalData(data.meta?.total || 0);
-    }
-  }, [data]);
 
   const columns: ColumnDef<any>[] = [
     {
@@ -243,7 +229,6 @@ export default function StockSparepartPage() {
                 onChange={(e) => {
                   setSearch(e.target.value);
                   setHookPage(1);
-                  setTablePage(1);
                 }}
                 className="pl-9 h-10 w-full border-gray-300 bg-white text-gray-900 rounded-lg shadow-sm"
               />
@@ -256,7 +241,6 @@ export default function StockSparepartPage() {
                   const nextInStock = val === 'all' ? undefined : val === 'true';
                   setInStock(nextInStock);
                   setHookPage(1);
-                  setTablePage(1);
                 }}
               >
                 <SelectTrigger className="h-10 w-[180px] border-gray-300 bg-white text-gray-900 rounded-lg shadow-sm">
@@ -275,7 +259,6 @@ export default function StockSparepartPage() {
                   const nextStatus = value === 'all' ? undefined : value;
                   setStockState(nextStatus);
                   setHookPage(1);
-                  setTablePage(1);
                 }}
               >
                 <SelectTrigger className="h-10 w-[180px] border-gray-300 bg-white text-gray-900 rounded-lg shadow-sm">
@@ -402,18 +385,13 @@ export default function StockSparepartPage() {
             data={data?.data || []}
             columns={columns}
             loading={isLoading}
-            page={tablePage}
-            perPage={tablePerPage}
-            totalData={tableTotalData}
+            meta={data?.meta}
             onPageChange={(p) => {
               setHookPage(p);
-              setTablePage(p);
             }}
             onPerPageChange={(pp) => {
               setHookPerPage(pp);
-              setTablePerPage(pp);
               setHookPage(1);
-              setTablePage(1);
             }}
           />
         </Card>

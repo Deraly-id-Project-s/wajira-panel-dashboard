@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import BaseTable, { ColumnDef } from '@/components/ui/base-table';
-import { PengeluaranUnit } from '@/@types/pengeluaran-unit.types';
+import { WarehouseActivity } from '@/@types/warehouse.types';
 import { PaginationMeta } from '@/@types/pagination.types';
 import { MoreVertical, Pencil } from 'lucide-react';
 import {
@@ -39,7 +39,7 @@ import { useWarehouseActivityStateUpdate } from '@/hooks/useWarehouseActivity';
 import { toast } from 'sonner';
 
 interface Props {
-  data: PengeluaranUnit[];
+  data: WarehouseActivity[];
   meta: PaginationMeta;
   search: string;
   perPage: number;
@@ -85,7 +85,7 @@ export default function PengeluaranUnitTable({
   const slugValue = Array.isArray(router.query.slug) ? router.query.slug[0] : router.query.slug;
   const slug = slugValue ? String(slugValue) : '';
 
-  const [editingActivity, setEditingActivity] = useState<{ id: number; state: 'draft' | 'process' | 'done'; state_note?: string } | null>(null);
+  const [editingActivity, setEditingActivity] = useState<{ id: string | number; state: 'draft' | 'process' | 'done'; state_note?: string } | null>(null);
   const [selectedState, setSelectedState] = useState<'draft' | 'process' | 'done'>('draft');
   const [stateNote, setStateNote] = useState('');
 
@@ -120,7 +120,7 @@ export default function PengeluaranUnitTable({
     }
   };
 
-  const handleOpenStateDialog = (activityId: number, state: string, stateNote?: string) => {
+  const handleOpenStateDialog = (activityId: string | number, state: string, stateNote?: string) => {
     const s = state?.toLowerCase();
     const cleanState = s === 'draft' || s === 'process' || s === 'done' ? (s as 'draft' | 'process' | 'done') : 'draft';
     setEditingActivity({ id: activityId, state: cleanState, state_note: stateNote });
@@ -137,25 +137,25 @@ export default function PengeluaranUnitTable({
     return '/dashboard/warehouse/pengeluaran-unit';
   };
 
-  const navigateToDetail = (id: number): void => {
+  const navigateToDetail = (id: string | number): void => {
     const base = resolveBasePath();
     void router.push(`${base}/${id}/detail`);
   };
 
-  const columns: ColumnDef<PengeluaranUnit>[] = [
+  const columns: ColumnDef<WarehouseActivity>[] = [
     {
       header: 'NO PENGELUARAN',
-      accessorKey: 'activityNumber',
+      accessorKey: 'activity_number',
       alignment: 'left',
       sortable: true,
-      cell: (item) => <CopyBox text={item.activityNumber} />,
+      cell: (item) => <CopyBox text={item.activity_number || '-'} />,
     },
     {
       header: 'TANGGAL',
-      accessorKey: 'activityDate',
+      accessorKey: 'activity_date',
       alignment: 'left',
       sortable: true,
-      cell: (item) => formatDate(item.activityDate),
+      cell: (item) => formatDate(item.activity_date),
     },
     {
       header: 'STATUS PENGELUARAN',
