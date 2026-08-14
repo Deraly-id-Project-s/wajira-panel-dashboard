@@ -131,6 +131,7 @@ export default function SelectCompanyPage() {
                   transition-all
                   duration-300
                   ease-in-out
+                  cursor-pointer
                   hover:shadow-sm
                 "
               >

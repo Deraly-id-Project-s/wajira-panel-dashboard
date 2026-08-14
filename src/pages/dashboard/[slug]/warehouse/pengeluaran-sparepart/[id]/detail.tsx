@@ -11,7 +11,7 @@ import { formatDate } from '@/lib/utils/format';
 import { ReferenceLink } from '@/components/ui/reference-link';
 import { LoadingState } from '@/components/ui/loading-state';
 import { Badge } from '@/components/ui/badge';
-import BaseTable, { ColumnDef } from '@/components/ui/base-table';
+import { currenciesFormat } from '@/components/ui/currenciesFormat';
 import {
   Dialog,
   DialogContent,
@@ -33,7 +33,6 @@ import { usePermissionGuard } from '@/hooks/usePermissionGuard';
 export default function PengeluaranSparepartDetailPage() {
   const router = useRouter();
   const { id, slug } = router.query as { id?: string; slug?: string };
-  const slugStr = typeof slug === 'string' ? slug : '';
 
   const { data: detailData, isLoading } = useWarehouseActivityDetail(id);
 
@@ -89,61 +88,6 @@ export default function PengeluaranSparepartDetailPage() {
     return { text: detailData?.state || '-', bg: 'border-slate-200 bg-slate-50 text-slate-700' };
   })();
 
-  const itemDetails = useMemo(() => {
-    if (!detailData?.sparepart_transaction) return [];
-    const st = detailData.sparepart_transaction;
-    return [
-      {
-        id: st.id,
-        code: st.code,
-        sparepartName: st.sparepart?.name || detailData.sparepart?.name || '-',
-        sparepartCode: st.sparepart?.code || detailData.sparepart?.code || '-',
-        qty: st.qty || detailData.qty || 1,
-        unitType: st.sparepart?.unit_type || detailData.sparepart?.unit_type || '-',
-      }
-    ];
-  }, [detailData]);
-
-  const columns: ColumnDef<any>[] = [
-    {
-      header: 'No. Transaksi',
-      accessorKey: 'code',
-      alignment: 'left',
-      cell: (item) => <CopyBox text={item.code} />,
-    },
-    {
-      header: 'Kode Sparepart',
-      accessorKey: 'sparepartCode',
-      alignment: 'left',
-      cell: (item) => <CopyBox text={item.sparepartCode} />,
-    },
-    {
-      header: 'Nama Sparepart',
-      accessorKey: 'sparepartName',
-      alignment: 'left',
-      cell: (item) => (
-        <ReferenceLink href={`/dashboard/${slugStr}/master/sparepart?search=${item.sparepartName}`}>
-          {item.sparepartName}
-        </ReferenceLink>
-      ),
-    },
-    {
-      header: 'Kuantitas',
-      accessorKey: 'qty',
-      alignment: 'center',
-      cell: (item) => <span className="font-semibold text-slate-900">{item.qty} {item.unitType}</span>,
-    },
-    {
-      header: 'Status',
-      alignment: 'center',
-      cell: () => (
-        <Badge variant="outline" className={`font-semibold ${stateInfo.bg}`}>
-          {stateInfo.text}
-        </Badge>
-      ),
-    },
-  ];
-
   if (isLoading) {
     return (
       <DashboardLayout>
@@ -151,6 +95,9 @@ export default function PengeluaranSparepartDetailPage() {
       </DashboardLayout>
     );
   }
+
+  const sparepartTx = detailData?.sparepart_transaction;
+  const sparepartItem = sparepartTx?.sparepart;
 
   return (
     <DashboardLayout>
@@ -183,7 +130,7 @@ export default function PengeluaranSparepartDetailPage() {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+        <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
           {/* Card 1: Informasi Pengeluaran */}
           <Card className="border-slate-200 shadow-sm bg-white">
             <CardContent className="p-5 space-y-2">
@@ -193,23 +140,25 @@ export default function PengeluaranSparepartDetailPage() {
                 </div>
                 <h3 className="text-sm font-semibold text-slate-700">Informasi Pengeluaran</h3>
               </div>
-              <div className="text-sm text-slate-600 mt-3 space-y-2">
+              <div className="text-sm text-slate-600 mt-3 space-y-2.5">
                 <div className="grid grid-cols-2 gap-2">
                   <div>
-                    <p className="text-xs text-slate-400">No. Pengeluaran</p>
+                    <p className="text-xs text-slate-400 font-medium">No. Pengeluaran</p>
                     <p className="font-semibold text-slate-900">
                       <CopyBox text={detailData?.activity_number || detailData?.noPenerimaan || '-'} />
                     </p>
                   </div>
                   <div>
-                    <p className="text-xs text-slate-400">Tanggal Pengeluaran</p>
+                    <p className="text-xs text-slate-400 font-medium">Tanggal Pengeluaran</p>
                     <p className="font-semibold text-slate-900">{formatDate(detailData?.activity_date || detailData?.tanggal || '')}</p>
                   </div>
                 </div>
-                <div className="flex items-center justify-between pt-1.5 border-t border-slate-100">
+
+                <div className="flex items-center justify-between pt-2 border-t border-slate-100">
                   <span className="text-xs text-slate-400">Warehouse/Gudang</span>
                   <span className="font-semibold text-slate-900">{detailData?.warehouse?.name || '-'}</span>
                 </div>
+
                 <div className="flex items-center justify-between">
                   <span className="text-xs text-slate-400">Customer</span>
                   <span className="font-semibold text-slate-900">
@@ -220,6 +169,7 @@ export default function PengeluaranSparepartDetailPage() {
                     ) : '-'}
                   </span>
                 </div>
+
                 <div className="flex items-center justify-between">
                   <span className="text-xs text-slate-400">Status Pengeluaran</span>
                   <span className="font-semibold text-slate-900 flex items-center gap-1.5">
@@ -239,53 +189,83 @@ export default function PengeluaranSparepartDetailPage() {
                     ) : '-'}
                   </span>
                 </div>
+
                 {detailData?.state_note && (
-                  <div className="flex items-center justify-between pt-1.5 border-t border-slate-100">
+                  <div className="flex items-center justify-between pt-2 border-t border-slate-100">
                     <span className="text-xs text-slate-400">Catatan Status</span>
-                    <span className="text-slate-900">{detailData?.state_note}</span>
+                    <span className="text-slate-950 font-medium">{detailData?.state_note}</span>
                   </div>
                 )}
               </div>
             </CardContent>
           </Card>
 
-          {/* Card 2: Keterangan & Logistik */}
+          {/* Card 2: Informasi Sparepart & Keterangan */}
           <Card className="border-slate-200 shadow-sm bg-white">
             <CardContent className="p-5 space-y-2">
               <div className="flex items-center gap-3">
-                <div className="p-2 rounded-md bg-yellow-50">
-                  <Package className="h-5 w-5 text-yellow-500" />
+                <div className="p-2 rounded-md bg-amber-50">
+                  <Package className="h-5 w-5 text-amber-500" />
                 </div>
-                <h3 className="text-sm font-semibold text-slate-700">Keterangan & Logistik</h3>
+                <h3 className="text-sm font-semibold text-slate-700">Detail Sparepart & Keterangan</h3>
               </div>
-              <div className="text-sm text-slate-600 mt-3 space-y-2">
-                <div className="flex items-center justify-between">
-                  <span className="text-xs text-slate-400">Total Item</span>
-                  <span className="font-semibold text-slate-900">{itemDetails.length} Jenis Sparepart</span>
-                </div>
-                <div className="flex flex-col gap-2">
-                  <span className="text-xs text-slate-400">Catatan / Keterangan</span>
-                  <p className="text-slate-900 p-2 rounded-md bg-slate-50 w-full min-h-[50px]">
-                    {detailData?.description || detailData?.keterangan || '-'}
+              <div className="text-sm text-slate-600 mt-3 space-y-2.5">
+                {sparepartItem ? (
+                  <>
+                    <div className="grid grid-cols-2 gap-2">
+                      <div>
+                        <p className="text-xs text-slate-400 font-medium">Kode Sparepart</p>
+                        <p className="font-semibold text-slate-900">
+                          <CopyBox text={sparepartItem.code} />
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-xs text-slate-400 font-medium">Nama Sparepart</p>
+                        <p className="font-semibold text-slate-900">{sparepartItem.name}</p>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center justify-between pt-2 border-t border-slate-100">
+                      <span className="text-xs text-slate-400">Kuantitas</span>
+                      <span className="font-bold text-slate-900">
+                        {sparepartTx.qty} {sparepartItem.unit_type || 'pcs'}
+                      </span>
+                    </div>
+
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs text-slate-400">Harga Satuan</span>
+                      <span className="font-medium text-slate-900">
+                        {currenciesFormat('idr', sparepartTx.price)}
+                      </span>
+                    </div>
+
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs text-slate-400">Diskon</span>
+                      <span className="font-medium text-slate-900">
+                        {sparepartTx.discount}%
+                      </span>
+                    </div>
+
+                    {sparepartTx.nota_number && (
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs text-slate-400">Nomor Nota</span>
+                        <span className="font-medium text-slate-900">{sparepartTx.nota_number}</span>
+                      </div>
+                    )}
+                  </>
+                ) : (
+                  <div className="text-center text-slate-400 py-3">Tidak ada informasi sparepart</div>
+                )}
+
+                <div className="flex flex-col gap-1.5 pt-2 border-t border-slate-100">
+                  <span className="text-xs text-slate-400 font-medium">Keterangan / Catatan Transaksi</span>
+                  <p className="text-slate-900 p-2.5 rounded-lg bg-slate-50 w-full min-h-[60px] text-xs leading-relaxed">
+                    {detailData?.description || detailData?.keterangan || sparepartTx?.note || '-'}
                   </p>
                 </div>
               </div>
             </CardContent>
           </Card>
-        </div>
-
-        <div className="bg-white rounded-md border p-6">
-          <h3 className="text-lg font-bold text-slate-800 mb-4">Daftar Sparepart Dikeluarkan</h3>
-          <BaseTable
-            data={itemDetails}
-            columns={columns}
-            loading={isLoading}
-            page={1}
-            perPage={10}
-            totalData={itemDetails.length}
-            onPageChange={() => {}}
-            onPerPageChange={() => {}}
-          />
         </div>
       </div>
 
