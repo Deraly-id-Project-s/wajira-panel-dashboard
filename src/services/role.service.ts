@@ -17,6 +17,7 @@ type RoleApiModel = {
 type PermissionApiModel = {
   id: number;
   name: string;
+  description?: string;
   guard_name?: string;
   created_at?: string;
   updated_at?: string;
@@ -47,6 +48,7 @@ const mapRoleDetail = (payload: RoleApiModel): Role => ({
   permissions: payload.permissions?.map((p) => ({
     id: p.id,
     name: p.name,
+    description: p.description,
     guard_name: p.guard_name,
     created_at: p.created_at,
     updated_at: p.updated_at,

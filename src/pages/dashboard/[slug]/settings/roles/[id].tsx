@@ -10,14 +10,33 @@ import { useUserOptions, useAssignRole, useRevokeRole } from '@/hooks/useUser';
 import { toast } from 'sonner';
 import { ChevronLeft, Shield, UserPlus, UserMinus } from 'lucide-react';
 import { ApiResponseError } from '@/lib/api/response';
+import type { LaravelApiResponse } from '@/lib/api/response';
 import { LoadingState } from '@/components/ui/loading-state';
+import { useCompany } from '@/contexts/CompanyContext';
+import { useQuery } from '@tanstack/react-query';
+import { apiClient } from '@/lib/api/client';
+import type { Module } from '@/services/module.service';
+import type { Permission } from '@/@types/permission.types';
 
 export default function RoleDetailPage() {
   const router = useRouter();
   const { slug, id } = router.query;
+  const { companyId } = useCompany();
 
   const { data: role, isLoading: isLoadingRole, isError: isErrorRole, refetch } = useRoleDetail(id as string);
   const { data: userOptions = [], isLoading: isLoadingUsers } = useUserOptions();
+
+  const { data: modules = [], isLoading: isLoadingModules } = useQuery<Module[]>({
+    queryKey: ['global-modules', companyId],
+    queryFn: async () => {
+      if (!companyId) return [];
+      const response = await apiClient.get<LaravelApiResponse<Module[]>>('/wapi/global/module', {
+        params: { company_id: companyId }
+      });
+      return response.data?.data || [];
+    },
+    enabled: !!companyId,
+  });
 
   const assignRoleMutation = useAssignRole();
   const revokeRoleMutation = useRevokeRole();
@@ -65,9 +84,34 @@ export default function RoleDetailPage() {
     (userOpt) => !role?.users?.some((u) => u.id === userOpt.id)
   );
 
+  const getMatchingPermsForModule = (moduleSlug: string, rolePerms: Permission[]) => {
+    return rolePerms.filter((p) => {
+      const parts = p.name.split(':');
+      const prefix = parts[0];
+
+      if (moduleSlug === 'user') {
+        return ['user', 'role', 'permission', 'settings'].includes(prefix) || p.name === 'user' || p.name === 'role' || p.name === 'permission' || p.name === 'settings';
+      }
+
+      return prefix === moduleSlug || p.name === moduleSlug;
+    });
+  };
+
+  const modulesWithAccess = role ? modules.map((mod) => {
+    const activeFeatures = role.features?.filter((roleFeature) =>
+      mod.features?.some((moduleFeature) => moduleFeature.id === roleFeature.id)
+    ) || [];
+    const activePerms = getMatchingPermsForModule(mod.slug, role.permissions || []);
+    return {
+      ...mod,
+      activeFeatures,
+      activePerms,
+    };
+  }).filter((m) => m.activeFeatures.length > 0 || m.activePerms.length > 0) : [];
+
   return (
     <DashboardLayout>
-      <div className="max-w-5xl mx-auto p-6 space-y-6">
+      <div className="mx-auto p-6 space-y-6">
         {/* Header */}
         <PageHeader
           breadcrumbs={[
@@ -86,10 +130,10 @@ export default function RoleDetailPage() {
             Gagal memuat detail peran atau peran tidak ditemukan.
           </div>
         ) : (
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            {/* Left/Main Column - Users & Management */}
-            <div className="lg:col-span-2 space-y-6">
-              {/* Card: Role Info Header (Without technical stuff like guard_name) */}
+          <div className="space-y-6">
+            {/* Users & Management Section */}
+            <div className="space-y-6">
+              {/* Card: Role Info Header */}
               <div className="bg-white rounded-md border p-6 shadow-sm space-y-4">
                 <div className="flex items-center gap-3">
                   <div className="h-10 w-10 rounded-md bg-indigo-50 flex items-center justify-center text-indigo-600">
@@ -199,43 +243,58 @@ export default function RoleDetailPage() {
               </div>
             </div>
 
-            {/* Right Column - Features & Permissions List */}
-            <div className="bg-white rounded-md border p-6 shadow-sm space-y-6 h-fit max-h-[80vh] flex flex-col">
-              {role.features && role.features.length > 0 && (
-                <div className="space-y-3 border-b pb-4 shrink-0">
-                  <h3 className="text-base font-semibold text-gray-900">Fitur yang Diaktifkan</h3>
-                  <p className="text-xs text-gray-500 mt-0.5">Daftar fitur aplikasi yang dikaitkan dengan peran ini.</p>
-                  <div className="flex flex-wrap gap-1.5 pt-2 max-h-36 overflow-y-auto">
-                    {role.features.map((f) => (
-                      <span key={f.id} className="inline-flex items-center px-2.5 py-1 rounded-md text-[10px] font-semibold bg-indigo-50 text-indigo-700 border border-indigo-100">
-                        {f.name}
-                      </span>
-                    ))}
-                  </div>
+            {/* Bottom Section - Features & Permissions Grouped by Module */}
+            <div className="bg-white rounded-md border p-6 shadow-sm space-y-6">
+              <div>
+                <h3 className="text-base font-semibold text-gray-900">Hak Akses & Fitur (RBAC)</h3>
+                <p className="text-xs text-gray-500 mt-0.5">Daftar modul, fitur, dan perizinan spesifik yang diaktifkan untuk peran ini.</p>
+              </div>
+
+              {modulesWithAccess.length === 0 ? (
+                <div className="text-sm text-gray-500 bg-gray-50/50 rounded-md p-8 text-center border border-dashed font-medium">
+                  Tidak ada fitur atau izin akses yang aktif untuk peran ini.
+                </div>
+              ) : (
+                <div className="space-y-6">
+                  {modulesWithAccess.map((mod) => (
+                    <div key={mod.id} className="border border-slate-100 rounded-xl bg-slate-50/25 p-6 space-y-4">
+                      {/* Module Title */}
+                      <div className="border-b border-slate-100 pb-2">
+                        <h4 className="text-sm font-bold text-slate-800 uppercase tracking-wider">{mod.name}</h4>
+                      </div>
+
+                      {/* Features Badges */}
+                      {mod.activeFeatures.length > 0 && (
+                        <div className="space-y-2">
+                          <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Fitur Aktif</span>
+                          <div className="flex flex-wrap gap-2">
+                            {mod.activeFeatures.map((feature) => (
+                              <span key={feature.id} className="inline-flex items-center px-3 py-1 rounded-lg text-xs font-semibold bg-indigo-50 text-indigo-700 border border-indigo-100 shadow-sm">
+                                {feature.name}
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Permissions List */}
+                      {mod.activePerms.length > 0 && (
+                        <div className="space-y-2 pt-3 border-t border-slate-100/50">
+                          <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Permissions</span>
+                          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+                            {mod.activePerms.map((perm) => (
+                              <div key={perm.id} className="p-3 rounded-lg border border-slate-100 bg-white shadow-sm flex flex-col gap-1 min-w-0">
+                                <span className="font-mono text-xs font-bold text-indigo-950 truncate" title={perm.name}>{perm.name}</span>
+                                <span className="text-[10px] text-slate-500 font-medium leading-normal line-clamp-2">{perm.description || 'Tidak ada deskripsi.'}</span>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  ))}
                 </div>
               )}
-
-              <div className="flex flex-col flex-1 min-h-0">
-                <div>
-                  <h3 className="text-base font-semibold text-gray-900">Izin Akses (Permissions)</h3>
-                  <p className="text-xs text-gray-500 mt-0.5">Daftar hak akses yang diaktifkan untuk peran ini.</p>
-                </div>
-
-                {!role.permissions || role.permissions.length === 0 ? (
-                  <div className="text-sm text-gray-500 bg-gray-50/50 rounded-md p-8 text-center border border-dashed font-medium mt-4">
-                    Tidak ada izin akses yang terdaftar.
-                  </div>
-                ) : (
-                  <div className="space-y-2 overflow-y-auto pr-1 flex-1 mt-4">
-                    {role.permissions.map((perm) => (
-                      <div key={perm.id} className="p-3 rounded-md border border-slate-100 bg-slate-50/40 flex flex-col gap-1">
-                        <span className="font-mono text-xs font-bold text-indigo-700">{perm.name}</span>
-                        <span className="text-[11px] text-gray-500 leading-normal font-medium">{perm.description || 'Tidak ada deskripsi.'}</span>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
             </div>
           </div>
         )}

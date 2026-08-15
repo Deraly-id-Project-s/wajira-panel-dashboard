@@ -19,13 +19,23 @@ export interface ModuleCompany {
   pivot: CompanyPivot;
 }
 
+export interface ModuleFeature {
+  id: number;
+  slug?: string;
+  name: string;
+  description?: string | null;
+  created_at?: string | null;
+  updated_at?: string | null;
+}
+
 export interface Module {
   id: number;
   slug: string;
   name: string;
-  description: string;
+  description?: string | null;
   created_at: string | null;
   updated_at: string | null;
+  features?: ModuleFeature[];
   companies?: ModuleCompany[];
 }
 

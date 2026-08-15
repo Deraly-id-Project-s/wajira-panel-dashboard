@@ -10,9 +10,9 @@ export interface Role {
   permissions?: Permission[];
   features?: Array<{
     id: number;
-    slug: string;
+    slug?: string;
     name: string;
-    description: string;
+    description?: string | null;
   }>;
   users?: Array<{
     id: number;
