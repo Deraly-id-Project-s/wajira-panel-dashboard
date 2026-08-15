@@ -187,6 +187,7 @@ export function PurchaseSparepartForm({ defaultValues, onSubmit, onCancel, readO
                             value={`${s.name} ${s.code} ${s.id}`}
                             onSelect={() => {
                               form.setValue("sparepart_id", Number(s.id));
+                              form.setValue("price", Number(s.purchasePrice ?? 0), { shouldValidate: true, shouldDirty: true });
                               form.clearErrors("sparepart_id");
                               setOpenSparepart(false);
                             }}
@@ -232,7 +233,7 @@ export function PurchaseSparepartForm({ defaultValues, onSubmit, onCancel, readO
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <FormField control={form.control} name="price" render={({ field }) => (
             <FormItem>
-              <FormLabel>Harga Satuan</FormLabel>
+              <FormLabel>Harga Beli Satuan</FormLabel>
               <FormControl>
                 <MoneyInput
                   name={field.name}

@@ -108,6 +108,8 @@ export interface CreateWarehouseActivityPayload {
   description?: string;
   activity_type?: 'receipt' | 'issue' | string;
   person_id?: string;
+  sparepart_transaction_id?: string;
+  state?: 'draft' | 'process' | 'done' | string;
   supplier_name?: string;
   type?: 'unit-type' | 'sparepart' | string;
 }

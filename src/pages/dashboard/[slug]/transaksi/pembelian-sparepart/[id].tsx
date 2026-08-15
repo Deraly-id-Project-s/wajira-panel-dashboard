@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/router';
 import { toast } from 'sonner';
+import { format } from 'date-fns';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { PageHeader } from '@/components/ui/page-header';
 import { LoadingState } from '@/components/ui/loading-state';
@@ -9,13 +10,16 @@ import { Badge } from '@/components/ui/badge';
 import { formatDate } from '@/lib/utils/format';
 import { useSparepartTransaction, useCreateSparepartTransactionBillingHistory, useUpdateSparepartTransactionBillingHistory, useDeleteSparepartTransactionBillingHistory, useUpdateSparepartTransactionBillingPaymentStatus } from '@/hooks/useSparepartTransaction';
 import { Button } from '@/components/ui/button';
-import { CheckCircle, Eye, Edit, Trash2, Plus, MoreVertical, CreditCard } from 'lucide-react';
+import { CheckCircle, Eye, Edit, Trash2, Plus, MoreVertical, CreditCard, Info } from 'lucide-react';
 import { PaymentModal } from '@/components/features/sparepart-transaction/PaymentModal';
 import DeletePaymentDialog from '@/components/features/sparepart-transaction/DeletePaymentDialog';
 import BaseTable, { ColumnDef } from '@/components/ui/base-table';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { currenciesFormat } from '@/components/ui/currenciesFormat';
 import { usePermissionGuard } from '@/hooks/usePermissionGuard';
+import { useCreateWarehouseActivity } from '@/hooks/useWarehouseActivity';
+import { useQueryClient } from '@tanstack/react-query';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 
 export default function DetailPurchaseSparepartPage() {
   const router = useRouter();
@@ -30,10 +34,14 @@ export default function DetailPurchaseSparepartPage() {
   const updatePaymentMutation = useUpdateSparepartTransactionBillingHistory();
   const deletePaymentMutation = useDeleteSparepartTransactionBillingHistory();
   const updatePaymentStatusMutation = useUpdateSparepartTransactionBillingPaymentStatus();
+  const createWarehouseActivityMutation = useCreateWarehouseActivity();
+  const queryClient = useQueryClient();
 
   const [paymentModalOpen, setPaymentModalOpen] = useState(false);
   const [selectedPayment, setSelectedPayment] = useState<any>(null);
   const [deletePaymentId, setDeletePaymentId] = useState<string | null>(null);
+  const [processDialogOpen, setProcessDialogOpen] = useState(false);
+  const [isProcessed, setIsProcessed] = useState(false);
 
   const handleBack = () => router.push(`/dashboard/${slug}/transaksi/pembelian-sparepart`);
 
@@ -106,6 +114,33 @@ export default function DetailPurchaseSparepartPage() {
     }
   };
 
+  const handleProcessGoods = async () => {
+    const warehouseId = transaction?.warehouse_id ?? transaction?.warehouse?.id;
+    if (!transaction?.id || !warehouseId || !transaction.person_id) {
+      toast.error('Data warehouse atau supplier tidak tersedia pada transaksi ini.');
+      return;
+    }
+
+    try {
+      await createWarehouseActivityMutation.mutateAsync({
+        warehouse_id: String(warehouseId),
+        person_id: String(transaction.person_id),
+        sparepart_transaction_id: String(transaction.id),
+        type: 'sparepart',
+        activity_type: 'receipt',
+        activity_date: format(new Date(), 'yyyy-MM-dd'),
+        description: `Penerimaan Stok Transaksi Beli Sparepart ${transaction.code} Sebanyak ${transaction.qty} ${transaction.sparepart?.unit_type || ''}`.trim(),
+        state: 'draft',
+      });
+      setIsProcessed(true);
+      setProcessDialogOpen(false);
+      await queryClient.invalidateQueries({ queryKey: ['sparepart-transactions'] });
+      toast.success('Penerimaan sparepart berhasil dibuat di Warehouse.');
+    } catch (error: any) {
+      toast.error(error?.message || 'Gagal membuat penerimaan sparepart di Warehouse.');
+    }
+  };
+
   if (isLoading) {
     return (
       <DashboardLayout>
@@ -128,6 +163,7 @@ export default function DetailPurchaseSparepartPage() {
   const totalPaid = histories.reduce((acc: number, curr: any) => acc + (curr.grand_total || curr.cash_payment_amount || curr.bca_payment_amount || 0), 0);
   const remainingPayment = sparepartBilling?.is_paid ? 0 : Math.max(0, totalTagihan - totalPaid);
   const isPaid = sparepartBilling?.is_paid || (totalTagihan > 0 && remainingPayment === 0);
+  const canProcessGoods = isPaid && !transaction.is_refunded && !isProcessed;
 
   const columns: ColumnDef<any>[] = [
     {
@@ -219,6 +255,14 @@ export default function DetailPurchaseSparepartPage() {
               >
                 <CheckCircle className="mr-2 h-4 w-4" />
                 Tandai Lunas
+              </Button>
+              <Button
+                variant="outline"
+                className="border-blue-600 text-blue-600 hover:bg-blue-50 disabled:cursor-not-allowed disabled:opacity-50"
+                disabled={!canEdit || !canProcessGoods || createWarehouseActivityMutation.isPending}
+                onClick={() => setProcessDialogOpen(true)}
+              >
+                {createWarehouseActivityMutation.isPending ? 'Memproses...' : isProcessed ? 'Sudah Diproses' : 'Proses Barang'}
               </Button>
               <Button
                 variant="outline"
@@ -362,6 +406,24 @@ export default function DetailPurchaseSparepartPage() {
           onConfirm={handleDeletePayment}
           loading={deletePaymentMutation.isPending}
         />
+
+        <Dialog open={processDialogOpen} onOpenChange={setProcessDialogOpen}>
+          <DialogContent className="sm:max-w-[425px]">
+            <DialogHeader>
+              <DialogTitle>Konfirmasi Proses Barang</DialogTitle>
+              <DialogDescription className="pt-2">Apakah Anda yakin ingin memproses penerimaan sparepart ini?</DialogDescription>
+              <div className="rounded-md border border-slate-200 bg-slate-50 p-2 text-sm text-slate-700">
+                <div className="flex gap-2"><Info className="h-5 w-5 shrink-0" /><span>Proses ini akan membuat data penerimaan sparepart pada Warehouse.</span></div>
+              </div>
+            </DialogHeader>
+            <DialogFooter className="mt-4 flex justify-end gap-2">
+              <Button type="button" variant="outline" onClick={() => setProcessDialogOpen(false)} disabled={createWarehouseActivityMutation.isPending}>Batal</Button>
+              <Button type="button" className="bg-blue-600 text-white hover:bg-blue-700" onClick={handleProcessGoods} disabled={createWarehouseActivityMutation.isPending}>
+                {createWarehouseActivityMutation.isPending ? 'Memproses...' : 'Ya, Proses Barang'}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
     </DashboardLayout>
   )

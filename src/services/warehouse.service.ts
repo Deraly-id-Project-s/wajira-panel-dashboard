@@ -298,6 +298,14 @@ const normalizeCreateUpdatePayload = (payload: CreateWarehouseActivityPayload | 
     body.append('person_id', payload.person_id);
   }
 
+  if ('sparepart_transaction_id' in payload && payload.sparepart_transaction_id) {
+    body.append('sparepart_transaction_id', payload.sparepart_transaction_id);
+  }
+
+  if ('state' in payload && payload.state) {
+    body.append('state', payload.state);
+  }
+
   if (payload.supplier_name) {
     // Compatibility fallback: some backend variants accept one of these aliases.
     body.append('supplier_name', payload.supplier_name);
