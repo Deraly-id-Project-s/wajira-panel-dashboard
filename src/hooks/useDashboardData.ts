@@ -68,3 +68,26 @@ export function useUnitTransactionTrend(startDate?: string | null, endDate?: str
     refetchOnWindowFocus: false,
   });
 }
+
+export function useProductTransactionOverview(params: {
+  company_id?: string | number | null;
+  range?: string;
+  start_date?: string | null;
+  end_date?: string | null;
+  warehouse_id?: string | number;
+  person_id?: string | number;
+  unit_type_id?: string | number;
+  sparepart_id?: string | number;
+}) {
+  const { companyId } = useCompany();
+  const requestParams = { company_id: companyId || params.company_id, ...params };
+
+  return useQuery({
+    queryKey: ['product-transaction-overview', requestParams],
+    queryFn: () => dashboardService.getProductTransactionOverview(requestParams),
+    enabled: Boolean(companyId || params.company_id),
+    staleTime: 5 * 60 * 1000,
+    gcTime: 10 * 60 * 1000,
+    refetchOnWindowFocus: false,
+  });
+}

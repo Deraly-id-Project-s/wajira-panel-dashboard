@@ -3,10 +3,40 @@
  * Service layer untuk semua dashboard-related API calls
  */
 
-import { DashboardApiResponse, BillingStatsRaw, CustomerStatsRaw, ProductStatsRaw, TransactionStatsRaw, FinanceSeriesPoint, AccountOverview, CustomerOverview, ProductOverview, CashflowSummary, TransactionEntry } from '@/@types/dashboard';
+import { DashboardApiResponse, BillingStatsRaw, CustomerStatsRaw, ProductStatsRaw, TransactionStatsRaw, FinanceSeriesPoint, AccountOverview, CustomerOverview, ProductOverview, CashflowSummary, TransactionEntry, ProductTransactionOverviewResponse } from '@/@types/dashboard';
 import { apiClient } from './client';
 
+const emptyProductMetrics = () => ({
+  sales_transaction_count: 0,
+  purchase_transaction_count: 0,
+  sales_qty: 0,
+  purchase_qty: 0,
+  sales_amount: 0,
+  purchase_amount: 0,
+});
+
 export const dashboardService = {
+  async getProductTransactionOverview(params: {
+    company_id?: string | number | null;
+    range?: string;
+    start_date?: string | null;
+    end_date?: string | null;
+    warehouse_id?: string | number;
+    person_id?: string | number;
+    unit_type_id?: string | number;
+    sparepart_id?: string | number;
+  }): Promise<ProductTransactionOverviewResponse> {
+    try {
+      const response = await apiClient.get<{ status: boolean; data: ProductTransactionOverviewResponse }>(
+        '/wapi/stats/transaction-overview-stat',
+        { params },
+      );
+      return response.data?.data || { summary: { total: emptyProductMetrics(), by_product_type: [] }, transaction_trend: [], product_trend: [] };
+    } catch (err) {
+      console.warn('[DashboardService] Failed to fetch product transaction overview:', err);
+      return { summary: { total: emptyProductMetrics(), by_product_type: [] }, transaction_trend: [], product_trend: [] };
+    }
+  },
   async getDashboardData(companyId: string, startDate?: string | null, endDate?: string | null): Promise<DashboardApiResponse> {
     const defaultParams: any = { company_id: companyId };
     if (startDate) defaultParams.start_date = startDate;

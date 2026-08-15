@@ -336,9 +336,9 @@ export default function DashboardPage() {
               <CustomerOverviewCard data={data?.customers} isLoading={isLoadingDisplay} />
               <ProductOverviewCard data={data?.products} isLoading={isLoadingDisplay} />
             </div>
-            <UnitTransactionTrendChart startDate={activeDateRange.start} endDate={activeDateRange.end} />
+            <UnitTransactionTrendChart companyId={companyId} startDate={activeDateRange.start} endDate={activeDateRange.end} />
             <TransactionTable data={data?.transactions || []} isLoading={isLoadingDisplay} />
-            <UnitTypeSalesTrendChart companyId={companyId} />
+            <UnitTypeSalesTrendChart companyId={companyId} startDate={activeDateRange.start} endDate={activeDateRange.end} />
           </div>
         )}
 
