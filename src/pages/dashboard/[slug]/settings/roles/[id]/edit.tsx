@@ -1,48 +1,61 @@
-import { useEffect, useState, useMemo } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { PageHeader } from '@/components/ui/page-header';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
-import { usePermissions } from '@/hooks/usePermission';
 import { useRoleDetail, useUpdateRole } from '@/hooks/useRole';
+import { usePermissions } from '@/hooks/usePermission';
 import { toast } from 'sonner';
 import { ChevronLeft, Shield } from 'lucide-react';
 import { LoadingState } from '@/components/ui/loading-state';
+import { useCompany } from '@/contexts/CompanyContext';
+import { useQuery } from '@tanstack/react-query';
+import { apiClient } from '@/lib/api/client';
 
 export default function EditRolePage() {
   const router = useRouter();
   const { slug, id } = router.query;
+  const { companyId } = useCompany();
 
-  const { data: permissions = [], isLoading: isLoadingPerms } = usePermissions();
   const { data: role, isLoading: isLoadingRole, isError: isErrorRole } = useRoleDetail(id as string);
   const updateMutation = useUpdateRole();
 
   const [name, setName] = useState('');
+  const [selectedFeatures, setSelectedFeatures] = useState<number[]>([]);
   const [selectedPerms, setSelectedPerms] = useState<string[]>([]);
+
+  // Fetch modules and features
+  const { data: modules = [], isLoading: isLoadingModules } = useQuery<any[]>({
+    queryKey: ['global-modules', companyId],
+    queryFn: async () => {
+      if (!companyId) return [];
+      const response = await apiClient.get('/wapi/global/modules', {
+        params: { company_id: companyId }
+      });
+      return response.data?.data || [];
+    },
+    enabled: !!companyId,
+  });
+
+  // Fetch all permissions
+  const { data: permissions = [], isLoading: isLoadingPerms } = usePermissions();
 
   // Pre-fill form when role data is fetched
   useEffect(() => {
     if (role) {
       setName(role.name);
-      setSelectedPerms(role.permissions?.map((p) => p.name) ?? []);
+      setSelectedFeatures(role.features?.map((f: any) => f.id) ?? []);
+      setSelectedPerms(role.permissions?.map((p: any) => p.name) ?? []);
     }
   }, [role]);
 
-  // Group permissions by prefix (e.g. "master-data:create" -> Group: "master-data")
-  const groupedPermissions = useMemo(() => {
-    const groups: Record<string, typeof permissions> = {};
-    permissions.forEach((perm) => {
-      const parts = perm.name.split(':');
-      const groupName = parts[0] || 'lainnya';
-      if (!groups[groupName]) {
-        groups[groupName] = [];
-      }
-      groups[groupName].push(perm);
-    });
-    return groups;
-  }, [permissions]);
+  const toggleFeature = (feature: any) => {
+    setSelectedFeatures((prev) =>
+      prev.includes(feature.id) ? prev.filter((f) => f !== feature.id) : [...prev, feature.id]
+    );
+  };
 
   const togglePerm = (permName: string) => {
     setSelectedPerms((prev) =>
@@ -50,13 +63,28 @@ export default function EditRolePage() {
     );
   };
 
-  const handleSelectAllGroup = (groupPerms: typeof permissions, checked: boolean) => {
-    const permNames = groupPerms.map((p) => p.name);
-    if (checked) {
-      setSelectedPerms((prev) => Array.from(new Set([...prev, ...permNames])));
-    } else {
-      setSelectedPerms((prev) => prev.filter((p) => !permNames.includes(p)));
-    }
+  const handleSelectAll = () => {
+    const allIds = modules.flatMap((mod) => mod.features?.map((f: any) => f.id) || []);
+    setSelectedFeatures(allIds);
+    setSelectedPerms(permissions.map((p) => p.name));
+  };
+
+  const handleClearAll = () => {
+    setSelectedFeatures([]);
+    setSelectedPerms([]);
+  };
+
+  const getMatchingPermsForModule = (moduleSlug: string) => {
+    return permissions.filter((p) => {
+      const parts = p.name.split(':');
+      const prefix = parts[0];
+      
+      if (moduleSlug === 'user') {
+        return ['user', 'role', 'permission', 'settings'].includes(prefix) || p.name === 'user' || p.name === 'role' || p.name === 'permission' || p.name === 'settings';
+      }
+      
+      return prefix === moduleSlug || p.name === moduleSlug;
+    });
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -68,7 +96,15 @@ export default function EditRolePage() {
     if (!id) return;
 
     try {
-      await updateMutation.mutateAsync({ id: id as string, payload: { name, permissions: selectedPerms } });
+      await updateMutation.mutateAsync({
+        id: id as string,
+        payload: {
+          name,
+          company_id: companyId,
+          feature_ids: selectedFeatures,
+          permissions: selectedPerms,
+        },
+      });
       toast.success('Role berhasil diperbarui');
       router.push(`/dashboard/${slug}/settings/roles`);
     } catch (err: any) {
@@ -88,6 +124,16 @@ export default function EditRolePage() {
     );
   }
 
+  if (isErrorRole || !role) {
+    return (
+      <DashboardLayout>
+        <div className="bg-white rounded-md border p-12 text-center text-red-500 font-medium">
+          Gagal memuat detail peran atau peran tidak ditemukan.
+        </div>
+      </DashboardLayout>
+    );
+  }
+
   const isPending = updateMutation.isPending || isLoadingRole;
 
   return (
@@ -100,7 +146,7 @@ export default function EditRolePage() {
             { label: 'Edit' }
           ]}
           title="Ubah Peran"
-          subtitle="Edit detail peran dan perbarui daftar permissions."
+          subtitle="Edit detail peran dan perbarui daftar akses fitur."
           onBack={handleBack}
         />
 
@@ -125,13 +171,13 @@ export default function EditRolePage() {
             </div>
           </div>
 
-          {/* Card: Permissions Selection */}
+          {/* Card: Features Selection */}
           <div className="bg-white rounded-md border p-6 space-y-6 shadow-sm">
             <div className="flex items-center justify-between border-b pb-4">
               <div>
                 <h2 className="text-base font-semibold text-gray-900 flex items-center gap-2">
                   <Shield className="text-indigo-600 h-4 w-4" />
-                  Hak Akses (Permissions)
+                  Fitur dan Modul (RBAC)
                 </h2>
                 <p className="text-xs text-gray-500 mt-0.5">Tentukan fitur mana saja yang dapat diakses oleh peran ini.</p>
               </div>
@@ -140,8 +186,8 @@ export default function EditRolePage() {
                   type="button"
                   variant="outline"
                   size="sm"
-                  onClick={() => setSelectedPerms(permissions.map((p) => p.name))}
-                  disabled={isLoadingPerms || isPending}
+                  onClick={handleSelectAll}
+                  disabled={isLoadingModules || isLoadingPerms || isPending}
                   className="rounded-lg text-xs"
                 >
                   Pilih Semua
@@ -150,8 +196,8 @@ export default function EditRolePage() {
                   type="button"
                   variant="outline"
                   size="sm"
-                  onClick={() => setSelectedPerms([])}
-                  disabled={isLoadingPerms || isPending}
+                  onClick={handleClearAll}
+                  disabled={isLoadingModules || isLoadingPerms || isPending}
                   className="rounded-lg text-xs"
                 >
                   Hapus Pilihan
@@ -159,61 +205,94 @@ export default function EditRolePage() {
               </div>
             </div>
 
-            {isLoadingPerms ? (
+            {isLoadingModules || isLoadingPerms ? (
               <LoadingState variant="page" />
-            ) : Object.keys(groupedPermissions).length === 0 ? (
-              <div className="py-8 text-center text-sm text-gray-500 font-medium">Tidak ada permissions tersedia.</div>
+            ) : modules.length === 0 ? (
+              <div className="py-8 text-center text-sm text-gray-500 font-medium">Tidak ada fitur tersedia untuk perusahaan ini.</div>
             ) : (
-              <div className="space-y-6 divide-y divide-gray-100">
-                {Object.entries(groupedPermissions).map(([group, groupPerms], idx) => {
-                  const allSelected = groupPerms.every((p) => selectedPerms.includes(p.name));
-                  const someSelected = groupPerms.some((p) => selectedPerms.includes(p.name)) && !allSelected;
-
+              <div className="space-y-8">
+                {modules.map((mod) => {
+                  const matchingPerms = getMatchingPermsForModule(mod.slug);
+                  
                   return (
-                    <div key={group} className={`pt-6 ${idx === 0 ? 'pt-0' : ''}`}>
-                      <div className="flex items-center justify-between mb-3">
-                        <h3 className="text-sm font-bold text-gray-900 uppercase tracking-wider capitalize">
-                          {group.replace(/-/g, ' ')}
-                        </h3>
-                        <label className="flex items-center gap-2 text-xs text-slate-500 cursor-pointer select-none">
-                          <Checkbox
-                            checked={allSelected ? true : (someSelected ? 'indeterminate' : false)}
-                            onCheckedChange={(checked) => handleSelectAllGroup(groupPerms, !!checked)}
-                            disabled={isPending}
-                          />
-                          <span>Pilih Grup</span>
-                        </label>
-                      </div>
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                        {groupPerms.map((perm) => {
-                          const isSelected = selectedPerms.includes(perm.name);
+                    <div key={mod.id} className="space-y-4">
+                      <h3 className="text-sm font-bold text-gray-900 uppercase tracking-wider border-b pb-2">
+                        {mod.name}
+                      </h3>
+                      
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        {mod.features?.map((feature: any) => {
+                          const isChecked = selectedFeatures.includes(feature.id);
+
                           return (
-                            <label
-                              key={perm.id}
-                              className={`flex items-start gap-3 p-3 rounded-md border transition-all cursor-pointer select-none ${isSelected
-                                ? 'border-indigo-600/30 bg-indigo-50/20'
-                                : 'border-gray-100 bg-gray-50/20 hover:bg-gray-50/60'
+                            <div
+                              key={feature.id}
+                              className={`flex flex-col justify-between p-4 rounded-xl border transition-all h-full min-h-[110px] ${isChecked
+                                ? 'border-indigo-600 bg-indigo-50/10 shadow-sm'
+                                : 'border-gray-200 bg-white hover:border-gray-300 hover:bg-gray-50/30'
                                 }`}
                             >
-                              <div className="pt-0.5">
+                              <div className="flex items-start justify-between gap-3 mb-2">
+                                <span
+                                  className="text-xs font-semibold text-gray-900 leading-tight cursor-pointer select-none"
+                                  onClick={() => toggleFeature(feature)}
+                                >
+                                  {feature.name}
+                                </span>
                                 <Checkbox
-                                  checked={isSelected}
-                                  onCheckedChange={() => togglePerm(perm.name)}
+                                  checked={isChecked}
+                                  onCheckedChange={() => toggleFeature(feature)}
                                   disabled={isPending}
                                 />
                               </div>
-                              <div className="space-y-0.5">
-                                <span className="block text-xs font-mono font-bold text-indigo-950">
-                                  {perm.name}
-                                </span>
-                                <span className="block text-[11px] text-gray-500 leading-normal font-medium">
-                                  {perm.description || 'Tidak ada deskripsi.'}
-                                </span>
-                              </div>
-                            </label>
+                              
+                              <p className="text-[11px] text-gray-500 leading-normal font-medium mt-auto">
+                                {feature.description || 'Tidak ada deskripsi.'}
+                              </p>
+                            </div>
                           );
                         })}
                       </div>
+
+                      {/* Permissions list under this module's features grid */}
+                      {matchingPerms.length > 0 && (
+                        <div className="pt-4 border-t border-gray-100/80 space-y-3">
+                          <div>
+                            <span className="block text-[11px] uppercase font-bold tracking-wider text-gray-400">Permissions - {mod.name}</span>
+                            <p className="text-[10px] text-gray-500 mt-0.5">Tentukan perizinan spesifik untuk modul ini.</p>
+                          </div>
+                          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+                            {matchingPerms.map((perm) => {
+                              const isPermChecked = selectedPerms.includes(perm.name);
+                              return (
+                                <label
+                                  key={perm.id}
+                                  className={`flex items-start gap-3 p-3 rounded-lg border transition-all cursor-pointer select-none ${isPermChecked
+                                    ? 'border-indigo-600/30 bg-indigo-50/20'
+                                    : 'border-gray-100 bg-gray-50/20 hover:bg-gray-50/60'
+                                    }`}
+                                >
+                                  <div className="pt-0.5">
+                                    <Checkbox
+                                      checked={isPermChecked}
+                                      onCheckedChange={() => togglePerm(perm.name)}
+                                      disabled={isPending}
+                                    />
+                                  </div>
+                                  <div className="space-y-0.5">
+                                    <span className="block text-xs font-mono font-bold text-indigo-950">
+                                      {perm.name}
+                                    </span>
+                                    <span className="block text-[10px] text-gray-500 leading-normal font-medium">
+                                      {perm.description || 'Tidak ada deskripsi.'}
+                                    </span>
+                                  </div>
+                                </label>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      )}
                     </div>
                   );
                 })}
@@ -235,11 +314,10 @@ export default function EditRolePage() {
             <Button
               type="submit"
               disabled={isPending || !name.trim()}
-              className="h-11 px-6 rounded-md bg-indigo-950 hover:bg-indigo-900 text-white font-semibold shadow-sm transition-all"
+              className="h-11 px-6 rounded-md bg-indigo-600 hover:bg-indigo-700 text-white font-semibold shadow-sm transition-all"
             >
-              {updateMutation.isPending ? 'Menyimpan...' : 'Perbarui Peran'}
+              {isPending ? 'Menyimpan...' : 'Perbarui Peran'}
             </Button>
-
           </div>
         </form>
       </div>

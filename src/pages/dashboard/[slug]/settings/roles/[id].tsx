@@ -199,27 +199,43 @@ export default function RoleDetailPage() {
               </div>
             </div>
 
-            {/* Right Column - Permissions List */}
+            {/* Right Column - Features & Permissions List */}
             <div className="bg-white rounded-md border p-6 shadow-sm space-y-6 h-fit max-h-[80vh] flex flex-col">
-              <div>
-                <h3 className="text-base font-semibold text-gray-900">Izin Akses (Permissions)</h3>
-                <p className="text-xs text-gray-500 mt-0.5">Daftar hak akses yang diaktifkan untuk peran ini.</p>
-              </div>
-
-              {!role.permissions || role.permissions.length === 0 ? (
-                <div className="text-sm text-gray-500 bg-gray-50/50 rounded-md p-8 text-center border border-dashed font-medium">
-                  Tidak ada izin akses yang terdaftar.
-                </div>
-              ) : (
-                <div className="space-y-2 overflow-y-auto pr-1 flex-1">
-                  {role.permissions.map((perm) => (
-                    <div key={perm.id} className="p-3 rounded-md border border-slate-100 bg-slate-50/40 flex flex-col gap-1">
-                      <span className="font-mono text-xs font-bold text-indigo-700">{perm.name}</span>
-                      <span className="text-[11px] text-gray-500 leading-normal font-medium">{perm.description || 'Tidak ada deskripsi.'}</span>
-                    </div>
-                  ))}
+              {role.features && role.features.length > 0 && (
+                <div className="space-y-3 border-b pb-4 shrink-0">
+                  <h3 className="text-base font-semibold text-gray-900">Fitur yang Diaktifkan</h3>
+                  <p className="text-xs text-gray-500 mt-0.5">Daftar fitur aplikasi yang dikaitkan dengan peran ini.</p>
+                  <div className="flex flex-wrap gap-1.5 pt-2 max-h-36 overflow-y-auto">
+                    {role.features.map((f) => (
+                      <span key={f.id} className="inline-flex items-center px-2.5 py-1 rounded-md text-[10px] font-semibold bg-indigo-50 text-indigo-700 border border-indigo-100">
+                        {f.name}
+                      </span>
+                    ))}
+                  </div>
                 </div>
               )}
+
+              <div className="flex flex-col flex-1 min-h-0">
+                <div>
+                  <h3 className="text-base font-semibold text-gray-900">Izin Akses (Permissions)</h3>
+                  <p className="text-xs text-gray-500 mt-0.5">Daftar hak akses yang diaktifkan untuk peran ini.</p>
+                </div>
+
+                {!role.permissions || role.permissions.length === 0 ? (
+                  <div className="text-sm text-gray-500 bg-gray-50/50 rounded-md p-8 text-center border border-dashed font-medium mt-4">
+                    Tidak ada izin akses yang terdaftar.
+                  </div>
+                ) : (
+                  <div className="space-y-2 overflow-y-auto pr-1 flex-1 mt-4">
+                    {role.permissions.map((perm) => (
+                      <div key={perm.id} className="p-3 rounded-md border border-slate-100 bg-slate-50/40 flex flex-col gap-1">
+                        <span className="font-mono text-xs font-bold text-indigo-700">{perm.name}</span>
+                        <span className="text-[11px] text-gray-500 leading-normal font-medium">{perm.description || 'Tidak ada deskripsi.'}</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         )}

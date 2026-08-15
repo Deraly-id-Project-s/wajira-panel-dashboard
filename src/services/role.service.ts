@@ -51,6 +51,12 @@ const mapRoleDetail = (payload: RoleApiModel): Role => ({
     created_at: p.created_at,
     updated_at: p.updated_at,
   })),
+  features: (payload as any).features?.map((f: any) => ({
+    id: f.id,
+    slug: f.slug,
+    name: f.name,
+    description: f.description,
+  })),
   users: payload.users,
 });
 
@@ -71,18 +77,14 @@ export const getRoleDetail = async (id: number | string, opts?: { withoutPermiss
   return mapRoleDetail(data);
 };
 
-const buildRolePayload = (payload: RolePayload) => {
-  const body = new FormData();
-  body.append('name', payload.name);
-  if (payload.permissions && payload.permissions.length > 0) {
-    body.append('permissions', payload.permissions.join(','));
-  }
-  return body;
-};
-
 export const createRole = async (payload: RolePayload): Promise<Role> => {
-  const body = buildRolePayload(payload);
-  const response = await apiClient.post<RoleItemResponse>(basePath, body);
+  const requestBody = {
+    name: payload.name,
+    company_id: payload.company_id,
+    feature_ids: payload.feature_ids || [],
+    permissions: payload.permissions?.join(',') || undefined,
+  };
+  const response = await apiClient.post<RoleItemResponse>(basePath, requestBody);
   const data = ensureSuccess(response.data);
   return mapRoleDetail(data);
 };
@@ -105,13 +107,13 @@ export const deleteRole = async (id: number | string): Promise<void> => {
 };
 
 export const updateRole = async (id: number | string, payload: RolePayload): Promise<Role> => {
-  const body = new FormData();
-  body.append('_method', 'PUT');
-  body.append('name', payload.name);
-  if (payload.permissions && payload.permissions.length > 0) {
-    body.append('permissions', payload.permissions.join(','));
-  }
-  const response = await apiClient.post<RoleItemResponse>(`${basePath}/${id}`, body);
+  const requestBody = {
+    name: payload.name,
+    company_id: payload.company_id,
+    feature_ids: payload.feature_ids || [],
+    permissions: payload.permissions?.join(',') || undefined,
+  };
+  const response = await apiClient.put<RoleItemResponse>(`${basePath}/${id}`, requestBody);
   const data = ensureSuccess(response.data);
   return mapRoleDetail(data);
 };
