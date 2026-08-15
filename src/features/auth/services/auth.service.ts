@@ -27,16 +27,56 @@ export class AuthService {
   }
 
   static async me(): Promise<ProfileResponse> {
+    const CACHE_KEY = 'auth_user_profile';
+
+    if (typeof window !== 'undefined') {
+      const cached = localStorage.getItem(CACHE_KEY);
+      if (cached) {
+        try {
+          const parsed = JSON.parse(cached);
+          if (parsed && parsed.status === true && parsed.data) {
+            return parsed;
+          }
+        } catch (err) {
+          console.warn('[AuthService] Failed to parse cached profile:', err);
+        }
+      }
+    }
+
     const response = await apiClient.get<ProfileResponse>('/wapi/auth/me');
 
     if (!response.data.status) {
       throw new Error(response.data.message || 'Failed to fetch profile');
     }
 
+    if (typeof window !== 'undefined') {
+      try {
+        localStorage.setItem(CACHE_KEY, JSON.stringify(response.data));
+      } catch (err) {
+        console.warn('[AuthService] Failed to save profile to localStorage:', err);
+      }
+    }
+
     return response.data;
   }
 
   static async getPermissions(): Promise<string[]> {
+    const CACHE_KEY = 'user_permissions';
+
+    if (typeof window !== 'undefined') {
+      const cached = localStorage.getItem(CACHE_KEY);
+      if (cached) {
+        try {
+          const parsed = JSON.parse(cached);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            return parsed;
+          }
+        } catch (err) {
+          console.warn('[AuthService] Failed to parse cached permissions:', err);
+        }
+      }
+    }
+
     const response = await apiClient.get<any>('/wapi/auth/has-permissions');
     let resData = response.data;
     if (typeof resData === 'string') {
@@ -52,7 +92,52 @@ export class AuthService {
     }
 
     const permissions = resData.data?.permissions || resData.permissions || [];
+
+    if (typeof window !== 'undefined') {
+      try {
+        localStorage.setItem(CACHE_KEY, JSON.stringify(permissions));
+      } catch (err) {
+        console.warn('[AuthService] Failed to save permissions to localStorage:', err);
+      }
+    }
+
     return permissions;
+  }
+
+  static async getSidebar(): Promise<SidebarModuleItem[]> {
+    const CACHE_KEY = 'user_sidebar';
+
+    if (typeof window !== 'undefined') {
+      const cached = localStorage.getItem(CACHE_KEY);
+      if (cached) {
+        try {
+          const parsed = JSON.parse(cached);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            return parsed;
+          }
+        } catch (err) {
+          console.warn('[AuthService] Failed to parse cached sidebar:', err);
+        }
+      }
+    }
+
+    const response = await apiClient.get<SidebarResponse>('/wapi/auth/get-sidebar');
+
+    if (!response.data.status) {
+      throw new Error(response.data.message || 'Failed to fetch sidebar');
+    }
+
+    const data = response.data.data || [];
+
+    if (typeof window !== 'undefined') {
+      try {
+        localStorage.setItem(CACHE_KEY, JSON.stringify(data));
+      } catch (err) {
+        console.warn('[AuthService] Failed to save sidebar to localStorage:', err);
+      }
+    }
+
+    return data;
   }
 
   static async updateProfile(id: number, data: { name?: string; username?: string; firstname?: string; lastname?: string; email?: string; avatar?: File | null }): Promise<ProfileResponse> {
@@ -73,7 +158,46 @@ export class AuthService {
       throw new Error(response.data.message || 'Failed to update profile');
     }
 
+    if (typeof window !== 'undefined') {
+      try {
+        localStorage.setItem('auth_user_profile', JSON.stringify(response.data));
+      } catch (err) {
+        console.warn('[AuthService] Failed to update cached profile:', err);
+      }
+    }
+
     return response.data;
+  }
+
+  static clearCachedProfile(): void {
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem('auth_user_profile');
+      localStorage.removeItem('user_permissions');
+      localStorage.removeItem('user_sidebar');
+    }
   }
 }
 
+export interface SidebarFeature {
+  id: number;
+  slug: string;
+  name: string;
+  description: string;
+}
+
+export interface SidebarModuleItem {
+  module: {
+    id: number;
+    name: string;
+    slug: string;
+    description: string;
+  };
+  features: SidebarFeature[];
+}
+
+export interface SidebarResponse {
+  status: boolean;
+  message: string;
+  errors: any;
+  data: SidebarModuleItem[];
+}
