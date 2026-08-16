@@ -176,7 +176,7 @@ export const getTransindoMenus = (slug: string): MenuItem[] => {
       icon: Settings,
       children: [
         {
-          label: 'Profile',
+          label: 'Profil Pengguna',
           href: base('/settings/profile'),
         },
       ],

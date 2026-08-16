@@ -325,7 +325,7 @@ export function Topbar() {
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-[180px] p-2 rounded-md">
               <DropdownMenuItem onClick={handleProfileClick} className="cursor-pointer font-medium text-slate-900 text-[13px] py-2 px-3 rounded-lg hover:bg-slate-50 focus:bg-slate-50">
-                Profile
+                Profil Pengguna
               </DropdownMenuItem>
               <DropdownMenuSeparator className="my-1" />
               <DropdownMenuItem onClick={handleLogout} className="cursor-pointer font-medium text-red-600 text-[13px] py-2 px-3 rounded-lg hover:bg-red-50 focus:bg-red-50 focus:text-red-600">

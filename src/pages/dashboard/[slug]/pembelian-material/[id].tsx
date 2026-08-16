@@ -9,8 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Input } from '@/components/ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import BaseTable, { ColumnDef } from '@/components/ui/base-table';
 import { useCompany } from '@/contexts/CompanyContext';
 import { useKas } from '@/hooks/useKas';
 import { useMaterials } from '@/hooks/useMaterial';
@@ -150,6 +149,74 @@ export default function PurchaseMaterialDetailPage() {
     }
   };
 
+  const itemColumns = useMemo<ColumnDef<MaterialTransactionDetailItem>[]>(
+    () => [
+      {
+        header: 'NO',
+        alignment: 'center',
+        cell: (_, index) => startData + index,
+      },
+      {
+        header: 'NAMA MATERIAL',
+        accessorKey: 'material.name',
+        className: 'text-slate-800 font-medium',
+        cell: (item) => item.material?.name ?? '-',
+      },
+      {
+        header: 'QTY',
+        accessorKey: 'qty',
+        alignment: 'center',
+        className: 'text-slate-800',
+        cell: (item) => item.qty,
+      },
+      {
+        header: 'HARGA SATUAN',
+        accessorKey: 'price',
+        alignment: 'center',
+        className: 'text-slate-800',
+        cell: (item) => item.price.toLocaleString('id-ID'),
+      },
+      {
+        header: 'SUB TOTAL',
+        accessorKey: 'total',
+        alignment: 'center',
+        className: 'text-slate-800',
+        cell: (item) => item.total.toLocaleString('id-ID'),
+      },
+      {
+        header: 'Aksi',
+        alignment: 'right',
+        sticky: 'right',
+        cell: (item) => (
+          <div className="flex justify-end">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" className="h-9 w-9 rounded-full p-0 text-slate-600 hover:bg-slate-100 hover:text-slate-900">
+                  <MoreVertical className="h-4 w-4 text-slate-700" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-40 rounded-md border-slate-200 p-2 shadow-lg">
+                <DropdownMenuItem
+                  onClick={() => {
+                    setEditingItem(item);
+                    setOpenItemModal(true);
+                  }}
+                  className="cursor-pointer rounded-md px-3 py-2 text-sm"
+                >
+                  Edit
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setDeleteItem(item)} className="cursor-pointer rounded-md px-3 py-2 text-sm text-red-600 focus:text-red-600">
+                  Hapus
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+        ),
+      },
+    ],
+    [startData],
+  );
+
   const handlePay = async (values: MaterialTransactionBillingFormValues) => {
     if (!transactionId || !transaction) return;
     if (values.amount > transaction.totalUnpaid) {
@@ -251,120 +318,36 @@ export default function PurchaseMaterialDetailPage() {
           </div>
         </Card>
 
-        <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-          <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
-            <div className="relative w-full sm:w-[332px]">
-              <Search className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
-              <Input value={search} onChange={(event) => { setSearch(event.target.value); setPage(1); }} placeholder="Search here" className="h-11 rounded-md border-slate-200 bg-white pl-11 shadow-sm" />
-            </div>
-            <div className="flex items-center gap-3 text-[16px] text-slate-700">
-              <span>Show</span>
-              <Select value={String(perPage)} onValueChange={(value) => { setPerPage(Number(value)); setPage(1); }}>
-                <SelectTrigger className="h-11 w-[68px] rounded-md border-slate-200 bg-white shadow-sm">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="25">25</SelectItem>
-                  <SelectItem value="50">50</SelectItem>
-                  <SelectItem value="100">100</SelectItem>
-                </SelectContent>
-              </Select>
-              <span>Page</span>
-            </div>
-          </div>
-
-          <Button onClick={() => { setEditingItem(null); setOpenItemModal(true); }} className="w-full sm:w-auto bg-[#1e3a5f] hover:bg-[#152e4d]">
-            <Plus className="mr-2 h-4 w-4" />
-            Tambah Data
-          </Button>
-        </div>
-
-        <Card className="overflow-hidden rounded-md border border-slate-200 bg-white shadow-sm">
-          <Table>
-            <TableHeader className="bg-slate-100">
-              <TableRow className="border-slate-200">
-                <TableHead className="px-5 py-4 text-center text-[14px] font-semibold uppercase text-slate-900">NO</TableHead>
-                <TableHead className="px-5 py-4 text-[14px] font-semibold uppercase text-slate-900">NAMA MATERIAL</TableHead>
-                <TableHead className="px-5 py-4 text-center text-[14px] font-semibold uppercase text-slate-900">QTY</TableHead>
-                <TableHead className="px-5 py-4 text-center text-[14px] font-semibold uppercase text-slate-900">HARGA SATUAN</TableHead>
-                <TableHead className="px-5 py-4 text-center text-[14px] font-semibold uppercase text-slate-900">SUB TOTAL</TableHead>
-                <TableHead className="px-5 py-4 text-right text-[14px] font-semibold uppercase text-slate-900">Aksi</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {transactionQuery.isFetching && filteredItems.length === 0 ? (
-                <TableRow>
-                  <TableCell colSpan={100} className="h-28 text-center"><LoadingState variant="section" text="Memuat detail item..." /></TableCell>
-                </TableRow>
-              ) : paginatedItems.length === 0 ? (
-                <TableRow>
-                  <TableCell colSpan={6} className="h-28 text-center text-slate-500">Belum ada material pada transaksi ini.</TableCell>
-                </TableRow>
-              ) : (
-                paginatedItems.map((item, index) => (
-                  <TableRow key={item.id} className="border-slate-200 hover:bg-slate-50/70">
-                    <TableCell className="px-5 py-4 text-center text-[16px] text-slate-800">{startData + index}</TableCell>
-                    <TableCell className="px-5 py-4 text-[16px] text-slate-800">{item.material?.name ?? '-'}</TableCell>
-                    <TableCell className="px-5 py-4 text-center text-[16px] text-slate-800">{item.qty}</TableCell>
-                    <TableCell className="px-5 py-4 text-center text-[16px] text-slate-800">{item.price.toLocaleString('id-ID')}</TableCell>
-                    <TableCell className="px-5 py-4 text-center text-[16px] text-slate-800">{item.total.toLocaleString('id-ID')}</TableCell>
-                    <TableCell className="px-5 py-4 text-right">
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" className="h-9 w-9 rounded-full p-0">
-                            <MoreVertical className="h-4 w-4 text-slate-700" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end" className="w-40 rounded-md border-slate-200 p-2 shadow-lg">
-                          <DropdownMenuItem
-                            onClick={() => {
-                              setEditingItem(item);
-                              setOpenItemModal(true);
-                            }}
-                            className="cursor-pointer rounded-md px-3 py-2 text-[16px]"
-                          >
-                            Edit
-                          </DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => setDeleteItem(item)} className="cursor-pointer rounded-md px-3 py-2 text-[16px] text-red-600 focus:text-red-600">
-                            Hapus
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </TableCell>
-                  </TableRow>
-                ))
-              )}
-            </TableBody>
-          </Table>
-        </Card>
-
-        <div className="flex flex-col gap-4 px-2 lg:flex-row lg:items-center lg:justify-between">
-          <p className="text-[14px] text-slate-500">Showing {startData}-{endData} of {filteredItems.length} data</p>
-          <div className="flex items-center gap-1 text-[16px]">
-            <Button variant="ghost" onClick={() => setPage(safePage - 1)} disabled={safePage <= 1} className="text-slate-700">
-              Previous
+        <BaseTable
+          data={paginatedItems}
+          columns={itemColumns}
+          loading={transactionQuery.isFetching && filteredItems.length === 0}
+          searchPlaceholder="Search here"
+          search={search}
+          onSearchChange={(value) => {
+            setSearch(value);
+            setPage(1);
+          }}
+          showLimitChange
+          perPage={perPage}
+          onPerPageChange={(value) => {
+            setPerPage(value);
+            setPage(1);
+          }}
+          meta={{
+            currentPage: safePage,
+            perPage,
+            lastPage: totalPages,
+            total: filteredItems.length,
+          }}
+          onPageChange={setPage}
+          headerActions={
+            <Button onClick={() => { setEditingItem(null); setOpenItemModal(true); }} className="w-full sm:w-auto bg-[#1e3a5f] hover:bg-[#152e4d]">
+              <Plus className="mr-2 h-4 w-4" />
+              Tambah Data
             </Button>
-            {pageNumbers.map((pageNumber) => (
-              <Button
-                key={pageNumber}
-                variant={pageNumber === safePage ? 'outline' : 'ghost'}
-                onClick={() => setPage(pageNumber)}
-                className={pageNumber === safePage ? 'h-10 min-w-10 rounded-md border-slate-200 bg-white' : 'h-10 min-w-10 rounded-md text-slate-700'}
-              >
-                {pageNumber}
-              </Button>
-            ))}
-            {totalPages > 5 && safePage < totalPages - 2 ? <span className="px-2 text-slate-500">...</span> : null}
-            {totalPages > 5 && !pageNumbers.includes(totalPages) ? (
-              <Button variant="ghost" onClick={() => setPage(totalPages)} className="h-10 min-w-10 rounded-md text-slate-700">
-                {totalPages}
-              </Button>
-            ) : null}
-            <Button variant="ghost" onClick={() => setPage(safePage + 1)} disabled={safePage >= totalPages} className="text-slate-700">
-              Next
-            </Button>
-          </div>
-        </div>
+          }
+        />
       </div>
 
       <PurchaseMaterialDetailItemModal

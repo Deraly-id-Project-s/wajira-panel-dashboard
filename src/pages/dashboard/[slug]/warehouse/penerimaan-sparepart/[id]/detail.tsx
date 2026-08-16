@@ -158,16 +158,6 @@ export default function PenerimaanSparepartDetailPage() {
               </div>
             </div>
           </div>
-
-          {detailData?.state !== 'done' && (
-            <Button
-              onClick={handleProcessStock}
-              disabled={isProcessing}
-              className="bg-emerald-600 hover:bg-emerald-700 text-white font-medium px-5 h-10 rounded-lg shadow-sm flex items-center gap-2 cursor-pointer"
-            >
-              {isProcessing ? 'Memproses...' : 'Proses Penerimaan'}
-            </Button>
-          )}
         </div>
 
         <div className="grid grid-cols-1 gap-6 md:grid-cols-2">

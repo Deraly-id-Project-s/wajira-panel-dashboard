@@ -1,8 +1,9 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useRouter } from 'next/router';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { PageHeader } from '@/components/ui/page-header';
 import { Button } from '@/components/ui/button';
+import BaseTable, { ColumnDef } from '@/components/ui/base-table';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useRoleDetail } from '@/hooks/useRole';
@@ -25,6 +26,70 @@ export default function RoleDetailPage() {
 
   const { data: role, isLoading: isLoadingRole, isError: isErrorRole, refetch } = useRoleDetail(id as string);
   const { data: userOptions = [], isLoading: isLoadingUsers } = useUserOptions();
+
+  const userColumns = useMemo<ColumnDef<any>[]>(() => {
+    const cols: ColumnDef<any>[] = [
+      {
+        header: 'Nama',
+        accessorKey: 'name',
+        className: 'font-medium text-gray-900',
+        cell: (user) => (
+          <div>
+            <div>{user.name}</div>
+            <div className="text-[10px] text-gray-400 font-normal mt-0.5">
+              {user.firstname || ''} {user.lastname || ''}
+            </div>
+          </div>
+        ),
+      },
+      {
+        header: 'Username & Email',
+        cell: (user) => (
+          <div>
+            <div className="text-gray-700 font-medium">{user.username}</div>
+            <div className="text-gray-500 mt-0.5">{user.email}</div>
+          </div>
+        ),
+      },
+      {
+        header: 'Status',
+        cell: (user) => (
+          <span
+            className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold border ${
+              user.is_active === 1
+                ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                : 'bg-slate-50 text-slate-700 border-slate-200'
+            }`}
+          >
+            {user.is_active === 1 ? 'Aktif' : 'Non-aktif'}
+          </span>
+        ),
+      },
+    ];
+
+    if (role?.name?.toLowerCase() !== 'admin') {
+      cols.push({
+        header: 'Aksi',
+        alignment: 'center',
+        sticky: 'right',
+        cell: (user) => (
+          <div className="flex justify-center">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setUserToRevoke({ id: user.id, name: user.name })}
+              className="h-8 w-8 text-red-500 hover:text-red-600 hover:bg-red-50 rounded-full"
+              title="Revoke Peran / Lepas Peran"
+            >
+              <UserMinus size={15} />
+            </Button>
+          </div>
+        ),
+      });
+    }
+
+    return cols;
+  }, [role?.name]);
 
   const { data: modules = [], isLoading: isLoadingModules } = useQuery<Module[]>({
     queryKey: ['global-modules', companyId],
@@ -188,57 +253,10 @@ export default function RoleDetailPage() {
                     Tidak ada pengguna yang terdaftar pada peran ini.
                   </div>
                 ) : (
-                  <div className="border rounded-md overflow-hidden bg-white">
-                    <table className="min-w-full text-xs text-left">
-                      <thead className="bg-slate-50/80 border-b">
-                        <tr>
-                          <th className="px-4 py-3 font-semibold text-gray-700 uppercase tracking-wider">Nama</th>
-                          <th className="px-4 py-3 font-semibold text-gray-700 uppercase tracking-wider">Username & Email</th>
-                          <th className="px-4 py-3 font-semibold text-gray-700 uppercase tracking-wider">Status</th>
-                          {role.name.toLowerCase() !== 'admin' && (
-                            <th className="px-4 py-3 font-semibold text-gray-700 uppercase tracking-wider text-center">Aksi</th>
-                          )}
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y">
-                        {role.users.map((user) => (
-                          <tr key={user.id} className="hover:bg-slate-50/50 transition-colors">
-                            <td className="px-4 py-3.5 font-medium text-gray-900">
-                              <div>{user.name}</div>
-                              <div className="text-[10px] text-gray-400 font-normal mt-0.5">
-                                {user.firstname || ''} {user.lastname || ''}
-                              </div>
-                            </td>
-                            <td className="px-4 py-3.5">
-                              <div className="text-gray-700 font-medium">{user.username}</div>
-                              <div className="text-gray-500 mt-0.5">{user.email}</div>
-                            </td>
-                            <td className="px-4 py-3.5">
-                              <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold border ${user.is_active === 1
-                                ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
-                                : 'bg-slate-50 text-slate-700 border-slate-200'
-                                }`}>
-                                {user.is_active === 1 ? 'Aktif' : 'Non-aktif'}
-                              </span>
-                            </td>
-                            {role.name.toLowerCase() !== 'admin' && (
-                              <td className="px-4 py-3.5 text-center">
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  onClick={() => setUserToRevoke({ id: user.id, name: user.name })}
-                                  className="h-8 w-8 text-red-500 hover:text-red-600 hover:bg-red-50 rounded-full"
-                                  title="Revoke Peran / Lepas Peran"
-                                >
-                                  <UserMinus size={15} />
-                                </Button>
-                              </td>
-                            )}
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
+                  <BaseTable
+                    data={role.users}
+                    columns={userColumns}
+                  />
                 )}
               </div>
             </div>

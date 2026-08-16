@@ -1,12 +1,12 @@
 import Link from 'next/link';
-import { MoreVertical, Search } from 'lucide-react';
+import { useMemo } from 'react';
+import { MoreVertical } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import BaseTable, { ColumnDef } from '@/components/ui/base-table';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import type { GoodsIssueEquipment } from '@/@types/goods-issue-equipment.types';
 import { format } from 'date-fns';
 import { id } from 'date-fns/locale';
-import { LoadingState } from '@/components/ui/loading-state';
 
 interface GoodsIssueEquipmentTableProps {
   data: GoodsIssueEquipment[];
@@ -36,78 +36,83 @@ export function GoodsIssueEquipmentTable({
   onUploadInvoice,
   onDelete,
 }: GoodsIssueEquipmentTableProps) {
+  const columns = useMemo<ColumnDef<GoodsIssueEquipment>[]>(
+    () => [
+      {
+        header: 'KODE PENGELUARAN',
+        accessorKey: 'code',
+        className: 'font-medium text-slate-900',
+        cell: (item) => item.code || '-',
+      },
+      {
+        header: 'TANGGAL',
+        accessorKey: 'transactionDate',
+        className: 'text-slate-700',
+        cell: (item) => formatDate(item.transactionDate),
+      },
+      {
+        header: 'DRIVER',
+        accessorKey: 'driver.name',
+        className: 'text-slate-700',
+        cell: (item) => item.driver?.name || '-',
+      },
+      {
+        header: 'NOMOR POLISI',
+        accessorKey: 'vehicleFleet.registrationNumber',
+        className: 'text-slate-700',
+        cell: (item) => item.vehicleFleet?.registrationNumber || '-',
+      },
+      {
+        header: 'KATEGORI',
+        accessorKey: 'category',
+        className: 'text-slate-700',
+        cell: (item) => getCategoryLabel(item.category),
+      },
+      {
+        header: 'Aksi',
+        alignment: 'center',
+        sticky: 'right',
+        cell: (item) => (
+          <div className="flex justify-center">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full text-slate-600 hover:bg-slate-100 hover:text-slate-900">
+                  <MoreVertical className="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="min-w-[150px] rounded-md border-slate-200 p-1.5 shadow-lg">
+                <DropdownMenuItem asChild className="rounded-lg px-3 py-2 text-sm text-slate-900 focus:bg-slate-50 cursor-pointer">
+                  <Link href={`/dashboard/${slug}/warehouse/pengeluaran-perlengkapan/${item.id}/edit`}>Edit</Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild className="rounded-lg px-3 py-2 text-sm text-slate-900 focus:bg-slate-50 cursor-pointer">
+                  <Link href={`/dashboard/${slug}/warehouse/pengeluaran-perlengkapan/${item.id}`}>Detail</Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  onClick={() => onUploadInvoice(item)}
+                  className="rounded-lg px-3 py-2 text-sm text-slate-900 focus:bg-slate-50 cursor-pointer"
+                >
+                  Upload Invoice
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  onClick={() => onDelete(item)}
+                  className="rounded-lg px-3 py-2 text-sm text-red-600 focus:bg-red-50 focus:text-red-600 cursor-pointer"
+                >
+                  Hapus
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+        ),
+      },
+    ],
+    [onDelete, onUploadInvoice, slug],
+  );
+
   return (
-    <Table>
-      <TableHeader className="bg-[#f8f9fa] border-b border-gray-200">
-        <TableRow className="hover:bg-[#f8f9fa]">
-          <TableHead className="px-4 py-4 text-left text-xs font-semibold uppercase text-slate-500 whitespace-nowrap">KODE PENGELUARAN</TableHead>
-          <TableHead className="px-4 py-4 text-left text-xs font-semibold uppercase text-slate-500 whitespace-nowrap">TANGGAL</TableHead>
-          <TableHead className="px-4 py-4 text-left text-xs font-semibold uppercase text-slate-500 whitespace-nowrap">DRIVER</TableHead>
-          <TableHead className="px-4 py-4 text-left text-xs font-semibold uppercase text-slate-500 whitespace-nowrap">NOMOR POLISI</TableHead>
-          <TableHead className="px-4 py-4 text-left text-xs font-semibold uppercase text-slate-500 whitespace-nowrap">KATEGORI</TableHead>
-          <TableHead className="px-4 py-4 text-center text-xs font-semibold uppercase text-slate-500 w-24 whitespace-nowrap sticky right-0 bg-[#f8f9fa] z-10 border-l border-slate-200 shadow-[-4px_0_6px_-4px_rgba(0,0,0,0.05)]">Aksi</TableHead>
-        </TableRow>
-      </TableHeader>
-      <TableBody>
-        {isLoading ? (
-          <TableRow className="group">
-            <TableCell colSpan={6} className="text-center px-4 py-4 sticky right-0 bg-white  z-10 border-l border-slate-200 shadow-[-4px_0_6px_-4px_rgba(0,0,0,0.05)]">
-              <LoadingState variant="section" text="Memuat data..." />
-            </TableCell>
-          </TableRow>
-        ) : data.length === 0 ? (
-          <TableRow className="group">
-            <TableCell colSpan={100} className="py-16 h-28 text-center text-slate-500 text-sm">
-              <div className="flex flex-col items-center justify-center gap-2">
-                <div className="rounded-full bg-slate-50 p-4 mb-2">
-                  <Search className="h-8 w-8 text-slate-400" />
-                </div>
-                <p className="text-base font-semibold text-slate-900">Tidak ada data ditemukan</p>
-                <p className="text-sm text-slate-500">Belum ada data atau coba gunakan kata kunci pencarian lain.</p>
-              </div>
-            </TableCell>
-          </TableRow>
-        ) : (
-          data.map((item) => (
-            <TableRow key={item.id} className="group bg-white hover:bg-slate-50 transition-colors">
-              <TableCell className="px-4 py-4 text-sm font-medium text-slate-900 text-left">{item.code || '-'}</TableCell>
-              <TableCell className="px-4 py-4 text-sm text-slate-700 text-left">{formatDate(item.transactionDate)}</TableCell>
-              <TableCell className="px-4 py-4 text-sm text-slate-700 text-left">{item.driver?.name || '-'}</TableCell>
-              <TableCell className="px-4 py-4 text-sm text-slate-700 text-left">{item.vehicleFleet?.registrationNumber || '-'}</TableCell>
-              <TableCell className="px-4 py-4 text-sm text-slate-700 text-left">{getCategoryLabel(item.category)}</TableCell>
-              <TableCell className="px-4 py-4 text-center sticky right-0 bg-white z-10 border-l border-slate-200 shadow-[-4px_0_6px_-4px_rgba(0,0,0,0.05)]">
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full text-slate-600 hover:bg-slate-100 hover:text-slate-900">
-                      <MoreVertical className="h-4 w-4" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="min-w-[150px] rounded-md border-slate-200 p-1.5 shadow-lg">
-                    <DropdownMenuItem asChild className="rounded-lg px-3 py-2 text-sm text-slate-900 focus:bg-slate-50 cursor-pointer">
-                      <Link href={`/dashboard/${slug}/warehouse/pengeluaran-perlengkapan/${item.id}/edit`}>Edit</Link>
-                    </DropdownMenuItem>
-                    <DropdownMenuItem asChild className="rounded-lg px-3 py-2 text-sm text-slate-900 focus:bg-slate-50 cursor-pointer">
-                      <Link href={`/dashboard/${slug}/warehouse/pengeluaran-perlengkapan/${item.id}`}>Detail</Link>
-                    </DropdownMenuItem>
-                    <DropdownMenuItem
-                      onClick={() => onUploadInvoice(item)}
-                      className="rounded-lg px-3 py-2 text-sm text-slate-900 focus:bg-slate-50 cursor-pointer"
-                    >
-                      Upload Invoice
-                    </DropdownMenuItem>
-                    <DropdownMenuItem
-                      onClick={() => onDelete(item)}
-                      className="rounded-lg px-3 py-2 text-sm text-red-600 focus:bg-red-50 focus:text-red-600 cursor-pointer"
-                    >
-                      Hapus
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </TableCell>
-            </TableRow>
-          ))
-        )}
-      </TableBody>
-    </Table>
+    <BaseTable
+      data={data}
+      columns={columns}
+      loading={isLoading}
+    />
   );
 }

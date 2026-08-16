@@ -16,8 +16,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import BaseTable, { ColumnDef } from '@/components/ui/base-table';
 import { Textarea } from '@/components/ui/textarea';
 import { GoodsReceiptItemModal } from '@/components/features/goods-receipt/GoodsReceiptItemModal';
 import { SearchableSelect } from '@/components/features/vehicle-data/SearchableSelect';
@@ -179,20 +178,94 @@ export default function GoodsReceiptEditPage() {
   };
 
   const handleDeleteItem = async () => {
-    if (!receipt) return;
-    const targets = deleteTarget ? [deleteTarget.id] : selectedIds;
-    if (targets.length === 0) return;
-
+    if (!receipt || !deleteTarget) return;
     try {
-      await Promise.all(targets.map((targetId) => deleteItemMutation.mutateAsync({ id: targetId, goodsTransactionId: receipt.id })));
+      if (deleteTarget.id > 0) {
+        await deleteItemMutation.mutateAsync({ id: deleteTarget.id, goodsTransactionId: receipt.id });
+        setSelectedIds((current) => current.filter((id) => id !== deleteTarget.id));
+      } else {
+        await Promise.all(selectedIds.map((id) => deleteItemMutation.mutateAsync({ id, goodsTransactionId: receipt.id })));
+        setSelectedIds([]);
+      }
       toast.success('Detail material berhasil dihapus');
       setDeleteTarget(null);
-      setSelectedIds([]);
     } catch (error) {
-      const message = error instanceof ApiResponseError ? error.message : 'Gagal menghapus detail material';
+      const message = error instanceof ApiValidationError || error instanceof ApiResponseError ? error.message : 'Gagal menghapus detail material';
       toast.error(message);
     }
   };
+
+  const itemColumns = useMemo<ColumnDef<GoodsReceiptItem>[]>(
+    () => [
+      {
+        header: 'NO',
+        alignment: 'left',
+        cell: (_, index) => (safePage - 1) * perPage + index + 1,
+      },
+      {
+        header: 'KODE BARANG',
+        accessorKey: 'material.code',
+        className: 'font-medium text-slate-900',
+        cell: (item) => item.material?.code ?? '-',
+      },
+      {
+        header: 'NAMA BARANG',
+        accessorKey: 'material.name',
+        className: 'text-slate-800',
+        cell: (item) => item.material?.name ?? '-',
+      },
+      {
+        header: 'QTY',
+        accessorKey: 'qty',
+        alignment: 'center',
+        cell: (item) => item.qty,
+      },
+      {
+        header: 'SATUAN',
+        accessorKey: 'type',
+        alignment: 'center',
+        cell: (item) => item.type.toUpperCase(),
+      },
+      {
+        header: 'HARGA SATUAN',
+        accessorKey: 'price',
+        alignment: 'right',
+        cell: (item) => formatCurrency(item.price),
+      },
+      {
+        header: 'TOTAL',
+        accessorKey: 'total',
+        alignment: 'right',
+        className: 'font-semibold text-slate-900',
+        cell: (item) => formatCurrency(item.total),
+      },
+      {
+        header: 'Aksi',
+        alignment: 'right',
+        sticky: 'right',
+        cell: (item) => (
+          <div className="flex justify-end">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" className="h-9 w-9 rounded-full p-0 text-slate-600 hover:bg-slate-100 hover:text-slate-900">
+                  <MoreVertical className="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-36 rounded-md border-slate-200 p-2 shadow-lg">
+                <DropdownMenuItem onClick={() => { setEditingItem(item); setItemOpen(true); }} className="cursor-pointer rounded-md px-3 py-2 text-sm">
+                  Edit
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setDeleteTarget(item)} className="cursor-pointer rounded-md px-3 py-2 text-sm text-red-600 focus:text-red-600">
+                  Hapus
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+        ),
+      },
+    ],
+    [perPage, safePage],
+  );
 
   if (query.isLoading) {
     return <DashboardLayout><LoadingState variant="page" /></DashboardLayout>;
@@ -295,111 +368,46 @@ export default function GoodsReceiptEditPage() {
           </form>
         </Card>
 
-        <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-          <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
-            <div className="relative w-full sm:w-[328px]">
-              <Search className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
-              <Input value={search} onChange={(event) => { setSearch(event.target.value); setPage(1); }} placeholder="Search here" className="h-11 rounded-md border-slate-200 bg-white pl-11 shadow-sm" />
+        <BaseTable
+          data={pageItems}
+          columns={itemColumns}
+          showCheckbox
+          selectedIds={new Set(selectedIds.map(String))}
+          onSelectedIdsChange={(set) => setSelectedIds(Array.from(set).map(Number))}
+          getRowId={(item) => String(item.id)}
+          searchPlaceholder="Search here"
+          search={search}
+          onSearchChange={(value) => {
+            setSearch(value);
+            setPage(1);
+          }}
+          showLimitChange
+          perPage={perPage}
+          onPerPageChange={(value) => {
+            setPerPage(value);
+            setPage(1);
+          }}
+          meta={{
+            currentPage: safePage,
+            perPage,
+            lastPage: totalPages,
+            total: filteredItems.length,
+          }}
+          onPageChange={setPage}
+          headerActions={
+            <div className="flex items-center gap-2">
+              {selectedIds.length > 0 && (
+                <Button variant="outline" onClick={() => setDeleteTarget({ id: 0 } as GoodsReceiptItem)} className="border-red-300 text-red-600 hover:text-red-700">
+                  Hapus ({selectedIds.length})
+                </Button>
+              )}
+              <Button onClick={() => { setEditingItem(null); setItemOpen(true); }} className="w-full sm:w-auto bg-[#1e3a5f] hover:bg-[#152e4d]">
+                <Plus className="mr-2 h-4 w-4" />
+                Tambah Data
+              </Button>
             </div>
-            <div className="flex items-center gap-3 text-[16px] text-slate-700">
-              <span>Show</span>
-              <Select value={String(perPage)} onValueChange={(value) => { setPerPage(Number(value)); setPage(1); }}>
-                <SelectTrigger className="h-11 w-[68px] rounded-md border-slate-200 bg-white shadow-sm">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="25">25</SelectItem>
-                  <SelectItem value="50">50</SelectItem>
-                  <SelectItem value="100">100</SelectItem>
-                </SelectContent>
-              </Select>
-              <span>Page</span>
-            </div>
-          </div>
-
-          <Button onClick={() => { setEditingItem(null); setItemOpen(true); }} className="w-full sm:w-auto bg-[#1e3a5f] hover:bg-[#152e4d]">
-            <Plus className="mr-2 h-4 w-4" />
-            Tambah Data
-          </Button>
-        </div>
-
-        <div className="flex items-center justify-between">
-          <p className="text-[14px] text-slate-500">{selectedIds.length > 0 ? `${selectedIds.length} data terpilih` : 'Pilih data untuk menghapus banyak item'}</p>
-          <Button variant="outline" onClick={() => setDeleteTarget({ id: 0 } as GoodsReceiptItem)} disabled={selectedIds.length === 0} className="border-red-300 text-red-600 hover:text-red-700">
-            Hapus
-          </Button>
-        </div>
-
-        <Card className="overflow-hidden rounded-md border border-slate-200 bg-white shadow-sm">
-          <Table>
-            <TableHeader className="bg-slate-100">
-              <TableRow className="border-slate-200">
-                <TableHead className="w-10 px-3 py-4">
-                  <Checkbox
-                    checked={pageItems.length > 0 && pageItems.every((item) => selectedIds.includes(item.id))}
-                    onCheckedChange={(checked) => {
-                      if (checked) {
-                        setSelectedIds(Array.from(new Set([...selectedIds, ...pageItems.map((item) => item.id)])));
-                        return;
-                      }
-                      setSelectedIds((current) => current.filter((item) => !pageItems.some((pageItem) => pageItem.id === item)));
-                    }}
-                  />
-                </TableHead>
-                <TableHead className="px-5 py-4 text-[14px] font-semibold uppercase text-slate-900">NO</TableHead>
-                <TableHead className="px-5 py-4 text-[14px] font-semibold uppercase text-slate-900">KODE BARANG</TableHead>
-                <TableHead className="px-5 py-4 text-[14px] font-semibold uppercase text-slate-900">NAMA BARANG</TableHead>
-                <TableHead className="px-5 py-4 text-[14px] font-semibold uppercase text-slate-900">QTY</TableHead>
-                <TableHead className="px-5 py-4 text-[14px] font-semibold uppercase text-slate-900">SATUAN</TableHead>
-                <TableHead className="px-5 py-4 text-[14px] font-semibold uppercase text-slate-900">HARGA SATUAN</TableHead>
-                <TableHead className="px-5 py-4 text-[14px] font-semibold uppercase text-slate-900">TOTAL</TableHead>
-                <TableHead className="px-5 py-4 text-right text-[14px] font-semibold uppercase text-slate-900">Aksi</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {pageItems.length === 0 ? (
-                <TableRow>
-                  <TableCell colSpan={9} className="h-24 text-center text-slate-500">Belum ada detail material.</TableCell>
-                </TableRow>
-              ) : pageItems.map((item, index) => (
-                <TableRow key={item.id} className="border-slate-200">
-                  <TableCell className="px-3 py-4">
-                    <Checkbox checked={selectedIds.includes(item.id)} onCheckedChange={(checked) => setSelectedIds((current) => checked ? [...current, item.id] : current.filter((value) => value !== item.id))} />
-                  </TableCell>
-                  <TableCell className="px-5 py-4 text-[15px]">{(safePage - 1) * perPage + index + 1}</TableCell>
-                  <TableCell className="px-5 py-4 text-[15px]">{item.material?.code ?? '-'}</TableCell>
-                  <TableCell className="px-5 py-4 text-[15px]">{item.material?.name ?? '-'}</TableCell>
-                  <TableCell className="px-5 py-4 text-[15px]">{item.qty}</TableCell>
-                  <TableCell className="px-5 py-4 text-[15px]">{item.type.toUpperCase()}</TableCell>
-                  <TableCell className="px-5 py-4 text-[15px]">{formatCurrency(item.price)}</TableCell>
-                  <TableCell className="px-5 py-4 text-[15px]">{formatCurrency(item.total)}</TableCell>
-                  <TableCell className="px-5 py-4 text-right">
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" className="h-9 w-9 rounded-full p-0">
-                          <MoreVertical className="h-4 w-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end" className="w-36 rounded-md border-slate-200 p-2 shadow-lg">
-                        <DropdownMenuItem onClick={() => { setEditingItem(item); setItemOpen(true); }} className="cursor-pointer rounded-md px-3 py-2 text-[16px]">Edit</DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => setDeleteTarget(item)} className="cursor-pointer rounded-md px-3 py-2 text-[16px] text-red-600 focus:text-red-600">Hapus</DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </Card>
-
-        <div className="flex flex-col gap-4 px-2 lg:flex-row lg:items-center lg:justify-between">
-          <p className="text-[14px] text-slate-500">Showing {filteredItems.length === 0 ? 0 : (safePage - 1) * perPage + 1}-{Math.min(safePage * perPage, filteredItems.length)} of {filteredItems.length} data</p>
-          <div className="flex items-center gap-2">
-            <Button variant="ghost" onClick={() => setPage((current) => Math.max(1, current - 1))} disabled={safePage <= 1}>Previous</Button>
-            <Button variant="outline" className="h-10 min-w-10 rounded-md border-slate-200 bg-white">{safePage}</Button>
-            <Button variant="ghost" onClick={() => setPage((current) => Math.min(totalPages, current + 1))} disabled={safePage >= totalPages}>Next</Button>
-          </div>
-        </div>
+          }
+        />
       </div>
 
       <GoodsReceiptItemModal

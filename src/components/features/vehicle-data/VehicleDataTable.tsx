@@ -1,17 +1,13 @@
-import { CheckCircle2, Download, MoreVertical, Plus, Search, Upload } from 'lucide-react';
+import { useMemo } from 'react';
+import { CheckCircle2, Download, MoreVertical, Plus, Upload } from 'lucide-react';
 import { format } from 'date-fns';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { Checkbox } from '@/components/ui/checkbox';
-import { Input } from '@/components/ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { DatePicker } from '@/components/ui/date-picker';
-import { getVisiblePageNumbers } from '@/lib/api/pagination';
+import BaseTable, { ColumnDef } from '@/components/ui/base-table';
 import type { VehicleData } from '@/@types/vehicle-data.types';
 import { SearchableSelect, type SearchableSelectOption } from './SearchableSelect';
-import { LoadingState } from '@/components/ui/loading-state';
 
 interface VehicleDataTableProps {
   items: VehicleData[];
@@ -80,37 +76,121 @@ export function VehicleDataTable({
   isAssigning = false,
 }: VehicleDataTableProps) {
   const totalPages = Math.max(1, Math.ceil(totalData / perPage));
-  const startData = totalData === 0 ? 0 : (page - 1) * perPage + 1;
-  const endData = Math.min(page * perPage, totalData);
-  const currentPageSelectableIds = items.filter((item) => !assignedIds.includes(item.id)).map((item) => item.id);
-  const allSelected = currentPageSelectableIds.length > 0 && currentPageSelectableIds.every((id) => selectedIds.includes(id));
-  const visiblePages = getVisiblePageNumbers(totalPages, page, 5);
   const assignedCountOnPage = items.filter((item) => assignedIds.includes(item.id)).length;
   const selectedPendingCount = selectedIds.filter((id) => !assignedIds.includes(id)).length;
-
-  const handleSelectAll = (checked: boolean | 'indeterminate') => {
-    if (checked === true) {
-      const next = Array.from(new Set([...selectedIds, ...currentPageSelectableIds]));
-      onSelectedIdsChange(next);
-      return;
-    }
-
-    onSelectedIdsChange(selectedIds.filter((id) => !currentPageSelectableIds.includes(id)));
-  };
-
-  const handleSelectRow = (id: number, checked: boolean | 'indeterminate') => {
-    if (checked === true) {
-      onSelectedIdsChange(Array.from(new Set([...selectedIds, id])));
-      return;
-    }
-
-    onSelectedIdsChange(selectedIds.filter((value) => value !== id));
-  };
 
   const handleResetAssign = () => {
     onVendorIdChange('');
     onProcessDateChange(undefined);
   };
+
+  const columns = useMemo<ColumnDef<VehicleData>[]>(
+    () => [
+      {
+        header: 'Kode Ditlantas',
+        accessorKey: 'ditlantasProcess.0.code',
+        alignment: 'left',
+        className: 'font-medium text-slate-900',
+        cell: (item) => item.ditlantasProcess?.[0]?.code || '-',
+      },
+      {
+        header: 'Dealer',
+        accessorKey: 'dealer.namaDealer',
+        alignment: 'left',
+        className: 'max-w-[220px] text-slate-700',
+        cell: (item) => (
+          <div className="space-y-2">
+            <div className="line-clamp-2 uppercase font-medium text-slate-900">{item.dealer?.namaDealer || '-'}</div>
+            {assignedIds.includes(item.id) ? (
+              <span className="inline-flex items-center rounded-full bg-emerald-100 px-2.5 py-1 text-[11px] font-semibold text-emerald-700">
+                Sudah assign Ditlantas
+              </span>
+            ) : selectedIds.includes(item.id) ? (
+              <span className="inline-flex items-center rounded-full bg-sky-100 px-2.5 py-1 text-[11px] font-semibold text-sky-700">
+                Siap di-assign
+              </span>
+            ) : null}
+          </div>
+        ),
+      },
+      {
+        header: 'Nama STNK',
+        accessorKey: 'stnkName',
+        alignment: 'left',
+        className: 'text-slate-700',
+        cell: (item) => item.stnkName || '-',
+      },
+      {
+        header: 'Wilayah',
+        accessorKey: 'region.name',
+        alignment: 'left',
+        className: 'text-slate-700',
+        cell: (item) => item.region?.name || '-',
+      },
+      {
+        header: 'Tipe Motor',
+        alignment: 'left',
+        className: 'text-slate-700',
+        cell: (item) => item.motorcycleType || item.motorcycleModel || '-',
+      },
+      {
+        header: 'No Mesin',
+        accessorKey: 'machineNumber',
+        alignment: 'left',
+        className: 'font-medium text-slate-700',
+        cell: (item) => item.machineNumber || '-',
+      },
+      {
+        header: 'No Rangka',
+        accessorKey: 'chassisNumber',
+        alignment: 'left',
+        className: 'text-slate-700',
+        cell: (item) => item.chassisNumber || '-',
+      },
+      {
+        header: 'Tgl Faktur',
+        accessorKey: 'invoiceDate',
+        alignment: 'center',
+        className: 'text-slate-700',
+        cell: (item) => formatDate(item.invoiceDate),
+      },
+      {
+        header: 'Tgl Terima Faktur',
+        accessorKey: 'invoiceReceiveDate',
+        alignment: 'center',
+        className: 'text-slate-700',
+        cell: (item) => formatDate(item.invoiceReceiveDate),
+      },
+      {
+        header: 'Aksi',
+        alignment: 'center',
+        sticky: 'right',
+        cell: (item) => (
+          <div className="flex justify-center">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" className="h-8 w-8 p-0 rounded-full text-slate-600 hover:bg-slate-100 hover:text-slate-900">
+                  <MoreVertical className="h-4 w-4 text-slate-500" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-[170px] rounded-md border-slate-200 p-1.5 shadow-lg">
+                <DropdownMenuItem onClick={() => onDetail(item)} className="rounded-lg px-3 py-2 text-sm text-slate-900 focus:bg-slate-50 cursor-pointer">
+                  Detail
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => onEdit(item)} className="rounded-lg px-3 py-2 text-sm text-slate-900 focus:bg-slate-50 cursor-pointer">
+                  Edit
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => onDelete(item)} className="rounded-lg px-3 py-2 text-sm text-red-600 focus:bg-red-50 focus:text-red-600 cursor-pointer">
+                  Hapus
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+        ),
+      },
+    ],
+    [assignedIds, onDelete, onDetail, onEdit, selectedIds],
+  );
 
   return (
     <div className="space-y-6">
@@ -144,180 +224,60 @@ export function VehicleDataTable({
         </div>
       </Card>
 
-      <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
-        <div className="flex flex-col gap-4">
-          <div className="flex flex-col gap-4 md:flex-row md:items-center">
-            <div className="relative w-full md:w-[325px]">
-              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
-              <Input value={search} onChange={(event) => onSearchChange(event.target.value)} placeholder="Search here" className="h-11 rounded-md border-slate-200 bg-white pl-10" />
-            </div>
-            <div className="flex items-center gap-2 text-sm text-slate-700">
-              <span>Show</span>
-              <Select value={String(perPage)} onValueChange={(value) => onPerPageChange(Number(value))}>
-                <SelectTrigger className="h-11 w-[90px] rounded-md border-slate-200 bg-white">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="25">25</SelectItem>
-                  <SelectItem value="50">50</SelectItem>
-                  <SelectItem value="100">100</SelectItem>
-                </SelectContent>
-              </Select>
-              <span>Page</span>
-            </div>
-          </div>
-
-          <div className="flex flex-wrap gap-2">
-            <div className="inline-flex items-center gap-2 rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1.5 text-xs font-medium text-emerald-700">
-              <CheckCircle2 className="h-3.5 w-3.5" />
-              {assignedIds.length} data sudah di-assign
-            </div>
-            <div className="inline-flex items-center gap-2 rounded-full border border-sky-200 bg-sky-50 px-3 py-1.5 text-xs font-medium text-sky-700">
-              {selectedPendingCount} data siap di-assign
-            </div>
-            {assignedCountOnPage > 0 ? (
-              <div className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs font-medium text-slate-600">
-                {assignedCountOnPage} data di halaman ini sudah di-assign
-              </div>
-            ) : null}
-          </div>
+      <div className="flex flex-wrap gap-2">
+        <div className="inline-flex items-center gap-2 rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1.5 text-xs font-medium text-emerald-700">
+          <CheckCircle2 className="h-3.5 w-3.5" />
+          {assignedIds.length} data sudah di-assign
         </div>
-
-        <div className="flex flex-wrap items-center gap-2 xl:justify-end">
-          <Button onClick={onImport} variant="outline" className="w-full sm:w-auto">
-            <Upload className="mr-2 h-4 w-4" />
-            Import
-          </Button>
-          <Button onClick={onExport} disabled={isExporting} variant="outline" className="w-full sm:w-auto">
-            <Download className="mr-2 h-4 w-4" />
-            {isExporting ? 'Exporting...' : 'Export'}
-          </Button>
-          <Button onClick={onAdd} className="w-full sm:w-auto bg-[#1e3a5f] hover:bg-[#152e4d]">
-            <Plus className="mr-2 h-4 w-4" />
-            Tambah Data
-          </Button>
+        <div className="inline-flex items-center gap-2 rounded-full border border-sky-200 bg-sky-50 px-3 py-1.5 text-xs font-medium text-sky-700">
+          {selectedPendingCount} data siap di-assign
         </div>
+        {assignedCountOnPage > 0 ? (
+          <div className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs font-medium text-slate-600">
+            {assignedCountOnPage} data di halaman ini sudah di-assign
+          </div>
+        ) : null}
       </div>
 
-      <div className="overflow-x-auto rounded-[16px] border border-slate-200 bg-white shadow-sm">s*<Table>
-        <TableHeader className="bg-[#f8f9fa] border-b border-gray-200">
-          <TableRow className="border-slate-200 hover:bg-transparent">
-            <TableHead className="w-14 px-4 py-4 text-center">
-              <Checkbox checked={allSelected} onCheckedChange={handleSelectAll} aria-label="Pilih semua data kendaraan" />
-            </TableHead>
-            <TableHead className="px-4 py-4 text-left text-xs font-semibold uppercase text-slate-500">Kode Ditlantas</TableHead>
-            <TableHead className="px-4 py-4 text-left text-xs font-semibold uppercase text-slate-500">Dealer</TableHead>
-            <TableHead className="px-4 py-4 text-left text-xs font-semibold uppercase text-slate-500">Nama STNK</TableHead>
-            <TableHead className="px-4 py-4 text-left text-xs font-semibold uppercase text-slate-500">Wilayah</TableHead>
-            <TableHead className="px-4 py-4 text-left text-xs font-semibold uppercase text-slate-500">Tipe Motor</TableHead>
-            <TableHead className="px-4 py-4 text-left text-xs font-semibold uppercase text-slate-500">No Mesin</TableHead>
-            <TableHead className="px-4 py-4 text-left text-xs font-semibold uppercase text-slate-500">No Rangka</TableHead>
-            <TableHead className="px-4 py-4 text-center text-xs font-semibold uppercase text-slate-500">Tgl Faktur</TableHead>
-            <TableHead className="px-4 py-4 text-center text-xs font-semibold uppercase text-slate-500">Tgl Terima Faktur</TableHead>
-            <TableHead className="px-4 py-4 text-center text-xs font-semibold uppercase text-slate-500 w-[80px] sticky right-0 bg-[#f8f9fa] z-10 border-l border-slate-200 shadow-[-4px_0_6px_-4px_rgba(0,0,0,0.05)]" AksiTableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {isLoading ? (
-            <tr>
-              <td colSpan={100} className="px-4 py-16 text-center bg-white">
-                <LoadingState variant="section" text="Memuat data..." />
-              </td>
-            </tr>
-          ) : items.length ? (
-            items.map((item) => (
-              <TableRow key={item.id} className={`group ${assignedIds.includes(item.id) ? 'border-b border-emerald-100 bg-emerald-50/40 hover:bg-emerald-50/60 transition-colors' : 'border-b border-slate-200 hover:bg-gray-50/70 transition-colors'}`}>
-                <TableCell className="px-4 py-4 text-center sticky right-0 bg-white group-hover:bg-gray-50 z-10 border-l border-slate-200 shadow-[-4px_0_6px_-4px_rgba(0,0,0,0.05)]">
-                  <Checkbox
-                    checked={assignedIds.includes(item.id) || selectedIds.includes(item.id)}
-                    disabled={assignedIds.includes(item.id)}
-                    onCheckedChange={(checked) => handleSelectRow(item.id, checked)}
-                    aria-label={`Pilih data kendaraan ${item.invoiceNumber}`}
-                  />
-                </TableCell>
-                <TableCell className="px-4 py-4 text-sm font-medium text-slate-900 text-left">
-                  {item.ditlantasProcess?.[0]?.code || '-'}
-                </TableCell>
-                <TableCell className="max-w-[220px] px-4 py-4 text-sm text-slate-700 text-left">
-                  <div className="space-y-2">
-                    <div className="line-clamp-2 uppercase font-medium text-slate-900">{item.dealer?.namaDealer || '-'}</div>
-                    {assignedIds.includes(item.id) ? (
-                      <span className="inline-flex items-center rounded-full bg-emerald-100 px-2.5 py-1 text-[11px] font-semibold text-emerald-700">
-                        Sudah assign Ditlantas
-                      </span>
-                    ) : selectedIds.includes(item.id) ? (
-                      <span className="inline-flex items-center rounded-full bg-sky-100 px-2.5 py-1 text-[11px] font-semibold text-sky-700">
-                        Siap di-assign
-                      </span>
-                    ) : null}
-                  </div>
-                </TableCell>
-                <TableCell className="px-4 py-4 text-sm text-slate-700 text-left">{item.stnkName || '-'}</TableCell>
-                <TableCell className="px-4 py-4 text-sm text-slate-700 text-left">{item.region?.name || '-'}</TableCell>
-                <TableCell className="px-4 py-4 text-sm text-slate-700 text-left">{item.motorcycleType || item.motorcycleModel || '-'}</TableCell>
-                <TableCell className="px-4 py-4 text-sm text-slate-700 text-left font-medium">{item.machineNumber || '-'}</TableCell>
-                <TableCell className="px-4 py-4 text-sm text-slate-700 text-left">{item.chassisNumber || '-'}</TableCell>
-                <TableCell className="px-4 py-4 text-sm text-slate-700 text-center">{formatDate(item.invoiceDate)}</TableCell>
-                <TableCell className="px-4 py-4 text-sm text-slate-700 text-center">{formatDate(item.invoiceReceiveDate)}</TableCell>
-                <TableCell className="px-4 py-4 text-center sticky right-0 bg-white group-hover:bg-gray-50 z-10 border-l border-slate-200 shadow-[-4px_0_6px_-4px_rgba(0,0,0,0.05)]">
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" className="h-8 w-8 p-0">
-                        <MoreVertical className="h-4 w-4 text-slate-500" />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end" className="w-[170px]">
-                      <DropdownMenuItem onClick={() => onDetail(item)} className="cursor-pointer">Detail</DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => onEdit(item)} className="cursor-pointer">Edit</DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => onDelete(item)} className="cursor-pointer text-red-600 focus:text-red-600">Hapus</DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                </TableCell>
-              </TableRow>
-            ))
-          ) : (
-            <TableRow className="group">
-              <TableCell colSpan={100} className="py-16 h-28 text-center text-sm text-slate-500">
-                <div className="flex flex-col items-center justify-center gap-2">
-                  <div className="rounded-full bg-slate-50 p-4 mb-2">
-                    <Search className="h-8 w-8 text-slate-400" />
-                  </div>
-                  <p className="text-base font-semibold text-slate-900">Tidak ada data ditemukan</p>
-                  <p className="text-sm text-slate-500">Belum ada data atau coba gunakan kata kunci pencarian lain.</p>
-                </div>
-              </TableCell>
-            </TableRow>
-          )}
-        </TableBody>
-      </Table>
-      </div>
-
-      <div className="flex flex-col gap-4 px-1 pb-2 md:flex-row md:items-center md:justify-between">
-        <div className="text-sm text-slate-500">
-          Showing {startData}-{endData} of {totalData} data
-        </div>
-        <div className="flex items-center gap-1 text-sm text-slate-700">
-          <Button variant="ghost" size="sm" onClick={() => onPageChange(page - 1)} disabled={page <= 1} className="rounded-md px-3">
-            Previous
-          </Button>
-          {visiblePages[0] > 1 ? <span className="px-1 text-slate-400">...</span> : null}
-          {visiblePages.map((pageNumber) => (
-            <Button
-              key={pageNumber}
-              variant={pageNumber === page ? 'outline' : 'ghost'}
-              size="sm"
-              onClick={() => onPageChange(pageNumber)}
-              className="h-9 min-w-9 rounded-md border-slate-200"
-            >
-              {pageNumber}
+      <BaseTable
+        data={items}
+        columns={columns}
+        loading={isLoading}
+        showCheckbox
+        selectedIds={new Set(selectedIds.map(String))}
+        onSelectedIdsChange={(set) => onSelectedIdsChange(Array.from(set).map(Number))}
+        getRowId={(item) => String(item.id)}
+        isCheckboxDisabled={(item) => assignedIds.includes(item.id)}
+        searchPlaceholder="Search here"
+        search={search}
+        onSearchChange={onSearchChange}
+        showLimitChange
+        perPage={perPage}
+        onPerPageChange={onPerPageChange}
+        meta={{
+          currentPage: page,
+          perPage,
+          lastPage: totalPages,
+          total: totalData,
+        }}
+        onPageChange={onPageChange}
+        headerActions={
+          <div className="flex flex-wrap items-center gap-2">
+            <Button onClick={onImport} variant="outline" className="w-full sm:w-auto">
+              <Upload className="mr-2 h-4 w-4" />
+              Import
             </Button>
-          ))}
-          {visiblePages[visiblePages.length - 1] < totalPages ? <span className="px-1 text-slate-400">...</span> : null}
-          <Button variant="ghost" size="sm" onClick={() => onPageChange(page + 1)} disabled={page >= totalPages} className="rounded-md px-3">
-            Next
-          </Button>
-        </div>
-      </div>
+            <Button onClick={onExport} disabled={isExporting} variant="outline" className="w-full sm:w-auto">
+              <Download className="mr-2 h-4 w-4" />
+              {isExporting ? 'Exporting...' : 'Export'}
+            </Button>
+            <Button onClick={onAdd} className="w-full sm:w-auto bg-[#1e3a5f] hover:bg-[#152e4d]">
+              <Plus className="mr-2 h-4 w-4" />
+              Tambah Data
+            </Button>
+          </div>
+        }
+      />
     </div>
   );
 }

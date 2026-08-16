@@ -1,9 +1,10 @@
-import { ReactNode, useEffect } from "react"
+import { ReactNode, useEffect, useState } from "react"
 import { useRouter } from "next/router"
 import { Sidebar } from "./Sidebar"
 import { Topbar } from "./Topbar"
 import { getToken } from "@/lib/auth"
 import { useCompany } from "@/contexts/CompanyContext"
+import { cn } from "@/lib/utils"
 
 interface DashboardLayoutProps {
     children: ReactNode
@@ -13,6 +14,7 @@ interface DashboardLayoutProps {
 export function DashboardLayout({ children, minimal = false }: DashboardLayoutProps) {
     const router = useRouter()
     const { companyId, isLoading } = useCompany()
+    const [isDesktopSidebarCollapsed, setIsDesktopSidebarCollapsed] = useState(false)
 
     // ===== ROUTE GUARD =====
     useEffect(() => {
@@ -50,8 +52,16 @@ export function DashboardLayout({ children, minimal = false }: DashboardLayoutPr
     return (
         <div className="fixed inset-0 flex w-full overflow-hidden bg-background">
             {/* ── Desktop Sidebar (hidden on mobile) ── */}
-            <div className="print:hidden hidden md:flex shrink-0 w-64 h-full overflow-hidden">
-                <Sidebar />
+            <div
+                className={cn(
+                    "print:hidden hidden md:flex shrink-0 h-full overflow-hidden transition-[width] duration-300 ease-in-out",
+                    isDesktopSidebarCollapsed ? "w-[72px]" : "w-64",
+                )}
+            >
+                <Sidebar
+                    isDesktopCollapsed={isDesktopSidebarCollapsed}
+                    onDesktopCollapsedChange={setIsDesktopSidebarCollapsed}
+                />
             </div>
 
             {/* ── Mobile Sidebar (rendered inside Sidebar component itself) ── */}

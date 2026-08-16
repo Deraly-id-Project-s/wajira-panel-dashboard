@@ -10,6 +10,7 @@ import Link from 'next/link';
 import { useCompanyMenu } from '@/hooks/use-company-menu';
 import { MenuItem } from '@/types/menu.types';
 import { clearCompanyScopedQueries } from '@/lib/session/query-cache';
+import Image from 'next/image';
 
 function CompanySelector({ companies, companyId, setCompanyId }: { companies: Company[], companyId: string | null, setCompanyId: (id: string) => void }) {
   const [isOpen, setIsOpen] = useState(false);
@@ -60,7 +61,15 @@ function CompanySelector({ companies, companyId, setCompanyId }: { companies: Co
   );
 }
 
-export function Sidebar() {
+interface SidebarProps {
+  isDesktopCollapsed?: boolean;
+  onDesktopCollapsedChange?: (collapsed: boolean) => void;
+}
+
+export function Sidebar({
+  isDesktopCollapsed: controlledDesktopCollapsed,
+  onDesktopCollapsedChange,
+}: SidebarProps = {}) {
   const router = useRouter();
   const slugQuery = router.query.slug;
   const slug = Array.isArray(slugQuery) ? slugQuery[0] : slugQuery || '';
@@ -68,7 +77,15 @@ export function Sidebar() {
   const { companyId, setCompanyId } = useCompany();
   const [companies, setCompanies] = useState<Company[]>([]);
   const [isMobileOpen, setIsMobileOpen] = useState(false);
-  const [isDesktopCollapsed, setIsDesktopCollapsed] = useState(false);
+  const [internalDesktopCollapsed, setInternalDesktopCollapsed] = useState(false);
+  const isDesktopCollapsed = controlledDesktopCollapsed ?? internalDesktopCollapsed;
+
+  const setIsDesktopCollapsed = (collapsed: boolean) => {
+    if (controlledDesktopCollapsed === undefined) {
+      setInternalDesktopCollapsed(collapsed);
+    }
+    onDesktopCollapsedChange?.(collapsed);
+  };
 
   useEffect(() => {
     fetchUserCompanies().then((data) => {
@@ -95,7 +112,7 @@ export function Sidebar() {
 
 
   const sidebarContent = (
-    <aside className={cn("flex h-full w-full flex-col border-r border-gray-200 bg-[#F9FAFB] transition-[width] duration-300 ease-in-out", isDesktopCollapsed ? "w-[72px]" : "w-64")}>
+    <aside className="flex h-full w-full flex-col border-r border-gray-200 bg-[#F9FAFB]">
       <div className={cn("flex h-16 shrink-0 items-center border-b border-gray-200", isDesktopCollapsed ? "px-0 justify-center" : "px-4")}>
         <div className="flex w-full items-center gap-2">
           {isDesktopCollapsed ? (
@@ -105,7 +122,8 @@ export function Sidebar() {
                 className="p-2 rounded-md hover:bg-gray-200 text-gray-500 transition-colors"
                 title="Expand Sidebar"
               >
-                <PanelLeftOpen className="w-5 h-5" />
+                <Image src="/wajira-logo.png" alt="Wajira Logo" height={40} width={40} priority />
+                {/* <PanelLeftOpen className="w-5 h-5" /> */}
               </button>
             </div>
           ) : (

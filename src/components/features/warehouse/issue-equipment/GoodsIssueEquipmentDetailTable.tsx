@@ -1,7 +1,7 @@
-import { MoreVertical, Search } from 'lucide-react';
+import { useMemo } from 'react';
+import { MoreVertical } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Checkbox } from '@/components/ui/checkbox';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import BaseTable, { ColumnDef } from '@/components/ui/base-table';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import type { GoodsTransactionDetailEquipment } from '@/@types/goods-issue-equipment.types';
 
@@ -20,90 +20,80 @@ export function GoodsIssueEquipmentDetailTable({
   onEdit,
   onDelete,
 }: GoodsIssueEquipmentDetailTableProps) {
-  const toggleAll = (checked: boolean) => {
-    if (checked) {
-      onSelectedIdsChange(data.map((item) => item.id));
-    } else {
-      onSelectedIdsChange([]);
-    }
-  };
-
-  const toggleOne = (id: number, checked: boolean) => {
-    if (checked) {
-      onSelectedIdsChange([...selectedIds, id]);
-    } else {
-      onSelectedIdsChange(selectedIds.filter((item) => item !== id));
-    }
-  };
-
-  const isAllChecked = data.length > 0 && data.every((item) => selectedIds.includes(item.id));
+  const columns = useMemo<ColumnDef<GoodsTransactionDetailEquipment>[]>(
+    () => [
+      {
+        header: 'NO',
+        alignment: 'left',
+        cell: (_, index) => index + 1,
+      },
+      {
+        header: 'KODE BARANG',
+        accessorKey: 'vehicleEquipment.code',
+        className: 'text-slate-700 font-medium',
+        cell: (item) => item.vehicleEquipment?.code || '-',
+      },
+      {
+        header: 'NAMA BARANG',
+        accessorKey: 'vehicleEquipment.name',
+        className: 'text-slate-700 font-medium',
+        cell: (item) => item.vehicleEquipment?.name || '-',
+      },
+      {
+        header: 'QTY',
+        accessorKey: 'qty',
+        alignment: 'center',
+        className: 'font-semibold text-slate-900',
+        cell: (item) => item.qty,
+      },
+      {
+        header: 'KETERANGAN',
+        accessorKey: 'description',
+        className: 'text-slate-700',
+        cell: (item) => item.description || '-',
+      },
+      {
+        header: 'Aksi',
+        alignment: 'center',
+        sticky: 'right',
+        cell: (item) => (
+          <div className="flex justify-center">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" className="h-9 w-9 rounded-full p-0 text-slate-600 hover:bg-slate-100 hover:text-slate-900">
+                  <MoreVertical className="h-4 w-4 text-slate-700" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-36 rounded-md border-slate-200 p-1.5 shadow-lg">
+                <DropdownMenuItem
+                  onClick={() => onEdit(item)}
+                  className="cursor-pointer rounded-lg px-3 py-2 text-sm text-slate-900 focus:bg-slate-50"
+                >
+                  Edit
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  onClick={() => onDelete(item)}
+                  className="cursor-pointer rounded-lg px-3 py-2 text-sm text-red-600 focus:bg-red-50 focus:text-red-600"
+                >
+                  Hapus
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+        ),
+      },
+    ],
+    [onDelete, onEdit],
+  );
 
   return (
-    <Table>
-      <TableHeader className="bg-[#f8f9fa] border-b border-gray-200">
-        <TableRow className="border-slate-200 hover:bg-transparent">
-          <TableHead className="w-12 px-4 py-4 text-center">
-            <Checkbox checked={isAllChecked} onCheckedChange={(checked) => toggleAll(!!checked)} />
-          </TableHead>
-          <TableHead className="px-4 py-4 text-left text-xs font-semibold uppercase text-slate-500 whitespace-nowrap">NO</TableHead>
-          <TableHead className="px-4 py-4 text-left text-xs font-semibold uppercase text-slate-500 whitespace-nowrap">KODE BARANG</TableHead>
-          <TableHead className="px-4 py-4 text-left text-xs font-semibold uppercase text-slate-500 whitespace-nowrap">NAMA BARANG</TableHead>
-          <TableHead className="px-4 py-4 text-center text-xs font-semibold uppercase text-slate-500 whitespace-nowrap">QTY</TableHead>
-          <TableHead className="px-4 py-4 text-left text-xs font-semibold uppercase text-slate-500 whitespace-nowrap">KETERANGAN</TableHead>
-          <TableHead className="px-4 py-4 text-center text-xs font-semibold uppercase text-slate-500 w-24 whitespace-nowrap sticky right-0 bg-[#f8f9fa] z-10 border-l border-slate-200 shadow-[-4px_0_6px_-4px_rgba(0,0,0,0.05)]">Aksi</TableHead>
-        </TableRow>
-      </TableHeader>
-      <TableBody>
-        {data.length === 0 ? (
-          <TableRow className="group">
-            <TableCell colSpan={100} className="text-center px-4 py-16 sticky right-0 bg-white  z-10 border-l border-slate-200 shadow-[-4px_0_6px_-4px_rgba(0,0,0,0.05)]">
-              <div className="flex flex-col items-center justify-center gap-2">
-                <div className="rounded-full bg-slate-50 p-4 mb-2">
-                  <Search className="h-8 w-8 text-slate-400" />
-                </div>
-                <p className="text-base font-semibold text-slate-900">Tidak ada data ditemukan</p>
-                <p className="text-sm text-slate-500">Belum ada data atau coba gunakan kata kunci pencarian lain.</p>
-              </div>
-            </TableCell>
-          </TableRow>
-        ) : (
-          data.map((item, index) => (
-            <TableRow key={item.id} className="group border-slate-200 bg-white hover:bg-slate-50 transition-colors">
-              <TableCell className="px-4 py-4 text-center sticky right-0 bg-white group-hover:bg-gray-50 z-10 border-l border-slate-200 shadow-[-4px_0_6px_-4px_rgba(0,0,0,0.05)]">
-                <Checkbox checked={selectedIds.includes(item.id)} onCheckedChange={(checked) => toggleOne(item.id, !!checked)} />
-              </TableCell>
-              <TableCell className="px-4 py-4 text-sm text-slate-700 text-left">{index + 1}</TableCell>
-              <TableCell className="px-4 py-4 text-sm text-slate-700 text-left">{item.vehicleEquipment?.code || '-'}</TableCell>
-              <TableCell className="px-4 py-4 text-sm text-slate-700 text-left">{item.vehicleEquipment?.name || '-'}</TableCell>
-              <TableCell className="px-4 py-4 text-center text-sm font-semibold text-slate-900">{item.qty}</TableCell>
-              <TableCell className="px-4 py-4 text-sm text-slate-700 text-left">{item.description || '-'}</TableCell>
-              <TableCell className="px-4 py-4 text-center sticky right-0 bg-white z-10 border-l border-slate-200 shadow-[-4px_0_6px_-4px_rgba(0,0,0,0.05)]">
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" className="h-9 w-9 rounded-full p-0">
-                      <MoreVertical className="h-4 w-4 text-slate-700" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="w-36 rounded-md border-slate-200 p-2 shadow-lg">
-                    <DropdownMenuItem
-                      onClick={() => onEdit(item)}
-                      className="cursor-pointer rounded-md px-3 py-2 text-[16px]"
-                    >
-                      Edit
-                    </DropdownMenuItem>
-                    <DropdownMenuItem
-                      onClick={() => onDelete(item)}
-                      className="cursor-pointer rounded-md px-3 py-2 text-[16px] text-red-600 focus:text-red-600"
-                    >
-                      Hapus
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </TableCell>
-            </TableRow>
-          ))
-        )}
-      </TableBody>
-    </Table>
+    <BaseTable
+      data={data}
+      columns={columns}
+      showCheckbox
+      selectedIds={new Set(selectedIds.map(String))}
+      onSelectedIdsChange={(set) => onSelectedIdsChange(Array.from(set).map(Number))}
+      getRowId={(item) => String(item.id)}
+    />
   );
 }
