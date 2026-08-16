@@ -22,6 +22,8 @@ import { Card } from '@/components/ui/card';
 import { toast } from 'sonner';
 import { dashboardService } from '@/lib/api/dashboard.service';
 import { LoadingState } from '@/components/ui/loading-state';
+import { useAuthMe } from '@/features/auth/hooks/use-auth-me';
+import { AuthService } from '@/features/auth/services/auth.service';
 
 interface StatDetail {
   bpkb: number;
@@ -72,7 +74,7 @@ function VehicleDocumentOverviewCard({
       });
       return response.data.data;
     },
-    enabled: ['3', '4'].includes(companyId),
+    enabled: Boolean(companyId),
   });
 
   if (isLoading) {
@@ -168,7 +170,7 @@ function VehicleRegistrationOverview({
       });
       return response.data.data;
     },
-    enabled: ['3', '4'].includes(companyId),
+    enabled: Boolean(companyId),
   });
 
   if (isLoading) {
@@ -262,7 +264,20 @@ export default function DashboardPage() {
   const [isRefreshingCache, setIsRefreshingCache] = useState(false);
 
   const { companyId } = useCompany();
+  const { data: profile } = useAuthMe();
   const { data, isLoading, isError } = useDashboardData(activeDateRange.start, activeDateRange.end);
+  const { data: dashboardPermissions = [], isLoading: isLoadingPermissions } = useQuery<string[]>({
+    queryKey: ['auth', 'dashboard-permissions'],
+    queryFn: AuthService.getDashboardPermissions,
+    staleTime: 5 * 60 * 1000,
+    retry: 1,
+    refetchOnWindowFocus: false,
+  });
+
+  const permissionSet = new Set(dashboardPermissions);
+  const hasPermission = (permission: string) => permissionSet.has(permission);
+  const user = profile?.data;
+  const displayName = user?.name || [user?.firstname, user?.lastname].filter(Boolean).join(' ') || 'Pengguna';
 
   const handleShowData = () => {
     setIsFiltering(true);
@@ -292,7 +307,7 @@ export default function DashboardPage() {
     <DashboardLayout>
       <div className="space-y-8">
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
-          <PageHeader title="Overview Keuangan" />
+          <PageHeader title="Statistik Dashboard" />
 
           <div className="flex items-center gap-3">
             <DatePickerWithRange date={dateRangeState} onChange={setDateRangeState} />
@@ -317,45 +332,74 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        <FinanceOverview accounts={data?.accounts || []} isLoading={isLoadingDisplay} isError={isError} />
-
-        <div className="grid gap-6 lg:grid-cols-3">
-          <div className="lg:col-span-3">
-            <FinanceChart data={data?.financeSeries || []} isLoading={isLoadingDisplay} />
+        <Card className="relative overflow-hidden rounded-2xl border border-slate-200 bg-gradient-to-r from-slate-50 via-white to-blue-50/70 px-6 py-7 shadow-sm sm:px-8">
+          <div className="absolute -right-12 -top-16 h-40 w-40 rounded-full border-[24px] border-red-200/60" />
+          <div className="absolute bottom-4 right-28 h-3 w-3 rounded-full bg-red-300/80" />
+          <div className="relative">
+            <p className="text-xs font-semibold uppercase text-red-400">Selamat datang kembali</p>
+            <h2 className="text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl">
+              Hallo, {displayName} <span className="inline-block">👋</span>
+            </h2>
           </div>
-          {/* <div className="lg:col-span-2">
-            <FinanceChart data={data?.financeSeries || []} isLoading={isLoading} />
-          </div>
-          <IncomeDonutChart /> */}
-        </div>
+        </Card>
 
-        {/* company_id = [1,2,5] */}
-        {companyId && ['1', '2', '5'].includes(companyId) && (
-          <div className="space-y-6">
-            <div className="grid gap-6 lg:grid-cols-2">
-              <CustomerOverviewCard data={data?.customers} isLoading={isLoadingDisplay} />
-              <ProductOverviewCard data={data?.products} isLoading={isLoadingDisplay} />
+        {isLoadingPermissions && (
+          <div className="h-36 animate-pulse rounded-[20px] bg-slate-100" />
+        )}
+
+        {/* Permission: dashboard:cash-value */}
+        {hasPermission('dashboard:cash-value') && (
+          <FinanceOverview accounts={data?.accounts || []} isLoading={isLoadingDisplay} isError={isError} />
+        )}
+
+        {/* Permission: dashboard:cash-stat-value */}
+        {hasPermission('dashboard:cash-stat-value') && (
+          <div className="grid gap-6 lg:grid-cols-3">
+            <div className="lg:col-span-3">
+              <FinanceChart data={data?.financeSeries || []} isLoading={isLoadingDisplay} />
             </div>
-            <UnitTransactionTrendChart companyId={companyId} startDate={activeDateRange.start} endDate={activeDateRange.end} />
-            <TransactionTable data={data?.transactions || []} isLoading={isLoadingDisplay} />
-            <UnitTypeSalesTrendChart companyId={companyId} startDate={activeDateRange.start} endDate={activeDateRange.end} />
           </div>
         )}
 
-        {/* company_id = 3 or 4 */}
-        {companyId && ['3', '4'].includes(companyId) && (
-          <>
-            <VehicleDocumentOverviewCard
-              companyId={companyId}
-              startDate={activeDateRange.start}
-              endDate={activeDateRange.end}
-            />
-            <VehicleRegistrationOverview
-              companyId={companyId}
-              startDate={activeDateRange.start}
-              endDate={activeDateRange.end}
-            />
-          </>
+        {/* Permission: dashboard:product-overview */}
+        {hasPermission('dashboard:product-overview') && (
+          <div className="grid gap-6 lg:grid-cols-2">
+            <CustomerOverviewCard data={data?.customers} isLoading={isLoadingDisplay} />
+            <ProductOverviewCard data={data?.products} isLoading={isLoadingDisplay} />
+          </div>
+        )}
+
+        {/* Permission: dashboard:transaction-trend */}
+        {hasPermission('dashboard:transaction-trend') && companyId && (
+          <UnitTransactionTrendChart companyId={companyId} startDate={activeDateRange.start} endDate={activeDateRange.end} />
+        )}
+
+        {/* Permission: dashboard:transaction-purchase */}
+        {hasPermission('dashboard:transaction-purchase') && (
+          <TransactionTable data={data?.transactions || []} isLoading={isLoadingDisplay} />
+        )}
+
+        {/* Permission: dashboard:transaction-sales */}
+        {hasPermission('dashboard:transaction-sales') && companyId && (
+          <UnitTypeSalesTrendChart companyId={companyId} startDate={activeDateRange.start} endDate={activeDateRange.end} />
+        )}
+
+        {/* Permission: dashboard:document */}
+        {hasPermission('dashboard:document') && companyId && (
+          <VehicleDocumentOverviewCard
+            companyId={companyId}
+            startDate={activeDateRange.start}
+            endDate={activeDateRange.end}
+          />
+        )}
+
+        {/* Permission: dashboard:other-stat */}
+        {hasPermission('dashboard:other-stat') && companyId && (
+          <VehicleRegistrationOverview
+            companyId={companyId}
+            startDate={activeDateRange.start}
+            endDate={activeDateRange.end}
+          />
         )}
 
         {/* <CashflowSummary data={data?.cashflow} isLoading={isLoadingDisplay} /> */}

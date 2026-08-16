@@ -146,11 +146,13 @@ export function UserTable({ data, onEdit, onDelete, onAdd, isLoading, canCreate,
       {
         header: 'Hak Akses',
         alignment: 'left',
-        cell: (item) => item.roles ? (
+        cell: (item) => item.roles && item.roles.length > 0 ? (
           <ReferenceLink href={`/dashboard/${slug}/settings/roles?search=${item.roles?.map((r) => r.name).join(',')}`}>
             {item.roles?.map((r) => r.name).join(', ')}
           </ReferenceLink>
-        ) : '-',
+        ) : (
+          <Badge variant="outline" className="bg-slate-50 border-slate-200 text-slate-700 font-normal py-0.5 px-2 text-[11px] rounded-md">Belum ditambahkan</Badge>
+        ),
       },
       {
         header: 'Status',

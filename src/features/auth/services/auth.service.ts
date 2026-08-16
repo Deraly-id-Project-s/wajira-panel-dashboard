@@ -69,7 +69,7 @@ export class AuthService {
         try {
           const parsed = JSON.parse(cached);
           if (Array.isArray(parsed) && parsed.length > 0) {
-            return parsed;
+            return parsed.filter((permission): permission is string => typeof permission === 'string');
           }
         } catch (err) {
           console.warn('[AuthService] Failed to parse cached permissions:', err);
@@ -91,13 +91,54 @@ export class AuthService {
       throw new Error(resData?.message || 'Failed to fetch permissions');
     }
 
-    const permissions = resData.data?.permissions || resData.permissions || [];
+    const permissions = resData.data?.permissions || resData.permissions || (Array.isArray(resData.data) ? resData.data : []);
+    const normalizedPermissions = Array.isArray(permissions)
+      ? permissions.filter((permission): permission is string => typeof permission === 'string')
+      : [];
+
+    if (typeof window !== 'undefined') {
+      try {
+        localStorage.setItem(CACHE_KEY, JSON.stringify(normalizedPermissions));
+      } catch (err) {
+        console.warn('[AuthService] Failed to save permissions to localStorage:', err);
+      }
+    }
+
+    return normalizedPermissions;
+  }
+
+  static async getDashboardPermissions(): Promise<string[]> {
+    const CACHE_KEY = 'dashboard_permissions';
+
+    if (typeof window !== 'undefined') {
+      const cached = localStorage.getItem(CACHE_KEY);
+      if (cached) {
+        try {
+          const parsed = JSON.parse(cached);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            return parsed.filter((permission): permission is string => typeof permission === 'string');
+          }
+        } catch (err) {
+          console.warn('[AuthService] Failed to parse cached dashboard permissions:', err);
+        }
+      }
+    }
+
+    const response = await apiClient.get<{ status: boolean; message: string; data: string[] }>(
+      '/wapi/auth/get-dashboard-permissions',
+    );
+
+    if (!response.data.status) {
+      throw new Error(response.data.message || 'Failed to fetch dashboard permissions');
+    }
+
+    const permissions = response.data.data || [];
 
     if (typeof window !== 'undefined') {
       try {
         localStorage.setItem(CACHE_KEY, JSON.stringify(permissions));
       } catch (err) {
-        console.warn('[AuthService] Failed to save permissions to localStorage:', err);
+        console.warn('[AuthService] Failed to save dashboard permissions to localStorage:', err);
       }
     }
 
@@ -173,6 +214,7 @@ export class AuthService {
     if (typeof window !== 'undefined') {
       localStorage.removeItem('auth_user_profile');
       localStorage.removeItem('user_permissions');
+      localStorage.removeItem('dashboard_permissions');
       localStorage.removeItem('user_sidebar');
     }
   }

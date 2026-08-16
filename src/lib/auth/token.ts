@@ -42,6 +42,7 @@ export const removeAccessToken = (): void => {
     localStorage.removeItem('user_companies');
     localStorage.removeItem('auth_user_profile');
     localStorage.removeItem('user_permissions');
+    localStorage.removeItem('dashboard_permissions');
     localStorage.removeItem('user_sidebar');
   }
   inMemoryToken = null;

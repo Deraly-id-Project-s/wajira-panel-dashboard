@@ -119,16 +119,32 @@ export function RoleForm({ id }: RoleFormProps) {
       return;
     }
 
-    // Automatically append list permissions for active features or permissions in each module
+    const finalFeatures = [...selectedFeatures];
     const finalPerms = [...selectedPerms];
-    modules.forEach((mod) => {
-      const listPermName = `${mod.slug}:list`;
-      const hasListPerm = permissions.some((p) => p.name === listPermName);
-      if (hasListPerm && !finalPerms.includes(listPermName)) {
-        const hasCheckedFeatures = mod.features?.some((f: any) => selectedFeatures.includes(f.id)) || false;
-        const hasOtherCheckedPerms = selectedPerms.some((p) => p.startsWith(`${mod.slug}:`) && p !== listPermName);
-        if (hasCheckedFeatures || hasOtherCheckedPerms) {
-          finalPerms.push(listPermName);
+    
+    modules.forEach((mod, index) => {
+      const isDashboardMod = mod.slug === 'dashboard' || index === 0;
+      if (isDashboardMod) {
+        mod.features?.forEach((f: any) => {
+          if (!finalFeatures.includes(f.id)) {
+            finalFeatures.push(f.id);
+          }
+        });
+        const matching = getMatchingPermsForModule(mod.slug);
+        matching.forEach((p) => {
+          if (!finalPerms.includes(p.name)) {
+            finalPerms.push(p.name);
+          }
+        });
+      } else {
+        const listPermName = `${mod.slug}:list`;
+        const hasListPerm = permissions.some((p) => p.name === listPermName);
+        if (hasListPerm && !finalPerms.includes(listPermName)) {
+          const hasCheckedFeatures = mod.features?.some((f: any) => selectedFeatures.includes(f.id)) || false;
+          const hasOtherCheckedPerms = selectedPerms.some((p) => p.startsWith(`${mod.slug}:`) && p !== listPermName);
+          if (hasCheckedFeatures || hasOtherCheckedPerms) {
+            finalPerms.push(listPermName);
+          }
         }
       }
     });
@@ -140,7 +156,7 @@ export function RoleForm({ id }: RoleFormProps) {
           payload: {
             name,
             company_id: companyId,
-            feature_ids: selectedFeatures,
+            feature_ids: finalFeatures,
             permissions: finalPerms,
           },
         });
@@ -149,7 +165,7 @@ export function RoleForm({ id }: RoleFormProps) {
         await createMutation.mutateAsync({
           name,
           company_id: companyId,
-          feature_ids: selectedFeatures,
+          feature_ids: finalFeatures,
           permissions: finalPerms,
         });
         toast.success('Role berhasil dibuat');
@@ -256,7 +272,8 @@ export function RoleForm({ id }: RoleFormProps) {
             <div className="py-8 text-center text-sm text-gray-500 font-medium">Tidak ada fitur tersedia untuk perusahaan ini.</div>
           ) : (
             <div className="space-y-8">
-              {modules.map((mod) => {
+              {modules.map((mod, index) => {
+                const isDashboardMod = mod.slug === 'dashboard' || index === 0;
                 const matchingPerms = getMatchingPermsForModule(mod.slug);
                 const isAllFeaturesInModuleChecked = mod.features?.every((f: any) => selectedFeatures.includes(f.id)) || false;
                 const isAllPermsInModuleChecked = matchingPerms.length > 0 && matchingPerms.every((p) => selectedPerms.includes(p.name));
@@ -279,9 +296,10 @@ export function RoleForm({ id }: RoleFormProps) {
                           <span className="text-xs font-bold text-gray-700 uppercase tracking-wider">Daftar Fitur</span>
                           <label className="flex items-center gap-1.5 text-[10px] text-gray-500 hover:text-gray-700 cursor-pointer select-none">
                             <Checkbox
-                              checked={isAllFeaturesInModuleChecked}
+                              checked={isAllFeaturesInModuleChecked || isDashboardMod}
                               onCheckedChange={(checked) => handleToggleAllFeaturesInModule(mod, !!checked)}
                               className="h-3.5 w-3.5 rounded"
+                              disabled={isLoadingModules || isLoadingPerms || isPending || isDashboardMod}
                             />
                             <span>Tandai Semua</span>
                           </label>
@@ -289,7 +307,8 @@ export function RoleForm({ id }: RoleFormProps) {
 
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                           {mod.features?.map((feature: any) => {
-                            const isChecked = selectedFeatures.includes(feature.id);
+                            const isChecked = selectedFeatures.includes(feature.id) || isDashboardMod;
+                            const isFeatureDisabled = isPending || isDashboardMod;
 
                             return (
                               <div
@@ -302,14 +321,14 @@ export function RoleForm({ id }: RoleFormProps) {
                                 <div className="flex items-start justify-between gap-3 mb-2">
                                   <span
                                     className="text-xs font-semibold text-gray-900 leading-tight cursor-pointer select-none"
-                                    onClick={() => toggleFeature(feature)}
+                                    onClick={() => !isDashboardMod && toggleFeature(feature)}
                                   >
                                     {feature.name}
                                   </span>
                                   <Checkbox
                                     checked={isChecked}
                                     onCheckedChange={() => toggleFeature(feature)}
-                                    disabled={isPending}
+                                    disabled={isFeatureDisabled}
                                   />
                                 </div>
 
@@ -329,9 +348,10 @@ export function RoleForm({ id }: RoleFormProps) {
                           {matchingPerms.length > 0 && (
                             <label className="flex items-center gap-1.5 text-[10px] text-gray-500 hover:text-gray-700 cursor-pointer select-none">
                               <Checkbox
-                                checked={isAllPermsInModuleChecked}
+                                checked={isAllPermsInModuleChecked || isDashboardMod}
                                 onCheckedChange={(checked) => handleToggleAllPermsInModule(mod, !!checked)}
                                 className="h-3.5 w-3.5 rounded"
+                                disabled={isLoadingModules || isLoadingPerms || isPending || isDashboardMod}
                               />
                               <span>Tandai Semua</span>
                             </label>
@@ -352,7 +372,8 @@ export function RoleForm({ id }: RoleFormProps) {
                               const hasCheckedFeatures = mod.features?.some((f: any) => selectedFeatures.includes(f.id)) || false;
                               const isListDisabled = isListPerm && (hasOtherChecked || hasCheckedFeatures);
                               
-                              const isPermChecked = selectedPerms.includes(perm.name) || isListDisabled;
+                              const isPermChecked = selectedPerms.includes(perm.name) || isListDisabled || isDashboardMod;
+                              const isPermCheckboxDisabled = isPending || isListDisabled || isDashboardMod;
 
                               return (
                                 <label
@@ -366,7 +387,7 @@ export function RoleForm({ id }: RoleFormProps) {
                                     <Checkbox
                                       checked={isPermChecked}
                                       onCheckedChange={() => togglePerm(perm.name)}
-                                      disabled={isPending || isListDisabled}
+                                      disabled={isPermCheckboxDisabled}
                                     />
                                   </div>
                                   <div className="space-y-0.5 min-w-0">

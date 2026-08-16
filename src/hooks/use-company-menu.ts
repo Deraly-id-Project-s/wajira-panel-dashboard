@@ -1,10 +1,10 @@
-import { useState, useEffect } from 'react';
+import { useMemo } from 'react';
 import { useRouter } from 'next/router';
+import { useQuery } from '@tanstack/react-query';
 import { useCompany } from '@/contexts/CompanyContext';
 import { MenuItem } from '@/types/menu.types';
 import { Company } from '@/services/company.service';
 import { AuthService, SidebarModuleItem } from '@/features/auth/services/auth.service';
-import { setStoredPermissions } from '@/lib/session/storage';
 import { 
   LayoutDashboard, 
   ClipboardList, 
@@ -122,11 +122,13 @@ const resolvePath = (path: string, slug: string) => {
   return slug ? `/dashboard/${slug}${path}` : path;
 };
 
-export function buildDynamicMenus(sidebarData: SidebarModuleItem[], slug: string): MenuItem[] {
+export function buildDynamicMenus(sidebarData: SidebarModuleItem[], permissions: string[], slug: string): MenuItem[] {
   const menus: MenuItem[] = [];
+  const permissionSet = new Set(permissions);
 
   for (const item of sidebarData) {
     const moduleSlug = item.module.slug;
+    if (!permissionSet.has(`${moduleSlug}:list`)) continue;
     let label = item.module.name;
     let icon = ClipboardList;
 
@@ -158,7 +160,12 @@ export function buildDynamicMenus(sidebarData: SidebarModuleItem[], slug: string
 
     for (const feature of item.features) {
       const mapping = FEATURE_MAP[feature.slug];
-      if (!mapping) continue;
+      if (!mapping) {
+        if (process.env.NODE_ENV !== 'production') {
+          console.warn(`[useCompanyMenu] No route mapping found for sidebar feature: ${feature.slug}`);
+        }
+        continue;
+      }
 
       const menuItem: MenuItem = {
         label: mapping.label || feature.name.replace(/^Master\s+/, ''),
@@ -192,35 +199,33 @@ export function buildDynamicMenus(sidebarData: SidebarModuleItem[], slug: string
   return menus;
 }
 
-export function useCompanyMenu(companies: Company[]): { menus: MenuItem[], isLoading: boolean } {
+export function useCompanyMenu(_companies: Company[]): { menus: MenuItem[], isLoading: boolean } {
   const router = useRouter();
   const slugQuery = router.query.slug;
   const slug = Array.isArray(slugQuery) ? slugQuery[0] : slugQuery || '';
 
   const { companyId } = useCompany();
-  const [menus, setMenus] = useState<MenuItem[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
+  const { data: permissions = [], isLoading: isLoadingPermissions } = useQuery<string[]>({
+    queryKey: ['auth', 'permissions'],
+    queryFn: AuthService.getPermissions,
+    enabled: Boolean(companyId),
+    staleTime: 5 * 60 * 1000,
+    retry: 1,
+    refetchOnWindowFocus: false,
+  });
+  const { data: sidebarData = [], isLoading: isLoadingSidebar } = useQuery<SidebarModuleItem[]>({
+    queryKey: ['auth', 'sidebar'],
+    queryFn: AuthService.getSidebar,
+    enabled: Boolean(companyId),
+    staleTime: 5 * 60 * 1000,
+    retry: 1,
+    refetchOnWindowFocus: false,
+  });
 
-  useEffect(() => {
-    if (!companyId) return;
-    setIsLoading(true);
+  const menus = useMemo(
+    () => buildDynamicMenus(sidebarData, permissions, slug),
+    [sidebarData, permissions, slug],
+  );
 
-    Promise.all([
-      AuthService.getPermissions(),
-      AuthService.getSidebar(),
-    ])
-      .then(([perms, sidebarData]) => {
-        setStoredPermissions(perms || []);
-        const dynamicMenus = buildDynamicMenus(sidebarData, slug);
-        setMenus(dynamicMenus);
-      })
-      .catch((err) => {
-        console.error('[useCompanyMenu] Failed to load permissions/sidebar:', err);
-      })
-      .finally(() => {
-        setIsLoading(false);
-      });
-  }, [companyId, slug]);
-
-  return { menus, isLoading };
+  return { menus, isLoading: isLoadingPermissions || isLoadingSidebar };
 }

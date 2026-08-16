@@ -11,5 +11,8 @@ export const performClientLogout = (queryClient: QueryClient): void => {
   clearStoredPermissions();
   clearCachedUserCompanies();
   AuthService.clearCachedProfile();
+  queryClient.removeQueries({ queryKey: ['auth', 'dashboard-permissions'] });
+  queryClient.removeQueries({ queryKey: ['auth', 'permissions'] });
+  queryClient.removeQueries({ queryKey: ['auth', 'sidebar'] });
   clearCompanyScopedQueries(queryClient);
 };
