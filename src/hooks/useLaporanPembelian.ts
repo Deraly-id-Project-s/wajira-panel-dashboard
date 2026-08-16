@@ -1,12 +1,18 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { getLaporanPembelian, PurchaseTransactionParams, PurchaseTransactionItem } from '@/services/laporan-pembelian.service';
+import {
+  getLaporanPembelian,
+  getLaporanPembelianSparepart,
+  PurchaseTransactionParams,
+  PurchaseTransactionItem,
+  PurchaseSparepartTransactionItem,
+} from '@/services/laporan-pembelian.service';
 import { toast } from 'sonner';
 import { useCompany } from '@/contexts/CompanyContext';
 
 export type ReportType = 'per-nota' | 'per-type' | 'per-supplier';
 
 interface UseLaporanPembelianReturn {
-  data: PurchaseTransactionItem[];
+  data: Array<PurchaseTransactionItem | PurchaseSparepartTransactionItem>;
   pagination: {
     currentPage: number;
     lastPage: number;
@@ -34,8 +40,8 @@ interface UseLaporanPembelianReturn {
   refetch: () => void;
 }
 
-export const useLaporanPembelian = (): UseLaporanPembelianReturn => {
-  const [data, setData] = useState<PurchaseTransactionItem[]>([]);
+export const useLaporanPembelian = (reportItem: 'unit' | 'sparepart' = 'unit'): UseLaporanPembelianReturn => {
+  const [data, setData] = useState<Array<PurchaseTransactionItem | PurchaseSparepartTransactionItem>>([]);
   const [pagination, setPagination] = useState({
     currentPage: 1,
     lastPage: 1,
@@ -75,7 +81,9 @@ export const useLaporanPembelian = (): UseLaporanPembelianReturn => {
       // Oleh karena itu, kita MENGHAPUS pengiriman parameter ini ke backend,
       // dan mengandalkan 100% Filter Sisi Klien (Client-Side Filtering) yang sudah kita buat di bawah.
       
-      const result = await getLaporanPembelian(params);
+      const result = reportItem === 'sparepart'
+        ? await getLaporanPembelianSparepart(params)
+        : await getLaporanPembelian(params);
 
       // Prevent stale response from older request overriding newest result.
       if (requestId !== latestRequestRef.current) {
@@ -83,15 +91,15 @@ export const useLaporanPembelian = (): UseLaporanPembelianReturn => {
       }
       
       // If backend fails to filter properly, apply client-side filtering fallback.
-      let filteredData = Array.isArray(result?.data) ? result.data : [];
+      let filteredData: Array<PurchaseTransactionItem | PurchaseSparepartTransactionItem> = Array.isArray(result?.data) ? result.data : [];
 
       if (startDate && endDate) {
         filteredData = filteredData.filter(item => {
-          const createdAt = (item as any)?.created_at;
-          if (!createdAt) return true;
+          const transactionDate = (item as any)?.transaction_date ?? (item as any)?.created_at;
+          if (!transactionDate) return true;
           try {
             // Support both T and space separated dates
-            const dateOnly = String(createdAt).split(/[T ]/)[0]; 
+            const dateOnly = String(transactionDate).split(/[T ]/)[0];
             return dateOnly >= startDate && dateOnly <= endDate;
           } catch {
             return true;
@@ -106,12 +114,14 @@ export const useLaporanPembelian = (): UseLaporanPembelianReturn => {
       if (currentSearch) {
         const q = String(currentSearch).toLowerCase();
         filteredData = filteredData.filter((item: any) => {
-          const matchesCode = item?.code?.toLowerCase().includes(q);
-          const matchesSupplier = item?.person?.name?.toLowerCase().includes(q);
+          const matchesCode = String(item?.transaction_code ?? item?.code ?? '').toLowerCase().includes(q);
+          const matchesSupplier = String(item?.person_name ?? item?.person?.name ?? '').toLowerCase().includes(q);
+          const matchesSparepart = String(item?.sparepart_name ?? '').toLowerCase().includes(q)
+            || String(item?.sparepart_code ?? '').toLowerCase().includes(q);
           const matchesUnitType = (item?.unit_transaction_items || []).some(
             (u: any) => u?.unit_type?.name?.toLowerCase().includes(q)
-          );
-          return Boolean(matchesCode || matchesSupplier || matchesUnitType);
+          ) || String(item?.unit_name ?? '').toLowerCase().includes(q);
+          return Boolean(matchesCode || matchesSupplier || matchesSparepart || matchesUnitType);
         });
       }
 
@@ -137,7 +147,7 @@ export const useLaporanPembelian = (): UseLaporanPembelianReturn => {
         setIsLoading(false);
       }
     }
-  }, [currentPage, currentPerPage, startDate, endDate, selectedSupplier, currentSearch, companyId]);
+  }, [currentPage, currentPerPage, startDate, endDate, selectedSupplier, currentSearch, companyId, reportItem]);
 
   useEffect(() => {
     fetchData();

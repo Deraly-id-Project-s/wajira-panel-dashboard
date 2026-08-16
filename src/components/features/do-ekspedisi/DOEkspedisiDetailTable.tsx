@@ -51,7 +51,7 @@ export function DOEkspedisiDetailTable({
           <TableHead className="text-center text-xs font-semibold uppercase text-slate-500 px-4 py-4">Invoice Tambahan</TableHead>
           <TableHead className="text-center text-xs font-semibold uppercase text-slate-500 px-4 py-4">PPN</TableHead>
           <TableHead className="text-center text-xs font-semibold uppercase text-slate-500 px-4 py-4">Fee</TableHead>
-          <TableHead className="text-center text-xs font-semibold uppercase text-slate-500 px-4 py-4 w-[80px] sticky right-0 bg-[#f8f9fa] z-10 border-l border-slate-200 shadow-[-4px_0_6px_-4px_rgba(0,0,0,0.05)]">Action</TableHead>
+          <TableHead className="text-center text-xs font-semibold uppercase text-slate-500 px-4 py-4 w-[80px] sticky right-0 bg-[#f8f9fa] z-10 border-l border-slate-200 shadow-[-4px_0_6px_-4px_rgba(0,0,0,0.05)]" AksiTableHead>
         </TableRow>
       </TableHeader>
       <TableBody>

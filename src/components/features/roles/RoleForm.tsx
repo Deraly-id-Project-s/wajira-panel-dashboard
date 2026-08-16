@@ -85,11 +85,11 @@ export function RoleForm({ id }: RoleFormProps) {
     return permissions.filter((p) => {
       const parts = p.name.split(':');
       const prefix = parts[0];
-      
+
       if (moduleSlug === 'user') {
         return ['user', 'role', 'permission', 'settings'].includes(prefix) || p.name === 'user' || p.name === 'role' || p.name === 'permission' || p.name === 'settings';
       }
-      
+
       return prefix === moduleSlug || p.name === moduleSlug;
     });
   };
@@ -121,7 +121,7 @@ export function RoleForm({ id }: RoleFormProps) {
 
     const finalFeatures = [...selectedFeatures];
     const finalPerms = [...selectedPerms];
-    
+
     modules.forEach((mod, index) => {
       const isDashboardMod = mod.slug === 'dashboard' || index === 0;
       if (isDashboardMod) {
@@ -130,21 +130,15 @@ export function RoleForm({ id }: RoleFormProps) {
             finalFeatures.push(f.id);
           }
         });
-        const matching = getMatchingPermsForModule(mod.slug);
-        matching.forEach((p) => {
-          if (!finalPerms.includes(p.name)) {
-            finalPerms.push(p.name);
-          }
-        });
-      } else {
-        const listPermName = `${mod.slug}:list`;
-        const hasListPerm = permissions.some((p) => p.name === listPermName);
-        if (hasListPerm && !finalPerms.includes(listPermName)) {
-          const hasCheckedFeatures = mod.features?.some((f: any) => selectedFeatures.includes(f.id)) || false;
-          const hasOtherCheckedPerms = selectedPerms.some((p) => p.startsWith(`${mod.slug}:`) && p !== listPermName);
-          if (hasCheckedFeatures || hasOtherCheckedPerms) {
-            finalPerms.push(listPermName);
-          }
+      }
+
+      const listPermName = `${mod.slug}:list`;
+      const hasListPerm = permissions.some((p) => p.name === listPermName);
+      if (hasListPerm && !finalPerms.includes(listPermName)) {
+        const hasCheckedFeatures = mod.features?.some((f: any) => selectedFeatures.includes(f.id) || isDashboardMod) || false;
+        const hasOtherCheckedPerms = selectedPerms.some((p) => p.startsWith(`${mod.slug}:`) && p !== listPermName);
+        if (hasCheckedFeatures || hasOtherCheckedPerms) {
+          finalPerms.push(listPermName);
         }
       }
     });
@@ -348,10 +342,10 @@ export function RoleForm({ id }: RoleFormProps) {
                           {matchingPerms.length > 0 && (
                             <label className="flex items-center gap-1.5 text-[10px] text-gray-500 hover:text-gray-700 cursor-pointer select-none">
                               <Checkbox
-                                checked={isAllPermsInModuleChecked || isDashboardMod}
+                                checked={isAllPermsInModuleChecked}
                                 onCheckedChange={(checked) => handleToggleAllPermsInModule(mod, !!checked)}
                                 className="h-3.5 w-3.5 rounded"
-                                disabled={isLoadingModules || isLoadingPerms || isPending || isDashboardMod}
+                                disabled={isLoadingModules || isLoadingPerms || isPending}
                               />
                               <span>Tandai Semua</span>
                             </label>
@@ -369,11 +363,11 @@ export function RoleForm({ id }: RoleFormProps) {
                               const parts = perm.name.split(':');
                               const prefix = parts[0];
                               const hasOtherChecked = selectedPerms.some((p) => p.startsWith(`${prefix}:`) && p !== perm.name);
-                              const hasCheckedFeatures = mod.features?.some((f: any) => selectedFeatures.includes(f.id)) || false;
+                              const hasCheckedFeatures = mod.features?.some((f: any) => selectedFeatures.includes(f.id) || isDashboardMod) || false;
                               const isListDisabled = isListPerm && (hasOtherChecked || hasCheckedFeatures);
-                              
-                              const isPermChecked = selectedPerms.includes(perm.name) || isListDisabled || isDashboardMod;
-                              const isPermCheckboxDisabled = isPending || isListDisabled || isDashboardMod;
+
+                              const isPermChecked = selectedPerms.includes(perm.name) || isListDisabled;
+                              const isPermCheckboxDisabled = isPending || isListDisabled;
 
                               return (
                                 <label

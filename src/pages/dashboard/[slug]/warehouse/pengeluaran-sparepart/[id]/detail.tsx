@@ -311,7 +311,7 @@ export default function PengeluaranSparepartDetailPage() {
 
       {/* DIALOG UPDATE STATUS */}
       <Dialog open={isUpdateStateDialogOpen} onOpenChange={setIsUpdateStateDialogOpen}>
-        <DialogContent className="sm:max-w-[425px] p-6 rounded-2xl">
+        <DialogContent className="sm:max-w-[425px] p-6 rounded-md">
           <DialogHeader>
             <DialogTitle className="text-lg font-bold text-slate-800">Ubah Status Pengeluaran</DialogTitle>
             <DialogDescription className="text-xs text-slate-500">

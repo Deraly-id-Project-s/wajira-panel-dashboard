@@ -8,7 +8,9 @@ import LaporanPembelianFilter from '@/components/features/laporan-pembelian/Lapo
 import LaporanPembelianPerNota from '@/components/features/laporan-pembelian/LaporanPembelianPerNota';
 import LaporanPembelianPerTipe from '@/components/features/laporan-pembelian/LaporanPembelianPerTipe';
 import LaporanPembelianPerSupplier from '@/components/features/laporan-pembelian/LaporanPembelianPerSupplier';
+import LaporanPembelianSparepart from '@/components/features/laporan-pembelian/LaporanPembelianSparepart';
 import { useLaporanPembelian } from '@/hooks/useLaporanPembelian';
+import type { PurchaseSparepartTransactionItem, PurchaseTransactionItem } from '@/services/laporan-pembelian.service';
 import { format } from 'date-fns';
 import { useRouter } from 'next/router';
 import { useCompany } from '@/contexts/CompanyContext';
@@ -17,6 +19,7 @@ import { PrintLetterPage } from '@/components/common/PrintLetterPage';
 
 export default function LaporanPembelianPage() {
   const [activeTab, setActiveTab] = useState('per-nota');
+  const [reportItem, setReportItem] = useState<'unit' | 'sparepart'>('unit');
   const router = useRouter();
   const { companyId } = useCompany();
   const {
@@ -28,7 +31,10 @@ export default function LaporanPembelianPage() {
     resetFiltersForTab,
     startDate,
     endDate,
-  } = useLaporanPembelian();
+  } = useLaporanPembelian(reportItem);
+
+  const unitData = data as PurchaseTransactionItem[];
+  const sparepartData = data as PurchaseSparepartTransactionItem[];
 
   const slugParam = router.query.slug;
   const resolvedCompanyId = resolveCompanyId(slugParam, companyId);
@@ -37,6 +43,11 @@ export default function LaporanPembelianPage() {
   const handleTabChange = (tab: string) => {
     setActiveTab(tab);
     resetFiltersForTab(tab);
+  };
+
+  const handleReportItemChange = (value: string) => {
+    setReportItem(value as 'unit' | 'sparepart');
+    setPage(1);
   };
 
   const handlePrint = () => {
@@ -58,14 +69,31 @@ export default function LaporanPembelianPage() {
       ? `Periode: ${format(new Date(startDate), 'dd/MM/yyyy')} s.d. ${format(new Date(endDate), 'dd/MM/yyyy')}`
       : 'Tahun 2026';
 
-    csvContent += `"${getReportTitle()}"\n`;
+    csvContent += `"${getReportTitle()} ${reportItem.toUpperCase()}"\n`;
     csvContent += `"PT WAJIRA JAGRATARA MORINDO"\n`;
     csvContent += `"${periodText}"\n\n`;
 
-    if (activeTab === 'per-nota') {
+    if (reportItem === 'sparepart') {
+      const showSupplier = activeTab === 'per-supplier';
+      csvContent += `NO,NO PEMBELIAN,TGL BELI,${showSupplier ? 'NAMA SUPPLIER,' : ''}SPAREPART,KODE SPAREPART,QTY,HARGA BELI,DISKON,TOTAL BELI,STATUS\n`;
+
+      sparepartData.forEach((item, idx) => {
+        csvContent += `${idx + 1},`;
+        csvContent += `"${item.transaction_code}",`;
+        csvContent += `"${new Date(item.transaction_date).toLocaleDateString('id-ID')}",`;
+        if (showSupplier) csvContent += `"${item.person_name || '-'}",`;
+        csvContent += `"${item.sparepart_name || '-'}",`;
+        csvContent += `"${item.sparepart_code || '-'}",`;
+        csvContent += `${item.qty || 0},`;
+        csvContent += `${item.price || 0},`;
+        csvContent += `${item.discount || 0},`;
+        csvContent += `${item.total || 0},`;
+        csvContent += `"${item.payment_status || (item.is_paid ? 'Lunas' : 'Belum Lunas')}"\n`;
+      });
+    } else if (activeTab === 'per-nota') {
       csvContent += "NO,NO PEMBELIAN,TGL BELI,TIPE UNIT,QTY,HARGA BELI,BIAYA BBN,BIAYA EKSPEDISI,BIAYA LAINNYA,HPP,DPP,PPN,JUMLAH\n";
 
-      data.forEach((item, idx) => {
+      unitData.forEach((item, idx) => {
         csvContent += `${idx + 1},`;
         csvContent += `"${item.transaction_code}",`;
         csvContent += `"${new Date(item.transaction_date).toLocaleDateString('id-ID')}",`;
@@ -83,7 +111,7 @@ export default function LaporanPembelianPage() {
     } else if (activeTab === 'per-tipe') {
       csvContent += "NO,NO PEMBELIAN,TGL BELI,TIPE UNIT,QTY,HARGA,BIAYA BBN,BIAYA EKSPEDISI,BIAYA LAIN,TOTAL BELI\n";
 
-      data.forEach((item, idx) => {
+      unitData.forEach((item, idx) => {
         csvContent += `${idx + 1},`;
         csvContent += `"${item.transaction_code}",`;
         csvContent += `"${new Date(item.transaction_date).toLocaleDateString('id-ID')}",`;
@@ -98,7 +126,7 @@ export default function LaporanPembelianPage() {
     } else {
       csvContent += "NO,NO PEMBELIAN,TGL BELI,NAMA SUPPLIER,QTY,HARGA,BIAYA BBN,BIAYA EKSPEDISI,BIAYA LAIN,TOTAL BELI\n";
 
-      data.forEach((item, idx) => {
+      unitData.forEach((item, idx) => {
         csvContent += `${idx + 1},`;
         csvContent += `"${item.transaction_code}",`;
         csvContent += `"${new Date(item.transaction_date).toLocaleDateString('id-ID')}",`;
@@ -116,7 +144,7 @@ export default function LaporanPembelianPage() {
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
     const uniqueId = new Date().getTime();
-    const fileName = `Laporan_Pembelian_${activeTab}_${uniqueId}.csv`;
+    const fileName = `Laporan_Pembelian_${reportItem}_${activeTab}_${uniqueId}.csv`;
     link.setAttribute("href", url);
     link.setAttribute("download", fileName);
     link.style.visibility = 'hidden';
@@ -138,6 +166,7 @@ export default function LaporanPembelianPage() {
         <div className="space-y-4">
           <LaporanPembelianFilter
             activeTab={activeTab}
+            reportItem={reportItem}
             startDate={startDate}
             endDate={endDate}
             onApplyFilters={applyFilters}
@@ -171,6 +200,13 @@ export default function LaporanPembelianPage() {
               </TabsList>
             </div>
 
+            <Tabs value={reportItem} onValueChange={handleReportItemChange} className="no-print">
+              <TabsList className="h-auto bg-slate-100 p-1">
+                <TabsTrigger value="unit" className="px-5 py-2">Unit Tipe</TabsTrigger>
+                <TabsTrigger value="sparepart" className="px-5 py-2">Sparepart</TabsTrigger>
+              </TabsList>
+            </Tabs>
+
             <PrintLetterPage
               id="laporan-pembelian-print"
               className="laporan-pembelian-print-area"
@@ -179,7 +215,7 @@ export default function LaporanPembelianPage() {
               <div className="laporan-pembelian-print-content">
                 <div className="flex flex-col items-center justify-center text-center space-y-1 mb-8">
                   <h2 className="text-[13px] font-bold uppercase text-gray-900 tracking-wide">
-                    REKAP PEMBELIAN {activeTab.replace('-', ' ')}
+                    REKAP PEMBELIAN {reportItem.toUpperCase()} {activeTab.replace('-', ' ')}
                   </h2>
                   <p className="text-[13px] font-bold text-gray-900 tracking-wide">
                     PT WAJIRA JAGRATARA MORINDO
@@ -192,30 +228,27 @@ export default function LaporanPembelianPage() {
                 </div>
 
                 <TabsContent value="per-nota" className="mt-0">
-                  <LaporanPembelianPerNota
-                    data={data}
-                    pagination={pagination}
-                    isLoading={isLoading}
-                    onPageChange={setPage}
-                  />
+                  {reportItem === 'sparepart' ? (
+                    <LaporanPembelianSparepart activeTab={activeTab} data={sparepartData} pagination={pagination} isLoading={isLoading} onPageChange={setPage} />
+                  ) : (
+                    <LaporanPembelianPerNota data={unitData} pagination={pagination} isLoading={isLoading} onPageChange={setPage} />
+                  )}
                 </TabsContent>
 
                 <TabsContent value="per-tipe" className="mt-0">
-                  <LaporanPembelianPerTipe
-                    data={data}
-                    pagination={pagination}
-                    isLoading={isLoading}
-                    onPageChange={setPage}
-                  />
+                  {reportItem === 'sparepart' ? (
+                    <LaporanPembelianSparepart activeTab={activeTab} data={sparepartData} pagination={pagination} isLoading={isLoading} onPageChange={setPage} />
+                  ) : (
+                    <LaporanPembelianPerTipe data={unitData} pagination={pagination} isLoading={isLoading} onPageChange={setPage} />
+                  )}
                 </TabsContent>
 
                 <TabsContent value="per-supplier" className="mt-0">
-                  <LaporanPembelianPerSupplier
-                    data={data}
-                    pagination={pagination}
-                    isLoading={isLoading}
-                    onPageChange={setPage}
-                  />
+                  {reportItem === 'sparepart' ? (
+                    <LaporanPembelianSparepart activeTab={activeTab} data={sparepartData} pagination={pagination} isLoading={isLoading} onPageChange={setPage} />
+                  ) : (
+                    <LaporanPembelianPerSupplier data={unitData} pagination={pagination} isLoading={isLoading} onPageChange={setPage} />
+                  )}
                 </TabsContent>
               </div>
             </PrintLetterPage>

@@ -104,9 +104,21 @@ export default function DetailSalesSparepartPage() {
   }
 
   const handleMarkAsPaid = async () => {
-    if (!transaction?.sparepart_transaction_billing?.id) return;
+    const billing = transaction?.sparepart_transaction_billing;
+    const remainingPayment = Number(billing?.is_remaining_payment ?? transaction?.billing_summary?.remaining_payment);
+
+    if (billing?.is_paid) return;
+    if (!Number.isFinite(remainingPayment) || remainingPayment !== 0) {
+      toast.error("Transaksi masih memiliki sisa pembayaran");
+      return;
+    }
+    if (!billing?.id) {
+      toast.error("Billing ID tidak valid");
+      return;
+    }
+
     try {
-      await updatePaymentStatusMutation.mutateAsync({ id: String(transaction.sparepart_transaction_billing.id), is_paid: true });
+      await updatePaymentStatusMutation.mutateAsync({ billingId: String(billing.id), is_paid: true });
       toast.success("Transaksi berhasil ditandai lunas");
     } catch {
       toast.error("Gagal menandai transaksi lunas");
@@ -156,13 +168,13 @@ export default function DetailSalesSparepartPage() {
     )
   }
 
-  // Calculate billing summary since API doesn't provide it wrapped
   const sparepartBilling = transaction?.sparepart_transaction_billing;
   const histories = sparepartBilling?.sparepart_transaction_billing_histories || [];
-  const totalTagihan = sparepartBilling?.grand_total || transaction.transaction_netto_total || 0;
-  const totalPaid = histories.reduce((acc: number, curr: any) => acc + (curr.grand_total || curr.cash_payment_amount || curr.bca_payment_amount || 0), 0);
-  const remainingPayment = sparepartBilling?.is_paid ? 0 : Math.max(0, totalTagihan - totalPaid);
-  const isPaid = sparepartBilling?.is_paid || (totalTagihan > 0 && remainingPayment === 0);
+  const totalTagihan = Number(sparepartBilling?.grand_total ?? transaction.billing_summary?.grand_total ?? transaction.transaction_netto_total ?? 0);
+  const totalPaid = Number(transaction.billing_summary?.total_paid ?? 0);
+  const remainingPayment = Number(sparepartBilling?.is_remaining_payment ?? transaction.billing_summary?.remaining_payment);
+  const isPaid = sparepartBilling?.is_paid === true;
+  const canMarkAsPaid = !isPaid && Number.isFinite(remainingPayment) && remainingPayment === 0 && Boolean(sparepartBilling?.id);
   const canProcessGoods = isPaid && !transaction.is_refunded && !isProcessed;
 
   const billingStatusLabel = isPaid ? 'Lunas' : 'Belum Lunas';
@@ -254,7 +266,7 @@ export default function DetailSalesSparepartPage() {
                 onClick={handleMarkAsPaid}
                 variant="outline"
                 className="border-blue-600 text-blue-600 hover:bg-blue-50 disabled:cursor-not-allowed disabled:opacity-50"
-                disabled={updatePaymentStatusMutation.isPending || !canEdit || isPaid || remainingPayment !== 0}
+                disabled={updatePaymentStatusMutation.isPending || !canEdit || !canMarkAsPaid}
               >
                 <CheckCircle className="mr-2 h-4 w-4" />
                 Tandai Lunas

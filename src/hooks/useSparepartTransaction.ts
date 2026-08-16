@@ -90,8 +90,8 @@ export function useDeleteSparepartTransaction() {
 export function useUpdateSparepartTransactionBillingPaymentStatus() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: ({ id, is_paid }: { id: string; is_paid: boolean }) =>
-      sparepartTransactionService.updateBillingPaymentStatus(id, is_paid),
+    mutationFn: ({ billingId, is_paid }: { billingId: string; is_paid: boolean }) =>
+      sparepartTransactionService.updateBillingPaymentStatus(billingId, is_paid),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: sparepartTransactionKeys.lists() });
       queryClient.invalidateQueries({ queryKey: sparepartTransactionKeys.details() });

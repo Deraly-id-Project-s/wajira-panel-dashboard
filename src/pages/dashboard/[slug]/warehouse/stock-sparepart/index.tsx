@@ -218,7 +218,7 @@ export default function StockSparepartPage() {
     <DashboardLayout>
       <div className="space-y-6">
         <PageHeader title="Stok Sparepart" subtitle="Kelola dan lacak semua stok sparepart" />
-        
+
         <Card className="rounded-md border p-6">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
             <div className="flex items-center gap-2 max-w-md w-full relative">
@@ -233,7 +233,7 @@ export default function StockSparepartPage() {
                 className="pl-9 h-10 w-full border-gray-300 bg-white text-gray-900 rounded-lg shadow-sm"
               />
             </div>
-            
+
             <div className="flex items-center gap-2">
               <Select
                 value={inStock === undefined ? 'all' : inStock ? 'true' : 'false'}
@@ -278,7 +278,7 @@ export default function StockSparepartPage() {
                     <SlidersHorizontal className="h-4 w-4 text-slate-500" /> Filter Lanjutan
                   </Button>
                 </DialogTrigger>
-                <DialogContent className="sm:max-w-[440px] p-6 rounded-2xl">
+                <DialogContent className="sm:max-w-[440px] p-6 rounded-md">
                   <DialogHeader>
                     <DialogTitle className="text-lg font-bold text-slate-800">Filter Lanjutan Stok Sparepart</DialogTitle>
                     <DialogDescription className="text-xs text-slate-500">

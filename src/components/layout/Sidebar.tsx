@@ -35,7 +35,7 @@ function CompanySelector({ companies, companyId, setCompanyId }: { companies: Co
       <PopoverTrigger asChild>
         <button className="flex w-full items-center justify-between rounded-md border cursor-pointer border-gray-300 bg-white px-3 py-1.5 text-left shadow-sm hover:bg-gray-50 transition-colors">
           <div className="flex flex-col overflow-hidden">
-            <span className="text-[10px] uppercase font-semibold text-gray-400">Company</span>
+            <span className="text-[10px] uppercase font-semibold text-red-400">Perusahaan</span>
             <span className="font-medium text-gray-900 truncate uppercase">{selectedCompany ? selectedCompany.name : 'Select Company'}</span>
           </div>
           <ChevronDown className={cn('h-4 w-4 text-gray-500 transition-transform', isOpen && 'rotate-180')} />
@@ -130,7 +130,7 @@ export function Sidebar() {
 
       <div className={cn("flex-1 overflow-y-auto py-6", isDesktopCollapsed ? "px-2" : "px-4")}>
         <div className="mb-4 flex items-center justify-between text-sm font-semibold text-gray-500">
-          {!isDesktopCollapsed && <span className="uppercase text-xs tracking-wider">Main Menu</span>}
+          {!isDesktopCollapsed && <span className="uppercase text-xs tracking-wider">Menu Utama</span>}
           <button
             onClick={() => setIsDesktopCollapsed(!isDesktopCollapsed)}
             className={cn("p-1.5 rounded-md hover:bg-gray-200 text-gray-400 hover:text-gray-600 transition-colors", isDesktopCollapsed && "mx-auto")}
@@ -236,7 +236,7 @@ function SidebarNavItem({ item, isCollapsed }: { item: MenuItem; isCollapsed?: b
         className={cn(
           'flex items-center justify-between rounded-md py-[9px] text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary',
           isCollapsed ? 'w-10 justify-center px-0' : 'w-full px-3',
-          isChildActive ? 'text-[#111827] bg-gray-100' : 'text-gray-600 hover:bg-gray-50',
+          isChildActive ? 'text-gray-600 bg-gray-100' : 'text-gray-600 hover:bg-gray-50',
         )}
       >
         <div className="flex items-center gap-3">
@@ -291,11 +291,11 @@ function SidebarSubNavItem({
         href={item.href || '#'}
         className={cn(
           'group relative ml-1 block rounded-md pl-3 pr-2 py-2 text-sm transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary',
-          active ? 'bg-[#E5E7EB] text-[#111827] font-[500]' : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900',
+          active ? 'bg-red-100 text-gray-600 font-[500]' : 'text-gray-600 hover:bg-red-100 hover:text-red-900',
         )}
         aria-current={active ? 'page' : undefined}
       >
-        {active && <div className="absolute left-0 top-0 h-full w-[3px] rounded-r-md bg-primary transition-transform duration-300 animate-in slide-in-from-left-1" />}
+        {active && <div className="absolute left-0 top-0 h-full w-[4px] rounded-l-lg transform translate-x-[1px] bg-orange-300 transition-transform duration-300 animate-in slide-in-from-left-1" />}
         {item.label}
       </Link>
     );
@@ -307,7 +307,7 @@ function SidebarSubNavItem({
         onClick={() => setOpen(!open)}
         className={cn(
           'flex w-full items-center justify-between rounded-md pl-3 pr-2 py-2 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary',
-          isSubChildActive ? 'text-[#111827]' : 'text-gray-600 hover:bg-gray-100',
+          isSubChildActive ? 'text-gray-600' : 'text-gray-600 hover:bg-gray-100',
         )}
       >
         <span>{item.label}</span>
@@ -325,11 +325,11 @@ function SidebarSubNavItem({
                 href={subChild.href || '#'}
                 className={cn(
                   'group relative ml-2 block rounded-md pl-3 pr-2 py-2 text-sm transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary',
-                  active ? 'bg-[#E5E7EB] text-[#111827] font-[500]' : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900',
+                  active ? 'bg-[#E5E7EB] text-gray-600 font-[500]' : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900',
                 )}
                 aria-current={active ? 'page' : undefined}
               >
-                {active && <div className="absolute left-0 top-0 h-full w-[3px] rounded-r-md bg-primary transition-transform duration-300 animate-in slide-in-from-left-1" />}
+                {active && <div className="absolute left-0 top-0 h-full w-[4px] rounded-l-lg transform translate-x-[1px] bg-orange-300 transition-transform duration-300 animate-in slide-in-from-left-1" />}
                 {subChild.label}
               </Link>
             );

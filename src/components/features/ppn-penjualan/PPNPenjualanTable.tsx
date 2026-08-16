@@ -266,7 +266,7 @@ export default function PPNPenjualanTable({
         cell: (item) => currenciesFormat('idr', item.payment_amount),
       },
       {
-        header: 'Action',
+        header: 'Aksi',
         alignment: 'center',
         sticky: 'right',
         cell: (item) => (
@@ -340,7 +340,7 @@ export default function PPNPenjualanTable({
       />
 
       <Dialog open={isOpenBulkModal} onOpenChange={setIsOpenBulkModal}>
-        <DialogContent className="sm:max-w-4xl md:max-w-5xl w-[90vw] p-6 rounded-2xl">
+        <DialogContent className="sm:max-w-4xl md:max-w-5xl w-[90vw] p-6 rounded-md">
           <DialogHeader>
             <DialogTitle className="text-xl font-bold text-slate-800">
               Bulk Update Data PPN Penjualan ({selectedIds.size} Data Terpilih)

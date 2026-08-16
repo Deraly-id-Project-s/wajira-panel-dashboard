@@ -320,7 +320,7 @@ export default function PengeluaranUnitDetailTable({ data, isRefundActivity, act
       />
 
       <Dialog open={isOpenProcessModal} onOpenChange={setIsOpenProcessModal}>
-        <DialogContent className="sm:max-w-4xl md:max-w-5xl w-[90vw] p-6 rounded-2xl">
+        <DialogContent className="sm:max-w-4xl md:max-w-5xl w-[90vw] p-6 rounded-md">
           <DialogHeader>
             <DialogTitle className="text-xl font-bold text-slate-800">Proses Data Unit ({selected.length} Unit Terpilih)</DialogTitle>
           </DialogHeader>

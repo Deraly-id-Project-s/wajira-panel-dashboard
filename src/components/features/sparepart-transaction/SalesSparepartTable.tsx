@@ -94,7 +94,7 @@ export default function SalesSparepartTable({
 
   const getBillingLabel = useCallback((item: SparepartTransaction) => {
     if (item.is_refunded) return 'Refund';
-    return item.billing_summary?.is_paid ? 'Lunas' : 'Belum Lunas';
+    return item.sparepart_transaction_billing?.is_paid ? 'Lunas' : 'Belum Lunas';
   }, []);
 
   const currentPage = meta?.currentPage ?? 1;
@@ -239,11 +239,11 @@ export default function SalesSparepartTable({
                 <DropdownMenuItem
                   className={cn(
                     "text-red-600 focus:text-red-600 focus:bg-red-50 cursor-pointer",
-                    item.billing_summary?.is_paid && "opacity-50 cursor-not-allowed hover:bg-transparent hover:text-red-600 focus:bg-transparent"
+                    item.sparepart_transaction_billing?.is_paid && "opacity-50 cursor-not-allowed hover:bg-transparent hover:text-red-600 focus:bg-transparent"
                   )}
-                  disabled={item.billing_summary?.is_paid}
+                  disabled={item.sparepart_transaction_billing?.is_paid}
                   onClick={(e) => {
-                    if (item.billing_summary?.is_paid) {
+                    if (item.sparepart_transaction_billing?.is_paid) {
                       e.preventDefault();
                       return;
                     }

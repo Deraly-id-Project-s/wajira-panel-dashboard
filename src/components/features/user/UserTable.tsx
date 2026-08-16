@@ -203,7 +203,7 @@ export function UserTable({ data, onEdit, onDelete, onAdd, isLoading, canCreate,
         },
       },
       {
-        header: 'Action',
+        header: 'Aksi',
         alignment: 'center',
         sticky: 'right',
         className: 'w-[80px]',

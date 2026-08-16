@@ -31,6 +31,21 @@ export interface PurchaseTransactionItem {
   payment_status: string;
 }
 
+export interface PurchaseSparepartTransactionItem {
+  id: number;
+  transaction_date: string;
+  transaction_code: string;
+  person_name: string;
+  sparepart_name: string;
+  sparepart_code: string;
+  qty: number;
+  price: number;
+  discount: number;
+  total: number;
+  is_paid: boolean;
+  payment_status: string;
+}
+
 export interface PurchaseTransactionResponse {
   current_page: number;
   data: PurchaseTransactionItem[];
@@ -41,6 +56,20 @@ export interface PurchaseTransactionResponse {
   to: number;
 }
 
+export type PurchaseSparepartTransactionResponse = Omit<PurchaseTransactionResponse, 'data'> & {
+  data: PurchaseSparepartTransactionItem[];
+};
+
+const normalizeReportResponse = <T>(responseData: any) => {
+  const payload = responseData?.data ?? responseData ?? {};
+  const rows = Array.isArray(payload?.data) ? payload.data : [];
+
+  return {
+    ...payload,
+    data: rows,
+  } as Omit<PurchaseTransactionResponse, 'data'> & { data: T[] };
+};
+
 export const getLaporanPembelian = async (
   params: PurchaseTransactionParams
 ): Promise<PurchaseTransactionResponse> => {
@@ -50,13 +79,19 @@ export const getLaporanPembelian = async (
     },
   });
 
-  const payload = response?.data?.data ?? response?.data ?? {};
-  const rows = Array.isArray(payload?.data) ? payload.data : [];
+  return normalizeReportResponse<PurchaseTransactionItem>(response.data);
+};
 
-  return {
-    ...payload,
-    data: rows,
-  } as PurchaseTransactionResponse;
+export const getLaporanPembelianSparepart = async (
+  params: PurchaseTransactionParams
+): Promise<PurchaseSparepartTransactionResponse> => {
+  const response = await apiClient.get('/wapi/report/transaction-sparepart-purchase-report', {
+    params: {
+      ...params,
+    },
+  });
+
+  return normalizeReportResponse<PurchaseSparepartTransactionItem>(response.data);
 };
 
 export const getSuppliers = async () => {

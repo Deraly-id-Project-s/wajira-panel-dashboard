@@ -128,7 +128,7 @@ export function buildDynamicMenus(sidebarData: SidebarModuleItem[], permissions:
 
   for (const item of sidebarData) {
     const moduleSlug = item.module.slug;
-    if (!permissionSet.has(`${moduleSlug}:list`)) continue;
+    if (moduleSlug !== 'dashboard' && !permissionSet.has(`${moduleSlug}:list`)) continue;
     let label = item.module.name;
     let icon = ClipboardList;
 

@@ -8,9 +8,12 @@ import { Printer, Download, ChevronsUpDown, Check } from 'lucide-react';
 import { getSuppliers, getUnitTypes } from '@/services/laporan-pembelian.service';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { cn } from '@/lib/utils';
+import { getSpareparts } from '@/services/sparepart.service';
+import { useCompany } from '@/contexts/CompanyContext';
 
 interface LaporanPembelianFilterProps {
   activeTab: string;
+  reportItem: 'unit' | 'sparepart';
   startDate: string | null;
   endDate: string | null;
   onApplyFilters: (filters: {
@@ -25,12 +28,14 @@ interface LaporanPembelianFilterProps {
 
 export default function LaporanPembelianFilter({
   activeTab,
+  reportItem,
   startDate,
   endDate,
   onApplyFilters,
   onPrint,
   onDownload,
 }: LaporanPembelianFilterProps) {
+  const { companyId } = useCompany();
   const dateRange = useMemo(() => {
     if (startDate && endDate) {
       const from = new Date(startDate);
@@ -51,6 +56,7 @@ export default function LaporanPembelianFilter({
   }, [startDate, endDate]);
   const [suppliers, setSuppliers] = useState<Array<{ id: number; name: string }>>([]);
   const [unitTypes, setUnitTypes] = useState<Array<{ id: number; name: string }>>([]);
+  const [spareparts, setSpareparts] = useState<Array<{ id: number; name: string }>>([]);
 
   // Search state
   const [searchQuery, setSearchQuery] = useState('');
@@ -76,25 +82,34 @@ export default function LaporanPembelianFilter({
         console.error(e);
       }
     };
+    const fetchSpareparts = async () => {
+      try {
+        const result = await getSpareparts(companyId ?? undefined);
+        setSpareparts(result.data.map(item => ({ id: Number(item.id), name: item.name })));
+      } catch (e) {
+        console.error(e);
+      }
+    };
 
     if (activeTab === 'per-supplier') {
       fetchSuppliers();
     } else if (activeTab === 'per-tipe') {
-      fetchUnitTypes();
+      if (reportItem === 'sparepart') fetchSpareparts();
+      else fetchUnitTypes();
     }
-  }, [activeTab]);
+  }, [activeTab, companyId, reportItem]);
 
   // Handle clear local inputs when tab changes
   useEffect(() => {
     setSearchQuery('');
-  }, [activeTab]);
+  }, [activeTab, reportItem]);
 
   // Clear inner search term when popover closes
   useEffect(() => {
     if (!openBox) setSearchTermInside('');
   }, [openBox]);
 
-  const rawOptions = activeTab === 'per-supplier' ? suppliers : unitTypes;
+  const rawOptions = activeTab === 'per-supplier' ? suppliers : reportItem === 'sparepart' ? spareparts : unitTypes;
   const currentOptions = Array.isArray(rawOptions) ? rawOptions : [];
 
   useEffect(() => {
@@ -106,7 +121,7 @@ export default function LaporanPembelianFilter({
 
     if (activeTab === 'per-supplier') {
       const matchedSupplier = currentOptions.find(s => s.name?.toLowerCase() === searchQuery.trim().toLowerCase());
-      if (matchedSupplier) {
+      if (matchedSupplier && reportItem === 'unit') {
         supplierId = matchedSupplier.id;
       } else {
         search = searchQuery.trim();
@@ -122,7 +137,7 @@ export default function LaporanPembelianFilter({
       search,
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [searchQuery, activeTab]);
+  }, [searchQuery, activeTab, reportItem]);
 
   const handleDateChange = (newRange: DateRange | undefined) => {
     const appliedStartDate = newRange?.from ? format(newRange.from, 'yyyy-MM-dd') : null;
@@ -133,7 +148,7 @@ export default function LaporanPembelianFilter({
 
     if (activeTab === 'per-supplier') {
       const matchedSupplier = currentOptions.find(s => s.name?.toLowerCase() === searchQuery.trim().toLowerCase());
-      if (matchedSupplier) {
+      if (matchedSupplier && reportItem === 'unit') {
         supplierId = matchedSupplier.id;
       } else {
         search = searchQuery.trim();
@@ -170,7 +185,7 @@ export default function LaporanPembelianFilter({
         {activeTab !== 'per-nota' && (
           <div className="flex flex-col space-y-2">
             <label className="text-[13px] font-medium text-slate-700">
-              {activeTab === 'per-tipe' ? 'Masukkan Tipe ' : 'Masukkan Supplier '}
+              {activeTab === 'per-tipe' ? `Masukkan ${reportItem === 'sparepart' ? 'Sparepart' : 'Tipe'} ` : 'Masukkan Supplier '}
               <span className="text-red-500">*</span>
             </label>
 
@@ -185,7 +200,7 @@ export default function LaporanPembelianFilter({
                   <span className="truncate">
                     {searchQuery
                       ? (currentOptions.find(o => o.name === searchQuery)?.name || searchQuery)
-                      : (activeTab === 'per-tipe' ? 'Pilih atau cari tipe...' : 'Pilih atau cari supplier...')}
+                      : (activeTab === 'per-tipe' ? `Pilih atau cari ${reportItem === 'sparepart' ? 'sparepart' : 'tipe'}...` : 'Pilih atau cari supplier...')}
                   </span>
                   <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                 </Button>
