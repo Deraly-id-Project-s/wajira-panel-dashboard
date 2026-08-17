@@ -18,7 +18,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { FormDialog } from '@/components/ui/form-dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { DataImportModal } from '@/components/features/master-data/DataImportModal';
@@ -595,37 +595,29 @@ export default function UnitPurchaseDetailPage() {
         </div>
       </div>
 
-      <Dialog open={openForm} onOpenChange={setOpenForm}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>{editingItem ? 'Edit Detail Unit' : 'Tambah Detail Unit'}</DialogTitle>
-          </DialogHeader>
-
-          <div className="space-y-3">
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Warna</label>
-              <Input value={formValues.color} onChange={(e) => setFormValues((prev) => ({ ...prev, color: e.target.value }))} placeholder="Masukkan warna" />
-            </div>
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Nomor Mesin</label>
-              <Input value={formValues.machine_number} onChange={(e) => setFormValues((prev) => ({ ...prev, machine_number: e.target.value }))} placeholder="Masukkan nomor mesin" />
-            </div>
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Nomor Rangka</label>
-              <Input value={formValues.chassis_number} onChange={(e) => setFormValues((prev) => ({ ...prev, chassis_number: e.target.value }))} placeholder="Masukkan nomor rangka" />
-            </div>
+      <FormDialog
+        open={openForm}
+        onOpenChange={setOpenForm}
+        title={editingItem ? 'Edit Detail Unit' : 'Tambah Detail Unit'}
+        onSubmit={(e: React.FormEvent) => { e.preventDefault(); handleSubmit(); }}
+        maxWidthClassName="max-w-md"
+        isSubmitting={createMutation.isPending || updateMutation.isPending}
+      >
+        <div className="space-y-3">
+          <div className="space-y-2">
+            <label className="text-sm font-medium">Warna</label>
+            <Input value={formValues.color} onChange={(e) => setFormValues((prev) => ({ ...prev, color: e.target.value }))} placeholder="Masukkan warna" />
           </div>
-
-          <DialogFooter>
-            <Button variant="ghost" onClick={() => setOpenForm(false)}>
-              Batal
-            </Button>
-            <Button onClick={handleSubmit} disabled={createMutation.isPending || updateMutation.isPending} className="bg-primary text-primary-foreground hover:bg-primary/90">
-              {createMutation.isPending || updateMutation.isPending ? 'Menyimpan...' : 'Simpan'}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+          <div className="space-y-2">
+            <label className="text-sm font-medium">Nomor Mesin</label>
+            <Input value={formValues.machine_number} onChange={(e) => setFormValues((prev) => ({ ...prev, machine_number: e.target.value }))} placeholder="Masukkan nomor mesin" />
+          </div>
+          <div className="space-y-2">
+            <label className="text-sm font-medium">Nomor Rangka</label>
+            <Input value={formValues.chassis_number} onChange={(e) => setFormValues((prev) => ({ ...prev, chassis_number: e.target.value }))} placeholder="Masukkan nomor rangka" />
+          </div>
+        </div>
+      </FormDialog>
 
       <AlertDialog open={Boolean(deleteTarget)} onOpenChange={(open) => !open && setDeleteTarget(null)}>
         <AlertDialogContent>

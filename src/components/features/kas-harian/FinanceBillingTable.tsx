@@ -5,7 +5,7 @@ import { useRouter } from 'next/router';
 import { Plus, Pencil, Trash2, MoreHorizontal, Check, ChevronsUpDown, Info, MoreVertical } from 'lucide-react';
 import { toast } from 'sonner';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { FormDialog } from '@/components/ui/form-dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -451,118 +451,98 @@ export default function FinanceBillingTable({ financeBillings, cashFlowDetail, c
       </div>
 
       {/* Add / Edit Dialog */}
-      <Dialog open={isFormOpen} onOpenChange={(open) => { if (!open) closeForm(); }}>
-        <DialogContent className="sm:max-w-2xl max-h-[600px] overflow-y-auto w-full" id="finance-billing-form">
-          <DialogHeader>
-            <DialogTitle>{editingId ? 'Edit Pembayaran' : 'Tambah Pembayaran Baru'}</DialogTitle>
-          </DialogHeader>
-
-          <div className="space-y-4 py-2">
-            <div className="grid gap-4 md:grid-cols-2">
-              {/* Kas */}
-              <div className="space-y-2">
-                <label className="text-sm font-medium text-slate-800">Kas</label>
-                <SearchableSelect
-                  value={form.cash_id}
-                  onValueChange={(v) => setForm((prev) => ({ ...prev, cash_id: v }))}
-                  options={kasOptions}
-                  placeholder="Pilih kas"
-                  searchPlaceholder="Cari kas..."
-                  getLabel={(k) => k.cash_name || `${k.code} - ${k.description}`}
-                  getSearchText={(k) => `${k.cash_name || ''} ${k.code} ${k.description}`}
-                  disabled={isLoading}
-                />
-              </div>
-
-              {/* Akun */}
-              <div className="space-y-2">
-                <label className="text-sm font-medium text-slate-800">Akun</label>
-                <SearchableSelect
-                  value={form.account_id}
-                  onValueChange={(v) => setForm((prev) => ({ ...prev, account_id: v }))}
-                  options={akunOptions}
-                  placeholder="Pilih akun"
-                  searchPlaceholder="Cari akun..."
-                  getLabel={(a) => `${a.code} - ${a.name}`}
-                  getSearchText={(a) => `${a.code} ${a.name}`}
-                  disabled={isLoading}
-                />
-              </div>
-            </div>
-
-            <div className="grid gap-4 md:grid-cols-2">
-              {/* Nominal */}
-              <div className="space-y-2">
-                <div className="rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800">
-                  <div className="font-semibold">Maksimal nominal: {formatSelectedCurrency(maxPaymentAmount)}</div>
-                  <div className="mt-0.5 text-amber-700">
-                    Total transaksi {formatSelectedCurrency(cashFlowAmount)} - total terbayar {formatSelectedCurrency(totalPaid)}
-                    {editingId ? ` + nominal pembayaran ini ${formatSelectedCurrency(editingAmount)}` : ''}.
-                  </div>
-                </div>
-                <label className="text-sm font-medium text-slate-800">Nominal</label>
-                <Input
-                  value={form.amount}
-                  onChange={(e) => {
-                    const nextAmount = parseMoneyInput(e.target.value);
-                    const clampedAmount = hasPaymentLimit ? Math.min(nextAmount, maxPaymentAmount) : nextAmount;
-                    setForm((prev) => ({ ...prev, amount: clampedAmount > 0 ? formatMoneyValue(clampedAmount) : '' }));
-                  }}
-                  placeholder={`${selectedCurrencySymbol} 0`}
-                  inputMode="numeric"
-                  className="h-11"
-                  disabled={isLoading}
-                />
-              </div>
-
-              {/* Tanggal Bayar */}
-              <div className="space-y-2">
-                <label className="text-sm font-medium text-slate-800">Tanggal Bayar</label>
-                <Input
-                  type="date"
-                  value={form.payment_at}
-                  onChange={(e) => setForm((prev) => ({ ...prev, payment_at: e.target.value }))}
-                  className="h-11"
-                  disabled={isLoading}
-                />
-              </div>
-            </div>
-
-            {/* Catatan */}
+      <FormDialog
+        open={isFormOpen}
+        onOpenChange={(open: boolean) => { if (!open) closeForm(); }}
+        title={editingId ? 'Edit Pembayaran' : 'Tambah Pembayaran Baru'}
+        onSubmit={(e: React.FormEvent) => { e.preventDefault(); void handleSubmitForm(); }}
+        maxWidthClassName="max-w-2xl"
+        isSubmitting={isLoading}
+      >
+        <div className="space-y-4">
+          <div className="grid gap-4 md:grid-cols-2">
+            {/* Kas */}
             <div className="space-y-2">
-              <label className="text-sm font-medium text-slate-800">Catatan</label>
-              <Textarea
-                value={form.note}
-                onChange={(e) => setForm((prev) => ({ ...prev, note: e.target.value }))}
-                placeholder="Catatan pembayaran..."
-                className="min-h-20 resize-none rounded-md"
+              <label className="text-sm font-medium text-slate-800">Kas</label>
+              <SearchableSelect
+                value={form.cash_id}
+                onValueChange={(v) => setForm((prev) => ({ ...prev, cash_id: v }))}
+                options={kasOptions}
+                placeholder="Pilih kas"
+                searchPlaceholder="Cari kas..."
+                getLabel={(k) => k.cash_name || `${k.code} - ${k.description}`}
+                getSearchText={(k) => `${k.cash_name || ''} ${k.code} ${k.description}`}
+                disabled={isLoading}
+              />
+            </div>
+
+            {/* Akun */}
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-slate-800">Akun</label>
+              <SearchableSelect
+                value={form.account_id}
+                onValueChange={(v) => setForm((prev) => ({ ...prev, account_id: v }))}
+                options={akunOptions}
+                placeholder="Pilih akun"
+                searchPlaceholder="Cari akun..."
+                getLabel={(a) => `${a.code} - ${a.name}`}
+                getSearchText={(a) => `${a.code} ${a.name}`}
                 disabled={isLoading}
               />
             </div>
           </div>
 
-          <DialogFooter>
-            <Button type="button" variant="outline" onClick={closeForm} disabled={isLoading}>
-              Batal
-            </Button>
-            <Button
-              type="button"
-              className="bg-[#18385b] text-white hover:bg-[#102843]"
+          <div className="grid gap-4 md:grid-cols-2">
+            {/* Nominal */}
+            <div className="space-y-2">
+              <div className="rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800">
+                <div className="font-semibold">Maksimal nominal: {formatSelectedCurrency(maxPaymentAmount)}</div>
+                <div className="mt-0.5 text-amber-700">
+                  Total transaksi {formatSelectedCurrency(cashFlowAmount)} - total terbayar {formatSelectedCurrency(totalPaid)}
+                  {editingId ? ` + nominal pembayaran ini ${formatSelectedCurrency(editingAmount)}` : ''}.
+                </div>
+              </div>
+              <label className="text-sm font-medium text-slate-800">Nominal</label>
+              <Input
+                value={form.amount}
+                onChange={(e) => {
+                  const nextAmount = parseMoneyInput(e.target.value);
+                  const clampedAmount = hasPaymentLimit ? Math.min(nextAmount, maxPaymentAmount) : nextAmount;
+                  setForm((prev) => ({ ...prev, amount: clampedAmount > 0 ? formatMoneyValue(clampedAmount) : '' }));
+                }}
+                placeholder={`${selectedCurrencySymbol} 0`}
+                inputMode="numeric"
+                className="h-11"
+                disabled={isLoading}
+              />
+            </div>
+
+            {/* Tanggal Bayar */}
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-slate-800">Tanggal Bayar</label>
+              <Input
+                type="date"
+                value={form.payment_at}
+                onChange={(e) => setForm((prev) => ({ ...prev, payment_at: e.target.value }))}
+                className="h-11"
+                disabled={isLoading}
+              />
+            </div>
+          </div>
+
+          {/* Catatan */}
+          <div className="space-y-2">
+            <label className="text-sm font-medium text-slate-800">Catatan</label>
+            <Textarea
+              value={form.note}
+              onChange={(e) => setForm((prev) => ({ ...prev, note: e.target.value }))}
+              placeholder="Catatan pembayaran..."
+              className="min-h-20 resize-none rounded-md"
               disabled={isLoading}
-              onClick={() => void handleSubmitForm()}
-            >
-              {isLoading ? (
-                <>
-                  <LoadingState variant="inline" text={null} />
-                  Menyimpan...
-                </>
-              ) : (
-                'Simpan'
-              )}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+            />
+          </div>
+        </div>
+      </FormDialog>
 
       {/* Delete Confirmation */}
       <AlertDialog open={Boolean(deleteTarget)} onOpenChange={(open) => { if (!open) setDeleteTarget(null); }}>

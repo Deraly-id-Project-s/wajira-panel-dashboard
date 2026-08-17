@@ -11,13 +11,7 @@ import BaseTable, { ColumnDef } from '@/components/ui/base-table';
 import { CopyBox } from '@/components/ui/copy-box';
 import { ReferenceLink } from '@/components/ui/reference-link';
 import { useRouter } from 'next/router';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from '@/components/ui/dialog';
+import { FormDialog } from '@/components/ui/form-dialog';
 import { Input } from '@/components/ui/input';
 import { useBulkUpdatePPNPembelian } from '@/hooks/usePPN';
 import { toast } from 'sonner';
@@ -339,127 +333,108 @@ export default function PPNPembelianTable({
         }
       />
 
-      <Dialog open={isOpenBulkModal} onOpenChange={setIsOpenBulkModal}>
-        <DialogContent className="sm:max-w-4xl md:max-w-5xl w-[90vw] p-6 rounded-md">
-          <DialogHeader>
-            <DialogTitle className="text-xl font-bold text-slate-800">
-              Bulk Update Data PPN Pembelian ({selectedIds.size} Data Terpilih)
-            </DialogTitle>
-          </DialogHeader>
-
-          <div className="space-y-6 my-4">
-            {/* Selected Items Summary Table */}
-            <div className="border border-slate-200 rounded-xl overflow-hidden shadow-sm bg-white">
-              <div className="max-h-52 overflow-y-auto overflow-x-auto">
-                <table className="w-full text-sm text-left border-collapse">
-                  <thead className="bg-[#f8f9fa] text-slate-600 uppercase text-xs font-semibold border-b border-slate-200 sticky top-0 z-10">
-                    <tr>
-                      <th className="px-4 py-3">Kode Pembelian</th>
-                      <th className="px-4 py-3">Tanggal Beli</th>
-                      <th className="px-4 py-3">Tipe Unit</th>
-                      <th className="px-4 py-3">Supplier</th>
-                      <th className="px-4 py-3">Tanggal FPM</th>
-                      <th className="px-4 py-3">Masa NSFPM</th>
-                      <th className="px-4 py-3">Nomor NSFP</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-100">
-                    {data
-                      .filter((item) => selectedIds.has(String(item.id)))
-                      .map((row) => (
-                        <tr key={row.id} className="hover:bg-slate-50/50 transition-colors">
-                          <td className="px-4 py-3 font-medium text-slate-900">
-                            <CopyBox text={row.code ?? '-'} />
-                          </td>
-                          <td className="px-4 py-3 text-slate-600 whitespace-nowrap">{formatDate(row.buy_date)}</td>
-                          <td className="px-4 py-3 text-slate-600">{row.unit_type?.name ?? '-'}</td>
-                          <td className="px-4 py-3 text-slate-600">{row.supplier ?? '-'}</td>
-                          <td className="px-4 py-3 text-slate-600 whitespace-nowrap">{formatDate(row.fp_date)}</td>
-                          <td className="px-4 py-3 text-slate-600 whitespace-nowrap">{formatDate(row.nsfp_age)}</td>
-                          <td className="px-4 py-3 text-slate-600 font-mono text-xs">{row.nsfp_number ?? '-'}</td>
-                        </tr>
-                      ))}
-                  </tbody>
-                </table>
-              </div>
+      <FormDialog
+        open={isOpenBulkModal}
+        onOpenChange={setIsOpenBulkModal}
+        title={`Bulk Update Data PPN Pembelian (${selectedIds.size} Data Terpilih)`}
+        onSubmit={handleSubmitBulk}
+        maxWidthClassName="max-w-5xl"
+        isSubmitting={bulkUpdateMutation.isPending}
+        submitLabel="Proses Update Bulk"
+      >
+        <div className="space-y-6">
+          {/* Selected Items Summary Table */}
+          <div className="border border-slate-200 rounded-xl overflow-hidden shadow-sm bg-white">
+            <div className="max-h-52 overflow-y-auto overflow-x-auto">
+              <table className="w-full text-sm text-left border-collapse">
+                <thead className="bg-[#f8f9fa] text-slate-600 uppercase text-xs font-semibold border-b border-slate-200 sticky top-0 z-10">
+                  <tr>
+                    <th className="px-4 py-3">Kode Pembelian</th>
+                    <th className="px-4 py-3">Tanggal Beli</th>
+                    <th className="px-4 py-3">Tipe Unit</th>
+                    <th className="px-4 py-3">Supplier</th>
+                    <th className="px-4 py-3">Tanggal FPM</th>
+                    <th className="px-4 py-3">Masa NSFPM</th>
+                    <th className="px-4 py-3">Nomor NSFP</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100">
+                  {data
+                    .filter((item) => selectedIds.has(String(item.id)))
+                    .map((row) => (
+                      <tr key={row.id} className="hover:bg-slate-50/50 transition-colors">
+                        <td className="px-4 py-3 font-medium text-slate-900">
+                          <CopyBox text={row.code ?? '-'} />
+                        </td>
+                        <td className="px-4 py-3 text-slate-600 whitespace-nowrap">{formatDate(row.buy_date)}</td>
+                        <td className="px-4 py-3 text-slate-600">{row.unit_type?.name ?? '-'}</td>
+                        <td className="px-4 py-3 text-slate-600">{row.supplier ?? '-'}</td>
+                        <td className="px-4 py-3 text-slate-600 whitespace-nowrap">{formatDate(row.fp_date)}</td>
+                        <td className="px-4 py-3 text-slate-600 whitespace-nowrap">{formatDate(row.nsfp_age)}</td>
+                        <td className="px-4 py-3 text-slate-600 font-mono text-xs">{row.nsfp_number ?? '-'}</td>
+                      </tr>
+                    ))}
+                </tbody>
+              </table>
             </div>
-
-            {/* Form Fields Grid */}
-            <form id="bulk-update-ppn-form" onSubmit={handleSubmitBulk} className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-1.5">
-                <label className="text-xs font-semibold text-slate-700">Tanggal FPM (fp_date)</label>
-                <Input
-                  type="date"
-                  value={fpDate}
-                  onChange={(e) => setFpDate(e.target.value)}
-                  className="bg-white border-slate-200 h-9 text-xs rounded-lg"
-                />
-              </div>
-
-              <div className="space-y-1.5">
-                <label className="text-xs font-semibold text-slate-700">Masa NSFPM (nsfp_age)</label>
-                <Input
-                  type="date"
-                  value={nsfpAge}
-                  onChange={(e) => setNsfpAge(e.target.value)}
-                  className="bg-white border-slate-200 h-9 text-xs rounded-lg"
-                />
-              </div>
-
-              <div className="space-y-1.5">
-                <label className="text-xs font-semibold text-slate-700">Jumlah NSFP (nsfp_amount)</label>
-                <Input
-                  type="number"
-                  placeholder="Jumlah NSFP"
-                  value={nsfpAmount}
-                  onChange={(e) => setNsfpAmount(e.target.value)}
-                  className="bg-white border-slate-200 h-9 text-xs rounded-lg"
-                />
-              </div>
-
-              <div className="space-y-1.5">
-                <label className="text-xs font-semibold text-slate-700">Total Nominal (amount)</label>
-                <MoneyInput
-                  placeholder="Nominal Rupiah"
-                  value={Number(amount) || 0}
-                  onChangeValue={(value) => setAmount(value.toString())}
-                  className="bg-white border-slate-200 h-9 text-xs rounded-lg"
-                />
-              </div>
-
-              <div className="space-y-1.5 md:col-span-2">
-                <label className="text-xs font-semibold text-slate-700">Nomor NSFP (nsfp_number)</label>
-                <Input
-                  type="text"
-                  placeholder="Contoh: FAP0012"
-                  value={nsfpNumber}
-                  onChange={(e) => setNsfpNumber(e.target.value)}
-                  className="bg-white border-slate-200 h-9 text-xs rounded-lg"
-                />
-              </div>
-            </form>
           </div>
 
-          <DialogFooter className="gap-2 sm:gap-0 border-t pt-4">
-            <Button
-              type="button"
-              variant="outline"
-              className="rounded-lg"
-              onClick={() => setIsOpenBulkModal(false)}
-            >
-              Batal
-            </Button>
-            <Button
-              type="submit"
-              form="bulk-update-ppn-form"
-              disabled={bulkUpdateMutation.isPending}
-              className="bg-primary text-primary-foreground hover:bg-primary/90 rounded-lg px-5"
-            >
-              {bulkUpdateMutation.isPending ? 'Memproses...' : 'Proses Update Bulk'}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+          {/* Form Fields Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-1.5">
+              <label className="text-xs font-semibold text-slate-700">Tanggal FPM (fp_date)</label>
+              <Input
+                type="date"
+                value={fpDate}
+                onChange={(e) => setFpDate(e.target.value)}
+                className="bg-white border-slate-200 h-9 text-xs rounded-lg"
+              />
+            </div>
+
+            <div className="space-y-1.5">
+              <label className="text-xs font-semibold text-slate-700">Masa NSFPM (nsfp_age)</label>
+              <Input
+                type="date"
+                value={nsfpAge}
+                onChange={(e) => setNsfpAge(e.target.value)}
+                className="bg-white border-slate-200 h-9 text-xs rounded-lg"
+              />
+            </div>
+
+            <div className="space-y-1.5">
+              <label className="text-xs font-semibold text-slate-700">Jumlah NSFP (nsfp_amount)</label>
+              <Input
+                type="number"
+                placeholder="Jumlah NSFP"
+                value={nsfpAmount}
+                onChange={(e) => setNsfpAmount(e.target.value)}
+                className="bg-white border-slate-200 h-9 text-xs rounded-lg"
+              />
+            </div>
+
+            <div className="space-y-1.5">
+              <label className="text-xs font-semibold text-slate-700">Total Nominal (amount)</label>
+              <MoneyInput
+                placeholder="Nominal Rupiah"
+                value={Number(amount) || 0}
+                onChangeValue={(value) => setAmount(value.toString())}
+                className="bg-white border-slate-200 h-9 text-xs rounded-lg"
+              />
+            </div>
+
+            <div className="space-y-1.5 md:col-span-2">
+              <label className="text-xs font-semibold text-slate-700">Nomor NSFP (nsfp_number)</label>
+              <Input
+                type="text"
+                placeholder="Contoh: FAP0012"
+                value={nsfpNumber}
+                onChange={(e) => setNsfpNumber(e.target.value)}
+                className="bg-white border-slate-200 h-9 text-xs rounded-lg"
+              />
+            </div>
+          </div>
+        </div>
+      </FormDialog>
     </div>
   );
 }

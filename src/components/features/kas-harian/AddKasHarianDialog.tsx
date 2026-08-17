@@ -4,8 +4,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useQuery } from '@tanstack/react-query';
 import { format } from 'date-fns';
 import { toast } from 'sonner';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
+import { FormDialog } from '@/components/ui/form-dialog';
 import { useCompany } from '@/contexts/CompanyContext';
 import { fetchUserCompanies } from '@/services/company.service';
 import { useCreateKasHarian } from '@/hooks/useKasHarian';
@@ -77,35 +76,24 @@ export default function AddKasHarianDialog({ open, onOpenChange }: Props) {
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[92vh] w-[calc(100vw-2rem)] max-w-[520px] overflow-hidden rounded-[28px] border-0 p-0 shadow-2xl">
-        <div className="flex max-h-[92vh] flex-col rounded-[28px] border border-slate-200 bg-white">
-          <DialogHeader className="space-y-1 px-6 pt-6 text-left sm:px-8 sm:pt-8">
-            <DialogTitle className="text-xl font-semibold text-slate-955">Tambah Transaksi KAS</DialogTitle>
-            <p className="text-sm text-muted-foreground">Masukkan detail transaksi baru</p>
-          </DialogHeader>
-
-          <div className="mt-6 flex-1 overflow-y-auto px-6 pb-6 sm:px-8">
-            <KasHarianForm
-              form={form}
-              onSubmit={onSubmit}
-              id="add-kas-form"
-              companies={companyQuery.data ?? []}
-            />
-          </div>
-
-          <div className="border-t border-slate-100 px-6 py-5 sm:px-8">
-            <div className="flex items-center justify-end gap-3">
-              <Button type="button" variant="outline" className="border-slate-200" onClick={() => onOpenChange(false)} disabled={isPending}>
-                Batal
-              </Button>
-              <Button type="submit" className="bg-[#1e3a5f] hover:bg-[#152e4d]" form="add-kas-form" disabled={isPending}>
-                {isPending ? 'Menyimpan...' : 'Simpan'}
-              </Button>
-            </div>
-          </div>
-        </div>
-      </DialogContent>
-    </Dialog>
+    <FormDialog
+      open={open}
+      onOpenChange={onOpenChange}
+      title="Tambah Transaksi KAS"
+      description="Masukkan detail transaksi baru"
+      onSubmit={(e: React.FormEvent) => {
+        e.preventDefault();
+        void form.handleSubmit(onSubmit)();
+      }}
+      maxWidthClassName="max-w-[520px]"
+      isSubmitting={isPending}
+    >
+      <KasHarianForm
+        form={form}
+        onSubmit={onSubmit}
+        companies={companyQuery.data ?? []}
+        wrapWithForm={false}
+      />
+    </FormDialog>
   );
 }
