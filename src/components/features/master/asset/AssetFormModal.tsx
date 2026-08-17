@@ -1,7 +1,6 @@
 import React, { useEffect } from 'react';
 import { useForm, Controller } from 'react-hook-form';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
+import { FormDialog } from '@/components/ui/form-dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -47,70 +46,57 @@ export function AssetFormModal({ isOpen, onClose, onSave, companyId }: AssetForm
     };
 
     return (
-        <Dialog open={isOpen} onOpenChange={onClose}>
-            <DialogContent className="sm:max-w-[425px]">
-                <DialogHeader>
-                    <DialogTitle>Tambah Data Aset</DialogTitle>
-                    <DialogDescription>
-                        Masukkan detail aset baru
-                    </DialogDescription>
-                </DialogHeader>
-                <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 pt-2">
+        <FormDialog
+            open={isOpen}
+            onOpenChange={onClose}
+            title="Tambah Data Aset"
+            description="Masukkan detail aset baru"
+            onSubmit={handleSubmit(onSubmit)}
+        >
+            <div className="space-y-2">
+                <Label htmlFor="code" className="text-gray-900 font-medium">Kode Aset</Label>
+                <Input
+                    id="code"
+                    placeholder="Kosongkan jika ingin auto generate dari backend"
+                    {...register('code')}
+                    className={errors.code ? 'border-red-500' : ''}
+                />
+                <p className="text-xs text-gray-500">Opsional. Jika dikosongkan, kode aset akan dibuat otomatis oleh sistem.</p>
+            </div>
 
-                    {/* Kode Aset */}
-                    <div className="space-y-2">
-                        <Label htmlFor="code" className="text-gray-900 font-medium">Kode Aset</Label>
-                        <Input
-                            id="code"
-                            placeholder="Kosongkan jika ingin auto generate dari backend"
-                            {...register('code')}
-                            className={errors.code ? 'border-red-500' : ''}
-                        />
-                        <p className="text-xs text-gray-500">Opsional. Jika dikosongkan, kode aset akan dibuat otomatis oleh sistem.</p>
-                    </div>
+            <div className="space-y-2">
+                <Label htmlFor="type" className="text-gray-900 font-medium">Tipe Aset</Label>
+                <Controller
+                    control={control}
+                    name="type"
+                    rules={{ required: 'Tipe aset wajib dipilih' }}
+                    render={({ field }) => (
+                        <Select value={field.value} onValueChange={field.onChange}>
+                            <SelectTrigger className={errors.type ? 'border-red-500' : ''}>
+                                <SelectValue placeholder="Select an item" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="inventory">Inventaris Kantor</SelectItem>
+                                <SelectItem value="vehicles">Kendaraan</SelectItem>
+                                <SelectItem value="buildings">Bangunan</SelectItem>
+                                <SelectItem value="land">Tanah</SelectItem>
+                            </SelectContent>
+                        </Select>
+                    )}
+                />
+                {errors.type && <p className="text-red-500 text-xs">{errors.type.message}</p>}
+            </div>
 
-                    {/* Tipe Aset */}
-                    <div className="space-y-2">
-                        <Label htmlFor="type" className="text-gray-900 font-medium">Tipe Aset</Label>
-                        <Controller
-                            control={control}
-                            name="type"
-                            rules={{ required: 'Tipe aset wajib dipilih' }}
-                            render={({ field }) => (
-                                <Select value={field.value} onValueChange={field.onChange}>
-                                    <SelectTrigger className={errors.type ? 'border-red-500' : ''}>
-                                        <SelectValue placeholder="Select an item" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        <SelectItem value="inventory">Inventaris Kantor</SelectItem>
-                                        <SelectItem value="vehicles">Kendaraan</SelectItem>
-                                        <SelectItem value="buildings">Bangunan</SelectItem>
-                                        <SelectItem value="land">Tanah</SelectItem>
-                                    </SelectContent>
-                                </Select>
-                            )}
-                        />
-                        {errors.type && <p className="text-red-500 text-xs">{errors.type.message}</p>}
-                    </div>
-
-                    {/* Nama Barang */}
-                    <div className="space-y-2">
-                        <Label htmlFor="name" className="text-gray-900 font-medium">Nama Barang</Label>
-                        <Input
-                            id="name"
-                            placeholder="Contoh: Sapu"
-                            {...register('name', { required: 'Nama barang wajib diisi' })}
-                            className={errors.name ? 'border-red-500' : ''}
-                        />
-                        {errors.name && <p className="text-red-500 text-xs">{errors.name.message}</p>}
-                    </div>
-
-                    <div className="flex flex-col space-y-2 pt-2">
-                        <Button type="submit" className="w-full bg-[#1e3a5f] hover:bg-[#152e4d]">Simpan</Button>
-                        <Button type="button" variant="outline" className="w-full" onClick={onClose}>Batal</Button>
-                    </div>
-                </form>
-            </DialogContent>
-        </Dialog>
+            <div className="space-y-2">
+                <Label htmlFor="name" className="text-gray-900 font-medium">Nama Barang</Label>
+                <Input
+                    id="name"
+                    placeholder="Contoh: Sapu"
+                    {...register('name', { required: 'Nama barang wajib diisi' })}
+                    className={errors.name ? 'border-red-500' : ''}
+                />
+                {errors.name && <p className="text-red-500 text-xs">{errors.name.message}</p>}
+            </div>
+        </FormDialog>
     );
 }

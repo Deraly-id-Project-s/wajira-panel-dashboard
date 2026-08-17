@@ -3,16 +3,15 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { useQuery } from '@tanstack/react-query';
+import { FormDialog } from '@/components/ui/form-dialog';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { useState, useMemo } from 'react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
 import { Check, ChevronsUpDown } from 'lucide-react';
 import { Textarea } from '@/components/ui/textarea';
-import { LoadingState } from '@/components/ui/loading-state';
 import { getWarehouseDataList } from '@/services/warehouseBlock.service';
 import type { WarehouseBlock } from '@/services/warehouseBlock.service';
 import { cn } from '@/lib/utils';
@@ -91,29 +90,30 @@ export function WarehouseBlockForm({ open, onOpenChange, initialData, onSubmit, 
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[425px]">
-        <DialogHeader>
-          <DialogTitle>{initialData ? 'Edit Blok Gudang' : 'Tambah Blok Gudang'}</DialogTitle>
-        </DialogHeader>
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
-            <FormField
-              control={form.control}
-              name="warehouse_id"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Pilih Gudang</FormLabel>
-                  <Popover
-                    modal={true}
-                    open={openWarehouseSelect}
-                    onOpenChange={(open) => {
-                      setOpenWarehouseSelect(open);
-                      if (!open) setWarehouseSearch('');
-                    }}
-                  >
-                    <PopoverTrigger asChild>
-                      <FormControl>
+    <Form {...form}>
+      <FormDialog
+        open={open}
+        onOpenChange={onOpenChange}
+        title={initialData ? 'Edit Blok Gudang' : 'Tambah Blok Gudang'}
+        onSubmit={form.handleSubmit(handleSubmit)}
+        isSubmitting={isSubmitting}
+      >
+        <FormField
+          control={form.control}
+          name="warehouse_id"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Pilih Gudang</FormLabel>
+              <Popover
+                modal={true}
+                open={openWarehouseSelect}
+                onOpenChange={(open) => {
+                  setOpenWarehouseSelect(open);
+                  if (!open) setWarehouseSearch('');
+                }}
+              >
+                <PopoverTrigger asChild>
+                  <FormControl>
                         <Button
                           variant="outline"
                           role="combobox"
@@ -130,88 +130,77 @@ export function WarehouseBlockForm({ open, onOpenChange, initialData, onSubmit, 
                           <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                         </Button>
                       </FormControl>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-[--radix-popover-trigger-width] p-0" align="start">
-                      <Command shouldFilter={false}>
-                        <CommandInput 
-                          placeholder="Cari gudang..." 
-                          value={warehouseSearch} 
-                          onValueChange={setWarehouseSearch} 
-                        />
-                        <CommandList>
-                          <CommandEmpty>Gudang tidak ditemukan.</CommandEmpty>
-                          <CommandGroup>
-                            {filteredWarehouses.map((wh) => (
-                              <CommandItem
-                                key={wh.id}
-                                value={`${wh.name} ${wh.id}`}
-                                onSelect={() => {
-                                  field.onChange(wh.id);
-                                  setOpenWarehouseSelect(false);
-                                  setWarehouseSearch('');
-                                }}
-                              >
-                                <Check
-                                  className={cn(
-                                    "mr-2 h-4 w-4",
-                                    field.value === wh.id ? "opacity-100" : "opacity-0"
-                                  )}
-                                />
-                                {wh.name}
-                              </CommandItem>
-                            ))}
-                          </CommandGroup>
-                        </CommandList>
-                      </Command>
-                    </PopoverContent>
-                  </Popover>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="name"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Nama Blok</FormLabel>
-                  <FormControl>
-                    <Input placeholder="cth: Blok A" disabled={isSubmitting} {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="description"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Deskripsi</FormLabel>
-                  <FormControl>
-                    <Textarea
-                      placeholder="Masukkan deskripsi opsional"
-                      disabled={isSubmitting}
-                      className="resize-none"
-                      {...field}
+                </PopoverTrigger>
+                <PopoverContent className="w-[--radix-popover-trigger-width] p-0" align="start">
+                  <Command shouldFilter={false}>
+                    <CommandInput 
+                      placeholder="Cari gudang..." 
+                      value={warehouseSearch} 
+                      onValueChange={setWarehouseSearch} 
                     />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <DialogFooter className="mt-6">
-              <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={isSubmitting}>
-                Batal
-              </Button>
-              <Button type="submit" disabled={isSubmitting} className="bg-[#1e3a5f] hover:bg-[#152e4d]">
-                {isSubmitting && <LoadingState variant="inline" text={null} />}
-                Simpan
-              </Button>
-            </DialogFooter>
-          </form>
-        </Form>
-      </DialogContent>
-    </Dialog>
+                    <CommandList>
+                      <CommandEmpty>Gudang tidak ditemukan.</CommandEmpty>
+                      <CommandGroup>
+                        {filteredWarehouses.map((wh) => (
+                          <CommandItem
+                            key={wh.id}
+                            value={`${wh.name} ${wh.id}`}
+                            onSelect={() => {
+                              field.onChange(wh.id);
+                              setOpenWarehouseSelect(false);
+                              setWarehouseSearch('');
+                            }}
+                          >
+                            <Check
+                              className={cn(
+                                "mr-2 h-4 w-4",
+                                field.value === wh.id ? "opacity-100" : "opacity-0"
+                              )}
+                            />
+                            {wh.name}
+                          </CommandItem>
+                        ))}
+                      </CommandGroup>
+                    </CommandList>
+                  </Command>
+                </PopoverContent>
+              </Popover>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <FormField
+          control={form.control}
+          name="name"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Nama Blok</FormLabel>
+              <FormControl>
+                <Input placeholder="cth: Blok A" disabled={isSubmitting} {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <FormField
+          control={form.control}
+          name="description"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Deskripsi</FormLabel>
+              <FormControl>
+                <Textarea
+                  placeholder="Masukkan deskripsi opsional"
+                  disabled={isSubmitting}
+                  className="resize-none"
+                  {...field}
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+      </FormDialog>
+    </Form>
   );
 }
