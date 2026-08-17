@@ -75,7 +75,7 @@ export function CompanyProvider({ children }: { children: React.ReactNode }) {
         setCompanyAccessStatus("loading")
         setCompanyAccessError(null)
 
-        const request = fetchUserCompanies({ forceRefresh: true })
+        const request = fetchUserCompanies({ forceRefresh: options.forceRefresh })
             .then((data) => {
                 companiesRef.current = data
                 loadedForTokenRef.current = token

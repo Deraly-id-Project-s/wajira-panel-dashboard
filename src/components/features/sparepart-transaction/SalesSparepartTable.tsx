@@ -1,7 +1,7 @@
 import { useCallback, useMemo, useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { SparepartTransaction } from '@/@types/sparepart-transaction.types';
-import { Eye, MoreVertical, Pencil, Plus, Search, Trash2 } from 'lucide-react';
+import { Eye, MoreVertical, Pencil, Plus, Search, Trash2, Undo2 } from 'lucide-react';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { useRouter } from 'next/router';
 import { Input } from '@/components/ui/input';
@@ -230,6 +230,11 @@ export default function SalesSparepartTable({
               <DropdownMenuItem onClick={() => router.push(`/dashboard/${slug}/transaksi/penjualan-sparepart/${item.id}`)}>
                 <Eye className="mr-2 h-4 w-4" /> Detail
               </DropdownMenuItem>
+              {!item.is_refunded && canCreate && (
+                <DropdownMenuItem onClick={() => router.push(`/dashboard/${slug}/transaksi/refund-sparepart/create?sparepart_transaction_id=${item.id}`)}>
+                  <Undo2 className="mr-2 h-4 w-4" /> Refund
+                </DropdownMenuItem>
+              )}
               {canEdit && (
                 <DropdownMenuItem onClick={() => router.push(`/dashboard/${slug}/transaksi/penjualan-sparepart/edit/${item.id}`)}>
                   <Pencil className="mr-2 h-4 w-4" /> Edit
@@ -258,7 +263,7 @@ export default function SalesSparepartTable({
         ),
       },
     ],
-    [slug, canEdit, canDelete, onDelete, getBillingLabel, router, getCustomerName, getSparepartName]
+    [slug, canCreate, canEdit, canDelete, onDelete, getBillingLabel, router, getCustomerName, getSparepartName]
   );
 
   const headerActions = (

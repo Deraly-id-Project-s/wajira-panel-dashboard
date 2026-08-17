@@ -1,5 +1,5 @@
 import React from 'react';
-import { Search, Plus, MoreVertical } from 'lucide-react';
+import { Search, Plus, MoreVertical, History } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -22,6 +22,7 @@ interface TarifTableProps {
     onPerPageChange: (perPage: number) => void;
     onAdd: () => void;
     onEdit: (tarif: Tarif) => void;
+    onVersioning: (tarif: Tarif) => void;
     onDelete: (tarif: Tarif) => void;
     canCreate: boolean;
     canEdit: boolean;
@@ -50,6 +51,7 @@ export function TarifTable({
     onPerPageChange,
     onAdd,
     onEdit,
+    onVersioning,
     onDelete,
     canCreate,
     canEdit,
@@ -235,6 +237,12 @@ export function TarifTable({
                                                     </Button>
                                                 </DropdownMenuTrigger>
                                                 <DropdownMenuContent align="end" className="min-w-[150px] rounded-md border-slate-200 p-1.5 shadow-lg">
+                                                    <DropdownMenuItem
+                                                        onClick={() => onVersioning(tarif)}
+                                                        className="rounded-lg px-3 py-2 text-sm text-slate-900 focus:bg-slate-50 cursor-pointer"
+                                                    >
+                                                        Detail
+                                                    </DropdownMenuItem>
                                                     <DropdownMenuItem
                                                         onClick={() => onEdit(tarif)}
                                                         disabled={!canEdit}

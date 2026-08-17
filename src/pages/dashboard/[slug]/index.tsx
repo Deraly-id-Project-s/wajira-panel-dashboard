@@ -334,7 +334,7 @@ export default function DashboardPage() {
 
         <Card className="relative overflow-hidden rounded-md border border-slate-200 bg-gradient-to-r from-slate-50 via-white to-blue-50/70 px-6 py-7 shadow-sm sm:px-8">
           <div className="absolute -right-12 -top-16 h-40 w-40 rounded-full border-[24px] border-red-200/60" />
-          <div className="absolute bottom-4 right-28 h-3 w-3 rounded-full bg-red-300/80" />
+          <div className="absolute -bottom-4 right-20 h-10 w-10 rounded-full bg-red-300/50" />
           <div className="relative">
             <p className="text-xs font-semibold uppercase text-red-400">Selamat datang kembali</p>
             <h2 className="text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl">
