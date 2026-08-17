@@ -39,7 +39,7 @@ export function UserFormDialog({ open, onOpenChange, user }: Props) {
   const { data: roleOptions = [], isLoading: isRolesLoading } = useRoles();
   const { data: companyOptions = [], isLoading: isCompaniesLoading } = useQuery({
     queryKey: ['user-companies'],
-    queryFn: fetchUserCompanies,
+    queryFn: () => fetchUserCompanies(),
   });
 
   // Using a union type for potential values

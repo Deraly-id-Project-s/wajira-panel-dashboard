@@ -36,7 +36,7 @@ export default function AddKasHarianDialog({ open, onOpenChange }: Props) {
 
   const companyQuery = useQuery({
     queryKey: ['companies', 'selector'],
-    queryFn: fetchUserCompanies,
+    queryFn: () => fetchUserCompanies(),
     staleTime: 10 * 60 * 1000,
   });
 
