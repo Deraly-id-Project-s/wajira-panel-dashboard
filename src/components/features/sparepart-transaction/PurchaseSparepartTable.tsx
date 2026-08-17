@@ -1,7 +1,7 @@
 import { useCallback, useMemo, useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { SparepartTransaction } from '@/@types/sparepart-transaction.types';
-import { CheckCircle, Eye, MoreVertical, Pencil, Plus, Search, Trash2 } from 'lucide-react';
+import { CheckCircle, Eye, MoreVertical, Pencil, Plus, Search, Trash2, Undo2 } from 'lucide-react';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { useRouter } from 'next/router';
 import { toast } from 'sonner';
@@ -241,6 +241,11 @@ export default function PurchaseSparepartTable({
               <DropdownMenuItem onClick={() => router.push(`/dashboard/${slug}/transaksi/pembelian-sparepart/${item.id}`)}>
                 <Eye className="mr-2 h-4 w-4" /> Detail
               </DropdownMenuItem>
+              {!item.is_refunded && canCreate && (
+                <DropdownMenuItem onClick={() => router.push(`/dashboard/${slug}/transaksi/refund-sparepart/create?sparepart_transaction_id=${item.id}`)}>
+                  <Undo2 className="mr-2 h-4 w-4" /> Refund
+                </DropdownMenuItem>
+              )}
               {canEdit && (
                 <DropdownMenuItem onClick={() => router.push(`/dashboard/${slug}/transaksi/pembelian-sparepart/edit/${item.id}`)}>
                   <Pencil className="mr-2 h-4 w-4" /> Edit
@@ -280,7 +285,7 @@ export default function PurchaseSparepartTable({
         ),
       },
     ],
-    [slug, canEdit, canDelete, onDelete, getBillingLabel, router, getSupplierName, getSparepartName, handleMarkAsPaid]
+    [slug, canCreate, canEdit, canDelete, onDelete, getBillingLabel, router, getSupplierName, getSparepartName, handleMarkAsPaid]
   );
 
   const headerActions = (

@@ -100,6 +100,10 @@ export const getGeneralMenus = (slug: string): MenuItem[] => {
               label: 'Penjualan Sparepart',
               href: base('/transaksi/penjualan-sparepart'),
             },
+            {
+              label: 'Refund Sparepart',
+              href: base('/transaksi/refund-sparepart'),
+            },
           ]
         },
         {

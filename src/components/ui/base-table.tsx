@@ -1,10 +1,10 @@
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
-import { ArrowDown, ArrowUp, ArrowUpDown, Search, Info } from 'lucide-react';
+import { ArrowDown, ArrowUp, ArrowUpDown, Search, Info, Lock, Unlock } from 'lucide-react';
 import { LoadingState } from '@/components/ui/loading-state';
 import { cn } from '@/lib/utils';
 import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from '@/components/ui/tooltip';
@@ -113,6 +113,75 @@ export default function BaseTable<T>({
   const [internalSort, setInternalSort] = useState<{ key: string; direction: 'asc' | 'desc' } | null>(
     defaultSort || null
   );
+  const [lockedColumns, setLockedColumns] = useState<Set<string | number>>(new Set());
+  const [columnLeftOffsets, setColumnLeftOffsets] = useState<Record<string | number, number>>({});
+  const tableContainerRef = useRef<HTMLDivElement>(null);
+
+  const updateLeftOffsets = useCallback(() => {
+    if (!tableContainerRef.current) return;
+    const headerCells = tableContainerRef.current.querySelectorAll('thead th');
+    const offsets: Record<string | number, number> = {};
+
+    let currentLeft = 0;
+    if (showCheckbox && headerCells[0]) {
+      currentLeft = (headerCells[0] as HTMLElement).offsetWidth;
+    }
+
+    const startIdx = showCheckbox ? 1 : 0;
+    columns.forEach((col, idx) => {
+      const colKey = col.id || col.accessorKey || String(idx);
+      const isLocked = lockedColumns.has(colKey) || col.sticky === 'left';
+
+      if (isLocked) {
+        offsets[colKey] = currentLeft;
+        const cellEl = headerCells[startIdx + idx] as HTMLElement;
+        if (cellEl) {
+          currentLeft += cellEl.offsetWidth;
+        } else {
+          currentLeft += 120;
+        }
+      }
+    });
+
+    setColumnLeftOffsets(offsets);
+  }, [columns, showCheckbox, lockedColumns]);
+
+  const lastStickyLeftKey = useMemo(() => {
+    let lastKey: string | number | null = null;
+    columns.forEach((col, idx) => {
+      const colKey = col.id || col.accessorKey || String(idx);
+      if (lockedColumns.has(colKey) || col.sticky === 'left') {
+        lastKey = colKey;
+      }
+    });
+    return lastKey;
+  }, [columns, lockedColumns]);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      updateLeftOffsets();
+    }, 50);
+    return () => clearTimeout(timer);
+  }, [data, loading, lockedColumns, updateLeftOffsets]);
+
+  useEffect(() => {
+    updateLeftOffsets();
+    window.addEventListener('resize', updateLeftOffsets);
+    return () => window.removeEventListener('resize', updateLeftOffsets);
+  }, [updateLeftOffsets]);
+
+  const toggleLockColumn = (colKey: string | number, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setLockedColumns((prev) => {
+      const next = new Set(prev);
+      if (next.has(colKey)) {
+        next.delete(colKey);
+      } else {
+        next.add(colKey);
+      }
+      return next;
+    });
+  };
 
   const dateRange = useMemo<DateRange | undefined>(() => {
     if (!startDate && !endDate) return undefined;
@@ -233,7 +302,7 @@ export default function BaseTable<T>({
     if (!selectedIds || !isCheckboxDisabled) return false;
     const allChecked = sortedData.length > 0 && sortedData.every((item) => selectedIds.has(getRowIdInternal(item)));
     if (allChecked) return false;
-    
+
     return sortedData.some((item) => {
       const isChecked = selectedIds.has(getRowIdInternal(item));
       return !isChecked && isCheckboxDisabled(item);
@@ -344,7 +413,10 @@ export default function BaseTable<T>({
         )
       )}
 
-      <div className={cn('relative overflow-hidden rounded-md border border-slate-200 bg-white shadow-none', containerClassName)}>
+      <div
+        ref={tableContainerRef}
+        className={cn('relative overflow-hidden rounded-md border border-slate-200 bg-white shadow-none', containerClassName)}
+      >
         <Table className="w-max min-w-full print:w-full print:table-fixed">
           <TableHeader className={cn('border-b border-gray-200', headerRowClassName)}>
             {headerGroups && headerGroups}
@@ -366,23 +438,58 @@ export default function BaseTable<T>({
 
                 const isSortable = col.sortable && col.accessorKey;
                 const sortKey = String(col.accessorKey || col.id || '');
+                const colKey = col.id || col.accessorKey || String(idx);
                 const isSorted = activeSort?.key === sortKey;
+
+                const isStickyLeft = col.sticky === 'left' || lockedColumns.has(colKey);
+                const isStickyRight = col.sticky === 'right';
+                const isLastStickyLeft = colKey === lastStickyLeftKey;
+                const leftOffset = columnLeftOffsets[colKey] ?? 0;
+                const canLock = !col.sticky;
 
                 return (
                   <TableHead
                     key={col.id || idx}
                     onClick={() => isSortable && handleSort(sortKey)}
                     className={cn(
-                      'px-4 py-4 print:px-2 print:py-2 text-xs print:text-[10px] font-semibold uppercase text-slate-500 whitespace-nowrap print:whitespace-normal',
-                      isSortable && 'cursor-pointer select-none group',
-                      col.sticky === 'right' && cn('sticky right-0 z-10 border-l border-slate-200 shadow-[-4px_0_6px_-4px_rgba(0,0,0,0.05)] w-[80px] min-w-[80px] max-w-[80px]', headerRowClassName),
-                      col.sticky === 'left' && cn('sticky left-0 z-10 border-r border-slate-200 shadow-[4px_0_6px_-4px_rgba(0,0,0,0.05)] w-[80px] min-w-[80px] max-w-[80px]', headerRowClassName),
+                      'px-4 py-4 print:px-2 print:py-2 text-xs print:text-[10px] font-semibold uppercase text-slate-500 whitespace-nowrap print:whitespace-normal group',
+                      isSortable && 'cursor-pointer select-none',
+                      isStickyLeft && cn(
+                        'sticky z-10 border-r border-slate-200',
+                        isLastStickyLeft && 'shadow-[4px_0_6px_-4px_rgba(0,0,0,0.05)]',
+                        headerRowClassName
+                      ),
+                      isStickyRight && cn(
+                        'sticky right-0 z-10 border-l border-slate-200 shadow-[-4px_0_6px_-4px_rgba(0,0,0,0.05)] w-[80px] min-w-[80px] max-w-[80px]',
+                        headerRowClassName
+                      ),
                       textAlignment,
                       col.headerClassName
                     )}
+                    style={isStickyLeft ? { left: leftOffset } : undefined}
                   >
-                    <div className={cn('flex items-center gap-1', justifyClass)}>
+                    <div className={cn('flex items-center gap-1.5', justifyClass)}>
                       <span>{col.header}</span>
+
+                      {canLock && (
+                        <button
+                          onClick={(e) => toggleLockColumn(colKey, e)}
+                          className={cn(
+                            "p-1 rounded hover:bg-slate-100/80 text-slate-400 hover:text-slate-700 transition-all shrink-0 cursor-pointer",
+                            lockedColumns.has(colKey)
+                              ? "text-indigo-600 opacity-100"
+                              : "opacity-0 group-hover:opacity-100"
+                          )}
+                          title={lockedColumns.has(colKey) ? "Unlock column" : "Lock column"}
+                        >
+                          {lockedColumns.has(colKey) ? (
+                            <Lock className="h-3 w-3" />
+                          ) : (
+                            <Unlock className="h-3 w-3" />
+                          )}
+                        </button>
+                      )}
+
                       {col.tooltip && (
                         <TooltipProvider>
                           <Tooltip>
@@ -459,17 +566,27 @@ export default function BaseTable<T>({
                   {columns.map((col, colIdx) => {
                     const alignment = col.alignment ?? 'left';
                     const textAlignment = alignment === 'right' ? 'text-right' : alignment === 'center' ? 'text-center' : 'text-left';
+                    const colKey = col.id || col.accessorKey || String(colIdx);
+
+                    const isStickyLeft = col.sticky === 'left' || lockedColumns.has(colKey);
+                    const isStickyRight = col.sticky === 'right';
+                    const isLastStickyLeft = colKey === lastStickyLeftKey;
+                    const leftOffset = columnLeftOffsets[colKey] ?? 0;
 
                     return (
                       <TableCell
                         key={col.id || colIdx}
                         className={cn(
                           'px-4 py-4 print:px-2 print:py-2 text-sm print:text-[10px] text-slate-700 transition-colors',
-                          col.sticky === 'right' && 'sticky right-0 bg-white group-hover:bg-slate-50 z-10 border-l border-slate-200 shadow-[-4px_0_6px_-4px_rgba(0,0,0,0.05)] w-[80px] min-w-[80px] max-w-[80px]',
-                          col.sticky === 'left' && 'sticky left-0 bg-white group-hover:bg-slate-50 z-10 border-r border-slate-200 shadow-[4px_0_6px_-4px_rgba(0,0,0,0.05)] w-[80px] min-w-[80px] max-w-[80px]',
+                          isStickyLeft && cn(
+                            'sticky z-10 bg-white group-hover:bg-slate-50 border-r border-slate-200',
+                            isLastStickyLeft && 'shadow-[4px_0_6px_-4px_rgba(0,0,0,0.05)]'
+                          ),
+                          isStickyRight && 'sticky right-0 bg-white group-hover:bg-slate-50 z-10 border-l border-slate-200 shadow-[-4px_0_6px_-4px_rgba(0,0,0,0.05)] w-[80px] min-w-[80px] max-w-[80px]',
                           textAlignment,
                           col.className
                         )}
+                        style={isStickyLeft ? { left: leftOffset } : undefined}
                       >
                         {col.cell
                           ? col.cell(item, rowIdx)

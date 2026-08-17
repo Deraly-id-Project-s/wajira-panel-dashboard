@@ -51,6 +51,10 @@ export default function TarifPage() {
         router.push(`/dashboard/${slug}/master/tarif/${tarif.id}/edit`);
     };
 
+    const handleVersioningClick = (tarif: Tarif) => {
+        router.push(`/dashboard/${slug}/master/tarif/${tarif.id}`);
+    };
+
     const handleDeleteClick = (tarif: Tarif) => {
         if (!canDelete) return;
         setSelectedTarif(tarif);
@@ -98,6 +102,7 @@ export default function TarifPage() {
                     }}
                     onAdd={handleAddClick}
                     onEdit={handleEditClick}
+                    onVersioning={handleVersioningClick}
                     onDelete={handleDeleteClick}
                     canCreate={canCreate}
                     canEdit={canEdit}

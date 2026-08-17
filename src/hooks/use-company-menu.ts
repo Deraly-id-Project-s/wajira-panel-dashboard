@@ -47,6 +47,7 @@ const FEATURE_MAP: Record<string, { path: string; label?: string; group?: string
   'unit-sales': { path: '/transaksi/penjualan-unit', label: 'Penjualan Unit', group: 'Transaksi Unit Tipe' },
   'sparepart-purchases': { path: '/transaksi/pembelian-sparepart', label: 'Pembelian Sparepart', group: 'Transaksi Sparepart' },
   'sparepart-sales': { path: '/transaksi/penjualan-sparepart', label: 'Penjualan Sparepart', group: 'Transaksi Sparepart' },
+  'sparepart-refunds': { path: '/transaksi/refund-sparepart', label: 'Refund Sparepart', group: 'Transaksi Sparepart' },
   'invoices': { path: '/transaksi/faktur', label: 'Faktur' },
   'expedition-delivery-orders': { path: '/do-ekspedisi', label: 'DO Ekspedisi' },
   'witholding-tax': { path: '/administrasi/bukti-potong', label: 'Bukti Potong' },
