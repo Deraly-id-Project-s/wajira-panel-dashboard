@@ -470,26 +470,6 @@ export default function BaseTable<T>({
                   >
                     <div className={cn('flex items-center gap-1.5', justifyClass)}>
                       <span>{col.header}</span>
-
-                      {canLock && (
-                        <button
-                          onClick={(e) => toggleLockColumn(colKey, e)}
-                          className={cn(
-                            "p-1 rounded hover:bg-slate-100/80 text-slate-400 hover:text-slate-700 transition-all shrink-0 cursor-pointer",
-                            lockedColumns.has(colKey)
-                              ? "text-indigo-600 opacity-100"
-                              : "opacity-0 group-hover:opacity-100"
-                          )}
-                          title={lockedColumns.has(colKey) ? "Unlock column" : "Lock column"}
-                        >
-                          {lockedColumns.has(colKey) ? (
-                            <Lock className="h-3 w-3" />
-                          ) : (
-                            <Unlock className="h-3 w-3" />
-                          )}
-                        </button>
-                      )}
-
                       {col.tooltip && (
                         <TooltipProvider>
                           <Tooltip>
@@ -517,6 +497,24 @@ export default function BaseTable<T>({
                         ) : (
                           <ArrowUpDown className="h-3 w-3 opacity-0 group-hover:opacity-70 transition-opacity duration-150 shrink-0" />
                         )
+                      )}
+                      {canLock && (
+                        <button
+                          onClick={(e) => toggleLockColumn(colKey, e)}
+                          className={cn(
+                            "p-1 rounded hover:bg-slate-100/80 text-slate-400 hover:text-slate-700 transition-all shrink-0 cursor-pointer",
+                            lockedColumns.has(colKey)
+                              ? "text-indigo-600 opacity-100"
+                              : "opacity-0 group-hover:opacity-100"
+                          )}
+                          title={lockedColumns.has(colKey) ? "Unlock column" : "Lock column"}
+                        >
+                          {lockedColumns.has(colKey) ? (
+                            <Lock className="h-3 w-3" />
+                          ) : (
+                            <Unlock className="h-3 w-3" />
+                          )}
+                        </button>
                       )}
                     </div>
                   </TableHead>

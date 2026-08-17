@@ -13,12 +13,10 @@ import {
     FormLabel,
     FormMessage,
 } from "@/components/ui/form"
-import { Save, Check, ChevronsUpDown } from "lucide-react"
+import { Save } from "lucide-react"
 import { useSuppliers } from "@/hooks/useSupplier"
-import { useState, useMemo, useEffect } from "react"
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
-import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command"
-import { cn } from "@/lib/utils"
+import { useMemo, useEffect } from "react"
+import { SupplierCombobox } from "@/components/features/supplier/SupplierCombobox"
 
 interface Props {
     defaultValues?: Partial<PurchaseFormValues>
@@ -39,8 +37,6 @@ export default function PurchaseForm({
 }: Props) {
     const router = useRouter()
     const { data: supplierData } = useSuppliers(companyId || null)
-    const [supplierOpen, setSupplierOpen] = useState(false)
-
     const personOptions = useMemo(() => supplierData?.data ?? [], [supplierData])
 
     const form = useForm<PurchaseFormValues>({
@@ -73,8 +69,8 @@ export default function PurchaseForm({
                 {/* Section Header */}
                 <div>
                     <h2 className="text-xl font-semibold text-foreground tracking-tight">Informasi Pembelian</h2>
-                    <p className="text-sm text-gray-500 mt-1">Kelola detail informasi pembelian unit dan biaya-biaya terkait</p>
-                    <div className="my-6 h-px bg-muted/60" />
+                    <p className="text-sm text-gray-500">Kelola detail informasi pembelian unit dan biaya-biaya terkait</p>
+                    <div className="h-px bg-muted/60" />
                 </div>
 
                 {/* ROW 1: Supplier, Date, Code */}
@@ -103,48 +99,17 @@ export default function PurchaseForm({
                         render={({ field }) => (
                             <FormItem className="flex flex-col">
                                 <FormLabel className="text-sm font-medium">Supplier</FormLabel>
-                                <Popover open={supplierOpen} onOpenChange={setSupplierOpen}>
-                                    <PopoverTrigger asChild>
-                                        <Button
-                                            type="button"
-                                            variant="outline"
-                                            role="combobox"
-                                            aria-expanded={supplierOpen}
-                                            className="w-full justify-between bg-transparent font-normal"
-                                            disabled={readOnly}
-                                        >
-                                            <span className={cn('truncate', !field.value && 'text-muted-foreground')}>
-                                                {field.value || 'Pilih supplier'}
-                                            </span>
-                                            <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                                        </Button>
-                                    </PopoverTrigger>
-                                    <PopoverContent className="w-[--radix-popover-trigger-width] p-0">
-                                        <Command>
-                                            <CommandInput placeholder="Cari supplier..." />
-                                            <CommandList id="supplier-combobox-list">
-                                                <CommandEmpty>Supplier tidak ditemukan.</CommandEmpty>
-                                                <CommandGroup>
-                                                    {personOptions.map((person) => (
-                                                        <CommandItem
-                                                            key={String(person.id)}
-                                                            value={`${person.name} ${person.code ?? ''} ${person.id}`}
-                                                            onSelect={() => {
-                                                                form.setValue('supplierName', person.name)
-                                                                form.setValue('supplierAddress', person.address ?? '')
-                                                                form.setValue('supplierNpwp', person.npwp ?? '')
-                                                                setSupplierOpen(false)
-                                                            }}
-                                                        >
-                                                            <Check className={cn('mr-2 h-4 w-4', field.value === person.name ? 'opacity-100' : 'opacity-0')} />
-                                                            {person.name}
-                                                        </CommandItem>
-                                                    ))}
-                                                </CommandGroup>
-                                            </CommandList>
-                                        </Command>
-                                    </PopoverContent>
-                                </Popover>
+                                <SupplierCombobox
+                                    companyId={companyId}
+                                    selectedName={field.value}
+                                    disabled={readOnly}
+                                    allowCreate
+                                    onSelect={(supplier) => {
+                                        field.onChange(supplier.name)
+                                        form.setValue('supplierAddress', supplier.address ?? '')
+                                        form.setValue('supplierNpwp', supplier.npwp ?? '')
+                                    }}
+                                />
                                 <FormMessage />
                             </FormItem>
                         )}

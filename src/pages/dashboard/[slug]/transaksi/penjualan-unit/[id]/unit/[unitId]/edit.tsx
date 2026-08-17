@@ -3,8 +3,8 @@ import { useRouter } from 'next/router';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { Card, CardContent } from '@/components/ui/card';
 import { ArrowLeft } from 'lucide-react';
-import { EditUnitForm } from '@/components/features/sales/edit/EditUnitForm';
-import { EditUnitFormData } from '@/components/features/sales/edit/edit-unit.schema';
+import { UnitTransactionForm } from '@/components/features/unit-transaction/UnitTransactionForm';
+import { type UnitTransactionFormValues } from '@/components/features/unit-transaction/unit-transaction.schema';
 import { toast } from 'sonner';
 import { useSalesUnitItems, useUpdateUnitItem } from '@/hooks/useUnitTransactionItem';
 import { useSalesDetail } from '@/hooks/useSales';
@@ -36,41 +36,31 @@ export default function EditNestedUnitPage() {
     const item = (itemResponse?.data ?? []).find((row) => String(row.id) === String(selectedUnitId ?? ''));
     const invoiceCode = salesDetail?.raw?.code ?? '-';
 
-    const productOptions = useMemo(
-        () =>
-            (unitTypes?.data ?? []).map((option) => ({
-                value: String(option.id),
-                label: option.name,
-            })),
-        [unitTypes?.data],
-    );
-
-    const formData: EditUnitFormData | null = useMemo(() => {
+    const formData: UnitTransactionFormValues | null = useMemo(() => {
         if (!item) return null;
         const qty = Number(item.qty_total ?? 0) || 1;
 
         return {
-            customer: salesDetail?.ui?.customer ?? '',
-            tipeUnit: String(item.unit_type_id ?? ''),
+            unitTypeId: String(item.unit_type_id ?? ''),
             qty,
-            harga: Number(item.price ?? 0),
-            biayaBbn: Number(item.bbn_price ?? 0),
-            biayaEkspedisi: Number(item.expedition_fee ?? 0),
-            biayaLain: Number(item.other_fee ?? 0),
-            hppSatuan: qty > 0 ? Number(item.hpp_total_price ?? 0) / qty : 0,
-            totalHpp: Number(item.hpp_total_price ?? 0),
-            dppSatuan: qty > 0 ? Number(item.dpp_total_price ?? 0) / qty : 0,
-            totalDpp: Number(item.dpp_total_price ?? 0),
-            ppnSatuan: qty > 0 ? Number(item.ppn_total_price ?? 0) / qty : 0,
-            totalPpn: Number(item.ppn_total_price ?? 0),
-            hargaUsd: item.price_usd ? Number(item.price_usd) : undefined,
-            hargaPerUnitUsd: item.price_per_unit_usd ? Number(item.price_per_unit_usd) : undefined,
+            price: Number(item.price ?? 0),
+            bbnPrice: Number(item.bbn_price ?? 0),
+            expeditionFee: Number(item.expedition_fee ?? 0),
+            otherFee: Number(item.other_fee ?? 0),
+            hppPerUnit: qty > 0 ? Number(item.hpp_total_price ?? 0) / qty : 0,
+            hppTotal: Number(item.hpp_total_price ?? 0),
+            dppPerUnit: qty > 0 ? Number(item.dpp_total_price ?? 0) / qty : 0,
+            dppTotal: Number(item.dpp_total_price ?? 0),
+            ppnPerUnit: qty > 0 ? Number(item.ppn_total_price ?? 0) / qty : 0,
+            ppnTotal: Number(item.ppn_total_price ?? 0),
+            priceUsd: item.price_usd ? Number(item.price_usd) : undefined,
+            pricePerUnitUsd: item.price_per_unit_usd ? Number(item.price_per_unit_usd) : undefined,
             dppTaxVersionId: item.dpp_tax_id ?? undefined,
             ppnTaxVersionId: item.ppn_tax_id ?? undefined,
         };
-    }, [item, salesDetail?.ui?.customer]);
+    }, [item]);
 
-    const handleSubmit = async (values: EditUnitFormData) => {
+    const handleSubmit = async (values: UnitTransactionFormValues) => {
         try {
             if (!selectedUnitId) {
                 toast.error('Unit tidak valid');
@@ -78,21 +68,21 @@ export default function EditNestedUnitPage() {
             }
 
             // Omit unit_transaction_id and unit_type_id if they haven't changed to bypass backend unique constraint bug
-            const isUnitTypeChanged = values.tipeUnit && String(values.tipeUnit) !== String(item?.unit_type_id);
+            const isUnitTypeChanged = values.unitTypeId && String(values.unitTypeId) !== String(item?.unit_type_id);
 
             await updateMutation.mutateAsync({
                 id: String(selectedUnitId),
                 payload: {
                     unit_transaction_id: undefined,
-                    unit_type_id: isUnitTypeChanged && String(values.tipeUnit) !== 'null' ? String(values.tipeUnit) : undefined,
+                    unit_type_id: isUnitTypeChanged && String(values.unitTypeId) !== 'null' ? String(values.unitTypeId) : undefined,
                     sparepart_id: item?.sparepart_id && String(item.sparepart_id) !== 'null' ? String(item.sparepart_id) : undefined,
                     qty_total: Number(values.qty ?? 0),
-                    price: Number(values.harga ?? 0),
-                    bbn_price: Number(values.biayaBbn ?? 0),
-                    expedition_fee: Number(values.biayaEkspedisi ?? 0),
-                    other_fee: Number(values.biayaLain ?? 0),
-                    price_usd: values.hargaUsd ? Number(values.hargaUsd) : undefined,
-                    price_per_unit_usd: values.hargaPerUnitUsd ? Number(values.hargaPerUnitUsd) : undefined,
+                    price: Number(values.price ?? 0),
+                    bbn_price: Number(values.bbnPrice ?? 0),
+                    expedition_fee: Number(values.expeditionFee ?? 0),
+                    other_fee: Number(values.otherFee ?? 0),
+                    price_usd: values.priceUsd ? Number(values.priceUsd) : undefined,
+                    price_per_unit_usd: values.pricePerUnitUsd ? Number(values.pricePerUnitUsd) : undefined,
                     dpp_tax_id: values.dppTaxVersionId ? Number(values.dppTaxVersionId) : undefined,
                     ppn_tax_id: values.ppnTaxVersionId ? Number(values.ppnTaxVersionId) : undefined,
                 },
@@ -153,11 +143,11 @@ export default function EditNestedUnitPage() {
 
                 <Card className="rounded-md">
                     <CardContent className="p-6">
-                        <EditUnitForm
+                        <UnitTransactionForm
+            type="sales"
+            allowCreateTypeUnit
                             defaultValues={formData}
-                            hideCustomerField
-                            productOptions={productOptions}
-                            searchableTypeUnit
+                            typeUnitOptions={unitTypes?.data ?? []}
                             onSubmit={handleSubmit}
                             onCancel={() => router.back()}
                             submitDisabled={updateMutation.isPending}

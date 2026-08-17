@@ -1,6 +1,5 @@
-import { useMemo, useState, useEffect } from 'react';
+import { useMemo, useState, useEffect, type ReactNode } from 'react';
 import { useForm } from 'react-hook-form';
-import { useQueryClient } from '@tanstack/react-query';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
@@ -8,48 +7,58 @@ import { MoneyInput } from '@/components/ui/money-input';
 import { formatCurrency } from '@/lib/utils/currency';
 import { Button } from '@/components/ui/button';
 import { Save, Plus, ChevronsUpDown, Check } from 'lucide-react';
-import { createPurchaseUnitSchema, type CreatePurchaseUnitFormValues } from '@/scheme/purchase.schema';
-import { useTypeUnits, useCreateTypeUnit } from '@/hooks/useTypeUnit';
-import { useBrands } from '@/hooks/useBrand';
-import { TypeUnit } from '@/@types/type-unit.types';
-import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { useTypeUnits } from '@/hooks/useTypeUnit';
+import type { TypeUnit } from '@/@types/type-unit.types';
 import { Label } from '@/components/ui/label';
-import { toast } from 'sonner';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
 import { cn } from '@/lib/utils';
 import { useUnitFormula } from '@/hooks/useUnitFormula';
 import { useTaxDefault } from '@/hooks/useTax';
 import RequiredMark from '@/components/ui/required-mark';
-import { PageHeader } from '@/components/ui/page-header';
-import { useRouter } from 'next/router';
+import { TypeUnitFormModal } from '@/components/features/type-unit/TypeUnitFormModal';
+import { unitTransactionSchema, type UnitTransactionFormValues } from './unit-transaction.schema';
 
-interface Props {
-  onSubmit: (data: CreatePurchaseUnitFormValues) => void;
-  defaultValues?: Partial<CreatePurchaseUnitFormValues> & { dppTaxVersionId?: string | number | null; ppnTaxVersionId?: string | number | null };
+export interface UnitTransactionFormProps {
+  type: 'purchase' | 'sales';
+  onSubmit: (data: UnitTransactionFormValues) => void;
+  defaultValues?: Partial<UnitTransactionFormValues> & { dppTaxVersionId?: string | number | null; ppnTaxVersionId?: string | number | null };
   readOnly?: boolean;
   loading?: boolean;
   onCancel?: () => void;
-  companyId?: string | null;
+  companyId?: string | number | null;
   excludedTypeUnitIds?: string[];
-  prependFields?: React.ReactNode;
+  prependFields?: ReactNode;
+  hideItemFields?: boolean;
+  submitDisabled?: boolean;
+  cancelDisabled?: boolean;
+  allowCreateTypeUnit?: boolean;
+  typeUnitOptions?: TypeUnit[];
 }
 
-export default function PurchaseUnitForm({ onSubmit, defaultValues, readOnly, loading, onCancel, companyId, excludedTypeUnitIds = [], prependFields }: Props) {
-  void companyId;
-  const router = useRouter();
-  const queryClient = useQueryClient();
-  const { data: typeUnitData, isLoading: typeUnitLoading, isError: typeUnitError, refetch: refetchTypeUnits } = useTypeUnits();
-  const { data: brandsData } = useBrands();
-  const createTypeUnit = useCreateTypeUnit();
-
+export function UnitTransactionForm({
+  type,
+  onSubmit,
+  defaultValues,
+  readOnly = false,
+  loading = false,
+  onCancel,
+  companyId,
+  excludedTypeUnitIds = [],
+  prependFields,
+  hideItemFields = false,
+  submitDisabled = false,
+  cancelDisabled = false,
+  allowCreateTypeUnit = false,
+  typeUnitOptions: suppliedTypeUnitOptions,
+}: UnitTransactionFormProps) {
+  const { data: typeUnitData, isLoading: typeUnitLoading, isError: typeUnitError, refetch: refetchTypeUnits } = useTypeUnits({
+    company_id: companyId ?? undefined,
+  });
   const [openTypeModal, setOpenTypeModal] = useState(false);
-  const [typeImage, setTypeImage] = useState<File | null>(null);
+  const [createdTypeUnit, setCreatedTypeUnit] = useState<TypeUnit | null>(null);
   const [openTypeSelect, setOpenTypeSelect] = useState(false);
   const [isUsd, setIsUsd] = useState(Boolean(defaultValues?.priceUsd && Number(defaultValues.priceUsd) > 0));
-
-  const slugQuery = router.query.slug;
-  const slug = Array.isArray(slugQuery) ? slugQuery[0] : slugQuery || '';
 
   const [selectedDppTaxVersionId, setSelectedDppTaxVersionId] = useState<string | number | null>(defaultValues?.dppTaxVersionId ?? null);
   const [selectedPpnTaxVersionId, setSelectedPpnTaxVersionId] = useState<string | number | null>(defaultValues?.ppnTaxVersionId ?? null);
@@ -69,133 +78,96 @@ export default function PurchaseUnitForm({ onSubmit, defaultValues, readOnly, lo
     }
   }, [defaultPpnTax, selectedPpnTaxVersionId]);
 
-  const form = useForm<CreatePurchaseUnitFormValues>({
-    resolver: zodResolver(createPurchaseUnitSchema),
+  const form = useForm<UnitTransactionFormValues>({
+    resolver: zodResolver(unitTransactionSchema),
     defaultValues: {
-      typeUnitId: defaultValues?.typeUnitId || '',
-      qty: defaultValues?.qty,
+      unitTypeId: defaultValues?.unitTypeId || '',
+      qty: defaultValues?.qty ?? 1,
       price: defaultValues?.price || 0,
-      biayaBBN: defaultValues?.biayaBBN || 0,
-      biayaEkspedisi: defaultValues?.biayaEkspedisi || 0,
-      biayaLain: defaultValues?.biayaLain || 0,
-      priceUsd: defaultValues?.priceUsd || (defaultValues as any)?.priceUsd || 0,
-      pricePerUnitUsd: defaultValues?.pricePerUnitUsd || (defaultValues as any)?.pricePerUnitUsd || 0,
+      bbnPrice: defaultValues?.bbnPrice || 0,
+      expeditionFee: defaultValues?.expeditionFee || 0,
+      otherFee: defaultValues?.otherFee || 0,
+      priceUsd: defaultValues?.priceUsd || 0,
+      pricePerUnitUsd: defaultValues?.pricePerUnitUsd || 0,
       ...defaultValues,
     },
   });
 
   const qty = Number(form.watch('qty') ?? 0);
   const price = Number(form.watch('price') ?? 0);
-  const biayaBBN = Number(form.watch('biayaBBN') ?? 0);
-  const biayaEkspedisi = Number(form.watch('biayaEkspedisi') ?? 0);
-  const biayaLain = Number(form.watch('biayaLain') ?? 0);
+  const bbnPrice = Number(form.watch('bbnPrice') ?? 0);
+  const expeditionFee = Number(form.watch('expeditionFee') ?? 0);
+  const otherFee = Number(form.watch('otherFee') ?? 0);
 
   const { formula } = useUnitFormula({
     qty_total: qty,
     price,
-    bbn_price: biayaBBN,
-    expedition_fee: biayaEkspedisi,
-    other_fee: biayaLain,
+    bbn_price: bbnPrice,
+    expedition_fee: expeditionFee,
+    other_fee: otherFee,
     dpp_tax_id: selectedDppTaxVersionId ?? undefined,
     ppn_tax_id: selectedPpnTaxVersionId ?? undefined,
   });
 
-  const hppSatuan = Number(formula?.hpp_per_unit_price ?? 0);
-  const dppSatuan = Number(formula?.dpp_per_unit_price ?? 0);
-  const ppnSatuan = Number(formula?.ppn_per_unit_price ?? 0);
-  const totalHpp = Number(formula?.hpp_total_price ?? 0);
-  const totalDpp = Number(formula?.dpp_total_price ?? 0);
-  const totalPpn = Number(formula?.ppn_total_price ?? 0);
+  const hppPerUnit = Number(formula?.hpp_per_unit_price ?? 0);
+  const dppPerUnit = Number(formula?.dpp_per_unit_price ?? 0);
+  const ppnPerUnit = Number(formula?.ppn_per_unit_price ?? 0);
+  const hppTotal = Number(formula?.hpp_total_price ?? 0);
+  const dppTotal = Number(formula?.dpp_total_price ?? 0);
+  const ppnTotal = Number(formula?.ppn_total_price ?? 0);
 
   const typeUnitOptions = useMemo<TypeUnit[]>(() => {
-    const maybeList = (typeUnitData as any)?.data;
-    if (Array.isArray(maybeList)) return maybeList as TypeUnit[];
-    if (maybeList && Array.isArray(maybeList.data)) return maybeList.data as TypeUnit[];
-    return [];
-  }, [typeUnitData]);
-  const brandOptions = useMemo(() => {
-    const maybeList = (brandsData as any)?.data;
-    return Array.isArray(maybeList) ? maybeList : [];
-  }, [brandsData]);
+    const list = suppliedTypeUnitOptions ?? typeUnitData?.data ?? [];
+    if (!createdTypeUnit || list.some((item) => item.id === createdTypeUnit.id)) return list;
+    return [createdTypeUnit, ...list];
+  }, [createdTypeUnit, suppliedTypeUnitOptions, typeUnitData?.data]);
 
-  const handleCreateTypeUnit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    const formData = new FormData(e.currentTarget);
-    const code = String(formData.get('code') || '').trim();
-    const name = String(formData.get('name') || '').trim();
-    const brandId = Number(formData.get('brandId') || 0);
-    const description = String(formData.get('description') || '').trim();
-    const netto = formData.get('nettoWeight');
-    const bruto = formData.get('brutoWeight');
-
-    if (!code) {
-      toast.error('Kode tipe wajib diisi');
-      return;
+  const selectTypeUnit = (typeUnit: TypeUnit) => {
+    form.setValue('unitTypeId', String(typeUnit.id), { shouldDirty: true, shouldValidate: true });
+    const preferredPrice = type === 'purchase' ? typeUnit.buyPrice : typeUnit.sellPrice;
+    if (preferredPrice !== undefined && preferredPrice !== null) {
+      form.setValue('price', Number(preferredPrice), { shouldDirty: true });
     }
-
-    if (!brandId) {
-      toast.error('Merk kendaraan wajib dipilih');
-      return;
-    }
-
-    try {
-      const created = await createTypeUnit.mutateAsync({
-        code,
-        name: name || code,
-        brandId,
-        unitType: description || undefined,
-        unitModel: description || undefined,
-        nettoWeight: netto ? Number(netto) : undefined,
-        brutoWeight: bruto ? Number(bruto) : undefined,
-        image: typeImage,
-      });
-
-      if (created?.id) {
-        form.setValue('typeUnitId', String(created.id));
-        queryClient.setQueryData(['type-units'], (prev: any) => {
-          if (!prev) return { data: [created], meta: { total: 1, currentPage: 1, perPage: 25, lastPage: 1 } };
-          const alreadyExist = prev.data?.some((item: any) => item.id === created.id);
-          const mergedData = alreadyExist ? prev.data : [created, ...(prev.data ?? [])];
-          return { ...prev, data: mergedData };
-        });
-        toast.success('Tipe unit berhasil ditambahkan');
-      }
-
-      setOpenTypeModal(false);
-      setTypeImage(null);
-    } catch (error: any) {
-      const message = error?.response?.data?.message || error?.message || 'Gagal menambahkan tipe unit';
-      toast.error(message);
-    }
+    setOpenTypeSelect(false);
   };
 
-  const handleFormSubmit = (values: CreatePurchaseUnitFormValues) => {
+  const handleFormSubmit = (values: UnitTransactionFormValues) => {
     onSubmit({
       ...values,
       priceUsd: Number(values.priceUsd) || 0,
       pricePerUnitUsd: Number(values.pricePerUnitUsd) || 0,
       dppTaxVersionId: selectedDppTaxVersionId ?? undefined,
       ppnTaxVersionId: selectedPpnTaxVersionId ?? undefined,
-    } as any);
+    });
   };
 
   return (
     <>
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(handleFormSubmit)} className="space-y-4">
+        <form
+          onSubmit={hideItemFields
+            ? (event) => {
+                event.preventDefault();
+                handleFormSubmit(form.getValues());
+              }
+            : form.handleSubmit(handleFormSubmit)}
+          className="space-y-8"
+        >
           <div>
-            <h2 className="text-xl font-semibold text-foreground tracking-tight">Informasi Pembelian</h2>
-            <p className="text-sm text-gray-500 mt-1">Kelola detail informasi pembelian unit dan biaya-biaya terkait</p>
+            <h2 className="text-xl font-semibold text-foreground tracking-tight">Informasi {type === 'purchase' ? 'Pembelian' : 'Penjualan'}</h2>
+            <p className="text-sm text-gray-500 mt-1">Kelola detail informasi {type === 'purchase' ? 'pembelian' : 'penjualan'} unit dan biaya-biaya terkait</p>
             <div className="my-6 h-px bg-muted/60" />
           </div>
 
           {prependFields}
 
+          {!hideItemFields && (
+            <>
           {/* Row Type Unit / Qty / Harga */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <FormField
               control={form.control}
-              name="typeUnitId"
+              name="unitTypeId"
               render={({ field }) => (
                 <FormItem>
                   <FormLabel className="text-sm font-medium">Tipe Unit <RequiredMark /></FormLabel>
@@ -207,9 +179,9 @@ export default function PurchaseUnitForm({ onSubmit, defaultValues, readOnly, lo
                             type="button"
                             role="combobox"
                             aria-expanded={openTypeSelect}
-                            aria-controls="type-unit-combobox-list"
+                            aria-controls={`type-unit-${type}-combobox-list`}
                             disabled={readOnly}
-                            className="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background disabled:cursor-not-allowed disabled:opacity-50"
+                            className="flex h-10 w-full items-center justify-between rounded-md border border-input bg-transparent px-3 py-2 text-sm ring-offset-background disabled:cursor-not-allowed disabled:opacity-50"
                           >
                             <span className={cn('truncate', !field.value && 'text-muted-foreground')}>
                               {field.value ? typeUnitOptions.find((option) => String(option.id) === field.value)?.name ?? 'Pilih tipe unit' : 'Pilih tipe unit'}
@@ -221,7 +193,7 @@ export default function PurchaseUnitForm({ onSubmit, defaultValues, readOnly, lo
                       <PopoverContent className="w-[--radix-popover-trigger-width] p-0">
                         <Command>
                           <CommandInput placeholder="Cari tipe unit..." />
-                          <CommandList id="type-unit-combobox-list">
+                          <CommandList id={`type-unit-${type}-combobox-list`}>
                             {typeUnitLoading && <div className="px-3 py-2 text-xs text-muted-foreground">Memuat tipe unit...</div>}
                             {typeUnitError && (
                               <div className="px-3 py-2 text-xs text-destructive">
@@ -238,14 +210,7 @@ export default function PurchaseUnitForm({ onSubmit, defaultValues, readOnly, lo
                                   key={option.id}
                                   value={`${option.name} ${option.code ?? ''} ${option.id}`}
                                   disabled={excludedTypeUnitIds.includes(String(option.id))}
-                                  onSelect={() => {
-                                    if (excludedTypeUnitIds.includes(String(option.id))) return;
-                                    field.onChange(String(option.id));
-                                    if (option?.buyPrice !== undefined && option?.buyPrice !== null) {
-                                      form.setValue('price', Number(option.buyPrice));
-                                    }
-                                    setOpenTypeSelect(false);
-                                  }}
+                                  onSelect={() => !excludedTypeUnitIds.includes(String(option.id)) && selectTypeUnit(option)}
                                 >
                                   <Check className={cn('mr-2 h-4 w-4', field.value === String(option.id) ? 'opacity-100' : 'opacity-0')} />
                                   <span className="truncate">{option.name}</span>
@@ -257,9 +222,11 @@ export default function PurchaseUnitForm({ onSubmit, defaultValues, readOnly, lo
                         </Command>
                       </PopoverContent>
                     </Popover>
-                    <Button type="button" onClick={() => setOpenTypeModal(true)} className="w-full sm:w-auto bg-[#1e3a5f] hover:bg-[#152e4d]">
-                      <Plus className="h-4 w-4" />
-                    </Button>
+                    {allowCreateTypeUnit && !readOnly && (
+                      <Button type="button" variant="outline" size="icon" aria-label="Tambah tipe unit" onClick={() => setOpenTypeModal(true)} className="h-10 w-10 shrink-0">
+                        <Plus className="h-4 w-4" />
+                      </Button>
+                    )}
                   </div>
                   <FormMessage />
                 </FormItem>
@@ -309,7 +276,7 @@ export default function PurchaseUnitForm({ onSubmit, defaultValues, readOnly, lo
           <div className="flex items-center space-x-2 py-1">
             <input autoComplete="off"
               type="checkbox"
-              id="is_usd"
+              id={`${type}_is_usd`}
               checked={isUsd}
               onChange={(e) => {
                 setIsUsd(e.target.checked);
@@ -321,7 +288,7 @@ export default function PurchaseUnitForm({ onSubmit, defaultValues, readOnly, lo
               disabled={readOnly}
               className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500 cursor-pointer"
             />
-            <Label htmlFor="is_usd" className="text-sm font-medium cursor-pointer">
+            <Label htmlFor={`${type}_is_usd`} className="text-sm font-medium cursor-pointer">
               Transaksi USD (Gunakan mata uang asing USD)
             </Label>
           </div>
@@ -380,7 +347,7 @@ export default function PurchaseUnitForm({ onSubmit, defaultValues, readOnly, lo
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <FormField
               control={form.control}
-              name="biayaBBN"
+              name="bbnPrice"
               render={({ field }) => (
                 <FormItem>
                   <FormLabel className="text-sm font-medium">Biaya BBN</FormLabel>
@@ -394,7 +361,7 @@ export default function PurchaseUnitForm({ onSubmit, defaultValues, readOnly, lo
 
             <FormField
               control={form.control}
-              name="biayaEkspedisi"
+              name="expeditionFee"
               render={({ field }) => (
                 <FormItem>
                   <FormLabel className="text-sm font-medium">Biaya Ekspedisi</FormLabel>
@@ -408,7 +375,7 @@ export default function PurchaseUnitForm({ onSubmit, defaultValues, readOnly, lo
 
             <FormField
               control={form.control}
-              name="biayaLain"
+              name="otherFee"
               render={({ field }) => (
                 <FormItem>
                   <FormLabel className="text-sm font-medium flex flex-row justify-between">
@@ -427,21 +394,21 @@ export default function PurchaseUnitForm({ onSubmit, defaultValues, readOnly, lo
             <FormItem>
               <FormLabel className="text-sm font-medium">HPP Satuan</FormLabel>
               <FormControl>
-                <Input value={formatCurrency(hppSatuan)} className="bg-muted/50" disabled readOnly />
+                <Input value={formatCurrency(hppPerUnit)} className="bg-muted/50" disabled readOnly />
               </FormControl>
             </FormItem>
 
             <FormItem>
               <FormLabel className="text-sm font-medium">DPP Satuan</FormLabel>
               <FormControl>
-                <Input value={formatCurrency(dppSatuan)} className="bg-muted/50" disabled readOnly />
+                <Input value={formatCurrency(dppPerUnit)} className="bg-muted/50" disabled readOnly />
               </FormControl>
             </FormItem>
 
             <FormItem>
               <FormLabel className="text-sm font-medium">PPN Satuan</FormLabel>
               <FormControl>
-                <Input value={formatCurrency(ppnSatuan)} className="bg-muted/50" disabled readOnly />
+                <Input value={formatCurrency(ppnPerUnit)} className="bg-muted/50" disabled readOnly />
               </FormControl>
             </FormItem>
           </div>
@@ -450,31 +417,33 @@ export default function PurchaseUnitForm({ onSubmit, defaultValues, readOnly, lo
             <FormItem>
               <FormLabel className="text-sm font-medium">HPP Total</FormLabel>
               <FormControl>
-                <Input value={formatCurrency(totalHpp)} className="bg-muted/50" disabled readOnly />
+                <Input value={formatCurrency(hppTotal)} className="bg-muted/50" disabled readOnly />
               </FormControl>
             </FormItem>
 
             <FormItem>
               <FormLabel className="text-sm font-medium">DPP Total</FormLabel>
               <FormControl>
-                <Input value={formatCurrency(totalDpp)} className="bg-muted/50" disabled readOnly />
+                <Input value={formatCurrency(dppTotal)} className="bg-muted/50" disabled readOnly />
               </FormControl>
             </FormItem>
 
             <FormItem>
               <FormLabel className="text-sm font-medium">PPN Total</FormLabel>
               <FormControl>
-                <Input value={formatCurrency(totalPpn)} className="bg-muted/50" disabled readOnly />
+                <Input value={formatCurrency(ppnTotal)} className="bg-muted/50" disabled readOnly />
               </FormControl>
             </FormItem>
           </div>
+            </>
+          )}
 
-          <div className="flex justify-center gap-3 pt-8">
-            <Button type="button" variant="ghost" onClick={onCancel} disabled={loading} className="text-muted-foreground hover:text-foreground">
+          <div className="flex justify-center items-center gap-6 pt-10">
+            <Button type="button" variant="ghost" onClick={onCancel} disabled={loading || cancelDisabled} className="text-muted-foreground font-medium hover:text-foreground">
               Batal
             </Button>
             {!readOnly && (
-              <Button type="submit" disabled={loading} className="bg-[#1e293b] hover:bg-[#0f172a] text-white min-w-25">
+              <Button type="submit" disabled={loading || submitDisabled} className="bg-[#1e293b] hover:bg-[#0f172a] text-white font-medium min-w-[120px] rounded-lg">
                 {loading ? (
                   'Menyimpan...'
                 ) : (
@@ -489,63 +458,14 @@ export default function PurchaseUnitForm({ onSubmit, defaultValues, readOnly, lo
         </form>
       </Form>
 
-      <Dialog open={openTypeModal} onOpenChange={setOpenTypeModal}>
-        <DialogContent className="sm:max-w-[480px]">
-          <DialogHeader>
-            <DialogTitle>Tambah Data Tipe</DialogTitle>
-          </DialogHeader>
-          <form className="space-y-4" onSubmit={handleCreateTypeUnit}>
-            <div className="space-y-2">
-              <Label htmlFor="code">Kode Tipe</Label>
-              <Input id="code" name="code" placeholder="Masukkan kode tipe" required />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="name">Nama Tipe</Label>
-              <Input id="name" name="name" placeholder="Masukkan nama tipe" required />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="description">Deskripsi</Label>
-              <Input id="description" name="description" placeholder="Masukkan deskripsi" />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="brandId">Merk Kendaraan</Label>
-              <select id="brandId" name="brandId" className="w-full border rounded-md h-10 px-3" required defaultValue="">
-                <option value="" disabled>
-                  Pilih merk
-                </option>
-                {brandOptions.map((b) => (
-                  <option key={b.id} value={b.id}>
-                    {b.name}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-2">
-                <Label htmlFor="nettoWeight">Berat Netto</Label>
-                <Input id="nettoWeight" name="nettoWeight" type="number" step="0.01" placeholder="Masukkan berat" />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="brutoWeight">Berat Bruto</Label>
-                <Input id="brutoWeight" name="brutoWeight" type="number" step="0.01" placeholder="Masukkan berat" />
-              </div>
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="image">Gambar (opsional)</Label>
-              <Input id="image" name="image" type="file" accept="image/*" onChange={(e) => setTypeImage(e.target.files?.[0] || null)} />
-            </div>
-
-            <DialogFooter className="pt-2">
-              <Button type="button" variant="ghost" onClick={() => setOpenTypeModal(false)}>
-                Batal
-              </Button>
-              <Button type="submit" disabled={createTypeUnit.isPending} className="bg-[#1e293b] hover:bg-[#0f172a] text-white">
-                {createTypeUnit.isPending ? 'Menyimpan...' : 'Simpan'}
-              </Button>
-            </DialogFooter>
-          </form>
-        </DialogContent>
-      </Dialog>
+      <TypeUnitFormModal
+        open={openTypeModal}
+        onOpenChange={setOpenTypeModal}
+        onCreated={(created) => {
+          setCreatedTypeUnit(created);
+          selectTypeUnit(created);
+        }}
+      />
     </>
   );
 }

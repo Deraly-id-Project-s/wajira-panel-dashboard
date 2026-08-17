@@ -1,5 +1,6 @@
 import { apiClient } from '@/lib/api/client';
 import { AuthResponse, LoginRequest, ProfileResponse } from '../types/auth.types';
+import type { Module } from '@/services/module.service';
 
 export class AuthService {
   /**
@@ -60,16 +61,21 @@ export class AuthService {
     return response.data;
   }
 
-  static async getPermissions(): Promise<string[]> {
+  static async getPermissions(companyId: string | number): Promise<string[]> {
     const CACHE_KEY = 'user_permissions';
+    const normalizedCompanyId = String(companyId);
 
     if (typeof window !== 'undefined') {
       const cached = localStorage.getItem(CACHE_KEY);
       if (cached) {
         try {
           const parsed = JSON.parse(cached);
-          if (Array.isArray(parsed) && parsed.length > 0) {
-            return parsed.filter((permission): permission is string => typeof permission === 'string');
+          if (
+            parsed &&
+            String(parsed.companyId) === normalizedCompanyId &&
+            Array.isArray(parsed.data)
+          ) {
+            return parsed.data.filter((permission: unknown): permission is string => typeof permission === 'string');
           }
         } catch (err) {
           console.warn('[AuthService] Failed to parse cached permissions:', err);
@@ -77,7 +83,9 @@ export class AuthService {
       }
     }
 
-    const response = await apiClient.get<any>('/wapi/auth/has-permissions');
+    const response = await apiClient.get<any>('/wapi/auth/has-permissions', {
+      params: { company_id: companyId },
+    });
     let resData = response.data;
     if (typeof resData === 'string') {
       try {
@@ -98,7 +106,10 @@ export class AuthService {
 
     if (typeof window !== 'undefined') {
       try {
-        localStorage.setItem(CACHE_KEY, JSON.stringify(normalizedPermissions));
+        localStorage.setItem(CACHE_KEY, JSON.stringify({
+          companyId: normalizedCompanyId,
+          data: normalizedPermissions,
+        }));
       } catch (err) {
         console.warn('[AuthService] Failed to save permissions to localStorage:', err);
       }
@@ -145,16 +156,21 @@ export class AuthService {
     return permissions;
   }
 
-  static async getSidebar(): Promise<SidebarModuleItem[]> {
+  static async getSidebar(companyId: string | number): Promise<SidebarModuleItem[]> {
     const CACHE_KEY = 'user_sidebar';
+    const normalizedCompanyId = String(companyId);
 
     if (typeof window !== 'undefined') {
       const cached = localStorage.getItem(CACHE_KEY);
       if (cached) {
         try {
           const parsed = JSON.parse(cached);
-          if (Array.isArray(parsed) && parsed.length > 0) {
-            return parsed;
+          if (
+            parsed &&
+            String(parsed.companyId) === normalizedCompanyId &&
+            Array.isArray(parsed.data)
+          ) {
+            return parsed.data;
           }
         } catch (err) {
           console.warn('[AuthService] Failed to parse cached sidebar:', err);
@@ -162,17 +178,47 @@ export class AuthService {
       }
     }
 
-    const response = await apiClient.get<SidebarResponse>('/wapi/auth/get-sidebar');
+    const [response, companyModulesResponse] = await Promise.all([
+      apiClient.get<SidebarResponse>('/wapi/auth/get-sidebar', {
+        params: { company_id: companyId },
+      }),
+      apiClient.get<{ data?: Module[] }>('/wapi/global/module', {
+        params: { company_id: companyId },
+      }),
+    ]);
 
     if (!response.data.status) {
       throw new Error(response.data.message || 'Failed to fetch sidebar');
     }
 
-    const data = response.data.data || [];
+    const authSidebar = response.data.data || [];
+    const companyModules = Array.isArray(companyModulesResponse.data?.data)
+      ? companyModulesResponse.data.data
+      : [];
+    const companyModuleMap = new Map(
+      companyModules.map((module) => [module.slug, module]),
+    );
+    const data = authSidebar
+      .filter((item) => companyModuleMap.has(item.module.slug))
+      .map((item) => {
+        const companyModule = companyModuleMap.get(item.module.slug);
+        const allowedFeatureIds = new Set(companyModule?.features?.map((feature) => feature.id) ?? []);
+        const allowedFeatureSlugs = new Set(companyModule?.features?.map((feature) => feature.slug).filter(Boolean) ?? []);
+
+        return {
+          ...item,
+          features: item.features.filter(
+            (feature) => allowedFeatureIds.has(feature.id) || allowedFeatureSlugs.has(feature.slug),
+          ),
+        };
+      });
 
     if (typeof window !== 'undefined') {
       try {
-        localStorage.setItem(CACHE_KEY, JSON.stringify(data));
+        localStorage.setItem(CACHE_KEY, JSON.stringify({
+          companyId: normalizedCompanyId,
+          data,
+        }));
       } catch (err) {
         console.warn('[AuthService] Failed to save sidebar to localStorage:', err);
       }
@@ -213,6 +259,14 @@ export class AuthService {
   static clearCachedProfile(): void {
     if (typeof window !== 'undefined') {
       localStorage.removeItem('auth_user_profile');
+      localStorage.removeItem('user_permissions');
+      localStorage.removeItem('dashboard_permissions');
+      localStorage.removeItem('user_sidebar');
+    }
+  }
+
+  static clearCachedCompanyAccess(): void {
+    if (typeof window !== 'undefined') {
       localStorage.removeItem('user_permissions');
       localStorage.removeItem('dashboard_permissions');
       localStorage.removeItem('user_sidebar');

@@ -9,7 +9,7 @@ export function useTaxes(params?: TaxListParams & { enabled?: boolean }) {
     queryKey: ['tax', 'list', rest],
     queryFn: async () => {
       const response = await getTaxes(rest.page ?? 1, rest.perPage ?? 100, rest.search ?? '');
-      // Map it to match the old format expected by PurchaseUnitForm/EditUnitForm
+      // Map it to the shape expected by UnitTransactionForm.
       // The components expect `data` to be an array of taxes
       return {
         data: response.data.data,

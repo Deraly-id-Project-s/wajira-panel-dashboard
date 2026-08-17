@@ -3,8 +3,8 @@ import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { PageHeader } from '@/components/ui/page-header';
 import { Card, CardContent } from '@/components/ui/card';
 import { ChevronRight, Check, ChevronsUpDown } from 'lucide-react';
-import { EditUnitForm } from '@/components/features/sales/edit/EditUnitForm';
-import { EditUnitFormData } from '@/components/features/sales/edit/edit-unit.schema';
+import { UnitTransactionForm } from '@/components/features/unit-transaction/UnitTransactionForm';
+import { type UnitTransactionFormValues } from '@/components/features/unit-transaction/unit-transaction.schema';
 import { useEffect, useMemo, useState } from 'react';
 import { toast } from 'sonner';
 import { useSalesDetail, useUpdateSales } from '@/hooks/useSales';
@@ -46,7 +46,7 @@ export default function EditUnitPage() {
     npwp: '',
   });
 
-  const formData: EditUnitFormData | null = useMemo(() => {
+  const formData: UnitTransactionFormValues | null = useMemo(() => {
     if (!data?.raw) return null;
     return mapSalesDetailToEditForm(data.raw);
   }, [data?.raw]);
@@ -155,7 +155,7 @@ export default function EditUnitPage() {
   /**
    * Handle form submit - API READY
    */
-  const handleSubmit = async (formValues: EditUnitFormData) => {
+  const handleSubmit = async (formValues: UnitTransactionFormValues) => {
     try {
       if (!salesId || !data?.raw) {
         toast.error('Data penjualan tidak ditemukan');
@@ -224,7 +224,9 @@ export default function EditUnitPage() {
         {/* Form Card - Border 1px, Radius 12px, Padding 24px */}
         <Card className="rounded-md border border-gray-200 shadow-none">
           <CardContent className="p-6">
-            <EditUnitForm
+            <UnitTransactionForm
+            type="sales"
+            allowCreateTypeUnit
               defaultValues={formData}
               prependFields={
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
@@ -279,7 +281,6 @@ export default function EditUnitPage() {
                   </div>
                 </div>
               }
-              hideCustomerField={true}
               hideItemFields={true}
               onSubmit={handleSubmit}
               onCancel={handleCancel}

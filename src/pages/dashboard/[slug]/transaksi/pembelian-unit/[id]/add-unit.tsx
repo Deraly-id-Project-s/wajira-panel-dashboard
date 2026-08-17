@@ -3,7 +3,7 @@
 import { useRouter } from "next/router"
 import { toast } from "sonner"
 import { DashboardLayout } from "@/components/layout/DashboardLayout"
-import PurchaseUnitForm from "@/components/features/purchase/PurchaseUnitForm"
+import { UnitTransactionForm } from "@/components/features/unit-transaction/UnitTransactionForm"
 import { useAddPurchaseUnit } from "@/hooks/usePurchase"
 
 export default function AddUnitPage() {
@@ -38,7 +38,7 @@ export default function AddUnitPage() {
                     </p>
                 </div>
 
-                <PurchaseUnitForm onSubmit={handleSubmit} />
+                <UnitTransactionForm type="purchase" allowCreateTypeUnit onSubmit={handleSubmit} onCancel={() => router.back()} />
             </div>
         </DashboardLayout>
     )

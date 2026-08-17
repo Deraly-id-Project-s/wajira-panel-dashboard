@@ -9,10 +9,17 @@ import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { useDebouncedValue } from '@/hooks/useDebouncedValue';
 import { useOrderLists, useDeleteOrderList, useOrderListTarifs, useOrderListTarifItems, useUpdateOrderList } from '@/hooks/useOrderList';
 import { composeOrderListWithTarifs } from '@/services/order-list.service';
+import { usePermissionGuard } from '@/hooks/usePermissionGuard';
 
 export default function OrderListPage() {
   const router = useRouter();
   const slug = typeof router.query.slug === 'string' ? router.query.slug : '';
+
+  const { hasPermission } = usePermissionGuard();
+  const canCreate = hasPermission('transaction:create');
+  const canEdit = hasPermission('transaction:edit');
+  const canDelete = hasPermission('transaction:delete');
+
   const initialPage = typeof router.query.page === 'string' ? Number(router.query.page) : 1;
   const initialPerPage = typeof router.query.perPage === 'string'
     ? Number(router.query.perPage)
@@ -210,6 +217,9 @@ export default function OrderListPage() {
         onEdit={handleEdit}
         onDelete={handleDeleteClick}
         onUpdateStatus={handleUpdateStatus}
+        canCreate={canCreate}
+        canEdit={canEdit}
+        canDelete={canDelete}
       />
 
       <OrderListDeleteDialog

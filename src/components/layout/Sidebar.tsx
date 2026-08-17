@@ -11,11 +11,13 @@ import { useCompanyMenu } from '@/hooks/use-company-menu';
 import { MenuItem } from '@/types/menu.types';
 import { clearCompanyScopedQueries } from '@/lib/session/query-cache';
 import Image from 'next/image';
+import { AuthService } from '@/features/auth/services/auth.service';
 
 function CompanySelector({ companies, companyId }: { companies: Company[], companyId: string | null }) {
   const [isOpen, setIsOpen] = useState(false);
   const router = useRouter();
   const queryClient = useQueryClient();
+  const { setCompanyId } = useCompany();
   const selectedCompany = companies.find((c) => String(c.id) === String(companyId));
 
   const handleSelectCompany = (company: Company) => {
@@ -24,7 +26,11 @@ function CompanySelector({ companies, companyId }: { companies: Company[], compa
       return;
     }
 
+    AuthService.clearCachedCompanyAccess();
+    queryClient.removeQueries({ queryKey: ['auth', 'permissions'] });
+    queryClient.removeQueries({ queryKey: ['auth', 'sidebar'] });
     clearCompanyScopedQueries(queryClient);
+    setCompanyId(String(company.id));
     setIsOpen(false);
     const targetSlug = company.slug || company.id;
     router.push(`/dashboard/${targetSlug}`);

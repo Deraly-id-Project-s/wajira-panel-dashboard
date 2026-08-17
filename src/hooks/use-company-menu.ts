@@ -207,16 +207,16 @@ export function useCompanyMenu(_companies: Company[]): { menus: MenuItem[], isLo
 
   const { companyId } = useCompany();
   const { data: permissions = [], isLoading: isLoadingPermissions } = useQuery<string[]>({
-    queryKey: ['auth', 'permissions'],
-    queryFn: AuthService.getPermissions,
+    queryKey: ['auth', 'permissions', companyId],
+    queryFn: () => AuthService.getPermissions(companyId as string),
     enabled: Boolean(companyId),
     staleTime: 5 * 60 * 1000,
     retry: 1,
     refetchOnWindowFocus: false,
   });
   const { data: sidebarData = [], isLoading: isLoadingSidebar } = useQuery<SidebarModuleItem[]>({
-    queryKey: ['auth', 'sidebar'],
-    queryFn: AuthService.getSidebar,
+    queryKey: ['auth', 'sidebar', companyId],
+    queryFn: () => AuthService.getSidebar(companyId as string),
     enabled: Boolean(companyId),
     staleTime: 5 * 60 * 1000,
     retry: 1,

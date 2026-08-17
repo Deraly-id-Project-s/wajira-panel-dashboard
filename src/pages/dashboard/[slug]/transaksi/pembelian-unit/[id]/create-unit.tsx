@@ -3,12 +3,12 @@
 import { useRouter } from 'next/router';
 import { toast } from 'sonner';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
-import PurchaseUnitForm from '@/components/features/purchase/PurchaseUnitForm';
+import { UnitTransactionForm } from '@/components/features/unit-transaction/UnitTransactionForm';
 import { usePurchaseById } from '@/hooks/useUnitTransaction';
 import { useCreateUnitItem, usePurchaseUnitItems } from '@/hooks/useUnitTransactionItem';
 import { ArrowLeft } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
-import { CreatePurchaseUnitFormValues } from '@/scheme/purchase.schema';
+import { type UnitTransactionFormValues } from '@/components/features/unit-transaction/unit-transaction.schema';
 import { useMemo } from 'react';
 import { LoadingState } from '@/components/ui/loading-state';
 import { PageHeader } from '@/components/ui/page-header';
@@ -44,23 +44,23 @@ export default function CreatePurchaseUnitPage() {
     [existingItems]
   );
 
-  const handleSubmit = async (data: CreatePurchaseUnitFormValues) => {
+  const handleSubmit = async (data: UnitTransactionFormValues) => {
     try {
-      if (!data.typeUnitId) {
+      if (!data.unitTypeId) {
         toast.error('Tipe unit wajib dipilih');
         return;
       }
 
-      if (existingTypeUnitIds.includes(String(data.typeUnitId))) {
+      if (existingTypeUnitIds.includes(String(data.unitTypeId))) {
         toast.error('Tipe unit sudah ada di transaksi ini. Pilih tipe unit lain.');
         return;
       }
 
       const qty = Number(data.qty ?? 0);
       const price = Number(data.price ?? 0);
-      const bbn = Number(data.biayaBBN ?? 0);
-      const expedition = Number(data.biayaEkspedisi ?? 0);
-      const other = Number(data.biayaLain ?? 0);
+      const bbn = Number(data.bbnPrice ?? 0);
+      const expedition = Number(data.expeditionFee ?? 0);
+      const other = Number(data.otherFee ?? 0);
 
       if (!Number.isFinite(qty) || qty <= 0) {
         toast.error('Qty wajib lebih dari 0');
@@ -83,8 +83,7 @@ export default function CreatePurchaseUnitPage() {
 
       await addUnitMutation.mutateAsync({
         unit_transaction_id: id as string,
-        unit_type_id: data?.typeUnitId,
-        sparepart_id: data?.sparepartId,
+        unit_type_id: data?.unitTypeId,
         qty_total: qty,
         price,
         bbn_price: bbn,
@@ -132,7 +131,9 @@ export default function CreatePurchaseUnitPage() {
 
         <Card className="rounded-md">
           <CardContent className="p-6">
-            <PurchaseUnitForm
+            <UnitTransactionForm
+            type="purchase"
+            allowCreateTypeUnit
               onSubmit={handleSubmit}
               onCancel={() => router.back()}
               loading={addUnitMutation.isPending}

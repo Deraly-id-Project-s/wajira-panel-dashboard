@@ -1,5 +1,5 @@
 import { SalesItem, SalesLineItem } from '@/components/features/sales/sales.data';
-import { EditUnitFormData } from '@/components/features/sales/edit/edit-unit.schema';
+import type { UnitTransactionFormValues } from '@/components/features/unit-transaction/unit-transaction.schema';
 import { UnitTransaction } from '@/@types/unit-transaction.types';
 
 export type SalesApiModel = {
@@ -353,24 +353,23 @@ export const mapSalesDetailCard = (item: SalesApiModel) => ({
   ppn: getPpnTotal(item),
 });
 
-export const mapSalesDetailToEditForm = (item: SalesApiModel): EditUnitFormData => {
+export const mapSalesDetailToEditForm = (item: SalesApiModel): UnitTransactionFormValues => {
   const qty = Math.max(toNumber(item.max_capacity), 1);
   const totalDpp = getDppTotal(item);
   const totalPpn = getPpnTotal(item);
 
   return {
-    customer: item.person?.name ?? '',
-    tipeUnit: item.unit_transaction_items?.[0]?.unit_type?.name ?? 'Product A',
+    unitTypeId: String(item.unit_transaction_items?.[0]?.unit_type_id ?? ''),
     qty,
-    harga: toNumber(item.unit_transaction_items?.[0]?.price),
-    biayaBbn: toNumber(item.transaction_bbn_total),
-    biayaEkspedisi: item.unit_transaction_items?.reduce((acc, row) => acc + toNumber(row.expedition_fee), 0) ?? 0,
-    biayaLain: toNumber(item.transaction_other_fee),
-    hppSatuan: totalDpp / qty,
-    totalHpp: totalDpp,
-    dppSatuan: totalDpp / qty,
-    totalDpp,
-    ppnSatuan: totalPpn / qty,
-    totalPpn,
+    price: toNumber(item.unit_transaction_items?.[0]?.price),
+    bbnPrice: toNumber(item.transaction_bbn_total),
+    expeditionFee: item.unit_transaction_items?.reduce((acc, row) => acc + toNumber(row.expedition_fee), 0) ?? 0,
+    otherFee: toNumber(item.transaction_other_fee),
+    hppPerUnit: totalDpp / qty,
+    hppTotal: totalDpp,
+    dppPerUnit: totalDpp / qty,
+    dppTotal: totalDpp,
+    ppnPerUnit: totalPpn / qty,
+    ppnTotal: totalPpn,
   };
 };

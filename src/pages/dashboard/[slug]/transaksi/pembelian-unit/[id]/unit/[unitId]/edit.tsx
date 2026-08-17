@@ -3,14 +3,14 @@ import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { PageHeader } from '@/components/ui/page-header';
 import { Card, CardContent } from '@/components/ui/card';
 import { ArrowLeft, ChevronRight } from 'lucide-react';
-import PurchaseUnitForm from '@/components/features/purchase/PurchaseUnitForm';
+import { UnitTransactionForm } from '@/components/features/unit-transaction/UnitTransactionForm';
 import { usePurchaseById } from '@/hooks/useUnitTransaction';
 import {
   usePurchaseUnitItems,
   useUpdateUnitItem,
 } from '@/hooks/useUnitTransactionItem';
 import { toast } from 'sonner';
-import { CreatePurchaseUnitFormValues } from '@/scheme/purchase.schema';
+import { type UnitTransactionFormValues } from '@/components/features/unit-transaction/unit-transaction.schema';
 import { Button } from '@/components/ui/button';
 import { LoadingState } from '@/components/ui/loading-state';
 
@@ -77,7 +77,7 @@ export default function EditNestedUnitPage() {
   // SUBMIT HANDLER
   // ======================
   const handleSubmit = async (
-    data: CreatePurchaseUnitFormValues
+    data: UnitTransactionFormValues
   ) => {
     try {
       if (!unitId) {
@@ -89,16 +89,16 @@ export default function EditNestedUnitPage() {
       // NORMALIZE INPUT
       // ======================
       const selectedTypeUnitId =
-        data.typeUnitId !== undefined &&
-          data.typeUnitId !== null
-          ? String(data.typeUnitId)
+        data.unitTypeId !== undefined &&
+          data.unitTypeId !== null
+          ? String(data.unitTypeId)
           : '';
 
       const qty = Number(data.qty ?? 0);
       const price = Number(data.price ?? 0);
-      const bbn = Number(data.biayaBBN ?? 0);
-      const expedition = Number(data.biayaEkspedisi ?? 0);
-      const other = Number(data.biayaLain ?? 0);
+      const bbn = Number(data.bbnPrice ?? 0);
+      const expedition = Number(data.expeditionFee ?? 0);
+      const other = Number(data.otherFee ?? 0);
 
       // ======================
       // VALIDATION
@@ -132,9 +132,6 @@ export default function EditNestedUnitPage() {
       // ======================
       const currentTypeUnitId = unit?.unit_type_id
         ? String(unit.unit_type_id)
-        : '';
-      const currentSparepartId = unit?.sparepart_id
-        ? String(unit.sparepart_id)
         : '';
 
       const currentQty = Number(unit?.qty_total ?? 0);
@@ -188,10 +185,6 @@ export default function EditNestedUnitPage() {
         selectedTypeUnitId !== currentTypeUnitId
       ) {
         payload.unit_type_id = selectedTypeUnitId;
-      }
-
-      if ((data.sparepartId || '') !== currentSparepartId) {
-        payload.sparepart_id = data.sparepartId || '';
       }
 
       if (!isSame(qty, currentQty)) {
@@ -313,15 +306,16 @@ export default function EditNestedUnitPage() {
 
         <Card className="rounded-md">
           <CardContent className="p-6">
-            <PurchaseUnitForm
+            <UnitTransactionForm
+            type="purchase"
+            allowCreateTypeUnit
               defaultValues={{
-                typeUnitId: unit.unit_type_id ?? '',
-                sparepartId: unit.sparepart_id ?? '',
+                unitTypeId: unit.unit_type_id ?? '',
                 qty: unit.qty_total,
                 price: unit.price,
-                biayaBBN: unit.bbn_price,
-                biayaEkspedisi: unit.expedition_fee,
-                biayaLain: unit.other_fee,
+                bbnPrice: unit.bbn_price,
+                expeditionFee: unit.expedition_fee,
+                otherFee: unit.other_fee,
                 priceUsd: unit.price_usd,
                 pricePerUnitUsd: unit.price_per_unit_usd,
                 dppTaxVersionId: unit.dpp_tax_id != null ? String(unit.dpp_tax_id) : undefined,

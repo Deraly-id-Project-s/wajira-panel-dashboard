@@ -4,20 +4,16 @@ import { useRouter } from 'next/router';
 import { toast } from 'sonner';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { PageHeader } from '@/components/ui/page-header';
-import PurchaseUnitForm from '@/components/features/purchase/PurchaseUnitForm';
+import { UnitTransactionForm } from '@/components/features/unit-transaction/UnitTransactionForm';
 import { useCreatePurchase } from '@/hooks/usePurchase';
-import { ChevronLeft, Check, ChevronsUpDown, ChevronRight, ArrowLeft } from 'lucide-react';
 import { useCompany } from '@/contexts/CompanyContext';
-import { useSuppliers } from '@/hooks/useSupplier';
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
-import { CreatePurchaseUnitFormValues } from '@/scheme/purchase.schema';
+import { type UnitTransactionFormValues } from '@/components/features/unit-transaction/unit-transaction.schema';
 import { CreatePurchaseRequest } from '@/@types/purchase.types';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
-import { cn } from '@/lib/utils';
+import { SupplierCombobox } from '@/components/features/supplier/SupplierCombobox';
+import type { Supplier } from '@/@types/supplier.types';
 import { apiClient } from '@/lib/api/client';
 import { purchaseService } from '@/services/purchase.service';
 
@@ -58,20 +54,9 @@ export default function CreatePurchasePage() {
   const { slug } = router.query;
   const { companyId } = useCompany();
   const mutation = useCreatePurchase();
-  const { data: supplierData } = useSuppliers(companyId || null);
   const [personId, setPersonId] = useState('');
-  const [supplierOpen, setSupplierOpen] = useState(false);
+  const [selectedPerson, setSelectedPerson] = useState<Supplier | null>(null);
   const [tanggal, setTanggal] = useState(new Date().toISOString().split('T')[0]);
-
-  const personOptions = useMemo(() => supplierData?.data ?? [], [supplierData]);
-
-  const selectedPerson = useMemo(() => {
-    return personOptions.find((person) => String(person.id) === personId);
-  }, [personOptions, personId]);
-
-  useEffect(() => {
-    setPersonId('');
-  }, []);
 
   const generatedCode = useMemo(() => {
     const now = new Date();
@@ -85,17 +70,17 @@ export default function CreatePurchasePage() {
     return `PBL-${companyCode}/${ymd}-${seq}${ms}`;
   }, [slug]);
 
-  const handleSubmit = async (data: CreatePurchaseUnitFormValues) => {
+  const handleSubmit = async (data: UnitTransactionFormValues) => {
     try {
       const personNumeric = Number(personId);
       const warehouseNumeric = DEFAULT_WAREHOUSE_ID;
       const companyNumeric = Number(companyId);
       const qtyNumber = Number(data.qty ?? 0);
-      const unitTypeIdNumber = Number(data.typeUnitId ?? 0);
+      const unitTypeIdNumber = Number(data.unitTypeId ?? 0);
       const priceNumber = Number(data.price ?? 0);
-      const bbnNumber = Number(data.biayaBBN ?? 0);
-      const expeditionNumber = Number(data.biayaEkspedisi ?? 0);
-      const otherFeeNumber = Number(data.biayaLain ?? 0);
+      const bbnNumber = Number(data.bbnPrice ?? 0);
+      const expeditionNumber = Number(data.expeditionFee ?? 0);
+      const otherFeeNumber = Number(data.otherFee ?? 0);
 
       if (!personNumeric || personNumeric <= 0) {
         toast.error('Supplier wajib dipilih (person_id tidak boleh kosong)');
@@ -213,7 +198,9 @@ export default function CreatePurchasePage() {
         />
 
         <div className="rounded-md border bg-white p-5 md:p-6 shadow-sm">
-          <PurchaseUnitForm
+          <UnitTransactionForm
+            type="purchase"
+            allowCreateTypeUnit
             onSubmit={handleSubmit}
             loading={mutation.isPending}
             onCancel={() => router.push(purchasePath)}
@@ -232,45 +219,15 @@ export default function CreatePurchasePage() {
 
                 <div className="space-y-2">
                   <Label className="text-sm font-medium">Supplier</Label>
-                  <Popover open={supplierOpen} onOpenChange={setSupplierOpen}>
-                    <PopoverTrigger asChild>
-                      <Button
-                        type="button"
-                        variant="outline"
-                        role="combobox"
-                        aria-expanded={supplierOpen}
-                        className="w-full justify-between bg-transparent font-normal"
-                      >
-                        <span className={cn('truncate', !selectedPerson && 'text-muted-foreground')}>
-                          {selectedPerson ? selectedPerson.name : 'Pilih supplier'}
-                        </span>
-                        <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-[--radix-popover-trigger-width] p-0">
-                      <Command>
-                        <CommandInput placeholder="Cari supplier..." />
-                        <CommandList id="supplier-combobox-list">
-                          <CommandEmpty>Supplier tidak ditemukan.</CommandEmpty>
-                          <CommandGroup>
-                            {personOptions.map((person) => (
-                              <CommandItem
-                                key={String(person.id)}
-                                value={`${person.name} ${person.code ?? ''} ${person.id}`}
-                                onSelect={() => {
-                                  setPersonId(String(person.id));
-                                  setSupplierOpen(false);
-                                }}
-                              >
-                                <Check className={cn('mr-2 h-4 w-4', personId === String(person.id) ? 'opacity-100' : 'opacity-0')} />
-                                {person.name}
-                              </CommandItem>
-                            ))}
-                          </CommandGroup>
-                        </CommandList>
-                      </Command>
-                    </PopoverContent>
-                  </Popover>
+                  <SupplierCombobox
+                    companyId={companyId}
+                    selectedId={personId}
+                    allowCreate
+                    onSelect={(supplier) => {
+                      setPersonId(String(supplier.id));
+                      setSelectedPerson(supplier);
+                    }}
+                  />
                 </div>
 
                 <div className="space-y-2">
