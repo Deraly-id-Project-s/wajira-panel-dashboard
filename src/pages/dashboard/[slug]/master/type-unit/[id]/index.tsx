@@ -25,6 +25,7 @@ import { UnitTypePriceVersionTable } from '@/components/features/type-unit/UnitT
 import { UnitTypePriceVersionForm } from '@/components/features/type-unit/UnitTypePriceVersionForm';
 import type { UnitTypePriceVersion, UnitTypePriceVersionFormValues } from '@/@types/unit-type-price-version.types';
 import { toast } from 'sonner';
+import { usePermissionGuard } from '@/hooks/usePermissionGuard';
 
 const statusConfig: Record<string, { label: string; className: string }> = {
   normal: { label: 'Normal', className: 'border-emerald-200 bg-emerald-50 text-emerald-700 font-semibold' },
@@ -53,6 +54,11 @@ export default function TypeUnitDetailPage() {
   const router = useRouter();
   const { slug, id } = router.query;
   const { companyId } = useCompany();
+
+  const { hasPermission } = usePermissionGuard();
+  const canCreate = hasPermission('master-data:create');
+  const canEdit = hasPermission('master-data:edit');
+  const canDelete = hasPermission('master-data:delete');
 
   // Search & Filter States
   const [filterColor, setFilterColor] = useState('');
@@ -453,6 +459,9 @@ export default function TypeUnitDetailPage() {
             onAdd={handleAddPrice}
             onEdit={handleEditPrice}
             onDelete={handleDeletePrice}
+            canCreate={canCreate}
+            canEdit={canEdit}
+            canDelete={canDelete}
           />
         </div>
       </div>

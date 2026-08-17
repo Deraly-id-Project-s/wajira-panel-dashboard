@@ -22,6 +22,9 @@ interface UnitTypePriceVersionTableProps {
   onDelete: (version: UnitTypePriceVersion) => void;
   onPageChange: (page: number) => void;
   onPerPageChange: (perPage: number) => void;
+  canCreate: boolean;
+  canEdit: boolean;
+  canDelete: boolean;
 }
 
 export const UnitTypePriceVersionTable = ({
@@ -36,7 +39,10 @@ export const UnitTypePriceVersionTable = ({
   onEdit,
   onDelete,
   onPageChange,
-  onPerPageChange
+  onPerPageChange,
+  canCreate,
+  canEdit,
+  canDelete,
 }: UnitTypePriceVersionTableProps) => {
   const columns = useMemo<ColumnDef<UnitTypePriceVersion>[]>(
     () => [
@@ -125,7 +131,7 @@ export const UnitTypePriceVersionTable = ({
             <DropdownMenuContent align="end" className="min-w-[150px] rounded-xl border-slate-200 p-1.5 shadow-lg">
               <DropdownMenuItem
                 onClick={() => onEdit(item)}
-                disabled={item.is_lock === 1 || item.is_lock === true}
+                disabled={!canEdit || item.is_lock === 1 || item.is_lock === true}
                 className="rounded-lg px-3 py-2 text-sm text-slate-900 focus:bg-slate-50 cursor-pointer"
               >
                 <Pencil className="mr-2 h-4 w-4" />
@@ -134,7 +140,7 @@ export const UnitTypePriceVersionTable = ({
               <DropdownMenuItem
                 onClick={() => onDelete(item)}
                 className="rounded-lg px-3 py-2 text-sm text-red-600 focus:bg-red-50 focus:text-red-600 cursor-pointer"
-                disabled={item.is_default === 1 || item.is_default === true || item.is_lock === 1 || item.is_lock === true}
+                disabled={!canDelete || item.is_default === 1 || item.is_default === true || item.is_lock === 1 || item.is_lock === true}
               >
                 <Trash className="mr-2 h-4 w-4" />
                 Hapus
@@ -144,7 +150,7 @@ export const UnitTypePriceVersionTable = ({
         ),
       },
     ],
-    [onEdit, onDelete],
+    [onEdit, onDelete, canEdit, canDelete],
   );
 
   return (
@@ -167,7 +173,7 @@ export const UnitTypePriceVersionTable = ({
       }}
       onPageChange={onPageChange}
       headerActions={
-        <Button onClick={onAdd} className="w-full sm:w-auto bg-[#1e3a5f] hover:bg-[#152e4d]">
+        <Button onClick={onAdd} disabled={!canCreate} className="w-full sm:w-auto bg-[#1e3a5f] hover:bg-[#152e4d]">
           <Plus className="mr-2 h-4 w-4" />
           Tambah Versi
         </Button>

@@ -14,12 +14,18 @@ import { ArrowLeft, Lock } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
+import { usePermissionGuard } from '@/hooks/usePermissionGuard';
 
 export default function TaxDetailPage() {
   const router = useRouter();
   const slug = router.query.slug as string;
   const taxId = Number(router.query.id);
   const queryClient = useQueryClient();
+
+  const { hasPermission } = usePermissionGuard();
+  const canCreate = hasPermission('master-data:create');
+  const canEdit = hasPermission('master-data:edit');
+  const canDelete = hasPermission('master-data:delete');
 
   const [page, setPage] = useState(1);
   const [perPage, setPerPage] = useState(25);
@@ -196,6 +202,9 @@ export default function TaxDetailPage() {
               onAdd={handleAdd}
               onEdit={handleEdit}
               onDelete={handleDelete}
+              canCreate={canCreate}
+              canEdit={canEdit}
+              canDelete={canDelete}
             />
           </div>
         </div>
