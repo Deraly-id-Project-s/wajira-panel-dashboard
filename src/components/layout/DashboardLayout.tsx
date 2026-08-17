@@ -29,7 +29,56 @@ export function DashboardLayout({ children, minimal = false }: DashboardLayoutPr
         loadCompanies,
         isCompanyAccessVerified,
     } = useCompany()
-    const [isDesktopSidebarCollapsed, setIsDesktopSidebarCollapsed] = useState(false)
+    const [isDesktopSidebarCollapsed, setIsDesktopSidebarCollapsed] = useState(() => {
+        if (typeof window !== "undefined") {
+            const config = localStorage.getItem("site_config");
+            if (config) {
+                try {
+                    const parsed = JSON.parse(config);
+                    if (Array.isArray(parsed)) {
+                        const item = parsed.find((i: any) => i && i.key === "sidebar_collapsed");
+                        return item ? !!item.value : false;
+                    } else if (typeof parsed === "object" && parsed !== null) {
+                        return !!parsed.sidebar_collapsed;
+                    }
+                } catch (e) {
+                    console.warn(e);
+                }
+            }
+        }
+        return false;
+    });
+
+    const handleDesktopCollapsedChange = (collapsed: boolean) => {
+        setIsDesktopSidebarCollapsed(collapsed);
+        if (typeof window !== "undefined") {
+            try {
+                const existing = localStorage.getItem("site_config");
+                let configList: Array<{ key: string; value: any }> = [];
+                if (existing) {
+                    try {
+                        const parsed = JSON.parse(existing);
+                        if (Array.isArray(parsed)) {
+                            configList = parsed;
+                        } else if (typeof parsed === "object" && parsed !== null) {
+                            configList = Object.entries(parsed).map(([key, value]) => ({ key, value }));
+                        }
+                    } catch (e) {
+                        configList = [];
+                    }
+                }
+                const existingIndex = configList.findIndex((item) => item && item.key === "sidebar_collapsed");
+                if (existingIndex > -1) {
+                    configList[existingIndex].value = collapsed;
+                } else {
+                    configList.push({ key: "sidebar_collapsed", value: collapsed });
+                }
+                localStorage.setItem("site_config", JSON.stringify(configList));
+            } catch (err) {
+                console.warn(err);
+            }
+        }
+    };
 
     const slugQuery = router.query.slug
     const routeSlug = Array.isArray(slugQuery) ? slugQuery[0] : slugQuery
@@ -174,7 +223,7 @@ export function DashboardLayout({ children, minimal = false }: DashboardLayoutPr
             >
                 <Sidebar
                     isDesktopCollapsed={isDesktopSidebarCollapsed}
-                    onDesktopCollapsedChange={setIsDesktopSidebarCollapsed}
+                    onDesktopCollapsedChange={handleDesktopCollapsedChange}
                 />
             </div>
 
