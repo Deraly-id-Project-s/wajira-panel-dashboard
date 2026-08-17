@@ -9,7 +9,7 @@ import { Badge } from '@/components/ui/badge';
 import { PurchaseDetailCards } from '@/components/features/purchase/PurchaseDetailCards';
 import PurchaseUnitTable from '@/components/features/purchase/PurchaseUnitTable';
 import BaseTable, { ColumnDef } from '@/components/ui/base-table';
-import { usePurchaseById, useUpdateUnitTransactionState } from '@/hooks/useUnitTransaction';
+import { usePurchaseById } from '@/hooks/useUnitTransaction';
 import { useUnitBillings, useCurrentBilling, useBillingHistory, useUpdateBillingIsPaid } from '@/hooks/useUnitBilling';
 import { usePurchaseUnitItems } from '@/hooks/useUnitTransactionItem';
 import { useTypeUnits } from '@/hooks/useTypeUnit';
@@ -29,9 +29,6 @@ import {
 } from '@/components/ui/dialog';
 import { formatDate } from '@/lib/utils/format';
 import { LoadingState } from '@/components/ui/loading-state';
-
-const PURCHASE_PREPARE_STOCK_STATE = 'inbound_incoming_goods';
-const PURCHASE_RECEIVED_STOCK_STATE = 'inbound_receipt';
 
 const readApiError = (error: any): string => {
   const details = error?.details ?? error?.response?.data?.errors;
@@ -55,18 +52,18 @@ export default function PurchaseDetailPage() {
   const canDelete = hasPermission('transaction:delete');
 
   const { slug, id } = router.query;
-  const { data: purchase, isLoading, isError } = usePurchaseById(id as string);
+  const { data: purchase, isLoading, isError, refetch: refetchPurchase } = usePurchaseById(id as string);
   const { data: billings = [] } = useUnitBillings(purchase?.id);
   const { data: currentBilling, isLoading: billingLoading } = useCurrentBilling(String(purchase?.id ?? ''));
   const billingId = String(currentBilling?.id ?? '');
   const { data: billingHistories = [], isLoading: historyLoading } = useBillingHistory(billingId || undefined, String(purchase?.id ?? ''));
   const { data: unitItemsResponse, isLoading: unitItemsLoading } = usePurchaseUnitItems(purchase?.id);
-  const updateState = useUpdateUnitTransactionState();
   const updateBillingIsPaid = useUpdateBillingIsPaid();
   const { data: typeUnits } = useTypeUnits();
 
   const [isMarkAsPaidDialogOpen, setIsMarkAsPaidDialogOpen] = useState(false);
   const [isReceiveDialogOpen, setIsReceiveDialogOpen] = useState(false);
+  const [isWarehouseProcessing, setIsWarehouseProcessing] = useState(false);
 
   useEffect(() => {
     if (!isLoading && purchase && purchase?.type !== 'purchase') {
@@ -82,17 +79,19 @@ export default function PurchaseDetailPage() {
   ));
   const hasPaidBilling = billings.some((item: any) => Boolean(item.is_paid));
   const isPaid = billingSummary?.is_paid ?? (hasPaidBilling || (totalPaid >= totalTagihan && totalTagihan > 0));
-  const currentStockState = String(purchase?.stock_state ?? '').toLowerCase();
   const isRefunded = purchase?.has_refund_transaction;
-  const canReceive = isPaid && purchase?.isUnitTypeDetailValid === true && (purchase?.warehouse_activity ? purchase?.warehouse_activity?.state === 'draft' : true);
 
   const receiveButtonText = useMemo(() => {
-    if (updateState.isPending) return 'Memproses...';
+    if (isWarehouseProcessing) return 'Memproses...';
     if (purchase?.warehouse_activity?.state === 'done') return 'Selesai Diproses';
     if (purchase?.warehouse_activity?.state === 'process') return 'Sedang Diproses';
     if (purchase?.warehouse_activity?.state === 'draft') return 'Proses Penerimaan';
+    if (purchase?.warehouse_activity) return 'Sudah Diproses';
     return 'Proses Barang';
-  }, [updateState.isPending, purchase?.warehouse_activity?.state]);
+  }, [isWarehouseProcessing, purchase?.warehouse_activity]);
+  const canReceive = isPaid
+    && purchase?.isUnitTypeDetailValid === true
+    && receiveButtonText === 'Proses Barang';
   const unitItems = unitItemsResponse?.data ?? [];
   const resolvedBillingHistories =
     billingHistories.length > 0
@@ -186,7 +185,12 @@ export default function PurchaseDetailPage() {
 
   const handleReceipt = async () => {
     if (!purchase?.id) return;
+    if (purchase.warehouse_activity) {
+      setIsReceiveDialogOpen(false);
+      return;
+    }
 
+    setIsWarehouseProcessing(true);
     try {
       const warehouseId = String(purchase.warehouse?.id ?? '').trim();
       const personId = String(purchase.person?.id ?? '').trim();
@@ -246,22 +250,6 @@ export default function PurchaseDetailPage() {
         return;
       }
 
-      let stockStateForWarehouse = currentStockState;
-      if (stockStateForWarehouse !== PURCHASE_PREPARE_STOCK_STATE) {
-        await updateState.mutateAsync({
-          id: purchase.id,
-          stockState: PURCHASE_PREPARE_STOCK_STATE,
-          unitTransactionDetails: detailIds,
-        });
-        stockStateForWarehouse = PURCHASE_PREPARE_STOCK_STATE;
-      }
-
-      if (stockStateForWarehouse !== PURCHASE_PREPARE_STOCK_STATE) {
-        toast.error('State transaksi harus inbound_incoming_goods sebelum membuat warehouse activity.');
-        setIsReceiveDialogOpen(false);
-        return;
-      }
-
       const description = String(`Penerimaan Stok Transaksi beli ${purchase?.code} Sebanyak ${detailIds?.length} Unit`);
 
       const activityId = await warehouseActivityService.createReceiptActivity({
@@ -273,26 +261,17 @@ export default function PurchaseDetailPage() {
       });
 
       await warehouseActivityService.receiptStock(activityId, detailIds);
+      await refetchPurchase();
 
-      await updateState.mutateAsync({
-        id: purchase.id,
-        stockState: PURCHASE_RECEIVED_STOCK_STATE,
-      });
-
-      toast.success('Status pembelian diperbarui ke receipt dan stok warehouse berhasil diproses.');
+      toast.success('Stok warehouse berhasil diproses.');
       setIsReceiveDialogOpen(false);
     } catch (error: any) {
       const message = readApiError(error);
-
-      toast.error(message || 'Gagal update state ke receipt', {
-        action: {
-          label: 'Retry',
-          onClick: () => {
-            void handleReceipt();
-          },
-        },
-      });
+      await refetchPurchase();
+      toast.error(message || 'Gagal memproses stok warehouse.');
       setIsReceiveDialogOpen(false);
+    } finally {
+      setIsWarehouseProcessing(false);
     }
   };
 
@@ -470,7 +449,7 @@ export default function PurchaseDetailPage() {
               type="button"
               variant="outline"
               onClick={() => setIsReceiveDialogOpen(false)}
-              disabled={updateState.isPending}
+              disabled={isWarehouseProcessing}
             >
               Batal
             </Button>
@@ -478,9 +457,9 @@ export default function PurchaseDetailPage() {
               type="button"
               className="bg-blue-600 hover:bg-blue-700 text-white"
               onClick={handleReceipt}
-              disabled={updateState.isPending}
+              disabled={isWarehouseProcessing}
             >
-              {updateState.isPending ? 'Memproses...' : 'Ya, Proses Barang'}
+              {isWarehouseProcessing ? 'Memproses...' : 'Ya, Proses Barang'}
             </Button>
           </DialogFooter>
         </DialogContent>

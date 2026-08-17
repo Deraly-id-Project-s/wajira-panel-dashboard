@@ -9,7 +9,6 @@ import { SalesUnitTable } from '@/components/features/sales/detail/SalesUnitTabl
 import { toast } from 'sonner';
 import { useSalesById } from '@/hooks/useSales';
 import { useCurrentBilling, useBillingHistory, useUpdateBillingIsPaid, useUnitBillings } from '@/hooks/useUnitBilling';
-import { useUpdateUnitTransactionState } from '@/hooks/useUnitTransaction';
 import { mapSalesDetailToUI } from '@/services/sales.mapper';
 import { warehouseActivityService } from '@/services/warehouseActivity.service';
 import { usePermissionGuard } from '@/hooks/usePermissionGuard';
@@ -37,16 +36,16 @@ export default function SalesDetailPage() {
   const canCreate = hasPermission('transaction:create');
 
   const { slug, id } = router.query;
-  const { data: sales, isLoading, isError } = useSalesById(id as string);
+  const { data: sales, isLoading, isError, refetch: refetchSales } = useSalesById(id as string);
   const { data: billings = [] } = useUnitBillings(sales?.id);
   const { data: currentBilling, isLoading: billingLoading } = useCurrentBilling(String(sales?.id ?? ''));
   const billingId = String(currentBilling?.id ?? '');
   const { data: billingHistories = [], isLoading: historyLoading } = useBillingHistory(billingId || undefined, String(sales?.id ?? ''));
-  const updateState = useUpdateUnitTransactionState();
   const updateBillingIsPaid = useUpdateBillingIsPaid();
 
   const [isMarkAsPaidDialogOpen, setIsMarkAsPaidDialogOpen] = useState(false);
   const [isDeliveryDialogOpen, setIsDeliveryDialogOpen] = useState(false);
+  const [isWarehouseProcessing, setIsWarehouseProcessing] = useState(false);
   const { companyId } = useCompany();
   const queryClient = useQueryClient();
 
@@ -70,19 +69,19 @@ export default function SalesDetailPage() {
   ));
   const hasPaidBilling = billings.some((item: any) => Boolean(item.is_paid));
   const isPaid = billingSummary?.is_paid ?? (hasPaidBilling || (totalPaid >= totalTagihan && totalTagihan > 0));
-  const currentStockState = String(sales?.stock_state ?? '').toLowerCase();
   const isRefunded = sales?.has_refund_transaction;
 
-  const SALES_DELIVERED_STOCK_STATE = 'outbound_delivered';
-  const canDeliver = isPaid && sales?.isUnitTypeDetailValid === true && (sales?.warehouse_activity ? sales?.warehouse_activity?.state === 'draft' : true);
-
   const deliveryButtonText = useMemo(() => {
-    if (updateState.isPending) return 'Memproses...';
+    if (isWarehouseProcessing) return 'Memproses...';
     if (sales?.warehouse_activity?.state === 'done') return 'Selesai Diproses';
     if (sales?.warehouse_activity?.state === 'process') return 'Sedang Diproses';
     if (sales?.warehouse_activity?.state === 'draft') return 'Proses Pengiriman';
+    if (sales?.warehouse_activity) return 'Sudah Diproses';
     return 'Proses Barang';
-  }, [updateState.isPending, sales?.warehouse_activity?.state]);
+  }, [isWarehouseProcessing, sales?.warehouse_activity]);
+  const canDeliver = isPaid
+    && sales?.isUnitTypeDetailValid === true
+    && deliveryButtonText === 'Proses Barang';
 
   const resolvedBillingHistories =
     billingHistories.length > 0
@@ -198,7 +197,12 @@ export default function SalesDetailPage() {
 
   const handleDelivery = async () => {
     if (!sales?.id) return;
+    if (sales.warehouse_activity) {
+      setIsDeliveryDialogOpen(false);
+      return;
+    }
 
+    setIsWarehouseProcessing(true);
     try {
       const warehouseId = String(sales.warehouse?.id ?? '').trim();
       const personId = String(sales.person?.id ?? '').trim();
@@ -252,22 +256,6 @@ export default function SalesDetailPage() {
         return;
       }
 
-      let stockStateForWarehouse = currentStockState;
-      if (stockStateForWarehouse !== 'outbound_in_transit') {
-        await updateState.mutateAsync({
-          id: sales.id,
-          stockState: 'outbound_in_transit',
-          unitTransactionDetails: detailIds,
-        });
-        stockStateForWarehouse = 'outbound_in_transit';
-      }
-
-      if (stockStateForWarehouse !== 'outbound_in_transit') {
-        toast.error('State transaksi harus outbound_in_transit sebelum membuat warehouse activity.');
-        setIsDeliveryDialogOpen(false);
-        return;
-      }
-
       const description = String(`Pengiriman Stok Transaksi beli ${sales?.code} Sebanyak ${detailIds?.length} Unit`);
 
       const activityId = await warehouseActivityService.createIssueActivity({
@@ -280,21 +268,20 @@ export default function SalesDetailPage() {
 
       await warehouseActivityService.dispatchStock(activityId, detailIds);
 
-      await updateState.mutateAsync({
-        id: sales.id,
-        stockState: SALES_DELIVERED_STOCK_STATE,
-      });
-
       await queryClient.invalidateQueries({ queryKey: ['sales-by-id', companyId, sales.id] });
       await queryClient.invalidateQueries({ queryKey: ['sales-transactions'] });
       await queryClient.invalidateQueries({ queryKey: ['sales-unit-items', sales.id] });
       await queryClient.invalidateQueries({ queryKey: ['stock-units'] });
 
-      toast.success('Status penjualan diperbarui ke delivered dan stok berhasil dikirim.');
+      await refetchSales();
+      toast.success('Stok berhasil dikirim.');
       setIsDeliveryDialogOpen(false);
     } catch (error: any) {
+      await refetchSales();
       toast.error(error?.message || 'Gagal mengirim barang.');
       setIsDeliveryDialogOpen(false);
+    } finally {
+      setIsWarehouseProcessing(false);
     }
   };
 
@@ -467,7 +454,7 @@ export default function SalesDetailPage() {
               type="button"
               variant="outline"
               onClick={() => setIsDeliveryDialogOpen(false)}
-              disabled={updateState.isPending}
+              disabled={isWarehouseProcessing}
             >
               Batal
             </Button>
@@ -475,9 +462,9 @@ export default function SalesDetailPage() {
               type="button"
               className="bg-blue-600 hover:bg-blue-700 text-white"
               onClick={handleDelivery}
-              disabled={updateState.isPending}
+              disabled={isWarehouseProcessing}
             >
-              {updateState.isPending ? 'Memproses...' : 'Ya, Proses Barang'}
+              {isWarehouseProcessing ? 'Memproses...' : 'Ya, Proses Barang'}
             </Button>
           </DialogFooter>
         </DialogContent>

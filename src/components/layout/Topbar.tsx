@@ -12,11 +12,11 @@ import { LogOut } from 'lucide-react';
 import { useRouter, useParams } from 'next/navigation';
 import { useAuthMe } from '@/features/auth/hooks/use-auth-me';
 import { performClientLogout } from '@/lib/session/logout';
-import { fetchUserCompanies, Company } from '@/services/company.service';
 import { useCompanyMenu } from '@/hooks/use-company-menu';
 import { MenuItem } from '@/types/menu.types';
 import { cn } from '@/lib/utils';
 import { ParsedImage } from '@/components/ui/parsed-image';
+import { useCompany } from '@/contexts/CompanyContext';
 
 const RECENT_STORAGE_KEY = 'global-search-recent';
 
@@ -52,17 +52,7 @@ export function Topbar() {
   const slug = params?.slug as string;
 
   const searchInputRef = useRef<HTMLInputElement>(null);
-  const [companies, setCompanies] = useState<Company[]>([]);
-
-  useEffect(() => {
-    fetchUserCompanies()
-      .then((data) => {
-        setCompanies(data || []);
-      })
-      .catch((err) => {
-        console.error('Failed to fetch user companies:', err);
-      });
-  }, []);
+  const { companies } = useCompany();
 
   // Keyboard shortcut handler (Cmd + K or Ctrl + K)
   useEffect(() => {

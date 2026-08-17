@@ -25,10 +25,14 @@ export interface Company {
 
 type CompanyListApiResponse = LaravelApiResponse<Company[] | Company>;
 
-export async function fetchUserCompanies(): Promise<Company[]> {
+interface FetchUserCompaniesOptions {
+  forceRefresh?: boolean;
+}
+
+export async function fetchUserCompanies(options: FetchUserCompaniesOptions = {}): Promise<Company[]> {
   const CACHE_KEY = 'user_companies';
 
-  if (typeof window !== 'undefined') {
+  if (!options.forceRefresh && typeof window !== 'undefined') {
     const cached = localStorage.getItem(CACHE_KEY);
     if (cached) {
       try {

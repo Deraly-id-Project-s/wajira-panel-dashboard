@@ -1,38 +1,40 @@
 import { useEffect } from 'react';
 import { useRouter } from 'next/router';
 import { useCompany } from '@/contexts/CompanyContext';
-import { fetchUserCompanies } from '@/services/company.service';
 import { LoadingState } from '@/components/ui/loading-state';
+import { getToken } from '@/lib/auth';
 
 export default function DashboardIndex() {
   const router = useRouter();
-  const { companyId, isLoading } = useCompany();
+  const { companyId, isLoading, setCompanyId, loadCompanies } = useCompany();
 
   useEffect(() => {
     async function handleRedirect() {
-      if (!isLoading) {
-        if (companyId) {
-          try {
-            const companies = await fetchUserCompanies();
-            const company = companies.find((c) => String(c.id) === String(companyId));
+      if (isLoading) return;
 
-            if (company && company.slug) {
-              router.replace(`/dashboard/${company.slug}`);
-            } else {
-              // Fallback if company not found or no slug
-              router.replace('/select-company');
-            }
-          } catch (error) {
-            router.replace('/select-company');
-          }
-        } else {
+      if (!getToken()) {
+        router.replace('/login');
+        return;
+      }
+
+      try {
+        const companies = await loadCompanies();
+        const company = companies.find((item) => String(item.id) === String(companyId)) || companies[0];
+
+        if (!company) {
           router.replace('/select-company');
+          return;
         }
+
+        setCompanyId(String(company.id));
+        router.replace(`/dashboard/${company.slug || company.id}`);
+      } catch {
+        router.replace('/select-company');
       }
     }
 
     handleRedirect();
-  }, [companyId, isLoading, router]);
+  }, [companyId, isLoading, router, setCompanyId, loadCompanies]);
 
   return (
     <div className="flex h-screen w-full items-center justify-center">

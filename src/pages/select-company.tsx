@@ -1,39 +1,32 @@
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import Image from 'next/image';
 import { useRouter } from 'next/router';
 
 import { Card } from '@/components/ui/card';
-import { fetchUserCompanies, Company } from '@/services/company.service';
+import { Company } from '@/services/company.service';
 import { getToken } from '@/lib/auth';
 import { useCompany } from '@/contexts/CompanyContext';
 
 export default function SelectCompanyPage() {
   const router = useRouter();
-  const { setCompanyId } = useCompany();
-
-  const [companies, setCompanies] = useState<Company[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const {
+    companies,
+    companyAccessStatus,
+    companyAccessError,
+    setCompanyId,
+    loadCompanies,
+  } = useCompany();
 
   // ===== TOKEN GUARD =====
   useEffect(() => {
     const token = getToken();
     if (!token) {
       router.replace('/login');
+      return;
     }
-  }, [router]);
 
-  // ===== FETCH COMPANIES =====
-  useEffect(() => {
-    fetchUserCompanies()
-      .then((data) => {
-        setCompanies(data);
-      })
-      .catch((err) => {
-        setError(err?.message || 'Gagal memuat perusahaan');
-      })
-      .finally(() => setLoading(false));
-  }, []);
+    void loadCompanies().catch(() => undefined);
+  }, [router, loadCompanies]);
 
   function handleSelect(company: Company) {
     setCompanyId(String(company.id));
@@ -45,7 +38,7 @@ export default function SelectCompanyPage() {
     }
   }
 
-  if (loading) {
+  if (companyAccessStatus === 'idle' || companyAccessStatus === 'loading') {
     return (
       <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-[#F5F6F8] px-4 font-sans">
         <div className="h-12 w-12 animate-spin rounded-full border-4 border-orange-200 border-t-orange-500" />
@@ -53,20 +46,15 @@ export default function SelectCompanyPage() {
     );
   }
 
-  if (error) {
+  if (companyAccessStatus === 'error') {
     return (
       <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-[#F5F6F8] px-4 font-sans">
         <Card className="w-full max-w-[420px] bg-white p-8 text-center space-y-4">
-          <p className="text-sm text-red-600 font-medium">{error}</p>
+          <p className="text-sm text-red-600 font-medium">
+            {companyAccessError || 'Gagal memuat perusahaan'}
+          </p>
           <button
-            onClick={() => {
-              setError(null);
-              setLoading(true);
-              fetchUserCompanies()
-                .then((data) => setCompanies(data))
-                .catch((err) => setError(err?.message || 'Gagal memuat perusahaan'))
-                .finally(() => setLoading(false));
-            }}
+            onClick={() => void loadCompanies({ forceRefresh: true }).catch(() => undefined)}
             className="text-sm font-medium text-orange-600 hover:text-orange-700"
           >
             Coba lagi
@@ -111,6 +99,11 @@ export default function SelectCompanyPage() {
 
           {/* COMPANY LIST */}
           <div className="space-y-3">
+            {companies.length === 0 && (
+              <p className="py-6 text-center text-sm text-gray-500">
+                Akun Anda belum memiliki akses ke perusahaan mana pun.
+              </p>
+            )}
             {companies.map((company) => (
               <button
                 key={company.id}

@@ -2,7 +2,7 @@ import { ChevronDown, Check, Menu, X, PanelLeftClose, PanelLeftOpen } from 'luci
 import { useEffect, useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { useCompany } from '@/contexts/CompanyContext';
-import { fetchUserCompanies, Company } from '@/services/company.service';
+import { Company } from '@/services/company.service';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { cn } from '@/lib/utils';
 import { useRouter } from 'next/router';
@@ -12,7 +12,7 @@ import { MenuItem } from '@/types/menu.types';
 import { clearCompanyScopedQueries } from '@/lib/session/query-cache';
 import Image from 'next/image';
 
-function CompanySelector({ companies, companyId, setCompanyId }: { companies: Company[], companyId: string | null, setCompanyId: (id: string) => void }) {
+function CompanySelector({ companies, companyId }: { companies: Company[], companyId: string | null }) {
   const [isOpen, setIsOpen] = useState(false);
   const router = useRouter();
   const queryClient = useQueryClient();
@@ -25,7 +25,6 @@ function CompanySelector({ companies, companyId, setCompanyId }: { companies: Co
     }
 
     clearCompanyScopedQueries(queryClient);
-    setCompanyId(String(company.id));
     setIsOpen(false);
     const targetSlug = company.slug || company.id;
     router.push(`/dashboard/${targetSlug}`);
@@ -71,11 +70,7 @@ export function Sidebar({
   onDesktopCollapsedChange,
 }: SidebarProps = {}) {
   const router = useRouter();
-  const slugQuery = router.query.slug;
-  const slug = Array.isArray(slugQuery) ? slugQuery[0] : slugQuery || '';
-
-  const { companyId, setCompanyId } = useCompany();
-  const [companies, setCompanies] = useState<Company[]>([]);
+  const { companyId, companies } = useCompany();
   const [isMobileOpen, setIsMobileOpen] = useState(false);
   const [internalDesktopCollapsed, setInternalDesktopCollapsed] = useState(false);
   const isDesktopCollapsed = controlledDesktopCollapsed ?? internalDesktopCollapsed;
@@ -87,23 +82,7 @@ export function Sidebar({
     onDesktopCollapsedChange?.(collapsed);
   };
 
-  useEffect(() => {
-    fetchUserCompanies().then((data) => {
-      setCompanies(data);
-    });
-  }, []);
-
   const { menus, isLoading: isMenuLoading } = useCompanyMenu(companies);
-
-  useEffect(() => {
-    if (slug && companies.length > 0) {
-      const matchedCompany = companies.find((c) => c.slug === slug || String(c.id) === String(slug));
-
-      if (matchedCompany && String(matchedCompany.id) !== String(companyId)) {
-        setCompanyId(String(matchedCompany.id));
-      }
-    }
-  }, [slug, companies, companyId, setCompanyId]);
 
   // Close mobile sidebar on route change
   useEffect(() => {
@@ -131,7 +110,6 @@ export function Sidebar({
               <CompanySelector
                 companies={companies}
                 companyId={companyId}
-                setCompanyId={setCompanyId}
               />
 
               <button
