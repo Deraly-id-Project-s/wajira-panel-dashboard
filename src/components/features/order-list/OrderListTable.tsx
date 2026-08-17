@@ -264,7 +264,7 @@ export const OrderListTable = React.memo(function OrderListTable({
         ),
       },
     ],
-    [onDetail, onEdit, onDelete, onUpdateStatus, canEdit, canDelete]
+    [onDetail, onEdit, onDelete, onUpdateStatus, canEdit, canDelete, slugStr]
   );
 
   return (
