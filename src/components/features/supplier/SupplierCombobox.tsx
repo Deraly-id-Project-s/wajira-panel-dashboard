@@ -97,7 +97,7 @@ export function SupplierCombobox({
 
   return (
     <>
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-2 w-full min-w-0">
         <Popover open={open} onOpenChange={setOpen}>
           <PopoverTrigger asChild>
             <Button
@@ -106,7 +106,7 @@ export function SupplierCombobox({
               role="combobox"
               aria-expanded={open}
               disabled={disabled}
-              className="w-full justify-between bg-transparent font-normal"
+              className="w-full justify-between bg-transparent font-normal min-w-0"
             >
               <span className={cn('truncate', !selectedName && !selected && 'text-muted-foreground')}>
                 {selectedName || selected?.name || 'Pilih supplier'}

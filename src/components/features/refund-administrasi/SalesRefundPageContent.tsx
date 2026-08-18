@@ -208,7 +208,7 @@ export default function SalesRefundPageContent({ transactionId }: { transactionI
           }
           headerActions={
             <div className="flex flex-col gap-2 md:flex-row md:items-center justify-between">
-              <div className="flex items-center gap-2">
+              <div className="flex flex-col sm:flex-row items-center gap-2 w-full sm:w-auto">
                 {canCreate && (
                   <Button
                     onClick={() => router.push(`/dashboard/${slug}/transaksi/penjualan-unit/${transactionId}/refund/create`)}

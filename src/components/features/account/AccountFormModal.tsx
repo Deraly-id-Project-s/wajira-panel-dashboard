@@ -89,7 +89,7 @@ export function AccountFormModal({
                 <FormItem className="space-y-1.5">
                   <FormLabel className="text-xs font-semibold text-slate-700">Grup Akun <RequiredMark /></FormLabel>
                   <FormControl>
-                    <div className="flex items-center gap-2">
+                    <div className="flex flex-col sm:flex-row items-center gap-2 w-full sm:w-auto">
                       <div className="flex-1">
                         <SearchableSelect
                           value={field.value ? String(field.value) : ''}

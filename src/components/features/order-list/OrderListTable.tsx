@@ -295,7 +295,7 @@ export const OrderListTable = React.memo(function OrderListTable({
         }}
         onPageChange={onPageChange}
         headerActions={
-          <div className="flex items-center gap-2">
+          <div className="flex flex-col sm:flex-row items-center gap-2 w-full sm:w-auto">
             {isRefetching && (
               <span className="text-xs font-medium text-slate-400 animate-pulse mr-2">
                 Memperbarui data...

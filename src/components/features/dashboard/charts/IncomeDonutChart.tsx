@@ -105,7 +105,7 @@ export function IncomeDonutChart() {
                 padding: '12px',
               }}
             >
-              <div className="flex items-center gap-2">
+              <div className="flex flex-col sm:flex-row items-center gap-2 w-full sm:w-auto">
                 {/* Indicator: 10px, 2px radius */}
                 <span
                   style={{

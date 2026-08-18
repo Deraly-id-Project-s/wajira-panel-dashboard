@@ -4,7 +4,7 @@ import { useEffect, useMemo } from 'react';
 import { z } from 'zod';
 import { Controller, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import {  Paperclip, Upload } from 'lucide-react';
+import { Paperclip, Upload } from 'lucide-react';
 import { toast } from 'sonner';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -26,10 +26,10 @@ const resolveCashId = (
     return cashes.find((cash) => {
       const code = String(cash.code ?? '').toLowerCase();
       const desc = String(cash.description ?? '').toLowerCase();
-      
+
       const matchesKeyword = keywords.some((kw) => code === kw || code.includes(kw) || desc.includes(kw));
       if (!matchesKeyword) return false;
-      
+
       const matchesExclude = excludeKeywords.some((ex) => code.includes(ex) || desc.includes(ex));
       return !matchesExclude;
     });
@@ -313,7 +313,7 @@ export default function PembayaranHutangPaymentDialog({ open, onOpenChange, bill
             </Button>
             <Button type="submit" disabled={isBusy || !billingId} className="bg-primary text-primary-foreground hover:bg-primary/90">
               {isBusy ? (
-                <span className="flex items-center gap-2">
+                <span className="flex flex-col sm:flex-row items-center gap-2 w-full sm:w-auto">
                   <LoadingState variant="inline" text={null} />
                   Menyimpan
                 </span>

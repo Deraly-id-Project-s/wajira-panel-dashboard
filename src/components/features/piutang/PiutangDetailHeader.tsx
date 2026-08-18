@@ -54,7 +54,7 @@ export default function PiutangDetailHeader({ data, onTerima }: Props) {
 
             <div>
               <p className="text-sm text-gray-500 mb-1">Tanggal</p>
-              <div className="flex items-center gap-2">
+              <div className="flex flex-col sm:flex-row items-center gap-2 w-full sm:w-auto">
                 <span className="text-gray-400">
                   <CalendarDays size={16} className="text-gray-400" />
                 </span>
@@ -64,7 +64,7 @@ export default function PiutangDetailHeader({ data, onTerima }: Props) {
 
             <div>
               <p className="text-sm text-gray-500 mb-1">Supplier</p>
-              <div className="flex items-center gap-2">
+              <div className="flex flex-col sm:flex-row items-center gap-2 w-full sm:w-auto">
                 <span className="text-gray-400">
                   <User size={16} className="text-gray-400" />
                 </span>

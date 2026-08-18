@@ -329,7 +329,7 @@ export const AccountListPage = () => {
               </div>
             </div>
 
-            <div className="flex flex-wrap items-center gap-2">
+            <div className="flex flex-col sm:flex-row items-center gap-2 w-full sm:w-auto">
               <Button onClick={handleExport} variant="outline" className="w-full sm:w-auto">
                 <Upload className="h-4 w-4 mr-2" />
                 Export

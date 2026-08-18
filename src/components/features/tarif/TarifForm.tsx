@@ -83,7 +83,7 @@ export function TarifForm({ initialData, onSubmit, isSubmitting, title }: TarifF
     return (
         <div className="space-y-6 pb-8">
             {/* Page Title */}
-            <div className="flex items-center gap-2">
+            <div className="flex flex-col sm:flex-row items-center gap-2 w-full sm:w-auto">
                 <Button onClick={() => router.back()} variant="ghost" size="icon" className="h-10 w-10 rounded-md border border-slate-200 hover:bg-slate-50 cursor-pointer">
                     <ArrowLeft className="h-5 w-5" />
                 </Button>

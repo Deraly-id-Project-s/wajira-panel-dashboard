@@ -395,7 +395,7 @@ export default function GoodsReceiptEditPage() {
           }}
           onPageChange={setPage}
           headerActions={
-            <div className="flex items-center gap-2">
+            <div className="flex flex-col sm:flex-row items-center gap-2 w-full sm:w-auto">
               {selectedIds.length > 0 && (
                 <Button variant="outline" onClick={() => setDeleteTarget({ id: 0 } as GoodsReceiptItem)} className="border-red-300 text-red-600 hover:text-red-700">
                   Hapus ({selectedIds.length})

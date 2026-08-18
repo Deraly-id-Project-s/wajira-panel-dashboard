@@ -83,7 +83,7 @@ export function SalesTableRow({ item, isSelected, onToggle, onDelete, canEdit, c
 
             {/* Customer */}
             <TableCell className="px-4 py-4 text-left text-sm text-slate-700">
-                <div className="flex items-center gap-2">
+                <div className="flex flex-col sm:flex-row items-center gap-2 w-full sm:w-auto">
                     <ReferenceLink href={`/dashboard/${slug}/customer?search=${item.customer}`}>
                         {item.customer || '-'}
                     </ReferenceLink>

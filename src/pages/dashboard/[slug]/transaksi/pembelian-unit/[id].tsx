@@ -321,7 +321,7 @@ export default function PurchaseDetailPage() {
           }
           actions={
             <>
-              <Button disabled={isRefunded || !canEdit} className="bg-emerald-500 hover:bg-emerald-600 text-white disabled:cursor-not-allowed disabled:opacity-50" onClick={() => router.push(`/dashboard/${slug}/transaksi/pembelian-unit/${purchase.id}/payment`)}>
+              <Button disabled={isRefunded || !canEdit} className="bg-emerald-500 hover:bg-emerald-600 text-white disabled:cursor-not-allowed disabled:opacity-50 w-full sm:w-auto" onClick={() => router.push(`/dashboard/${slug}/transaksi/pembelian-unit/${purchase.id}/payment`)}>
                 <CreditCard className="mr-2 h-4 w-4" />
                 {isPaid ? 'Sudah Dibayar' : 'Bayar'}
               </Button>
@@ -329,7 +329,7 @@ export default function PurchaseDetailPage() {
                 type="button"
                 variant="outline"
                 disabled={!canEdit || isPaid || isRefunded || updateBillingIsPaid.isPending || purchase?.unit_transaction_billing == null}
-                className="border-blue-600 text-blue-600 hover:bg-blue-50 disabled:cursor-not-allowed disabled:opacity-50"
+                className="border-blue-600 text-blue-600 hover:bg-blue-50 disabled:cursor-not-allowed disabled:opacity-50 w-full sm:w-auto"
                 onClick={() => setIsMarkAsPaidDialogOpen(true)}
               >
                 <CheckCircle2 className="mr-2 h-4 w-4" />
@@ -337,7 +337,7 @@ export default function PurchaseDetailPage() {
               </Button>
               <Button
                 variant="outline"
-                className="bg-white hover:bg-gray-50 border-gray-200"
+                className="bg-white hover:bg-gray-50 border-gray-200 w-full sm:w-auto"
                 disabled={!canReceive || !canEdit}
                 onClick={() => setIsReceiveDialogOpen(true)}
               >
@@ -345,6 +345,7 @@ export default function PurchaseDetailPage() {
               </Button>
               <Button
                 variant="outline"
+                className="w-full sm:w-auto"
                 disabled={!canEdit}
                 onClick={() => router.push(`/dashboard/${slug}/transaksi/pembelian-unit/edit/${purchase?.id}`)}>
                 <Edit className="mr-2 h-4 w-4" />

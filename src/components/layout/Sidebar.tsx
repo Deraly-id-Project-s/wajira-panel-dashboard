@@ -180,7 +180,7 @@ export function Sidebar({
           {!isDesktopCollapsed && <span className="uppercase text-xs tracking-wider">Menu Utama</span>}
           <button
             onClick={() => setIsDesktopCollapsed(!isDesktopCollapsed)}
-            className={cn("p-1.5 rounded-md hover:bg-gray-200 text-gray-400 hover:text-gray-600 transition-colors", isDesktopCollapsed && "mx-auto")}
+            className={cn("hidden md:block p-1.5 rounded-md hover:bg-gray-200 text-gray-400 hover:text-gray-600 transition-colors", isDesktopCollapsed && "mx-auto")}
             title="Toggle Sidebar"
           >
             {isDesktopCollapsed ? <PanelLeftOpen className="w-[18px] h-[18px]" /> : <PanelLeftClose className="w-[18px] h-[18px]" />}

@@ -563,7 +563,7 @@ export default function UnitPurchaseDetailPage() {
                 onSearchChange={(val) => { setSearch(val); }}
                 headerActions=
                 {(
-                  <div className="flex items-center gap-2">
+                  <div className="flex flex-col sm:flex-row items-center gap-2 w-full sm:w-auto">
                     {selectedIds.size > 0 && canDelete && !isPaid && (
                       <Button
                         onClick={() => setOpenBulkDeleteModal(true)}

@@ -161,7 +161,7 @@ export default function StockUnitPage() {
           perPage={tablePerPage} // Pass tablePerPage state
           totalData={tableTotalData} // Pass tableTotalData state
           statusTabs={(
-            <div className="flex items-center gap-2">
+            <div className="flex flex-col sm:flex-row items-center gap-2 w-full sm:w-auto">
               <Select
                 value={inStock === undefined ? 'all' : inStock ? 'true' : 'false'}
                 onValueChange={(val) => {

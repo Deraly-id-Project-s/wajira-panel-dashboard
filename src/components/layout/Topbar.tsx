@@ -233,7 +233,7 @@ export function Topbar() {
     <>
       <header className="flex h-16 items-center justify-between border-b border-gray-200 bg-white px-4 md:px-6">
         {/* Left — spacer on mobile (hamburger is fixed, handled by Sidebar) */}
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3 flex-1 mr-4 md:mr-0 md:flex-initial">
           {/* Spacer so content doesn't sit behind hamburger on mobile */}
           <div className="w-8 md:hidden" />
 
@@ -273,10 +273,10 @@ export function Topbar() {
           {/* ── Mobile Search Button ── */}
           <button
             onClick={() => setMobileSearchOpen(true)}
-            className="md:hidden flex items-center gap-2 rounded-md border border-gray-200 bg-gray-50 px-3 py-2 text-sm text-gray-400 hover:bg-white transition"
+            className="md:hidden flex items-center gap-2 rounded-md border border-gray-200 bg-gray-50 px-3 py-2 text-sm text-gray-400 hover:bg-white transition w-full"
           >
-            <Search className="h-4 w-4" />
-            <span>Search...</span>
+            <Search className="h-4 w-4 shrink-0" />
+            <span className="truncate">Search...</span>
           </button>
         </div>
 

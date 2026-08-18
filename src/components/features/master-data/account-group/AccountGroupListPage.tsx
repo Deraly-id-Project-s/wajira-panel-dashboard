@@ -173,7 +173,7 @@ export const AccountGroupListPage = () => {
                 <span>Page</span>
               </div>
             </div>
-            <div className="flex flex-wrap items-center gap-2">
+            <div className="flex flex-col sm:flex-row items-center gap-2 w-full sm:w-auto">
               {canCreate && (
                 <>
                   <Button onClick={() => setOpenImport(true)} variant="outline" className="w-full sm:w-auto">

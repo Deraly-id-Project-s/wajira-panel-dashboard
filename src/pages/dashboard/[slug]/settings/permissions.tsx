@@ -63,7 +63,7 @@ export default function PermissionsPage() {
         sortable: true,
         alignment: 'left',
         cell: (item) => (
-          <div className="flex items-center gap-2">
+          <div className="flex flex-col sm:flex-row items-center gap-2 w-full sm:w-auto">
             <Shield className="h-4 w-4 text-slate-400 shrink-0" />
             <span className="text-sm font-medium text-gray-900">{item.name}</span>
           </div>
@@ -178,7 +178,7 @@ export default function PermissionsPage() {
                 </div>
                 <div className="flex items-center gap-3 px-4 py-3">
                   <Shield className="h-5 w-5 text-slate-400 shrink-0" />
-                  <div className="flex items-center gap-2">
+                  <div className="flex flex-col sm:flex-row items-center gap-2 w-full sm:w-auto">
                     <span className="text-xs text-gray-500">Guard:</span>
                     <Badge variant="secondary" className="bg-slate-100 text-slate-700 font-normal text-xs">
                       {detail.guard_name || '-'}
@@ -187,7 +187,7 @@ export default function PermissionsPage() {
                 </div>
                 <div className="flex items-center gap-3 px-4 py-3">
                   <Calendar className="h-5 w-5 text-slate-400 shrink-0" />
-                  <div className="flex items-center gap-2">
+                  <div className="flex flex-col sm:flex-row items-center gap-2 w-full sm:w-auto">
                     <span className="text-xs text-gray-500">Dibuat:</span>
                     <span className="text-sm text-gray-700">
                       {detail.created_at
@@ -198,7 +198,7 @@ export default function PermissionsPage() {
                 </div>
                 <div className="flex items-center gap-3 px-4 py-3">
                   <Clock className="h-5 w-5 text-slate-400 shrink-0" />
-                  <div className="flex items-center gap-2">
+                  <div className="flex flex-col sm:flex-row items-center gap-2 w-full sm:w-auto">
                     <span className="text-xs text-gray-500">Diperbarui:</span>
                     <span className="text-sm text-gray-700">
                       {detail.updated_at

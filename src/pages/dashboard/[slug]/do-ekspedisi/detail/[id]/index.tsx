@@ -235,7 +235,7 @@ export default function DetailDOEkspedisiPage() {
               />
             </div>
 
-            <div className="flex items-center gap-2">
+            <div className="flex flex-col sm:flex-row items-center gap-2 w-full sm:w-auto">
               <span className="text-sm text-slate-600">Show</span>
               <Select value={String(perPage)} onValueChange={(value) => {
                 setPerPage(Number(value));

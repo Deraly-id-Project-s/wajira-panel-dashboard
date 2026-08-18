@@ -198,7 +198,7 @@ export function SalesTable({
           }
 
           return (
-            <div className="flex items-center gap-2">
+            <div className="flex flex-col sm:flex-row items-center gap-2 w-full sm:w-auto">
               {(showUnBilled || showUnVerified) && (
                 <TooltipProvider>
                   <Tooltip>
@@ -231,7 +231,7 @@ export function SalesTable({
         sortable: true,
         alignment: 'left',
         cell: (item) => (
-          <div className="flex items-center gap-2">
+          <div className="flex flex-col sm:flex-row items-center gap-2 w-full sm:w-auto">
             <ReferenceLink href={`/dashboard/${slug}/customer?search=${encodeURIComponent(item.supplier || '')}`}>
               {item.supplier || '-'}
             </ReferenceLink>

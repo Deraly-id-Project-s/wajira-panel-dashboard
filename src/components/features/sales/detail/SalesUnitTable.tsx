@@ -223,10 +223,11 @@ export function SalesUnitTable({ lineItems, salesId, onAddUnit, canCreate, canEd
             }}
             onPageChange={setCurrentPage}
             headerActions={
-              <div className="flex items-center gap-2">
+              <div className="flex flex-col sm:flex-row items-center gap-2 w-full sm:w-auto">
                 {canDelete && (
                   <Button
                     size="sm"
+                    className="w-full sm:w-auto"
                     variant="destructive"
                     disabled={selectedIds.size === 0 || bulkDeleteMutation.isPending || isPaid || !canCreate}
                     onClick={() => !isPaid ? setIsBulkDeleteOpen(true) : undefined}

@@ -176,7 +176,7 @@ export default function PerlengkapanMasukDetailPage() {
           ]}
           title="Detail Penerimaan Perlengkapan"
           subtitle={
-            <div className="flex items-center gap-2">
+            <div className="flex flex-col sm:flex-row items-center gap-2 w-full sm:w-auto">
               Detail transaksi penerimaan perlengkapan
               {transaction?.code && (
                 <span className="font-medium text-[#1f4163]">Kode Transaksi: {transaction.code}</span>

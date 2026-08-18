@@ -309,25 +309,31 @@ export default function DashboardPage() {
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
           <PageHeader title="Statistik Dashboard" />
 
-          <div className="flex items-center gap-3">
-            <DatePickerWithRange date={dateRangeState} onChange={setDateRangeState} />
+          <div className="flex items-center gap-2 sm:gap-3 overflow-x-auto pb-1.5 sm:pb-0 scrollbar-none w-full sm:w-auto">
+            <DatePickerWithRange date={dateRangeState} onChange={setDateRangeState} className="shrink-0" />
             <Button
               variant="outline"
-              className="bg-[#f8f9fa] shadow-sm text-gray-700 gap-2 shrink-0"
+              className="h-8 px-2.5 sm:h-9 sm:px-4 text-xs sm:text-sm bg-[#f8f9fa] shadow-sm text-gray-700 gap-1.5 sm:gap-2 shrink-0 hover:bg-slate-100"
               onClick={handleShowData}
               disabled={isLoadingDisplay}
             >
-              {isLoadingDisplay ? <LoadingState variant="inline" text={null} /> : <Eye className="h-4 w-4" />}
-              Show
+              {isLoadingDisplay ? (
+                <LoadingState variant="inline" text={null} />
+              ) : (
+                <Eye className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+              )}
+              <span className="hidden sm:inline">Terapkan Tanggal</span>
+              <span className="inline sm:hidden">Terapkan</span>
             </Button>
             <Button
               variant="outline"
-              className="bg-[#f8f9fa] shadow-sm text-gray-700 gap-2 shrink-0 hover:bg-slate-100"
+              className="h-8 px-2.5 sm:h-9 sm:px-4 text-xs sm:text-sm bg-[#f8f9fa] shadow-sm text-gray-700 gap-1.5 sm:gap-2 shrink-0 hover:bg-slate-100"
               onClick={handleRefreshCache}
               disabled={isRefreshingCache || isLoadingDisplay}
             >
-              <RotateCw className={`h-4 w-4 ${isRefreshingCache ? 'animate-spin' : ''}`} />
-              Refresh Cache
+              <RotateCw className={`h-3.5 w-3.5 sm:h-4 sm:w-4 ${isRefreshingCache ? 'animate-spin' : ''}`} />
+              <span className="hidden sm:inline">Refresh Cache</span>
+              <span className="inline sm:hidden">Refresh</span>
             </Button>
           </div>
         </div>

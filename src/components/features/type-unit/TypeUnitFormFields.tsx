@@ -45,7 +45,7 @@ export function TypeUnitFormFields({ form, disabled = false }: TypeUnitFormField
         <FormField control={form.control} name="brandId" render={({ field }) => (
           <FormItem>
             <FormLabel className="text-sm font-medium">Merk<RequiredMark /></FormLabel>
-            <div className="flex items-center gap-2">
+            <div className="flex flex-col sm:flex-row items-center gap-2 w-full sm:w-auto">
               <Popover open={brandOpen} onOpenChange={(open) => { setBrandOpen(open); if (!open) setSearch(''); }}>
                 <PopoverTrigger asChild>
                   <Button type="button" variant="outline" role="combobox" disabled={disabled || isLoading} className="w-full justify-between bg-transparent font-normal">

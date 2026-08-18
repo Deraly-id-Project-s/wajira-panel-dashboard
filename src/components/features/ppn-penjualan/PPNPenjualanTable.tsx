@@ -326,7 +326,7 @@ export default function PPNPenjualanTable({
         }}
         onPageChange={onPageChange}
         headerActions={
-          <div className="flex items-center gap-2">
+          <div className="flex flex-col sm:flex-row items-center gap-2 w-full sm:w-auto">
             <Button
               type="button"
               onClick={() => setIsOpenBulkModal(true)}

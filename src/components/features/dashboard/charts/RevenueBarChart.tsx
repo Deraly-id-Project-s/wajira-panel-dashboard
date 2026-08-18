@@ -26,7 +26,7 @@ function CustomTooltip({ active, payload, label }: { active?: boolean; payload?:
         <p className="mb-1">{label}</p>
         <div className="space-y-0.5">
           {payload.map((entry: any, index: number) => (
-            <div key={index} className="flex items-center gap-2">
+            <div key={index} className="flex flex-col sm:flex-row items-center gap-2 w-full sm:w-auto">
               <div className="h-2 w-2 rounded-sm" style={{ backgroundColor: entry.color }} />
               <span className="text-xs">{entry.name}:</span>
               <span className="text-xs font-semibold">{entry.value}</span>
@@ -114,7 +114,7 @@ export function RevenueBarChart() {
         </ResponsiveContainer>
         {/* Legend - Horizontal at bottom */}
         <div className="mx-4 flex items-center justify-center gap-6">
-          <div className="flex items-center gap-2">
+          <div className="flex flex-col sm:flex-row items-center gap-2 w-full sm:w-auto">
             <span
               style={{
                 width: '10px',
@@ -125,7 +125,7 @@ export function RevenueBarChart() {
             />
             <span style={{ fontSize: '12px', color: '#737373' }}>BCA IDR</span>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex flex-col sm:flex-row items-center gap-2 w-full sm:w-auto">
             <span
               style={{
                 width: '10px',
@@ -136,7 +136,7 @@ export function RevenueBarChart() {
             />
             <span style={{ fontSize: '12px', color: '#737373' }}>BCA USD</span>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex flex-col sm:flex-row items-center gap-2 w-full sm:w-auto">
             <span
               style={{
                 width: '10px',

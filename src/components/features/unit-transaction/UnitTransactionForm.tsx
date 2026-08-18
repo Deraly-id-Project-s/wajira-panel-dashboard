@@ -147,9 +147,9 @@ export function UnitTransactionForm({
         <form
           onSubmit={hideItemFields
             ? (event) => {
-                event.preventDefault();
-                handleFormSubmit(form.getValues());
-              }
+              event.preventDefault();
+              handleFormSubmit(form.getValues());
+            }
             : form.handleSubmit(handleFormSubmit)}
           className="space-y-8"
         >
@@ -163,278 +163,278 @@ export function UnitTransactionForm({
 
           {!hideItemFields && (
             <>
-          {/* Row Type Unit / Qty / Harga */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <FormField
-              control={form.control}
-              name="unitTypeId"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel className="text-sm font-medium">Tipe Unit <RequiredMark /></FormLabel>
-                  <div className="flex items-center gap-2">
-                    <Popover open={openTypeSelect} onOpenChange={setOpenTypeSelect}>
+              {/* Row Type Unit / Qty / Harga */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <FormField
+                  control={form.control}
+                  name="unitTypeId"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-sm font-medium">Tipe Unit <RequiredMark /></FormLabel>
+                      <div className="flex items-center gap-2 w-full min-w-0">
+                        <Popover open={openTypeSelect} onOpenChange={setOpenTypeSelect}>
+                          <FormControl>
+                            <PopoverTrigger asChild>
+                              <button
+                                type="button"
+                                role="combobox"
+                                aria-expanded={openTypeSelect}
+                                aria-controls={`type-unit-${type}-combobox-list`}
+                                disabled={readOnly}
+                                className="flex h-10 w-full items-center justify-between rounded-md border border-input bg-transparent px-3 py-2 text-sm ring-offset-background disabled:cursor-not-allowed disabled:opacity-50 min-w-0"
+                              >
+                                <span className={cn('truncate', !field.value && 'text-muted-foreground')}>
+                                  {field.value ? typeUnitOptions.find((option) => String(option.id) === field.value)?.name ?? 'Pilih tipe unit' : 'Pilih tipe unit'}
+                                </span>
+                                <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                              </button>
+                            </PopoverTrigger>
+                          </FormControl>
+                          <PopoverContent className="w-[--radix-popover-trigger-width] p-0">
+                            <Command>
+                              <CommandInput placeholder="Cari tipe unit..." />
+                              <CommandList id={`type-unit-${type}-combobox-list`}>
+                                {typeUnitLoading && <div className="px-3 py-2 text-xs text-muted-foreground">Memuat tipe unit...</div>}
+                                {typeUnitError && (
+                                  <div className="px-3 py-2 text-xs text-destructive">
+                                    Gagal memuat tipe unit.{' '}
+                                    <button type="button" className="underline" onClick={() => refetchTypeUnits()}>
+                                      Coba lagi
+                                    </button>
+                                  </div>
+                                )}
+                                <CommandEmpty>Tipe unit tidak ditemukan.</CommandEmpty>
+                                <CommandGroup>
+                                  {typeUnitOptions.map((option) => (
+                                    <CommandItem
+                                      key={option.id}
+                                      value={`${option.name} ${option.code ?? ''} ${option.id}`}
+                                      disabled={excludedTypeUnitIds.includes(String(option.id))}
+                                      onSelect={() => !excludedTypeUnitIds.includes(String(option.id)) && selectTypeUnit(option)}
+                                    >
+                                      <Check className={cn('mr-2 h-4 w-4', field.value === String(option.id) ? 'opacity-100' : 'opacity-0')} />
+                                      <span className="truncate">{option.name}</span>
+                                      {excludedTypeUnitIds.includes(String(option.id)) && <span className="ml-auto text-xs text-muted-foreground">Sudah dipakai</span>}
+                                    </CommandItem>
+                                  ))}
+                                </CommandGroup>
+                              </CommandList>
+                            </Command>
+                          </PopoverContent>
+                        </Popover>
+                        {allowCreateTypeUnit && !readOnly && (
+                          <Button type="button" variant="outline" size="icon" aria-label="Tambah tipe unit" onClick={() => setOpenTypeModal(true)} className="h-10 w-10 shrink-0">
+                            <Plus className="h-4 w-4" />
+                          </Button>
+                        )}
+                      </div>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="qty"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-sm font-medium">QTY <RequiredMark /></FormLabel>
                       <FormControl>
-                        <PopoverTrigger asChild>
-                          <button
-                            type="button"
-                            role="combobox"
-                            aria-expanded={openTypeSelect}
-                            aria-controls={`type-unit-${type}-combobox-list`}
-                            disabled={readOnly}
-                            className="flex h-10 w-full items-center justify-between rounded-md border border-input bg-transparent px-3 py-2 text-sm ring-offset-background disabled:cursor-not-allowed disabled:opacity-50"
-                          >
-                            <span className={cn('truncate', !field.value && 'text-muted-foreground')}>
-                              {field.value ? typeUnitOptions.find((option) => String(option.id) === field.value)?.name ?? 'Pilih tipe unit' : 'Pilih tipe unit'}
-                            </span>
-                            <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                          </button>
-                        </PopoverTrigger>
+                        <Input
+                          type="number"
+                          placeholder="QTY"
+                          min="1"
+                          value={field.value ?? ''}
+                          onChange={(e) => {
+                            const value = e.target.value;
+                            field.onChange(value === '' ? undefined : Number(value));
+                          }}
+                          disabled={readOnly}
+                        />
                       </FormControl>
-                      <PopoverContent className="w-[--radix-popover-trigger-width] p-0">
-                        <Command>
-                          <CommandInput placeholder="Cari tipe unit..." />
-                          <CommandList id={`type-unit-${type}-combobox-list`}>
-                            {typeUnitLoading && <div className="px-3 py-2 text-xs text-muted-foreground">Memuat tipe unit...</div>}
-                            {typeUnitError && (
-                              <div className="px-3 py-2 text-xs text-destructive">
-                                Gagal memuat tipe unit.{' '}
-                                <button type="button" className="underline" onClick={() => refetchTypeUnits()}>
-                                  Coba lagi
-                                </button>
-                              </div>
-                            )}
-                            <CommandEmpty>Tipe unit tidak ditemukan.</CommandEmpty>
-                            <CommandGroup>
-                              {typeUnitOptions.map((option) => (
-                                <CommandItem
-                                  key={option.id}
-                                  value={`${option.name} ${option.code ?? ''} ${option.id}`}
-                                  disabled={excludedTypeUnitIds.includes(String(option.id))}
-                                  onSelect={() => !excludedTypeUnitIds.includes(String(option.id)) && selectTypeUnit(option)}
-                                >
-                                  <Check className={cn('mr-2 h-4 w-4', field.value === String(option.id) ? 'opacity-100' : 'opacity-0')} />
-                                  <span className="truncate">{option.name}</span>
-                                  {excludedTypeUnitIds.includes(String(option.id)) && <span className="ml-auto text-xs text-muted-foreground">Sudah dipakai</span>}
-                                </CommandItem>
-                              ))}
-                            </CommandGroup>
-                          </CommandList>
-                        </Command>
-                      </PopoverContent>
-                    </Popover>
-                    {allowCreateTypeUnit && !readOnly && (
-                      <Button type="button" variant="outline" size="icon" aria-label="Tambah tipe unit" onClick={() => setOpenTypeModal(true)} className="h-10 w-10 shrink-0">
-                        <Plus className="h-4 w-4" />
-                      </Button>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="price"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-sm font-medium">Harga Satuan <RequiredMark /></FormLabel>
+                      <FormControl>
+                        <MoneyInput name={field.name} value={Number(field.value) || 0} onChangeValue={(val) => field.onChange(val)} onBlur={field.onBlur} disabled={readOnly} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+
+              {/* USD Transaction Toggle */}
+              <div className="flex items-center space-x-2 py-1">
+                <input autoComplete="off"
+                  type="checkbox"
+                  id={`${type}_is_usd`}
+                  checked={isUsd}
+                  onChange={(e) => {
+                    setIsUsd(e.target.checked);
+                    if (!e.target.checked) {
+                      form.setValue('priceUsd', 0);
+                      form.setValue('pricePerUnitUsd', 0);
+                    }
+                  }}
+                  disabled={readOnly}
+                  className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500 cursor-pointer"
+                />
+                <Label htmlFor={`${type}_is_usd`} className="text-sm font-medium cursor-pointer">
+                  Transaksi USD (Gunakan mata uang asing USD)
+                </Label>
+              </div>
+
+              {/* USD Inputs */}
+              {isUsd && (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 p-4 rounded-md border border-amber-200 bg-amber-50/30 animate-in fade-in slide-in-from-top-2 duration-200">
+                  <FormField
+                    control={form.control}
+                    name="priceUsd"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-sm font-medium text-amber-900">Total Harga (USD)</FormLabel>
+                        <FormControl>
+                          <MoneyInput
+                            currency="USD"
+                            placeholder="$ 0.00"
+                            name={field.name}
+                            value={field.value ?? 0}
+                            onChangeValue={(val) => field.onChange(val === 0 ? undefined : val)}
+                            disabled={readOnly}
+                            onBlur={field.onBlur}
+                            className="border-amber-200 focus:border-amber-300 focus:ring-amber-200 bg-white"
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
                     )}
-                  </div>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+                  />
 
-            <FormField
-              control={form.control}
-              name="qty"
-              render={({ field }) => (
+                  <FormField
+                    control={form.control}
+                    name="pricePerUnitUsd"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-sm font-medium text-amber-900">Harga Satuan (USD)</FormLabel>
+                        <FormControl>
+                          <MoneyInput
+                            currency="USD"
+                            placeholder="$ 0.00"
+                            name={field.name}
+                            value={field.value ?? 0}
+                            onChangeValue={(val) => field.onChange(val === 0 ? undefined : val)}
+                            disabled={readOnly}
+                            onBlur={field.onBlur}
+                            className="border-amber-200 focus:border-amber-300 focus:ring-amber-200 bg-white"
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+              )}
+
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <FormField
+                  control={form.control}
+                  name="bbnPrice"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-sm font-medium">Biaya BBN</FormLabel>
+                      <FormControl>
+                        <MoneyInput placeholder="Value" name={field.name} value={Number(field.value) || 0} onChangeValue={(val) => field.onChange(val)} onBlur={field.onBlur} disabled={readOnly} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="expeditionFee"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-sm font-medium">Biaya Ekspedisi</FormLabel>
+                      <FormControl>
+                        <MoneyInput placeholder="Value" name={field.name} value={Number(field.value) || 0} onChangeValue={(val) => field.onChange(val)} onBlur={field.onBlur} disabled={readOnly} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="otherFee"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-sm font-medium flex flex-row justify-between">
+                        Biaya Lain
+                      </FormLabel>
+                      <FormControl>
+                        <MoneyInput placeholder="Value" name={field.name} value={Number(field.value) || 0} onChangeValue={(val) => field.onChange(val)} onBlur={field.onBlur} disabled={readOnly} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <FormItem>
-                  <FormLabel className="text-sm font-medium">QTY <RequiredMark /></FormLabel>
+                  <FormLabel className="text-sm font-medium">HPP Satuan</FormLabel>
                   <FormControl>
-                    <Input
-                      type="number"
-                      placeholder="QTY"
-                      min="1"
-                      value={field.value ?? ''}
-                      onChange={(e) => {
-                        const value = e.target.value;
-                        field.onChange(value === '' ? undefined : Number(value));
-                      }}
-                      disabled={readOnly}
-                    />
+                    <Input value={formatCurrency(hppPerUnit)} className="bg-muted/50" disabled readOnly />
                   </FormControl>
-                  <FormMessage />
                 </FormItem>
-              )}
-            />
 
-            <FormField
-              control={form.control}
-              name="price"
-              render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="text-sm font-medium">Harga Satuan <RequiredMark /></FormLabel>
+                  <FormLabel className="text-sm font-medium">DPP Satuan</FormLabel>
                   <FormControl>
-                    <MoneyInput name={field.name} value={Number(field.value) || 0} onChangeValue={(val) => field.onChange(val)} onBlur={field.onBlur} disabled={readOnly} />
+                    <Input value={formatCurrency(dppPerUnit)} className="bg-muted/50" disabled readOnly />
                   </FormControl>
-                  <FormMessage />
                 </FormItem>
-              )}
-            />
-          </div>
 
-          {/* USD Transaction Toggle */}
-          <div className="flex items-center space-x-2 py-1">
-            <input autoComplete="off"
-              type="checkbox"
-              id={`${type}_is_usd`}
-              checked={isUsd}
-              onChange={(e) => {
-                setIsUsd(e.target.checked);
-                if (!e.target.checked) {
-                  form.setValue('priceUsd', 0);
-                  form.setValue('pricePerUnitUsd', 0);
-                }
-              }}
-              disabled={readOnly}
-              className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500 cursor-pointer"
-            />
-            <Label htmlFor={`${type}_is_usd`} className="text-sm font-medium cursor-pointer">
-              Transaksi USD (Gunakan mata uang asing USD)
-            </Label>
-          </div>
-
-          {/* USD Inputs */}
-          {isUsd && (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 p-4 rounded-md border border-amber-200 bg-amber-50/30 animate-in fade-in slide-in-from-top-2 duration-200">
-              <FormField
-                control={form.control}
-                name="priceUsd"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="text-sm font-medium text-amber-900">Total Harga (USD)</FormLabel>
-                    <FormControl>
-                      <MoneyInput
-                        currency="USD"
-                        placeholder="$ 0.00"
-                        name={field.name}
-                        value={field.value ?? 0}
-                        onChangeValue={(val) => field.onChange(val === 0 ? undefined : val)}
-                        disabled={readOnly}
-                        onBlur={field.onBlur}
-                        className="border-amber-200 focus:border-amber-300 focus:ring-amber-200 bg-white"
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="pricePerUnitUsd"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="text-sm font-medium text-amber-900">Harga Satuan (USD)</FormLabel>
-                    <FormControl>
-                      <MoneyInput
-                        currency="USD"
-                        placeholder="$ 0.00"
-                        name={field.name}
-                        value={field.value ?? 0}
-                        onChangeValue={(val) => field.onChange(val === 0 ? undefined : val)}
-                        disabled={readOnly}
-                        onBlur={field.onBlur}
-                        className="border-amber-200 focus:border-amber-300 focus:ring-amber-200 bg-white"
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
-          )}
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <FormField
-              control={form.control}
-              name="bbnPrice"
-              render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="text-sm font-medium">Biaya BBN</FormLabel>
+                  <FormLabel className="text-sm font-medium">PPN Satuan</FormLabel>
                   <FormControl>
-                    <MoneyInput placeholder="Value" name={field.name} value={Number(field.value) || 0} onChangeValue={(val) => field.onChange(val)} onBlur={field.onBlur} disabled={readOnly} />
+                    <Input value={formatCurrency(ppnPerUnit)} className="bg-muted/50" disabled readOnly />
                   </FormControl>
-                  <FormMessage />
                 </FormItem>
-              )}
-            />
+              </div>
 
-            <FormField
-              control={form.control}
-              name="expeditionFee"
-              render={({ field }) => (
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <FormItem>
-                  <FormLabel className="text-sm font-medium">Biaya Ekspedisi</FormLabel>
+                  <FormLabel className="text-sm font-medium">HPP Total</FormLabel>
                   <FormControl>
-                    <MoneyInput placeholder="Value" name={field.name} value={Number(field.value) || 0} onChangeValue={(val) => field.onChange(val)} onBlur={field.onBlur} disabled={readOnly} />
+                    <Input value={formatCurrency(hppTotal)} className="bg-muted/50" disabled readOnly />
                   </FormControl>
-                  <FormMessage />
                 </FormItem>
-              )}
-            />
 
-            <FormField
-              control={form.control}
-              name="otherFee"
-              render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="text-sm font-medium flex flex-row justify-between">
-                    Biaya Lain
-                  </FormLabel>
+                  <FormLabel className="text-sm font-medium">DPP Total</FormLabel>
                   <FormControl>
-                    <MoneyInput placeholder="Value" name={field.name} value={Number(field.value) || 0} onChangeValue={(val) => field.onChange(val)} onBlur={field.onBlur} disabled={readOnly} />
+                    <Input value={formatCurrency(dppTotal)} className="bg-muted/50" disabled readOnly />
                   </FormControl>
-                  <FormMessage />
                 </FormItem>
-              )}
-            />
-          </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <FormItem>
-              <FormLabel className="text-sm font-medium">HPP Satuan</FormLabel>
-              <FormControl>
-                <Input value={formatCurrency(hppPerUnit)} className="bg-muted/50" disabled readOnly />
-              </FormControl>
-            </FormItem>
-
-            <FormItem>
-              <FormLabel className="text-sm font-medium">DPP Satuan</FormLabel>
-              <FormControl>
-                <Input value={formatCurrency(dppPerUnit)} className="bg-muted/50" disabled readOnly />
-              </FormControl>
-            </FormItem>
-
-            <FormItem>
-              <FormLabel className="text-sm font-medium">PPN Satuan</FormLabel>
-              <FormControl>
-                <Input value={formatCurrency(ppnPerUnit)} className="bg-muted/50" disabled readOnly />
-              </FormControl>
-            </FormItem>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <FormItem>
-              <FormLabel className="text-sm font-medium">HPP Total</FormLabel>
-              <FormControl>
-                <Input value={formatCurrency(hppTotal)} className="bg-muted/50" disabled readOnly />
-              </FormControl>
-            </FormItem>
-
-            <FormItem>
-              <FormLabel className="text-sm font-medium">DPP Total</FormLabel>
-              <FormControl>
-                <Input value={formatCurrency(dppTotal)} className="bg-muted/50" disabled readOnly />
-              </FormControl>
-            </FormItem>
-
-            <FormItem>
-              <FormLabel className="text-sm font-medium">PPN Total</FormLabel>
-              <FormControl>
-                <Input value={formatCurrency(ppnTotal)} className="bg-muted/50" disabled readOnly />
-              </FormControl>
-            </FormItem>
-          </div>
+                <FormItem>
+                  <FormLabel className="text-sm font-medium">PPN Total</FormLabel>
+                  <FormControl>
+                    <Input value={formatCurrency(ppnTotal)} className="bg-muted/50" disabled readOnly />
+                  </FormControl>
+                </FormItem>
+              </div>
             </>
           )}
 

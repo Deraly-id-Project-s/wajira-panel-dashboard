@@ -299,7 +299,7 @@ export default function MaterialReleaseEditPage() {
           ]}
           title="Data Pengeluaran Perlengkapan"
           subtitle={
-            <div className="flex items-center gap-2">
+            <div className="flex flex-col sm:flex-row items-center gap-2 w-full sm:w-auto">
               No Pengeluaran
               {transactionQuery.data?.code && (
                 <span className="font-medium text-[#1f4163]">{transactionQuery.data.code}</span>
@@ -402,7 +402,7 @@ export default function MaterialReleaseEditPage() {
           }}
           onPageChange={setPage}
           headerActions={
-            <div className="flex items-center gap-2">
+            <div className="flex flex-col sm:flex-row items-center gap-2 w-full sm:w-auto">
               {selectedIds.length > 0 && (
                 <Button
                   variant="outline"
