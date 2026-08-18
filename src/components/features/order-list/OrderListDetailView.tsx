@@ -1,40 +1,105 @@
 import * as React from 'react';
-import { ChevronLeft, Search } from 'lucide-react';
+import {
+  ArrowRight,
+  CalendarDays,
+  CheckCircle2,
+  CircleUserRound,
+  ClipboardList,
+  Copy,
+  FileText,
+  MapPin,
+  Package,
+  Route,
+  Truck,
+  Wallet,
+} from 'lucide-react';
 import type { OrderList } from '@/@types/order-list.types';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
+import BaseTable, { type ColumnDef } from '@/components/ui/base-table';
+import { PageHeader } from '@/components/ui/page-header';
 import { cn } from '@/lib/utils';
 import {
   formatOrderCurrency,
-  getOrderVehicleTypeLabel,
   getOrderStatusBadgeClassName,
   getOrderStatusLabel,
+  getOrderVehicleTypeLabel,
 } from './order-list.utils';
+import { ReferenceLink } from '@/components/ui/reference-link';
 
-interface DetailFieldProps {
-  label: string;
-  value: React.ReactNode;
+interface ExpeditionData {
+  id?: number;
+  code?: string;
+  date?: string | null;
+  driver_note?: string | null;
+  is_printed?: boolean;
+  vehicle?: { registration_number?: string; type?: string } | null;
+  driver?: { name?: string } | null;
 }
 
-function DetailField({ label, value }: DetailFieldProps) {
+function formatDate(value?: string | null) {
+  if (!value) return '-';
+  const date = new Date(value);
+  return Number.isNaN(date.getTime())
+    ? value
+    : date.toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' });
+}
+
+function Field({ label, value, icon: Icon }: { label: string; value: React.ReactNode; icon?: React.ElementType }) {
   return (
-    <div className="space-y-1">
-      <p className="text-sm text-slate-600">{label}</p>
-      <div className="text-[18px] font-semibold text-slate-950">{value}</div>
+    <div className="space-y-1.5">
+      <p className="text-xs font-medium uppercase tracking-wide text-slate-500">{label}</p>
+      <div className="flex items-center gap-2 text-sm font-semibold text-slate-950">
+        {Icon ? <Icon className="h-4 w-4 shrink-0 text-slate-400" /> : null}
+        <span>{value}</span>
+      </div>
     </div>
   );
 }
 
-function SectionCard({ title, children }: { title: string; children: React.ReactNode }) {
+function SectionHeading({ icon: Icon, title, description }: { icon: React.ElementType; title: string; description?: string }) {
   return (
-    <section className="overflow-hidden rounded-[18px] border border-slate-200 bg-white shadow-sm">
-      <div className="bg-[#eef3f8] px-5 py-4">
-        <h2 className="text-[18px] font-semibold text-slate-950">{title}</h2>
+    <div className="flex items-start gap-3">
+      <div className="rounded-lg bg-orange-100 p-2 text-orange-700"><Icon className="h-5 w-5" /></div>
+      <div>
+        <h2 className="text-base font-semibold text-slate-950">{title}</h2>
+        {description ? <p className="mt-0.5 text-xs text-slate-500">{description}</p> : null}
       </div>
-      <div className="px-5 py-6">{children}</div>
-    </section>
+    </div>
   );
 }
+
+interface CargoRow {
+  id: string | number;
+  loadContent: string;
+  qty: number;
+}
+
+const cargoColumns: ColumnDef<CargoRow>[] = [
+  {
+    header: 'No',
+    alignment: 'center',
+    className: 'w-[56px] text-slate-400',
+    cell: (_item, index) => index + 1,
+  },
+  {
+    header: 'Nama Muatan',
+    cell: (item) => <span className="font-medium text-slate-900">{item.loadContent || '-'}</span>,
+  },
+  {
+    header: 'Qty',
+    alignment: 'right',
+    className: 'w-[110px] font-semibold',
+    cell: (item) => `${item.qty} PCS`,
+  },
+];
+
+const KPI_COLOR_CLASSES = {
+  blue: 'bg-orange-100 text-orange-700',
+  violet: 'bg-orange-200 text-orange-800',
+  amber: 'bg-orange-300 text-orange-900',
+  emerald: 'bg-orange-50 text-orange-700',
+} as const;
 
 interface OrderListDetailViewProps {
   data: OrderList;
@@ -42,190 +107,97 @@ interface OrderListDetailViewProps {
 }
 
 export function OrderListDetailView({ data, onBack }: OrderListDetailViewProps) {
-  const orderTarifs = React.useMemo(() => {
-    return data.tarifs?.length ? data.tarifs : [];
-  }, [data.tarifs]);
-
-  const summaryCargoItems = React.useMemo(() => {
-    const map = new Map<string, number>();
-
-    orderTarifs.forEach((tarif) => {
-      const items = tarif.tarifItems?.length
-        ? tarif.tarifItems
-        : tarif.loadContent
-          ? [{ loadContent: tarif.loadContent, qty: Number(tarif.qty ?? 0) }]
-          : [];
-
-      items.forEach((item) => {
-        const name = String(item.loadContent || '').trim();
-        if (!name) return;
-        const currentQty = map.get(name) || 0;
-        map.set(name, currentQty + Number(item.qty || 0));
-      });
-    });
-
-    return Array.from(map.entries()).map(([loadContent, qty], idx) => ({
-      id: `summary-${idx}`,
-      loadContent,
-      qty,
-    }));
-  }, [orderTarifs]);
+  const expeditions = (Array.isArray(data.expeditions) ? data.expeditions : []) as ExpeditionData[];
+  const routes = data.tarifs ?? [];
+  const totalCargo = routes.reduce((sum, route) => {
+    const items = route.tarifItems ?? (route.loadContent ? [{ loadContent: route.loadContent, qty: route.qty ?? 0 }] : []);
+    return sum + items.reduce((itemSum, item) => itemSum + Number(item.qty ?? 0), 0);
+  }, 0);
+  const totalDistance = routes.reduce((sum, route) => sum + Number(route.tarif?.distance ?? 0), 0);
+  const totalUj = data.ujDriver || routes.reduce((sum, route) => sum + Number(route.driverFee ?? 0), 0);
+  const copiedCode = () => navigator.clipboard?.writeText(data.code);
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center gap-3">
-        <Button type="button" variant="ghost" size="icon" onClick={onBack} className="h-10 w-10 rounded-full">
-          <ChevronLeft className="h-5 w-5" />
-        </Button>
-        <h1 className="text-2xl font-semibold text-slate-950">Detail Order</h1>
+    <div className="space-y-6 pb-8">
+      <PageHeader
+        breadcrumbs={[{ label: 'Order List', onClick: onBack }, { label: 'Detail Order' }]}
+        title="Detail Order"
+        onBack={onBack}
+        subtitle={(
+          <>
+            <button type="button" onClick={copiedCode} className="inline-flex items-center gap-1.5 font-semibold text-orange-600 hover:text-orange-700">
+              {data.code}
+            </button>
+            <Badge variant="outline" className={cn('rounded-full px-3 py-1', getOrderStatusBadgeClassName(data.status))}>
+              {getOrderStatusLabel(data.status)}
+            </Badge>
+          </>
+        )}
+      />
+
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        {[
+          { label: 'Total Ekspedisi', value: expeditions.length || routes.length, suffix: ' DO', icon: Truck, color: 'blue' },
+          { label: 'Total Muatan', value: totalCargo, suffix: ' PCS', icon: Package, color: 'violet' },
+          { label: 'Total Jarak', value: totalDistance.toLocaleString('id-ID'), suffix: ' KM', icon: Route, color: 'amber' },
+          { label: 'Total UJ Driver', value: formatOrderCurrency(totalUj), suffix: '', icon: Wallet, color: 'emerald' },
+        ].map((item) => (
+          <Card key={item.label} className="border-slate-200 shadow-sm"><CardContent className="flex items-center gap-4 p-5">
+            <div className={cn('rounded-xl p-3', KPI_COLOR_CLASSES[item.color as keyof typeof KPI_COLOR_CLASSES])}><item.icon className="h-5 w-5" /></div>
+            <div><p className="text-xs text-slate-500">{item.label}</p><p className="mt-1 font-bold text-slate-950">{item.value}<span className="ml-1 text-xs font-semibold text-slate-500">{item.suffix}</span></p></div>
+          </CardContent></Card>
+        ))}
       </div>
 
-      <SectionCard title="Detail Customer">
-        <div className="grid gap-6 md:grid-cols-2">
-          <DetailField label="Nama Customer" value={data.customer?.name || '-'} />
-          <DetailField label="Kode Order" value={data.code || '-'} />
-
-          <div className="md:col-span-2 space-y-2">
-            <p className="text-sm text-slate-600 font-medium">Ringkasan (Summary) Total Muatan</p>
-            <div className="overflow-hidden rounded-md border border-slate-200">
-              <table className="w-full border-collapse text-left text-sm text-slate-500">
-                <thead className="bg-slate-50 text-xs uppercase text-slate-700">
-                  <tr>
-                    <th className="px-4 py-2.5 font-semibold w-[60px]">No</th>
-                    <th className="px-4 py-2.5 font-semibold">Nama Muatan</th>
-                    <th className="px-4 py-2.5 font-semibold w-[150px]">Total QTY</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-200 bg-white">
-                  {summaryCargoItems.length ? (
-                    summaryCargoItems.map((cargoItem, idx) => (
-                      <tr key={cargoItem.id || idx} className="hover:bg-slate-50 text-[15px] text-slate-900">
-                        <td className="px-4 py-2.5 font-medium text-slate-500">{idx + 1}</td>
-                        <td className="px-4 py-2.5 font-semibold">{cargoItem.loadContent || '-'}</td>
-                        <td className="px-4 py-2.5 font-semibold">{cargoItem.qty} PCS</td>
-                      </tr>
-                    ))
-                  ) : (
-                    <tr>
-                      <td colSpan={100} className="px-4 py-16 text-center text-slate-400">
-                        <div className="flex flex-col items-center justify-center gap-2">
-                          <div className="rounded-full bg-slate-50 p-4 mb-2">
-                            <Search className="h-8 w-8 text-slate-400" />
-                          </div>
-                          <p className="text-base font-semibold text-slate-900">Tidak ada data ditemukan</p>
-                          <p className="text-sm text-slate-500">Belum ada data atau coba gunakan kata kunci pencarian lain.</p>
-                        </div>
-                      </td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
-            </div>
-          </div>
+      <Card className="border-slate-200 shadow-sm"><CardContent className="space-y-6 p-5 sm:p-6">
+        <SectionHeading icon={FileText} title="Informasi Order" description="Identitas order, customer, dan detail pengiriman utama" />
+        <div className="grid gap-5 border-t border-slate-100 pt-5 sm:grid-cols-2 lg:grid-cols-3">
+          <Field label="Customer" value={data.customer?.name || '-'} icon={CircleUserRound} />
+          <Field label="Jenis Kendaraan" value={getOrderVehicleTypeLabel(data)} icon={Truck} />
+          <Field label="Jumlah Tujuan" value={`${routes.length} tujuan`} icon={MapPin} />
         </div>
-      </SectionCard>
+        <div className="grid gap-5 rounded-xl bg-orange-50 p-4 sm:grid-cols-2">
+          <Field label="Lokasi Muat" value={data.loadingIn || '-'} icon={MapPin} />
+          <Field label="Lokasi Bongkar" value={data.loadingOut || '-'} icon={MapPin} />
+        </div>
+      </CardContent></Card>
 
-      <SectionCard title="Detail Rute &amp; Muatan">
-        <div className="space-y-6">
-          {orderTarifs.map((item, index) => {
-            const cargoItems = item.tarifItems?.length
-              ? item.tarifItems
-              : item.loadContent
-                ? [{ id: `${item.id}-fallback`, loadContent: item.loadContent, qty: Number(item.qty ?? 0) }]
-                : [];
-
+      <Card className="border-slate-200 shadow-sm"><CardContent className="space-y-5 p-5 sm:p-6">
+        <SectionHeading icon={ClipboardList} title="Detail Ekspedisi & Muatan" description="Rincian DO, tujuan pengiriman, dan barang pada setiap rute" />
+        <div className="space-y-5">
+          {routes.map((route, index) => {
+            const expedition = expeditions[index];
+            const tarif = route.tarif;
+            const cargo = route.tarifItems ?? (route.loadContent ? [{ id: `${route.id}-fallback`, loadContent: route.loadContent, qty: route.qty ?? 0 }] : []);
+            const invoice = route.expeditionInvoice || (data.vehicleType === 'fuso' ? tarif?.invFuso : tarif?.invCdd);
+            const uj = route.driverFee || (data.vehicleType === 'fuso' ? tarif?.ujFuso : tarif?.ujCdd);
             return (
-              <div key={item.id || index} className="rounded-md border border-slate-200 bg-white overflow-hidden shadow-none">
-                {/* Header Sub-Card */}
-                <div className="bg-slate-50 border-b border-slate-200 px-4 py-3 flex items-center justify-between">
-                  <span className="text-sm font-semibold text-slate-800">
-                    Rute #{index + 1}: {item.loadingIn || '-'} ke {item.loadingOut || '-'}
-                  </span>
-                  <span className="text-xs font-medium bg-[#eef3f8] text-slate-700 px-2 py-0.5 rounded-full">
-                    {getOrderVehicleTypeLabel(data, item)}
-                  </span>
+              <div key={route.id || index} className="overflow-hidden rounded-xl border border-slate-200">
+                <div className="flex flex-col gap-3 border-b border-orange-200 bg-orange-50 px-4 py-4 sm:flex-row sm:items-center sm:justify-between">
+                  <div className="flex items-center gap-3"><span className="flex h-8 w-8 items-center justify-center rounded-full bg-orange-300 text-sm font-bold text-orange-950">{index + 1}</span><div><p className="font-semibold text-slate-950">{expedition?.code || `Ekspedisi #${index + 1}`}</p><p className="text-xs text-slate-500">{route.deliveryDestination || '-'}</p></div></div>
+                  <div className="flex items-center gap-2"><Badge variant="outline" className="rounded-full border-orange-200 bg-orange-100 text-orange-800">{getOrderVehicleTypeLabel(data, route)}</Badge>{expedition?.is_printed ? <Badge variant="outline" className="rounded-full border-emerald-200 bg-emerald-50 text-emerald-700"><CheckCircle2 className="mr-1 h-3 w-3" />Sudah dicetak</Badge> : <Badge variant="outline" className="rounded-full text-slate-500">Belum dicetak</Badge>}</div>
                 </div>
-
-                {/* Detail Fields */}
-                <div className="p-4 grid gap-4 md:grid-cols-3">
-                  <div className="space-y-0.5">
-                    <p className="text-xs text-slate-500">Tujuan Kirim</p>
-                    <p className="text-sm font-semibold text-slate-900">{item.deliveryDestination || '-'}</p>
-                  </div>
-                  <div className="space-y-0.5">
-                    <p className="text-xs text-slate-500">UJ Driver</p>
-                    <p className="text-sm font-semibold text-slate-900">{formatOrderCurrency(item.driverFee)}</p>
-                  </div>
-                  <div className="space-y-0.5">
-                    <p className="text-xs text-slate-500">Invoice Ekspedisi</p>
-                    <p className="text-sm font-semibold text-slate-900">{formatOrderCurrency(item.expeditionInvoice)}</p>
-                  </div>
+                <div className="grid gap-4 border-b border-slate-100 p-4 sm:grid-cols-2 lg:grid-cols-4">
+                  <Field label="Rute" value={<span className="inline-flex items-center gap-1">{route.loadingIn || tarif?.loadingIn || '-'} <ArrowRight className="h-3.5 w-3.5" /> {route.loadingOut || tarif?.loadingOut || '-'}</span>} icon={Route} />
+                  <Field label="Jarak" value={`${Number(tarif?.distance ?? 0).toLocaleString('id-ID')} KM`} />
+                  <Field label="Tanggal Jalan" value={formatDate(expedition?.date)} icon={CalendarDays} />
+                  <Field label="Kendaraan / Driver" value={expedition?.vehicle?.registration_number || 'Belum ditugaskan'} icon={Truck} />
                 </div>
-
-                {/* Cargo Table for this specific route */}
-                <div className="border-t border-slate-100 p-4 space-y-2">
-                  <p className="text-xs font-semibold text-slate-500">Muatan Rute #{index + 1}</p>
-                  <div className="overflow-hidden rounded-lg border border-slate-200">
-                    <table className="w-full border-collapse text-left text-xs text-slate-500">
-                      <thead className="bg-slate-50 text-slate-700 uppercase">
-                        <tr>
-                          <th className="px-3 py-2 font-semibold w-[50px]">No</th>
-                          <th className="px-3 py-2 font-semibold">Nama Muatan</th>
-                          <th className="px-3 py-2 font-semibold w-[120px]">QTY</th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-slate-100 bg-white">
-                        {cargoItems.length ? (
-                          cargoItems.map((cargo, cIdx) => (
-                            <tr key={cargo.id || cIdx} className="hover:bg-slate-50 text-[13px] text-slate-900 font-medium">
-                              <td className="px-3 py-2 text-slate-500">{cIdx + 1}</td>
-                              <td className="px-3 py-2 font-semibold">{cargo.loadContent}</td>
-                              <td className="px-3 py-2 font-semibold">{cargo.qty} PCS</td>
-                            </tr>
-                          ))
-                        ) : (
-                          <tr>
-                            <td colSpan={100} className="px-3 py-16 text-center text-slate-400">
-                              <div className="flex flex-col items-center justify-center gap-2">
-                                <div className="rounded-full bg-slate-50 p-4 mb-2">
-                                  <Search className="h-8 w-8 text-slate-400" />
-                                </div>
-                                <p className="text-base font-semibold text-slate-900">Tidak ada data ditemukan</p>
-                                <p className="text-sm text-slate-500">Belum ada data atau coba gunakan kata kunci pencarian lain.</p>
-                              </div>
-                            </td>
-                          </tr>
-                        )}
-                      </tbody>
-                    </table>
-                  </div>
+                <div className="grid gap-5 p-4 lg:grid-cols-[1fr_260px]">
+                  <div><p className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-500">Daftar Muatan</p><BaseTable<CargoRow> data={cargo as CargoRow[]} columns={cargoColumns} headerRowClassName="bg-orange-100" containerClassName="rounded-lg" /></div>
+                  <div className="space-y-3 rounded-lg bg-orange-50 p-4"><p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Rincian Tarif</p><div className="flex justify-between gap-3 text-sm"><span className="text-slate-500">UJ Driver</span><span className="font-semibold text-slate-900">{formatOrderCurrency(uj)}</span></div><div className="flex justify-between gap-3 text-sm"><span className="text-slate-500">Invoice</span><span className="font-semibold text-slate-900">{formatOrderCurrency(invoice)}</span></div><div className="flex justify-between gap-3 border-t border-orange-200 pt-3 text-sm"><span className="text-slate-500">Tujuan</span><span className="text-right font-semibold text-slate-900">{route.deliveryDestination || '-'}</span></div></div>
                 </div>
+                {expedition?.driver_note ? <div className="border-t border-slate-100 px-4 py-3 text-sm text-slate-600"><span className="font-semibold text-slate-900">Catatan driver:</span> {expedition.driver_note}</div> : null}
               </div>
             );
           })}
         </div>
-      </SectionCard>
+      </CardContent></Card>
 
-      <SectionCard title="Keuangan">
-        <div className="grid gap-6 md:grid-cols-3">
-          <DetailField label="Total UJ Driver" value={formatOrderCurrency(data.ujDriver)} />
-          <DetailField label="Total Invoice Ekspedisi" value={formatOrderCurrency(data.billInvoice)} />
-          <DetailField label="PPN" value={formatOrderCurrency(data.ppn)} />
-        </div>
-      </SectionCard>
-
-      <SectionCard title="Status Order">
-        <div className="space-y-1">
-          <DetailField
-            label="Status pengiriman"
-            value={
-              <Badge variant="outline" className={cn('rounded-full px-3 py-1 text-sm font-medium', getOrderStatusBadgeClassName(data.status))}>
-                {getOrderStatusLabel(data.status)}
-              </Badge>
-            }
-          />
-        </div>
-      </SectionCard>
+      <div className="grid gap-4 lg:grid-cols-[1fr_1fr]">
+        <Card className="border-slate-200 shadow-sm"><CardContent className="space-y-5 p-5 sm:p-6"><SectionHeading icon={Wallet} title="Ringkasan Keuangan" /><div className="space-y-3 border-t border-slate-100 pt-5"><div className="flex justify-between text-sm"><span className="text-slate-500">Invoice Ekspedisi</span><span className="font-semibold text-slate-900">{formatOrderCurrency(data.billInvoice)}</span></div><div className="flex justify-between text-sm"><span className="text-slate-500">PPN</span><span className="font-semibold text-slate-900">{formatOrderCurrency(data.ppn)}</span></div><div className="flex justify-between border-t border-slate-100 pt-3"><span className="font-bold text-slate-950">Total Tagihan</span><span className="text-lg font-bold text-orange-700">{formatOrderCurrency(Number(data.billInvoice ?? 0) + Number(data.ppn ?? 0))}</span></div></div></CardContent></Card>
+        <Card className="border-slate-200 shadow-sm"><CardContent className="space-y-5 p-5 sm:p-6"><SectionHeading icon={ClipboardList} title="Status Order" /><div className="flex items-center justify-between border-t border-slate-100 pt-5"><div><p className="font-semibold text-slate-950">Status pengiriman</p><p className="mt-1 text-sm text-slate-500">Status terakhir order list</p></div><Badge variant="outline" className={cn('rounded-full px-3 py-1 text-sm', getOrderStatusBadgeClassName(data.status))}>{getOrderStatusLabel(data.status)}</Badge></div></CardContent></Card>
+      </div>
     </div>
   );
 }

@@ -44,15 +44,15 @@ export function CustomerFormModal({
           control={form.control}
           name="name"
           render={({ field }) => (
-            <FormItem className="space-y-2">
-              <FormLabel className="text-[14px] font-medium text-[#171717]">
+            <FormItem>
+              <FormLabel className="text-sm font-medium text-gray-700">
                 Nama Customer<RequiredMark />
               </FormLabel>
               <FormControl>
                 <Input
                   {...field}
                   placeholder="Tambahkan nama customer"
-                  className="h-12 rounded-md border-[#E4E4E7] px-4 text-[15px] placeholder:text-[#A1A1AA]"
+                  className={`bg-white ${form.formState.errors.name ? 'border-red-500' : ''}`}
                 />
               </FormControl>
               <FormMessage />
@@ -64,13 +64,13 @@ export function CustomerFormModal({
           control={form.control}
           name="pic"
           render={({ field }) => (
-            <FormItem className="space-y-2">
-              <FormLabel className="text-[14px] font-medium text-[#171717]">PIC</FormLabel>
+            <FormItem>
+              <FormLabel className="text-sm font-medium text-gray-700">PIC</FormLabel>
               <FormControl>
                 <Input
                   {...field}
                   placeholder="Tambahkan PIC"
-                  className="h-12 rounded-md border-[#E4E4E7] px-4 text-[15px] placeholder:text-[#A1A1AA]"
+                  className={`bg-white ${form.formState.errors.pic ? 'border-red-500' : ''}`}
                 />
               </FormControl>
               <FormMessage />
@@ -82,15 +82,15 @@ export function CustomerFormModal({
           control={form.control}
           name="phone"
           render={({ field }) => (
-            <FormItem className="space-y-2">
-              <FormLabel className="text-[14px] font-medium text-[#171717]">
+            <FormItem>
+              <FormLabel className="text-sm font-medium text-gray-700">
                 Phone<RequiredMark />
               </FormLabel>
               <FormControl>
                 <Input
                   {...field}
                   placeholder="Tambahkan nomer telepon"
-                  className="h-12 rounded-md border-[#E4E4E7] px-4 text-[15px] placeholder:text-[#A1A1AA]"
+                  className={`bg-white ${form.formState.errors.phone ? 'border-red-500' : ''}`}
                 />
               </FormControl>
               <FormMessage />
@@ -102,8 +102,8 @@ export function CustomerFormModal({
           control={form.control}
           name="npwp"
           render={({ field }) => (
-            <FormItem className="space-y-2">
-              <FormLabel className="text-[14px] font-medium text-[#171717]">
+            <FormItem>
+              <FormLabel className="text-sm font-medium text-gray-700">
                 NPWP<RequiredMark />
               </FormLabel>
               <FormControl>
@@ -112,7 +112,7 @@ export function CustomerFormModal({
                   placeholder="Tambahkan NPWP"
                   maxLength={16}
                   minLength={15}
-                  className="h-12 rounded-md border-[#E4E4E7] px-4 text-[15px] placeholder:text-[#A1A1AA]"
+                  className={`bg-white ${form.formState.errors.npwp ? 'border-red-500' : ''}`}
                   onChange={(e) => {
                     field.onChange(e.target.value.replace(/[^\d]/g, ''));
                   }}
@@ -127,8 +127,8 @@ export function CustomerFormModal({
           control={form.control}
           name="map_link"
           render={({ field }) => (
-            <FormItem className="space-y-2">
-              <FormLabel className="text-[14px] font-medium text-[#171717]">
+            <FormItem>
+              <FormLabel className="text-sm font-medium text-gray-700">
                 <div className="flex flex-row justify-between w-full">
                   <span>
                     Maps
@@ -140,7 +140,7 @@ export function CustomerFormModal({
                 <Input
                   {...field}
                   placeholder="Tambahkan link maps"
-                  className="h-12 rounded-md border-[#E4E4E7] px-4 text-[15px] placeholder:text-[#A1A1AA]"
+                  className={`bg-white ${form.formState.errors.map_link ? 'border-red-500' : ''}`}
                 />
               </FormControl>
               <FormMessage />
@@ -152,15 +152,15 @@ export function CustomerFormModal({
           control={form.control}
           name="address"
           render={({ field }) => (
-            <FormItem className="space-y-2">
-              <FormLabel className="text-[14px] font-medium text-[#171717]">
+            <FormItem>
+              <FormLabel className="text-sm font-medium text-gray-700">
                 Alamat<RequiredMark />
               </FormLabel>
               <FormControl>
                 <Textarea
                   {...field}
                   placeholder="Tambahkan Alamat"
-                  className="min-h-[100px] rounded-md border-[#E4E4E7] px-4 py-3 text-[15px] placeholder:text-[#A1A1AA] resize-none"
+                  className={`bg-white resize-none min-h-[100px] ${form.formState.errors.address ? 'border-red-500' : ''}`}
                 />
               </FormControl>
               <FormMessage />

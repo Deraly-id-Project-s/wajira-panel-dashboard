@@ -398,7 +398,7 @@ export default function UnitPurchaseDetailPage() {
             subtitle={
               <>
                 <span>Kode Beli:</span>
-                <span className="text-blue-600 font-semibold">{purchase.code}</span>
+                <span className="inline-flex items-center gap-1.5 font-semibold text-orange-600 hover:text-orange-700">{purchase.code}</span>
               </>
             }
             onBack={() => router.push(`/dashboard/${slug}/transaksi/pembelian-unit/${purchaseId}`)}

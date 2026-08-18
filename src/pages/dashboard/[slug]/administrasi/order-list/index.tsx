@@ -10,6 +10,7 @@ import { useDebouncedValue } from '@/hooks/useDebouncedValue';
 import { useOrderLists, useDeleteOrderList, useOrderListTarifs, useOrderListTarifItems, useUpdateOrderList } from '@/hooks/useOrderList';
 import { composeOrderListWithTarifs } from '@/services/order-list.service';
 import { usePermissionGuard } from '@/hooks/usePermissionGuard';
+import { PageHeader } from '@/components/ui/page-header';
 
 export default function OrderListPage() {
   const router = useRouter();
@@ -198,29 +199,36 @@ export default function OrderListPage() {
 
   return (
     <DashboardLayout>
-      <OrderListTable
-        data={tableData}
-        search={searchInput}
-        page={page}
-        perPage={perPage}
-        totalData={listQuery.data?.meta.total ?? 0}
-        isLoading={showTableSkeleton}
-        isRefetching={listQuery.isFetching || tarifItemQuery.isFetching || tarifLoadItemQuery.isFetching}
-        onSearchChange={setSearchInput}
-        onPageChange={setPage}
-        onPerPageChange={(value) => {
-          setPerPage(value);
-          setPage(1);
-        }}
-        onAdd={handleAdd}
-        onDetail={handleDetail}
-        onEdit={handleEdit}
-        onDelete={handleDeleteClick}
-        onUpdateStatus={handleUpdateStatus}
-        canCreate={canCreate}
-        canEdit={canEdit}
-        canDelete={canDelete}
-      />
+      <div className="space-y-6">
+        <PageHeader
+          title="Order List"
+          subtitle="Lihat dan kelola pesanan pelanggan dengan mudah"
+        />
+
+        <OrderListTable
+          data={tableData}
+          search={searchInput}
+          page={page}
+          perPage={perPage}
+          totalData={listQuery.data?.meta.total ?? 0}
+          isLoading={showTableSkeleton}
+          isRefetching={listQuery.isFetching || tarifItemQuery.isFetching || tarifLoadItemQuery.isFetching}
+          onSearchChange={setSearchInput}
+          onPageChange={setPage}
+          onPerPageChange={(value) => {
+            setPerPage(value);
+            setPage(1);
+          }}
+          onAdd={handleAdd}
+          onDetail={handleDetail}
+          onEdit={handleEdit}
+          onDelete={handleDeleteClick}
+          onUpdateStatus={handleUpdateStatus}
+          canCreate={canCreate}
+          canEdit={canEdit}
+          canDelete={canDelete}
+        />
+      </div>
 
       <OrderListDeleteDialog
         open={deleteOpen}

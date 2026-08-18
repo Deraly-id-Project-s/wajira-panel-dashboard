@@ -24,7 +24,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 export default function DetailSalesSparepartPage() {
   const router = useRouter();
   const { slug, id } = router.query;
-  
+
   const { hasPermission } = usePermissionGuard();
   const canEdit = hasPermission('transaction:edit');
   const canDelete = hasPermission('transaction:delete');
@@ -57,8 +57,8 @@ export default function DetailSalesSparepartPage() {
 
   const handlePaymentSubmit = async (data: any) => {
     if (!transaction?.sparepart_transaction_billing?.id) {
-       toast.error("Billing ID tidak valid");
-       return;
+      toast.error("Billing ID tidak valid");
+      return;
     }
 
     try {
@@ -66,23 +66,23 @@ export default function DetailSalesSparepartPage() {
         await updatePaymentMutation.mutateAsync({
           id: selectedPayment.id,
           payload: {
-             sparepart_transaction_billing_id: transaction.sparepart_transaction_billing.id,
-             payment_at: data.payment_at,
-             cash_payment_amount: data.cash_payment_amount,
-             bca_payment_amount: data.bca_payment_amount,
-             bca_payment_usd_amount: data.bca_payment_usd_amount,
-             note: data.note,
+            sparepart_transaction_billing_id: transaction.sparepart_transaction_billing.id,
+            payment_at: data.payment_at,
+            cash_payment_amount: data.cash_payment_amount,
+            bca_payment_amount: data.bca_payment_amount,
+            bca_payment_usd_amount: data.bca_payment_usd_amount,
+            note: data.note,
           }
         });
         toast.success("Pembayaran berhasil diubah");
       } else {
         await createPaymentMutation.mutateAsync({
-           sparepart_transaction_billing_id: transaction.sparepart_transaction_billing.id,
-           payment_at: data.payment_at,
-           cash_payment_amount: data.cash_payment_amount,
-           bca_payment_amount: data.bca_payment_amount,
-           bca_payment_usd_amount: data.bca_payment_usd_amount,
-           note: data.note,
+          sparepart_transaction_billing_id: transaction.sparepart_transaction_billing.id,
+          payment_at: data.payment_at,
+          cash_payment_amount: data.cash_payment_amount,
+          bca_payment_amount: data.bca_payment_amount,
+          bca_payment_usd_amount: data.bca_payment_usd_amount,
+          note: data.note,
         });
         toast.success("Pembayaran berhasil ditambahkan");
       }
@@ -163,7 +163,7 @@ export default function DetailSalesSparepartPage() {
   if (!transaction) {
     return (
       <DashboardLayout>
-         <div className="p-10 text-center">Data tidak ditemukan</div>
+        <div className="p-10 text-center">Data tidak ditemukan</div>
       </DashboardLayout>
     )
   }
@@ -231,12 +231,12 @@ export default function DetailSalesSparepartPage() {
   return (
     <DashboardLayout>
       <div className="space-y-6">
-        <PageHeader 
-          title="Detail Penjualan Sparepart" 
+        <PageHeader
+          title="Detail Penjualan Sparepart"
           subtitle={
             <>
               <span>Kode Jual:</span>
-              <span className="text-blue-600 font-semibold">{transaction.code}</span>
+              <span className="inline-flex items-center gap-1.5 font-semibold text-orange-600 hover:text-orange-700">{transaction.code}</span>
               {isPaid ? (
                 <Badge variant="outline" className="border-emerald-200 bg-emerald-50 text-emerald-700 font-semibold">
                   Lunas
@@ -291,135 +291,135 @@ export default function DetailSalesSparepartPage() {
         />
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-           <div className="md:col-span-2 space-y-6">
-             <Card className="shadow-none border-gray-200">
-               <CardHeader className="bg-slate-50/50 border-b border-gray-100 py-4 px-6">
-                 <CardTitle className="text-lg font-semibold">Informasi Transaksi</CardTitle>
-               </CardHeader>
-               <CardContent className="text-slate-700 p-6 pt-6">
-                 <div className="grid grid-cols-1 md:grid-cols-2 gap-y-6 gap-x-8">
-                   <div>
-                     <p className="text-sm font-medium text-slate-500 mb-1">Tanggal Transaksi</p>
-                     <p className="text-base text-slate-900 font-medium">{formatDate(transaction.transaction_date || transaction.created_at)}</p>
-                   </div>
-                   <div>
-                     <p className="text-sm font-medium text-slate-500 mb-1">No Nota</p>
-                     <p className="text-base text-slate-900 font-medium">{transaction.nota_number || '-'}</p>
-                   </div>
-                   <div>
-                     <p className="text-sm font-medium text-slate-500 mb-1">Customer</p>
-                     <p className="text-base text-slate-900 font-medium">{transaction.person?.name || '-'}</p>
-                   </div>
-                   <div>
-                     <p className="text-sm font-medium text-slate-500 mb-1">Gudang Penyimpanan</p>
-                     <p className="text-base text-slate-900 font-medium">{transaction.warehouse?.name || '-'}</p>
-                   </div>
-                   <div>
-                     <p className="text-sm font-medium text-slate-500 mb-1">Sparepart</p>
-                     <p className="text-base text-slate-900 font-medium">{transaction.sparepart?.name || '-'} ({transaction.sparepart?.code})</p>
-                   </div>
-                   <div>
-                     <p className="text-sm font-medium text-slate-500 mb-1">Kuantitas</p>
-                     <p className="text-base text-slate-900 font-medium">{transaction.qty} {transaction.sparepart?.unit_type || ''}</p>
-                   </div>
-                   <div>
-                     <p className="text-sm font-medium text-slate-500 mb-1">Tipe Pembayaran</p>
-                     <p className="text-base text-slate-900 font-medium capitalize">{transaction.billing_type || '-'}</p>
-                   </div>
-                   <div>
-                     <p className="text-sm font-medium text-slate-500 mb-1">Catatan</p>
-                     <p className="text-base text-slate-900 font-medium">{transaction.note || '-'}</p>
-                   </div>
-                 </div>
-               </CardContent>
-             </Card>
+          <div className="md:col-span-2 space-y-6">
+            <Card className="shadow-none border-gray-200">
+              <CardHeader className="bg-slate-50/50 border-b border-gray-100 py-4 px-6">
+                <CardTitle className="text-lg font-semibold">Informasi Transaksi</CardTitle>
+              </CardHeader>
+              <CardContent className="text-slate-700 p-6 pt-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-y-6 gap-x-8">
+                  <div>
+                    <p className="text-sm font-medium text-slate-500 mb-1">Tanggal Transaksi</p>
+                    <p className="text-base text-slate-900 font-medium">{formatDate(transaction.transaction_date || transaction.created_at)}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-slate-500 mb-1">No Nota</p>
+                    <p className="text-base text-slate-900 font-medium">{transaction.nota_number || '-'}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-slate-500 mb-1">Customer</p>
+                    <p className="text-base text-slate-900 font-medium">{transaction.person?.name || '-'}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-slate-500 mb-1">Gudang Penyimpanan</p>
+                    <p className="text-base text-slate-900 font-medium">{transaction.warehouse?.name || '-'}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-slate-500 mb-1">Sparepart</p>
+                    <p className="text-base text-slate-900 font-medium">{transaction.sparepart?.name || '-'} ({transaction.sparepart?.code})</p>
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-slate-500 mb-1">Kuantitas</p>
+                    <p className="text-base text-slate-900 font-medium">{transaction.qty} {transaction.sparepart?.unit_type || ''}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-slate-500 mb-1">Tipe Pembayaran</p>
+                    <p className="text-base text-slate-900 font-medium capitalize">{transaction.billing_type || '-'}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-slate-500 mb-1">Catatan</p>
+                    <p className="text-base text-slate-900 font-medium">{transaction.note || '-'}</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
 
-             <Card className="shadow-none border-gray-200">
-               <CardHeader className="bg-slate-50/50 border-b border-gray-100 py-4 px-6 flex flex-row items-center justify-between">
-                 <CardTitle className=" text-lg font-semibold">Riwayat Pembayaran</CardTitle>
-               </CardHeader>
-               <CardContent className="p-6 pt-6">
-                  <div className="overflow-x-auto">
-                    <BaseTable 
-                      data={histories}
-                      columns={columns}
-                    />
-                  </div>
-               </CardContent>
-             </Card>
-           </div>
-           
-           <div className="space-y-6">
-             <Card className="shadow-none border-gray-200">
-                <CardHeader className="bg-slate-50/50 border-b border-gray-100 py-4 px-6">
-                  <CardTitle className="text-lg font-semibold">Rincian Transaksi</CardTitle>
-                </CardHeader>
-                <CardContent className="p-6 pt-6 space-y-4">
-                  <div className="flex justify-between items-center text-sm">
-                    <span className="text-slate-500">Harga Satuan</span>
-                    <span className="font-medium text-slate-900">{currenciesFormat('idr', transaction.price)}</span>
-                  </div>
-                  <div className="flex justify-between items-center text-sm">
-                    <span className="text-slate-500">Kuantitas</span>
-                    <span className="font-medium text-slate-900">{transaction.qty}</span>
-                  </div>
-                  <div className="flex justify-between items-center text-sm">
-                    <span className="text-slate-500">Total Bruto</span>
-                    <span className="font-medium text-slate-900">{currenciesFormat('idr', transaction.transaction_bruto_total)}</span>
-                  </div>
-                  <div className="flex justify-between items-center text-sm">
-                    <span className="text-slate-500">Diskon</span>
-                    <span className="font-medium text-slate-900">{transaction.discount}%</span>
-                  </div>
-                  
-                  <div className="h-px bg-slate-200 my-2"></div>
+            <Card className="shadow-none border-gray-200">
+              <CardHeader className="bg-slate-50/50 border-b border-gray-100 py-4 px-6 flex flex-row items-center justify-between">
+                <CardTitle className=" text-lg font-semibold">Riwayat Pembayaran</CardTitle>
+              </CardHeader>
+              <CardContent className="p-6 pt-6">
+                <div className="overflow-x-auto">
+                  <BaseTable
+                    data={histories}
+                    columns={columns}
+                  />
+                </div>
+              </CardContent>
+            </Card>
+          </div>
 
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm font-semibold text-slate-700">TOTAL PENJUALAN</span>
-                    <span className="font-bold text-base text-slate-900">{currenciesFormat('idr', transaction.transaction_netto_total)}</span>
-                  </div>
-                </CardContent>
-             </Card>
+          <div className="space-y-6">
+            <Card className="shadow-none border-gray-200">
+              <CardHeader className="bg-slate-50/50 border-b border-gray-100 py-4 px-6">
+                <CardTitle className="text-lg font-semibold">Rincian Transaksi</CardTitle>
+              </CardHeader>
+              <CardContent className="p-6 pt-6 space-y-4">
+                <div className="flex justify-between items-center text-sm">
+                  <span className="text-slate-500">Harga Satuan</span>
+                  <span className="font-medium text-slate-900">{currenciesFormat('idr', transaction.price)}</span>
+                </div>
+                <div className="flex justify-between items-center text-sm">
+                  <span className="text-slate-500">Kuantitas</span>
+                  <span className="font-medium text-slate-900">{transaction.qty}</span>
+                </div>
+                <div className="flex justify-between items-center text-sm">
+                  <span className="text-slate-500">Total Bruto</span>
+                  <span className="font-medium text-slate-900">{currenciesFormat('idr', transaction.transaction_bruto_total)}</span>
+                </div>
+                <div className="flex justify-between items-center text-sm">
+                  <span className="text-slate-500">Diskon</span>
+                  <span className="font-medium text-slate-900">{transaction.discount}%</span>
+                </div>
 
-             <Card className="shadow-none border-gray-200">
-                 <CardHeader className="bg-slate-50/50 border-b border-gray-100 py-4 px-6">
-                  <CardTitle className="text-lg font-semibold">Rincian Pembayaran</CardTitle>
-                </CardHeader>
-                <CardContent className="p-6 pt-6 space-y-4">
-                  <div className="flex justify-between items-center text-sm">
-                    <span className="text-slate-500">Total Tagihan</span>
-                    <span className="font-medium text-slate-900">{currenciesFormat('idr', totalTagihan)}</span>
-                  </div>
-                  <div className="flex justify-between items-center text-sm">
-                    <span className="text-slate-500">Total Dibayar</span>
-                    <span className="font-medium text-emerald-600">{currenciesFormat('idr', totalPaid)}</span>
-                  </div>
-                  
-                  <div className="h-px bg-slate-200 my-2"></div>
+                <div className="h-px bg-slate-200 my-2"></div>
 
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm font-semibold text-slate-700">KURANG BAYAR</span>
-                    <span className="font-bold text-base text-red-600">{currenciesFormat('idr', remainingPayment)}</span>
-                  </div>
-                </CardContent>
-             </Card>
-           </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-sm font-semibold text-slate-700">TOTAL PENJUALAN</span>
+                  <span className="font-bold text-base text-slate-900">{currenciesFormat('idr', transaction.transaction_netto_total)}</span>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="shadow-none border-gray-200">
+              <CardHeader className="bg-slate-50/50 border-b border-gray-100 py-4 px-6">
+                <CardTitle className="text-lg font-semibold">Rincian Pembayaran</CardTitle>
+              </CardHeader>
+              <CardContent className="p-6 pt-6 space-y-4">
+                <div className="flex justify-between items-center text-sm">
+                  <span className="text-slate-500">Total Tagihan</span>
+                  <span className="font-medium text-slate-900">{currenciesFormat('idr', totalTagihan)}</span>
+                </div>
+                <div className="flex justify-between items-center text-sm">
+                  <span className="text-slate-500">Total Dibayar</span>
+                  <span className="font-medium text-emerald-600">{currenciesFormat('idr', totalPaid)}</span>
+                </div>
+
+                <div className="h-px bg-slate-200 my-2"></div>
+
+                <div className="flex justify-between items-center">
+                  <span className="text-sm font-semibold text-slate-700">KURANG BAYAR</span>
+                  <span className="font-bold text-base text-red-600">{currenciesFormat('idr', remainingPayment)}</span>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
         </div>
 
-        <PaymentModal 
-          open={paymentModalOpen} 
-          onClose={() => setPaymentModalOpen(false)} 
-          onSubmit={handlePaymentSubmit} 
+        <PaymentModal
+          open={paymentModalOpen}
+          onClose={() => setPaymentModalOpen(false)}
+          onSubmit={handlePaymentSubmit}
           defaultValues={selectedPayment}
           loading={createPaymentMutation.isPending || updatePaymentMutation.isPending}
           remainingPayment={remainingPayment}
         />
 
-        <DeletePaymentDialog 
-          open={!!deletePaymentId} 
-          onClose={() => setDeletePaymentId(null)} 
-          onConfirm={handleDeletePayment} 
-          loading={deletePaymentMutation.isPending} 
+        <DeletePaymentDialog
+          open={!!deletePaymentId}
+          onClose={() => setDeletePaymentId(null)}
+          onConfirm={handleDeletePayment}
+          loading={deletePaymentMutation.isPending}
         />
 
         <Dialog open={processDialogOpen} onOpenChange={setProcessDialogOpen}>

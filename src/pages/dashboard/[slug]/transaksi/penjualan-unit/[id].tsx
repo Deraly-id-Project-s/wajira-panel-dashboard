@@ -317,7 +317,7 @@ export default function SalesDetailPage() {
           subtitle={
             <>
               <span>Kode Jual:</span>
-              <span className="text-blue-600 font-semibold">{sales.code}</span>
+              <span className="inline-flex items-center gap-1.5 font-semibold text-orange-600 hover:text-orange-700">{sales.code}</span>
               {isPaid ? (
                 <Badge variant="outline" className="border-emerald-200 bg-emerald-50 text-emerald-700 font-semibold">
                   Lunas

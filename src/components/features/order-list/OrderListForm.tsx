@@ -5,7 +5,7 @@ import { Plus, Save, Trash2 } from 'lucide-react';
 import { useRouter } from 'next/router';
 import { PageHeader } from '@/components/ui/page-header';
 import type { OrderList, OrderListVehicleType } from '@/@types/order-list.types';
-import type { Tarif } from '@/@types/tarif.types';
+import type { Tarif, TarifPayload } from '@/@types/tarif.types';
 import { SearchableSelect, type SearchableSelectOption } from '@/components/features/vehicle-data/SearchableSelect';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -13,6 +13,8 @@ import { MoneyInput } from '@/components/ui/money-input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { toast } from 'sonner';
+import { TarifFormModal } from '@/components/features/tarif/TarifFormModal';
+import { useCreateTarif } from '@/hooks/useTarif';
 import { orderListFormSchema, type OrderListFormSchema } from '@/schemas/order-list.schema';
 import {
   Form,
@@ -70,7 +72,7 @@ const createCargoItem = (overrides?: Partial<OrderListFormCargoItemValue>): Orde
   localId: createItemId(),
   id: overrides?.id,
   loadContent: overrides?.loadContent ?? '',
-  qty: Number(overrides?.qty ?? 0),
+  qty: Number(overrides?.qty ?? 1),
 });
 
 const getVehicleFee = (tarif: Tarif | undefined, vehicleType: OrderListVehicleType) => {
@@ -165,6 +167,11 @@ export function OrderListForm({
   const router = useRouter();
   const slug = typeof router.query.slug === 'string' ? router.query.slug : '';
 
+  const [localTarifs, setLocalTarifs] = React.useState<Tarif[]>([]);
+  const [isCreateTarifOpen, setIsCreateTarifOpen] = React.useState(false);
+  const [activeItemIndex, setActiveItemIndex] = React.useState<number | null>(null);
+  const createTarifMutation = useCreateTarif();
+
   const defaultCustomerOption = React.useMemo<SearchableSelectOption[]>(() => {
     if (!initialData?.customer?.id) return [];
     return [
@@ -187,11 +194,27 @@ export function OrderListForm({
       }));
   }, [initialData?.tarifs]);
 
+  const localTarifOptions = React.useMemo<SearchableSelectOption[]>(
+    () =>
+      localTarifs.map((item) => ({
+        value: String(item.id),
+        label: `${item.loadingIn || '-'} - ${item.loadingOut || '-'}`,
+        subtitle: item.customer?.name,
+      })),
+    [localTarifs],
+  );
+
   const mergedCustomerOptions = React.useMemo(
     () => mergeSelectOptions(customerOptions, defaultCustomerOption),
     [customerOptions, defaultCustomerOption],
   );
-  const mergedTarifOptions = React.useMemo(() => mergeSelectOptions(tarifOptions, defaultTarifOptions), [tarifOptions, defaultTarifOptions]);
+
+  const mergedTarifOptions = React.useMemo(() => {
+    const merged = mergeSelectOptions(tarifOptions, defaultTarifOptions);
+    const existingValues = new Set(merged.map((o) => o.value));
+    const filteredLocal = localTarifOptions.filter((o) => !existingValues.has(o.value));
+    return [...merged, ...filteredLocal];
+  }, [tarifOptions, defaultTarifOptions, localTarifOptions]);
 
   const form = useForm<OrderListFormValues>({
     resolver: zodResolver(orderListFormSchema),
@@ -259,7 +282,8 @@ export function OrderListForm({
 
   const getTarifById = React.useCallback(
     (tarifId: string): Tarif | undefined => {
-      const fromLookup = tarifRecords.find((item) => String(item.id) === tarifId);
+      const fromLookup = tarifRecords.find((item) => String(item.id) === tarifId)
+        || localTarifs.find((item) => String(item.id) === tarifId);
       if (fromLookup) return fromLookup;
 
       const fromInitial = initialData?.tarifs?.find((item) => String(item.tarifId) === tarifId)?.tarif;
@@ -281,7 +305,7 @@ export function OrderListForm({
       }
       return undefined;
     },
-    [initialData?.tarifs, tarifRecords],
+    [initialData?.tarifs, tarifRecords, localTarifs],
   );
 
   const handleTarifChange = React.useCallback(
@@ -300,6 +324,31 @@ export function OrderListForm({
     },
     [getTarifById, setValue, watchedItems],
   );
+
+  const handleSaveTarif = async (data: TarifPayload) => {
+    try {
+      const newTarif = await createTarifMutation.mutateAsync(data);
+      toast.success('Data tarif berhasil ditambahkan');
+      setLocalTarifs((prev) => [...prev, newTarif]);
+      
+      if (activeItemIndex !== null) {
+        const stringId = String(newTarif.id);
+        setValue(`items.${activeItemIndex}.tarifId`, stringId, { shouldValidate: true, shouldDirty: true });
+        
+        const nextVehicleType = watchedItems?.[activeItemIndex]?.vehicleType ?? 'fuso';
+        const fee = getVehicleFee(newTarif, nextVehicleType);
+
+        setValue(`items.${activeItemIndex}.loadingIn`, newTarif.loadingIn ?? '', { shouldDirty: true });
+        setValue(`items.${activeItemIndex}.loadingOut`, newTarif.loadingOut ?? '', { shouldDirty: true });
+        setValue(`items.${activeItemIndex}.driverFee`, fee.driverFee, { shouldDirty: true });
+        setValue(`items.${activeItemIndex}.expeditionInvoice`, fee.invoice, { shouldDirty: true });
+      }
+      setIsCreateTarifOpen(false);
+      setActiveItemIndex(null);
+    } catch (error: any) {
+      toast.error(error.message || 'Gagal menambahkan tarif baru');
+    }
+  };
 
   const handleVehicleTypeChange = React.useCallback(
     (index: number, vehicleType: OrderListVehicleType) => {
@@ -385,11 +434,6 @@ export function OrderListForm({
                         className="bg-transparent"
                       />
                     </FormControl>
-                    {selectedCustomer?.subtitle && (
-                      <span className="text-xs text-slate-400 mt-1">
-                        Kode: {selectedCustomer.subtitle}
-                      </span>
-                    )}
                     <FormMessage />
                   </FormItem>
                 )}
@@ -404,7 +448,7 @@ export function OrderListForm({
                     <FormControl>
                       <Textarea
                         placeholder="Tambahkan catatan jika diperlukan..."
-                        className="bg-transparent min-h-[42px] py-2 resize-none"
+                        className="bg-transparent min-h-[42px] resize-none"
                         {...field}
                         value={field.value ?? ''}
                       />
@@ -416,10 +460,9 @@ export function OrderListForm({
             </div>
 
             {/* ── Section 2: Detail Rute & Muatan ── */}
-            <div className="">
+            <div>
               <h2 className="text-lg font-semibold text-foreground tracking-tight">Detail Rute & Muatan</h2>
               <p className="text-sm text-gray-500 mt-1">Kelola rute ekspedisi, tipe armada, dan barang muatan</p>
-              <div className="my-4 h-px bg-muted/60" />
             </div>
 
             <div className="space-y-6">
@@ -467,6 +510,11 @@ export function OrderListForm({
                                 loading={tarifLoading}
                                 onSearchChange={onTarifSearch}
                                 className="bg-transparent"
+                                onActionClick={() => {
+                                  setActiveItemIndex(index);
+                                  setIsCreateTarifOpen(true);
+                                }}
+                                actionLabel="Tambah Tarif Baru"
                               />
                             </FormControl>
                             <FormMessage />
@@ -587,12 +635,13 @@ export function OrderListForm({
                               <div className="w-[120px] space-y-1">
                                 <Input
                                   type="number"
-                                  min={0}
-                                  placeholder="0"
+                                  min={1}
+                                  placeholder="1"
                                   className="bg-transparent"
                                   {...register(`items.${index}.cargoItems.${cargoIndex}.qty`, {
                                     valueAsNumber: true,
                                     required: 'Qty wajib diisi',
+                                    setValueAs: (value) => value === '' ? 1 : Number(value),
                                     min: { value: 1, message: 'Qty minimal 1' },
                                   })}
                                 />
@@ -754,6 +803,16 @@ export function OrderListForm({
           </div>
         </form>
       </Form>
+
+      <TarifFormModal
+        isOpen={isCreateTarifOpen}
+        onClose={() => {
+          setIsCreateTarifOpen(false);
+          setActiveItemIndex(null);
+        }}
+        onSave={handleSaveTarif}
+        isSubmitting={createTarifMutation.isPending}
+      />
     </div>
   );
 }

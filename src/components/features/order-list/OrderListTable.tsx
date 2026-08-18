@@ -105,28 +105,6 @@ export const OrderListTable = React.memo(function OrderListTable({
         },
       },
       {
-        header: 'TUJUAN KIRIM',
-        accessorKey: 'destination',
-        cell: (item) => {
-          const primaryTarif = getPrimaryTarifItem(item);
-          return (
-            <span className="text-sm text-gray-700">
-              {item.tarifs.length > 1 ? (
-                <span className="flex flex-col gap-0.5">
-                  {item.tarifs.map((t, idx) => (
-                    <span key={t.id || idx} className="block text-xs text-left">
-                      {idx + 1}. {t.deliveryDestination || '-'}
-                    </span>
-                  ))}
-                </span>
-              ) : (
-                primaryTarif?.deliveryDestination || '-'
-              )}
-            </span>
-          );
-        },
-      },
-      {
         header: 'LOADING OUT',
         accessorKey: 'loadingOut',
         cell: (item) => {
@@ -143,6 +121,28 @@ export const OrderListTable = React.memo(function OrderListTable({
                 </span>
               ) : (
                 primaryTarif?.loadingOut || item.loadingOut || '-'
+              )}
+            </span>
+          );
+        },
+      },
+      {
+        header: 'TUJUAN KIRIM',
+        accessorKey: 'destination',
+        cell: (item) => {
+          const primaryTarif = getPrimaryTarifItem(item);
+          return (
+            <span className="text-sm text-gray-700">
+              {item.tarifs.length > 1 ? (
+                <span className="flex flex-col gap-0.5">
+                  {item.tarifs.map((t, idx) => (
+                    <span key={t.id || idx} className="block text-xs text-left">
+                      {idx + 1}. {t.deliveryDestination || '-'}
+                    </span>
+                  ))}
+                </span>
+              ) : (
+                primaryTarif?.deliveryDestination || '-'
               )}
             </span>
           );
@@ -269,13 +269,6 @@ export const OrderListTable = React.memo(function OrderListTable({
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Order List</h1>
-          <p className="text-sm text-slate-500 mt-1">Lihat dan kelola pesanan pelanggan dengan mudah.</p>
-        </div>
-      </div>
-
       <BaseTable
         data={data}
         columns={columns}
@@ -305,7 +298,7 @@ export const OrderListTable = React.memo(function OrderListTable({
               type="button"
               onClick={onAdd}
               disabled={!canCreate}
-              className="bg-[#1e3a5f] hover:bg-[#152e4d]"
+              className="button-theme-1"
             >
               <Plus className="h-4 w-4 mr-2" />
               Tambah Data

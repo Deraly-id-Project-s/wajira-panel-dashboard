@@ -191,7 +191,7 @@ export default function CreatePurchasePage() {
           subtitle={
             <>
               <span>Kode Beli:</span>
-              <span className="text-blue-600 font-semibold">{generatedCode}</span>
+              <span className="inline-flex items-center gap-1.5 font-semibold text-orange-600 hover:text-orange-700">{generatedCode}</span>
             </>
           }
           onBack={() => router.push(`/dashboard/${slug}/transaksi/pembelian-unit`)}

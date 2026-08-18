@@ -1,190 +1,270 @@
 import React, { useEffect } from 'react';
-import { useForm } from 'react-hook-form';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
+import { useForm, Controller } from 'react-hook-form';
+import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from '@/components/ui/form';
+import { FormDialog } from '@/components/ui/form-dialog';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
+import { MoneyInput } from '@/components/ui/money-input';
+import type { TarifPayload } from '@/@types/tarif.types';
 
 export interface TarifFormData {
-    namaDealer: string;
-    provinsi: string;
-    tujuan: string;
-    jarak: string;
-    day: number;
-    invCdd: number;
-    invFuso: number;
-    ujCdd: number;
-    ujFuso: number;
+    distance: string;
+    loadingIn: string;
+    loadingOut: string;
+    ujTowing: number | null;
+    ujCdd: number | null;
+    ujFuso: number | null;
+    invTowing: number | null;
+    invCdd: number | null;
+    invFuso: number | null;
 }
 
 interface TarifFormModalProps {
     isOpen: boolean;
     onClose: () => void;
-    onSave: (data: TarifFormData) => void;
-    initialData?: TarifFormData | null;
+    onSave: (data: TarifPayload) => void;
+    isSubmitting?: boolean;
 }
 
-export function TarifFormModal({ isOpen, onClose, onSave, initialData }: TarifFormModalProps) {
-    const { register, handleSubmit, reset, formState: { errors } } = useForm<TarifFormData>({
+export function TarifFormModal({ isOpen, onClose, onSave, isSubmitting = false }: TarifFormModalProps) {
+    const form = useForm<TarifFormData>({
         defaultValues: {
-            namaDealer: '',
-            provinsi: '',
-            tujuan: '',
-            jarak: '',
-            day: 1,
-            invCdd: 0,
-            invFuso: 0,
-            ujCdd: 0,
-            ujFuso: 0
+            distance: '',
+            loadingIn: '',
+            loadingOut: '',
+            ujTowing: null,
+            ujCdd: null,
+            ujFuso: null,
+            invTowing: null,
+            invCdd: null,
+            invFuso: null,
         },
-        values: initialData || { namaDealer: '', provinsi: '', tujuan: '', jarak: '', day: 1, invCdd: 0, invFuso: 0, ujCdd: 0, ujFuso: 0 }
     });
 
     useEffect(() => {
         if (!isOpen) {
-            reset({ namaDealer: '', provinsi: '', tujuan: '', jarak: '', day: 1, invCdd: 0, invFuso: 0, ujCdd: 0, ujFuso: 0 });
+            form.reset({
+                distance: '',
+                loadingIn: '',
+                loadingOut: '',
+                ujTowing: null,
+                ujCdd: null,
+                ujFuso: null,
+                invTowing: null,
+                invCdd: null,
+                invFuso: null,
+            });
         }
-    }, [isOpen, reset]);
+    }, [isOpen, form]);
 
     const onSubmit = (data: TarifFormData) => {
-        // Ensure numeric fields are actually numbers when saving
         onSave({
-            ...data,
-            day: Number(data.day),
-            invCdd: Number(data.invCdd),
-            invFuso: Number(data.invFuso),
-            ujCdd: Number(data.ujCdd),
-            ujFuso: Number(data.ujFuso)
+            loading_in: data.loadingIn,
+            loading_out: data.loadingOut,
+            distance: Number(data.distance),
+            uj_towing: data.ujTowing,
+            uj_cdd: data.ujCdd,
+            uj_fuso: data.ujFuso,
+            inv_towing: data.invTowing,
+            inv_cdd: data.invCdd,
+            inv_fuso: data.invFuso,
+            is_active: true,
         });
     };
 
-    const isEdit = !!initialData;
-
     return (
-        <Dialog open={isOpen} onOpenChange={onClose}>
-            <DialogContent className="sm:max-w-[425px]">
-                <DialogHeader>
-                    <DialogTitle>{isEdit ? 'Edit Data Tarif' : 'Tambah Data Tarif'}</DialogTitle>
-                    <DialogDescription>
-                        {isEdit ? 'Edit detail tarif' : 'Masukkan detail tarif baru'}
-                    </DialogDescription>
-                </DialogHeader>
-                {isOpen && (
-                    <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 pt-4 max-h-[70vh] overflow-y-auto px-1">
-                        <div className="space-y-2">
-                            <Label htmlFor="namaDealer">Nama Dealer</Label>
-                            <Input
-                                id="namaDealer"
-                                placeholder="Tambahkan nama dealer"
-                                {...register('namaDealer', { required: 'Nama Dealer wajib diisi' })}
-                                className={errors.namaDealer ? 'border-red-500' : ''}
-                            />
-                            {errors.namaDealer && <p className="text-red-500 text-xs">{errors.namaDealer.message}</p>}
-                        </div>
+        <Form {...form}>
+            <FormDialog
+                open={isOpen}
+                onOpenChange={(open) => !open && onClose()}
+                title="Tambah Tarif"
+                description="Masukkan detail tarif baru"
+                onSubmit={form.handleSubmit(onSubmit)}
+                submitLabel="Simpan"
+                isSubmitting={isSubmitting}
+                maxWidthClassName="max-w-4xl"
+            >
+                <div className="space-y-4 max-h-[60vh] overflow-y-auto px-1 py-1">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <FormField
+                            control={form.control}
+                            name="loadingIn"
+                            rules={{ required: 'Loading in wajib diisi' }}
+                            render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel className="text-sm font-medium text-gray-700">
+                                        Loading in <span className="text-red-500">*</span>
+                                    </FormLabel>
+                                    <FormControl>
+                                        <Input
+                                            placeholder="Masukkan data"
+                                            className={`bg-white ${form.formState.errors.loadingIn ? 'border-red-500' : ''}`}
+                                            {...field}
+                                        />
+                                    </FormControl>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
 
-                        <div className="space-y-2">
-                            <Label htmlFor="provinsi">Provinsi</Label>
-                            <Input
-                                id="provinsi"
-                                placeholder="Tambahkan provinsi"
-                                {...register('provinsi', { required: 'Provinsi wajib diisi' })}
-                                className={errors.provinsi ? 'border-red-500' : ''}
-                            />
-                            {errors.provinsi && <p className="text-red-500 text-xs">{errors.provinsi.message}</p>}
-                        </div>
+                        <FormField
+                            control={form.control}
+                            name="loadingOut"
+                            rules={{ required: 'Loading out wajib diisi' }}
+                            render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel className="text-sm font-medium text-gray-700">
+                                        Loading out <span className="text-red-500">*</span>
+                                    </FormLabel>
+                                    <FormControl>
+                                        <Input
+                                            placeholder="Masukkan data"
+                                            className={`bg-white ${form.formState.errors.loadingOut ? 'border-red-500' : ''}`}
+                                            {...field}
+                                        />
+                                    </FormControl>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
 
-                        <div className="space-y-2">
-                            <Label htmlFor="tujuan">Tujuan</Label>
-                            <Input
-                                id="tujuan"
-                                placeholder="Tambahkan tujuan"
-                                {...register('tujuan', { required: 'Tujuan wajib diisi' })}
-                                className={errors.tujuan ? 'border-red-500' : ''}
-                            />
-                            {errors.tujuan && <p className="text-red-500 text-xs">{errors.tujuan.message}</p>}
-                        </div>
+                        <FormField
+                            control={form.control}
+                            name="distance"
+                            rules={{ required: 'Jarak wajib diisi' }}
+                            render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel className="text-sm font-medium text-gray-700">
+                                        Jarak (KM) <span className="text-red-500">*</span>
+                                    </FormLabel>
+                                    <FormControl>
+                                        <Input
+                                            type="number"
+                                            placeholder="Masukkan data"
+                                            className={`bg-white ${form.formState.errors.distance ? 'border-red-500' : ''}`}
+                                            {...field}
+                                        />
+                                    </FormControl>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+                    </div>
 
-                        <div className="grid grid-cols-2 gap-4">
-                            <div className="space-y-2">
-                                <Label htmlFor="jarak">Jarak (km)</Label>
-                                <Input
-                                    id="jarak"
-                                    placeholder="e.g. 100 km"
-                                    {...register('jarak', { required: 'Jarak wajib diisi' })}
-                                    className={errors.jarak ? 'border-red-500' : ''}
-                                />
-                                {errors.jarak && <p className="text-red-500 text-xs">{errors.jarak.message}</p>}
-                            </div>
-                            <div className="space-y-2">
-                                <Label htmlFor="day">Day</Label>
-                                <Input
-                                    id="day"
-                                    type="number"
-                                    placeholder="Hari"
-                                    {...register('day', { required: 'Day wajib diisi', valueAsNumber: true, min: 1 })}
-                                    className={errors.day ? 'border-red-500' : ''}
-                                />
-                                {errors.day && <p className="text-red-500 text-xs">{errors.day.message}</p>}
-                            </div>
-                        </div>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <FormField
+                            control={form.control}
+                            name="ujTowing"
+                            render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel className="text-sm font-medium text-gray-700">UJ Towing</FormLabel>
+                                    <FormControl>
+                                        <MoneyInput
+                                            placeholder="Masukkan data"
+                                            value={field.value}
+                                            onChangeValue={field.onChange}
+                                            className="bg-white"
+                                        />
+                                    </FormControl>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+                        <FormField
+                            control={form.control}
+                            name="ujCdd"
+                            render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel className="text-sm font-medium text-gray-700">UJ CDD</FormLabel>
+                                    <FormControl>
+                                        <MoneyInput
+                                            placeholder="Masukkan data"
+                                            value={field.value}
+                                            onChangeValue={field.onChange}
+                                            className="bg-white"
+                                        />
+                                    </FormControl>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+                        <FormField
+                            control={form.control}
+                            name="ujFuso"
+                            render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel className="text-sm font-medium text-gray-700">UJ Fuso</FormLabel>
+                                    <FormControl>
+                                        <MoneyInput
+                                            placeholder="Masukkan data"
+                                            value={field.value}
+                                            onChangeValue={field.onChange}
+                                            className="bg-white"
+                                        />
+                                    </FormControl>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+                    </div>
 
-                        <div className="grid grid-cols-2 gap-4">
-                            <div className="space-y-2">
-                                <Label htmlFor="invCdd">INV CDD (Rp)</Label>
-                                <Input
-                                    id="invCdd"
-                                    type="number"
-                                    placeholder="0"
-                                    {...register('invCdd', { required: 'Wajib diisi', valueAsNumber: true, min: 0 })}
-                                    className={errors.invCdd ? 'border-red-500' : ''}
-                                />
-                                {errors.invCdd && <p className="text-red-500 text-xs">{errors.invCdd.message}</p>}
-                            </div>
-                            <div className="space-y-2">
-                                <Label htmlFor="invFuso">INV Fuso (Rp)</Label>
-                                <Input
-                                    id="invFuso"
-                                    type="number"
-                                    placeholder="0"
-                                    {...register('invFuso', { required: 'Wajib diisi', valueAsNumber: true, min: 0 })}
-                                    className={errors.invFuso ? 'border-red-500' : ''}
-                                />
-                                {errors.invFuso && <p className="text-red-500 text-xs">{errors.invFuso.message}</p>}
-                            </div>
-                        </div>
-
-                        <div className="grid grid-cols-2 gap-4">
-                            <div className="space-y-2">
-                                <Label htmlFor="ujCdd">UJ CDD (Rp)</Label>
-                                <Input
-                                    id="ujCdd"
-                                    type="number"
-                                    placeholder="0"
-                                    {...register('ujCdd', { required: 'Wajib diisi', valueAsNumber: true, min: 0 })}
-                                    className={errors.ujCdd ? 'border-red-500' : ''}
-                                />
-                                {errors.ujCdd && <p className="text-red-500 text-xs">{errors.ujCdd.message}</p>}
-                            </div>
-                            <div className="space-y-2">
-                                <Label htmlFor="ujFuso">UJ Fuso (Rp)</Label>
-                                <Input
-                                    id="ujFuso"
-                                    type="number"
-                                    placeholder="0"
-                                    {...register('ujFuso', { required: 'Wajib diisi', valueAsNumber: true, min: 0 })}
-                                    className={errors.ujFuso ? 'border-red-500' : ''}
-                                />
-                                {errors.ujFuso && <p className="text-red-500 text-xs">{errors.ujFuso.message}</p>}
-                            </div>
-                        </div>
-
-                        <div className="flex flex-col space-y-2 pt-4">
-                            <Button type="submit" className="w-full bg-[#1e3a5f] hover:bg-[#152e4d]">Simpan</Button>
-                            <Button type="button" variant="outline" className="w-full" onClick={onClose}>Batal</Button>
-                        </div>
-                    </form>
-                )}
-            </DialogContent>
-        </Dialog>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <FormField
+                            control={form.control}
+                            name="invTowing"
+                            render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel className="text-sm font-medium text-gray-700">Invoice Towing</FormLabel>
+                                    <FormControl>
+                                        <MoneyInput
+                                            placeholder="Masukkan data"
+                                            value={field.value}
+                                            onChangeValue={field.onChange}
+                                            className="bg-white"
+                                        />
+                                    </FormControl>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+                        <FormField
+                            control={form.control}
+                            name="invCdd"
+                            render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel className="text-sm font-medium text-gray-700">Invoice CDD</FormLabel>
+                                    <FormControl>
+                                        <MoneyInput
+                                            placeholder="Masukkan data"
+                                            value={field.value}
+                                            onChangeValue={field.onChange}
+                                            className="bg-white"
+                                        />
+                                    </FormControl>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+                        <FormField
+                            control={form.control}
+                            name="invFuso"
+                            render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel className="text-sm font-medium text-gray-700">Invoice Fuso</FormLabel>
+                                    <FormControl>
+                                        <MoneyInput
+                                            placeholder="Masukkan data"
+                                            value={field.value}
+                                            onChangeValue={field.onChange}
+                                            className="bg-white"
+                                        />
+                                    </FormControl>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+                    </div>
+                </div>
+            </FormDialog>
+        </Form>
     );
 }

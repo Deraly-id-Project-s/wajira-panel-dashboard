@@ -123,7 +123,7 @@ export default function CreatePurchaseUnitPage() {
           subtitle={
             <>
               <span>Kode Pembelian:</span>
-              <span className="text-blue-600 font-semibold">{purchase?.code ?? '-'}</span>
+              <span className="inline-flex items-center gap-1.5 font-semibold text-orange-600 hover:text-orange-700">{purchase?.code ?? '-'}</span>
             </>
           }
         />
@@ -132,8 +132,8 @@ export default function CreatePurchaseUnitPage() {
         <Card className="rounded-md">
           <CardContent className="p-6">
             <UnitTransactionForm
-            type="purchase"
-            allowCreateTypeUnit
+              type="purchase"
+              allowCreateTypeUnit
               onSubmit={handleSubmit}
               onCancel={() => router.back()}
               loading={addUnitMutation.isPending}

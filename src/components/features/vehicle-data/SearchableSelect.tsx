@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { Check, ChevronsUpDown, Search } from 'lucide-react';
+import { Check, ChevronsUpDown, Search, Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Command, CommandEmpty, CommandGroup, CommandItem, CommandList } from '@/components/ui/command';
@@ -25,6 +25,8 @@ interface SearchableSelectProps {
   onLoadMore?: () => void;
   hasMore?: boolean;
   className?: string;
+  onActionClick?: () => void;
+  actionLabel?: string;
 }
 
 export function SearchableSelect({
@@ -40,6 +42,8 @@ export function SearchableSelect({
   onLoadMore,
   hasMore = false,
   className,
+  onActionClick,
+  actionLabel,
 }: SearchableSelectProps) {
   const [open, setOpen] = React.useState(false);
   const [query, setQuery] = React.useState('');
@@ -87,10 +91,10 @@ export function SearchableSelect({
         </Button>
       </PopoverTrigger>
       <PopoverContent
-        className="w-[--radix-popover-trigger-width] p-0 pointer-events-auto"
+        className="w-[--radix-popover-trigger-width] p-0 pointer-events-auto flex flex-col"
         align="start"
       >
-        <Command shouldFilter={false}>
+        <Command shouldFilter={false} className="flex-1 min-h-0">
           <div className="flex h-9 items-center gap-2 border-b px-3" data-slot="command-input-wrapper">
             <Search className="size-4 shrink-0 opacity-50" />
             <input autoComplete="off"
@@ -143,6 +147,24 @@ export function SearchableSelect({
             )}
           </CommandList>
         </Command>
+        {onActionClick && (
+          <div className="border-t p-1.5 bg-gray-50 flex justify-center shrink-0">
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              className="w-full text-xs font-semibold text-blue-600 hover:text-blue-700 hover:bg-blue-50/50 justify-center h-8 gap-1 rounded-md"
+              onClick={(e) => {
+                e.stopPropagation();
+                onActionClick();
+                setOpen(false);
+              }}
+            >
+              <Plus className="h-3.5 w-3.5" />
+              {actionLabel || 'Tambah Data Baru'}
+            </Button>
+          </div>
+        )}
       </PopoverContent>
     </Popover>
   );

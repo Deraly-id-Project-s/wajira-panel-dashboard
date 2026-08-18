@@ -199,7 +199,7 @@ export default function SalesRefundDetailPageContent({ transactionId, refundId }
               <h1 className="text-2xl font-semibold text-slate-900">Detail Data Refund Penjualan</h1>
               <div className="text-sm text-muted-foreground flex items-center gap-2">
                 <span>Kode Refund:</span>
-                <span className="text-blue-600 font-semibold">{refund.code}</span>
+                <span className="inline-flex items-center gap-1.5 font-semibold text-orange-600 hover:text-orange-700">{refund.code}</span>
               </div>
             </div>
           </div>

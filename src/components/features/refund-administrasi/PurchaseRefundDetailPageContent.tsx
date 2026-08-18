@@ -200,7 +200,7 @@ export default function PurchaseRefundDetailPageContent({ transactionId, refundI
               <h1 className="text-2xl font-semibold text-slate-900">Detail Data Refund Pembelian</h1>
               <div className="text-sm text-muted-foreground flex items-center gap-2">
                 <span>Kode Refund:</span>
-                <span className="text-blue-600 font-semibold">{refund.code}</span>
+                <span className="inline-flex items-center gap-1.5 font-semibold text-orange-600 hover:text-orange-700">{refund.code}</span>
               </div>
             </div>
           </div>

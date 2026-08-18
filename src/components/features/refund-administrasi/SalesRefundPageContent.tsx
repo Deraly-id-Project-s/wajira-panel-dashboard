@@ -175,7 +175,7 @@ export default function SalesRefundPageContent({ transactionId }: { transactionI
               <h1 className="text-2xl font-semibold text-slate-900">Data Refund Penjualan</h1>
               <div className="text-sm text-muted-foreground flex items-center gap-2">
                 <span>Kode Jual:</span>
-                <span className="text-blue-600 font-semibold">{transactionQuery.data?.code}</span>
+                <span className="inline-flex items-center gap-1.5 font-semibold text-orange-600 hover:text-orange-700">{transactionQuery.data?.code}</span>
               </div>
             </div>
           </div>

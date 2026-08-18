@@ -120,7 +120,7 @@ export default function PenerimaanUnitDetailPage() {
               <h1 className="text-2xl font-semibold text-slate-900">Detail Penerimaan Unit</h1>
               <div className="text-sm text-muted-foreground flex items-center gap-2">
                 <span>Kode Transaksi:</span>
-                <span className="text-blue-600 font-semibold">{detailData?.activity_number || detailData?.noPenerimaan || '-'}</span>
+                <span className="inline-flex items-center gap-1.5 font-semibold text-orange-600 hover:text-orange-700">{detailData?.activity_number || detailData?.noPenerimaan || '-'}</span>
                 <Badge variant="outline" className={`font-semibold ${stateInfo.bg}`}>
                   {stateInfo.text}
                 </Badge>

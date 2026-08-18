@@ -142,7 +142,7 @@ export default function CreateUnitPage() {
           subtitle={
             <>
               <span>Kode Penjualan:</span>
-              <span className="text-blue-600 font-semibold">{invoiceCode}</span>
+              <span className="inline-flex items-center gap-1.5 font-semibold text-orange-600 hover:text-orange-700">{invoiceCode}</span>
             </>
           }
         />
@@ -150,8 +150,8 @@ export default function CreateUnitPage() {
         <Card className="rounded-md">
           <CardContent className="p-6">
             <UnitTransactionForm
-            type="sales"
-            allowCreateTypeUnit
+              type="sales"
+              allowCreateTypeUnit
               defaultValues={{
                 unitTypeId: '',
                 qty: 1,

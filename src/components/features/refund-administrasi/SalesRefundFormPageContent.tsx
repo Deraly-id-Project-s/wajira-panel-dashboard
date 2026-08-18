@@ -253,7 +253,7 @@ export default function SalesRefundFormPageContent({ transactionId, mode, refund
               <h1 className="text-2xl font-semibold text-slate-900">{mode === 'create' ? 'Tambah Data Refund Penjualan' : 'Edit Data Refund Penjualan'}</h1>
               <div className="text-sm text-muted-foreground flex items-center gap-2">
                 <span>Kode Jual:</span>
-                <span className="text-blue-600 font-semibold">{selectableItemsQuery.transactionQuery?.data?.code}</span>
+                <span className="inline-flex items-center gap-1.5 font-semibold text-orange-600 hover:text-orange-700">{selectableItemsQuery.transactionQuery?.data?.code}</span>
               </div>
             </div>
           </div>

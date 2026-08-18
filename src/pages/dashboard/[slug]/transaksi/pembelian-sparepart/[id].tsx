@@ -234,7 +234,7 @@ export default function DetailPurchaseSparepartPage() {
           subtitle={
             <>
               <span>Kode Beli:</span>
-              <span className="text-blue-600 font-semibold">{transaction.code}</span>
+              <span className="inline-flex items-center gap-1.5 font-semibold text-orange-600 hover:text-orange-700">{transaction.code}</span>
               {isPaid ? (
                 <Badge variant="outline" className="border-emerald-200 bg-emerald-50 text-emerald-700 font-semibold">
                   Lunas
