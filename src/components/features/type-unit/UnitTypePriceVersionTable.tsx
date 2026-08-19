@@ -173,7 +173,7 @@ export const UnitTypePriceVersionTable = ({
       }}
       onPageChange={onPageChange}
       headerActions={
-        <Button onClick={onAdd} disabled={!canCreate} className="button-theme-1">
+        <Button onClick={onAdd} disabled={!canCreate} className="button-theme-1!">
           <Plus className="mr-2 h-4 w-4" />
           Tambah Versi
         </Button>

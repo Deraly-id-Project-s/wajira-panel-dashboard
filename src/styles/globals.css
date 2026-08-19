@@ -51,7 +51,7 @@
 }
 
 @utility button-theme-1 {
-  @apply bg-orange-600 hover:bg-orange-700 opacity-80 text-white font-medium shadow-sm transition-colors;
+  @apply bg-orange-500 hover:bg-orange-600 opacity-70 w-full sm:w-auto text-white font-medium shadow-sm transition-colors;
 }
 
 @theme inline {

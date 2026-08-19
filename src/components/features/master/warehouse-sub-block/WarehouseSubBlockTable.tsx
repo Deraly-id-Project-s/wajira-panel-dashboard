@@ -192,7 +192,7 @@ export const WarehouseSubBlockTable = ({
               Import
             </Button>
           )}
-          <Button onClick={canCreate ? onAdd : undefined} className="w-full sm:w-auto bg-[#1e3a5f] hover:bg-[#152e4d]" disabled={!canCreate}>
+          <Button onClick={canCreate ? onAdd : undefined} className="button-theme-1!" disabled={!canCreate}>
             <Plus className="mr-2 h-4 w-4" />
             Tambah Data
           </Button>

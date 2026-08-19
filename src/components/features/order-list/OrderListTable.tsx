@@ -298,7 +298,7 @@ export const OrderListTable = React.memo(function OrderListTable({
               type="button"
               onClick={onAdd}
               disabled={!canCreate}
-              className="button-theme-1"
+              className="button-theme-1!"
             >
               <Plus className="h-4 w-4 mr-2" />
               Tambah Data
