@@ -5,6 +5,10 @@ import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import BaseTable, { ColumnDef } from '@/components/ui/base-table';
 import type { DoEkspedisi } from '@/@types/do-ekspedisi.types';
+import { CopyBox } from '@/components/ui/copy-box';
+import { formatDate } from '@/lib/utils/format';
+import { useRouter } from 'next/router';
+import { ReferenceLink } from '@/components/ui/reference-link';
 
 interface DOEkspedisiTableProps {
   data: DoEkspedisi[];
@@ -39,6 +43,9 @@ export const DOEkspedisiTable = React.memo(function DOEkspedisiTable({
   onDelete,
   onPrint,
 }: DOEkspedisiTableProps) {
+  const router = useRouter();
+  const slug = typeof router.query.slug === 'string' ? router.query.slug : '';
+
   const columns = useMemo<ColumnDef<DoEkspedisi>[]>(
     () => [
       {
@@ -46,24 +53,24 @@ export const DOEkspedisiTable = React.memo(function DOEkspedisiTable({
         accessorKey: 'doCode',
         alignment: 'center',
         className: 'font-medium text-slate-800',
-        cell: (item) => item.doCode || '-',
+        cell: (item) => item?.doCode ? <CopyBox text={item?.doCode} /> : '-',
       },
       {
         header: 'Kode Order',
         alignment: 'center',
-        cell: (item) => item.orderCode || item.orderList?.code || '-',
+        cell: (item) => item?.orderCode ? <CopyBox text={item?.orderCode} /> : '-',
       },
       {
         header: 'Tanggal',
         accessorKey: 'date',
         alignment: 'center',
-        cell: (item) => (item.date ? format(new Date(item.date), 'dd/MM/yyyy') : '-'),
+        cell: (item) => (item?.date ? formatDate(item?.date) : '-'),
       },
       {
         header: 'Nama Driver',
         accessorKey: 'driver.name',
         alignment: 'center',
-        cell: (item) => item.driver?.name || '-',
+        cell: (item) => item?.driver ? <ReferenceLink href={`/dashboard/${slug}/master/driver?search=${item?.driver?.name}`}>{item?.driver?.name}</ReferenceLink> : '-',
       },
       {
         header: 'No Polisi',

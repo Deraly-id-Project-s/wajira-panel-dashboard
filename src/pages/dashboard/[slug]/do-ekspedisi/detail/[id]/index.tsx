@@ -1,5 +1,5 @@
 import React from 'react';
-import { ChevronLeft, Printer } from 'lucide-react';
+import { AlertTriangle, Pencil, Printer } from 'lucide-react';
 import { useRouter } from 'next/router';
 import { toast } from 'sonner';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
@@ -12,6 +12,8 @@ import { useOrderListTarifs, useOrderListTarifItems } from '@/hooks/useOrderList
 import { useProcessDoExpedition } from '@/hooks/useDoInvoice';
 import { getApiErrorMessage } from '@/utils/apiErrorHandler';
 import { LoadingState } from '@/components/ui/loading-state';
+import { PageHeader } from '@/components/ui/page-header';
+import { Button } from '@/components/ui/button';
 
 // pagination helper removed (unused in print/detail view)
 
@@ -42,6 +44,23 @@ export default function DetailDOEkspedisiPage() {
     enabled: Boolean(orderListId),
   });
   const deleteItemMutation = useDeleteDoEkspedisiItem();
+
+  const backToList = React.useCallback(() => {
+    if (slug) void router.push(`/dashboard/${slug}/do-ekspedisi`);
+  }, [router, slug]);
+
+  const pageHeader = (actions?: React.ReactNode) => (
+    <PageHeader
+      breadcrumbs={[
+        { label: 'DO Ekspedisi', onClick: backToList },
+        { label: 'Detail DO' },
+      ]}
+      title="Detail Delivery Order Ekspedisi"
+      subtitle={detailQuery.data?.doCode || undefined}
+      onBack={backToList}
+      actions={actions}
+    />
+  );
 
   const effectiveData = React.useMemo<DoEkspedisi | null>(() => {
     if (!detailQuery.data) return null;
@@ -131,17 +150,7 @@ export default function DetailDOEkspedisiPage() {
     return (
       <DashboardLayout>
         <div className="space-y-4">
-          <div className="flex items-start gap-3">
-            <button
-              onClick={() => slug && router.push(`/dashboard/${slug}/do-ekspedisi`)}
-              className="rounded-md p-1 transition-colors hover:bg-slate-100"
-            >
-              <ChevronLeft className="h-5 w-5 text-slate-500" />
-            </button>
-            <div>
-              <h1 className="text-2xl font-semibold text-slate-950">Detail Delivery Order Ekspedisi</h1>
-            </div>
-          </div>
+          {pageHeader()}
 
           <div className="rounded-lg border border-red-200 bg-red-50 p-6 text-center">
             <p className="mb-4 text-red-700">
@@ -166,17 +175,7 @@ export default function DetailDOEkspedisiPage() {
     return (
       <DashboardLayout>
         <div className="space-y-4">
-          <div className="flex items-start gap-3">
-            <button
-              onClick={() => slug && router.push(`/dashboard/${slug}/do-ekspedisi`)}
-              className="rounded-md p-1 transition-colors hover:bg-slate-100"
-            >
-              <ChevronLeft className="h-5 w-5 text-slate-500" />
-            </button>
-            <div>
-              <h1 className="text-2xl font-semibold text-slate-950">Detail Delivery Order Ekspedisi</h1>
-            </div>
-          </div>
+          {pageHeader()}
 
           <div className="rounded-lg border border-yellow-200 bg-yellow-50 p-6 text-center">
             <p className="mb-4 text-yellow-700">Data DO Ekspedisi tidak ditemukan</p>
@@ -195,31 +194,44 @@ export default function DetailDOEkspedisiPage() {
   return (
     <DashboardLayout>
       <div className="space-y-6">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div className="flex items-start gap-3">
-            <button onClick={() => slug && router.push(`/dashboard/${slug}/do-ekspedisi`)} className="rounded-md p-1 transition-colors hover:bg-slate-100">
-              <ChevronLeft className="h-5 w-5 text-slate-500" />
-            </button>
+        {pageHeader(
+          <>
+            <Button
+              variant="outline"
+              onClick={() => slug && id && void router.push(`/dashboard/${slug}/do-ekspedisi/${id}/edit`)}
+              className="border-slate-200 text-slate-700 hover:bg-slate-50"
+            >
+              <Pencil className="h-4 w-4" />
+              Edit
+            </Button>
+            <Button
+              onClick={async () => {
+                if (!id || !slug) return;
+                try {
+                  await processExpeditionMutation.mutateAsync({ id: Number(id) });
+                  router.push(`/dashboard/${slug}/do-ekspedisi/print/${id}`);
+                } catch (error: any) {
+                  toast.error(getApiErrorMessage(error));
+                }
+              }}
+              disabled={processExpeditionMutation.isPending}
+              className="bg-[#1e3a5f] text-white hover:bg-[#152e4d]"
+            >
+              <Printer className="h-4 w-4" />
+              {processExpeditionMutation.isPending ? 'Menyiapkan...' : 'Print DO'}
+            </Button>
+          </>,
+        )}
+
+        {!effectiveData?.driver && (
+          <div role="alert" className="flex items-start gap-3 rounded-lg border border-amber-200 bg-amber-50 p-4 text-amber-900">
+            <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0 text-amber-600" />
             <div>
-              <h1 className="text-2xl font-semibold text-slate-950">Detail Delivery Order Ekspedisi</h1>
+              <p className="font-semibold">Data driver belum dipilih</p>
+              <p className="mt-1 text-sm text-amber-800">Silakan klik Edit untuk memilih driver sebelum mencetak Delivery Order.</p>
             </div>
           </div>
-          <button
-            onClick={async () => {
-              if (!id || !slug) return;
-              try {
-                await processExpeditionMutation.mutateAsync({ id: Number(id) });
-                router.push(`/dashboard/${slug}/do-ekspedisi/print/${id}`);
-              } catch (error: any) {
-                toast.error(getApiErrorMessage(error));
-              }
-            }}
-            className="inline-flex items-center gap-2 rounded-md bg-[#1e3a5f] px-4 py-2.5 text-sm font-semibold text-white hover:bg-[#152e4d]"
-          >
-            <Printer className="h-4 w-4" />
-            Print DO
-          </button>
-        </div>
+        )}
 
         <DOEkspedisiDetailCard data={effectiveData ?? detailQuery.data} />
 
