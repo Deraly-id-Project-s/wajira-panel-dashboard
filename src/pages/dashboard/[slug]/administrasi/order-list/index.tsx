@@ -22,14 +22,10 @@ export default function OrderListPage() {
   const canDelete = hasPermission('transaction:delete');
 
   const initialPage = typeof router.query.page === 'string' ? Number(router.query.page) : 1;
-  const initialPerPage = typeof router.query.perPage === 'string'
-    ? Number(router.query.perPage)
-    : typeof router.query.per_page === 'string'
-      ? Number(router.query.per_page)
-      : 10;
+  const initialPerPage = 25;
   const initialSearch = typeof router.query.search === 'string' ? router.query.search : '';
   const [page, setPage] = React.useState(Number.isFinite(initialPage) && initialPage > 0 ? initialPage : 1);
-  const [perPage, setPerPage] = React.useState(Number.isFinite(initialPerPage) && initialPerPage > 0 ? initialPerPage : 10);
+  const [perPage, setPerPage] = React.useState(Number.isFinite(initialPerPage) && initialPerPage > 0 ? initialPerPage : 25);
   const [searchInput, setSearchInput] = React.useState(initialSearch);
   const [search, setSearch] = React.useState(initialSearch);
   const debouncedSearch = useDebouncedValue(searchInput, 350);
@@ -57,7 +53,7 @@ export default function OrderListPage() {
   const tarifItemQueryParams = React.useMemo(
     () => ({
       page: 1,
-      perPage: 500,
+      perPage: 50,
       order_by: 'created_at' as const,
       order_sort: 'desc' as const,
     }),
@@ -67,7 +63,7 @@ export default function OrderListPage() {
   const tarifLoadItemQueryParams = React.useMemo(
     () => ({
       page: 1,
-      perPage: 1000,
+      perPage: 100,
       order_by: 'created_at' as const,
       order_sort: 'desc' as const,
     }),

@@ -25,6 +25,7 @@ export const orderListFormSchema = z.object({
   status: z.enum(['deliver', 'process', 'pending', 'reject']),
   invoiceBill: z.coerce.number().min(0),
   ppn: z.coerce.number().min(0),
+  pph: z.coerce.number().min(0).optional(),
   ujDriver: z.coerce.number().min(0),
   note: z.string().optional().default(''),
   items: z.array(orderListItemSchema).min(1, 'Minimal satu tarif harus ditambahkan'),

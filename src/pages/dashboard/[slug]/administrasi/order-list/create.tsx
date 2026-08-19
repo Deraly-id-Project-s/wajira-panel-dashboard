@@ -65,7 +65,6 @@ export default function CreateOrderListPage() {
         bill_invoice: Number(values.invoiceBill),
         vehicle_type: firstItem?.vehicleType ?? 'fuso',
         note: values.note,
-        ppn: Number(values.ppn),
         uj_driver: Number(values.ujDriver),
         loading_in: firstItem?.loadingIn ?? '',
         loading_out: firstItem?.loadingOut ?? '',

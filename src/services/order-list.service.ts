@@ -278,6 +278,7 @@ const mapOrderList = (item: any): OrderList => {
     vehicleType: normalizeVehicleType(dataItem?.vehicle_type ?? dataItem?.vehicleType ?? firstTarif?.vehicleType),
     billInvoice: toNumber(dataItem?.bill_invoice ?? dataItem?.invoice_bill),
     ppn: toNumber(dataItem?.ppn),
+    pph: toNumber(dataItem?.pph),
     note: toStringValue(dataItem?.note, dataItem?.notes, dataItem?.keterangan, dataItem?.description, dataItem?.remark),
     ujDriver: toNumber(dataItem?.uj_driver ?? firstTarif?.driverFee),
     loadingIn: toStringValue(dataItem?.loading_in, dataItem?.loadingIn, firstTarif?.loadingIn),
@@ -298,7 +299,6 @@ const buildCreateOrderListBody = (payload: CreateOrderListPayload) => {
   body.append('bill_invoice', String(payload.bill_invoice));
   if (payload.vehicle_type) body.append('vehicle_type', payload.vehicle_type);
   if (payload.note != null) body.append('note', payload.note);
-  if (payload.ppn != null) body.append('ppn', String(payload.ppn));
   if (payload.uj_driver != null) body.append('uj_driver', String(payload.uj_driver));
   if (payload.loading_in != null) body.append('loading_in', payload.loading_in);
   if (payload.loading_out != null) body.append('loading_out', payload.loading_out);
@@ -313,7 +313,6 @@ const buildUpdateOrderListBody = (payload: UpdateOrderListPayload) => {
   body.append('bill_invoice', String(payload.bill_invoice ?? payload.invoice_bill));
   if (payload.vehicle_type) body.append('vehicle_type', payload.vehicle_type);
   if (payload.note != null) body.append('note', payload.note);
-  if (payload.ppn != null) body.append('ppn', String(payload.ppn));
   if (payload.uj_driver != null) body.append('uj_driver', String(payload.uj_driver));
   if (payload.loading_in != null) body.append('loading_in', payload.loading_in);
   if (payload.loading_out != null) body.append('loading_out', payload.loading_out);
@@ -503,4 +502,40 @@ export const deleteOrderListTarifItem = async (id: string | number): Promise<voi
   if (!response.data.status) {
     throw new ApiResponseError(response.data.message ?? 'Failed to delete order list tarif item');
   }
+};
+
+export interface OrderListFormulaResponse {
+  vehicle_type: OrderListVehicleType;
+  bill_invoice: number;
+  uj_driver: number;
+  ppn: {
+    name: string;
+    rate: number;
+    value: number;
+  };
+  pph: {
+    name: string;
+    rate: number;
+    value: number;
+  };
+  grand_total: number;
+  total_billing: number;
+}
+
+export const getOrderListFormula = async (params: {
+  vehicle_type: OrderListVehicleType;
+  tarif_ids: number[];
+  bill_invoice: number;
+}): Promise<OrderListFormulaResponse> => {
+  const response = await apiClient.get<LaravelApiResponse<OrderListFormulaResponse>>(
+    `${orderListBasePath}/get-formula`,
+    {
+      params: {
+        vehicle_type: params.vehicle_type,
+        tarif_ids: JSON.stringify(params.tarif_ids),
+        bill_invoice: params.bill_invoice,
+      },
+    }
+  );
+  return ensureSuccess(response.data);
 };

@@ -100,19 +100,18 @@ export function SupplierCombobox({
       <div className="flex items-center gap-2 w-full min-w-0">
         <Popover open={open} onOpenChange={setOpen}>
           <PopoverTrigger asChild>
-            <Button
+            <button
               type="button"
-              variant="outline"
               role="combobox"
               aria-expanded={open}
               disabled={disabled}
-              className="w-full justify-between bg-transparent font-normal min-w-0"
+              className="flex h-10 w-full items-center justify-between rounded-md border border-input bg-transparent px-3 py-2 text-sm ring-offset-background disabled:cursor-not-allowed disabled:opacity-50 min-w-0 font-normal"
             >
               <span className={cn('truncate', !selectedName && !selected && 'text-muted-foreground')}>
                 {selectedName || selected?.name || 'Pilih supplier'}
               </span>
               <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-            </Button>
+            </button>
           </PopoverTrigger>
           <PopoverContent className="w-[--radix-popover-trigger-width] p-0" align="start">
             <Command>

@@ -97,7 +97,7 @@ export default function PurchaseForm({
                         control={form.control}
                         name="supplierName"
                         render={({ field }) => (
-                            <FormItem className="flex flex-col">
+                            <FormItem className="flex flex-col min-w-0">
                                 <FormLabel className="text-sm font-medium">Supplier</FormLabel>
                                 <SupplierCombobox
                                     companyId={companyId}

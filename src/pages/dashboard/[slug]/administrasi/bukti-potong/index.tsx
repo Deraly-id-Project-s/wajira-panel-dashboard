@@ -215,7 +215,7 @@ export default function BuktiPotongPage() {
                 Export
               </Button>
               {canCreate && (
-                <Button onClick={handleCreate} className="w-full sm:w-auto bg-[#1e3a5f] hover:bg-[#152e4d]">
+                <Button onClick={handleCreate} className="button-theme-1">
                   <Plus className="h-4 w-4" />
                   Tambah Data
                 </Button>

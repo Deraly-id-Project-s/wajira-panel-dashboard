@@ -73,6 +73,7 @@ export interface OrderList {
   vehicleType?: OrderListVehicleType | null;
   billInvoice: number;
   ppn: number;
+  pph?: number;
   note: string;
   ujDriver: number;
   loadingIn: string;
@@ -110,7 +111,6 @@ export interface CreateOrderListPayload {
   bill_invoice: number;
   vehicle_type: OrderListVehicleType;
   note?: string;
-  ppn?: number;
   uj_driver?: number;
   loading_in?: string;
   loading_out?: string;
@@ -123,7 +123,6 @@ export interface UpdateOrderListPayload {
   bill_invoice?: number;
   vehicle_type?: OrderListVehicleType;
   note?: string;
-  ppn?: number;
   uj_driver?: number;
   loading_in?: string;
   loading_out?: string;

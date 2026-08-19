@@ -28,6 +28,7 @@ import {
   ORDER_LIST_VEHICLE_OPTIONS,
   formatOrderCurrency,
 } from './order-list.utils';
+import { getOrderListFormula } from '@/services/order-list.service';
 
 export interface OrderListFormItemValue {
   localId: string;
@@ -223,6 +224,7 @@ export function OrderListForm({
       status: initialData?.status ?? 'pending',
       invoiceBill: Number(initialData?.billInvoice ?? 0),
       ppn: Number(initialData?.ppn ?? 0),
+      pph: Number(initialData?.pph ?? 0),
       ujDriver: Number(initialData?.ujDriver ?? 0),
       note: initialData?.note ?? '',
       items: toItemDefaults(initialData),
@@ -244,6 +246,7 @@ export function OrderListForm({
       status: initialData?.status ?? 'pending',
       invoiceBill: Number(initialData?.billInvoice ?? 0),
       ppn: Number(initialData?.ppn ?? 0),
+      pph: Number(initialData?.pph ?? 0),
       ujDriver: Number(initialData?.ujDriver ?? 0),
       note: initialData?.note ?? '',
       items: toItemDefaults(initialData),
@@ -259,6 +262,7 @@ export function OrderListForm({
   const customerId = useWatch({ control, name: 'customerId' });
   const invoiceBill = useWatch({ control, name: 'invoiceBill' });
   const watchedPpn = useWatch({ control, name: 'ppn' });
+  const watchedPph = useWatch({ control, name: 'pph' });
   const watchedUjDriver = useWatch({ control, name: 'ujDriver' });
   const selectedCustomer = mergedCustomerOptions.find((item) => item.value === customerId);
 
@@ -375,10 +379,46 @@ export function OrderListForm({
     setValue('invoiceBill', totalInvoice, { shouldDirty: true });
   }, [setValue, watchedItems]);
 
+  const [ppnInfo, setPpnInfo] = React.useState<{ name: string; rate: number } | null>(null);
+  const [pphInfo, setPphInfo] = React.useState<{ name: string; rate: number } | null>(null);
+  const [isLoadingFormula, setIsLoadingFormula] = React.useState(false);
+
+  const vehicleType = watchedItems?.[0]?.vehicleType;
+  const tarifIds = React.useMemo(() => {
+    return (watchedItems ?? [])
+      .map((item) => Number(item?.tarifId))
+      .filter((id) => !Number.isNaN(id) && id > 0);
+  }, [watchedItems]);
+
   React.useEffect(() => {
-    const calculatedPpn = Math.round(Number(invoiceBill || 0) * 0.011);
-    setValue('ppn', calculatedPpn, { shouldDirty: true });
-  }, [invoiceBill, setValue]);
+    if (!vehicleType || tarifIds.length === 0 || !invoiceBill) {
+      return;
+    }
+
+    const fetchFormula = async () => {
+      setIsLoadingFormula(true);
+      try {
+        const formula = await getOrderListFormula({
+          vehicle_type: vehicleType,
+          tarif_ids: tarifIds,
+          bill_invoice: Number(invoiceBill),
+        });
+
+        setValue('ppn', formula.ppn.value, { shouldDirty: true });
+        setValue('pph', formula.pph.value, { shouldDirty: true });
+        setValue('ujDriver', formula.uj_driver, { shouldDirty: true });
+
+        setPpnInfo({ name: formula.ppn.name, rate: formula.ppn.rate });
+        setPphInfo({ name: formula.pph.name, rate: formula.pph.rate });
+      } catch (error) {
+        console.error('Failed to fetch formula:', error);
+      } finally {
+        setIsLoadingFormula(false);
+      }
+    };
+
+    fetchFormula();
+  }, [vehicleType, tarifIds, invoiceBill, setValue]);
 
   const onInvalid = (errs: any) => {
     console.error('Form validation failed:', errs);
@@ -498,25 +538,37 @@ export function OrderListForm({
                         control={control}
                         name={`items.${index}.tarifId`}
                         render={({ field: controllerField }) => (
-                          <FormItem className="flex flex-col">
+                          <FormItem className="flex flex-col min-w-0">
                             <FormLabel className="text-sm font-medium">Pilih Rute / Tarif</FormLabel>
-                            <FormControl>
-                              <SearchableSelect
-                                value={controllerField.value}
-                                onChange={(value) => handleTarifChange(index, value)}
-                                options={mergedTarifOptions}
-                                placeholder="Pilih tarif"
-                                searchPlaceholder="Cari tarif..."
-                                loading={tarifLoading}
-                                onSearchChange={onTarifSearch}
-                                className="bg-transparent"
-                                onActionClick={() => {
+                            <div className="flex items-center gap-2 w-full min-w-0">
+                              <div className="flex-1 min-w-0">
+                                <FormControl>
+                                  <SearchableSelect
+                                    value={controllerField.value}
+                                    onChange={(value) => handleTarifChange(index, value)}
+                                    options={mergedTarifOptions}
+                                    placeholder="Pilih tarif"
+                                    searchPlaceholder="Cari tarif..."
+                                    loading={tarifLoading}
+                                    onSearchChange={onTarifSearch}
+                                    className="bg-transparent"
+                                  />
+                                </FormControl>
+                              </div>
+                              <Button
+                                type="button"
+                                variant="outline"
+                                size="icon"
+                                aria-label="Tambah tarif"
+                                onClick={() => {
                                   setActiveItemIndex(index);
                                   setIsCreateTarifOpen(true);
                                 }}
-                                actionLabel="Tambah Tarif Baru"
-                              />
-                            </FormControl>
+                                className="h-10 w-10 shrink-0 cursor-pointer"
+                              >
+                                <Plus className="h-4 w-4" />
+                              </Button>
+                            </div>
                             <FormMessage />
                           </FormItem>
                         )}
@@ -710,7 +762,7 @@ export function OrderListForm({
               <div className="my-4 h-px bg-muted/60" />
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
               <FormField
                 control={control}
                 name="ujDriver"
@@ -755,13 +807,38 @@ export function OrderListForm({
                 name="ppn"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-sm font-medium">PPN</FormLabel>
+                    <FormLabel className="text-sm font-medium">
+                      PPN {ppnInfo ? `(${ppnInfo.name} - ${ppnInfo.rate}%)` : ''}
+                    </FormLabel>
                     <FormControl>
                       <MoneyInput
                         value={field.value}
                         onChangeValue={field.onChange}
-                        placeholder="Masukkan nominal PPN"
-                        className="bg-transparent"
+                        disabled
+                        placeholder="Terisi otomatis..."
+                        className="bg-slate-50 border-slate-200 cursor-not-allowed"
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={control}
+                name="pph"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-sm font-medium">
+                      PPh {pphInfo ? `(${pphInfo.name} - ${pphInfo.rate}%)` : ''}
+                    </FormLabel>
+                    <FormControl>
+                      <MoneyInput
+                        value={field.value}
+                        onChangeValue={field.onChange}
+                        disabled
+                        placeholder="Terisi otomatis..."
+                        className="bg-slate-50 border-slate-200 cursor-not-allowed"
                       />
                     </FormControl>
                     <FormMessage />
@@ -771,7 +848,7 @@ export function OrderListForm({
             </div>
 
             <div className="rounded-xl border border-dashed border-slate-200 bg-slate-50/50 p-4 text-sm text-slate-600 font-medium">
-              Ringkasan biaya: UJ Driver {formatOrderCurrency(watchedUjDriver)} • Invoice {formatOrderCurrency(invoiceBill)} • PPN {formatOrderCurrency(watchedPpn)}
+              Ringkasan biaya: UJ Driver {formatOrderCurrency(watchedUjDriver)} • Invoice {formatOrderCurrency(invoiceBill)} • PPN {formatOrderCurrency(watchedPpn)} • PPh {formatOrderCurrency(watchedPph)}
             </div>
           </div>
 
