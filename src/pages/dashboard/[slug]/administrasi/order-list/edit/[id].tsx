@@ -22,9 +22,10 @@ import {
   useUpdateOrderListTarif,
 } from '@/hooks/useOrderList';
 import { useTarifs } from '@/hooks/useTarif';
+import { useDrivers } from '@/hooks/useDriver';
+import { useVehicleFleetLookups } from '@/hooks/useVehicleFleetLookups';
 import { ApiValidationError } from '@/lib/api/response';
 import { composeOrderListWithTarifs } from '@/services/order-list.service';
-import { summarizeTarifCargoItems } from '@/components/features/order-list/order-list.utils';
 import { LoadingState } from '@/components/ui/loading-state';
 
 const isItemChangedTarif = (initialItem: any, currentItem: OrderListFormItemValue) =>
@@ -40,8 +41,12 @@ export default function EditOrderListPage() {
   const { companyId } = useCompany();
   const [customerSearch, setCustomerSearch] = React.useState('');
   const [tarifSearch, setTarifSearch] = React.useState('');
+  const [vehicleSearch, setVehicleSearch] = React.useState('');
+  const [driverSearch, setDriverSearch] = React.useState('');
   const debouncedCustomerSearch = useDebouncedValue(customerSearch, 350);
   const debouncedTarifSearch = useDebouncedValue(tarifSearch, 350);
+  const debouncedVehicleSearch = useDebouncedValue(vehicleSearch, 350);
+  const debouncedDriverSearch = useDebouncedValue(driverSearch, 350);
 
   const detailQuery = useOrderListDetail(id);
   const tarifItemQuery = useOrderListTarifs({
@@ -72,6 +77,10 @@ export default function EditOrderListPage() {
     perPage: 100,
     search: debouncedTarifSearch,
   });
+  const fusoQuery = useVehicleFleetLookups({ page: 1, perPage: 100, search: debouncedVehicleSearch, company_id: companyId ?? '', type: 'fuso' });
+  const cddQuery = useVehicleFleetLookups({ page: 1, perPage: 100, search: debouncedVehicleSearch, company_id: companyId ?? '', type: 'cdd' });
+  const towingQuery = useVehicleFleetLookups({ page: 1, perPage: 100, search: debouncedVehicleSearch, company_id: companyId ?? '', type: 'towing' });
+  const driverQuery = useDrivers({ page: 1, perPage: 100, search: debouncedDriverSearch, company_id: companyId ?? undefined });
   const updateOrderMutation = useUpdateOrderList();
   const updateTarifMutation = useUpdateOrderListTarif();
   const createTarifMutation = useCreateOrderListTarif();
@@ -143,6 +152,16 @@ export default function EditOrderListPage() {
       })),
     [tarifRecords],
   );
+  const toVehicleOptions = React.useCallback((records: Array<{ id: number; registrationNumber: string; type: string }>) =>
+    records.map((item) => ({ value: String(item.id), label: item.registrationNumber, subtitle: item.type.toUpperCase() })), []);
+  const vehicleOptions = React.useMemo(() => ({
+    fuso: toVehicleOptions(fusoQuery.data?.data ?? []),
+    cdd: toVehicleOptions(cddQuery.data?.data ?? []),
+    towing: toVehicleOptions(towingQuery.data?.data ?? []),
+  }), [cddQuery.data?.data, fusoQuery.data?.data, towingQuery.data?.data, toVehicleOptions]);
+  const driverOptions = React.useMemo<SearchableSelectOption[]>(() =>
+    (driverQuery.data?.data ?? []).map((item) => ({ value: String(item.id), label: item.name, subtitle: item.code })),
+  [driverQuery.data?.data]);
 
   // Handle error notifications
   React.useEffect(() => {
@@ -188,16 +207,16 @@ export default function EditOrderListPage() {
         const initialItem = initialTarifs.find((entry) => entry.id === item.id);
 
         if (item.id && initialItem) {
-          const tarifSummary = summarizeTarifCargoItems(item.cargoItems);
           if (isItemChangedTarif(initialItem, item)) {
             await deleteTarifMutation.mutateAsync({ id: item.id, orderListId: id });
 
             const createdTarif = await createTarifMutation.mutateAsync({
               do_orderlist_id: id,
               tarif_id: Number(item.tarifId),
-              qty: tarifSummary.qty,
-              load_content: tarifSummary.loadContent,
+              vehicle_type: item.vehicleType,
               delivery_destination: item.deliveryDestination,
+              vehicle_id: Number(item.vehicleId),
+              driver_id: Number(item.driverId),
             });
 
             for (const cargoItem of item.cargoItems) {
@@ -212,8 +231,10 @@ export default function EditOrderListPage() {
               id: item.id,
               payload: {
                 delivery_destination: item.deliveryDestination,
-                qty: tarifSummary.qty,
-                load_content: tarifSummary.loadContent,
+                tarif_id: Number(item.tarifId),
+                vehicle_type: item.vehicleType,
+                vehicle_id: Number(item.vehicleId),
+                driver_id: Number(item.driverId),
               },
             });
 
@@ -249,13 +270,13 @@ export default function EditOrderListPage() {
             }
           }
         } else {
-          const tarifSummary = summarizeTarifCargoItems(item.cargoItems);
           const createdTarif = await createTarifMutation.mutateAsync({
             do_orderlist_id: id,
             tarif_id: Number(item.tarifId),
-            qty: tarifSummary.qty,
-            load_content: tarifSummary.loadContent,
+            vehicle_type: item.vehicleType,
             delivery_destination: item.deliveryDestination,
+            vehicle_id: Number(item.vehicleId),
+            driver_id: Number(item.driverId),
           });
 
           for (const cargoItem of item.cargoItems) {
@@ -360,10 +381,16 @@ export default function EditOrderListPage() {
         customerOptions={customerOptions}
         tarifOptions={tarifOptions}
         tarifRecords={tarifRecords}
+        vehicleOptions={vehicleOptions}
+        driverOptions={driverOptions}
         customerLoading={customerQuery.isLoading}
         tarifLoading={tarifQuery.isLoading}
+        vehicleLoading={fusoQuery.isLoading || cddQuery.isLoading || towingQuery.isLoading}
+        driverLoading={driverQuery.isLoading}
         onCustomerSearch={setCustomerSearch}
         onTarifSearch={setTarifSearch}
+        onVehicleSearch={setVehicleSearch}
+        onDriverSearch={setDriverSearch}
         onCancel={() => router.push(`/dashboard/${slug}/administrasi/order-list`)}
         onSubmit={handleSubmit}
         isSubmitting={

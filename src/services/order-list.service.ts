@@ -18,6 +18,7 @@ import type {
   UpdateOrderListTarifItemPayload,
   UpdateOrderListPayload,
   UpdateOrderListTarifPayload,
+  UpdateOrderListStatePayload,
 } from '@/@types/order-list.types';
 import { apiClient } from '@/lib/api/client';
 import { buildLaravelPaginationQuery } from '@/lib/api/pagination';
@@ -150,6 +151,7 @@ const mapTarifReference = (item: any): OrderListTarifReference | undefined => {
     ujFuso: item.uj_fuso != null ? toNumber(item.uj_fuso) : null,
     invCdd: item.inv_cdd != null ? toNumber(item.inv_cdd) : null,
     invFuso: item.inv_fuso != null ? toNumber(item.inv_fuso) : null,
+    invTowing: item.inv_towing != null ? toNumber(item.inv_towing) : null,
     customer: mapOrderListCustomer(item.customer),
   };
 };
@@ -165,6 +167,7 @@ const resolveDriverFee = (vehicleType: OrderListVehicleType | null, tarif?: Orde
 const resolveInvoiceFee = (vehicleType: OrderListVehicleType | null, tarif?: OrderListTarifReference, fallback?: unknown) => {
   if (fallback != null && fallback !== '') return toNumber(fallback);
   if (!tarif || !vehicleType) return 0;
+  if (vehicleType === 'towing') return toNumber(tarif.invTowing);
   if (vehicleType === 'cdd') return toNumber(tarif.invCdd);
   if (vehicleType === 'fuso') return toNumber(tarif.invFuso);
   return 0;
@@ -215,6 +218,14 @@ const mapOrderListTarifItem = (item: any, parent?: any): OrderListTarifItem => {
       item.pivot?.deliveryDestination,
     ),
     vehicleType,
+    vehicleId: item.vehicle_id != null ? Number(item.vehicle_id) : null,
+    driverId: item.driver_id != null ? Number(item.driver_id) : null,
+    vehicle: item.vehicle ? mapOrderListVehicle(item.vehicle) : undefined,
+    driver: item.driver ? {
+      id: Number(item.driver.id ?? 0),
+      name: item.driver.name ?? '-',
+      code: item.driver.code,
+    } : undefined,
     loadingIn: toStringValue(item.loading_in, item.loadingIn, tarif?.loadingIn, parent?.loading_in, parent?.loadingIn),
     loadingOut: toStringValue(item.loading_out, item.loadingOut, tarif?.loadingOut, parent?.loading_out, parent?.loadingOut),
     loadContent: toStringValue(item.load_content, item.muatan, item.loadContent, item.pivot?.load_content, item.pivot?.muatan),
@@ -254,10 +265,10 @@ const mapOrderListTarifLoadItem = (item: any, parentTarif?: any): OrderListTarif
 const mapOrderList = (item: any): OrderList => {
   const dataItem = item?.do_order_list ?? item;
   
-  const tarifSource = Array.isArray(dataItem?.tarifs)
-    ? dataItem.tarifs
-    : Array.isArray(dataItem?.do_order_list_tarifs)
-      ? dataItem.do_order_list_tarifs
+  const tarifSource = Array.isArray(dataItem?.do_order_list_tarifs)
+    ? dataItem.do_order_list_tarifs
+    : Array.isArray(dataItem?.tarifs)
+      ? dataItem.tarifs
       : Array.isArray(dataItem?.do_orderlist_tarifs)
         ? dataItem.do_orderlist_tarifs
         : [];
@@ -274,7 +285,7 @@ const mapOrderList = (item: any): OrderList => {
     uuid: dataItem?.uuid,
     code: dataItem?.code ?? '-',
     customerId: Number(dataItem?.customer_id ?? dataItem?.customer?.id ?? 0),
-    status: (dataItem?.status ?? 'pending') as OrderList['status'],
+    status: (dataItem?.status ?? 'draft') as OrderList['status'],
     vehicleType: normalizeVehicleType(dataItem?.vehicle_type ?? dataItem?.vehicleType ?? firstTarif?.vehicleType),
     billInvoice: toNumber(dataItem?.bill_invoice ?? dataItem?.invoice_bill),
     ppn: toNumber(dataItem?.ppn),
@@ -283,6 +294,13 @@ const mapOrderList = (item: any): OrderList => {
     ujDriver: toNumber(dataItem?.uj_driver ?? firstTarif?.driverFee),
     loadingIn: toStringValue(dataItem?.loading_in, dataItem?.loadingIn, firstTarif?.loadingIn),
     loadingOut: toStringValue(dataItem?.loading_out, dataItem?.loadingOut, firstTarif?.loadingOut),
+    deliveryDestination: toStringValue(dataItem?.do_delivery_destination, firstTarif?.deliveryDestination),
+    ujTowing: dataItem?.uj_towing != null ? toNumber(dataItem.uj_towing) : null,
+    ujCdd: dataItem?.uj_cdd != null ? toNumber(dataItem.uj_cdd) : null,
+    ujFuso: dataItem?.uj_fuso != null ? toNumber(dataItem.uj_fuso) : null,
+    invTowing: dataItem?.inv_towing != null ? toNumber(dataItem.inv_towing) : null,
+    invCdd: dataItem?.inv_cdd != null ? toNumber(dataItem.inv_cdd) : null,
+    invFuso: dataItem?.inv_fuso != null ? toNumber(dataItem.inv_fuso) : null,
     vehicles: Array.isArray(dataItem?.vehicles) ? dataItem.vehicles.map(mapOrderListVehicle) : [],
     customer: mapOrderListCustomer(dataItem?.customer),
     tarifs,
@@ -295,13 +313,7 @@ const mapOrderList = (item: any): OrderList => {
 const buildCreateOrderListBody = (payload: CreateOrderListPayload) => {
   const body = new FormData();
   body.append('customer_id', String(payload.customer_id));
-  body.append('status', payload.status);
-  body.append('bill_invoice', String(payload.bill_invoice));
-  if (payload.vehicle_type) body.append('vehicle_type', payload.vehicle_type);
-  if (payload.note != null) body.append('note', payload.note);
-  if (payload.uj_driver != null) body.append('uj_driver', String(payload.uj_driver));
-  if (payload.loading_in != null) body.append('loading_in', payload.loading_in);
-  if (payload.loading_out != null) body.append('loading_out', payload.loading_out);
+  body.append('company_id', String(payload.company_id));
   return body;
 };
 
@@ -323,17 +335,20 @@ const buildCreateOrderListTarifBody = (payload: CreateOrderListTarifPayload) => 
   const body = new FormData();
   body.append('do_orderlist_id', String(payload.do_orderlist_id));
   body.append('tarif_id', String(payload.tarif_id));
-  body.append('qty', String(payload.qty));
-  body.append('load_content', payload.load_content);
+  body.append('vehicle_type', payload.vehicle_type);
   body.append('delivery_destination', payload.delivery_destination);
+  body.append('vehicle_id', String(payload.vehicle_id));
+  body.append('driver_id', String(payload.driver_id));
   return body;
 };
 
 const buildUpdateOrderListTarifBody = (payload: UpdateOrderListTarifPayload) => {
   const body = new URLSearchParams();
   body.append('delivery_destination', payload.delivery_destination);
-  if (payload.qty != null) body.append('qty', String(payload.qty));
-  if (payload.load_content != null) body.append('load_content', payload.load_content);
+  if (payload.tarif_id != null) body.append('tarif_id', String(payload.tarif_id));
+  if (payload.vehicle_type != null) body.append('vehicle_type', payload.vehicle_type);
+  if (payload.vehicle_id != null) body.append('vehicle_id', String(payload.vehicle_id));
+  if (payload.driver_id != null) body.append('driver_id', String(payload.driver_id));
   return body;
 };
 
@@ -359,6 +374,7 @@ export const getOrderLists = async (params: OrderListListParams): Promise<OrderL
       ...buildLaravelPaginationQuery(params),
       order_by: params.order_by ?? 'created_at',
       order_sort: params.order_sort ?? 'desc',
+      company_id: params.company_id,
     },
   });
 
@@ -393,6 +409,15 @@ export const updateOrderList = async (id: string | number, payload: UpdateOrderL
     if (error instanceof ApiValidationError) throw error;
     throw error;
   }
+};
+
+export const updateOrderListState = async (id: string | number, payload: UpdateOrderListStatePayload): Promise<OrderList> => {
+  const body = new URLSearchParams();
+  body.append('status', payload.status);
+  const response = await apiClient.put<LaravelApiResponse<any>>(`${orderListBasePath}/${id}/update-state`, body, {
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+  });
+  return mapOrderList(ensureSuccess(response.data));
 };
 
 export const deleteOrderList = async (id: string | number): Promise<void> => {

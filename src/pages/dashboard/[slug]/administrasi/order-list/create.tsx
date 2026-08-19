@@ -9,8 +9,9 @@ import { useCustomers } from '@/hooks/useCustomer';
 import { useDebouncedValue } from '@/hooks/useDebouncedValue';
 import { useCreateOrderList, useCreateOrderListTarif, useCreateOrderListTarifItem } from '@/hooks/useOrderList';
 import { useTarifs } from '@/hooks/useTarif';
+import { useDrivers } from '@/hooks/useDriver';
+import { useVehicleFleetLookups } from '@/hooks/useVehicleFleetLookups';
 import { ApiValidationError } from '@/lib/api/response';
-import { summarizeTarifCargoItems } from '@/components/features/order-list/order-list.utils';
 
 export default function CreateOrderListPage() {
   const router = useRouter();
@@ -18,8 +19,12 @@ export default function CreateOrderListPage() {
   const { companyId } = useCompany();
   const [customerSearch, setCustomerSearch] = React.useState('');
   const [tarifSearch, setTarifSearch] = React.useState('');
+  const [vehicleSearch, setVehicleSearch] = React.useState('');
+  const [driverSearch, setDriverSearch] = React.useState('');
   const debouncedCustomerSearch = useDebouncedValue(customerSearch, 350);
   const debouncedTarifSearch = useDebouncedValue(tarifSearch, 350);
+  const debouncedVehicleSearch = useDebouncedValue(vehicleSearch, 350);
+  const debouncedDriverSearch = useDebouncedValue(driverSearch, 350);
 
   const customerQuery = useCustomers({
     page: 1,
@@ -32,6 +37,10 @@ export default function CreateOrderListPage() {
     perPage: 100,
     search: debouncedTarifSearch,
   });
+  const fusoQuery = useVehicleFleetLookups({ page: 1, perPage: 100, search: debouncedVehicleSearch, company_id: companyId ?? '', type: 'fuso' });
+  const cddQuery = useVehicleFleetLookups({ page: 1, perPage: 100, search: debouncedVehicleSearch, company_id: companyId ?? '', type: 'cdd' });
+  const towingQuery = useVehicleFleetLookups({ page: 1, perPage: 100, search: debouncedVehicleSearch, company_id: companyId ?? '', type: 'towing' });
+  const driverQuery = useDrivers({ page: 1, perPage: 100, search: debouncedDriverSearch, company_id: companyId ?? undefined });
   const createOrderMutation = useCreateOrderList();
   const createTarifMutation = useCreateOrderListTarif();
   const createTarifItemMutation = useCreateOrderListTarifItem();
@@ -55,29 +64,36 @@ export default function CreateOrderListPage() {
       })),
     [tarifRecords],
   );
+  const toVehicleOptions = React.useCallback((records: Array<{ id: number; registrationNumber: string; type: string }>) =>
+    records.map((item) => ({ value: String(item.id), label: item.registrationNumber, subtitle: item.type.toUpperCase() })), []);
+  const vehicleOptions = React.useMemo(() => ({
+    fuso: toVehicleOptions(fusoQuery.data?.data ?? []),
+    cdd: toVehicleOptions(cddQuery.data?.data ?? []),
+    towing: toVehicleOptions(towingQuery.data?.data ?? []),
+  }), [cddQuery.data?.data, fusoQuery.data?.data, towingQuery.data?.data, toVehicleOptions]);
+  const driverOptions = React.useMemo<SearchableSelectOption[]>(() =>
+    (driverQuery.data?.data ?? []).map((item) => ({ value: String(item.id), label: item.name, subtitle: item.code })),
+  [driverQuery.data?.data]);
 
   const handleSubmit = async (values: OrderListFormValues) => {
     try {
-      const firstItem = values.items[0];
+      if (!companyId) {
+        toast.error('Perusahaan belum dipilih');
+        return;
+      }
       const created = await createOrderMutation.mutateAsync({
         customer_id: Number(values.customerId),
-        status: values.status,
-        bill_invoice: Number(values.invoiceBill),
-        vehicle_type: firstItem?.vehicleType ?? 'fuso',
-        note: values.note,
-        uj_driver: Number(values.ujDriver),
-        loading_in: firstItem?.loadingIn ?? '',
-        loading_out: firstItem?.loadingOut ?? '',
+        company_id: Number(companyId),
       });
 
       for (const item of values.items) {
-        const tarifSummary = summarizeTarifCargoItems(item.cargoItems);
         const createdTarif = await createTarifMutation.mutateAsync({
           do_orderlist_id: created.id,
           tarif_id: Number(item.tarifId),
-          qty: tarifSummary.qty,
-          load_content: tarifSummary.loadContent,
+          vehicle_type: item.vehicleType,
           delivery_destination: item.deliveryDestination,
+          vehicle_id: Number(item.vehicleId),
+          driver_id: Number(item.driverId),
         });
 
         for (const cargoItem of item.cargoItems) {
@@ -107,10 +123,16 @@ export default function CreateOrderListPage() {
         customerOptions={customerOptions}
         tarifOptions={tarifOptions}
         tarifRecords={tarifRecords}
+        vehicleOptions={vehicleOptions}
+        driverOptions={driverOptions}
         customerLoading={customerQuery.isLoading}
         tarifLoading={tarifQuery.isLoading}
+        vehicleLoading={fusoQuery.isLoading || cddQuery.isLoading || towingQuery.isLoading}
+        driverLoading={driverQuery.isLoading}
         onCustomerSearch={setCustomerSearch}
         onTarifSearch={setTarifSearch}
+        onVehicleSearch={setVehicleSearch}
+        onDriverSearch={setDriverSearch}
         onCancel={() => router.push(`/dashboard/${slug}/administrasi/order-list`)}
         onSubmit={handleSubmit}
         isSubmitting={createOrderMutation.isPending || createTarifMutation.isPending || createTarifItemMutation.isPending}

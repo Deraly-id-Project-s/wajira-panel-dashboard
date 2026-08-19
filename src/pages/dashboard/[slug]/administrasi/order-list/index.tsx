@@ -7,21 +7,22 @@ import { OrderListTable } from '@/components/features/order-list/OrderListTable'
 import { OrderStatusConfirmDialog } from '@/components/features/order-list/OrderStatusConfirmDialog';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { useDebouncedValue } from '@/hooks/useDebouncedValue';
-import { useOrderLists, useDeleteOrderList, useOrderListTarifs, useOrderListTarifItems, useUpdateOrderList } from '@/hooks/useOrderList';
-import { composeOrderListWithTarifs } from '@/services/order-list.service';
+import { useOrderLists, useDeleteOrderList, useUpdateOrderListState } from '@/hooks/useOrderList';
 import { usePermissionGuard } from '@/hooks/usePermissionGuard';
 import { PageHeader } from '@/components/ui/page-header';
+import { useCompany } from '@/contexts/CompanyContext';
 
 export default function OrderListPage() {
   const router = useRouter();
   const slug = typeof router.query.slug === 'string' ? router.query.slug : '';
+  const { companyId } = useCompany();
 
   const { hasPermission } = usePermissionGuard();
   const canCreate = hasPermission('transaction:create');
   const canEdit = hasPermission('transaction:edit');
   const canDelete = hasPermission('transaction:delete');
 
-  const initialPage = typeof router.query.page === 'string' ? Number(router.query.page) : 25;
+  const initialPage = typeof router.query.page === 'string' ? Number(router.query.page) : 1;
   const initialPerPage = typeof router.query.perPage === 'string'
     ? Number(router.query.perPage)
     : typeof router.query.per_page === 'string'
@@ -50,69 +51,16 @@ export default function OrderListPage() {
       search,
       order_by: 'created_at' as const,
       order_sort: 'desc' as const,
+      company_id: companyId ?? undefined,
+      enabled: Boolean(companyId),
     }),
-    [page, perPage, search],
-  );
-
-  const tarifItemQueryParams = React.useMemo(
-    () => ({
-      page: 1,
-      perPage: 50,
-      order_by: 'created_at' as const,
-      order_sort: 'desc' as const,
-    }),
-    [],
-  );
-
-  const tarifLoadItemQueryParams = React.useMemo(
-    () => ({
-      page: 1,
-      perPage: 100,
-      order_by: 'created_at' as const,
-      order_sort: 'desc' as const,
-    }),
-    [],
+    [companyId, page, perPage, search],
   );
 
   const listQuery = useOrderLists(listQueryParams);
-  const tarifItemQuery = useOrderListTarifs(tarifItemQueryParams);
-  const tarifLoadItemQuery = useOrderListTarifItems(tarifLoadItemQueryParams);
   const deleteMutation = useDeleteOrderList();
-  const updateMutation = useUpdateOrderList();
-
-  const tableData = React.useMemo(() => {
-    const orders = listQuery.data?.data ?? [];
-    const tarifHeaders = tarifItemQuery.data?.data ?? [];
-    const tarifLoadItems = tarifLoadItemQuery.data?.data ?? [];
-
-    if (!orders.length) {
-      return orders;
-    }
-
-    const tarifMap = new Map<number, typeof tarifHeaders>();
-    const tarifItemMap = new Map<number, typeof tarifLoadItems>();
-
-    tarifHeaders.forEach((item) => {
-      const current = tarifMap.get(item.doOrderListId) ?? [];
-      current.push(item);
-      tarifMap.set(item.doOrderListId, current);
-    });
-
-    tarifLoadItems.forEach((item) => {
-      const orderId = Number(item.doOrderListId ?? 0);
-      if (!orderId) return;
-      const current = tarifItemMap.get(orderId) ?? [];
-      current.push(item);
-      tarifItemMap.set(orderId, current);
-    });
-
-    return orders.map((order) => {
-      const orderTarifs = tarifMap.get(order.id) ?? [];
-      const orderTarifItems = tarifItemMap.get(order.id) ?? [];
-
-      return composeOrderListWithTarifs(order, orderTarifs.length ? orderTarifs : order.tarifs, orderTarifItems);
-    });
-  }, [listQuery.data?.data, tarifItemQuery.data?.data, tarifLoadItemQuery.data?.data]);
+  const updateMutation = useUpdateOrderListState();
+  const tableData = listQuery.data?.data ?? [];
 
   const handleDelete = React.useCallback(async () => {
     if (!selectedItem) return;
@@ -139,18 +87,7 @@ export default function OrderListPage() {
     try {
       await updateMutation.mutateAsync({
         id: item.id,
-        payload: {
-          customer_id: item.customerId,
-          status: newStatus,
-          invoice_bill: item.billInvoice,
-          bill_invoice: item.billInvoice,
-          vehicle_type: item.vehicleType || 'fuso',
-          note: item.note,
-          ppn: item.ppn,
-          uj_driver: item.ujDriver,
-          loading_in: item.loadingIn,
-          loading_out: item.loadingOut,
-        }
+        payload: { status: newStatus },
       });
       toast.success('Status berhasil diperbarui');
       setStatusConfirmOpen(false);
@@ -195,7 +132,7 @@ export default function OrderListPage() {
     [],
   );
 
-  const showTableSkeleton = !listQuery.data && !tarifItemQuery.data && !tarifLoadItemQuery.data;
+  const showTableSkeleton = !listQuery.data;
 
   return (
     <DashboardLayout>
@@ -212,7 +149,7 @@ export default function OrderListPage() {
           perPage={perPage}
           totalData={listQuery.data?.meta.total ?? 0}
           isLoading={showTableSkeleton}
-          isRefetching={listQuery.isFetching || tarifItemQuery.isFetching || tarifLoadItemQuery.isFetching}
+          isRefetching={listQuery.isFetching}
           onSearchChange={setSearchInput}
           onPageChange={setPage}
           onPerPageChange={(value) => {

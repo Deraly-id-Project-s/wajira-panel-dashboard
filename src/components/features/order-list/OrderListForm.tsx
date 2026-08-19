@@ -5,7 +5,7 @@ import { Plus, Save, Trash2 } from 'lucide-react';
 import { useRouter } from 'next/router';
 import { PageHeader } from '@/components/ui/page-header';
 import type { OrderList, OrderListVehicleType } from '@/@types/order-list.types';
-import type { Tarif, TarifPayload } from '@/@types/tarif.types';
+import type { Tarif } from '@/@types/tarif.types';
 import { SearchableSelect, type SearchableSelectOption } from '@/components/features/vehicle-data/SearchableSelect';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -13,8 +13,6 @@ import { MoneyInput } from '@/components/ui/money-input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { toast } from 'sonner';
-import { TarifFormModal } from '@/components/features/tarif/TarifFormModal';
-import { useCreateTarif } from '@/hooks/useTarif';
 import { orderListFormSchema, type OrderListFormSchema } from '@/schemas/order-list.schema';
 import {
   Form,
@@ -35,6 +33,8 @@ export interface OrderListFormItemValue {
   id?: number;
   tarifId: string;
   vehicleType: OrderListVehicleType;
+  vehicleId: string;
+  driverId: string;
   loadingIn: string;
   loadingOut: string;
   deliveryDestination: string;
@@ -58,10 +58,16 @@ interface OrderListFormProps {
   customerOptions: SearchableSelectOption[];
   tarifOptions: SearchableSelectOption[];
   tarifRecords: Tarif[];
+  vehicleOptions: Record<OrderListVehicleType, SearchableSelectOption[]>;
+  driverOptions: SearchableSelectOption[];
   customerLoading?: boolean;
   tarifLoading?: boolean;
+  vehicleLoading?: boolean;
+  driverLoading?: boolean;
   onCustomerSearch: (value: string) => void;
   onTarifSearch: (value: string) => void;
+  onVehicleSearch: (value: string) => void;
+  onDriverSearch: (value: string) => void;
   onSubmit: (values: OrderListFormValues) => void | Promise<void>;
   onCancel: () => void;
   isSubmitting?: boolean;
@@ -103,6 +109,8 @@ const toItemDefaults = (order?: OrderList | null): OrderListFormItemValue[] => {
         localId: createItemId(),
         tarifId: '',
         vehicleType: 'fuso',
+        vehicleId: '',
+        driverId: '',
         loadingIn: '',
         loadingOut: '',
         deliveryDestination: '',
@@ -118,6 +126,8 @@ const toItemDefaults = (order?: OrderList | null): OrderListFormItemValue[] => {
     id: item.id,
     tarifId: item.tarifId ? String(item.tarifId) : '',
     vehicleType: item.vehicleType ?? 'fuso',
+    vehicleId: item.vehicleId ? String(item.vehicleId) : '',
+    driverId: item.driverId ? String(item.driverId) : '',
     loadingIn: item.loadingIn ?? '',
     loadingOut: item.loadingOut ?? '',
     deliveryDestination: item.deliveryDestination ?? '',
@@ -157,21 +167,22 @@ export function OrderListForm({
   customerOptions,
   tarifOptions,
   tarifRecords,
+  vehicleOptions,
+  driverOptions,
   customerLoading = false,
   tarifLoading = false,
+  vehicleLoading = false,
+  driverLoading = false,
   onCustomerSearch,
   onTarifSearch,
+  onVehicleSearch,
+  onDriverSearch,
   onSubmit,
   onCancel,
   isSubmitting = false,
 }: OrderListFormProps) {
   const router = useRouter();
   const slug = typeof router.query.slug === 'string' ? router.query.slug : '';
-
-  const [localTarifs, setLocalTarifs] = React.useState<Tarif[]>([]);
-  const [isCreateTarifOpen, setIsCreateTarifOpen] = React.useState(false);
-  const [activeItemIndex, setActiveItemIndex] = React.useState<number | null>(null);
-  const createTarifMutation = useCreateTarif();
 
   const defaultCustomerOption = React.useMemo<SearchableSelectOption[]>(() => {
     if (!initialData?.customer?.id) return [];
@@ -195,33 +206,20 @@ export function OrderListForm({
       }));
   }, [initialData?.tarifs]);
 
-  const localTarifOptions = React.useMemo<SearchableSelectOption[]>(
-    () =>
-      localTarifs.map((item) => ({
-        value: String(item.id),
-        label: `${item.loadingIn || '-'} - ${item.loadingOut || '-'}`,
-        subtitle: item.customer?.name,
-      })),
-    [localTarifs],
-  );
-
   const mergedCustomerOptions = React.useMemo(
     () => mergeSelectOptions(customerOptions, defaultCustomerOption),
     [customerOptions, defaultCustomerOption],
   );
 
   const mergedTarifOptions = React.useMemo(() => {
-    const merged = mergeSelectOptions(tarifOptions, defaultTarifOptions);
-    const existingValues = new Set(merged.map((o) => o.value));
-    const filteredLocal = localTarifOptions.filter((o) => !existingValues.has(o.value));
-    return [...merged, ...filteredLocal];
-  }, [tarifOptions, defaultTarifOptions, localTarifOptions]);
+    return mergeSelectOptions(tarifOptions, defaultTarifOptions);
+  }, [tarifOptions, defaultTarifOptions]);
 
   const form = useForm<OrderListFormValues>({
     resolver: zodResolver(orderListFormSchema),
     defaultValues: {
       customerId: initialData?.customerId ? String(initialData.customerId) : '',
-      status: initialData?.status ?? 'pending',
+      status: initialData?.status ?? 'draft',
       invoiceBill: Number(initialData?.billInvoice ?? 0),
       ppn: Number(initialData?.ppn ?? 0),
       pph: Number(initialData?.pph ?? 0),
@@ -243,7 +241,7 @@ export function OrderListForm({
   React.useEffect(() => {
     reset({
       customerId: initialData?.customerId ? String(initialData.customerId) : '',
-      status: initialData?.status ?? 'pending',
+      status: initialData?.status ?? 'draft',
       invoiceBill: Number(initialData?.billInvoice ?? 0),
       ppn: Number(initialData?.ppn ?? 0),
       pph: Number(initialData?.pph ?? 0),
@@ -265,6 +263,10 @@ export function OrderListForm({
   const watchedPph = useWatch({ control, name: 'pph' });
   const watchedUjDriver = useWatch({ control, name: 'ujDriver' });
   const selectedCustomer = mergedCustomerOptions.find((item) => item.value === customerId);
+  const selectedTarifIds = React.useMemo(
+    () => (watchedItems ?? []).map((item) => item?.tarifId).filter((value): value is string => Boolean(value)),
+    [watchedItems],
+  );
 
   const appendCargoItem = React.useCallback(
     (itemIndex: number) => {
@@ -287,7 +289,7 @@ export function OrderListForm({
   const getTarifById = React.useCallback(
     (tarifId: string): Tarif | undefined => {
       const fromLookup = tarifRecords.find((item) => String(item.id) === tarifId)
-        || localTarifs.find((item) => String(item.id) === tarifId);
+        ;
       if (fromLookup) return fromLookup;
 
       const fromInitial = initialData?.tarifs?.find((item) => String(item.tarifId) === tarifId)?.tarif;
@@ -309,7 +311,7 @@ export function OrderListForm({
       }
       return undefined;
     },
-    [initialData?.tarifs, tarifRecords, localTarifs],
+    [initialData?.tarifs, tarifRecords],
   );
 
   const handleTarifChange = React.useCallback(
@@ -329,42 +331,15 @@ export function OrderListForm({
     [getTarifById, setValue, watchedItems],
   );
 
-  const handleSaveTarif = async (data: TarifPayload) => {
-    try {
-      const newTarif = await createTarifMutation.mutateAsync(data);
-      toast.success('Data tarif berhasil ditambahkan');
-      setLocalTarifs((prev) => [...prev, newTarif]);
-      
-      if (activeItemIndex !== null) {
-        const stringId = String(newTarif.id);
-        setValue(`items.${activeItemIndex}.tarifId`, stringId, { shouldValidate: true, shouldDirty: true });
-        
-        const nextVehicleType = watchedItems?.[activeItemIndex]?.vehicleType ?? 'fuso';
-        const fee = getVehicleFee(newTarif, nextVehicleType);
-
-        setValue(`items.${activeItemIndex}.loadingIn`, newTarif.loadingIn ?? '', { shouldDirty: true });
-        setValue(`items.${activeItemIndex}.loadingOut`, newTarif.loadingOut ?? '', { shouldDirty: true });
-        setValue(`items.${activeItemIndex}.driverFee`, fee.driverFee, { shouldDirty: true });
-        setValue(`items.${activeItemIndex}.expeditionInvoice`, fee.invoice, { shouldDirty: true });
-      }
-      setIsCreateTarifOpen(false);
-      setActiveItemIndex(null);
-    } catch (error: any) {
-      toast.error(error.message || 'Gagal menambahkan tarif baru');
-    }
-  };
-
   const handleVehicleTypeChange = React.useCallback(
     (index: number, vehicleType: OrderListVehicleType) => {
-      const itemsCount = watchedItems?.length ?? 0;
-      for (let i = 0; i < itemsCount; i++) {
-        setValue(`items.${i}.vehicleType`, vehicleType, { shouldValidate: true, shouldDirty: true });
-        const tarifId = watchedItems?.[i]?.tarifId ?? '';
-        const matchedTarif = getTarifById(tarifId);
-        const fee = getVehicleFee(matchedTarif, vehicleType);
-        setValue(`items.${i}.driverFee`, fee.driverFee, { shouldDirty: true });
-        setValue(`items.${i}.expeditionInvoice`, fee.invoice, { shouldDirty: true });
-      }
+      setValue(`items.${index}.vehicleType`, vehicleType, { shouldValidate: true, shouldDirty: true });
+      setValue(`items.${index}.vehicleId`, '', { shouldValidate: true, shouldDirty: true });
+      const tarifId = watchedItems?.[index]?.tarifId ?? '';
+      const matchedTarif = getTarifById(tarifId);
+      const fee = getVehicleFee(matchedTarif, vehicleType);
+      setValue(`items.${index}.driverFee`, fee.driverFee, { shouldDirty: true });
+      setValue(`items.${index}.expeditionInvoice`, fee.invoice, { shouldDirty: true });
     },
     [getTarifById, setValue, watchedItems],
   );
@@ -540,8 +515,7 @@ export function OrderListForm({
                         render={({ field: controllerField }) => (
                           <FormItem className="flex flex-col min-w-0">
                             <FormLabel className="text-sm font-medium">Pilih Rute / Tarif</FormLabel>
-                            <div className="flex items-center gap-2 w-full min-w-0">
-                              <div className="flex-1 min-w-0">
+                            <div className="w-full min-w-0">
                                 <FormControl>
                                   <SearchableSelect
                                     value={controllerField.value}
@@ -551,23 +525,10 @@ export function OrderListForm({
                                     searchPlaceholder="Cari tarif..."
                                     loading={tarifLoading}
                                     onSearchChange={onTarifSearch}
+                                    disabledValues={selectedTarifIds.filter((value) => value !== controllerField.value)}
                                     className="bg-transparent"
                                   />
                                 </FormControl>
-                              </div>
-                              <Button
-                                type="button"
-                                variant="outline"
-                                size="icon"
-                                aria-label="Tambah tarif"
-                                onClick={() => {
-                                  setActiveItemIndex(index);
-                                  setIsCreateTarifOpen(true);
-                                }}
-                                className="h-10 w-10 shrink-0 cursor-pointer"
-                              >
-                                <Plus className="h-4 w-4" />
-                              </Button>
                             </div>
                             <FormMessage />
                           </FormItem>
@@ -587,7 +548,7 @@ export function OrderListForm({
                       </FormItem>
                     </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                       <FormItem>
                         <FormLabel className="text-sm font-medium">Loading Out</FormLabel>
                         <FormControl>
@@ -628,7 +589,6 @@ export function OrderListForm({
                               <Select
                                 value={controllerField.value}
                                 onValueChange={(value: OrderListVehicleType) => handleVehicleTypeChange(index, value)}
-                                disabled={index > 0}
                               >
                                 <SelectTrigger className="bg-transparent disabled:bg-slate-50 disabled:opacity-100 disabled:cursor-not-allowed">
                                   <SelectValue placeholder="Pilih armada" />
@@ -641,6 +601,50 @@ export function OrderListForm({
                                   ))}
                                 </SelectContent>
                               </Select>
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      <FormField
+                        control={control}
+                        name={`items.${index}.vehicleId`}
+                        render={({ field: controllerField }) => (
+                          <FormItem className="flex flex-col">
+                            <FormLabel className="text-sm font-medium">Kendaraan</FormLabel>
+                            <FormControl>
+                              <SearchableSelect
+                                value={controllerField.value}
+                                onChange={controllerField.onChange}
+                                options={vehicleOptions[item?.vehicleType ?? 'fuso']}
+                                placeholder="Pilih kendaraan"
+                                searchPlaceholder="Cari nomor polisi..."
+                                loading={vehicleLoading}
+                                onSearchChange={onVehicleSearch}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      <FormField
+                        control={control}
+                        name={`items.${index}.driverId`}
+                        render={({ field: controllerField }) => (
+                          <FormItem className="flex flex-col">
+                            <FormLabel className="text-sm font-medium">Driver</FormLabel>
+                            <FormControl>
+                              <SearchableSelect
+                                value={controllerField.value}
+                                onChange={controllerField.onChange}
+                                options={driverOptions}
+                                placeholder="Pilih driver"
+                                searchPlaceholder="Cari driver..."
+                                loading={driverLoading}
+                                onSearchChange={onDriverSearch}
+                              />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -741,6 +745,8 @@ export function OrderListForm({
                   localId: createItemId(),
                   tarifId: '',
                   vehicleType: currentVehicleType,
+                  vehicleId: '',
+                  driverId: '',
                   loadingIn: '',
                   loadingOut: '',
                   deliveryDestination: '',
@@ -881,15 +887,6 @@ export function OrderListForm({
         </form>
       </Form>
 
-      <TarifFormModal
-        isOpen={isCreateTarifOpen}
-        onClose={() => {
-          setIsCreateTarifOpen(false);
-          setActiveItemIndex(null);
-        }}
-        onSave={handleSaveTarif}
-        isSubmitting={createTarifMutation.isPending}
-      />
     </div>
   );
 }

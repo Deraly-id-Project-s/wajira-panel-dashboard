@@ -38,6 +38,9 @@ export function OrderStatusConfirmDialog({
           <AlertDialogDescription>
             Apakah Anda yakin ingin mengubah status order <strong>{itemName || 'ini'}</strong> menjadi <strong>{statusLabel}</strong>?
           </AlertDialogDescription>
+          <AlertDialogDescription className='bg-orange-100 p-2 rounded-md'>
+            Proses ini akan menambah data <strong>DO Ekspedisi</strong>
+          </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
           <AlertDialogCancel className="rounded-md">Batal</AlertDialogCancel>

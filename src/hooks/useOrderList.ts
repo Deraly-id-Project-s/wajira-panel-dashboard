@@ -9,6 +9,7 @@ import type {
   UpdateOrderListTarifItemPayload,
   UpdateOrderListPayload,
   UpdateOrderListTarifPayload,
+  UpdateOrderListStatePayload,
 } from '@/@types/order-list.types';
 import {
   createOrderList,
@@ -26,6 +27,7 @@ import {
   updateOrderList,
   updateOrderListTarif,
   updateOrderListTarifItem,
+  updateOrderListState,
 } from '@/services/order-list.service';
 
 export function useOrderLists(params: OrderListListParams & { enabled?: boolean }) {
@@ -46,7 +48,8 @@ export function useOrderListDetail(id: string | number | null) {
     enabled: !!id,
     retry: 3,
     retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 10000),
-    staleTime: 1000 * 60 * 5,
+    staleTime: 0,
+    refetchOnMount: 'always',
   });
 }
 
@@ -110,6 +113,18 @@ export function useUpdateOrderList() {
 
   return useMutation({
     mutationFn: ({ id, payload }: { id: string | number; payload: UpdateOrderListPayload }) => updateOrderList(id, payload),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['order-list'] });
+      queryClient.invalidateQueries({ queryKey: ['order-list', 'detail', variables.id] });
+    },
+  });
+}
+
+export function useUpdateOrderListState() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ id, payload }: { id: string | number; payload: UpdateOrderListStatePayload }) => updateOrderListState(id, payload),
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ['order-list'] });
       queryClient.invalidateQueries({ queryKey: ['order-list', 'detail', variables.id] });

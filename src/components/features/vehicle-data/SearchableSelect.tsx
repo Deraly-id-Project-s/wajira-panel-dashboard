@@ -27,6 +27,8 @@ interface SearchableSelectProps {
   className?: string;
   onActionClick?: () => void;
   actionLabel?: string;
+  disabledValues?: string[];
+  disabledLabel?: string;
 }
 
 export function SearchableSelect({
@@ -44,6 +46,8 @@ export function SearchableSelect({
   className,
   onActionClick,
   actionLabel,
+  disabledValues = [],
+  disabledLabel = 'Sudah ditambahkan',
 }: SearchableSelectProps) {
   const [open, setOpen] = React.useState(false);
   const [query, setQuery] = React.useState('');
@@ -134,7 +138,8 @@ export function SearchableSelect({
                 <CommandItem
                   key={option.value}
                   value={option.value}
-                  onSelect={() => selectOption(option)}
+                  disabled={disabledValues.includes(option.value)}
+                  onSelect={() => !disabledValues.includes(option.value) && selectOption(option)}
                   className="flex items-start gap-2 cursor-pointer py-1"
                 >
                   <Check className={cn('mt-0.5 h-4 w-4', value === option.value ? 'opacity-100' : 'opacity-0')} />
@@ -142,6 +147,7 @@ export function SearchableSelect({
                     <div className="truncate">{option.label}</div>
                     {option.subtitle ? <div className="text-xs text-muted-foreground">{option.subtitle}</div> : null}
                   </div>
+                  {disabledValues.includes(option.value) ? <span className="ml-auto shrink-0 text-xs text-muted-foreground">{disabledLabel}</span> : null}
                 </CommandItem>
               ))}
             </CommandGroup>

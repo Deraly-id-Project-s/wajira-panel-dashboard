@@ -214,7 +214,7 @@ export function UnitTransactionForm({
                                     >
                                       <Check className={cn('mr-2 h-4 w-4', field.value === String(option.id) ? 'opacity-100' : 'opacity-0')} />
                                       <span className="truncate">{option.name}</span>
-                                      {excludedTypeUnitIds.includes(String(option.id)) && <span className="ml-auto text-xs text-muted-foreground">Sudah dipakai</span>}
+                                      {excludedTypeUnitIds.includes(String(option.id)) && <span className="ml-auto text-xs text-muted-foreground">Sudah ditambahkan</span>}
                                     </CommandItem>
                                   ))}
                                 </CommandGroup>
