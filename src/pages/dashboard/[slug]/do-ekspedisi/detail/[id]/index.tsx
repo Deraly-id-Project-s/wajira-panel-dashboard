@@ -17,6 +17,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import { formatDate } from '@/lib/utils/format';
+import { DOEkspedisiRelatedData } from '@/components/features/do-ekspedisi/DOEkspedisiRelatedData';
 
 // pagination helper removed (unused in print/detail view)
 
@@ -340,6 +341,7 @@ export default function DetailDOEkspedisiPage() {
         )}
 
         <DOEkspedisiDetailCard data={effectiveData ?? detailQuery.data} />
+        <DOEkspedisiRelatedData data={effectiveData ?? detailQuery.data} onRefresh={() => void detailQuery.refetch()} />
 
         {/* <div className="flex flex-col items-start justify-between gap-4 lg:flex-row lg:items-center">
           <div className="flex w-full flex-col gap-3 sm:flex-row sm:items-center lg:w-auto">

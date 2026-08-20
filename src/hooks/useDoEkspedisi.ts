@@ -10,11 +10,13 @@ import type {
 import type { PaginationParams } from '@/@types/pagination.types';
 import {
   createDoEkspedisi,
+  createDoDetailResource,
   createDoEkspedisiItem,
   createDoEkspedisiItemDestination,
   deleteDoEkspedisi,
   deleteDoEkspedisiItem,
   deleteDoEkspedisiItemDestination,
+  deleteDoDetailResource,
   getDoEkspedisiById,
   getDoEkspedisiItemById,
   getDoEkspedisiItemDestinationById,
@@ -28,6 +30,8 @@ import {
   updateDoEkspedisi,
   updateDoEkspedisiItem,
   updateDoEkspedisiItemDestination,
+  updateDoDetailResource,
+  type DetailResource,
 } from '@/services/do-ekspedisi.service';
 
 export function useDoEkspedisis(params: PaginationParams & DoEkspedisiListParams & { enabled?: boolean }) {
@@ -234,4 +238,14 @@ export function useDoEkspedisiDriverLookup(search: string, enabled = true) {
     enabled,
     staleTime: 30_000,
   });
+}
+
+export function useDoDetailResourceMutation(resource: DetailResource, expeditionId: string | number) {
+  const queryClient = useQueryClient();
+  const invalidate = () => queryClient.invalidateQueries({ queryKey: ['do-ekspedisi', 'detail', String(expeditionId)] });
+  return {
+    create: useMutation({ mutationFn: (payload: Record<string, unknown> | FormData) => createDoDetailResource(resource, payload), onSuccess: invalidate }),
+    update: useMutation({ mutationFn: ({ id, payload }: { id: string | number; payload: Record<string, unknown> | FormData }) => updateDoDetailResource(resource, id, payload), onSuccess: invalidate }),
+    remove: useMutation({ mutationFn: (id: string | number) => deleteDoDetailResource(resource, id), onSuccess: invalidate }),
+  };
 }

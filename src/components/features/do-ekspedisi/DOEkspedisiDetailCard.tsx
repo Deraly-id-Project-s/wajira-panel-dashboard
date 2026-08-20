@@ -6,6 +6,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import BaseTable, { type ColumnDef } from '@/components/ui/base-table';
 import { useRouter } from 'next/router';
 import { ReferenceLink } from '@/components/ui/reference-link';
+import { formatCurrency } from '@/lib/utils/currency';
 
 interface DOEkspedisiDetailCardProps {
   data: DoEkspedisi;
@@ -97,9 +98,10 @@ export function DOEkspedisiDetailCard({ data }: DOEkspedisiDetailCardProps) {
     <div className="space-y-6">
       <Section title="Detail Driver" description="Informasi kendaraan dan penanggung jawab pengiriman" icon={Truck}>
         <div className="grid grid-cols-1 gap-x-12 gap-y-6 border-t border-slate-100 pt-5 md:grid-cols-3">
-          <DetailField label="Tanggal Pengiriman" value={data.date ? format(new Date(data.date), 'dd/MM/yyyy') : '-'} icon={CalendarDays} />
+          <DetailField label="Mulai Pengiriman" value={(data.startDate || data.date) ? format(new Date(data.startDate || data.date), 'dd/MM/yyyy HH:mm') : '-'} icon={CalendarDays} />
+          <DetailField label="Selesai Pengiriman" value={data.endDate ? format(new Date(data.endDate), 'dd/MM/yyyy HH:mm') : '-'} icon={CalendarDays} />
           <DetailField label="Kode DO" value={data.doCode || '-'} icon={ClipboardList} />
-          <div />
+          <DetailField label="Uang Jalan" value={formatCurrency(data.ujNominal)} />
           <DetailField
             label="Nama Driver"
             value={

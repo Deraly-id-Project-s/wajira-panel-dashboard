@@ -1,6 +1,10 @@
 import type {
   DoEkspedisi,
   DoEkspedisiCustomer,
+  DoEkspedisiClaim,
+  DoEkspedisiClaimDocumentation,
+  DoEkspedisiDriverNote,
+  DoEkspedisiExpense,
   DoEkspedisiDriver,
   DoEkspedisiItem,
   DoEkspedisiItemDestination,
@@ -27,6 +31,10 @@ const expeditionItemDestinationBasePath = '/wapi/transaction/do-expedition-item-
 const customerLookupPath = '/wapi/master-data/customer';
 const vehicleLookupPath = '/wapi/master-data/vehicle-fleet';
 const driverLookupPath = '/wapi/master-data/driver';
+export const driverNotePath = '/wapi/transaction/driver-note';
+export const expeditionExpensePath = '/wapi/transaction/expedition-expense';
+export const expeditionClaimPath = '/wapi/transaction/expedition-claim';
+export const claimDocumentationPath = '/wapi/transaction/expedition-claim-documentation';
 
 const toNumber = (value: unknown) => {
   if (value == null || value === '') return 0;
@@ -95,6 +103,35 @@ const mapCustomer = (item: any): DoEkspedisiCustomer => ({
   uuid: item?.uuid,
   name: item?.name ?? '',
   pic: item?.pic ?? item?.pic_name ?? null,
+});
+
+const mapClaimDocumentation = (item: any): DoEkspedisiClaimDocumentation => ({
+  id: Number(item?.id ?? 0), uuid: item?.uuid,
+  doExpeditionClaimId: Number(item?.do_expedition_claim_id ?? item?.expedition_claim_id ?? 0),
+  image: item?.image ?? null, caption: item?.caption ?? '',
+});
+
+const mapDriverNote = (item: any): DoEkspedisiDriverNote => ({
+  id: Number(item?.id ?? 0), uuid: item?.uuid,
+  doExpeditionsId: Number(item?.do_expeditions_id ?? item?.do_expedition_id ?? 0),
+  effectiveDate: item?.effective_date ?? '', subject: item?.subject ?? '',
+  image: item?.image ?? null, description: item?.description ?? '',
+});
+
+const mapExpense = (item: any): DoEkspedisiExpense => ({
+  id: Number(item?.id ?? 0), uuid: item?.uuid,
+  doExpeditionsId: Number(item?.do_expeditions_id ?? item?.do_expedition_id ?? 0),
+  driverId: item?.driver_id == null ? null : Number(item.driver_id), subject: item?.subject ?? '',
+  description: item?.description ?? '', nominal: toNumber(item?.nominal),
+});
+
+const mapClaim = (item: any): DoEkspedisiClaim => ({
+  id: Number(item?.id ?? 0), uuid: item?.uuid,
+  doExpeditionsId: Number(item?.do_expeditions_id ?? item?.do_expedition_id ?? 0),
+  driverId: Number(item?.driver_id ?? 0), subject: item?.subject ?? '', description: item?.description ?? '',
+  isClaim: Boolean(item?.is_claim), claimNominal: toNumber(item?.claim_nominal),
+  nominal: toNumber(item?.nominal ?? item?.claim_nominal), remainingNominal: toNumber(item?.remaining_nominal),
+  documentations: (item?.documentations ?? item?.expedition_claim_documentations ?? []).map(mapClaimDocumentation),
 });
 
 const mapDoOrderTarifItem = (entry: any, parent?: any) => {
@@ -232,6 +269,12 @@ const mapDoEkspedisi = (item: any): DoEkspedisi => {
     updatedAt: item?.updated_at,
     status: String(item?.status ?? 'draft'),
     ujNominal: toNumber(item?.uj_nominal ?? item?.ujNominal),
+    startDate: item?.start_date ?? null,
+    endDate: item?.end_date ?? null,
+    driverNotes: (item?.driver_notes ?? []).map(mapDriverNote),
+    expeditionExpenses: (item?.expedition_expenses ?? []).map(mapExpense),
+    expeditionClaims: (item?.expedition_claims ?? []).map(mapClaim),
+    driverExpeditionClaims: (item?.driver_expedition_claims ?? []).map(mapClaim),
   };
 };
 
@@ -630,4 +673,26 @@ export const lookupDoEkspedisiDrivers = async (search = ''): Promise<LookupOptio
     label: item.name ?? '',
     subtitle: item.code ?? item.phone ?? undefined,
   }));
+};
+
+export type DetailResource = 'note' | 'expense' | 'claim' | 'documentation';
+const detailPaths: Record<DetailResource, string> = {
+  note: driverNotePath, expense: expeditionExpensePath, claim: expeditionClaimPath, documentation: claimDocumentationPath,
+};
+
+const detailResponse = async (response: { data: LaravelApiResponse<any> }) => ensureSuccess(response.data);
+
+export const createDoDetailResource = async (resource: DetailResource, payload: Record<string, unknown> | FormData) => {
+  const response = await apiClient.post<LaravelApiResponse<any>>(detailPaths[resource], payload);
+  return detailResponse(response);
+};
+
+export const updateDoDetailResource = async (resource: DetailResource, id: string | number, payload: Record<string, unknown> | FormData) => {
+  const response = await apiClient.put<LaravelApiResponse<any>>(`${detailPaths[resource]}/${id}`, payload);
+  return detailResponse(response);
+};
+
+export const deleteDoDetailResource = async (resource: DetailResource, id: string | number) => {
+  const response = await apiClient.delete<LaravelApiResponse<null>>(`${detailPaths[resource]}/${id}`);
+  ensureSuccess(response.data);
 };
