@@ -16,7 +16,7 @@ import {
   useUpdateDoEkspedisi,
 } from '@/hooks/useDoEkspedisi';
 import { useProcessDoExpedition } from '@/hooks/useDoInvoice';
-
+import { PageHeader } from '@/components/ui/page-header';
 import { getApiErrorMessage } from '@/utils/apiErrorHandler';
 
 const toApiDate = (value?: Date) => {
@@ -152,12 +152,13 @@ export default function DOEkspedisiPage() {
   return (
     <DashboardLayout>
       <div className="space-y-6">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-semibold text-slate-950">Data DO Ekspedisi</h1>
-            <p className="text-sm text-muted-foreground">Buat faktur dengan informasi penagihan yang diperlukan.</p>
-          </div>
-        </div>
+        <PageHeader
+          breadcrumbs={[
+            { label: 'DO Ekspedisi' }
+          ]}
+          title="Data DO Ekspedisi"
+          subtitle="Buat faktur dengan informasi penagihan yang diperlukan."
+        />
 
         <DOEkspedisiTable
           data={listQuery.data?.data ?? []}

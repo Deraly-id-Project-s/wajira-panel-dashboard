@@ -7,15 +7,52 @@ import { DOEkspedisiDetailCard } from '@/components/features/do-ekspedisi/DOEksp
 // import { DOEkspedisiDetailTable } from '@/components/features/do-ekspedisi/DOEkspedisiDetailTable';
 import { DeleteDOEkspedisiModal } from '@/components/features/do-ekspedisi/DeleteDOEkspedisiModal';
 import type { DoEkspedisi, DoEkspedisiItem, DoEkspedisiOrderList, DoEkspedisiOrderTarifItem, DoEkspedisiOrderTarifLoadItem } from '@/@types/do-ekspedisi.types';
-import { useDeleteDoEkspedisiItem, useDoEkspedisiDetail } from '@/hooks/useDoEkspedisi';
+import { useDeleteDoEkspedisiItem, useDoEkspedisiDetail, useUpdateDoEkspedisi } from '@/hooks/useDoEkspedisi';
 import { useOrderListTarifs, useOrderListTarifItems } from '@/hooks/useOrderList';
 import { useProcessDoExpedition } from '@/hooks/useDoInvoice';
 import { getApiErrorMessage } from '@/utils/apiErrorHandler';
 import { LoadingState } from '@/components/ui/loading-state';
 import { PageHeader } from '@/components/ui/page-header';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { cn } from '@/lib/utils';
+import { formatDate } from '@/lib/utils/format';
 
 // pagination helper removed (unused in print/detail view)
+
+const getDoStatusBadgeClassName = (status: string) => {
+  switch (String(status).toLowerCase()) {
+    case 'draft':
+      return 'border-slate-200 bg-slate-50 text-slate-700';
+    case 'process':
+      return 'border-blue-200 bg-blue-50 text-blue-700 font-semibold';
+    case 'done':
+      return 'border-emerald-200 bg-emerald-50 text-emerald-700 font-semibold';
+    case 'failed':
+      return 'border-rose-200 bg-rose-50 text-rose-700 font-semibold';
+    case 'pending':
+      return 'border-amber-200 bg-amber-50 text-amber-700 font-semibold';
+    default:
+      return 'border-slate-200 bg-slate-50 text-slate-700';
+  }
+};
+
+const getDoStatusLabel = (status: string) => {
+  switch (String(status).toLowerCase()) {
+    case 'draft':
+      return 'Draft';
+    case 'process':
+      return 'Proses';
+    case 'done':
+      return 'Selesai';
+    case 'failed':
+      return 'Gagal';
+    case 'pending':
+      return 'Tertunda';
+    default:
+      return status || '-';
+  }
+};
 
 export default function DetailDOEkspedisiPage() {
   const router = useRouter();
@@ -26,6 +63,7 @@ export default function DetailDOEkspedisiPage() {
 
   const detailQuery = useDoEkspedisiDetail(id ? String(id) : null);
   const processExpeditionMutation = useProcessDoExpedition();
+  const updateMutation = useUpdateDoEkspedisi();
   const orderListId = detailQuery.data?.orderList?.id ?? null;
   const tarifQuery = useOrderListTarifs({
     page: 1,
@@ -56,7 +94,18 @@ export default function DetailDOEkspedisiPage() {
         { label: 'Detail DO' },
       ]}
       title="Detail Delivery Order Ekspedisi"
-      subtitle={detailQuery.data?.doCode || undefined}
+      subtitle={(
+        <div className="flex flex-wrap items-center gap-2">
+          <span>Kode DO:</span>
+          <span className="font-semibold text-orange-600">{detailQuery.data?.doCode}</span>
+          {detailQuery.data && (
+            <Badge variant="outline" className={cn('rounded-full px-3 py-1', getDoStatusBadgeClassName(detailQuery.data.status))}>
+              {getDoStatusLabel(detailQuery.data.status)}
+            </Badge>
+          )}
+          <span className="text-xs text-slate-500">Dibuat {detailQuery.data?.createdAt ? formatDate(detailQuery.data.createdAt) : ''}</span>
+        </div>
+      )}
       onBack={backToList}
       actions={actions}
     />
@@ -196,14 +245,71 @@ export default function DetailDOEkspedisiPage() {
       <div className="space-y-6">
         {pageHeader(
           <>
-            <Button
-              variant="outline"
-              onClick={() => slug && id && void router.push(`/dashboard/${slug}/do-ekspedisi/${id}/edit`)}
-              className="border-slate-200 text-slate-700 hover:bg-slate-50"
-            >
-              <Pencil className="h-4 w-4" />
-              Edit
-            </Button>
+            {detailQuery.data?.status === 'draft' ? (
+              <Button
+                type="button"
+                disabled={updateMutation.isPending}
+                onClick={async () => {
+                  if (!id) return;
+                  try {
+                    await updateMutation.mutateAsync({
+                      id: String(id),
+                      payload: {
+                        date: detailQuery.data.date,
+                        vehicle_id: detailQuery.data.vehicleId ?? '',
+                        driver_id: detailQuery.data.driverId ?? '',
+                        driver_note: detailQuery.data.driverNote,
+                        status: 'process',
+                      },
+                    });
+                    toast.success('DO Ekspedisi diproses');
+                  } catch (error: any) {
+                    toast.error(getApiErrorMessage(error));
+                  }
+                }}
+                className="bg-orange-600 hover:bg-orange-700 text-white min-w-[120px] cursor-pointer font-medium"
+              >
+                {updateMutation.isPending ? 'Memproses...' : 'Proses DO'}
+              </Button>
+            ) : detailQuery.data?.status === 'process' ? (
+              <Button
+                type="button"
+                variant="outline"
+                disabled={updateMutation.isPending}
+                onClick={async () => {
+                  if (!id) return;
+                  try {
+                    await updateMutation.mutateAsync({
+                      id: String(id),
+                      payload: {
+                        date: detailQuery.data.date,
+                        vehicle_id: detailQuery.data.vehicleId ?? '',
+                        driver_id: detailQuery.data.driverId ?? '',
+                        driver_note: detailQuery.data.driverNote,
+                        status: 'draft',
+                      },
+                    });
+                    toast.success('DO Ekspedisi dikembalikan ke Draft');
+                  } catch (error: any) {
+                    toast.error(getApiErrorMessage(error));
+                  }
+                }}
+                className="min-w-[120px] border-slate-300 text-slate-700 hover:bg-slate-50 cursor-pointer font-medium"
+              >
+                {updateMutation.isPending ? 'Memproses...' : 'Jadikan Draft'}
+              </Button>
+            ) : null}
+
+            {detailQuery.data?.status === 'draft' && (
+              <Button
+                variant="outline"
+                onClick={() => slug && id && void router.push(`/dashboard/${slug}/do-ekspedisi/${id}/edit`)}
+                className="border-slate-200 text-slate-700 hover:bg-slate-50 font-medium"
+              >
+                <Pencil className="h-4 w-4" />
+                Edit
+              </Button>
+            )}
             <Button
               onClick={async () => {
                 if (!id || !slug) return;
@@ -215,7 +321,7 @@ export default function DetailDOEkspedisiPage() {
                 }
               }}
               disabled={processExpeditionMutation.isPending}
-              className="bg-[#1e3a5f] text-white hover:bg-[#152e4d]"
+              className="bg-[#1e3a5f] text-white hover:bg-[#152e4d] font-medium"
             >
               <Printer className="h-4 w-4" />
               {processExpeditionMutation.isPending ? 'Menyiapkan...' : 'Print DO'}

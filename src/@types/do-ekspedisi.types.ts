@@ -112,6 +112,8 @@ export interface DoEkspedisi {
   items?: DoEkspedisiItem[];
   createdAt?: string;
   updatedAt?: string;
+  status: string;
+  ujNominal: number;
 }
 
 export interface DoEkspedisiListParams {
@@ -143,6 +145,7 @@ export interface DoEkspedisiPayload {
   vehicle_id: string | number;
   driver_id: string | number;
   driver_note?: string;
+  status?: string;
 }
 
 export interface DoEkspedisiItemPayload {

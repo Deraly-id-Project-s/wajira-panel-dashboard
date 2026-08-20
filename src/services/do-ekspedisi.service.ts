@@ -201,30 +201,39 @@ const mapDoEkspedisiItem = (item: any): DoEkspedisiItem => {
   };
 };
 
-const mapDoEkspedisi = (item: any): DoEkspedisi => ({
-  id: Number(item?.id ?? 0),
-  uuid: item?.uuid,
-  doCode: toText(item?.do_code, item?.code),
-  orderCode: toText(item?.do_order_list?.code, item?.do_orderlist?.code, item?.order_list?.code, item?.order_code),
-  date: item?.date ?? '',
-  vehicleId: item?.vehicle_id == null ? null : Number(item.vehicle_id),
-  driverId: item?.driver_id == null ? null : Number(item.driver_id),
-  driverNote: toText(item?.driver_note, item?.note),
-  itemsCount: Number(item?.items_count ?? item?.items?.length ?? 0),
-  bruttoValue: toNumber(item?.brutto_value),
-  totalPpn: toNumber(item?.total_ppn),
-  totalPph: toNumber(item?.total_pph),
-  totalServiceFee: toNumber(item?.total_service_fee),
-  totalAdditionalCost: toNumber(item?.total_additional_cost),
-  totalOtherFee: toNumber(item?.total_other_fee),
-  totalDriverFee: toNumber(item?.total_driver_fee),
-  vehicle: item?.vehicle ? mapVehicle(item.vehicle) : null,
-  driver: item?.driver ? mapDriver(item.driver) : null,
-  orderList: mapDoOrderList(item?.do_order_list ?? item?.do_orderlist ?? item?.order_list),
-  items: Array.isArray(item?.items) ? item.items.map(mapDoEkspedisiItem) : undefined,
-  createdAt: item?.created_at,
-  updatedAt: item?.updated_at,
-});
+const mapDoEkspedisi = (item: any): DoEkspedisi => {
+  const orderListTarif = item?.orderListTarif ?? item?.order_list_tarif;
+  const rawVehicle = item?.vehicle ?? orderListTarif?.vehicle;
+  const rawDriver = item?.driver ?? orderListTarif?.driver;
+  const rawOrderList = item?.do_order_list ?? item?.do_orderlist ?? item?.order_list ?? orderListTarif?.doOrderList ?? orderListTarif?.do_order_list;
+  
+  return {
+    id: Number(item?.id ?? 0),
+    uuid: item?.uuid,
+    doCode: toText(item?.do_code, item?.code),
+    orderCode: toText(rawOrderList?.code, item?.orderCode, item?.order_code),
+    date: item?.date ?? '',
+    vehicleId: item?.vehicle_id == null ? (orderListTarif?.vehicle_id == null ? null : Number(orderListTarif.vehicle_id)) : Number(item.vehicle_id),
+    driverId: item?.driver_id == null ? (orderListTarif?.driver_id == null ? null : Number(orderListTarif.driver_id)) : Number(item.driver_id),
+    driverNote: toText(item?.driver_note, item?.note),
+    itemsCount: Number(item?.items_count ?? item?.items?.length ?? 0),
+    bruttoValue: toNumber(item?.brutto_value),
+    totalPpn: toNumber(item?.total_ppn),
+    totalPph: toNumber(item?.total_pph),
+    totalServiceFee: toNumber(item?.total_service_fee),
+    totalAdditionalCost: toNumber(item?.total_additional_cost),
+    totalOtherFee: toNumber(item?.total_other_fee),
+    totalDriverFee: toNumber(item?.total_driver_fee),
+    vehicle: rawVehicle ? mapVehicle(rawVehicle) : null,
+    driver: rawDriver ? mapDriver(rawDriver) : null,
+    orderList: mapDoOrderList(rawOrderList),
+    items: Array.isArray(item?.items) ? item.items.map(mapDoEkspedisiItem) : undefined,
+    createdAt: item?.created_at,
+    updatedAt: item?.updated_at,
+    status: String(item?.status ?? 'draft'),
+    ujNominal: toNumber(item?.uj_nominal ?? item?.ujNominal),
+  };
+};
 
 const enrichVehiclesWithType = async (items: DoEkspedisi[]): Promise<DoEkspedisi[]> => {
   const missingVehicleIds = Array.from(
@@ -279,6 +288,9 @@ const buildMainPayload = (payload: DoEkspedisiPayload, asUpdate = false) => {
       formData.append('driver_note', payload.driver_note);
       formData.append('note', payload.driver_note);
     }
+    if (payload.status != null) {
+      formData.append('status', payload.status);
+    }
     return formData;
   }
 
@@ -289,6 +301,9 @@ const buildMainPayload = (payload: DoEkspedisiPayload, asUpdate = false) => {
   if (payload.driver_note != null) {
     params.append('driver_note', payload.driver_note);
     params.append('note', payload.driver_note);
+  }
+  if (payload.status != null) {
+    params.append('status', payload.status);
   }
   return params;
 };

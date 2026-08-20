@@ -12,8 +12,6 @@ import {
 import { cn } from '@/lib/utils';
 import BaseTable, { ColumnDef } from '@/components/ui/base-table';
 import {
-  formatOrderCurrency,
-  getOrderVehicleTypeLabel,
   getOrderStatusBadgeClassName,
   getOrderStatusLabel,
   getPrimaryTarifItem,
@@ -22,6 +20,7 @@ import {
 import { CopyBox } from '@/components/ui/copy-box';
 import { ReferenceLink } from '@/components/ui/reference-link';
 import { useRouter } from 'next/router';
+import { currenciesFormat } from '@/components/ui/currenciesFormat';
 
 interface OrderListTableProps {
   data: OrderList[];
@@ -75,6 +74,46 @@ export const OrderListTable = React.memo(function OrderListTable({
         accessorKey: 'code',
         sortable: true,
         cell: (item) => <CopyBox text={item.code || '-'} />
+      },
+      {
+        header: 'STATUS',
+        accessorKey: 'status',
+        alignment: 'center',
+        cell: (item) => (
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button
+                type="button"
+                className={cn(
+                  'inline-flex items-center justify-center rounded-full border px-3 py-1 text-xs font-semibold cursor-pointer transition-colors hover:opacity-80 focus:outline-none',
+                  getOrderStatusBadgeClassName(item.status)
+                )}
+                disabled={!canEdit}
+              >
+                {getOrderStatusLabel(item.status)}
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="center" className="w-[140px] rounded-xl border-slate-200 shadow-lg p-1">
+              <div className="px-2 py-1.5 text-xs font-semibold text-slate-500">Ubah Status</div>
+              <DropdownMenuSeparator />
+              {ORDER_LIST_STATUS_OPTIONS.map((option) => (
+                <DropdownMenuItem
+                  key={option.value}
+                  disabled={item.status === option.value}
+                  onSelect={(e) => {
+                    e.preventDefault();
+                    if (item.status !== option.value && onUpdateStatus) {
+                      onUpdateStatus(item, option.value);
+                    }
+                  }}
+                  className={cn('cursor-pointer rounded-lg px-2.5 py-2 text-xs font-medium', item.status === option.value && 'bg-slate-100 opacity-50')}
+                >
+                  {option.label}
+                </DropdownMenuItem>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
+        ),
       },
       {
         header: 'NAMA CUSTOMER',
@@ -149,71 +188,22 @@ export const OrderListTable = React.memo(function OrderListTable({
         },
       },
       {
-        header: 'TIPE',
-        accessorKey: 'vehicleType',
-        alignment: 'center',
-        cell: (item) => {
-          const primaryTarif = getPrimaryTarifItem(item);
-          return <span className="text-sm text-gray-700">{getOrderVehicleTypeLabel(item, primaryTarif)}</span>;
-        },
-      },
-      {
         header: 'UJ DRIVER',
         accessorKey: 'ujDriver',
         alignment: 'right',
-        cell: (item) => <span className="text-sm text-gray-700">{formatOrderCurrency(item.ujDriver)}</span>,
+        cell: (item) => <span className="text-sm text-gray-700">{currenciesFormat('idr', item.ujDriver)}</span>,
       },
       {
         header: 'INV EKSPEDISI',
         accessorKey: 'billInvoice',
         alignment: 'right',
-        cell: (item) => <span className="text-sm text-gray-700">{formatOrderCurrency(item.billInvoice)}</span>,
+        cell: (item) => <span className="text-sm text-gray-700">{currenciesFormat('idr', item.billInvoice)}</span>,
       },
       {
         header: 'PPN',
         accessorKey: 'ppn',
         alignment: 'right',
-        cell: (item) => <span className="text-sm text-gray-700">{formatOrderCurrency(item.ppn)}</span>,
-      },
-      {
-        header: 'STATUS',
-        accessorKey: 'status',
-        alignment: 'center',
-        cell: (item) => (
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <button
-                type="button"
-                className={cn(
-                  'inline-flex items-center justify-center rounded-full border px-3 py-1 text-xs font-semibold cursor-pointer transition-colors hover:opacity-80 focus:outline-none',
-                  getOrderStatusBadgeClassName(item.status)
-                )}
-                disabled={!canEdit}
-              >
-                {getOrderStatusLabel(item.status)}
-              </button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="center" className="w-[140px] rounded-xl border-slate-200 shadow-lg p-1">
-              <div className="px-2 py-1.5 text-xs font-semibold text-slate-500">Ubah Status</div>
-              <DropdownMenuSeparator />
-              {ORDER_LIST_STATUS_OPTIONS.map((option) => (
-                <DropdownMenuItem
-                  key={option.value}
-                  disabled={item.status === option.value}
-                  onSelect={(e) => {
-                    e.preventDefault();
-                    if (item.status !== option.value && onUpdateStatus) {
-                      onUpdateStatus(item, option.value);
-                    }
-                  }}
-                  className={cn('cursor-pointer rounded-lg px-2.5 py-2 text-xs font-medium', item.status === option.value && 'bg-slate-100 opacity-50')}
-                >
-                  {option.label}
-                </DropdownMenuItem>
-              ))}
-            </DropdownMenuContent>
-          </DropdownMenu>
-        ),
+        cell: (item) => <span className="text-sm text-gray-700">{currenciesFormat('idr', item.ppn)}</span>,
       },
       {
         header: 'ACTION',
@@ -242,7 +232,7 @@ export const OrderListTable = React.memo(function OrderListTable({
                   event.preventDefault();
                   onEdit(item);
                 }}
-                disabled={!canEdit}
+                disabled={!canEdit || item?.status !== 'draft'}
                 className="cursor-pointer rounded-lg px-3 py-2 text-sm text-slate-900 focus:bg-slate-50"
               >
                 <FilePenLine className="mr-2 h-4 w-4" />
@@ -253,7 +243,7 @@ export const OrderListTable = React.memo(function OrderListTable({
                   event.preventDefault();
                   onDelete(item);
                 }}
-                disabled={!canDelete}
+                disabled={!canDelete || item?.status !== 'draft'}
                 className="cursor-pointer rounded-lg px-3 py-2 text-sm text-red-600 focus:bg-red-50 focus:text-red-600"
               >
                 <Trash2 className="mr-2 h-4 w-4" />

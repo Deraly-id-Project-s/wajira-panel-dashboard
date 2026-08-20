@@ -4,6 +4,8 @@ import { CalendarDays, CircleUserRound, ClipboardList, MapPin, Truck } from 'luc
 import type { DoEkspedisi, DoEkspedisiOrderTarifItem } from '@/@types/do-ekspedisi.types';
 import { Card, CardContent } from '@/components/ui/card';
 import BaseTable, { type ColumnDef } from '@/components/ui/base-table';
+import { useRouter } from 'next/router';
+import { ReferenceLink } from '@/components/ui/reference-link';
 
 interface DOEkspedisiDetailCardProps {
   data: DoEkspedisi;
@@ -64,6 +66,9 @@ const cargoColumns: ColumnDef<CargoRow>[] = [
 ];
 
 export function DOEkspedisiDetailCard({ data }: DOEkspedisiDetailCardProps) {
+  const router = useRouter();
+  const slug = typeof router.query.slug === 'string' ? router.query.slug : '';
+
   const firstItem = data.items?.[0];
   const order = data.orderList;
   const orderDetails = React.useMemo<DoEkspedisiOrderTarifItem[]>(
@@ -84,6 +89,10 @@ export function DOEkspedisiDetailCard({ data }: DOEkspedisiDetailCardProps) {
     [firstItem?.destination, firstItem?.loadingIn, firstItem?.loadingOut, order?.destination, order?.loadContent, order?.loadingIn, order?.loadingOut, order?.qty, order?.tarifs],
   );
 
+  const driverName = data.driver?.name;
+  const registrationNumber = data.vehicle?.registrationNumber;
+  const customerName = order?.customerName || firstItem?.customerName || firstItem?.customer?.name;
+
   return (
     <div className="space-y-6">
       <Section title="Detail Driver" description="Informasi kendaraan dan penanggung jawab pengiriman" icon={Truck}>
@@ -91,9 +100,33 @@ export function DOEkspedisiDetailCard({ data }: DOEkspedisiDetailCardProps) {
           <DetailField label="Tanggal Pengiriman" value={data.date ? format(new Date(data.date), 'dd/MM/yyyy') : '-'} icon={CalendarDays} />
           <DetailField label="Kode DO" value={data.doCode || '-'} icon={ClipboardList} />
           <div />
-          <DetailField label="Nama Driver" value={data.driver?.name || '-'} icon={CircleUserRound} />
+          <DetailField
+            label="Nama Driver"
+            value={
+              driverName ? (
+                <ReferenceLink href={`/dashboard/${slug}/master/driver?search=${driverName}`}>
+                  {driverName}
+                </ReferenceLink>
+              ) : (
+                '-'
+              )
+            }
+            icon={CircleUserRound}
+          />
           <DetailField label="Tipe Armada" value={data.vehicle?.type || '-'} icon={Truck} />
-          <DetailField label="Nomor Polisi" value={data.vehicle?.registrationNumber || '-'} icon={Truck} />
+          <DetailField
+            label="Nomor Polisi"
+            value={
+              registrationNumber ? (
+                <ReferenceLink href={`/dashboard/${slug}/master/vehicle?search=${registrationNumber}`}>
+                  {registrationNumber}
+                </ReferenceLink>
+              ) : (
+                '-'
+              )
+            }
+            icon={Truck}
+          />
           <div className="md:col-span-3 border-t border-slate-100 pt-4">
             <div className="space-y-1">
               <p className="text-xs font-medium uppercase tracking-wide text-slate-500">Atensi Driver</p>
@@ -107,7 +140,19 @@ export function DOEkspedisiDetailCard({ data }: DOEkspedisiDetailCardProps) {
 
       <Section title="Detail Order Customer" description="Identitas customer dan rincian rute pengiriman" icon={ClipboardList}>
         <div className="grid grid-cols-1 gap-x-12 gap-y-6 border-t border-slate-100 pt-5 md:grid-cols-3">
-          <DetailField label="Nama Customer" value={order?.customerName || firstItem?.customerName || firstItem?.customer?.name || '-'} icon={CircleUserRound} />
+          <DetailField
+            label="Nama Customer"
+            value={
+              customerName ? (
+                <ReferenceLink href={`/dashboard/${slug}/master/customer?search=${customerName}`}>
+                  {customerName}
+                </ReferenceLink>
+              ) : (
+                '-'
+              )
+            }
+            icon={CircleUserRound}
+          />
           <DetailField label="Kode Order" value={data.orderCode || order?.code || '-'} icon={ClipboardList} />
           <div />
         </div>

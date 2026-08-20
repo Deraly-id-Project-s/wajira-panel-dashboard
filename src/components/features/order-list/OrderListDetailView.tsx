@@ -18,8 +18,9 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { PageHeader } from '@/components/ui/page-header';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { cn } from '@/lib/utils';
+import { useRouter } from 'next/router';
+import { ReferenceLink } from '@/components/ui/reference-link';
 import {
   formatOrderCurrency,
   getOrderStatusBadgeClassName,
@@ -105,11 +106,11 @@ function CargoList({ route }: { route: OrderListTarifItem }) {
     ? route.tarifItems
     : route.loadContent
       ? [{
-          id: `${route.id}-fallback`,
-          uuid: undefined,
-          loadContent: route.loadContent,
-          qty: Number(route.qty ?? 0),
-        }]
+        id: `${route.id}-fallback`,
+        uuid: undefined,
+        loadContent: route.loadContent,
+        qty: Number(route.qty ?? 0),
+      }]
       : [];
 
   if (!items.length) {
@@ -147,8 +148,8 @@ export function OrderListDetailView({
   canUpdateStatus = false,
   isUpdatingStatus = false,
 }: OrderListDetailViewProps) {
-  const [nextStatus, setNextStatus] = React.useState<OrderListStatus>(data.status);
-  React.useEffect(() => setNextStatus(data.status), [data.status]);
+  const router = useRouter();
+  const slug = typeof router.query.slug === 'string' ? router.query.slug : '';
 
   const routes = data.tarifs ?? [];
   const expeditions = Array.isArray(data.expeditions) ? data.expeditions : [];
@@ -167,6 +168,7 @@ export function OrderListDetailView({
         onBack={onBack}
         subtitle={(
           <div className="flex flex-wrap items-center gap-2">
+            Kode Order :
             <button
               type="button"
               onClick={() => navigator.clipboard?.writeText(data.code)}
@@ -181,6 +183,30 @@ export function OrderListDetailView({
             <span className="text-xs text-slate-500">Dibuat {formatDate(data.createdAt, true)}</span>
           </div>
         )}
+        actions={
+          canUpdateStatus ? (
+            data.status === 'draft' ? (
+              <Button
+                type="button"
+                disabled={isUpdatingStatus}
+                onClick={() => onUpdateStatus?.('deliver')}
+                className="bg-orange-600 hover:bg-orange-700 text-white min-w-[120px] cursor-pointer"
+              >
+                {isUpdatingStatus ? 'Memproses...' : 'Proses Order List'}
+              </Button>
+            ) : data.status === 'deliver' ? (
+              <Button
+                type="button"
+                variant="outline"
+                disabled={isUpdatingStatus}
+                onClick={() => onUpdateStatus?.('draft')}
+                className="min-w-[120px] border-slate-300 text-slate-700 hover:bg-slate-50 cursor-pointer"
+              >
+                {isUpdatingStatus ? 'Memproses...' : 'Jadikan Draft'}
+              </Button>
+            ) : undefined
+          ) : undefined
+        }
       />
 
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
@@ -208,7 +234,19 @@ export function OrderListDetailView({
         <CardContent className="space-y-6 p-5 sm:p-6">
           <SectionHeading icon={FileText} title="Informasi Order" description="Informasi customer dan rangkuman tujuan pengiriman" />
           <div className="grid gap-5 border-t border-slate-100 pt-5 sm:grid-cols-2 lg:grid-cols-4">
-            <Field label="Customer" value={data.customer?.name || '-'} icon={CircleUserRound} />
+            <Field
+              label="Customer"
+              value={
+                data.customer?.name ? (
+                  <ReferenceLink href={`/dashboard/${slug}/master/customer?search=${data.customer.name}`}>
+                    {data.customer.name}
+                  </ReferenceLink>
+                ) : (
+                  '-'
+                )
+              }
+              icon={CircleUserRound}
+            />
             <Field label="Kode Customer" value={data.customer?.code || '-'} icon={ClipboardList} />
             <Field label="Tipe Armada" value={getOrderVehicleTypeLabel(data)} icon={Truck} />
             <Field label="DO Ekspedisi" value={`${expeditions.length} data`} icon={FileText} />
@@ -248,8 +286,36 @@ export function OrderListDetailView({
 
                     <div className="grid gap-5 border-b border-slate-100 p-4 sm:grid-cols-2 lg:grid-cols-4">
                       <Field label="Jarak" value={`${Number(tarif?.distance ?? 0).toLocaleString('id-ID')} KM`} icon={Route} />
-                      <Field label="Kendaraan" value={route.vehicle?.registrationNumber || (route.vehicleId ? `ID ${route.vehicleId}` : '-')} icon={Truck} />
-                      <Field label="Driver" value={route.driver?.name || (route.driverId ? `ID ${route.driverId}` : '-')} icon={UserRound} />
+                      <Field
+                        label="Kendaraan"
+                        value={
+                          route.vehicle?.registrationNumber ? (
+                            <ReferenceLink href={`/dashboard/${slug}/master/vehicle?search=${route.vehicle.registrationNumber}`}>
+                              {route.vehicle.registrationNumber}
+                            </ReferenceLink>
+                          ) : route.vehicleId ? (
+                            `ID ${route.vehicleId}`
+                          ) : (
+                            '-'
+                          )
+                        }
+                        icon={Truck}
+                      />
+                      <Field
+                        label="Driver"
+                        value={
+                          route.driver?.name ? (
+                            <ReferenceLink href={`/dashboard/${slug}/master/driver?search=${route.driver.name}`}>
+                              {route.driver.name}
+                            </ReferenceLink>
+                          ) : route.driverId ? (
+                            `ID ${route.driverId}`
+                          ) : (
+                            '-'
+                          )
+                        }
+                        icon={UserRound}
+                      />
                       <Field label="Dibuat" value={formatDate(route.createdAt)} icon={CalendarDays} />
                     </div>
 
@@ -280,53 +346,17 @@ export function OrderListDetailView({
         </CardContent>
       </Card>
 
-      <div className="grid gap-4 lg:grid-cols-2">
-        <Card className="border-slate-200 shadow-sm">
-          <CardContent className="space-y-5 p-5 sm:p-6">
-            <SectionHeading icon={Wallet} title="Ringkasan Keuangan" description="Nilai agregat dari DO order list" />
-            <div className="space-y-3 border-t border-slate-100 pt-5">
-              <CurrencyRow label="Invoice Ekspedisi" value={data.billInvoice} />
-              <CurrencyRow label="PPN" value={data.ppn} />
-              <CurrencyRow label="PPh" value={data.pph} />
-              <CurrencyRow label="Total Tagihan" value={totalBilling} emphasized />
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="border-slate-200 shadow-sm">
-          <CardContent className="space-y-5 p-5 sm:p-6">
-            <SectionHeading icon={ClipboardList} title="Status Order" description="Perubahan selain draft akan membentuk data DO ekspedisi" />
-            <div className="flex items-center justify-between border-t border-slate-100 pt-5">
-              <div>
-                <p className="font-semibold text-slate-950">Status saat ini</p>
-                <p className="mt-1 text-sm text-slate-500">Diperbarui {formatDate(data.updatedAt, true)}</p>
-              </div>
-              <Badge variant="outline" className={cn('rounded-full px-3 py-1 text-sm', getOrderStatusBadgeClassName(data.status))}>
-                {getOrderStatusLabel(data.status)}
-              </Badge>
-            </div>
-            {canUpdateStatus ? (
-              <div className="flex flex-col gap-2 sm:flex-row">
-                <Select value={nextStatus} onValueChange={(value: OrderListStatus) => setNextStatus(value)}>
-                  <SelectTrigger className="flex-1"><SelectValue placeholder="Pilih status" /></SelectTrigger>
-                  <SelectContent>
-                    {ORDER_LIST_STATUS_OPTIONS.map((option) => (
-                      <SelectItem key={option.value} value={option.value}>{option.label}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <Button
-                  type="button"
-                  disabled={isUpdatingStatus || nextStatus === data.status}
-                  onClick={() => onUpdateStatus?.(nextStatus)}
-                >
-                  {isUpdatingStatus ? 'Menyimpan...' : 'Ubah Status'}
-                </Button>
-              </div>
-            ) : null}
-          </CardContent>
-        </Card>
-      </div>
+      <Card className="border-slate-200 shadow-sm">
+        <CardContent className="space-y-5 p-5 sm:p-6">
+          <SectionHeading icon={Wallet} title="Ringkasan Keuangan" description="Nilai agregat dari DO order list" />
+          <div className="space-y-3 border-t border-slate-100 pt-5">
+            <CurrencyRow label="Invoice Ekspedisi" value={data.billInvoice} />
+            <CurrencyRow label="PPN" value={data.ppn} />
+            <CurrencyRow label="PPh" value={data.pph} />
+            <CurrencyRow label="Total Tagihan" value={totalBilling} emphasized />
+          </div>
+        </CardContent>
+      </Card>
 
       <Card className="border-slate-200 shadow-sm">
         <CardContent className="space-y-5 p-5 sm:p-6">

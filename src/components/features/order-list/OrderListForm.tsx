@@ -27,6 +27,12 @@ import {
   formatOrderCurrency,
 } from './order-list.utils';
 import { getOrderListFormula } from '@/services/order-list.service';
+import { CustomerFormModal } from '@/components/features/customer/CustomerFormModal';
+import { useCreateCustomer } from '@/hooks/useCustomer';
+import { customerSchema, type CustomerFormValues } from '@/scheme/customer.schema';
+import { useAuthMe } from '@/features/auth/hooks/use-auth-me';
+import { useCompany } from '@/contexts/CompanyContext';
+import { ApiValidationError } from '@/lib/api/response';
 
 export interface OrderListFormItemValue {
   localId: string;
@@ -184,6 +190,67 @@ export function OrderListForm({
   const router = useRouter();
   const slug = typeof router.query.slug === 'string' ? router.query.slug : '';
 
+  const { companyId } = useCompany();
+  const { data: profile } = useAuthMe();
+  const createCustomerMutation = useCreateCustomer();
+
+  const [localCustomers, setLocalCustomers] = React.useState<any[]>([]);
+  const [isCreateCustomerOpen, setIsCreateCustomerOpen] = React.useState(false);
+
+  const customerForm = useForm<CustomerFormValues>({
+    resolver: zodResolver(customerSchema),
+    defaultValues: {
+      name: '',
+      address: '',
+      npwp: '',
+      pic: '',
+      phone: '',
+      map_link: '',
+    },
+  });
+
+  const handleCreateCustomerSubmit = async (values: CustomerFormValues) => {
+    if (!companyId) {
+      toast.error('Company ID tidak ditemukan');
+      return;
+    }
+    const userId = profile?.data?.id;
+    if (!userId) {
+      toast.error('User belum dimuat, silakan coba lagi');
+      return;
+    }
+
+    try {
+      const created = await createCustomerMutation.mutateAsync({
+        ...values,
+        companyId: Number(companyId),
+        userId: Number(userId),
+      });
+
+      toast.success('Customer berhasil ditambahkan');
+      setLocalCustomers((prev) => [...prev, created]);
+      setValue('customerId', String(created.id), { shouldValidate: true, shouldDirty: true });
+      setIsCreateCustomerOpen(false);
+      customerForm.reset({
+        name: '',
+        address: '',
+        npwp: '',
+        pic: '',
+        phone: '',
+        map_link: '',
+      });
+    } catch (error: any) {
+      if (error instanceof ApiValidationError) {
+        Object.entries(error.fieldErrors).forEach(([field, messages]) => {
+          customerForm.setError(field as keyof CustomerFormValues, {
+            message: messages?.[0] || 'Validasi gagal',
+          });
+        });
+      }
+      toast.error(error.message || 'Gagal menambahkan customer baru');
+    }
+  };
+
   const defaultCustomerOption = React.useMemo<SearchableSelectOption[]>(() => {
     if (!initialData?.customer?.id) return [];
     return [
@@ -206,10 +273,22 @@ export function OrderListForm({
       }));
   }, [initialData?.tarifs]);
 
-  const mergedCustomerOptions = React.useMemo(
-    () => mergeSelectOptions(customerOptions, defaultCustomerOption),
-    [customerOptions, defaultCustomerOption],
+  const localCustomerOptions = React.useMemo<SearchableSelectOption[]>(
+    () =>
+      localCustomers.map((item) => ({
+        value: String(item.id),
+        label: item.name,
+        subtitle: item.code,
+      })),
+    [localCustomers],
   );
+
+  const mergedCustomerOptions = React.useMemo(() => {
+    const merged = mergeSelectOptions(customerOptions, defaultCustomerOption);
+    const existingValues = new Set(merged.map((o) => o.value));
+    const filteredLocal = localCustomerOptions.filter((o) => !existingValues.has(o.value));
+    return [...merged, ...filteredLocal];
+  }, [customerOptions, defaultCustomerOption, localCustomerOptions]);
 
   const mergedTarifOptions = React.useMemo(() => {
     return mergeSelectOptions(tarifOptions, defaultTarifOptions);
@@ -435,20 +514,44 @@ export function OrderListForm({
                 control={control}
                 name="customerId"
                 render={({ field }) => (
-                  <FormItem className="flex flex-col">
+                  <FormItem className="flex flex-col min-w-0">
                     <FormLabel className="text-sm font-medium">Customer</FormLabel>
-                    <FormControl>
-                      <SearchableSelect
-                        value={field.value}
-                        onChange={field.onChange}
-                        options={mergedCustomerOptions}
-                        placeholder="Pilih customer"
-                        searchPlaceholder="Cari customer..."
-                        loading={customerLoading}
-                        onSearchChange={onCustomerSearch}
-                        className="bg-transparent"
-                      />
-                    </FormControl>
+                    <div className="flex items-center gap-2 w-full min-w-0">
+                      <div className="flex-1 min-w-0">
+                        <FormControl>
+                          <SearchableSelect
+                            value={field.value}
+                            onChange={field.onChange}
+                            options={mergedCustomerOptions}
+                            placeholder="Pilih customer"
+                            searchPlaceholder="Cari customer..."
+                            loading={customerLoading}
+                            onSearchChange={onCustomerSearch}
+                            className="bg-transparent"
+                          />
+                        </FormControl>
+                      </div>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="icon"
+                        aria-label="Tambah customer"
+                        onClick={() => {
+                          customerForm.reset({
+                            name: '',
+                            address: '',
+                            npwp: '',
+                            pic: '',
+                            phone: '',
+                            map_link: '',
+                          });
+                          setIsCreateCustomerOpen(true);
+                        }}
+                        className="h-10 w-10 shrink-0 cursor-pointer"
+                      >
+                        <Plus className="h-4 w-4" />
+                      </Button>
+                    </div>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -886,6 +989,28 @@ export function OrderListForm({
           </div>
         </form>
       </Form>
+
+      <CustomerFormModal
+        open={isCreateCustomerOpen}
+        onOpenChange={(nextOpen) => {
+          setIsCreateCustomerOpen(nextOpen);
+          if (!nextOpen) {
+            customerForm.reset({
+              name: '',
+              address: '',
+              npwp: '',
+              pic: '',
+              phone: '',
+              map_link: '',
+            });
+          }
+        }}
+        form={customerForm}
+        onSubmit={handleCreateCustomerSubmit}
+        title="Tambah Data Customer"
+        description="Masukkan detail customer baru"
+        isSubmitting={createCustomerMutation.isPending}
+      />
 
     </div>
   );
