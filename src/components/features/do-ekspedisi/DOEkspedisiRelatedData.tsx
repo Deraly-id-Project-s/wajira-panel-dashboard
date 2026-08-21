@@ -35,6 +35,7 @@ export function DOEkspedisiRelatedData({ data, onRefresh }: { data: DoEkspedisi;
   const claim = useDoDetailResourceMutation('claim', data.id);
   const documentation = useDoDetailResourceMutation('documentation', data.id);
   const canManageClaims = data.status === 'done' && Boolean(data.driverId);
+  const canApplyClaims = canManageClaims && data.ujNominal > 0;
   const availableClaims = useAvailableExpeditionClaims(data.driverId, canManageClaims && applyOpen);
   const applyClaim = useApplyExpeditionClaim(data.id);
   const mutations = { note, expense, claim, documentation }[active?.resource ?? 'note'];
@@ -62,11 +63,11 @@ export function DOEkspedisiRelatedData({ data, onRefresh }: { data: DoEkspedisi;
     } catch (error: any) { toast.error(error?.message || 'Gagal menyimpan data'); }
   };
   const remove = async (resource: Resource, item: any) => { if (!window.confirm('Hapus data ini?')) return; try { await ({ note, expense, claim, documentation }[resource].remove.mutateAsync(item.id)); toast.success('Data berhasil dihapus'); onRefresh?.(); } catch (error: any) { toast.error(error?.message || 'Gagal menghapus data'); } };
-  const actions = (resource: Resource, item: any) => <DropdownMenu><DropdownMenuTrigger asChild><Button variant="ghost" size="icon"><MoreVertical className="h-4 w-4" /></Button></DropdownMenuTrigger><DropdownMenuContent align="end"><DropdownMenuItem onClick={() => openEdit(resource, item)}><Pencil className="mr-2 h-4 w-4" />Edit</DropdownMenuItem><DropdownMenuItem className="text-red-600" onClick={() => void remove(resource, item)}><Trash2 className="mr-2 h-4 w-4" />Hapus</DropdownMenuItem></DropdownMenuContent></DropdownMenu>;
+  const actions = (resource: Resource, item: any) => <DropdownMenu><DropdownMenuTrigger asChild><Button variant="ghost" size="icon"><MoreVertical className="h-4 w-4" /></Button></DropdownMenuTrigger><DropdownMenuContent align="end"><DropdownMenuItem onClick={() => openEdit(resource, item)}><Pencil className="mr-2 h-4 w-4" />Edit</DropdownMenuItem>{(resource !== 'claim' || Number(item.appliedNominal) === 0) && <DropdownMenuItem className="text-red-600" onClick={() => void remove(resource, item)}><Trash2 className="mr-2 h-4 w-4" />Hapus</DropdownMenuItem>}</DropdownMenuContent></DropdownMenu>;
 
   const noteColumns: ColumnDef<DoEkspedisiDriverNote>[] = [{ header: 'No', cell: (_, i) => i + 1 }, { header: 'Tanggal Efektif', cell: (x) => x.effectiveDate ? formatDate(x.effectiveDate) : '-' }, { header: 'Subject', cell: (x) => x.subject }, { header: 'Deskripsi', cell: (x) => x.description }, { header: '', alignment: 'right', cell: (x) => actions('note', x) }];
   const expenseColumns: ColumnDef<DoEkspedisiExpense>[] = [{ header: 'No', cell: (_, i) => i + 1 }, { header: 'Subject', cell: (x) => x.subject }, { header: 'Deskripsi', cell: (x) => x.description }, { header: 'Nominal', alignment: 'right', cell: (x) => formatCurrency(x.nominal) }, { header: '', alignment: 'right', cell: (x) => actions('expense', x) }];
-  const claimColumns: ColumnDef<DoEkspedisiClaim>[] = [{ header: 'No', cell: (_, i) => i + 1 }, { header: 'Subject', cell: (x) => x.subject }, { header: 'Deskripsi', cell: (x) => x.description }, { header: 'Claim', alignment: 'right', cell: (x) => formatCurrency(x.claimNominal) }, { header: 'Sisa', alignment: 'right', cell: (x) => formatCurrency(x.remainingNominal) }, { header: 'Dokumentasi', cell: (x) => <Button variant="link" className="p-0" onClick={() => setDocClaim(x)}>{x.documentations?.length ?? 0} file</Button> }, { header: '', alignment: 'right', cell: (x) => actions('claim', x) }];
+  const claimColumns: ColumnDef<DoEkspedisiClaim>[] = [{ header: 'No', cell: (_, i) => i + 1 }, { header: 'Subject', cell: (x) => x.subject }, { header: 'Deskripsi', cell: (x) => x.description }, { header: 'Claim', alignment: 'right', cell: (x) => formatCurrency(x.claimNominal) }, { header: 'Terpakai', alignment: 'right', cell: (x) => formatCurrency(x.appliedNominal) }, { header: 'Sisa', alignment: 'right', cell: (x) => formatCurrency(x.remainingNominal) }, { header: 'Dokumentasi', cell: (x) => <Button variant="link" className="p-0" onClick={() => setDocClaim(x)}>{x.documentations?.length ?? 0} file</Button> }, { header: '', alignment: 'right', cell: (x) => actions('claim', x) }];
   const applicationColumns: ColumnDef<DoEkspedisiClaimApplication>[] = [
     { header: 'No', cell: (_, i) => i + 1 },
     { header: 'Sumber Claim', cell: (x) => <div><p className="font-medium text-slate-900">{x.claim?.sourceExpeditionCode || '-'}</p><p className="text-xs text-slate-500">{x.claim?.subject || '-'}</p></div> },
@@ -83,12 +84,18 @@ export function DOEkspedisiRelatedData({ data, onRefresh }: { data: DoEkspedisi;
     event.preventDefault();
     if (!data.driverId || !applyForm.claimId) return;
 
+    const nominal = Number(applyForm.nominal);
+    if (!selectedAvailableClaim || nominal < 1 || nominal > selectedAvailableClaim.remainingNominal || nominal > data.ujNominal) {
+      toast.error('Nominal potongan harus lebih dari 0 dan tidak boleh melebihi sisa claim atau sisa UJ.');
+      return;
+    }
+
     try {
       await applyClaim.mutateAsync({
         do_expedition_claim_id: Number(applyForm.claimId),
         do_expedition_id: data.id,
         driver_id: data.driverId,
-        nominal: Number(applyForm.nominal),
+        nominal,
         type: applyForm.type,
         date: applyForm.date,
       });
@@ -105,7 +112,7 @@ export function DOEkspedisiRelatedData({ data, onRefresh }: { data: DoEkspedisi;
     <RelatedSection title="Driver Notes" icon={<FileText />} onAdd={() => openCreate('note', { effective_date: new Date().toISOString().slice(0, 16) })}><BaseTable data={data.driverNotes} columns={noteColumns} containerClassName="rounded-lg border" headerRowClassName="bg-orange-50" /></RelatedSection>
     <RelatedSection title="DO Expense" icon={<Receipt />} onAdd={() => openCreate('expense', { nominal: '' })}><BaseTable data={data.expeditionExpenses} columns={expenseColumns} containerClassName="rounded-lg border" headerRowClassName="bg-orange-50" /></RelatedSection>
     <RelatedSection title="Driver Claim" icon={<ShieldAlert />} onAdd={() => openCreate('claim', { driver_id: String(data.driverId ?? '') })} addDisabled={!canManageClaims} helper={!canManageClaims ? 'Claim baru hanya dapat dibuat setelah ekspedisi selesai.' : undefined}><BaseTable data={data.expeditionClaims} columns={claimColumns} containerClassName="rounded-lg border" headerRowClassName="bg-orange-50" /></RelatedSection>
-    <RelatedSection title="Potongan Claim pada UJ" icon={<WalletCards />} onAdd={() => setApplyOpen(true)} addLabel="Terapkan Claim" addDisabled={!canManageClaims} helper={!canManageClaims ? 'Selesaikan ekspedisi dan pastikan driver terpasang sebelum menerapkan claim.' : 'Claim dari ekspedisi mana pun milik driver yang sama dapat digunakan sebagai potongan UJ.'}><BaseTable data={data.driverExpeditionClaims} columns={applicationColumns} containerClassName="rounded-lg border" headerRowClassName="bg-rose-50" /></RelatedSection>
+    <RelatedSection title="Potongan Claim pada UJ" icon={<WalletCards />} onAdd={() => setApplyOpen(true)} addLabel="Terapkan Claim" addDisabled={!canApplyClaims} helper={!canManageClaims ? 'Selesaikan ekspedisi dan pastikan driver terpasang sebelum menerapkan claim.' : data.ujNominal <= 0 ? 'UJ driver sudah habis terpotong claim.' : 'Claim dari ekspedisi mana pun milik driver yang sama dapat digunakan sebagai potongan UJ.'}><BaseTable data={data.driverExpeditionClaims} columns={applicationColumns} containerClassName="rounded-lg border" headerRowClassName="bg-rose-50" /></RelatedSection>
     <FormDialog open={Boolean(active)} onOpenChange={(open) => !open && close()} title={title} description="Lengkapi data transaksi perjalanan" onSubmit={save} isSubmitting={busy} maxWidthClassName="max-w-lg">
       {active?.resource === 'note' && <>{field('Tanggal Efektif', form.effective_date ?? '', (v) => set('effective_date', v), 'datetime-local')}{field('Subject', form.subject ?? '', (v) => set('subject', v))}<div className="space-y-1"><Label>Gambar</Label><FileInput accept="image/*" value={form.image ?? null} onFileChange={(file) => set('image', file)} /></div><div className="space-y-1"><Label>Deskripsi</Label><Textarea required value={form.description ?? ''} onChange={(e) => set('description', e.target.value)} /></div></>}
       {active?.resource === 'expense' && <>{field('Subject', form.subject ?? '', (v) => set('subject', v))}<div className="space-y-1"><Label>Deskripsi *</Label><Textarea required value={form.description ?? ''} onChange={(e) => set('description', e.target.value)} /></div>{field('Nominal', form.nominal ?? '', (v) => set('nominal', v), 'number')}</>}
@@ -115,10 +122,10 @@ export function DOEkspedisiRelatedData({ data, onRefresh }: { data: DoEkspedisi;
     <FormDialog open={Boolean(docClaim)} onOpenChange={(open) => !open && setDocClaim(null)} title="Dokumentasi Claim" description="Lampiran kerusakan atau kehilangan barang" onSubmit={(e) => { e.preventDefault(); }} submitLabel="Tutup" cancelLabel="Tutup" maxWidthClassName="max-w-3xl"><div className="space-y-4"><div className="flex justify-end"><Button type="button" onClick={() => openCreate('documentation')}><Plus className="mr-2 h-4 w-4" />Tambah Dokumentasi</Button></div><BaseTable data={docs} columns={docColumns} containerClassName="rounded-lg border" headerRowClassName="bg-orange-50" /></div></FormDialog>
     <FormDialog open={applyOpen} onOpenChange={setApplyOpen} title="Terapkan Claim ke UJ" description="Pilih tagihan driver yang akan dipotong dari uang jalan ekspedisi ini." onSubmit={submitClaimApplication} submitLabel="Terapkan Claim" isSubmitting={applyClaim.isPending} maxWidthClassName="max-w-lg">
       <div className="space-y-1"><Label>Claim *</Label><Select value={applyForm.claimId} onValueChange={(claimId) => { const selected = availableClaims.data?.find((item) => String(item.id) === claimId); setApplyForm((old) => ({ ...old, claimId, nominal: selected ? String(Math.min(selected.remainingNominal, data.ujNominal)) : '' })); }}><SelectTrigger><SelectValue placeholder={availableClaims.isLoading ? 'Memuat claim...' : 'Pilih claim driver'} /></SelectTrigger><SelectContent>{availableClaims.data?.map((item) => <SelectItem key={item.id} value={String(item.id)}>{item.sourceExpeditionCode || `Ekspedisi #${item.doExpeditionsId}`} · {item.subject} · Sisa {formatCurrency(item.remainingNominal)}</SelectItem>)}</SelectContent></Select></div>
-      {availableClaims.isSuccess && availableClaims.data.length === 0 && <p className="rounded-lg bg-slate-50 p-3 text-sm text-slate-600">Tidak ada claim outstanding untuk driver ini.</p>}
+      {availableClaims.isSuccess && availableClaims.data?.length === 0 && <p className="rounded-lg bg-slate-50 p-3 text-sm text-slate-600">Tidak ada claim outstanding untuk driver ini.</p>}
       {selectedAvailableClaim && <div className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900"><p>Sisa claim: <strong>{formatCurrency(selectedAvailableClaim.remainingNominal)}</strong></p><p>Sisa UJ tersedia: <strong>{formatCurrency(data.ujNominal)}</strong></p></div>}
       {field('Nominal Potongan', applyForm.nominal, (nominal) => setApplyForm((old) => ({ ...old, nominal })), 'number')}
-      <div className="space-y-1"><Label>Metode *</Label><Select value={applyForm.type} onValueChange={(type: 'cash' | 'transfer') => setApplyForm((old) => ({ ...old, type }))}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="cash">Cash</SelectItem><SelectItem value="transfer">Transfer</SelectItem></SelectContent></Select></div>
+      <div className="space-y-1"><Label>Metode *</Label><Select value={applyForm.type} onValueChange={(type) => setApplyForm((old) => ({ ...old, type: type as 'cash' | 'transfer' }))}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="cash">Cash</SelectItem><SelectItem value="transfer">Transfer</SelectItem></SelectContent></Select></div>
       {field('Tanggal', applyForm.date, (date) => setApplyForm((old) => ({ ...old, date })), 'datetime-local')}
     </FormDialog>
   </div>;

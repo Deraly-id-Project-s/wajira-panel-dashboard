@@ -155,6 +155,7 @@ export interface DoEkspedisiClaim {
   claimNominal: number;
   nominal: number;
   remainingNominal: number;
+  appliedNominal: number;
   sourceExpeditionCode?: string;
   documentations: DoEkspedisiClaimDocumentation[];
 }

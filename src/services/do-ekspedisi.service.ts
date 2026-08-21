@@ -133,6 +133,7 @@ const mapClaim = (item: any): DoEkspedisiClaim => ({
   driverId: Number(item?.driver_id ?? 0), subject: item?.subject ?? '', description: item?.description ?? '',
   isClaim: Boolean(item?.is_claim), claimNominal: toNumber(item?.claim_nominal),
   nominal: toNumber(item?.nominal ?? item?.claim_nominal), remainingNominal: toNumber(item?.remaining_nominal),
+  appliedNominal: Math.max(0, toNumber(item?.claim_nominal) - toNumber(item?.remaining_nominal)),
   sourceExpeditionCode: toText(item?.expedition?.code, item?.source_expedition_code),
   documentations: (item?.documentations ?? item?.expedition_claim_documentations ?? []).map(mapClaimDocumentation),
 });

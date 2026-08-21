@@ -97,8 +97,8 @@ export default function DetailDOEkspedisiPage() {
           driver_id: detailQuery.data.driverId ?? '',
           driver_note: detailQuery.data.driverNote,
           status,
-          start_date: status === 'process' ? (detailQuery.data.startDate || now) : detailQuery.data.startDate,
-          end_date: status === 'done' ? now : detailQuery.data.endDate,
+          start_date: status === 'draft' ? null : status === 'process' ? (detailQuery.data.startDate || now) : detailQuery.data.startDate,
+          end_date: status === 'draft' ? null : status === 'done' ? now : detailQuery.data.endDate,
         },
       });
       toast.success(status === 'process' ? 'Pengiriman dimulai' : status === 'done' ? 'DO Ekspedisi telah selesai' : 'DO Ekspedisi dikembalikan ke Draft');
@@ -273,7 +273,7 @@ export default function DetailDOEkspedisiPage() {
             {detailQuery.data?.status === 'draft' ? (
               <Button
                 type="button"
-                disabled={updateMutation.isPending}
+                disabled={updateMutation.isPending || !detailQuery.data.driverId || !detailQuery.data.vehicleId}
                 onClick={() => void updateStatus('process')}
                 className="bg-orange-600 hover:bg-orange-700 text-white min-w-[120px] cursor-pointer font-medium"
               >
@@ -319,7 +319,7 @@ export default function DetailDOEkspedisiPage() {
                   toast.error(getApiErrorMessage(error));
                 }
               }}
-              disabled={processExpeditionMutation.isPending || detailQuery.data.status === 'draft' || !detailQuery.data.driverId}
+              disabled={processExpeditionMutation.isPending || detailQuery.data.status === 'draft' || !detailQuery.data.driverId || !detailQuery.data.vehicleId}
               className="bg-[#1e3a5f] text-white hover:bg-[#152e4d] font-medium"
             >
               <Printer className="h-4 w-4" />
@@ -328,12 +328,12 @@ export default function DetailDOEkspedisiPage() {
           </>,
         )}
 
-        {!effectiveData?.driver && (
+        {(!effectiveData?.driver || !effectiveData?.vehicle) && (
           <div role="alert" className="flex items-start gap-3 rounded-lg border border-amber-200 bg-amber-50 p-4 text-amber-900">
             <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0 text-amber-600" />
             <div>
-              <p className="font-semibold">Data driver belum dipilih</p>
-              <p className="mt-1 text-sm text-amber-800">Silakan klik Edit untuk memilih driver sebelum mencetak Delivery Order.</p>
+              <p className="font-semibold">Driver atau kendaraan belum dipilih</p>
+              <p className="mt-1 text-sm text-amber-800">Silakan klik Edit untuk melengkapi driver dan kendaraan sebelum memulai pengiriman.</p>
             </div>
           </div>
         )}
