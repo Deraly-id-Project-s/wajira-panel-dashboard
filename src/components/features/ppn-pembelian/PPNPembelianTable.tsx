@@ -113,7 +113,7 @@ export default function PPNPembelianTable({
       setAmount('');
       setNsfpNumber('');
     } catch (err: any) {
-      toast.error(err?.message || 'Gagal melakukan bulk update PPN Pembelian');
+      toast.error(err?.message || 'Gagal melakukan Update Data PPN Pembelian');
     }
   };
 
@@ -327,7 +327,7 @@ export default function PPNPembelianTable({
               disabled={selectedIds.size === 0}
               className="bg-primary text-primary-foreground hover:bg-primary/90 h-9 px-3 text-xs gap-1.5 font-medium rounded-lg shadow-sm"
             >
-              <Settings size={14} /> Bulk Update ({selectedIds.size})
+              <Settings size={14} /> Update Data ({selectedIds.size})
             </Button>
           </div>
         }
@@ -336,7 +336,7 @@ export default function PPNPembelianTable({
       <FormDialog
         open={isOpenBulkModal}
         onOpenChange={setIsOpenBulkModal}
-        title={`Bulk Update Data PPN Pembelian (${selectedIds.size} Data Terpilih)`}
+        title={`Update Data Data PPN Pembelian (${selectedIds.size} Data Terpilih)`}
         onSubmit={handleSubmitBulk}
         maxWidthClassName="max-w-5xl"
         isSubmitting={bulkUpdateMutation.isPending}

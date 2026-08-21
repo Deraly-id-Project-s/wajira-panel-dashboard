@@ -119,7 +119,7 @@ export default function PPNPenjualanTable({
       setAmount('');
       setNsfpNumber('');
     } catch (err: any) {
-      toast.error(err?.message || 'Gagal melakukan bulk update PPN Penjualan');
+      toast.error(err?.message || 'Gagal melakukan Update Data PPN Penjualan');
     }
   };
 
@@ -333,7 +333,7 @@ export default function PPNPenjualanTable({
               disabled={selectedIds.size === 0}
               className="bg-primary text-primary-foreground hover:bg-primary/90 h-9 px-3 text-xs gap-1.5 font-medium rounded-lg shadow-sm"
             >
-              <Settings size={14} /> Bulk Update ({selectedIds.size})
+              <Settings size={14} /> Update Data ({selectedIds.size})
             </Button>
           </div>
         }
@@ -343,7 +343,7 @@ export default function PPNPenjualanTable({
         <DialogContent className="sm:max-w-4xl md:max-w-5xl w-[90vw] p-6 rounded-md">
           <DialogHeader>
             <DialogTitle className="text-xl font-bold text-slate-800">
-              Bulk Update Data PPN Penjualan ({selectedIds.size} Data Terpilih)
+              Update Data Data PPN Penjualan ({selectedIds.size} Data Terpilih)
             </DialogTitle>
           </DialogHeader>
 

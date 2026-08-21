@@ -153,9 +153,6 @@ export default function DOEkspedisiPage() {
     <DashboardLayout>
       <div className="space-y-6">
         <PageHeader
-          breadcrumbs={[
-            { label: 'DO Ekspedisi' }
-          ]}
           title="Data DO Ekspedisi"
           subtitle="Buat faktur dengan informasi penagihan yang diperlukan."
         />
