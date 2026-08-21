@@ -121,6 +121,7 @@ export interface OrderListTarifItemListParams extends PaginationParams {
 export interface CreateOrderListPayload {
   customer_id: number;
   company_id: number;
+  description?: string;
 }
 
 export interface UpdateOrderListPayload {
@@ -130,6 +131,7 @@ export interface UpdateOrderListPayload {
   bill_invoice?: number;
   vehicle_type?: OrderListVehicleType;
   note?: string;
+  description?: string;
   uj_driver?: number;
   loading_in?: string;
   loading_out?: string;

@@ -4,6 +4,7 @@ import { useFieldArray, useForm, useWatch } from 'react-hook-form';
 import { Plus, Save, Trash2 } from 'lucide-react';
 import { useRouter } from 'next/router';
 import { PageHeader } from '@/components/ui/page-header';
+import RequiredMark from '@/components/ui/required-mark';
 import type { OrderList, OrderListVehicleType } from '@/@types/order-list.types';
 import type { Tarif } from '@/@types/tarif.types';
 import { SearchableSelect, type SearchableSelectOption } from '@/components/features/vehicle-data/SearchableSelect';
@@ -514,8 +515,8 @@ export function OrderListForm({
                 control={control}
                 name="customerId"
                 render={({ field }) => (
-                  <FormItem className="flex flex-col min-w-0">
-                    <FormLabel className="text-sm font-medium">Customer</FormLabel>
+                  <FormItem className="flex flex-col min-w-0 relative pb-5">
+                    <FormLabel className="text-sm font-medium">Customer<RequiredMark /></FormLabel>
                     <div className="flex items-center gap-2 w-full min-w-0">
                       <div className="flex-1 min-w-0">
                         <FormControl>
@@ -552,7 +553,7 @@ export function OrderListForm({
                         <Plus className="h-4 w-4" />
                       </Button>
                     </div>
-                    <FormMessage />
+                    <FormMessage className="absolute bottom-0 text-[11px] leading-none mt-0" />
                   </FormItem>
                 )}
               />
@@ -561,7 +562,7 @@ export function OrderListForm({
                 control={control}
                 name="note"
                 render={({ field }) => (
-                  <FormItem>
+                  <FormItem className="relative pb-5">
                     <FormLabel className="text-sm font-medium">Catatan / Keterangan</FormLabel>
                     <FormControl>
                       <Textarea
@@ -571,7 +572,7 @@ export function OrderListForm({
                         value={field.value ?? ''}
                       />
                     </FormControl>
-                    <FormMessage />
+                    <FormMessage className="absolute bottom-0 text-[11px] leading-none mt-0" />
                   </FormItem>
                 )}
               />
@@ -611,34 +612,34 @@ export function OrderListForm({
                       )}
                     </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                       <FormField
                         control={control}
                         name={`items.${index}.tarifId`}
                         render={({ field: controllerField }) => (
-                          <FormItem className="flex flex-col min-w-0">
-                            <FormLabel className="text-sm font-medium">Pilih Rute / Tarif</FormLabel>
+                          <FormItem className="flex flex-col min-w-0 relative pb-5">
+                            <FormLabel className="text-sm font-medium">Pilih Rute / Tarif<RequiredMark /></FormLabel>
                             <div className="w-full min-w-0">
-                                <FormControl>
-                                  <SearchableSelect
-                                    value={controllerField.value}
-                                    onChange={(value) => handleTarifChange(index, value)}
-                                    options={mergedTarifOptions}
-                                    placeholder="Pilih tarif"
-                                    searchPlaceholder="Cari tarif..."
-                                    loading={tarifLoading}
-                                    onSearchChange={onTarifSearch}
-                                    disabledValues={selectedTarifIds.filter((value) => value !== controllerField.value)}
-                                    className="bg-transparent"
-                                  />
-                                </FormControl>
+                              <FormControl>
+                                <SearchableSelect
+                                  value={controllerField.value}
+                                  onChange={(value) => handleTarifChange(index, value)}
+                                  options={mergedTarifOptions}
+                                  placeholder="Pilih tarif"
+                                  searchPlaceholder="Cari tarif..."
+                                  loading={tarifLoading}
+                                  onSearchChange={onTarifSearch}
+                                  disabledValues={selectedTarifIds.filter((value) => value !== controllerField.value)}
+                                  className="bg-transparent"
+                                />
+                              </FormControl>
                             </div>
-                            <FormMessage />
+                            <FormMessage className="absolute bottom-0 text-[11px] leading-none mt-0" />
                           </FormItem>
                         )}
                       />
 
-                      <FormItem>
+                      <FormItem className="relative pb-5">
                         <FormLabel className="text-sm font-medium">Loading In</FormLabel>
                         <FormControl>
                           <Input
@@ -649,10 +650,8 @@ export function OrderListForm({
                           />
                         </FormControl>
                       </FormItem>
-                    </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                      <FormItem>
+                      <FormItem className="relative pb-5">
                         <FormLabel className="text-sm font-medium">Loading Out</FormLabel>
                         <FormControl>
                           <Input
@@ -663,13 +662,15 @@ export function OrderListForm({
                           />
                         </FormControl>
                       </FormItem>
+                    </div>
 
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                       <FormField
                         control={control}
                         name={`items.${index}.deliveryDestination`}
                         render={({ field: controllerField }) => (
-                          <FormItem>
-                            <FormLabel className="text-sm font-medium">Tujuan Kirim</FormLabel>
+                          <FormItem className="relative pb-5">
+                            <FormLabel className="text-sm font-medium">Tujuan Kirim<RequiredMark /></FormLabel>
                             <FormControl>
                               <Input
                                 placeholder="Contoh: Nama PT / Alamat Detail"
@@ -677,7 +678,7 @@ export function OrderListForm({
                                 {...controllerField}
                               />
                             </FormControl>
-                            <FormMessage />
+                            <FormMessage className="absolute bottom-0 text-[11px] leading-none mt-0" />
                           </FormItem>
                         )}
                       />
@@ -686,8 +687,8 @@ export function OrderListForm({
                         control={control}
                         name={`items.${index}.vehicleType`}
                         render={({ field: controllerField }) => (
-                          <FormItem className="flex flex-col">
-                            <FormLabel className="text-sm font-medium">Tipe Armada</FormLabel>
+                          <FormItem className="flex flex-col relative pb-5">
+                            <FormLabel className="text-sm font-medium">Tipe Armada<RequiredMark /></FormLabel>
                             <FormControl>
                               <Select
                                 value={controllerField.value}
@@ -705,7 +706,7 @@ export function OrderListForm({
                                 </SelectContent>
                               </Select>
                             </FormControl>
-                            <FormMessage />
+                            <FormMessage className="absolute bottom-0 text-[11px] leading-none mt-0" />
                           </FormItem>
                         )}
                       />
@@ -714,8 +715,8 @@ export function OrderListForm({
                         control={control}
                         name={`items.${index}.vehicleId`}
                         render={({ field: controllerField }) => (
-                          <FormItem className="flex flex-col">
-                            <FormLabel className="text-sm font-medium">Kendaraan</FormLabel>
+                          <FormItem className="flex flex-col relative pb-5">
+                            <FormLabel className="text-sm font-medium">Kendaraan<RequiredMark /></FormLabel>
                             <FormControl>
                               <SearchableSelect
                                 value={controllerField.value}
@@ -727,7 +728,7 @@ export function OrderListForm({
                                 onSearchChange={onVehicleSearch}
                               />
                             </FormControl>
-                            <FormMessage />
+                            <FormMessage className="absolute bottom-0 text-[11px] leading-none mt-0" />
                           </FormItem>
                         )}
                       />
@@ -736,8 +737,8 @@ export function OrderListForm({
                         control={control}
                         name={`items.${index}.driverId`}
                         render={({ field: controllerField }) => (
-                          <FormItem className="flex flex-col">
-                            <FormLabel className="text-sm font-medium">Driver</FormLabel>
+                          <FormItem className="flex flex-col relative pb-5">
+                            <FormLabel className="text-sm font-medium">Driver<RequiredMark /></FormLabel>
                             <FormControl>
                               <SearchableSelect
                                 value={controllerField.value}
@@ -749,7 +750,7 @@ export function OrderListForm({
                                 onSearchChange={onDriverSearch}
                               />
                             </FormControl>
-                            <FormMessage />
+                            <FormMessage className="absolute bottom-0 text-[11px] leading-none mt-0" />
                           </FormItem>
                         )}
                       />
@@ -770,10 +771,10 @@ export function OrderListForm({
                       <div className="space-y-3">
                         <div className="flex items-center gap-3 w-full">
                           <div className="flex-1">
-                            <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Nama Muatan</span>
+                            <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Nama Muatan<RequiredMark /></span>
                           </div>
                           <div className="w-[120px]">
-                            <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Qty</span>
+                            <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Qty<RequiredMark /></span>
                           </div>
                           <div className="w-10 shrink-0" />
                         </div>
@@ -783,6 +784,10 @@ export function OrderListForm({
                           const cargoCount = item?.cargoItems?.length ?? 0;
                           return (
                             <div key={cargoKey} className="flex items-start gap-3 w-full">
+                              <input autoComplete="off"
+                                type="hidden"
+                                {...register(`items.${index}.cargoItems.${cargoIndex}.localId`)}
+                              />
                               <div className="flex-1 space-y-1">
                                 <Input
                                   placeholder="Contoh: Honda Vario"
@@ -876,7 +881,7 @@ export function OrderListForm({
                 control={control}
                 name="ujDriver"
                 render={({ field }) => (
-                  <FormItem>
+                  <FormItem className="relative pb-5">
                     <FormLabel className="text-sm font-medium">Uang Jalan Driver (Total)</FormLabel>
                     <FormControl>
                       <MoneyInput
@@ -887,7 +892,7 @@ export function OrderListForm({
                         className="bg-slate-50 border-slate-200 cursor-default"
                       />
                     </FormControl>
-                    <FormMessage />
+                    <FormMessage className="absolute bottom-0 text-[11px] leading-none mt-0" />
                   </FormItem>
                 )}
               />
@@ -896,8 +901,8 @@ export function OrderListForm({
                 control={control}
                 name="invoiceBill"
                 render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="text-sm font-medium">Invoice Ekspedisi</FormLabel>
+                  <FormItem className="relative pb-5">
+                    <FormLabel className="text-sm font-medium">Invoice Ekspedisi<RequiredMark /></FormLabel>
                     <FormControl>
                       <MoneyInput
                         value={field.value}
@@ -906,7 +911,7 @@ export function OrderListForm({
                         className="bg-transparent"
                       />
                     </FormControl>
-                    <FormMessage />
+                    <FormMessage className="absolute bottom-0 text-[11px] leading-none mt-0" />
                   </FormItem>
                 )}
               />
@@ -915,7 +920,7 @@ export function OrderListForm({
                 control={control}
                 name="ppn"
                 render={({ field }) => (
-                  <FormItem>
+                  <FormItem className="relative pb-5">
                     <FormLabel className="text-sm font-medium">
                       PPN {ppnInfo ? `(${ppnInfo.name} - ${ppnInfo.rate}%)` : ''}
                     </FormLabel>
@@ -928,7 +933,7 @@ export function OrderListForm({
                         className="bg-slate-50 border-slate-200 cursor-not-allowed"
                       />
                     </FormControl>
-                    <FormMessage />
+                    <FormMessage className="absolute bottom-0 text-[11px] leading-none mt-0" />
                   </FormItem>
                 )}
               />
@@ -937,7 +942,7 @@ export function OrderListForm({
                 control={control}
                 name="pph"
                 render={({ field }) => (
-                  <FormItem>
+                  <FormItem className="relative pb-5">
                     <FormLabel className="text-sm font-medium">
                       PPh {pphInfo ? `(${pphInfo.name} - ${pphInfo.rate}%)` : ''}
                     </FormLabel>
@@ -950,7 +955,7 @@ export function OrderListForm({
                         className="bg-slate-50 border-slate-200 cursor-not-allowed"
                       />
                     </FormControl>
-                    <FormMessage />
+                    <FormMessage className="absolute bottom-0 text-[11px] leading-none mt-0" />
                   </FormItem>
                 )}
               />

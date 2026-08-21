@@ -1,7 +1,9 @@
 import type {
   DoEkspedisi,
+  ApplyExpeditionClaimPayload,
   DoEkspedisiCustomer,
   DoEkspedisiClaim,
+  DoEkspedisiClaimApplication,
   DoEkspedisiClaimDocumentation,
   DoEkspedisiDriverNote,
   DoEkspedisiExpense,
@@ -131,7 +133,20 @@ const mapClaim = (item: any): DoEkspedisiClaim => ({
   driverId: Number(item?.driver_id ?? 0), subject: item?.subject ?? '', description: item?.description ?? '',
   isClaim: Boolean(item?.is_claim), claimNominal: toNumber(item?.claim_nominal),
   nominal: toNumber(item?.nominal ?? item?.claim_nominal), remainingNominal: toNumber(item?.remaining_nominal),
+  sourceExpeditionCode: toText(item?.expedition?.code, item?.source_expedition_code),
   documentations: (item?.documentations ?? item?.expedition_claim_documentations ?? []).map(mapClaimDocumentation),
+});
+
+const mapClaimApplication = (item: any): DoEkspedisiClaimApplication => ({
+  id: Number(item?.id ?? 0),
+  uuid: item?.uuid,
+  doExpeditionId: Number(item?.do_expedition_id ?? 0),
+  doExpeditionClaimId: Number(item?.do_expedition_claim_id ?? 0),
+  driverId: Number(item?.driver_id ?? 0),
+  nominal: toNumber(item?.nominal),
+  type: item?.type === 'transfer' ? 'transfer' : 'cash',
+  date: item?.date ?? '',
+  claim: item?.claim ? mapClaim(item.claim) : null,
 });
 
 const mapDoOrderTarifItem = (entry: any, parent?: any) => {
@@ -269,12 +284,14 @@ const mapDoEkspedisi = (item: any): DoEkspedisi => {
     updatedAt: item?.updated_at,
     status: String(item?.status ?? 'draft'),
     ujNominal: toNumber(item?.uj_nominal ?? item?.ujNominal),
+    ujNominalBeforeClaim: toNumber(item?.uj_nominal_before_claim ?? item?.uj_nominal ?? item?.ujNominal),
+    claimDeductionNominal: toNumber(item?.claim_deduction_nominal),
     startDate: item?.start_date ?? null,
     endDate: item?.end_date ?? null,
     driverNotes: (item?.driver_notes ?? []).map(mapDriverNote),
     expeditionExpenses: (item?.expedition_expenses ?? []).map(mapExpense),
     expeditionClaims: (item?.expedition_claims ?? []).map(mapClaim),
-    driverExpeditionClaims: (item?.driver_expedition_claims ?? []).map(mapClaim),
+    driverExpeditionClaims: (item?.driver_expedition_claims ?? []).map(mapClaimApplication),
   };
 };
 
@@ -347,6 +364,12 @@ const buildMainPayload = (payload: DoEkspedisiPayload, asUpdate = false) => {
   }
   if (payload.status != null) {
     params.append('status', payload.status);
+  }
+  if (payload.start_date !== undefined) {
+    params.append('start_date', payload.start_date ?? '');
+  }
+  if (payload.end_date !== undefined) {
+    params.append('end_date', payload.end_date ?? '');
   }
   return params;
 };
@@ -695,4 +718,18 @@ export const updateDoDetailResource = async (resource: DetailResource, id: strin
 export const deleteDoDetailResource = async (resource: DetailResource, id: string | number) => {
   const response = await apiClient.delete<LaravelApiResponse<null>>(`${detailPaths[resource]}/${id}`);
   ensureSuccess(response.data);
+};
+
+export const getAvailableExpeditionClaims = async (driverId: number): Promise<DoEkspedisiClaim[]> => {
+  const response = await apiClient.get<LaravelApiResponse<any>>(expeditionClaimPath, {
+    params: { driver_id: driverId, page: 1, per_page: 100 },
+  });
+  const normalized = normalizePagination(ensureSuccess(response.data));
+
+  return (normalized.data ?? []).map(mapClaim).filter((claim: DoEkspedisiClaim) => claim.remainingNominal > 0);
+};
+
+export const applyExpeditionClaim = async (payload: ApplyExpeditionClaimPayload): Promise<DoEkspedisiClaimApplication> => {
+  const response = await apiClient.post<LaravelApiResponse<any>>(`${expeditionClaimPath}/apply`, payload);
+  return mapClaimApplication(ensureSuccess(response.data));
 };

@@ -314,6 +314,7 @@ const buildCreateOrderListBody = (payload: CreateOrderListPayload) => {
   const body = new FormData();
   body.append('customer_id', String(payload.customer_id));
   body.append('company_id', String(payload.company_id));
+  if (payload.description != null) body.append('description', payload.description);
   return body;
 };
 
@@ -324,7 +325,8 @@ const buildUpdateOrderListBody = (payload: UpdateOrderListPayload) => {
   body.append('invoice_bill', String(payload.invoice_bill));
   body.append('bill_invoice', String(payload.bill_invoice ?? payload.invoice_bill));
   if (payload.vehicle_type) body.append('vehicle_type', payload.vehicle_type);
-  if (payload.note != null) body.append('note', payload.note);
+  if (payload.description != null) body.append('description', payload.description);
+  else if (payload.note != null) body.append('description', payload.note);
   if (payload.uj_driver != null) body.append('uj_driver', String(payload.uj_driver));
   if (payload.loading_in != null) body.append('loading_in', payload.loading_in);
   if (payload.loading_out != null) body.append('loading_out', payload.loading_out);

@@ -114,12 +114,14 @@ export interface DoEkspedisi {
   updatedAt?: string;
   status: string;
   ujNominal: number;
+  ujNominalBeforeClaim: number;
+  claimDeductionNominal: number;
   startDate?: string | null;
   endDate?: string | null;
   driverNotes: DoEkspedisiDriverNote[];
   expeditionExpenses: DoEkspedisiExpense[];
   expeditionClaims: DoEkspedisiClaim[];
-  driverExpeditionClaims: DoEkspedisiClaim[];
+  driverExpeditionClaims: DoEkspedisiClaimApplication[];
 }
 
 export interface DoEkspedisiDriverNote {
@@ -153,7 +155,29 @@ export interface DoEkspedisiClaim {
   claimNominal: number;
   nominal: number;
   remainingNominal: number;
+  sourceExpeditionCode?: string;
   documentations: DoEkspedisiClaimDocumentation[];
+}
+
+export interface DoEkspedisiClaimApplication {
+  id: number;
+  uuid?: string;
+  doExpeditionId: number;
+  doExpeditionClaimId: number;
+  driverId: number;
+  nominal: number;
+  type: 'cash' | 'transfer';
+  date: string;
+  claim?: DoEkspedisiClaim | null;
+}
+
+export interface ApplyExpeditionClaimPayload {
+  do_expedition_claim_id: number;
+  do_expedition_id: number;
+  driver_id: number;
+  nominal: number;
+  type: 'cash' | 'transfer';
+  date: string;
 }
 
 export interface DoEkspedisiClaimDocumentation {
@@ -194,6 +218,8 @@ export interface DoEkspedisiPayload {
   driver_id: string | number;
   driver_note?: string;
   status?: string;
+  start_date?: string | null;
+  end_date?: string | null;
 }
 
 export interface DoEkspedisiItemPayload {

@@ -84,6 +84,7 @@ export default function CreateOrderListPage() {
       const created = await createOrderMutation.mutateAsync({
         customer_id: Number(values.customerId),
         company_id: Number(companyId),
+        description: values.note,
       });
 
       for (const item of values.items) {
@@ -106,7 +107,7 @@ export default function CreateOrderListPage() {
       }
 
       toast.success('Order list berhasil ditambahkan');
-      await router.push(`/dashboard/${slug}/administrasi/order-list`);
+      await router.push(`/dashboard/${slug}/administrasi/order-list/detail/${created.id}`);
     } catch (error: any) {
       if (error instanceof ApiValidationError) {
         toast.error(error.message || 'Validasi data order list gagal');

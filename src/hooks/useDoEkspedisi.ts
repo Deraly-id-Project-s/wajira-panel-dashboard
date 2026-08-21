@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type {
+  ApplyExpeditionClaimPayload,
   DoEkspedisiItemDestinationListParams,
   DoEkspedisiItemDestinationPayload,
   DoEkspedisiItemListParams,
@@ -10,6 +11,7 @@ import type {
 import type { PaginationParams } from '@/@types/pagination.types';
 import {
   createDoEkspedisi,
+  applyExpeditionClaim,
   createDoDetailResource,
   createDoEkspedisiItem,
   createDoEkspedisiItemDestination,
@@ -18,6 +20,7 @@ import {
   deleteDoEkspedisiItemDestination,
   deleteDoDetailResource,
   getDoEkspedisiById,
+  getAvailableExpeditionClaims,
   getDoEkspedisiItemById,
   getDoEkspedisiItemDestinationById,
   getDoEkspedisiItemDestinations,
@@ -248,4 +251,25 @@ export function useDoDetailResourceMutation(resource: DetailResource, expedition
     update: useMutation({ mutationFn: ({ id, payload }: { id: string | number; payload: Record<string, unknown> | FormData }) => updateDoDetailResource(resource, id, payload), onSuccess: invalidate }),
     remove: useMutation({ mutationFn: (id: string | number) => deleteDoDetailResource(resource, id), onSuccess: invalidate }),
   };
+}
+
+export function useAvailableExpeditionClaims(driverId: number | null, enabled = true) {
+  return useQuery({
+    queryKey: ['expedition-claim', 'available', driverId],
+    queryFn: () => getAvailableExpeditionClaims(driverId as number),
+    enabled: enabled && Boolean(driverId),
+  });
+}
+
+export function useApplyExpeditionClaim(expeditionId: string | number) {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (payload: ApplyExpeditionClaimPayload) => applyExpeditionClaim(payload),
+    onSuccess: (_, payload) => {
+      queryClient.invalidateQueries({ queryKey: ['do-ekspedisi'] });
+      queryClient.invalidateQueries({ queryKey: ['do-ekspedisi', 'detail', String(expeditionId)] });
+      queryClient.invalidateQueries({ queryKey: ['expedition-claim', 'available', payload.driver_id] });
+    },
+  });
 }

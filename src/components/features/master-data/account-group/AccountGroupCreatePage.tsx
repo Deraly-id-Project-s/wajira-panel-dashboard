@@ -70,7 +70,7 @@ export const AccountGroupCreatePage = () => {
         <Card>
           <Form {...form}>
             <form onSubmit={form.handleSubmit(handleSubmit)} className="flex-1 flex flex-col overflow-hidden">
-              <div className="flex-1 overflow-y-auto px-6 space-y-4">
+              <div className="flex-1 overflow-y-auto px-6">
                 <AccountGroupForm form={form} />
               </div>
               <div className="shrink-0 flex gap-3 px-6 py-4 border-t bg-gray-50">

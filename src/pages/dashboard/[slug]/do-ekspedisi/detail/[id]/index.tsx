@@ -1,5 +1,5 @@
 import React from 'react';
-import { AlertTriangle, Pencil, Printer } from 'lucide-react';
+import { AlertTriangle, CheckCircle2, Pencil, Play, Printer } from 'lucide-react';
 import { useRouter } from 'next/router';
 import { toast } from 'sonner';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
@@ -83,6 +83,30 @@ export default function DetailDOEkspedisiPage() {
     enabled: Boolean(orderListId),
   });
   const deleteItemMutation = useDeleteDoEkspedisiItem();
+
+  const updateStatus = async (status: 'draft' | 'process' | 'done') => {
+    if (!id || !detailQuery.data) return;
+
+    const now = new Date().toISOString();
+    try {
+      await updateMutation.mutateAsync({
+        id: String(id),
+        payload: {
+          date: detailQuery.data.date,
+          vehicle_id: detailQuery.data.vehicleId ?? '',
+          driver_id: detailQuery.data.driverId ?? '',
+          driver_note: detailQuery.data.driverNote,
+          status,
+          start_date: status === 'process' ? (detailQuery.data.startDate || now) : detailQuery.data.startDate,
+          end_date: status === 'done' ? now : detailQuery.data.endDate,
+        },
+      });
+      toast.success(status === 'process' ? 'Pengiriman dimulai' : status === 'done' ? 'DO Ekspedisi telah selesai' : 'DO Ekspedisi dikembalikan ke Draft');
+      await detailQuery.refetch();
+    } catch (error) {
+      toast.error(getApiErrorMessage(error));
+    }
+  };
 
   const backToList = React.useCallback(() => {
     if (slug) void router.push(`/dashboard/${slug}/do-ekspedisi`);
@@ -250,55 +274,29 @@ export default function DetailDOEkspedisiPage() {
               <Button
                 type="button"
                 disabled={updateMutation.isPending}
-                onClick={async () => {
-                  if (!id) return;
-                  try {
-                    await updateMutation.mutateAsync({
-                      id: String(id),
-                      payload: {
-                        date: detailQuery.data.date,
-                        vehicle_id: detailQuery.data.vehicleId ?? '',
-                        driver_id: detailQuery.data.driverId ?? '',
-                        driver_note: detailQuery.data.driverNote,
-                        status: 'process',
-                      },
-                    });
-                    toast.success('DO Ekspedisi diproses');
-                  } catch (error: any) {
-                    toast.error(getApiErrorMessage(error));
-                  }
-                }}
+                onClick={() => void updateStatus('process')}
                 className="bg-orange-600 hover:bg-orange-700 text-white min-w-[120px] cursor-pointer font-medium"
               >
-                {updateMutation.isPending ? 'Memproses...' : 'Proses DO'}
+                <Play className="h-4 w-4" />
+                {updateMutation.isPending ? 'Memproses...' : 'Mulai Pengiriman'}
               </Button>
             ) : detailQuery.data?.status === 'process' ? (
-              <Button
-                type="button"
-                variant="outline"
-                disabled={updateMutation.isPending}
-                onClick={async () => {
-                  if (!id) return;
-                  try {
-                    await updateMutation.mutateAsync({
-                      id: String(id),
-                      payload: {
-                        date: detailQuery.data.date,
-                        vehicle_id: detailQuery.data.vehicleId ?? '',
-                        driver_id: detailQuery.data.driverId ?? '',
-                        driver_note: detailQuery.data.driverNote,
-                        status: 'draft',
-                      },
-                    });
-                    toast.success('DO Ekspedisi dikembalikan ke Draft');
-                  } catch (error: any) {
-                    toast.error(getApiErrorMessage(error));
-                  }
-                }}
-                className="min-w-[120px] border-slate-300 text-slate-700 hover:bg-slate-50 cursor-pointer font-medium"
-              >
-                {updateMutation.isPending ? 'Memproses...' : 'Jadikan Draft'}
-              </Button>
+              <>
+                <Button
+                  type="button"
+                  disabled={updateMutation.isPending}
+                  onClick={() => {
+                    if (window.confirm('Tandai pengiriman ini sebagai selesai? Claim driver baru dapat dikelola setelah langkah ini.')) void updateStatus('done');
+                  }}
+                  className="min-w-[150px] bg-emerald-600 font-medium text-white hover:bg-emerald-700"
+                >
+                  <CheckCircle2 className="h-4 w-4" />
+                  {updateMutation.isPending ? 'Menyimpan...' : 'Selesaikan DO'}
+                </Button>
+                <Button type="button" variant="outline" disabled={updateMutation.isPending} onClick={() => void updateStatus('draft')} className="min-w-[120px] border-slate-300 font-medium text-slate-700 hover:bg-slate-50">
+                  Kembali ke Draft
+                </Button>
+              </>
             ) : null}
 
             {detailQuery.data?.status === 'draft' && (
@@ -321,7 +319,7 @@ export default function DetailDOEkspedisiPage() {
                   toast.error(getApiErrorMessage(error));
                 }
               }}
-              disabled={processExpeditionMutation.isPending}
+              disabled={processExpeditionMutation.isPending || detailQuery.data.status === 'draft' || !detailQuery.data.driverId}
               className="bg-[#1e3a5f] text-white hover:bg-[#152e4d] font-medium"
             >
               <Printer className="h-4 w-4" />
@@ -337,6 +335,13 @@ export default function DetailDOEkspedisiPage() {
               <p className="font-semibold">Data driver belum dipilih</p>
               <p className="mt-1 text-sm text-amber-800">Silakan klik Edit untuk memilih driver sebelum mencetak Delivery Order.</p>
             </div>
+          </div>
+        )}
+
+        {effectiveData?.status !== 'done' && (
+          <div role="status" className="flex items-start gap-3 rounded-lg border border-blue-200 bg-blue-50 p-4 text-blue-900">
+            <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0 text-blue-600" />
+            <div><p className="font-semibold">Claim driver belum dapat dikelola</p><p className="mt-1 text-sm text-blue-800">Selesaikan DO Ekspedisi terlebih dahulu. Setelah selesai, claim dari ekspedisi ini dapat dibuat dan claim outstanding driver dapat dipotong dari UJ.</p></div>
           </div>
         )}
 

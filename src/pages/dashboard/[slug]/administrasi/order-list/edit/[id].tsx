@@ -189,6 +189,7 @@ export default function EditOrderListPage() {
           bill_invoice: Number(values.invoiceBill),
           vehicle_type: firstItem?.vehicleType ?? effectiveOrderData.vehicleType ?? 'fuso',
           note: values.note,
+          description: values.note,
           uj_driver: ujDriver,
           loading_in: firstItem?.loadingIn ?? '',
           loading_out: firstItem?.loadingOut ?? '',

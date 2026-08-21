@@ -1,6 +1,6 @@
 import React from 'react';
 import { format } from 'date-fns';
-import { CalendarDays, CircleUserRound, ClipboardList, MapPin, Truck } from 'lucide-react';
+import { CalendarDays, CircleUserRound, ClipboardList, MapPin, ReceiptText, Truck, WalletCards } from 'lucide-react';
 import type { DoEkspedisi, DoEkspedisiOrderTarifItem } from '@/@types/do-ekspedisi.types';
 import { Card, CardContent } from '@/components/ui/card';
 import BaseTable, { type ColumnDef } from '@/components/ui/base-table';
@@ -101,7 +101,9 @@ export function DOEkspedisiDetailCard({ data }: DOEkspedisiDetailCardProps) {
           <DetailField label="Mulai Pengiriman" value={(data.startDate || data.date) ? format(new Date(data.startDate || data.date), 'dd/MM/yyyy HH:mm') : '-'} icon={CalendarDays} />
           <DetailField label="Selesai Pengiriman" value={data.endDate ? format(new Date(data.endDate), 'dd/MM/yyyy HH:mm') : '-'} icon={CalendarDays} />
           <DetailField label="Kode DO" value={data.doCode || '-'} icon={ClipboardList} />
-          <DetailField label="Uang Jalan" value={formatCurrency(data.ujNominal)} />
+          <DetailField label="UJ Awal" value={formatCurrency(data.ujNominalBeforeClaim)} icon={WalletCards} />
+          <DetailField label="Potongan Claim" value={<span className="text-rose-700">-{formatCurrency(data.claimDeductionNominal)}</span>} icon={ReceiptText} />
+          <DetailField label="UJ Diterima Driver" value={<span className="text-emerald-700">{formatCurrency(data.ujNominal)}</span>} icon={WalletCards} />
           <DetailField
             label="Nama Driver"
             value={
