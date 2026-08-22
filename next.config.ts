@@ -3,6 +3,10 @@ import type { NextConfig } from "next";
 const isProduction = process.env.NODE_ENV === "production";
 
 const nextConfig: NextConfig = {
+  env: {
+    OBJECT_BUCKET_URL: process.env.OBJECT_BUCKET_URL || '',
+    OBJECT_BUKCET: process.env.OBJECT_BUKCET || '',
+  },
   reactStrictMode: true,
   output: "standalone",
   productionBrowserSourceMaps: false,
