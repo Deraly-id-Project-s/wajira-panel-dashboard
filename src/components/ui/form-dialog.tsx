@@ -73,7 +73,7 @@ export function FormDialog({
             <Button
               type="submit"
               disabled={isSubmitting}
-              className="bg-[#1e293b] hover:bg-[#0f172a] text-white font-medium min-w-[120px] rounded-lg shadow-sm"
+              className="button-theme-1!"
             >
               {isSubmitting ? (
                 "Menyimpan..."

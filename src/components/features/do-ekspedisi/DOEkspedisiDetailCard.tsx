@@ -7,6 +7,7 @@ import BaseTable, { type ColumnDef } from '@/components/ui/base-table';
 import { useRouter } from 'next/router';
 import { ReferenceLink } from '@/components/ui/reference-link';
 import { formatCurrency } from '@/lib/utils/currency';
+import { CopyBox } from '@/components/ui/copy-box';
 
 interface DOEkspedisiDetailCardProps {
   data: DoEkspedisi;
@@ -142,7 +143,7 @@ export function DOEkspedisiDetailCard({ data }: DOEkspedisiDetailCardProps) {
         </div>
       </Section>
 
-      <Section title="Detail Order Customer" description="Identitas customer dan rincian rute pengiriman" icon={ClipboardList}>
+      <Section title="Informasi Customer" description="Identitas customer dan rincian rute pengiriman" icon={ClipboardList}>
         <div className="grid grid-cols-1 gap-x-12 gap-y-6 border-t border-slate-100 pt-5 md:grid-cols-3">
           <DetailField
             label="Nama Customer"
@@ -157,8 +158,18 @@ export function DOEkspedisiDetailCard({ data }: DOEkspedisiDetailCardProps) {
             }
             icon={CircleUserRound}
           />
-          <DetailField label="Kode Order" value={data.orderCode || order?.code || '-'} icon={ClipboardList} />
-          <div />
+          <DetailField
+            label="Kode Order"
+            description="testing saja"
+            value={
+              data.orderCode ? (
+                <CopyBox text={data.orderCode} />
+              ) : (
+                '-'
+              )
+            }
+            icon={ClipboardList}
+          />
         </div>
 
         <div className="mt-6 space-y-4">
@@ -183,20 +194,20 @@ export function DOEkspedisiDetailCard({ data }: DOEkspedisiDetailCardProps) {
                   <div className="text-sm font-semibold text-slate-950">Detail Order #{index + 1}</div>
                 </div>
                 <div className="p-4">
-                <div className="grid grid-cols-1 gap-x-12 gap-y-6 md:grid-cols-3">
-                  <DetailField label="Loading In" value={item.loadingIn || '-'} />
-                  <DetailField label="Loading Out" value={item.loadingOut || '-'} />
-                  <DetailField label="Tujuan Kirim" value={item.deliveryDestination || '-'} icon={MapPin} />
-                </div>
-                <div className="mt-6">
-                  <p className="mb-2 text-xs font-medium uppercase tracking-wide text-slate-500">Daftar Muatan</p>
-                  <BaseTable<CargoRow>
-                    data={cargo}
-                    columns={cargoColumns}
-                    headerRowClassName="bg-orange-50"
-                    containerClassName="rounded-lg border border-slate-200"
-                  />
-                </div>
+                  <div className="grid grid-cols-1 gap-x-12 gap-y-6 md:grid-cols-3">
+                    <DetailField label="Loading In" value={item.loadingIn || '-'} />
+                    <DetailField label="Loading Out" value={item.loadingOut || '-'} />
+                    <DetailField label="Tujuan Kirim" value={item.deliveryDestination || '-'} icon={MapPin} />
+                  </div>
+                  <div className="mt-6">
+                    <p className="mb-2 text-xs font-medium uppercase tracking-wide text-slate-500">Daftar Muatan</p>
+                    <BaseTable<CargoRow>
+                      data={cargo}
+                      columns={cargoColumns}
+                      headerRowClassName="bg-orange-50"
+                      containerClassName="rounded-lg border border-slate-200"
+                    />
+                  </div>
                 </div>
               </div>
             );
