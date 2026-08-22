@@ -144,6 +144,7 @@ export default function ProfilePage() {
                                 )}
 
                                 {/* Drag/Click File Uploader Box */}
+                                {/* file upload component */}
                                 <label className="flex w-full cursor-pointer flex-col items-center justify-center rounded-md border border-dashed border-slate-200 bg-slate-50 px-5 py-5 text-center hover:bg-slate-100/70 transition">
                                     <Upload className="mb-2 h-6 w-6 text-slate-500" />
                                     <span className="text-sm font-medium text-slate-700">

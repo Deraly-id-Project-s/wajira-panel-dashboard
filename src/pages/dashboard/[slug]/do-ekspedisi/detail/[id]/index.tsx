@@ -338,13 +338,6 @@ export default function DetailDOEkspedisiPage() {
           </div>
         )}
 
-        {effectiveData?.status !== 'done' && (
-          <div role="status" className="flex items-start gap-3 rounded-lg border border-blue-200 bg-blue-50 p-4 text-blue-900">
-            <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0 text-blue-600" />
-            <div><p className="font-semibold">Claim driver belum dapat dikelola</p><p className="mt-1 text-sm text-blue-800">Selesaikan DO Ekspedisi terlebih dahulu. Setelah selesai, claim dari ekspedisi ini dapat dibuat dan claim outstanding driver dapat dipotong dari UJ.</p></div>
-          </div>
-        )}
-
         <DOEkspedisiDetailCard data={effectiveData ?? detailQuery.data} />
         <DOEkspedisiRelatedData data={effectiveData ?? detailQuery.data} onRefresh={() => void detailQuery.refetch()} />
 
