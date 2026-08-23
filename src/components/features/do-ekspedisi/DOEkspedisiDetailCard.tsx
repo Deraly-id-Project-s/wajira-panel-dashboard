@@ -160,7 +160,6 @@ export function DOEkspedisiDetailCard({ data }: DOEkspedisiDetailCardProps) {
           />
           <DetailField
             label="Kode Order"
-            description="testing saja"
             value={
               data.orderCode ? (
                 <CopyBox text={data.orderCode} />

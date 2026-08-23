@@ -172,7 +172,7 @@ export const DOEkspedisiTable = React.memo(function DOEkspedisiTable({
         ),
       },
     ],
-    [onDelete, onDetail, onEdit, onPrint],
+    [onDelete, onDetail, onEdit, onPrint, slug],
   );
 
   return (

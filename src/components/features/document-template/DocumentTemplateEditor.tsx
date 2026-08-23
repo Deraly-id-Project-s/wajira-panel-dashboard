@@ -143,7 +143,7 @@ export function DocumentTemplateEditor({ initialData, isSubmitting, onSubmit, on
       }
     }
     prevLanguageRef.current = language;
-  }, [language, setValue, editor]);
+  }, [language, setValue, editor, watch]);
 
   const fileUrl = (file: File | null, setPreview: (url: string | null) => void) => {
     if (!file) return;

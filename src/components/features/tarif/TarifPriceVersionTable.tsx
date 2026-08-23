@@ -58,7 +58,7 @@ export function TarifPriceVersionTable({ data, meta, search, page, perPage, isLo
         </DropdownMenuContent>
       </DropdownMenu>
     },
-  ], [onDelete, onEdit, canCreate, canEdit, canDelete]);
+  ], [onDelete, onEdit, canEdit, canDelete]);
   return <BaseTable data={data} columns={columns} loading={isLoading} searchPlaceholder="Cari versi tarif..." search={search} onSearchChange={onSearchChange} showLimitChange perPage={perPage} onPerPageChange={onPerPageChange} defaultSort={{ key: 'id', direction: 'desc' }} meta={{ currentPage: page, perPage, lastPage: meta?.lastPage ?? 1, total: meta?.total ?? data.length }} onPageChange={onPageChange} headerActions={<Button onClick={onAdd} disabled={!canCreate} className="button-theme-1!">
     <Plus className="mr-2 h-4 w-4" />
     Tambah Versi

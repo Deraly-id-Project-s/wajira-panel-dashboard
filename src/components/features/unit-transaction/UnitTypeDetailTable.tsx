@@ -120,7 +120,7 @@ export function UnitTypeDetailTable({ transactionId }: UnitTypeDetailTableProps)
         },
       },
     ],
-    [data?.meta.currentPage, data?.meta.perPage, page, perPage],
+    [data?.meta.currentPage, data?.meta.perPage, page, perPage, slug],
   );
 
   return (

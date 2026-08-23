@@ -314,14 +314,14 @@ export function OrderListDetailView({
     enabled: isDraft,
   });
 
-  const tarifRecords = tarifQuery.data?.data ?? [];
-  const tarifOptions = React.useMemo(() =>
-    tarifRecords.map((item) => ({
+  const tarifOptions = React.useMemo(() => {
+    const records = tarifQuery.data?.data ?? [];
+    return records.map((item) => ({
       value: String(item.id),
       label: `${item.loadingIn || '-'} - ${item.loadingOut || '-'}`,
       subtitle: item.customer?.name,
-    })),
-    [tarifRecords]);
+    }));
+  }, [tarifQuery.data?.data]);
 
   const toVehicleOptions = React.useCallback((records: any[]) =>
     records.map((item) => ({ value: String(item.id), label: item.registrationNumber, subtitle: item.type.toUpperCase() })), []);
@@ -460,6 +460,10 @@ export function OrderListDetailView({
       qty: Number(cargoItem.qty ?? 1),
     });
     setIsCargoOpen(true);
+  };
+
+  const handleOpenDeleteCargo = (route: OrderListTarifItem, cargoItem: any) => {
+    setDeleteCargoTarget({ route, item: cargoItem });
   };
 
   const handleRouteSubmit = async (values: RouteFormValues) => {
@@ -653,10 +657,10 @@ export function OrderListDetailView({
             <Field label="Lokasi Bongkar" value={data.loadingOut || '-'} icon={MapPin} />
             <Field label="Tujuan Pengiriman" value={data.deliveryDestination || '-'} icon={MapPin} />
           </div>
-          {data.description && (
+          {data.note && (
             <div className="rounded-xl border border-slate-100 bg-slate-50/50 p-4">
               <p className="text-xs font-medium uppercase tracking-wide text-slate-500 mb-1">Catatan / Keterangan</p>
-              <p className="text-sm font-semibold text-slate-950">{data.description}</p>
+              <p className="text-sm font-semibold text-slate-950">{data.note}</p>
             </div>
           )}
         </CardContent>
@@ -779,7 +783,7 @@ export function OrderListDetailView({
                           route={route}
                           isDraft={isDraft}
                           onEditCargo={handleOpenEditCargo}
-                          onDeleteCargo={setDeleteCargoTarget}
+                          onDeleteCargo={handleOpenDeleteCargo}
                         />
                       </div>
                       <div className="space-y-3 rounded-lg bg-orange-50 p-4">

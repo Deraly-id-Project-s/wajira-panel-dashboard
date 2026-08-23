@@ -5,23 +5,24 @@ import type { TarifPayload } from '@/@types/tarif.types';
 import { useCompany } from '@/contexts/CompanyContext';
 import { companyQueryKeys } from '@/lib/query/company-key';
 
-export function useTarifs(params: PaginationParams & { search?: string }) {
+export function useTarifs(params: PaginationParams & { search?: string; enabled?: boolean }) {
     const { companyId } = useCompany();
+    const { enabled = true, ...rest } = params;
 
     return useQuery({
         queryKey: companyId
             ? companyQueryKeys.list(companyId, 'tarifs', {
-                  page: params.page,
-                  perPage: params.perPage,
-                  search: params.search,
-                  sort_by: params.sort_by,
-                  sort_order: params.sort_order,
+                  page: rest.page,
+                  perPage: rest.perPage,
+                  search: rest.search,
+                  sort_by: rest.sort_by,
+                  sort_order: rest.sort_order,
               })
-            : ['tarifs', 'unscoped', params],
-        queryFn: () => getTarifs({ ...params, company_id: companyId ?? undefined }),
+            : ['tarifs', 'unscoped', rest],
+        queryFn: () => getTarifs({ ...rest, company_id: companyId ?? undefined }),
         placeholderData: (prev) => prev,
         staleTime: 30_000,
-        enabled: Boolean(companyId),
+        enabled: enabled && Boolean(companyId),
     });
 }
 
