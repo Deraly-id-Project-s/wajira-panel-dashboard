@@ -66,6 +66,10 @@ export const getGeneralMenus = (slug: string): MenuItem[] => {
           label: 'Blok Gudang',
           href: master('/warehouse-block'),
         },
+        {
+          label: 'Dokumen Template',
+          href: master('/document-template'),
+        },
       ],
     },
     {

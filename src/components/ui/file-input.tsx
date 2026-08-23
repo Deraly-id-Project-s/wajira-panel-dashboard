@@ -1,6 +1,7 @@
 import React from 'react';
 import { Upload } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { TextTruncate } from './text-truncate';
 
 interface FileInputProps extends Omit<React.InputHTMLAttributes<HTMLInputElement>, 'type' | 'value' | 'onChange'> {
   value?: File | null;
@@ -55,7 +56,7 @@ export function FileInput({
       >
         <Upload className="mb-2 h-6 w-6 text-slate-500" />
         <span className="text-sm font-medium text-slate-700">
-          {value ? value.name : 'Klik untuk upload gambar'}
+          {value ? <TextTruncate text={value.name} maxLength={25} /> : 'Klik untuk upload gambar'}
         </span>
         <span className="mt-1 text-xs text-slate-400">
           {helperText}
