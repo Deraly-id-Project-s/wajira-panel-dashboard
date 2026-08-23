@@ -5,6 +5,8 @@ import { Badge } from '@/components/ui/badge';
 import { useUnitTransactionTypeDetails } from '@/hooks/useUnitTransaction';
 import { cn } from '@/lib/utils';
 import { CopyBox } from '@/components/ui/copy-box';
+import { ReferenceLink } from '@/components/ui/reference-link';
+import { useRouter } from 'next/router';
 
 const stockStateConfig: Record<string, { label: string; className: string }> = {
   draft: { label: 'Draft', className: 'border-slate-200 bg-slate-50 text-slate-600' },
@@ -24,6 +26,9 @@ export function UnitTypeDetailTable({ transactionId }: UnitTypeDetailTableProps)
   const perPage = 10;
   const { data, isLoading, isFetching } = useUnitTransactionTypeDetails(transactionId, { page, perPage });
 
+  const router = useRouter();
+  const slug = typeof router.query.slug === 'string' ? router.query.slug : '';
+
   const columns = useMemo<ColumnDef<UnitTransactionTypeDetail>[]>(
     () => [
       {
@@ -42,7 +47,7 @@ export function UnitTypeDetailTable({ transactionId }: UnitTypeDetailTableProps)
         header: 'Tipe Unit',
         accessorKey: 'unit_transaction_item.unit_type.name',
         sortable: true,
-        cell: (item) => item.unit_transaction_item?.unit_type?.name || '-',
+        cell: (item) => item.unit_transaction_item?.unit_type?.name ? <ReferenceLink target='_blank' href={`/dashboard/${slug}/master/type-unit/${item.unit_transaction_item?.unit_type?.id}`}>{item.unit_transaction_item?.unit_type?.name}</ReferenceLink> : '-',
       },
       {
         header: 'Warna',

@@ -97,7 +97,7 @@ export default function PurchaseUnitTable({ purchaseId, slug, isPaid, canEdit, c
     {
       header: 'Tipe Unit',
       cell: (item) => (
-        <ReferenceLink href={`/dashboard/${slug}/master-data/tipe-unit?search=${getUnitTypeName(item.unit_type_id)}`}>
+        <ReferenceLink target='_blank' href={`/dashboard/${slug}/master-data/tipe-unit?search=${getUnitTypeName(item.unit_type_id)}`}>
           {getUnitTypeName(item.unit_type_id)}
         </ReferenceLink>
       ),
