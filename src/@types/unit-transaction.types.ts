@@ -306,6 +306,43 @@ export interface UnitTransactionItemDetailListResponse {
   meta: PaginationMeta;
 }
 
+export interface UnitTransactionTypeDetail {
+  id: string;
+  unit_transaction_item_id: string;
+  warehouse_sub_block_id?: string | null;
+  uuid: string;
+  color?: string | null;
+  machine_number?: string | null;
+  chassis_number?: string | null;
+  in_stock: boolean;
+  is_forecast: boolean;
+  status?: string | null;
+  stock_state?: string | null;
+  is_sold_unit: boolean;
+  created_at?: string;
+  updated_at?: string;
+  unit_transaction_item: {
+    id: string;
+    unit_transaction_id: string;
+    unit_type_id: string;
+    unit_type: {
+      id: string;
+      code: string;
+      name: string;
+      unit_type?: string | null;
+      unit_model?: string | null;
+      buy_price: number;
+      sell_price: number;
+    } | null;
+  } | null;
+  warehouse_sub_block: WarehouseSubBlock | null;
+}
+
+export interface UnitTransactionTypeDetailListResponse {
+  data: UnitTransactionTypeDetail[];
+  meta: PaginationMeta;
+}
+
 export interface CreateUnitItemDetailPayload {
   unit_transaction_item_id: string;
   color: string;
