@@ -6,14 +6,15 @@ import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select';
-import { useTransactions } from '@/hooks/useTransaction';
+import { useExportTransactions, useTransactions } from '@/hooks/useTransaction';
 import { useCompany } from '@/contexts/CompanyContext';
 import { TransactionTable } from '@/components/features/transaction/TransactionTable';
 import { DeleteTransactionDialog } from '@/components/features/transaction/DeleteTransactionDialog';
-import { Plus, Search } from 'lucide-react';
+import { Plus, Search, Upload } from 'lucide-react';
 import { Transaction } from '@/@types/transaction.types';
 import { usePermissionGuard } from '@/hooks/usePermissionGuard';
 import { LoadingState } from '@/components/ui/loading-state';
+import { toast } from 'sonner';
 
 // This page implements the List view
 export default function TransactionListPage() {
@@ -35,6 +36,7 @@ export default function TransactionListPage() {
 
     // Query Hooks
     const { data, isLoading: isListLoading } = useTransactions(safeCompanyId, page, limit, localSearch);
+    const exportMutation = useExportTransactions();
 
     // Dialog State
     const [openDelete, setOpenDelete] = useState(false);
@@ -48,6 +50,23 @@ export default function TransactionListPage() {
     const handleDelete = (trx: Transaction) => {
         setSelectedTrx(trx);
         setOpenDelete(true);
+    };
+
+    const handleExport = async () => {
+        if (!data?.total) {
+            toast.error('Tidak ada data untuk diexport');
+            return;
+        }
+
+        try {
+            await exportMutation.mutateAsync({
+                companyId: safeCompanyId,
+                search: localSearch.trim() || undefined,
+            });
+            toast.success('Data arus transaksi berhasil diexport');
+        } catch (error) {
+            toast.error(error instanceof Error ? error.message : 'Gagal mengekspor data arus transaksi');
+        }
     };
 
     return (
@@ -87,12 +106,25 @@ export default function TransactionListPage() {
                         </div>
                     </div>
 
-                    {canCreate && (
-                        <Button onClick={() => router.push(`${basePath}/create`)} className="w-full sm:w-auto bg-[#1e3a5f] hover:bg-[#152e4d]">
-                            <Plus className="mr-2 h-4 w-4" />
-                            Tambah Data
+                    <div className="flex flex-col sm:flex-row items-center gap-2 w-full md:w-auto">
+                        <Button
+                            type="button"
+                            onClick={handleExport}
+                            variant="outline"
+                            className="w-full sm:w-auto"
+                            disabled={isListLoading || exportMutation.isPending}
+                        >
+                            <Upload className="mr-2 h-4 w-4" />
+                            {exportMutation.isPending ? 'Exporting...' : 'Export'}
                         </Button>
-                    )}
+
+                        {canCreate && (
+                            <Button onClick={() => router.push(`${basePath}/create`)} className="w-full sm:w-auto bg-[#1e3a5f] hover:bg-[#152e4d]">
+                                <Plus className="mr-2 h-4 w-4" />
+                                Tambah Data
+                            </Button>
+                        )}
+                    </div>
                 </div>
 
                 {/* TABLE */}

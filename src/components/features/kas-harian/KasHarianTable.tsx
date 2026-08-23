@@ -98,6 +98,13 @@ export default function KasHarianTable({
         ),
       },
       {
+        header: 'No Invoice',
+        accessorKey: 'invoiceNumber',
+        sortable: true,
+        alignment: 'left',
+        cell: (item) => item.invoiceNumber ? <CopyBox text={item.invoiceNumber} /> : '-',
+      },
+      {
         header: 'TANGGAL',
         accessorKey: 'date',
         sortable: true,

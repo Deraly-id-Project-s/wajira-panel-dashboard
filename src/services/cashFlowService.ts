@@ -93,6 +93,7 @@ const normalizeCashFlow = (payload: Partial<KasHarian>): KasHarian => ({
     },
   })),
   grand_total: toNumber(payload.grand_total),
+  invoice_number: payload.invoice_number ?? null,
   remaining_payment: toNumber(payload.remaining_payment),
   remaining_payment_usd: toNumber(payload.remaining_payment_usd),
   unit_transaction_billing: payload.unit_transaction_billing

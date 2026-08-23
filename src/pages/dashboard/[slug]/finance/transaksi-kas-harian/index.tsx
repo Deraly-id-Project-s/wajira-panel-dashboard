@@ -26,6 +26,7 @@ const mapManualCashFlow = (item: KasHarian): KasHarianListItem => ({
   source: (item.finance_billings ?? []).length > 0 ? 'billing' : 'manual',
   date: item.date,
   code: item.code,
+  invoiceNumber: item.invoice_number ?? null,
   note: item.note || 'Transaksi kas harian',
   debet: Number(item.debet || 0),
   credit: Number(item.credit || 0),
@@ -106,7 +107,7 @@ export default function KasHarianPage() {
       .filter((item) => {
         if (!searchValue) return true;
         const query = searchValue.toLowerCase();
-        return [item.code, item.note, item.accountName, item.cashName ?? '', item.transaction_category ?? ''].some((value) => value.toLowerCase().includes(query));
+        return [item.code, item.invoiceNumber ?? '', item.note, item.accountName, item.cashName ?? '', item.transaction_category ?? ''].some((value) => value.toLowerCase().includes(query));
       })
       .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
   }, [kasHarianQuery.data?.data, searchValue]);

@@ -71,6 +71,7 @@ export interface KasHarian {
   created_at?: string;
   updated_at?: string;
   grand_total?: number;
+  invoice_number?: string | null;
   remaining_payment?: number;
   remaining_payment_usd?: number;
   cash?: KasHarianCash | null;
@@ -132,6 +133,7 @@ export interface KasHarianListItem {
   source: KasHarianSource;
   date: string;
   code: string;
+  invoiceNumber?: string | null;
   note: string;
   debet: number;
   credit: number;
