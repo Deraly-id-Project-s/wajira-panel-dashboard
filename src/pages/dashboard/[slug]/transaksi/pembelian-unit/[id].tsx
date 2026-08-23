@@ -29,6 +29,7 @@ import {
 } from '@/components/ui/dialog';
 import { formatDate } from '@/lib/utils/format';
 import { LoadingState } from '@/components/ui/loading-state';
+import { UnitTypeDetailTable } from '@/components/features/unit-transaction/UnitTypeDetailTable';
 
 const readApiError = (error: any): string => {
   const details = error?.details ?? error?.response?.data?.errors;
@@ -367,6 +368,8 @@ export default function PurchaseDetailPage() {
         <PurchaseDetailCards data={purchase} billingHistories={resolvedBillingHistories} />
 
         <PurchaseUnitTable purchaseId={purchase.id} slug={slug as string} isPaid={isPaid} canEdit={canEdit} canDelete={canDelete} />
+
+        <UnitTypeDetailTable transactionId={purchase.id} />
 
         <div className="space-y-3">
           <div>

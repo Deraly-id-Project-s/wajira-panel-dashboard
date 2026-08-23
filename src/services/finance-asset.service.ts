@@ -1,4 +1,4 @@
-import type { FinanceAsset, FinanceAssetListResponse, FinanceAssetPayload } from '@/@types/finance-asset.types';
+import type { FinanceAsset, FinanceAssetListResponse, FinanceAssetPayload, FinanceAssetFormulaParams, FinanceAssetFormulaResult } from '@/@types/finance-asset.types';
 import type { PaginationParams } from '@/@types/pagination.types';
 import { apiClient } from '@/lib/api/client';
 import { buildLaravelPaginationQuery } from '@/lib/api/pagination';
@@ -27,15 +27,22 @@ export const getFinanceAssets = async (params: PaginationParams & { search?: str
         (item: any) => ({
             ...item,
             code: item.asset?.code || item.code || '',
-            purchase_date: item.asset?.purchase_date || item.purchase_date || '',
+            purchase_date: item.purchase_date || item.asset?.purchase_date || '',
             name: item.asset?.name || item.name || '',
             type: item.asset?.type || item.type || '',
-            price: Number(item.asset?.price || item.price) || 0,
+            price: Number(item.price ?? item.asset?.price) || 0,
             serial_number: item.serial_number || item.asset?.serial_number || '',
-            depreciation: Number(item.depreciation) || Number(item.depreciation_per_month) || 0,
-            depreciation_per_month: Number(item.depreciation_per_month) || Number(item.depreciation) || 0,
-            final_value: Number(item.final_value || item.nilai_akhir) || 0,
             economic_age: Number(item.economic_age) || 0,
+            age: Number(item.age) || (Number(item.economic_age) ? Number(item.economic_age) * 12 : 0),
+            depreciation: Number(item.depreciation) || 0,
+            monthly_depreciation: Number(item.monthly_depreciation ?? item.depreciation_per_month ?? item.depreciation) || 0,
+            depreciation_per_month: Number(item.depreciation_per_month ?? item.monthly_depreciation ?? item.depreciation) || 0,
+            months_used: Number(item.months_used) || 0,
+            accumulated_depreciation: Number(item.accumulated_depreciation) || 0,
+            book_value: Number(item.book_value) || 0,
+            status: item.status || 'AKTIF',
+            final_value: Number(item.final_value ?? item.book_value ?? item.nilai_akhir) || 0,
+            residual_value: Number(item.residual_value) || 0,
         }),
     );
 };
@@ -47,16 +54,44 @@ export const getFinanceAssetById = async (id: string | number): Promise<FinanceA
     return {
         ...data,
         code: data.asset?.code || data.code || '',
-        purchase_date: data.asset?.purchase_date || data.purchase_date || '',
+        purchase_date: data.purchase_date || data.asset?.purchase_date || '',
         name: data.asset?.name || data.name || '',
         type: data.asset?.type || data.type || '',
-        price: Number(data.asset?.price || data.price) || 0,
+        price: Number(data.price ?? data.asset?.price) || 0,
         serial_number: data.serial_number || data.asset?.serial_number || '',
-        depreciation: Number(data.depreciation) || 0,
-        depreciation_per_month: Number(data.depreciation_per_month) || Number(data.depreciation) || 0,
-        final_value: Number(data.final_value || data.nilai_akhir) || 0,
         economic_age: Number(data.economic_age) || 0,
+        age: Number(data.age) || (Number(data.economic_age) ? Number(data.economic_age) * 12 : 0),
+        depreciation: Number(data.depreciation) || 0,
+        monthly_depreciation: Number(data.monthly_depreciation ?? data.depreciation_per_month ?? data.depreciation) || 0,
+        depreciation_per_month: Number(data.depreciation_per_month ?? data.monthly_depreciation ?? data.depreciation) || 0,
+        months_used: Number(data.months_used) || 0,
+        accumulated_depreciation: Number(data.accumulated_depreciation) || 0,
+        book_value: Number(data.book_value) || 0,
+        status: data.status || 'AKTIF',
+        final_value: Number(data.final_value ?? data.book_value ?? data.nilai_akhir) || 0,
+        residual_value: Number(data.residual_value) || 0,
     };
+};
+
+export const getFinanceAssetFormula = async (
+    params: FinanceAssetFormulaParams
+): Promise<FinanceAssetFormulaResult> => {
+    try {
+        const response = await apiClient.get<LaravelApiResponse<FinanceAssetFormulaResult>>(
+            '/wapi/finance/fiance-asset/get-formula',
+            { params }
+        );
+        return ensureSuccess(response.data);
+    } catch (err: any) {
+        if (err?.response?.status === 404) {
+            const fallbackResponse = await apiClient.get<LaravelApiResponse<FinanceAssetFormulaResult>>(
+                '/wapi/finance/finance-asset/get-formula',
+                { params }
+            );
+            return ensureSuccess(fallbackResponse.data);
+        }
+        throw err;
+    }
 };
 
 export const createFinanceAsset = async (data: FinanceAssetPayload): Promise<void> => {

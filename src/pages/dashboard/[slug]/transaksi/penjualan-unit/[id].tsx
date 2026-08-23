@@ -27,6 +27,7 @@ import { LoadingState } from '@/components/ui/loading-state';
 import { useCompany } from '@/contexts/CompanyContext';
 import { CreditCard, AlertTriangle, CheckCircle2, Info } from 'lucide-react';
 import { TextTruncate } from '@/components/ui/text-truncate';
+import { UnitTypeDetailTable } from '@/components/features/unit-transaction/UnitTypeDetailTable';
 
 export default function SalesDetailPage() {
   const router = useRouter();
@@ -374,6 +375,8 @@ export default function SalesDetailPage() {
 
         {/* UNIT TABLE */}
         <SalesUnitTable lineItems={salesData.lineItems} salesId={sales.id} onAddUnit={handleCreateUnit} canEdit={canEdit} canDelete={canDelete} canCreate={canCreate} isPaid={isPaid} />
+
+        <UnitTypeDetailTable transactionId={sales.id} />
 
         {/* PAYMENT HISTORY TABLE */}
         <div className="space-y-3">

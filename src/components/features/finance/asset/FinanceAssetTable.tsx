@@ -3,28 +3,10 @@ import { Download, MoreVertical, Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import type { FinanceAsset } from '@/@types/finance-asset.types';
-import { format } from 'date-fns';
-import { formatDate, formatMoney } from '@/lib/utils/format';
 import BaseTable, { ColumnDef } from '@/components/ui/base-table';
 import { CopyBox } from '@/components/ui/copy-box';
 import { currenciesFormat } from '@/components/ui/currenciesFormat';
 import { Badge } from '@/components/ui/badge';
-
-const getAssetTypeBadge = (type?: string | null) => {
-    if (!type) return <Badge variant="outline">-</Badge>;
-    switch (type.toLowerCase()) {
-        case 'inventory':
-            return <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">Inventaris</Badge>;
-        case 'vehicles':
-            return <Badge variant="outline" className="bg-purple-50 text-purple-700 border-purple-200">Kendaraan</Badge>;
-        case 'buildings':
-            return <Badge variant="outline" className="bg-emerald-50 text-emerald-700 border-emerald-200">Bangunan</Badge>;
-        case 'land':
-            return <Badge variant="outline" className="bg-amber-50 text-amber-700 border-amber-200">Tanah</Badge>;
-        default:
-            return <Badge variant="outline" className="bg-slate-50 text-slate-700 border-slate-200">{type}</Badge>;
-    }
-};
 
 interface FinanceAssetTableProps {
     assets: FinanceAsset[];
@@ -66,61 +48,120 @@ export function FinanceAssetTable({
     const columns = useMemo<ColumnDef<FinanceAsset>[]>(
         () => [
             {
-                header: 'KODE ASET',
-                accessorKey: 'code',
+                header: 'NAMA ASSET',
+                accessorKey: 'name',
                 alignment: 'left',
-                cell: (item) => <CopyBox text={item?.code || '-'} />
+                cell: (item) => (
+                    <div className="flex flex-col">
+                        <span className="font-semibold text-slate-900">{item.asset?.name || item.name || '-'}</span>
+                        {item.asset?.code && <span className="text-xs text-slate-400">{item.asset.code}</span>}
+                    </div>
+                ),
             },
             {
-                header: 'SERIAL NUMBER',
+                header: 'NO SN',
                 accessorKey: 'serial_number',
                 alignment: 'left',
                 className: 'uppercase',
-                cell: (item) => item.serial_number ? <CopyBox text={item.serial_number} /> : <Badge variant='outline' className='bg-slate-100 text-slate-500 border-slate-200'>belum ditambahkan</Badge>
+                cell: (item) =>
+                    item.serial_number ? (
+                        <CopyBox text={item.serial_number} />
+                    ) : (
+                        <Badge variant="outline" className="bg-slate-100 text-slate-500 border-slate-200">
+                            -
+                        </Badge>
+                    ),
             },
             {
-                header: 'TGL BELI',
+                header: 'BULAN PEROLEHAN',
                 accessorKey: 'purchase_date',
                 alignment: 'center',
-                cell: (item) => formatDate(item?.purchase_date),
+                cell: (item) => {
+                    if (!item.purchase_date) return '-';
+                    const dateObj = new Date(item.purchase_date);
+                    if (isNaN(dateObj.getTime())) return item.purchase_date;
+                    return new Intl.DateTimeFormat('id-ID', { month: 'long', year: 'numeric' }).format(dateObj);
+                },
             },
             {
-                header: 'NAMA BARANG',
-                accessorKey: 'name',
-                alignment: 'left',
-            },
-            {
-                header: 'TIPE ASET',
-                accessorKey: 'type',
-                alignment: 'left',
-                cell: (item) => getAssetTypeBadge(item?.type)
-            },
-            {
-                header: 'HARGA BELI',
+                header: 'HARGA PEROLEHAN',
                 accessorKey: 'price',
-                alignment: 'center',
+                alignment: 'right',
                 className: 'font-medium text-slate-900',
-                cell: (item) => currenciesFormat('idr', item.price),
+                cell: (item) => currenciesFormat('idr', item.price || 0),
             },
             {
-                header: 'UMUR EKONOMIS',
+                header: 'UMUR EKONOMIS (TH)',
                 accessorKey: 'economic_age',
                 alignment: 'center',
-                cell: (item) => item.economic_age ? `${item.economic_age} Tahun` : '-',
+                cell: (item) =>
+                    item.economic_age !== undefined && item.economic_age !== null
+                        ? `${item.economic_age} Thn`
+                        : '-',
             },
             {
-                header: 'PENYUSUTAN/BULAN',
-                accessorKey: 'depreciation_per_month',
+                header: 'UMUR (BLN)',
+                accessorKey: 'age',
                 alignment: 'center',
-                className: 'font-medium text-slate-900',
-                cell: (item) => currenciesFormat('idr', item.depreciation_per_month ?? item.depreciation ?? 0),
+                cell: (item) => {
+                    const age = item.age ?? (item.economic_age ? item.economic_age * 12 : undefined);
+                    return age !== undefined && age !== null ? `${age} Bln` : '-';
+                },
             },
             {
-                header: 'NILAI AKHIR',
-                accessorKey: 'final_value',
-                alignment: 'center',
+                header: 'PENYUSUTAN PERBULAN',
+                accessorKey: 'monthly_depreciation',
+                alignment: 'right',
                 className: 'font-medium text-slate-900',
-                cell: (item) => currenciesFormat('idr', item.final_value ?? 0),
+                cell: (item) =>
+                    currenciesFormat(
+                        'idr',
+                        item.monthly_depreciation ?? item.depreciation_per_month ?? item.depreciation ?? 0
+                    ),
+            },
+            {
+                header: 'BULAN TERPAKAI',
+                accessorKey: 'months_used',
+                alignment: 'center',
+                cell: (item) =>
+                    item.months_used !== undefined && item.months_used !== null
+                        ? `${item.months_used} Bln`
+                        : '-',
+            },
+            {
+                header: 'AKM PENYUSUTAN',
+                accessorKey: 'accumulated_depreciation',
+                alignment: 'right',
+                className: 'font-medium text-slate-900',
+                cell: (item) => currenciesFormat('idr', item.accumulated_depreciation ?? 0),
+            },
+            {
+                header: 'NILAI BUKU',
+                accessorKey: 'book_value',
+                alignment: 'right',
+                className: 'font-medium text-slate-900',
+                cell: (item) => currenciesFormat('idr', item.book_value ?? item.final_value ?? 0),
+            },
+            {
+                header: 'STATUS',
+                accessorKey: 'status',
+                alignment: 'center',
+                cell: (item) => {
+                    const status = item.status || 'AKTIF';
+                    const isAktif = status.toUpperCase() === 'AKTIF';
+                    return (
+                        <Badge
+                            variant="outline"
+                            className={
+                                isAktif
+                                    ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                                    : 'bg-slate-50 text-slate-700 border-slate-200'
+                            }
+                        >
+                            {status}
+                        </Badge>
+                    );
+                },
             },
             {
                 header: 'Aksi',
