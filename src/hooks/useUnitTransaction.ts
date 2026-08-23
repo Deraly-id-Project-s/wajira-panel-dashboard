@@ -15,6 +15,8 @@ const unitTransactionKeys = {
     }),
   detail: (companyId: string | number, id: string) => companyQueryKeys.detail(companyId, 'unit-transactions', id),
   purchaseDetail: (companyId: string | number, id: string) => companyQueryKeys.detail(companyId, 'purchase-by-id', id),
+  typeDetails: (companyId: string | number, id: string, page: number, perPage: number) =>
+    companyQueryKeys.list(companyId, 'unit-transaction-type-details', { id, page, perPage }),
 };
 
 export const useUnitTransactions = (options: { page?: number; perPage?: number; search?: string; status?: string; start_date?: string | null; end_date?: string | null } = {}) => {
@@ -67,6 +69,28 @@ export const usePurchaseById = (id?: string) => {
     refetchOnReconnect: true,
     refetchOnMount: 'always',
     refetchInterval: 30_000,
+    staleTime: 0,
+  });
+};
+
+export const useUnitTransactionTypeDetails = (
+  id?: string,
+  options: { page?: number; perPage?: number } = {},
+) => {
+  const { companyId } = useCompany();
+  const page = options.page ?? 1;
+  const perPage = options.perPage ?? 10;
+
+  return useQuery({
+    queryKey: companyId
+      ? unitTransactionKeys.typeDetails(companyId, id ?? '', page, perPage)
+      : ['unit-transaction-type-details', 'unscoped', id, page, perPage],
+    queryFn: () => unitTransactionService.getUnitTransactionTypeDetails(id as string, { page, perPage }),
+    enabled: Boolean(id) && Boolean(companyId),
+    placeholderData: (previousData) => previousData,
+    refetchOnWindowFocus: true,
+    refetchOnReconnect: true,
+    refetchOnMount: 'always',
     staleTime: 0,
   });
 };
