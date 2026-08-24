@@ -5,6 +5,7 @@ export const documentTemplateSchema = z.object({
   language: z.enum(['id', 'en']),
   subject: z.string().trim().min(1, 'Subject wajib diisi'),
   footerInformation: z.string().trim().min(1, 'Informasi footer wajib diisi'),
+  personSignature: z.any().nullable().optional(),
   personSigner: z.string().trim().min(1, 'Penandatangan wajib diisi'),
   documentTemplate: z.any().nullable().optional(),
 });

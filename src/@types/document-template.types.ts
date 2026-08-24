@@ -7,6 +7,7 @@ export interface DocumentTemplate {
   language: string;
   subject: string;
   footerInformation: string;
+  personSignature?: string | null;
   personSigner: string;
   documentTemplate?: string | null;
   createdAt?: string;
@@ -18,6 +19,7 @@ export interface DocumentTemplatePayload {
   language: string;
   subject: string;
   footerInformation: string;
+  personSignature?: File | null;
   personSigner: string;
   documentTemplate?: File | null;
 }

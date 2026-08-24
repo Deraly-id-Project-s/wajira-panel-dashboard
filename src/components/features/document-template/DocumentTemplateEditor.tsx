@@ -9,6 +9,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { FileInput } from '@/components/ui/file-input';
+import { getObjectStorageUrl, StorageImage } from '@/components/ui/storage-image';
 import type { DocumentTemplate } from '@/@types/document-template.types';
 import { documentTemplateSchema, type DocumentTemplateFormValues } from '@/scheme/document-template.schema';
 
@@ -22,6 +23,8 @@ const translations = {
     nameLabel: 'Nama Template',
     languageLabel: 'Bahasa',
     subjectFieldLabel: 'Subject',
+    signatureLabel: 'Tanda Tangan',
+    signatureHint: 'Upload gambar tanda tangan yang akan ditampilkan di atas nama penandatangan.',
     signerLabel: 'Penandatangan',
     documentLabel: 'Desain Dokumen',
     invoiceNumber: 'Nomor Invoice',
@@ -46,6 +49,8 @@ const translations = {
     nameLabel: 'Template Name',
     languageLabel: 'Language',
     subjectFieldLabel: 'Subject',
+    signatureLabel: 'Signature',
+    signatureHint: 'Upload a signature image to display above the signer name.',
     signerLabel: 'Signer',
     documentLabel: 'Document Design',
     invoiceNumber: 'Invoice Number',
@@ -77,6 +82,7 @@ interface Props {
 
 export function DocumentTemplateEditor({ initialData, isSubmitting, onSubmit, onCancel }: Props) {
   const [documentPreview, setDocumentPreview] = useState<string | null>(initialData?.documentTemplate ?? null);
+  const [signaturePreview, setSignaturePreview] = useState<string | null>(initialData?.personSignature ?? null);
 
   const langInit = initialData?.language === 'en' ? 'en' : 'id';
   const defaultSubject = initialData?.subject ?? translations[langInit].defaultSubject;
@@ -89,6 +95,7 @@ export function DocumentTemplateEditor({ initialData, isSubmitting, onSubmit, on
       language: langInit,
       subject: defaultSubject,
       footerInformation: defaultFooter,
+      personSignature: null,
       personSigner: initialData?.personSigner ?? 'Zaifudin Yukhri',
       documentTemplate: null
     },
@@ -189,6 +196,11 @@ export function DocumentTemplateEditor({ initialData, isSubmitting, onSubmit, on
             {errors.subject && <p className="mt-1 text-xs text-red-600">{errors.subject.message}</p>}
           </div>
           <div>
+            <Label htmlFor="person-signature">{t.signatureLabel}</Label>
+            <FileInput id="person-signature" accept="image/png,image/jpeg" value={watch('personSignature')} onFileChange={(file) => { setValue('personSignature', file, { shouldValidate: true }); fileUrl(file, setSignaturePreview); }} className="mt-1" />
+            <p className="mt-1 text-xs text-slate-500">{t.signatureHint}</p>
+          </div>
+          <div>
             <Label htmlFor="personSigner">{t.signerLabel}</Label>
             <Input id="personSigner" {...register('personSigner')} className="mt-1" />
             {errors.personSigner && <p className="mt-1 text-xs text-red-600">{errors.personSigner.message}</p>}
@@ -207,7 +219,7 @@ export function DocumentTemplateEditor({ initialData, isSubmitting, onSubmit, on
         </div>
 
         <div className="space-y-3 overflow-auto rounded-md bg-slate-100 p-4">
-          <div className="mx-auto min-h-[1123px] w-[794px] overflow-hidden bg-white shadow-md" style={{ backgroundImage: documentPreview ? `url(${documentPreview})` : undefined, backgroundSize: '100% 100%', backgroundPosition: 'center', backgroundRepeat: 'no-repeat' }}>
+          <div className="mx-auto min-h-[1123px] w-[794px] overflow-hidden bg-white shadow-md" style={{ backgroundImage: documentPreview ? `url(${getObjectStorageUrl(documentPreview)})` : undefined, backgroundSize: '100% 100%', backgroundPosition: 'center', backgroundRepeat: 'no-repeat' }}>
             <div className="flex min-h-[1123px] flex-col px-[76px] pb-[76px] pt-[160px]">
               <div className="flex-1">
                 <div className="flex justify-between text-sm">
@@ -250,7 +262,9 @@ export function DocumentTemplateEditor({ initialData, isSubmitting, onSubmit, on
 
               <div className="mb-38 mr-12 text-end text-sm">
                 <p>{t.closing}</p>
-                <div className="h-16" />
+                <div className="flex h-16 items-center justify-end">
+                  <StorageImage src={signaturePreview} alt="Tanda tangan" width={160} height={64} className="max-h-16 max-w-40 object-contain" />
+                </div>
                 <p className="font-semibold underline">{personSigner || '-'}</p>
               </div>
             </div>
