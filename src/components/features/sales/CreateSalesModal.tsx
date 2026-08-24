@@ -68,6 +68,7 @@ export function CreateSalesModal({ isOpen, onClose, onSuccess }: CreateSalesModa
             other_fee: Number(data.otherFee ?? 0),
             dpp_tax_id: data.dppTaxVersionId ? Number(data.dppTaxVersionId) : undefined,
             ppn_tax_id: data.ppnTaxVersionId ? Number(data.ppnTaxVersionId) : undefined,
+            document_template_id: data.documentTemplateId ?? null,
         };
 
         if (!payload.max_capacity || payload.max_capacity <= 0) {

@@ -13,6 +13,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { useCompany } from '@/contexts/CompanyContext';
 import { PageHeader } from '@/components/ui/page-header';
 import { LoadingState } from '@/components/ui/loading-state';
+import { useUpdateUnitTransactionDocumentTemplate } from '@/hooks/useUnitTransaction';
 
 /**
  * Tambah Unit Page - Nested under Sales Detail
@@ -26,6 +27,7 @@ export default function CreateUnitPage() {
   const salesId = Array.isArray(id) ? id[0] : id;
   const { data: salesDetail, isLoading: isLoadingDetail } = useSalesDetail(salesId);
   const createItemMutation = useCreateUnitItem();
+  const updateTemplateMutation = useUpdateUnitTransactionDocumentTemplate();
   const { data: typeUnitData, isLoading: isLoadingTypeUnits } = useTypeUnits({
     sort_by: 'created_at',
     sort_order: 'asc',
@@ -92,6 +94,10 @@ export default function CreateUnitPage() {
         dpp_tax_id: data.dppTaxVersionId ? Number(data.dppTaxVersionId) : undefined,
         ppn_tax_id: data.ppnTaxVersionId ? Number(data.ppnTaxVersionId) : undefined,
       });
+      const currentTemplateId = salesDetail?.ui?.documentTemplateId ?? null;
+      if ((data.documentTemplateId ?? null) !== currentTemplateId) {
+        await updateTemplateMutation.mutateAsync({ id: salesId, documentTemplateId: data.documentTemplateId ?? null });
+      }
 
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: ['sales-transaction', salesId] }),
@@ -165,6 +171,7 @@ export default function CreateUnitPage() {
                 hppPerUnit: 0,
                 dppPerUnit: 0,
                 ppnPerUnit: 0,
+                documentTemplateId: salesDetail?.ui?.documentTemplateId ?? null,
               }}
               typeUnitOptions={typeUnitData?.data ?? []}
               onSubmit={handleSubmit}

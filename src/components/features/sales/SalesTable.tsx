@@ -360,7 +360,9 @@ export function SalesTable({
                   </DropdownMenuItem>
                   <DropdownMenuItem
                     className="rounded-lg px-3 py-2 text-sm text-slate-900 focus:bg-slate-50 cursor-pointer"
-                    onClick={() => window.open(slug ? `/dashboard/${slug}/transaksi/penjualan-unit/print/${item.id}` : `/transaksi/penjualan-unit/print/${item.id}`, '_blank')}
+                    disabled={!item.documentTemplateId}
+                    title={!item.documentTemplateId ? 'Document template belum dipilih.' : undefined}
+                    onClick={() => item.documentTemplateId && window.open(slug ? `/dashboard/${slug}/transaksi/penjualan-unit/print/${item.id}` : `/transaksi/penjualan-unit/print/${item.id}`, '_blank')}
                   >
                     <Printer className="mr-2 h-4 w-4" /> Print
                   </DropdownMenuItem>

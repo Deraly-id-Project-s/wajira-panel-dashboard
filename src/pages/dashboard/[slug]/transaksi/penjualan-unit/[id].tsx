@@ -28,6 +28,7 @@ import { useCompany } from '@/contexts/CompanyContext';
 import { CreditCard, AlertTriangle, CheckCircle2, Info } from 'lucide-react';
 import { TextTruncate } from '@/components/ui/text-truncate';
 import { UnitTypeDetailTable } from '@/components/features/unit-transaction/UnitTypeDetailTable';
+import { useDocumentTemplate } from '@/hooks/useDocumentTemplate';
 
 export default function SalesDetailPage() {
   const router = useRouter();
@@ -38,6 +39,7 @@ export default function SalesDetailPage() {
 
   const { slug, id } = router.query;
   const { data: sales, isLoading, isError, refetch: refetchSales } = useSalesById(id as string);
+  const { data: documentTemplate } = useDocumentTemplate(sales?.documentTemplateId ?? null);
   const { data: billings = [] } = useUnitBillings(sales?.id);
   const { data: currentBilling, isLoading: billingLoading } = useCurrentBilling(String(sales?.id ?? ''));
   const billingId = String(currentBilling?.id ?? '');
@@ -103,7 +105,7 @@ export default function SalesDetailPage() {
       }));
 
   useEffect(() => {
-    if (router.query.print === 'true' && !isLoading && sales) {
+    if (router.query.print === 'true' && !isLoading && sales?.documentTemplateId) {
       setTimeout(() => {
         window.print();
       }, 800);
@@ -357,6 +359,11 @@ export default function SalesDetailPage() {
             </>
           }
         />
+
+        <div className="rounded-md border bg-white px-4 py-3 text-sm shadow-sm">
+          <span className="text-muted-foreground">Document Template:</span>{' '}
+          <span className="font-medium">{documentTemplate?.name ?? 'Tidak ada template'}</span>
+        </div>
 
         {isRefunded ? (
           <div className="flex items-start gap-2.5 rounded-lg border border-amber-200 bg-amber-50/50 px-4 py-3 text-sm text-amber-800">

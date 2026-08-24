@@ -50,6 +50,7 @@ export interface Purchase {
   warehouseName?: string;
   warehouseId?: string;
   transaction_date?: string;
+  documentTemplateId?: string | null;
 
   totalDpp: number;
   totalPpn: number;
@@ -89,6 +90,7 @@ export interface CreatePurchaseRequest {
   transaction_date?: string;
   price_usd?: number;
   price_per_unit_usd?: number;
+  document_template_id?: number | string | null;
 }
 
 export interface UpdatePurchaseRequest {
@@ -99,6 +101,7 @@ export interface UpdatePurchaseRequest {
   max_capacity: string;
   stock_state: string;
   transaction_date?: string;
+  document_template_id?: number | string | null;
 }
 
 export interface PurchaseFormValues {
@@ -107,6 +110,7 @@ export interface PurchaseFormValues {
   code: string;
   supplierAddress?: string | null;
   supplierNpwp?: string | null;
+  documentTemplateId?: string | number | null;
 }
 
 export interface CreatePurchaseUnitRequest {

@@ -1,10 +1,12 @@
-import { useMemo, useRef } from 'react';
+import { useRef } from 'react';
 import jsPDF from 'jspdf';
 import { Download, Printer } from 'lucide-react';
 import { useReactToPrint } from 'react-to-print';
 import type { UnitTransactionDetail, UnitTransactionItemDetail } from '@/@types/unit-transaction.types';
 import { Button } from '@/components/ui/button';
 import { formatCurrency } from '@/lib/utils/currency';
+import type { DocumentTemplate } from '@/@types/document-template.types';
+import { getObjectStorageUrl } from '@/components/ui/storage-image';
 
 interface Props {
   purchase: UnitTransactionDetail;
@@ -13,7 +15,15 @@ interface Props {
   companyName: string;
   hideControls?: boolean;
   printRef?: React.RefObject<HTMLDivElement | null>;
+  documentTemplate: DocumentTemplate;
 }
+
+const hexToRgb = (hex: string) => {
+  const normalized = hex.replace('#', '');
+  return [0, 2, 4].map((offset) => Number.parseInt(normalized.slice(offset, offset + 2), 16)) as [number, number, number];
+};
+
+const htmlToText = (html?: string) => html?.replace(/<br\s*\/?>/gi, '\n').replace(/<\/p>/gi, '\n').replace(/<[^>]+>/g, '').trim() ?? '';
 
 const formatLongDate = (dateStr?: string) => {
   if (!dateStr) return '-';
@@ -44,12 +54,15 @@ export default function PurchasePrintDocument({
   companyName,
   hideControls = false,
   printRef,
+  documentTemplate,
 }: Props) {
   const localPrintRef = useRef<HTMLDivElement>(null);
 
   const totalBruto = Number(purchase.unit_transaction_bruto_total ?? purchase.unit_transaction_item_bruto_total ?? 0);
   const totalDpp = Number(purchase.unit_transaction_item_total_dpp ?? 0);
   const totalPpn = Number(purchase.unit_transaction_item_total_ppn ?? 0);
+  const backgroundUrl = documentTemplate.documentTemplate ? getObjectStorageUrl(documentTemplate.documentTemplate) : letterheadUrl;
+  const signatureUrl = documentTemplate.personSignature ? getObjectStorageUrl(documentTemplate.personSignature) : null;
 
   const handlePrint = useReactToPrint({
     contentRef: printRef || localPrintRef,
@@ -80,9 +93,9 @@ export default function PurchasePrintDocument({
     const pageHeight = pdf.internal.pageSize.getHeight();
 
     const drawLetterhead = async () => {
-      if (!letterheadUrl) return;
+      if (!backgroundUrl) return;
       try {
-        const image = await loadImageAsDataUrl(letterheadUrl);
+        const image = await loadImageAsDataUrl(backgroundUrl);
         pdf.addImage(image, 'JPEG', 0, 0, pageWidth, pageHeight);
       } catch (err) {
         console.error('Failed to load letterhead image', err);
@@ -100,7 +113,7 @@ export default function PurchasePrintDocument({
       ];
 
       let x = 10;
-      pdf.setFillColor(31, 65, 99);
+      pdf.setFillColor(...hexToRgb(documentTemplate.tableColor || '#1f4163'));
       pdf.setTextColor(255, 255, 255);
       pdf.setFont('helvetica', 'bold');
       pdf.setFontSize(8);
@@ -131,7 +144,7 @@ export default function PurchasePrintDocument({
       pdf.setFont('helvetica', 'normal');
       pdf.text('Perihal', 20, 58);
       pdf.text(':', 45, 58);
-      pdf.text('Pemesanan / Pembelian Unit Motor', 48, 58);
+      pdf.text(documentTemplate.subject || 'Pemesanan / Pembelian Unit Motor', 48, 58);
 
       pdf.text('Gudang Tujuan', 20, 64);
       pdf.text(':', 45, 64);
@@ -145,13 +158,14 @@ export default function PurchasePrintDocument({
 
       pdf.setFont('helvetica', 'bold');
       pdf.setFontSize(14);
-      pdf.text('PURCHASE ORDER', pageWidth / 2, 95, { align: 'center' });
+      pdf.text(documentTemplate.subject || 'PURCHASE ORDER', pageWidth / 2, 95, { align: 'center' });
       pdf.line(pageWidth / 2 - 15, 96.5, pageWidth / 2 + 15, 96.5);
 
       pdf.setFont('helvetica', 'normal');
       pdf.setFontSize(9.5);
       pdf.text('Dengan hormat,', 20, 105);
-      pdf.text('Bersama ini kami sampaikan rincian pemesanan/pembelian unit motor dengan detail sebagai berikut:', 20, 110);
+      const headerText = htmlToText(documentTemplate.headerInformation) || 'Bersama ini kami sampaikan rincian pemesanan/pembelian unit motor dengan detail sebagai berikut:';
+      pdf.text(pdf.splitTextToSize(headerText, 170), 20, 110);
 
       let tableY = 118;
       let columns = drawTableHeader(tableY);
@@ -224,6 +238,12 @@ export default function PurchasePrintDocument({
 
       // Signatures
       let sigY = tableY + 20;
+      const footerText = htmlToText(documentTemplate.footerInformation);
+      if (footerText) {
+        pdf.setFont('helvetica', 'normal');
+        pdf.text(pdf.splitTextToSize(footerText, 100), 20, sigY);
+        sigY += 18;
+      }
       if (sigY + 30 > 240) {
         pdf.addPage();
         await drawLetterhead();
@@ -234,11 +254,20 @@ export default function PurchasePrintDocument({
       pdf.text('Dibuat Oleh,', 30, sigY);
       pdf.text('Disetujui Oleh,', 145, sigY);
 
+      if (signatureUrl) {
+        try {
+          const signatureImage = await loadImageAsDataUrl(signatureUrl);
+          pdf.addImage(signatureImage, signatureImage.startsWith('data:image/png') ? 'PNG' : 'JPEG', 132, sigY + 3, 38, 18);
+        } catch {
+          // Keep the signer name visible if the image cannot be loaded.
+        }
+      }
+
       pdf.line(20, sigY + 25, 70, sigY + 25);
       pdf.line(130, sigY + 25, 180, sigY + 25);
 
       pdf.text('Administrasi Pembelian', 28, sigY + 29);
-      pdf.text('Supplier / Partner', 143, sigY + 29);
+      pdf.text(documentTemplate.personSigner || 'Supplier / Partner', 143, sigY + 29);
 
       pdf.save(`PurchaseOrder-${purchase.code}.pdf`);
     } catch (error) {
@@ -268,8 +297,8 @@ export default function PurchasePrintDocument({
       >
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
-          src={letterheadUrl}
-          alt="Letterhead"
+          src={backgroundUrl}
+          alt="Document template"
           className="absolute inset-0 h-full w-full object-cover"
         />
 
@@ -281,7 +310,7 @@ export default function PurchasePrintDocument({
                   <span className="inline-block w-[28mm]">Nomor PO</span>: <strong>{purchase.code}</strong>
                 </div>
                 <div>
-                  <span className="inline-block w-[28mm]">Perihal</span>: Pemesanan / Pembelian Unit Motor
+                  <span className="inline-block w-[28mm]">Perihal</span>: {documentTemplate.subject || 'Pemesanan / Pembelian Unit Motor'}
                 </div>
                 <div>
                   <span className="inline-block w-[28mm]">Tujuan</span>: {purchase.warehouse?.name || '-'}
@@ -299,20 +328,18 @@ export default function PurchasePrintDocument({
             </div>
 
             <div className="mt-8 text-center text-[12pt] font-semibold tracking-[0.18em] text-slate-900">
-              <span className="border-b border-slate-900 uppercase">PURCHASE ORDER</span>
+              <span className="border-b border-slate-900 uppercase">{documentTemplate.subject || 'PURCHASE ORDER'}</span>
             </div>
 
             <div className="mt-6 text-[9.5pt] text-slate-900">
               <p>Dengan hormat,</p>
-              <p className="mt-1">
-                Bersama ini kami sampaikan rincian pemesanan/pembelian unit motor dengan detail sebagai berikut:
-              </p>
+              <div className="mt-1 prose prose-sm max-w-none" dangerouslySetInnerHTML={{ __html: documentTemplate.headerInformation }} />
             </div>
 
             <div className="mt-5 overflow-hidden rounded-[12px] border border-slate-200">
               <table className="w-full border-collapse text-[8.5pt]">
                 <thead>
-                  <tr className="bg-[#1f4163] text-white">
+                  <tr style={{ backgroundColor: documentTemplate.tableColor || '#1f4163' }} className="text-white">
                     <th className="border border-white/20 px-2 py-2.5 text-center font-semibold w-[40px]">NO</th>
                     <th className="border border-white/20 px-3 py-2.5 text-left font-semibold">TIPE UNIT</th>
                     <th className="border border-white/20 px-3 py-2.5 text-left font-semibold">WARNA</th>
@@ -363,17 +390,18 @@ export default function PurchasePrintDocument({
                 </tbody>
               </table>
             </div>
+            {documentTemplate.footerInformation && (
+              <div className="mt-6 rounded border border-slate-200 p-3 text-[9pt] prose prose-sm max-w-none" dangerouslySetInnerHTML={{ __html: documentTemplate.footerInformation }} />
+            )}
           </div>
 
-          <div className="mt-12 grid grid-cols-2 text-center text-[10pt] text-slate-900">
-            <div className="space-y-16">
-              <div>Dibuat Oleh,</div>
-              <div className="font-semibold underline">Administrasi Pembelian</div>
-            </div>
-            <div className="space-y-16">
-              <div>Disetujui Oleh,</div>
-              <div className="font-semibold underline">Supplier / Partner</div>
-            </div>
+          <div className="mt-12 text-right text-[10pt] text-slate-900">
+            <div>Hormat kami,</div>
+            {signatureUrl && (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={signatureUrl} alt="Tanda tangan" className="ml-auto h-20 w-40 object-contain" />
+            )}
+            <div className="font-semibold underline">{documentTemplate.personSigner || '-'}</div>
           </div>
         </div>
       </div>

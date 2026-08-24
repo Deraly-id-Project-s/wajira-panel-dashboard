@@ -6,7 +6,9 @@ export interface DocumentTemplate {
   name: string;
   language: string;
   subject: string;
+  headerInformation: string;
   footerInformation: string;
+  tableColor: string;
   personSignature?: string | null;
   personSigner: string;
   documentTemplate?: string | null;
@@ -18,7 +20,9 @@ export interface DocumentTemplatePayload {
   name: string;
   language: string;
   subject: string;
+  headerInformation: string;
   footerInformation: string;
+  tableColor: string;
   personSignature?: File | null;
   personSigner: string;
   documentTemplate?: File | null;

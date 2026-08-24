@@ -124,6 +124,7 @@ export default function CreatePurchasePage() {
         bbn_price: bbnNumber,
         expedition_fee: expeditionNumber,
         other_fee: otherFeeNumber,
+        document_template_id: data.documentTemplateId ?? null,
       };
 
       const response = await mutation.mutateAsync(payload);

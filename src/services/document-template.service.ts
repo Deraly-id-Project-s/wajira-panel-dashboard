@@ -11,7 +11,9 @@ const mapDocumentTemplate = (item: any): DocumentTemplate => ({
   name: item.name ?? '',
   language: item.language ?? 'id',
   subject: item.subject ?? '',
+  headerInformation: item.header_information ?? item.headerInformation ?? '',
   footerInformation: item.footer_information ?? item.footerInformation ?? '',
+  tableColor: item.table_color ?? item.tableColor ?? '#1f4163',
   personSignature: item.person_signature ?? item.personSignature ?? null,
   personSigner: item.person_signer ?? item.personSigner ?? '',
   documentTemplate: item.document_template ?? item.documentTemplate ?? null,
@@ -39,7 +41,9 @@ const toFormData = (payload: DocumentTemplatePayload, method?: 'PUT') => {
   body.append('name', payload.name);
   body.append('language', payload.language);
   body.append('subject', payload.subject);
+  body.append('header_information', payload.headerInformation);
   body.append('footer_information', payload.footerInformation);
+  body.append('table_color', payload.tableColor);
   if (payload.personSignature) body.append('person_signature', payload.personSignature);
   body.append('person_signer', payload.personSigner);
   if (payload.documentTemplate) body.append('document_template', payload.documentTemplate);

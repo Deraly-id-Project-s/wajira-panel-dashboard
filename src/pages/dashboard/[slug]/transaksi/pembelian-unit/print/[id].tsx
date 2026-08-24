@@ -11,6 +11,7 @@ import { useUnitItemDetailsByTransactionId } from '@/hooks/useUnitItemDetail';
 import PurchasePrintDocument from '@/components/features/purchase/PurchasePrintDocument';
 import { Button } from '@/components/ui/button';
 import { LoadingState } from '@/components/ui/loading-state';
+import { useDocumentTemplate } from '@/hooks/useDocumentTemplate';
 
 export default function PurchasePrintPage() {
   const router = useRouter();
@@ -21,6 +22,7 @@ export default function PurchasePrintPage() {
 
   const detailQuery = usePurchaseById(id);
   const detailsQuery = useUnitItemDetailsByTransactionId(id);
+  const templateQuery = useDocumentTemplate(detailQuery.data?.documentTemplateId ?? null);
 
   const printRef = React.useRef<HTMLDivElement>(null);
 
@@ -47,7 +49,7 @@ export default function PurchasePrintPage() {
       .catch(() => undefined);
   }, [companyId, slug, router.isReady]);
 
-  if (!router.isReady || detailQuery.isLoading || detailsQuery.isLoading) {
+  if (!router.isReady || detailQuery.isLoading || detailsQuery.isLoading || templateQuery.isLoading) {
     return (
       <DashboardLayout>
         <LoadingState variant="page" />
@@ -59,6 +61,16 @@ export default function PurchasePrintPage() {
     return (
       <DashboardLayout>
         <div className="py-20 text-center text-sm text-slate-500">Data pembelian tidak ditemukan.</div>
+      </DashboardLayout>
+    );
+  }
+
+  if (!detailQuery.data.documentTemplateId || !templateQuery.data) {
+    return (
+      <DashboardLayout>
+        <div className="rounded-md border bg-white p-8 text-center text-sm text-slate-500">
+          Document template belum dipilih pada transaksi ini.
+        </div>
       </DashboardLayout>
     );
   }
@@ -100,6 +112,7 @@ export default function PurchasePrintPage() {
             items={detailsQuery.data ?? []}
             letterheadUrl={letterheadUrl}
             companyName={companyName}
+            documentTemplate={templateQuery.data}
             hideControls
             printRef={printRef}
           />

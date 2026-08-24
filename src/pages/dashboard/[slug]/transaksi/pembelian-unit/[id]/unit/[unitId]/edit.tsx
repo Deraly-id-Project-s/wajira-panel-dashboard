@@ -4,7 +4,7 @@ import { PageHeader } from '@/components/ui/page-header';
 import { Card, CardContent } from '@/components/ui/card';
 import { ArrowLeft, ChevronRight } from 'lucide-react';
 import { UnitTransactionForm } from '@/components/features/unit-transaction/UnitTransactionForm';
-import { usePurchaseById } from '@/hooks/useUnitTransaction';
+import { usePurchaseById, useUpdateUnitTransactionDocumentTemplate } from '@/hooks/useUnitTransaction';
 import {
   usePurchaseUnitItems,
   useUpdateUnitItem,
@@ -57,6 +57,7 @@ export default function EditNestedUnitPage() {
     usePurchaseUnitItems(id as string);
 
   const updateUnitMutation = useUpdateUnitItem();
+  const updateTemplateMutation = useUpdateUnitTransactionDocumentTemplate();
 
   const unit = unitItems?.data?.find(
     (item) => item.id === String(unitId)
@@ -246,6 +247,9 @@ export default function EditNestedUnitPage() {
         id: String(unitId),
         payload,
       });
+      if ((data.documentTemplateId ?? null) !== (purchase?.documentTemplateId ?? null)) {
+        await updateTemplateMutation.mutateAsync({ id: parentTransactionId, documentTemplateId: data.documentTemplateId ?? null });
+      }
 
       toast.success('Unit berhasil diperbarui');
 
@@ -315,6 +319,7 @@ export default function EditNestedUnitPage() {
                 price: unit.price,
                 bbnPrice: unit.bbn_price,
                 expeditionFee: unit.expedition_fee,
+                documentTemplateId: purchase?.documentTemplateId ?? null,
                 otherFee: unit.other_fee,
                 priceUsd: unit.price_usd,
                 pricePerUnitUsd: unit.price_per_unit_usd,

@@ -18,6 +18,7 @@ import { useTaxDefault } from '@/hooks/useTax';
 import RequiredMark from '@/components/ui/required-mark';
 import { TypeUnitFormModal } from '@/components/features/type-unit/TypeUnitFormModal';
 import { unitTransactionSchema, type UnitTransactionFormValues } from './unit-transaction.schema';
+import { DocumentTemplateSelect } from '@/components/features/document-template/DocumentTemplateSelect';
 
 export interface UnitTransactionFormProps {
   type: 'purchase' | 'sales';
@@ -82,6 +83,7 @@ export function UnitTransactionForm({
     resolver: zodResolver(unitTransactionSchema),
     defaultValues: {
       unitTypeId: defaultValues?.unitTypeId || '',
+      documentTemplateId: defaultValues?.documentTemplateId ?? null,
       qty: defaultValues?.qty ?? 1,
       price: defaultValues?.price || 0,
       bbnPrice: defaultValues?.bbnPrice || 0,
@@ -164,7 +166,7 @@ export function UnitTransactionForm({
           {!hideItemFields && (
             <>
               {/* Row Type Unit / Qty / Harga */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
                 <FormField
                   control={form.control}
                   name="unitTypeId"
@@ -266,6 +268,22 @@ export function UnitTransactionForm({
                       <FormControl>
                         <MoneyInput name={field.name} value={Number(field.value) || 0} onChangeValue={(val) => field.onChange(val)} onBlur={field.onBlur} disabled={readOnly} />
                       </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="documentTemplateId"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-sm font-medium">Document Template <span className="font-normal text-muted-foreground">(Opsional)</span></FormLabel>
+                      <DocumentTemplateSelect
+                        value={field.value}
+                        onValueChange={field.onChange}
+                        disabled={readOnly}
+                      />
                       <FormMessage />
                     </FormItem>
                   )}

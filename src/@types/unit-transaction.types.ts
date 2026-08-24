@@ -82,6 +82,7 @@ export interface UnitTransaction {
   remainingPayment: number;
   isUnitTypeDetailValid?: boolean;
   billing_summary?: UnitTransactionBillingSummary | null;
+  documentTemplateId?: string | null;
 }
 
 export interface UnitTransactionResponse {
@@ -169,6 +170,7 @@ export interface UnitTransactionDetail {
   unit_transaction_adjustments?: any[];
   unit_transaction_items?: any[];
   isUnitTypeDetailValid?: boolean;
+  documentTemplateId?: string | null;
   pivot: {
     unit_transaction_item_detail_id: number;
   };

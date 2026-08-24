@@ -9,6 +9,7 @@ import { ChevronRight } from 'lucide-react';
 import { useMemo } from 'react';
 import { useCompany } from '@/contexts/CompanyContext';
 import { LoadingState } from '@/components/ui/loading-state';
+import type { PurchaseFormValues } from '@/@types/purchase.types';
 
 export default function EditPurchasePage() {
   const router = useRouter();
@@ -27,14 +28,25 @@ export default function EditPurchasePage() {
       code: purchase.code,
       supplierAddress: purchase.supplierAddress,
       supplierNpwp: purchase.supplierNpwp,
+      documentTemplateId: purchase.documentTemplateId ?? null,
     };
   }, [purchase]);
 
-  const handleSubmit = async (data: any) => {
+  const handleSubmit = async (data: PurchaseFormValues) => {
+    if (!purchase) return;
     try {
       await updateMutation.mutateAsync({
         id: itemId as string,
-        payload: data,
+        payload: {
+          company_id: Number(companyId),
+          person_id: Number(purchase.companyId),
+          code: purchase.code,
+          type: 'purchase',
+          max_capacity: String(purchase.maxCapacity ?? 0),
+          stock_state: purchase.stockState ?? 'draft',
+          transaction_date: data.date,
+          document_template_id: data.documentTemplateId ?? null,
+        },
       });
       toast.success('Pembelian berhasil diperbarui');
       router.push(`/dashboard/${slug}/transaksi/pembelian-unit`);

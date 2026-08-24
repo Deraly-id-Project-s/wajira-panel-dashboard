@@ -55,6 +55,8 @@ type UnitTransactionListApiModel = {
   stock_state?: string;
   created_at?: string;
   updated_at?: string;
+  document_template_id?: number | string | null;
+  document_template?: { id?: number | string; uuid?: string } | null;
   warehouse?: {
     id?: number;
     uuid?: string;
@@ -183,6 +185,7 @@ const mapDetailToPurchase = (detail: UnitTransactionDetailApiModel): Purchase =>
     warehouseName: detail.warehouse?.name,
     warehouseId: detail.warehouse?.id ? String(detail.warehouse.id) : undefined,
     transaction_date: (detail as any).transaction_date ?? detail.created_at ?? '',
+    documentTemplateId: detail.document_template_id != null ? String(detail.document_template_id) : detail.document_template?.id != null ? String(detail.document_template.id) : detail.document_template?.uuid ?? null,
     ...billingTotals,
     units: mapUnits(detail),
     unit_transaction_items: detail.unit_transaction_items ?? [],
@@ -223,6 +226,7 @@ const mapListItemToPurchase = (item: UnitTransactionListApiModel): Purchase => {
     warehouseName: item.warehouse?.name,
     warehouseId: item.warehouse?.id ? String(item.warehouse.id) : undefined,
     transaction_date: (item as any).transaction_date ?? item.created_at ?? '',
+    documentTemplateId: item.document_template_id != null ? String(item.document_template_id) : item.document_template?.id != null ? String(item.document_template.id) : item.document_template?.uuid ?? null,
     ...billingTotals,
     units: [],
     unit_transaction_items: (item as any).unit_transaction_items ?? [],
@@ -453,6 +457,7 @@ export const purchaseService = {
     if (payload.bbn_price !== undefined) form.append('bbn_price', String(payload.bbn_price));
     if (payload.expedition_fee !== undefined) form.append('expedition_fee', String(payload.expedition_fee));
     if (payload.other_fee !== undefined) form.append('other_fee', String(payload.other_fee));
+    form.append('document_template_id', payload.document_template_id == null ? '' : String(payload.document_template_id));
 
     if (process.env.NODE_ENV !== 'production') {
       const preview = Array.from(form.entries()).reduce<Record<string, any>>((acc, [k, v]) => {
@@ -482,6 +487,7 @@ export const purchaseService = {
     if (payload.transaction_date) {
       form.append('transaction_date', payload.transaction_date);
     }
+    form.append('document_template_id', payload.document_template_id == null ? '' : String(payload.document_template_id));
 
     const response = await apiClient.post<LaravelApiResponse<UnitTransactionDetailApiModel>>(`${basePath}/${id}`, form);
     const data = ensureSuccess(response.data);

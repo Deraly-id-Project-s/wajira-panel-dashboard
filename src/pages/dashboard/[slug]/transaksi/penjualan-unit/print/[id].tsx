@@ -13,6 +13,7 @@ import { useSalesDetail } from '@/hooks/useSales';
 import SalesPrintDocument from '@/components/features/sales/SalesPrintDocument';
 import { Button } from '@/components/ui/button';
 import { LoadingState } from '@/components/ui/loading-state';
+import { useDocumentTemplate } from '@/hooks/useDocumentTemplate';
 
 export default function SalesPrintPage() {
   const router = useRouter();
@@ -22,6 +23,7 @@ export default function SalesPrintPage() {
   const [companyName, setCompanyName] = React.useState('WAJIRA JAGRATARA TRANSINDO');
 
   const detailQuery = useSalesDetail(id);
+  const templateQuery = useDocumentTemplate(detailQuery.data?.ui?.documentTemplateId ?? null);
 
   const detailsQuery = useQuery({
     queryKey: ['sales-print-details', id],
@@ -120,7 +122,7 @@ export default function SalesPrintPage() {
       .catch(() => undefined);
   }, [companyId, slug, router.isReady]);
 
-  if (!router.isReady || detailQuery.isLoading || detailsQuery.isLoading) {
+  if (!router.isReady || detailQuery.isLoading || detailsQuery.isLoading || templateQuery.isLoading) {
     return (
       <DashboardLayout>
         <LoadingState variant="page" />
@@ -132,6 +134,16 @@ export default function SalesPrintPage() {
     return (
       <DashboardLayout>
         <div className="py-20 text-slate-500 text-center text-sm">Data penjualan tidak ditemukan.</div>
+      </DashboardLayout>
+    );
+  }
+
+  if (!detailQuery.data.ui.documentTemplateId || !templateQuery.data) {
+    return (
+      <DashboardLayout>
+        <div className="rounded-md border bg-white p-8 text-center text-sm text-slate-500">
+          Document template belum dipilih pada transaksi ini.
+        </div>
       </DashboardLayout>
     );
   }
@@ -173,6 +185,7 @@ export default function SalesPrintPage() {
             items={detailsQuery.data ?? []}
             letterheadUrl={letterheadUrl}
             companyName={companyName}
+            documentTemplate={templateQuery.data}
             hideControls
             printRef={printRef}
           />

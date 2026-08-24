@@ -178,6 +178,7 @@ export default function EditUnitPage() {
         type: 'sales' as const,
         max_capacity: Number(data.raw.max_capacity ?? 1),
         stock_state: data.raw.stock_state ?? 'draft',
+        document_template_id: formValues.documentTemplateId ?? null,
       };
 
       await updateMutation.mutateAsync({ id: salesId, payload });

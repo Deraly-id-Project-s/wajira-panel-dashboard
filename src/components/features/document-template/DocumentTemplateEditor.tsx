@@ -1,5 +1,6 @@
-import { useEffect, useMemo, useState, useRef } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { EditorContent, useEditor } from '@tiptap/react';
+import type { Editor } from '@tiptap/core';
 import StarterKit from '@tiptap/starter-kit';
 import { Bold, Italic, List, ListOrdered, Redo2, Undo2 } from 'lucide-react';
 import { useForm } from 'react-hook-form';
@@ -23,6 +24,9 @@ const translations = {
     nameLabel: 'Nama Template',
     languageLabel: 'Bahasa',
     subjectFieldLabel: 'Subject',
+    headerInformationLabel: 'Konten Header',
+    headerInformationHint: 'Pesan yang ditampilkan di bawah subject.',
+    tableColorLabel: 'Warna Header Tabel',
     signatureLabel: 'Tanda Tangan',
     signatureHint: 'Upload gambar tanda tangan yang akan ditampilkan di atas nama penandatangan.',
     signerLabel: 'Penandatangan',
@@ -49,6 +53,9 @@ const translations = {
     nameLabel: 'Template Name',
     languageLabel: 'Language',
     subjectFieldLabel: 'Subject',
+    headerInformationLabel: 'Header Content',
+    headerInformationHint: 'Message displayed below the subject.',
+    tableColorLabel: 'Table Header Color',
     signatureLabel: 'Signature',
     signatureHint: 'Upload a signature image to display above the signer name.',
     signerLabel: 'Signer',
@@ -80,13 +87,28 @@ interface Props {
   onCancel: () => void;
 }
 
+function EditorToolbar({ editor }: { editor: Editor | null }) {
+  return (
+    <div className="flex gap-1 rounded-md border bg-white p-2">
+      <button type="button" aria-label="Tebal" onClick={() => editor?.chain().focus().toggleBold().run()}><Bold className="h-4 w-4" /></button>
+      <button type="button" aria-label="Miring" onClick={() => editor?.chain().focus().toggleItalic().run()}><Italic className="h-4 w-4" /></button>
+      <button type="button" aria-label="Bullet list" onClick={() => editor?.chain().focus().toggleBulletList().run()}><List className="h-4 w-4" /></button>
+      <button type="button" aria-label="Numbered list" onClick={() => editor?.chain().focus().toggleOrderedList().run()}><ListOrdered className="h-4 w-4" /></button>
+      <button type="button" aria-label="Undo" onClick={() => editor?.chain().focus().undo().run()}><Undo2 className="h-4 w-4" /></button>
+      <button type="button" aria-label="Redo" onClick={() => editor?.chain().focus().redo().run()}><Redo2 className="h-4 w-4" /></button>
+    </div>
+  );
+}
+
 export function DocumentTemplateEditor({ initialData, isSubmitting, onSubmit, onCancel }: Props) {
   const [documentPreview, setDocumentPreview] = useState<string | null>(initialData?.documentTemplate ?? null);
   const [signaturePreview, setSignaturePreview] = useState<string | null>(initialData?.personSignature ?? null);
 
   const langInit = initialData?.language === 'en' ? 'en' : 'id';
   const defaultSubject = initialData?.subject ?? translations[langInit].defaultSubject;
+  const defaultHeader = initialData?.headerInformation || `<p>${translations[langInit].intro}</p>`;
   const defaultFooter = initialData?.footerInformation ?? translations[langInit].defaultFooterInfo;
+  const defaultTableColor = initialData?.tableColor || '#1f4163';
 
   const { register, handleSubmit, setValue, watch, formState: { errors } } = useForm<DocumentTemplateFormValues>({
     resolver: zodResolver(documentTemplateSchema),
@@ -94,22 +116,37 @@ export function DocumentTemplateEditor({ initialData, isSubmitting, onSubmit, on
       name: initialData?.name ?? '',
       language: langInit,
       subject: defaultSubject,
+      headerInformation: defaultHeader,
       footerInformation: defaultFooter,
+      tableColor: defaultTableColor,
       personSignature: null,
       personSigner: initialData?.personSigner ?? 'Zaifudin Yukhri',
       documentTemplate: null
     },
   });
 
-  const footerInformation = watch('footerInformation');
   const subject = watch('subject');
+  const tableColor = watch('tableColor');
   const personSigner = watch('personSigner');
   const language = watch('language');
 
   const currentLang = (language === 'en' ? 'en' : 'id') as 'id' | 'en';
   const t = translations[currentLang];
 
-  const editor = useEditor({
+  const headerEditor = useEditor({
+    extensions: [StarterKit],
+    content: defaultHeader,
+    immediatelyRender: false,
+    onUpdate: ({ editor: next }) => setValue('headerInformation', next.getHTML(), { shouldDirty: true, shouldValidate: true })
+  });
+
+  useEffect(() => {
+    if (headerEditor && initialData?.headerInformation) {
+      headerEditor.commands.setContent(initialData.headerInformation);
+    }
+  }, [headerEditor, initialData?.headerInformation]);
+
+  const footerEditor = useEditor({
     extensions: [StarterKit],
     content: defaultFooter,
     immediatelyRender: false,
@@ -117,10 +154,10 @@ export function DocumentTemplateEditor({ initialData, isSubmitting, onSubmit, on
   });
 
   useEffect(() => {
-    if (editor && initialData?.footerInformation) {
-      editor.commands.setContent(initialData.footerInformation);
+    if (footerEditor && initialData?.footerInformation) {
+      footerEditor.commands.setContent(initialData.footerInformation);
     }
-  }, [editor, initialData?.footerInformation]);
+  }, [footerEditor, initialData?.footerInformation]);
 
   const prevLanguageRef = useRef(language);
 
@@ -128,6 +165,7 @@ export function DocumentTemplateEditor({ initialData, isSubmitting, onSubmit, on
     const prevLang = prevLanguageRef.current;
     if (prevLang && prevLang !== language) {
       const currentSubject = watch('subject');
+      const currentHeader = watch('headerInformation');
       const currentFooter = watch('footerInformation');
 
       const oldDefaults = translations[prevLang as 'id' | 'en'];
@@ -135,6 +173,14 @@ export function DocumentTemplateEditor({ initialData, isSubmitting, onSubmit, on
 
       if (currentSubject === oldDefaults.defaultSubject || !currentSubject) {
         setValue('subject', newDefaults.defaultSubject, { shouldValidate: true });
+      }
+
+      const normalizedHeader = currentHeader ? currentHeader.replace(/<[^>]*>/g, '').trim() : '';
+      const normalizedOldHeader = oldDefaults.intro.trim();
+      if (normalizedHeader === normalizedOldHeader || !currentHeader) {
+        const newHeader = `<p>${newDefaults.intro}</p>`;
+        setValue('headerInformation', newHeader, { shouldValidate: true });
+        headerEditor?.commands.setContent(newHeader);
       }
 
       const normalizedCurrent = currentFooter ? currentFooter.replace(/<[^>]*>/g, '').trim() : '';
@@ -146,11 +192,11 @@ export function DocumentTemplateEditor({ initialData, isSubmitting, onSubmit, on
         !currentFooter
       ) {
         setValue('footerInformation', newDefaults.defaultFooterInfo, { shouldValidate: true });
-        editor?.commands.setContent(newDefaults.defaultFooterInfo);
+        footerEditor?.commands.setContent(newDefaults.defaultFooterInfo);
       }
     }
     prevLanguageRef.current = language;
-  }, [language, setValue, editor, watch]);
+  }, [language, setValue, headerEditor, footerEditor, watch]);
 
   const fileUrl = (file: File | null, setPreview: (url: string | null) => void) => {
     if (!file) return;
@@ -158,24 +204,14 @@ export function DocumentTemplateEditor({ initialData, isSubmitting, onSubmit, on
   };
 
   const submit = (values: DocumentTemplateFormValues) => onSubmit(values);
-  const previewFooter = useMemo(() => ({ __html: footerInformation || `<p>${t.paymentPlaceholder}</p>` }), [footerInformation, t.paymentPlaceholder]);
 
   return (
     <form onSubmit={handleSubmit(submit)} className="space-y-6">
-      <div className="mb-3 flex gap-1 rounded-md border bg-white p-2 xl:col-span-2">
-        <button type="button" aria-label="Tebal" onClick={() => editor?.chain().focus().toggleBold().run()}><Bold className="h-4 w-4" /></button>
-        <button type="button" aria-label="Miring" onClick={() => editor?.chain().focus().toggleItalic().run()}><Italic className="h-4 w-4" /></button>
-        <button type="button" aria-label="Bullet list" onClick={() => editor?.chain().focus().toggleBulletList().run()}><List className="h-4 w-4" /></button>
-        <button type="button" aria-label="Numbered list" onClick={() => editor?.chain().focus().toggleOrderedList().run()}><ListOrdered className="h-4 w-4" /></button>
-        <button type="button" aria-label="Undo" onClick={() => editor?.chain().focus().undo().run()}><Undo2 className="h-4 w-4" /></button>
-        <button type="button" aria-label="Redo" onClick={() => editor?.chain().focus().redo().run()}><Redo2 className="h-4 w-4" /></button>
-      </div>
-
       <div className="grid gap-6 xl:grid-cols-[360px_minmax(0,1fr)]">
         <div className="space-y-4 rounded-md border bg-white p-5 shadow-sm">
           <div>
             <Label htmlFor="name">{t.nameLabel}</Label>
-            <Input id="name" {...register('name')} className="mt-1" />
+            <Input id="name" {...register('name')} placeholder={t.nameLabel} className="mt-1" />
             {errors.name && <p className="mt-1 text-xs text-red-600">{errors.name.message}</p>}
           </div>
           <div>
@@ -194,6 +230,19 @@ export function DocumentTemplateEditor({ initialData, isSubmitting, onSubmit, on
             <Label htmlFor="subject">{t.subjectFieldLabel}</Label>
             <Input id="subject" {...register('subject')} className="mt-1" />
             {errors.subject && <p className="mt-1 text-xs text-red-600">{errors.subject.message}</p>}
+          </div>
+          <div>
+            <Label>{t.headerInformationLabel}</Label>
+            <p className="mt-1 text-xs text-slate-500">{t.headerInformationHint}</p>
+            {errors.headerInformation && <p className="mt-1 text-xs text-red-600">{errors.headerInformation.message}</p>}
+          </div>
+          <div>
+            <Label htmlFor="table-color">{t.tableColorLabel}</Label>
+            <div className="mt-1 flex items-center gap-2">
+              <input id="table-color" type="color" {...register('tableColor')} className="h-10 w-14 cursor-pointer rounded border border-slate-200 bg-white p-1" />
+              <Input value={tableColor} onChange={(event) => setValue('tableColor', event.target.value, { shouldDirty: true, shouldValidate: true })} className="font-mono uppercase" />
+            </div>
+            {errors.tableColor && <p className="mt-1 text-xs text-red-600">{errors.tableColor.message}</p>}
           </div>
           <div>
             <Label htmlFor="person-signature">{t.signatureLabel}</Label>
@@ -219,6 +268,7 @@ export function DocumentTemplateEditor({ initialData, isSubmitting, onSubmit, on
         </div>
 
         <div className="space-y-3 overflow-auto rounded-md bg-slate-100 p-4">
+          <EditorToolbar editor={headerEditor} />
           <div className="mx-auto min-h-[1123px] w-[794px] overflow-hidden bg-white shadow-md" style={{ backgroundImage: documentPreview ? `url(${getObjectStorageUrl(documentPreview)})` : undefined, backgroundSize: '100% 100%', backgroundPosition: 'center', backgroundRepeat: 'no-repeat' }}>
             <div className="flex min-h-[1123px] flex-col px-[76px] pb-[76px] pt-[160px]">
               <div className="flex-1">
@@ -232,11 +282,11 @@ export function DocumentTemplateEditor({ initialData, isSubmitting, onSubmit, on
                 </div>
                 <h1 className="mt-8 text-center text-xl font-bold tracking-widest underline">{subject || t.fallbackSubject}</h1>
                 <p className="mt-6 text-sm">{t.salutation}</p>
-                <p className="mt-1 text-sm">{t.intro}</p>
+                <EditorContent editor={headerEditor} className="mt-1 text-sm prose prose-sm max-w-none" dangerouslySetInnerHTML={undefined} />
 
                 <table className="mt-5 w-full border-collapse text-xs">
                   <thead>
-                    <tr className="bg-[#1f4163] text-white">
+                    <tr style={{ backgroundColor: tableColor }} className="text-white">
                       {t.tableHeaders.map((head) => <th key={head} className="border border-white/20 px-2 py-2">{head}</th>)}
                     </tr>
                   </thead>
@@ -255,17 +305,16 @@ export function DocumentTemplateEditor({ initialData, isSubmitting, onSubmit, on
 
                 <div className="mt-8 rounded border border-slate-200 p-3 text-sm">
                   <div className="mb-2 font-semibold">{t.paymentInfo}</div>
-                  <EditorContent editor={editor} className="prose prose-sm max-w-none" dangerouslySetInnerHTML={undefined} />
-                  <div className="hidden" dangerouslySetInnerHTML={previewFooter} />
+                  <EditorContent editor={footerEditor} className="prose prose-sm max-w-none" dangerouslySetInnerHTML={undefined} />
                 </div>
               </div>
 
-              <div className="mb-38 mr-12 text-end text-sm">
-                <p>{t.closing}</p>
-                <div className="flex h-16 items-center justify-end">
-                  <StorageImage src={signaturePreview} alt="Tanda tangan" width={160} height={64} className="max-h-16 max-w-40 object-contain" />
+              <div className="mb-38 text-end text-sm">
+                <p className='mr-12'>{t.closing}</p>
+                <div className="flex mr-[12.3px] items-center justify-end">
+                  <StorageImage src={signaturePreview} alt="Tanda tangan" width={160} height={85} className="max-h-24 max-w-40 object-contain" />
                 </div>
-                <p className="font-semibold underline">{personSigner || '-'}</p>
+                <p className="mr-12 font-semibold underline">{personSigner || '-'}</p>
               </div>
             </div>
           </div>

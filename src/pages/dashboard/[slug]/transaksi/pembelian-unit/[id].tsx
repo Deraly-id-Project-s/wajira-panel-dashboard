@@ -30,6 +30,7 @@ import {
 import { formatDate } from '@/lib/utils/format';
 import { LoadingState } from '@/components/ui/loading-state';
 import { UnitTypeDetailTable } from '@/components/features/unit-transaction/UnitTypeDetailTable';
+import { useDocumentTemplate } from '@/hooks/useDocumentTemplate';
 
 const readApiError = (error: any): string => {
   const details = error?.details ?? error?.response?.data?.errors;
@@ -54,6 +55,7 @@ export default function PurchaseDetailPage() {
 
   const { slug, id } = router.query;
   const { data: purchase, isLoading, isError, refetch: refetchPurchase } = usePurchaseById(id as string);
+  const { data: documentTemplate } = useDocumentTemplate(purchase?.documentTemplateId ?? null);
   const { data: billings = [] } = useUnitBillings(purchase?.id);
   const { data: currentBilling, isLoading: billingLoading } = useCurrentBilling(String(purchase?.id ?? ''));
   const billingId = String(currentBilling?.id ?? '');
@@ -113,7 +115,7 @@ export default function PurchaseDetailPage() {
       }));
 
   useEffect(() => {
-    if (router.query.print === 'true' && !isLoading && purchase) {
+    if (router.query.print === 'true' && !isLoading && purchase?.documentTemplateId) {
       setTimeout(() => {
         window.print();
       }, 800);
@@ -352,6 +354,11 @@ export default function PurchaseDetailPage() {
             </>
           }
         />
+
+        <div className="rounded-md border bg-white px-4 py-3 text-sm shadow-sm">
+          <span className="text-muted-foreground">Document Template:</span>{' '}
+          <span className="font-medium">{documentTemplate?.name ?? 'Tidak ada template'}</span>
+        </div>
 
         {isRefunded ? (
           <div className="flex items-start gap-2.5 rounded-lg border border-amber-200 bg-amber-50/50 px-4 py-3 text-sm text-amber-800">

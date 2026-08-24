@@ -166,6 +166,7 @@ export default function CreateSalesPage() {
       other_fee: biayaLain,
       dpp_tax_id: dppTaxVersionId,
       ppn_tax_id: ppnTaxVersionId,
+      document_template_id: data.documentTemplateId ?? null,
     };
 
     if (!transactionPayload.code?.trim()) {

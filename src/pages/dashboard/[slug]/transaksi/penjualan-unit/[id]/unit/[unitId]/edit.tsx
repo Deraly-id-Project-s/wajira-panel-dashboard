@@ -11,6 +11,7 @@ import { useSalesDetail } from '@/hooks/useSales';
 import { useTypeUnits } from '@/hooks/useTypeUnit';
 import { useCompany } from '@/contexts/CompanyContext';
 import { LoadingState } from '@/components/ui/loading-state';
+import { useUpdateUnitTransactionDocumentTemplate } from '@/hooks/useUnitTransaction';
 
 /**
  * Edit Unit Page - Nested under Sales Detail
@@ -32,6 +33,7 @@ export default function EditNestedUnitPage() {
         company_id: companyId || (salesDetail?.raw as any)?.company_id || 1
     });
     const updateMutation = useUpdateUnitItem();
+    const updateTemplateMutation = useUpdateUnitTransactionDocumentTemplate();
 
     const item = (itemResponse?.data ?? []).find((row) => String(row.id) === String(selectedUnitId ?? ''));
     const invoiceCode = salesDetail?.raw?.code ?? '-';
@@ -57,8 +59,9 @@ export default function EditNestedUnitPage() {
             pricePerUnitUsd: item.price_per_unit_usd ? Number(item.price_per_unit_usd) : undefined,
             dppTaxVersionId: item.dpp_tax_id ?? undefined,
             ppnTaxVersionId: item.ppn_tax_id ?? undefined,
+            documentTemplateId: salesDetail?.ui?.documentTemplateId ?? null,
         };
-    }, [item]);
+    }, [item, salesDetail?.ui?.documentTemplateId]);
 
     const handleSubmit = async (values: UnitTransactionFormValues) => {
         try {
@@ -87,6 +90,9 @@ export default function EditNestedUnitPage() {
                     ppn_tax_id: values.ppnTaxVersionId ? Number(values.ppnTaxVersionId) : undefined,
                 },
             });
+            if ((values.documentTemplateId ?? null) !== (salesDetail?.ui?.documentTemplateId ?? null) && salesId) {
+                await updateTemplateMutation.mutateAsync({ id: salesId, documentTemplateId: values.documentTemplateId ?? null });
+            }
 
             toast.success('Unit berhasil diperbarui!');
             const basePath = slugValue ? `/dashboard/${slugValue}/transaksi/penjualan-unit` : '/transaksi/penjualan-unit';

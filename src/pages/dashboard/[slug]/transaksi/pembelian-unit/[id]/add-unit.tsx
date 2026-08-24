@@ -5,18 +5,34 @@ import { toast } from "sonner"
 import { DashboardLayout } from "@/components/layout/DashboardLayout"
 import { UnitTransactionForm } from "@/components/features/unit-transaction/UnitTransactionForm"
 import { useAddPurchaseUnit } from "@/hooks/usePurchase"
+import { usePurchaseById, useUpdateUnitTransactionDocumentTemplate } from "@/hooks/useUnitTransaction"
+import type { UnitTransactionFormValues } from "@/components/features/unit-transaction/unit-transaction.schema"
 
 export default function AddUnitPage() {
     const router = useRouter()
     const { slug, id } = router.query
     const mutation = useAddPurchaseUnit()
+    const { data: purchase } = usePurchaseById(id as string)
+    const updateTemplateMutation = useUpdateUnitTransactionDocumentTemplate()
 
-    const handleSubmit = async (formData: any) => {
+    const handleSubmit = async (formData: UnitTransactionFormValues) => {
         try {
             await mutation.mutateAsync({
                 purchaseId: id as string,
-                ...formData
+                typeUnitId: formData.unitTypeId,
+                typeUnitName: '',
+                qty: formData.qty,
+                price: formData.price,
+                biayaBBN: formData.bbnPrice,
+                biayaEkspedisi: formData.expeditionFee,
+                biayaLain: formData.otherFee,
+                dppTaxVersionId: String(formData.dppTaxVersionId ?? ''),
+                ppnTaxVersionId: String(formData.ppnTaxVersionId ?? ''),
             })
+
+            if ((formData.documentTemplateId ?? null) !== (purchase?.documentTemplateId ?? null)) {
+                await updateTemplateMutation.mutateAsync({ id: String(id), documentTemplateId: formData.documentTemplateId ?? null })
+            }
 
             toast.success("Unit berhasil ditambahkan")
             router.push(`/dashboard/${slug}/transaksi/pembelian-unit/${id}`)
@@ -38,7 +54,7 @@ export default function AddUnitPage() {
                     </p>
                 </div>
 
-                <UnitTransactionForm type="purchase" allowCreateTypeUnit onSubmit={handleSubmit} onCancel={() => router.back()} />
+                <UnitTransactionForm type="purchase" allowCreateTypeUnit defaultValues={{ documentTemplateId: purchase?.documentTemplateId ?? null }} onSubmit={handleSubmit} onCancel={() => router.back()} />
             </div>
         </DashboardLayout>
     )
