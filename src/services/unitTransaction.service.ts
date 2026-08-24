@@ -156,6 +156,9 @@ type UnitTransactionTypeDetailApiModel = {
     id?: number | string;
     unit_transaction_id?: number | string;
     unit_type_id?: number | string;
+    price?: number | string;
+    price_usd?: number | string;
+    price_per_unit_usd?: number | string;
     unit_type?: {
       id?: number | string;
       code?: string;

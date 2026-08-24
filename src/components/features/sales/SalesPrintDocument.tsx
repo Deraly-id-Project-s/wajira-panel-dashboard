@@ -6,7 +6,7 @@ import type { SalesItem } from '@/components/features/sales/sales.data';
 import { Button } from '@/components/ui/button';
 import { formatCurrency } from '@/lib/utils/currency';
 import type { DocumentTemplate } from '@/@types/document-template.types';
-import { getObjectStorageUrl } from '@/components/ui/storage-image';
+import { getObjectStorageUrl, StorageImage } from '@/components/ui/storage-image';
 
 interface PrintItem {
   id: string | number;
@@ -52,6 +52,7 @@ const translations = {
     subjectLabel: 'Perihal',
     sourceWarehouse: 'Gudang Asal',
     salutation: 'Dengan hormat,',
+    toLabel: 'Kepada',
     ythCustomer: 'Yth. Customer',
     diTempat: 'Di Tempat',
     dibuatOleh: 'Dibuat Oleh,',
@@ -69,6 +70,7 @@ const translations = {
     subjectLabel: 'Subject',
     sourceWarehouse: 'Source Warehouse',
     salutation: 'Dear Sir/Madam,',
+    toLabel: 'To',
     ythCustomer: 'Dear Customer',
     diTempat: 'In Place',
     dibuatOleh: 'Created By,',
@@ -218,7 +220,7 @@ export default function SalesPrintDocument({
       pdf.text(pdf.splitTextToSize(headerText, 170), 20, 110);
 
       let tableY = 118;
-      let columns = drawTableHeader(tableY);
+      const columns = drawTableHeader(tableY);
       tableY += 8;
       pdf.setFontSize(8);
       pdf.setFont('helvetica', 'normal');
@@ -315,7 +317,7 @@ export default function SalesPrintDocument({
         drawHeaderInfo(page2Subject, page2Lembar);
 
         let tableY2 = 118;
-        let columns2 = drawTableHeader(tableY2);
+        const columns2 = drawTableHeader(tableY2);
         tableY2 += 8;
         pdf.setFontSize(8);
         pdf.setFont('helvetica', 'normal');

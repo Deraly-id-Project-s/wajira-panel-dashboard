@@ -53,6 +53,7 @@ const translations = {
     subjectLabel: 'Perihal',
     destinationWarehouse: 'Gudang Tujuan',
     salutation: 'Dengan hormat,',
+    toLabel: 'Kepada',
     ythSupplier: 'Yth. Supplier',
     diTempat: 'Di Tempat',
     dibuatOleh: 'Dibuat Oleh,',
@@ -70,6 +71,7 @@ const translations = {
     subjectLabel: 'Subject',
     destinationWarehouse: 'Destination Warehouse',
     salutation: 'Dear Sir/Madam,',
+    toLabel: 'To',
     ythSupplier: 'Dear Supplier',
     diTempat: 'In Place',
     dibuatOleh: 'Created By,',
@@ -219,7 +221,7 @@ export default function PurchasePrintDocument({
       pdf.text(pdf.splitTextToSize(headerText, 170), 20, 110);
 
       let tableY = 118;
-      let columns = drawTableHeader(tableY);
+      const columns = drawTableHeader(tableY);
       tableY += 8;
       pdf.setFontSize(8);
       pdf.setFont('helvetica', 'normal');
@@ -316,7 +318,7 @@ export default function PurchasePrintDocument({
         drawHeaderInfo(page2Subject, page2Lembar);
 
         let tableY2 = 118;
-        let columns2 = drawTableHeader(tableY2);
+        const columns2 = drawTableHeader(tableY2);
         tableY2 += 8;
         pdf.setFontSize(8);
         pdf.setFont('helvetica', 'normal');

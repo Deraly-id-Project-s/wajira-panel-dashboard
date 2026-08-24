@@ -255,7 +255,8 @@ export default function CreateSalesPage() {
               bbnPrice: 0,
               expeditionFee: 0,
               otherFee: 0,
-            prependFields={(form) => (
+            }}
+            prependFields={(rhfForm) => (
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <div className="space-y-2 flex flex-col">
                   <Label className="text-sm font-medium">Tanggal</Label>
@@ -308,7 +309,7 @@ export default function CreateSalesPage() {
                 </div>
 
                 <FormField
-                  control={form.control}
+                  control={rhfForm.control}
                   name="documentTemplateId"
                   render={({ field }) => (
                     <FormItem>

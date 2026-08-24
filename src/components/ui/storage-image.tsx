@@ -25,5 +25,6 @@ export function StorageImage({ src, alt, ...props }: StorageImageProps) {
   const imageUrl = getObjectStorageUrl(src);
   if (!imageUrl) return null;
 
+  // eslint-disable-next-line @next/next/no-img-element
   return <img {...props} src={imageUrl} alt={alt} />;
 }
