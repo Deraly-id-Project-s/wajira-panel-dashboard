@@ -377,6 +377,8 @@ export const getOrderLists = async (params: OrderListListParams): Promise<OrderL
       order_by: params.order_by ?? 'created_at',
       order_sort: params.order_sort ?? 'desc',
       company_id: params.company_id,
+      start_date: params.start_date,
+      end_date: params.end_date,
     },
   });
 

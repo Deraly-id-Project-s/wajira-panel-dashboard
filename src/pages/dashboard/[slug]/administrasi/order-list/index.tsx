@@ -33,6 +33,8 @@ export default function OrderListPage() {
   const [perPage, setPerPage] = React.useState(25);
   const [searchInput, setSearchInput] = React.useState(initialSearch);
   const [search, setSearch] = React.useState(initialSearch);
+  const [startDate, setStartDate] = React.useState<string | null>(null);
+  const [endDate, setEndDate] = React.useState<string | null>(null);
   const debouncedSearch = useDebouncedValue(searchInput, 350);
   const [deleteOpen, setDeleteOpen] = React.useState(false);
   const [selectedItem, setSelectedItem] = React.useState<OrderList | null>(null);
@@ -52,9 +54,11 @@ export default function OrderListPage() {
       order_by: 'created_at' as const,
       order_sort: 'desc' as const,
       company_id: companyId ?? undefined,
+      start_date: startDate,
+      end_date: endDate,
       enabled: Boolean(companyId),
     }),
-    [companyId, page, perPage, search],
+    [companyId, endDate, page, perPage, search, startDate],
   );
 
   const listQuery = useOrderLists(listQueryParams);
@@ -154,6 +158,13 @@ export default function OrderListPage() {
           onPageChange={setPage}
           onPerPageChange={(value) => {
             setPerPage(value);
+            setPage(1);
+          }}
+          startDate={startDate}
+          endDate={endDate}
+          onDateRangeChange={(start, end) => {
+            setStartDate(start);
+            setEndDate(end);
             setPage(1);
           }}
           onAdd={handleAdd}

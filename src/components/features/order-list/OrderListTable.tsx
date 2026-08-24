@@ -41,6 +41,9 @@ interface OrderListTableProps {
   canCreate: boolean;
   canEdit: boolean;
   canDelete: boolean;
+  startDate?: string | null;
+  endDate?: string | null;
+  onDateRangeChange?: (start: string | null, end: string | null) => void;
 }
 
 export const OrderListTable = React.memo(function OrderListTable({
@@ -62,6 +65,9 @@ export const OrderListTable = React.memo(function OrderListTable({
   canCreate,
   canEdit,
   canDelete,
+  startDate,
+  endDate,
+  onDateRangeChange,
 }: OrderListTableProps) {
   const router = useRouter();
   const { slug } = router.query;
@@ -277,6 +283,10 @@ export const OrderListTable = React.memo(function OrderListTable({
           total: totalData,
         }}
         onPageChange={onPageChange}
+        addDateRangePicker
+        startDate={startDate}
+        endDate={endDate}
+        onDateRangeChange={onDateRangeChange}
         headerActions={
           <div className="flex flex-col sm:flex-row items-center gap-2 w-full sm:w-auto">
             {isRefetching && (
