@@ -1,8 +1,13 @@
-import { useMemo } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import BaseTable, { ColumnDef } from '@/components/ui/base-table';
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from '@/components/ui/dropdown-menu';
 import { Button } from '@/components/ui/button';
 import { MoreVertical } from 'lucide-react';
+import { Switch } from '@/components/ui/switch';
+import { Badge } from '@/components/ui/badge';
+import { toast } from 'sonner';
+import { useActivateDriver, useDeactivateDriver } from '@/hooks/useDriver';
+import { getDriverPassword } from '@/services/driver.service';
 import type { Driver } from '@/@types/driver.types';
 import type { PaginationMeta } from '@/@types/pagination.types';
 
@@ -16,6 +21,7 @@ interface DriverTableProps {
     canDelete: boolean;
     onPageChange: (page: number) => void;
     onPerPageChange: (perPage: number) => void;
+    onView: (driver: Driver) => void;
     onEdit: (driver: Driver) => void;
     onDelete: (driver: Driver) => void;
 }
@@ -43,9 +49,37 @@ export function DriverTable({
     canDelete,
     onPageChange,
     onPerPageChange,
+    onView,
     onEdit,
     onDelete,
 }: DriverTableProps) {
+    const activateMutation = useActivateDriver();
+    const deactivateMutation = useDeactivateDriver();
+    const [fetchingPasswordId, setFetchingPasswordId] = useState<number | string | null>(null);
+
+    const handleToggleStatus = useCallback(async (driver: Driver, checked: boolean) => {
+        try {
+            if (checked) await activateMutation.mutateAsync(driver.id);
+            else await deactivateMutation.mutateAsync(driver.id);
+            toast.success(`Driver ${driver.name} berhasil ${checked ? 'diaktifkan' : 'dinonaktifkan'}`);
+        } catch (error: any) {
+            toast.error(error?.message || 'Gagal mengubah status driver');
+        }
+    }, [activateMutation, deactivateMutation]);
+
+    const handleCopyPassword = useCallback(async (driverId: number | string) => {
+        setFetchingPasswordId(driverId);
+        try {
+            const password = await getDriverPassword(driverId);
+            await navigator.clipboard.writeText(password);
+            toast.success('Password berhasil disalin ke clipboard');
+        } catch (error: any) {
+            toast.error(error?.message || 'Gagal menyalin password');
+        } finally {
+            setFetchingPasswordId(null);
+        }
+    }, []);
+
     const columns = useMemo<ColumnDef<Driver>[]>(
         () => [
             {
@@ -54,6 +88,12 @@ export function DriverTable({
                 sortable: true,
                 className: 'font-semibold text-gray-900',
                 cell: (item) => item.name || '-',
+            },
+            {
+                header: 'USERNAME',
+                accessorKey: 'username',
+                sortable: true,
+                cell: (item) => item.username || '-',
             },
             {
                 header: 'ALAMAT',
@@ -90,6 +130,15 @@ export function DriverTable({
                 cell: (item) => formatDate(item.joinedAt),
             },
             {
+                header: 'STATUS',
+                alignment: 'center',
+                cell: (item) => {
+                    const active = item.isActive === true || item.isActive === 1;
+                    const pending = (activateMutation.isPending && activateMutation.variables === item.id) || (deactivateMutation.isPending && deactivateMutation.variables === item.id);
+                    return <div className="flex items-center justify-center gap-2"><Switch checked={active} onCheckedChange={(checked) => handleToggleStatus(item, checked)} disabled={!canEdit || pending} /><Badge variant={active ? 'default' : 'secondary'}>{active ? 'Aktif' : 'Nonaktif'}</Badge></div>;
+                },
+            },
+            {
                 header: 'ACTION',
                 alignment: 'center',
                 sticky: 'right',
@@ -104,12 +153,28 @@ export function DriverTable({
                             <DropdownMenuItem
                                 onSelect={(e) => {
                                     e.preventDefault();
+                                    onView(item);
+                                }}
+                                className="rounded-lg px-3 py-2 text-sm text-slate-900 focus:bg-slate-50 cursor-pointer"
+                            >
+                                Detail
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
+                                onSelect={(e) => {
+                                    e.preventDefault();
                                     onEdit(item);
                                 }}
                                 disabled={!canEdit}
                                 className="rounded-lg px-3 py-2 text-sm text-slate-900 focus:bg-slate-50 cursor-pointer"
                             >
                                 Edit
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
+                                onClick={() => handleCopyPassword(item.id)}
+                                disabled={!canEdit || fetchingPasswordId !== null}
+                                className="rounded-lg px-3 py-2 text-sm cursor-pointer disabled:pointer-events-none disabled:opacity-50"
+                            >
+                                {fetchingPasswordId === item.id ? 'Menyalin...' : 'Salin Password'}
                             </DropdownMenuItem>
                             <DropdownMenuItem
                                 onSelect={(e) => {
@@ -126,7 +191,7 @@ export function DriverTable({
                 ),
             },
         ],
-        [onEdit, onDelete, canEdit, canDelete]
+        [onView, onEdit, onDelete, canEdit, canDelete, activateMutation.isPending, activateMutation.variables, deactivateMutation.isPending, deactivateMutation.variables, handleToggleStatus, fetchingPasswordId, handleCopyPassword]
     );
 
     return (

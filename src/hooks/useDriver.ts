@@ -7,6 +7,8 @@ import {
     deleteDriver,
     importDriver,
     exportDriver,
+    activateDriver,
+    deactivateDriver,
 } from '@/services/driver.service';
 import type { PaginationParams } from '@/@types/pagination.types';
 import type { DriverPayload } from '@/@types/driver.types';
@@ -54,10 +56,32 @@ export function useUpdateDriver() {
         mutationFn: ({ id, data }: { id: string | number; data: DriverPayload }) =>
             updateDriver(id, data),
         onSuccess: (_data, variables) => {
+            queryClient.invalidateQueries({ queryKey: ['drivers', variables.id] });
             if (!variables.data.company_id) return;
             queryClient.invalidateQueries({ queryKey: companyQueryKeys.companyScope(variables.data.company_id) });
         },
     });
+}
+
+function useDriverStatusMutation(mutationFn: (id: string | number) => Promise<void>) {
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn,
+        onSuccess: (_data, id) => {
+            queryClient.invalidateQueries({ queryKey: ['drivers', id] });
+            queryClient.invalidateQueries({
+                predicate: (query) => Array.isArray(query.queryKey) && query.queryKey.includes('drivers'),
+            });
+        },
+    });
+}
+
+export function useActivateDriver() {
+    return useDriverStatusMutation(activateDriver);
+}
+
+export function useDeactivateDriver() {
+    return useDriverStatusMutation(deactivateDriver);
 }
 
 export function useDeleteDriver() {

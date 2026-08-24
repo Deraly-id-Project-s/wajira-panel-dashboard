@@ -8,6 +8,9 @@ export interface Driver {
     code?: string;
     type?: string;
     name: string;
+    username?: string | null;
+    isActive?: boolean | number;
+    lastLogin?: string | null;
     address?: string;
     phone?: string;
     npwp?: string;
@@ -24,12 +27,20 @@ export interface Driver {
     joinedAt?: string | null;
     createdAt?: string;
     updatedAt?: string;
+    company?: {
+        id: number;
+        name: string;
+        slug: string;
+    } | null;
 }
 
 export interface DriverPayload {
     company_id?: number | string;
     user_id?: number | string;
     name: string;
+    username?: string | null;
+    password?: string;
+    is_active?: boolean;
     address?: string;
     phone?: string;
     npwp?: string;
