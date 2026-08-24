@@ -360,11 +360,6 @@ export default function SalesDetailPage() {
           }
         />
 
-        <div className="rounded-md border bg-white px-4 py-3 text-sm shadow-sm">
-          <span className="text-muted-foreground">Document Template:</span>{' '}
-          <span className="font-medium">{documentTemplate?.name ?? 'Tidak ada template'}</span>
-        </div>
-
         {isRefunded ? (
           <div className="flex items-start gap-2.5 rounded-lg border border-amber-200 bg-amber-50/50 px-4 py-3 text-sm text-amber-800">
             <AlertTriangle className="h-5 w-5 text-amber-655 shrink-0 mt-0.5" />
@@ -379,6 +374,24 @@ export default function SalesDetailPage() {
 
         {/* 3-COLUMN CARDS */}
         <SalesDetailCards data={salesData} billingHistories={resolvedBillingHistories} />
+
+        {sales?.documentTemplateId ? (
+          <div
+            onClick={() => router.push(`/dashboard/${slug}/transaksi/penjualan-unit/print/${sales.id}`)}
+            className="rounded-md border border-gray-200 bg-white px-4 py-3 text-sm shadow-sm hover:bg-slate-50 transition-colors cursor-pointer flex items-center justify-between"
+          >
+            <div>
+              <span className="text-muted-foreground">Document Template:</span>{' '}
+              <span className="font-medium text-blue-600 hover:underline">{documentTemplate?.name ?? 'Memuat template...'}</span>
+            </div>
+            <span className="text-xs text-blue-600 font-medium hover:underline">Print Dokumen</span>
+          </div>
+        ) : (
+          <div className="rounded-md border border-gray-200 bg-white px-4 py-3 text-sm shadow-sm">
+            <span className="text-muted-foreground">Document Template:</span>{' '}
+            <span className="font-medium text-gray-500">{documentTemplate?.name ?? 'Tidak ada template'}</span>
+          </div>
+        )}
 
         {/* UNIT TABLE */}
         <SalesUnitTable lineItems={salesData.lineItems} salesId={sales.id} onAddUnit={handleCreateUnit} canEdit={canEdit} canDelete={canDelete} canCreate={canCreate} isPaid={isPaid} />

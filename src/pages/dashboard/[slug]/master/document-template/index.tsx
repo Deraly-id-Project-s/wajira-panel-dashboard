@@ -28,5 +28,41 @@ export default function DocumentTemplateListPage() {
     try { await deleteMutation.mutateAsync(item.id); toast.success('Dokumen template berhasil dihapus'); } catch (error: any) { toast.error(error?.message ?? 'Gagal menghapus dokumen template'); }
   };
 
-  return <DashboardLayout><div className="space-y-6"><PageHeader title="Dokumen Template" subtitle="Kelola template dokumen untuk kebutuhan transaksi" /><DocumentTemplateTable data={data?.data ?? []} loading={isLoading || deleteMutation.isPending} search={search} page={page} perPage={perPage} total={data?.meta.total ?? 0} canCreate={canCreate} canEdit={canEdit} canDelete={canDelete} onSearchChange={(value) => { setSearch(value); setPage(1); }} onPageChange={setPage} onPerPageChange={(value) => { setPerPage(value); setPage(1); }} onCreate={goCreate} onEdit={goEdit} onDelete={remove} /></div></DashboardLayout>;
+  return (
+    <DashboardLayout>
+      <div className="space-y-6">
+        <PageHeader
+          breadcrumbs={[
+            { label: 'Master Data' },
+            { label: 'Dokumen Template' }
+          ]}
+          title="Dokumen Template"
+          subtitle="Kelola template dokumen untuk kebutuhan transaksi"
+        />
+        <DocumentTemplateTable
+          data={data?.data ?? []}
+          loading={isLoading || deleteMutation.isPending}
+          search={search}
+          page={page}
+          perPage={perPage}
+          total={data?.meta.total ?? 0}
+          canCreate={canCreate}
+          canEdit={canEdit}
+          canDelete={canDelete}
+          onSearchChange={(value) => {
+            setSearch(value);
+            setPage(1);
+          }}
+          onPageChange={setPage}
+          onPerPageChange={(value) => {
+            setPerPage(value);
+            setPage(1);
+          }}
+          onCreate={goCreate}
+          onEdit={goEdit}
+          onDelete={remove}
+        />
+      </div>
+    </DashboardLayout>
+  );
 }

@@ -277,6 +277,7 @@ export function DocumentTemplateEditor({ initialData, isSubmitting, onSubmit, on
                     <p>{t.invoiceNumber}: <strong>INV/2026/0001</strong></p>
                     <p>{t.subjectLabel}: {subject || '-'}</p>
                     <p>{t.toLabel}: Customer Dummy</p>
+                    <p>{language === 'en' ? 'Sheet' : 'Lembar'}: <strong>1</strong></p>
                   </div>
                   <p>{t.dateLabel}</p>
                 </div>

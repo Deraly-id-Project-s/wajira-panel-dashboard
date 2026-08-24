@@ -14,7 +14,32 @@ export default function CreateDocumentTemplatePage() {
   const mutation = useCreateDocumentTemplate();
   const submit = async (values: DocumentTemplateFormValues) => {
     if (!hasPermission('master-data:create')) return;
-    try { await mutation.mutateAsync(values); toast.success('Dokumen template berhasil ditambahkan'); await router.push(`/dashboard/${slug}/master/document-template`); } catch (error: any) { toast.error(error?.message ?? 'Gagal menambahkan dokumen template'); }
+    try {
+      await mutation.mutateAsync(values);
+      toast.success('Dokumen template berhasil ditambahkan');
+      await router.push(`/dashboard/${slug}/master/document-template`);
+    } catch (error: any) {
+      toast.error(error?.message ?? 'Gagal menambahkan dokumen template');
+    }
   };
-  return <DashboardLayout><div className="space-y-6"><PageHeader title="Tambah Dokumen Template" subtitle="Buat template dokumen baru" /><DocumentTemplateEditor isSubmitting={mutation.isPending} onSubmit={submit} onCancel={() => void router.push(`/dashboard/${slug}/master/document-template`)} /></div></DashboardLayout>;
+  return (
+    <DashboardLayout>
+      <div className="space-y-6">
+        <PageHeader
+          breadcrumbs={[
+            { label: 'Dokumen Template', onClick: () => router.push(`/dashboard/${slug}/master/document-template`) },
+            { label: 'Tambah Dokumen Template' }
+          ]}
+          title="Tambah Dokumen Template"
+          subtitle="Buat template dokumen baru"
+          onBack={() => router.push(`/dashboard/${slug}/master/document-template`)}
+        />
+        <DocumentTemplateEditor
+          isSubmitting={mutation.isPending}
+          onSubmit={submit}
+          onCancel={() => void router.push(`/dashboard/${slug}/master/document-template`)}
+        />
+      </div>
+    </DashboardLayout>
+  );
 }

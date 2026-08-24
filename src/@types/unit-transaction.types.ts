@@ -327,6 +327,9 @@ export interface UnitTransactionTypeDetail {
     id: string;
     unit_transaction_id: string;
     unit_type_id: string;
+    price?: number;
+    price_usd?: number;
+    price_per_unit_usd?: number;
     unit_type: {
       id: string;
       code: string;

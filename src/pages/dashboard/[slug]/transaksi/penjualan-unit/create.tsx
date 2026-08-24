@@ -21,6 +21,8 @@ import { Check, ChevronsUpDown } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useCreateUnitItem } from '@/hooks/useUnitTransactionItem';
 import { useTypeUnits } from '@/hooks/useTypeUnit';
+import { FormField, FormControl, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import { DocumentTemplateSelect } from '@/components/features/document-template/DocumentTemplateSelect';
 
 type SalesCreateFormState = {
   customerId: string;
@@ -253,9 +255,8 @@ export default function CreateSalesPage() {
               bbnPrice: 0,
               expeditionFee: 0,
               otherFee: 0,
-            }}
-            prependFields={
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            prependFields={(form) => (
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <div className="space-y-2 flex flex-col">
                   <Label className="text-sm font-medium">Tanggal</Label>
                   <Input
@@ -266,7 +267,7 @@ export default function CreateSalesPage() {
                   />
                 </div>
 
-                <div className="space-y-2 flex flex-col">
+                <div className="space-y-2 flex flex-col md:col-span-2">
                   <Label className="text-sm font-medium">Customer</Label>
                   <Popover open={isCustomerOpen} onOpenChange={setIsCustomerOpen}>
                     <PopoverTrigger asChild>
@@ -305,8 +306,25 @@ export default function CreateSalesPage() {
                   <Label className="text-sm font-medium">NPWP</Label>
                   <Input value={form.npwp} readOnly disabled className="bg-transparent" placeholder="NPWP customer" />
                 </div>
+
+                <FormField
+                  control={form.control}
+                  name="documentTemplateId"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-sm font-medium">Document Template <span className="font-normal text-muted-foreground">(Opsional)</span></FormLabel>
+                      <FormControl>
+                        <DocumentTemplateSelect
+                          value={field.value}
+                          onValueChange={field.onChange}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
               </div>
-            }
+            )}
             typeUnitOptions={unitTypeData?.data ?? []}
             onSubmit={handleSubmit}
             onCancel={() => router.push(salesPath)}

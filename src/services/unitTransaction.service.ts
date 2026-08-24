@@ -222,6 +222,9 @@ const mapUnitTransactionTypeDetail = (
         id: String(item.unit_transaction_item.id ?? ''),
         unit_transaction_id: String(item.unit_transaction_item.unit_transaction_id ?? ''),
         unit_type_id: String(item.unit_transaction_item.unit_type_id ?? ''),
+        price: item.unit_transaction_item.price !== undefined ? toNumber(item.unit_transaction_item.price) : undefined,
+        price_usd: item.unit_transaction_item.price_usd !== undefined ? toNumber(item.unit_transaction_item.price_usd) : undefined,
+        price_per_unit_usd: item.unit_transaction_item.price_per_unit_usd !== undefined ? toNumber(item.unit_transaction_item.price_per_unit_usd) : undefined,
         unit_type: item.unit_transaction_item.unit_type
           ? {
               id: String(item.unit_transaction_item.unit_type.id ?? ''),

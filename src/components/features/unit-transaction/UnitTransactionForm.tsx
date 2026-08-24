@@ -1,5 +1,5 @@
 import { useMemo, useState, useEffect, type ReactNode } from 'react';
-import { useForm } from 'react-hook-form';
+import { useForm, type UseFormReturn } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
@@ -18,7 +18,6 @@ import { useTaxDefault } from '@/hooks/useTax';
 import RequiredMark from '@/components/ui/required-mark';
 import { TypeUnitFormModal } from '@/components/features/type-unit/TypeUnitFormModal';
 import { unitTransactionSchema, type UnitTransactionFormValues } from './unit-transaction.schema';
-import { DocumentTemplateSelect } from '@/components/features/document-template/DocumentTemplateSelect';
 
 export interface UnitTransactionFormProps {
   type: 'purchase' | 'sales';
@@ -29,7 +28,7 @@ export interface UnitTransactionFormProps {
   onCancel?: () => void;
   companyId?: string | number | null;
   excludedTypeUnitIds?: string[];
-  prependFields?: ReactNode;
+  prependFields?: ReactNode | ((form: UseFormReturn<UnitTransactionFormValues>) => ReactNode);
   hideItemFields?: boolean;
   submitDisabled?: boolean;
   cancelDisabled?: boolean;
@@ -161,12 +160,12 @@ export function UnitTransactionForm({
             <div className="my-6 h-px bg-muted/60" />
           </div>
 
-          {prependFields}
+          {typeof prependFields === 'function' ? prependFields(form) : prependFields}
 
           {!hideItemFields && (
             <>
               {/* Row Type Unit / Qty / Harga */}
-              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <FormField
                   control={form.control}
                   name="unitTypeId"
@@ -268,22 +267,6 @@ export function UnitTransactionForm({
                       <FormControl>
                         <MoneyInput name={field.name} value={Number(field.value) || 0} onChangeValue={(val) => field.onChange(val)} onBlur={field.onBlur} disabled={readOnly} />
                       </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="documentTemplateId"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-sm font-medium">Document Template <span className="font-normal text-muted-foreground">(Opsional)</span></FormLabel>
-                      <DocumentTemplateSelect
-                        value={field.value}
-                        onValueChange={field.onChange}
-                        disabled={readOnly}
-                      />
                       <FormMessage />
                     </FormItem>
                   )}

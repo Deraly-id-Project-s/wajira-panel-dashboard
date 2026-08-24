@@ -16,6 +16,8 @@ import { SupplierCombobox } from '@/components/features/supplier/SupplierCombobo
 import type { Supplier } from '@/@types/supplier.types';
 import { apiClient } from '@/lib/api/client';
 import { purchaseService } from '@/services/purchase.service';
+import { FormField, FormControl, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import { DocumentTemplateSelect } from '@/components/features/document-template/DocumentTemplateSelect';
 
 type WarehouseDataResponse = {
   success?: boolean;
@@ -206,8 +208,8 @@ export default function CreatePurchasePage() {
             loading={mutation.isPending}
             onCancel={() => router.push(purchasePath)}
             companyId={companyId}
-            prependFields={
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            prependFields={(form) => (
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <div className="space-y-2">
                   <Label className="text-sm font-medium">Tanggal</Label>
                   <Input
@@ -218,7 +220,7 @@ export default function CreatePurchasePage() {
                   />
                 </div>
 
-                <div className="space-y-2">
+                <div className="space-y-2 md:col-span-2">
                   <Label className="text-sm font-medium">Supplier</Label>
                   <SupplierCombobox
                     companyId={companyId}
@@ -240,8 +242,25 @@ export default function CreatePurchasePage() {
                   <Label className="text-sm font-medium">NPWP</Label>
                   <Input value={selectedPerson?.npwp ?? ''} readOnly disabled className="bg-transparent" placeholder="NPWP supplier" />
                 </div>
+
+                <FormField
+                  control={form.control}
+                  name="documentTemplateId"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-sm font-medium">Document Template <span className="font-normal text-muted-foreground">(Opsional)</span></FormLabel>
+                      <FormControl>
+                        <DocumentTemplateSelect
+                          value={field.value}
+                          onValueChange={field.onChange}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
               </div>
-            }
+            )}
           />
         </div>
       </div>

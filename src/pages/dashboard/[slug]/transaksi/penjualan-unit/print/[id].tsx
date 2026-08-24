@@ -6,10 +6,8 @@ import { fetchUserCompanies } from '@/services/company.service';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { useCompany } from '@/contexts/CompanyContext';
 import { getLetterheadByCompanyId, resolveCompanyId } from '@/lib/print-letterhead';
-import { useQuery } from '@tanstack/react-query';
-import { apiClient } from '@/lib/api/client';
-import { ensureSuccess, LaravelApiResponse } from '@/lib/api/response';
 import { useSalesDetail } from '@/hooks/useSales';
+import { useUnitTransactionTypeDetails } from '@/hooks/useUnitTransaction';
 import SalesPrintDocument from '@/components/features/sales/SalesPrintDocument';
 import { Button } from '@/components/ui/button';
 import { LoadingState } from '@/components/ui/loading-state';
@@ -25,77 +23,40 @@ export default function SalesPrintPage() {
   const detailQuery = useSalesDetail(id);
   const templateQuery = useDocumentTemplate(detailQuery.data?.ui?.documentTemplateId ?? null);
 
-  const detailsQuery = useQuery({
-    queryKey: ['sales-print-details', id],
-    queryFn: async () => {
-      if (!id) return [];
+  const detailsQuery = useUnitTransactionTypeDetails(id || undefined, { page: 1, perPage: 1000 });
 
-      const itemsRes = await apiClient.get<LaravelApiResponse<any>>(
-        '/wapi/transaction/unit-transaction/unit-transaction-item',
-        { params: { unit_transaction_id: id, type: 'sales', per_page: 200 } }
-      );
-      const itemsPayload = ensureSuccess(itemsRes.data) as any;
-      const itemRows: any[] = Array.isArray(itemsPayload)
-        ? itemsPayload
-        : Array.isArray(itemsPayload?.data)
-          ? itemsPayload.data
-          : Array.isArray(itemsPayload?.data?.data)
-            ? itemsPayload.data.data
-            : [];
-
-      if (itemRows.length === 0) return [];
-
-      const detailGroups = await Promise.all(
-        itemRows.map(async (row) => {
-          const itemId = String(row.id ?? '');
-          const typeName = row.unit_type?.name || row.unit_type_name || '-';
-          const price = Number(row.price ?? 0);
-          if (!itemId) return [];
-
-          try {
-            let res: any;
-            try {
-              res = await apiClient.get<LaravelApiResponse<any>>(
-                '/wapi/transaction/unit-transaction-item-detail',
-                { params: { unit_transaction_item_id: itemId, per_page: 200 } }
-              );
-            } catch {
-              res = await apiClient.get<LaravelApiResponse<any>>(
-                '/wapi/transaction/unit-transaction/unit-transaction-item-detail',
-                { params: { unit_transaction_item_id: itemId, per_page: 200 } }
-              );
-            }
-
-            const payload = ensureSuccess(res.data) as any;
-            const dataRows: any[] = Array.isArray(payload)
-              ? payload
-              : Array.isArray(payload?.data)
-                ? payload.data
-                : Array.isArray(payload?.data?.data)
-                  ? payload.data.data
-                  : [];
-
-            return dataRows.map((detail) => ({
-              id: String(detail.id ?? ''),
-              unit_transaction_item_id: itemId,
-              unit_type_name: typeName,
-              color: detail.color || '-',
-              chassis_number: detail.chassis_number || '-',
-              machine_number: detail.machine_number || '-',
-              price: price,
-              price_usd: row.price_usd ? Number(row.price_usd) : undefined,
-            }));
-          } catch (err) {
-            return [];
-          }
-        })
-      );
-
-      return detailGroups.flat();
-    },
-    enabled: !!id,
-    staleTime: 1000 * 30,
-  });
+  const detailsList = React.useMemo(() => {
+    const list = detailsQuery.data?.data ?? [];
+    return list.map((item) => ({
+      id: item.id,
+      unit_transaction_item_id: item.unit_transaction_item_id,
+      code: '',
+      created_at: item.created_at,
+      unit_type_name: item.unit_transaction_item?.unit_type?.name ?? '',
+      color: item.color ?? '-',
+      machine_number: item.machine_number ?? '-',
+      chassis_number: item.chassis_number ?? '-',
+      in_stock: item.in_stock,
+      is_forecast: item.is_forecast,
+      is_sold_unit: item.is_sold_unit,
+      status: item.status ?? '',
+      price: item.unit_transaction_item?.price ?? item.unit_transaction_item?.unit_type?.sell_price ?? 0,
+      price_usd: item.unit_transaction_item?.price_usd ?? undefined,
+      unit_transaction_bruto_total: 0,
+      unit_transaction_item_total_hpp: 0,
+      unit_transaction_item_total_dpp: 0,
+      unit_transaction_item_total_ppn: 0,
+      unit_transaction_item_bruto_total: 0,
+      transaction_bbn_total: 0,
+      transaction_other_fee: 0,
+      expedition_fee_total: 0,
+      person: { id: '', name: '' },
+      warehouse_sub_block: {
+        id: item.warehouse_sub_block?.id ?? '',
+        name: item.warehouse_sub_block?.name ?? '',
+      },
+    }));
+  }, [detailsQuery.data?.data]);
 
   const printRef = React.useRef<HTMLDivElement>(null);
 
@@ -182,7 +143,7 @@ export default function SalesPrintPage() {
         <div className="flex justify-center bg-slate-50 py-8 no-print">
           <SalesPrintDocument
             sales={detailQuery.data.ui}
-            items={detailsQuery.data ?? []}
+            items={detailsList}
             letterheadUrl={letterheadUrl}
             companyName={companyName}
             documentTemplate={templateQuery.data}
