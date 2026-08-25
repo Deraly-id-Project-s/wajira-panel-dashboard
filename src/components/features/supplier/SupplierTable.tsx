@@ -138,7 +138,8 @@ export function SupplierTable({
   );
 
   return (
-    <BaseTable
+    <>
+      <BaseTable
       data={suppliers}
       columns={columns}
       loading={isLoading}

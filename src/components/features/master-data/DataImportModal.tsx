@@ -3,8 +3,9 @@
 import { useEffect, useState } from 'react';
 import { FormDialog } from '@/components/ui/form-dialog';
 import { toast } from 'sonner';
-import { CheckCircle2, Upload, FileSpreadsheet, Download } from 'lucide-react';
+import { CheckCircle2, Upload, FileSpreadsheet, Download, Info } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 
 interface Props {
     open: boolean;
@@ -16,9 +17,14 @@ interface Props {
     isPending: boolean;
     templateUrl?: string;
     accept?: string;
+    exampleData?: {
+        headers: string[];
+        row: React.ReactNode[];
+    };
+    guideNotes?: React.ReactNode;
 }
 
-export function DataImportModal({ open, onOpenChange, entityName = 'Data', title, description, onImport, isPending, templateUrl, accept = '.xlsx, .xls' }: Props) {
+export function DataImportModal({ open, onOpenChange, entityName = 'Data', title, description, onImport, isPending, templateUrl, accept = '.xlsx, .xls', exampleData, guideNotes }: Props) {
     const [file, setFile] = useState<File | null>(null);
 
     useEffect(() => {
@@ -54,9 +60,41 @@ export function DataImportModal({ open, onOpenChange, entityName = 'Data', title
             onSubmit={handleImport}
             submitLabel="Import"
             isSubmitting={isPending}
-            maxWidthClassName="max-w-md"
+            maxWidthClassName={exampleData ? "max-w-2xl" : "max-w-md"}
         >
-            <div className="space-y-5">
+            <div className="space-y-6">
+                {exampleData && (
+                    <div className="rounded-md bg-blue-50 p-4">
+                        <h4 className="text-sm font-medium text-blue-800 mb-2">Panduan Struktur File CSV</h4>
+                        <p className="text-xs text-blue-700 mb-3">
+                            File excel/CSV anda wajib memiliki header (baris pertama) seperti di bawah ini:
+                        </p>
+                        <div className="rounded-md border bg-white overflow-x-auto">
+                            <Table className="text-xs">
+                                <TableHeader className="bg-gray-50">
+                                    <TableRow>
+                                        {exampleData.headers.map((header, idx) => (
+                                            <TableHead key={idx} className="h-8 py-1 whitespace-nowrap">{header}</TableHead>
+                                        ))}
+                                    </TableRow>
+                                </TableHeader>
+                                <TableBody>
+                                    <TableRow>
+                                        {exampleData.row.map((cell, idx) => (
+                                            <TableCell key={idx} className="py-1 whitespace-nowrap">{cell}</TableCell>
+                                        ))}
+                                    </TableRow>
+                                </TableBody>
+                            </Table>
+                        </div>
+                        {guideNotes && (
+                            <p className="text-[10px] text-blue-600 mt-2 font-medium">
+                                {guideNotes}
+                            </p>
+                        )}
+                    </div>
+                )}
+
                 <label className={cn(
                     "group relative flex cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed p-8 transition-all duration-300",
                     file

@@ -392,6 +392,63 @@ Untuk memastikan tombol aksi selalu terlihat di berbagai ukuran layar (terutama 
 
 ---
 
+## 10.1 Standarisasi Komponen Modal Import
+
+**Aturan**:
+Penggunaan modal import **TIDAK BOLEH** diletakkan dan dikelola *state*-nya di dalam komponen Page (misalnya `CustomerManagementPage.tsx`), melainkan harus diletakkan di dalam komponen Table masing-masing (misalnya `CustomerTable.tsx`). Hal ini bertujuan agar file Page tetap bersih dari *boilerplate* UI Modal.
+
+Wajib menggunakan komponen `<DataImportModal>` (`src/components/features/master-data/DataImportModal.tsx`) yang sudah bersifat *reusable*, dan manfaatkan properti `entityName` agar judul dan deskripsi ter-*generate* secara otomatis dan konsisten.
+
+**Contoh Implementasi di dalam `*Table.tsx`:**
+
+```tsx
+import { useState } from 'react';
+import { DataImportModal } from '@/components/features/master-data/DataImportModal';
+
+export function CustomerTable({ onImport, isImporting, ...props }) {
+  const [isImportOpen, setIsImportOpen] = useState(false);
+
+  return (
+    <>
+      <BaseTable
+        {...props}
+        headerActions={
+          <Button onClick={() => setIsImportOpen(true)} variant="outline">
+            <Upload className="h-4 w-4 mr-2" />
+            Import
+          </Button>
+        }
+      />
+      <DataImportModal
+        open={isImportOpen}
+        onOpenChange={setIsImportOpen}
+        entityName="Customer" // Otomatis generate title & description
+        onImport={onImport}
+        isPending={isImporting}
+        accept=".xlsx,.xls,.csv,text/csv"
+      />
+    </>
+  );
+}
+```
+
+**Di dalam komponen Page (misal `CustomerManagementPage.tsx`)**:
+Cukup teruskan fungsi *handler* dan *state loading* ke tabel tanpa perlu mendefinisikan Modal.
+```tsx
+  const handleImport = async (file: File) => {
+    await importCustomer.mutateAsync({ companyId, file });
+  };
+
+  // Render Table
+  <CustomerTable
+    onImport={handleImport}
+    isImporting={importCustomer.isPending}
+    {...otherProps}
+  />
+```
+
+---
+
 ## 11. Format Tanggal
 
 **Standar Format Tanggal**:

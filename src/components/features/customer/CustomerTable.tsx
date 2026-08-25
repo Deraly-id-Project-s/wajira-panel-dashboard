@@ -156,7 +156,8 @@ export function CustomerTable({
   );
 
   return (
-    <BaseTable
+    <>
+      <BaseTable
       data={customers}
       columns={columns}
       loading={isLoading}
