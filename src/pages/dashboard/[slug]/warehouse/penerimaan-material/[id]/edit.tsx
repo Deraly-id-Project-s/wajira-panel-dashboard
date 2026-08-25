@@ -294,7 +294,7 @@ export default function GoodsReceiptEditPage() {
               <Button
                 type="submit"
                 disabled={updateReceiptMutation.isPending}
-                className="h-10 rounded-[10px] bg-[#1f4163] px-5 text-[16px] hover:bg-[#183552]"
+                className="h-10 rounded-[10px] px-5 text-[16px] button-theme-1!"
               >
                 {updateReceiptMutation.isPending ? 'Menyimpan...' : 'Simpan'}
               </Button>
@@ -401,7 +401,7 @@ export default function GoodsReceiptEditPage() {
                   Hapus ({selectedIds.length})
                 </Button>
               )}
-              <Button onClick={() => { setEditingItem(null); setItemOpen(true); }} className="w-full sm:w-auto bg-[#1e3a5f] hover:bg-[#152e4d]">
+              <Button onClick={() => { setEditingItem(null); setItemOpen(true); }} className="button-theme-1!">
                 <Plus className="mr-2 h-4 w-4" />
                 Tambah Data
               </Button>

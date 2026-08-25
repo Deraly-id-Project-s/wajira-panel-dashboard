@@ -42,7 +42,7 @@ export default function PembayaranHutangDetailHeader({ data, onAddPayment, addPa
         }
         onBack={() => router.push(resolvedBackHref)}
         actions={
-          <Button onClick={onAddPayment} disabled={addPaymentDisabled} className="w-full sm:w-auto bg-[#1e3a5f] hover:bg-[#152e4d]">
+          <Button onClick={onAddPayment} disabled={addPaymentDisabled} className="button-theme-1!">
             Tambah Pembayaran
           </Button>
         }

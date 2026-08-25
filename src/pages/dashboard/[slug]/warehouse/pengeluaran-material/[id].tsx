@@ -45,7 +45,7 @@ export default function GoodsIssueDetailPage() {
           <div className="space-y-6">
             <div className="flex items-center justify-between border-b border-slate-200 pb-6">
               <h2 className="text-[18px] font-semibold text-slate-900">Informasi Pengeluaran</h2>
-              <Button onClick={() => setOpenInvoice(true)} className="h-10 rounded-[10px] bg-[#1f4163] px-5 text-[16px] hover:bg-[#183552]">Lihat Nota</Button>
+              <Button onClick={() => setOpenInvoice(true)} className="h-10 rounded-[10px] px-5 text-[16px] button-theme-1!">Lihat Nota</Button>
             </div>
 
             <div className="grid gap-5 md:grid-cols-2">

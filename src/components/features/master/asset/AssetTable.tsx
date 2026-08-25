@@ -131,7 +131,7 @@ export function AssetTable({
                                     Import
                                 </Button>
                             )}
-                            <Button onClick={onAdd} className="w-full sm:w-auto bg-[#1e3a5f] hover:bg-[#152e4d]">
+                            <Button onClick={onAdd} className="button-theme-1!">
                                 <svg className="h-4 w-4 mr-2" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14" /><path d="M12 5v14" /></svg>
                                 Tambah
                             </Button>

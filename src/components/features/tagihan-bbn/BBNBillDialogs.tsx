@@ -148,7 +148,7 @@ export function BBNBillFormDialog({
             </div>
 
             <div className="flex flex-col gap-3 pt-3">
-              <Button type="submit" disabled={isSubmitting} className="h-11 w-full rounded-md bg-[#1f4163] text-sm font-medium text-white hover:bg-[#183552]">
+              <Button type="submit" disabled={isSubmitting} className="h-11 rounded-md text-sm button-theme-1!">
                 {isSubmitting ? 'Menyimpan...' : 'Simpan'}
               </Button>
               <Button type="button" variant="outline" onClick={() => onOpenChange(false)} className="h-11 w-full rounded-md border-slate-200 text-sm font-medium text-slate-700 bg-white">
@@ -264,7 +264,7 @@ export function BBNBillPaymentDialog({ open, onOpenChange, onSubmit, isSubmittin
             </div>
 
             <div className="flex flex-col gap-3 pt-3">
-              <Button type="submit" disabled={isSubmitting} className="h-11 w-full rounded-md bg-[#1f4163] text-sm font-medium text-white hover:bg-[#183552]">
+              <Button type="submit" disabled={isSubmitting} className="h-11 rounded-md text-sm button-theme-1!">
                 {isSubmitting ? 'Menyimpan...' : 'Simpan'}
               </Button>
               <Button type="button" variant="outline" onClick={() => onOpenChange(false)} className="h-11 w-full rounded-md border-slate-200 text-sm font-medium text-slate-700 bg-white">

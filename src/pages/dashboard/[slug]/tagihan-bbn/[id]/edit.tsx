@@ -162,7 +162,7 @@ export default function EditBBNBillPage() {
               </div>
 
               <div className="flex items-end justify-end">
-                <Button type="submit" disabled={updateMutation.isPending} className="rounded-md bg-[#1e3a5f] px-6 hover:bg-[#152e4d]">
+                <Button type="submit" disabled={updateMutation.isPending} className="rounded-md px-6 button-theme-1!">
                   <Save className="mr-2 h-4 w-4" />
                   {updateMutation.isPending ? 'Menyimpan...' : 'Simpan'}
                 </Button>

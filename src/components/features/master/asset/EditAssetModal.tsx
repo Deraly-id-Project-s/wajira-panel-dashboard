@@ -110,7 +110,7 @@ function EditAssetInnerForm({ initialData, onClose, onSave }: InnerProps) {
             </div>
 
             <div className="flex flex-col space-y-2 pt-2">
-                <Button type="submit" className="w-full bg-[#1e3a5f] hover:bg-[#152e4d]">Simpan</Button>
+                <Button type="submit" className="button-theme-1!">Simpan</Button>
                 <Button type="button" variant="outline" className="w-full" onClick={onClose}>Batal</Button>
             </div>
         </form>

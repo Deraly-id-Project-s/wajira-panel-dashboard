@@ -80,7 +80,7 @@ function EditRegionInnerForm({ initialData, onClose, onSave }: InnerProps) {
             </div>
 
             <div className="flex flex-col space-y-2 pt-4">
-                <Button type="submit" className="w-full bg-[#1e3a5f] hover:bg-[#152e4d]">Simpan Perubahan</Button>
+                <Button type="submit" className="button-theme-1!">Simpan Perubahan</Button>
                 <Button type="button" variant="outline" className="w-full" onClick={onClose}>Batal</Button>
             </div>
         </form>

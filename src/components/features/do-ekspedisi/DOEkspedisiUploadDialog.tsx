@@ -33,7 +33,7 @@ export function DOEkspedisiUploadDialog({ open, onOpenChange, onSubmit, isSubmit
           }}
         >
           <FileInput value={file} onFileChange={setFile} className="h-9 rounded-lg border-slate-200" />
-          <Button type="submit" disabled={!file || isSubmitting} className="h-9 w-full rounded-lg bg-[#1f4163] hover:bg-[#183552]">
+          <Button type="submit" disabled={!file || isSubmitting} className="h-9 rounded-lg button-theme-1!">
             {isSubmitting ? 'Menyimpan...' : 'Simpan'}
           </Button>
           <Button type="button" variant="outline" disabled={isSubmitting} onClick={() => onOpenChange(false)} className="h-9 w-full rounded-lg">

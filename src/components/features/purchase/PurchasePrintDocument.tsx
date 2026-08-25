@@ -312,7 +312,7 @@ export default function PurchasePrintDocument({
             <div className="mt-5 overflow-hidden rounded-[12px] border border-slate-200">
               <table className="w-full border-collapse text-[8.5pt]">
                 <thead>
-                  <tr className="bg-[#1f4163] text-white">
+                  <tr className="button-theme-1!">
                     <th className="border border-white/20 px-2 py-2.5 text-center font-semibold w-[40px]">NO</th>
                     <th className="border border-white/20 px-3 py-2.5 text-left font-semibold">TIPE UNIT</th>
                     <th className="border border-white/20 px-3 py-2.5 text-left font-semibold">WARNA</th>

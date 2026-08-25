@@ -133,7 +133,7 @@ export default function DetailPenerimaanPiutangPage() {
               }
               onBack={() => router.push(slug ? `/dashboard/${slug}/finance/data-penerimaan-piutang` : '/dashboard')}
               actions={
-                <Button onClick={() => setPaymentDialogOpen(true)} disabled={detail.billing_summary.is_paid || detail.billing_summary.remaining_payment <= 0 || detail.unit_transaction_billing.id <= 0} className="w-full sm:w-auto bg-[#1e3a5f] hover:bg-[#152e4d]">
+                <Button onClick={() => setPaymentDialogOpen(true)} disabled={detail.billing_summary.is_paid || detail.billing_summary.remaining_payment <= 0 || detail.unit_transaction_billing.id <= 0} className="button-theme-1!">
                   Tambah Penerimaan
                 </Button>
               }

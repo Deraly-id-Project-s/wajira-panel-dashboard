@@ -70,7 +70,7 @@ export function UploadInvoiceModal({
             />
 
             <div className="space-y-3">
-              <Button type="submit" disabled={isSubmitting} className="h-11 w-full rounded-md bg-[#1f4163] text-[16px] font-medium hover:bg-[#183552]">
+              <Button type="submit" disabled={isSubmitting} className="h-11 rounded-md text-[16px] button-theme-1!">
                 {isSubmitting ? 'Menyimpan...' : 'Simpan'}
               </Button>
               <Button type="button" variant="outline" onClick={() => onOpenChange(false)} className="h-11 w-full rounded-md border-slate-300 text-[16px] font-medium">

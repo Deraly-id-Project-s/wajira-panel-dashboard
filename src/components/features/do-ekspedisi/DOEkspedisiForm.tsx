@@ -381,7 +381,7 @@ export function DOEkspedisiForm({
                 <Label>Destinasi Tambahan</Label>
                 <p className="text-xs text-slate-500">Tambahkan tujuan berikutnya jika satu item DO memiliki lebih dari satu destinasi.</p>
               </div>
-              <Button type="button" onClick={() => append({ destination: '', driverNote: '', mapsUrl: '' })} className="w-full sm:w-auto bg-[#1e3a5f] hover:bg-[#152e4d]">
+              <Button type="button" onClick={() => append({ destination: '', driverNote: '', mapsUrl: '' })} className="button-theme-1!">
                 <Plus className="mr-2 h-4 w-4" />
                 Tambah Tujuan
               </Button>

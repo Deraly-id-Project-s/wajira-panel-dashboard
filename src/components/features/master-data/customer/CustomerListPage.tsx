@@ -37,7 +37,7 @@ export const CustomerListPage = () => {
                                     <Upload className="h-4 w-4" />
                                     Import
                                 </Button>
-                                <Button className="w-full sm:w-auto bg-[#1e3a5f] hover:bg-[#152e4d]">
+                                <Button className="button-theme-1!">
                                     <Plus className="h-4 w-4" />
                                     Tambah
                                 </Button>

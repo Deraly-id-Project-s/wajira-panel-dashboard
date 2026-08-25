@@ -35,7 +35,7 @@ export const DealerListPage = () => {
                                 <Button onClick={() => setOpenImport(true)} variant="outline" className="w-full sm:w-auto">
                                     Import
                                 </Button>
-                                <Button className="w-full sm:w-auto bg-[#1e3a5f] hover:bg-[#152e4d]">
+                                <Button className="button-theme-1!">
                                     + Tambah
                                 </Button>
                             </>

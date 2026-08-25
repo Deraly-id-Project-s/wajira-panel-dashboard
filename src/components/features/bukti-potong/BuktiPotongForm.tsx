@@ -306,7 +306,7 @@ export default function BuktiPotongForm({ item, companyId, onSuccess: onFinish, 
         <Button type="button" variant="ghost" onClick={onCancel} disabled={isPending} className="w-[140px] text-base font-semibold">
           Batal
         </Button>
-        <Button type="submit" className="w-[140px] text-base font-semibold bg-[#1f4163] hover:bg-[#183552] text-white" disabled={isPending}>
+        <Button type="submit" className="w-[140px] text-base font-semibold button-theme-1!" disabled={isPending}>
           {isPending ? 'Menyimpan...' : 'Simpan'}
         </Button>
       </div>

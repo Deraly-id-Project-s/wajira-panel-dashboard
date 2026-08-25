@@ -201,7 +201,7 @@ export function SparepartTable({ data, onEdit, onDelete, onAdd, onImport, canEdi
             </Button>
           )}
           {onAdd && (
-            <Button onClick={onAdd} className="w-full sm:w-auto bg-[#1e3a5f] hover:bg-[#152e4d]">
+            <Button onClick={onAdd} className="button-theme-1!">
               <Plus className="h-4 w-4 mr-2" />
               Tambah
             </Button>

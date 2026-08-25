@@ -264,7 +264,7 @@ export function CreateInvoicePrintDocument({ payload, letterheadUrl, hideControl
           <div className="mt-5 overflow-hidden rounded-[16px] border border-slate-200">
             <table className="w-full border-collapse text-[7.2pt]">
               <thead>
-                <tr className="bg-[#1f4163] text-white">
+                <tr className="button-theme-1!">
                   {['NO', 'TANGGAL', 'NO POLISI', 'TYPE', 'DRIVER', 'LOADING IN', 'TUJUAN KIRIM', 'LOADING OUT', 'NO SURAT DO', 'DESKRIPSI', 'QTY', isUsd ? 'INV EKSPEDISI (USD)' : 'INV EKSPEDISI', isUsd ? 'PPN (USD)' : 'PPN', isUsd ? 'TOTAL (USD)' : 'TOTAL'].map((header) => (
                     <th key={header} className="border border-white/20 px-1 py-2 text-center font-semibold">{header}</th>
                   ))}

@@ -194,7 +194,7 @@ export function DOEkspedisiEditDialog({
             <Textarea rows={4} placeholder="Type your message here." className="rounded-lg border-slate-200" {...register('driverNote')} />
           </div>
 
-          <Button type="submit" disabled={isSubmitting} className="h-9 w-full rounded-lg bg-[#1f4163] hover:bg-[#183552]">
+          <Button type="submit" disabled={isSubmitting} className="h-9 rounded-lg button-theme-1!">
             {isSubmitting ? 'Menyimpan...' : 'Simpan'}
           </Button>
           <Button type="button" variant="outline" disabled={isSubmitting} onClick={() => onOpenChange(false)} className="h-9 w-full rounded-lg">

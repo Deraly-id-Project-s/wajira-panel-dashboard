@@ -433,7 +433,7 @@ export function FinanceAssetForm({
                 </Button>
                 <Button
                     type="submit"
-                    className="px-8 bg-[#1e3a5f] hover:bg-[#152e4d] flex items-center gap-2"
+                    className="px-8 flex items-center gap-2 button-theme-1!"
                     disabled={isSaving}
                 >
                     {isSaving ? (

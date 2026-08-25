@@ -320,7 +320,7 @@ export default function DetailDOEkspedisiPage() {
                 }
               }}
               disabled={processExpeditionMutation.isPending || detailQuery.data.status === 'draft' || !detailQuery.data.driverId || !detailQuery.data.vehicleId}
-              className="bg-[#1e3a5f] text-white hover:bg-[#152e4d] font-medium"
+              className="button-theme-1!"
             >
               <Printer className="h-4 w-4" />
               {processExpeditionMutation.isPending ? 'Menyiapkan...' : 'Print DO'}
@@ -372,7 +372,7 @@ export default function DetailDOEkspedisiPage() {
             </div>
           </div>
 
-          <Button onClick={() => slug && id && router.push(`/dashboard/${slug}/do-ekspedisi/detail/${id}/create`)} className="w-full sm:w-auto bg-[#1e3a5f] hover:bg-[#152e4d]">
+          <Button onClick={() => slug && id && router.push(`/dashboard/${slug}/do-ekspedisi/detail/${id}/create`)} className="button-theme-1!">
             <Plus className="mr-2 h-4 w-4" />
             Tambah Data
           </Button>

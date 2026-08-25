@@ -371,7 +371,7 @@ export default function StockSparepartPage() {
                       <Button variant="outline" className="rounded-lg cursor-pointer" onClick={() => setIsFilterModalOpen(false)}>
                         Batal
                       </Button>
-                      <Button onClick={handleApplyFilters} className="bg-[#1e3a5f] text-white hover:bg-[#152e4d] rounded-lg px-5 cursor-pointer">
+                      <Button onClick={handleApplyFilters} className="rounded-lg px-5 cursor-pointer button-theme-1!">
                         Terapkan
                       </Button>
                     </div>

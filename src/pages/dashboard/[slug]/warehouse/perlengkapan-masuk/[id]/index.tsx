@@ -199,7 +199,7 @@ export default function PerlengkapanMasukDetailPage() {
                     </a>
                   </Button>
                 ) : null}
-                <Button onClick={() => setOpenInvoiceModal(true)} className="h-10 rounded-md bg-[#1f4163] px-4 hover:bg-[#183552]">
+                <Button onClick={() => setOpenInvoiceModal(true)} className="h-10 rounded-md px-4 button-theme-1!">
                   {invoiceUrl ? 'Ganti Invoice' : 'Upload Invoice'}
                 </Button>
               </div>
@@ -278,7 +278,7 @@ export default function PerlengkapanMasukDetailPage() {
                   <div className="rounded-md bg-slate-50 p-4 text-center text-sm text-slate-500">
                     Billing belum dibuat untuk transaksi ini.
                   </div>
-                  <Button onClick={handleCreateBilling} className="w-full h-10 rounded-md bg-[#1f4163] hover:bg-[#183552] text-white">
+                  <Button onClick={handleCreateBilling} className="h-10 rounded-md button-theme-1!">
                     Buat Billing
                   </Button>
                 </div>

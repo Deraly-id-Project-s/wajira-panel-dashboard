@@ -197,7 +197,7 @@ export default function TransactionForm({ defaultValues, onSubmit, onCancel, isB
           <Button type="button" variant="outline" onClick={onCancel} disabled={isBusy}>
             Batal
           </Button>
-          <Button type="submit" className="bg-[#1e3a5f] hover:bg-[#152e4d] text-white" disabled={isBusy}>
+          <Button type="submit" className="button-theme-1!" disabled={isBusy}>
             {isBusy ? (
               <>Menyimpan...</>
             ) : (
