@@ -309,7 +309,7 @@ export default function MaterialReleaseEditPage() {
           onBack={() => router.push(`/dashboard/${slug}/warehouse/perlengkapan-keluar`)}
         />
 
-        <Card className="rounded-[20px] border border-slate-200 bg-white p-5 shadow-none">
+        <Card className="rounded-md border border-slate-200 bg-white p-5 shadow-none">
           <div className="space-y-6">
             <div className="border-b border-slate-200 pb-6">
               <h2 className="text-[20px] font-semibold text-slate-950">Informasi Pengeluaran</h2>

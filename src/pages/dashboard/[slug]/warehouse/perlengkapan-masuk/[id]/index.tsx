@@ -187,7 +187,7 @@ export default function PerlengkapanMasukDetailPage() {
         />
 
         <div className="grid gap-6 lg:grid-cols-3">
-          <Card className="col-span-2 rounded-[20px] border border-slate-200 bg-white p-6 shadow-none space-y-6">
+          <Card className="col-span-2 rounded-md border border-slate-200 bg-white p-6 shadow-none space-y-6">
             <div className="flex flex-col gap-4 border-b border-slate-200 pb-5 sm:flex-row sm:items-center sm:justify-between">
               <h2 className="text-[20px] font-semibold text-slate-950">Informasi Penerimaan</h2>
               <div className="flex gap-2">
@@ -230,7 +230,7 @@ export default function PerlengkapanMasukDetailPage() {
             </div>
           </Card>
 
-          <Card className="rounded-[20px] border border-slate-200 bg-white p-6 shadow-none space-y-6">
+          <Card className="rounded-md border border-slate-200 bg-white p-6 shadow-none space-y-6">
             <h2 className="text-[20px] font-semibold text-slate-950 border-b border-slate-200 pb-5">Ringkasan Billing</h2>
             <div className="space-y-4">
               <div className="flex justify-between items-center text-[15px]">
@@ -288,7 +288,7 @@ export default function PerlengkapanMasukDetailPage() {
         </div>
 
         {billing && billing.payments && billing.payments.length > 0 && (
-          <Card className="rounded-[20px] border border-slate-200 bg-white p-6 shadow-none space-y-4">
+          <Card className="rounded-md border border-slate-200 bg-white p-6 shadow-none space-y-4">
             <h2 className="text-[18px] font-semibold text-slate-950">Riwayat Pembayaran</h2>
             <div className="overflow-hidden rounded-md border border-slate-200">
               <Table>
@@ -331,7 +331,7 @@ export default function PerlengkapanMasukDetailPage() {
           </Card>
         )}
 
-        <Card className="rounded-[20px] border border-slate-200 bg-white p-6 shadow-none space-y-4">
+        <Card className="rounded-md border border-slate-200 bg-white p-6 shadow-none space-y-4">
           <h2 className="text-[18px] font-semibold text-slate-950">Daftar Barang Perlengkapan</h2>
           <div className="overflow-hidden rounded-md border border-slate-200">
             <Table>

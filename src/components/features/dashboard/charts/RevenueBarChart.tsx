@@ -27,7 +27,7 @@ function CustomTooltip({ active, payload, label }: { active?: boolean; payload?:
         <div className="space-y-0.5">
           {payload.map((entry: any, index: number) => (
             <div key={index} className="flex flex-col sm:flex-row items-center gap-2 w-full sm:w-auto">
-              <div className="h-2 w-2 rounded-sm" style={{ backgroundColor: entry.color }} />
+              <div className="h-2 w-2 rounded-md" style={{ backgroundColor: entry.color }} />
               <span className="text-xs">{entry.name}:</span>
               <span className="text-xs font-semibold">{entry.value}</span>
             </div>

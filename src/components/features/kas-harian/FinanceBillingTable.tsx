@@ -397,7 +397,7 @@ export default function FinanceBillingTable({ financeBillings, cashFlowDetail, c
   );
 
   return (
-    <div className="rounded-[26px] border border-slate-200 bg-white p-6 shadow-sm space-y-4">
+    <div className="rounded-md border border-slate-200 bg-white p-6 shadow-sm space-y-4">
       <div className="flex items-center justify-between border-b border-slate-100 pb-4">
         <div>
           <div className="flex items-center gap-3 flex-wrap">

@@ -11,6 +11,7 @@ import { useCompany } from '@/contexts/CompanyContext';
 import { ChevronRight } from 'lucide-react';
 
 import { TransactionFormValues } from '@/scheme/transaction.schema';
+import { PageHeader } from '@/components/ui/page-header';
 
 export default function CreateTransactionPage() {
     const router = useRouter();
@@ -46,19 +47,15 @@ export default function CreateTransactionPage() {
     return (
         <DashboardLayout>
             <div className="space-y-6">
-                {/* BREADCRUMB HEADER */}
-                <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                    <span className="hover:text-foreground cursor-pointer" onClick={() => router.push(basePath)}>
-                        Arus Transaksi
-                    </span>
-                    <ChevronRight className="h-4 w-4" />
-                    <span className="font-medium text-foreground">Tambah Transaksi</span>
-                </div>
-
-                <div>
-                    <h1 className="text-2xl font-semibold text-slate-900">Tambahkan Transaksi</h1>
-                    <p className="text-sm text-muted-foreground">Masukkan detail transaksi operasional baru</p>
-                </div>
+                <PageHeader
+                    breadcrumbs={[
+                        { label: 'Arus Transaksi', onClick: () => router.push(`/dashboard/${slug}/arus-transaksi`) },
+                        { label: 'Tambah Data Arus Transaksi' }
+                    ]}
+                    title="Tambah Transaksi"
+                    subtitle="Perbarui isi dan tampilan template dokumen"
+                    onBack={() => router.push(`/dashboard/${slug}/arus-transaksi`)}
+                />
 
                 <div className="rounded-md border bg-white p-6 md:p-8">
                     <TransactionForm

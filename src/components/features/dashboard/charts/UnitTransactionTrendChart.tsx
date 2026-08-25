@@ -62,7 +62,7 @@ export function UnitTransactionTrendChart({ startDate, endDate, companyId }: Pro
   }, {} as Record<string, number>), [data, enabled]);
   const visibleSeries = SERIES.filter((series) => enabled[series.key]);
 
-  return <Card className="rounded-[20px] border border-slate-200 bg-white p-7 shadow-sm">
+  return <Card className="rounded-md border border-slate-200 bg-white p-7 shadow-sm">
     <CardHeader className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-100 p-0 pb-6">
       <div className="flex items-center gap-3"><div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-50 text-blue-600"><TrendingUp className="h-5 w-5" /></div><div><CardTitle className="text-[17px] font-bold text-slate-900">Trend Jual Beli Produk</CardTitle><p className="mt-0.5 text-xs text-slate-500">Tren transaksi unit type dan sparepart</p></div></div>
       <div className="rounded-lg border border-slate-100 bg-slate-50 px-3 py-1.5 text-xs font-semibold text-slate-500">{periodLabel(startDate, endDate)}</div>

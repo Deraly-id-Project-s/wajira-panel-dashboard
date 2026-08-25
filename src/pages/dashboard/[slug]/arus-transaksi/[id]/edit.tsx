@@ -13,6 +13,7 @@ import { ChevronRight } from 'lucide-react';
 
 import { TransactionFormValues } from '@/scheme/transaction.schema';
 import { LoadingState } from '@/components/ui/loading-state';
+import { PageHeader } from '@/components/ui/page-header';
 
 export default function EditTransactionPage() {
     const router = useRouter();
@@ -90,14 +91,15 @@ export default function EditTransactionPage() {
     return (
         <DashboardLayout>
             <div className="space-y-6">
-                {/* BREADCRUMB HEADER */}
-                <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                    <span className="hover:text-foreground cursor-pointer" onClick={() => router.push(basePath)}>
-                        Arus Transaksi
-                    </span>
-                    <ChevronRight className="h-4 w-4" />
-                    <span className="font-medium text-foreground">Edit Transaksi</span>
-                </div>
+                <PageHeader
+                    breadcrumbs={[
+                        { label: 'Arus Transaksi', onClick: () => router.push(`/dashboard/${slug}/arus-transaksi`) },
+                        { label: 'Edit Data Arus Transaksi' }
+                    ]}
+                    title="Edit Transaksi"
+                    subtitle="Perbarui isi dan tampilan template dokumen"
+                    onBack={() => router.push(`/dashboard/${slug}/arus-transaksi`)}
+                />
 
                 <div>
                     <h1 className="text-2xl font-semibold text-slate-900">Edit Transaksi</h1>

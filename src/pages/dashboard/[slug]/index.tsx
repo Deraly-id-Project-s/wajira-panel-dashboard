@@ -78,7 +78,7 @@ function VehicleDocumentOverviewCard({
   });
 
   if (isLoading) {
-    return <div className="h-44 animate-pulse rounded-[20px] bg-slate-100" />;
+    return <div className="h-44 animate-pulse rounded-md bg-slate-100" />;
   }
 
   if (isError || !data) {
@@ -92,7 +92,7 @@ function VehicleDocumentOverviewCard({
   };
 
   return (
-    <Card className="rounded-[20px] border border-slate-200 bg-white p-7 shadow-sm">
+    <Card className="rounded-md border border-slate-200 bg-white p-7 shadow-sm">
       <h3 className="mb-8 text-center text-[17px] font-bold text-slate-900">Overview Dokumen</h3>
       <div className="grid grid-cols-4 gap-4 text-center items-center">
         <div className="flex flex-col items-center justify-start">
@@ -130,7 +130,7 @@ function StatCard({
   icon: React.ComponentType<{ className?: string; color?: string }>;
 }) {
   return (
-    <Card className="relative overflow-hidden rounded-[20px] border border-slate-200 bg-white p-6 shadow-sm flex flex-col justify-between h-[150px]">
+    <Card className="relative overflow-hidden rounded-md border border-slate-200 bg-white p-6 shadow-sm flex flex-col justify-between h-[150px]">
       <div className="absolute top-0 left-0 right-0 h-[8px]" style={{ backgroundColor: accentColor }} />
 
       <div className="flex items-center justify-start mb-4">
@@ -178,12 +178,12 @@ function VehicleRegistrationOverview({
       <div className="space-y-6">
         <div className="grid gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
           {Array.from({ length: 4 }).map((_, idx) => (
-            <div key={idx} className="h-[150px] animate-pulse rounded-[20px] bg-slate-100" />
+            <div key={idx} className="h-[150px] animate-pulse rounded-md bg-slate-100" />
           ))}
         </div>
         <div className="grid gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
           {Array.from({ length: 3 }).map((_, idx) => (
-            <div key={idx} className="h-[150px] animate-pulse rounded-[20px] bg-slate-100" />
+            <div key={idx} className="h-[150px] animate-pulse rounded-md bg-slate-100" />
           ))}
         </div>
       </div>
@@ -350,7 +350,7 @@ export default function DashboardPage() {
         </Card>
 
         {isLoadingPermissions && (
-          <div className="h-36 animate-pulse rounded-[20px] bg-slate-100" />
+          <div className="h-36 animate-pulse rounded-md bg-slate-100" />
         )}
 
         {/* Permission: dashboard:cash-value */}

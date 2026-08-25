@@ -109,7 +109,7 @@ export default function MaterialReleaseDetailPage() {
           onBack={() => router.push(`/dashboard/${slug}/warehouse/perlengkapan-keluar`)}
         />
 
-        <Card className="rounded-[20px] border border-slate-200 bg-white p-5 shadow-none">
+        <Card className="rounded-md border border-slate-200 bg-white p-5 shadow-none">
           <div className="space-y-6">
             <div className="flex flex-col gap-4 border-b border-slate-200 pb-6 lg:flex-row lg:items-center lg:justify-between">
               <h2 className="text-[20px] font-semibold text-slate-950">Informasi Pengeluaran</h2>
