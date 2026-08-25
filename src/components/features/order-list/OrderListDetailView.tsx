@@ -810,7 +810,7 @@ export function OrderListDetailView({
 
       <Card className="border-slate-200 shadow-sm">
         <CardContent className="space-y-5 p-5 sm:p-6">
-          <SectionHeading icon={Wallet} title="Ringkasan Keuangan" description="Nilai agregat dari DO order list" />
+          <SectionHeading icon={Wallet} title="Ringkasan Invoice" description="Nominal Invoice dari DO order list" />
           <div className="space-y-3 border-t border-slate-100 pt-5">
             <CurrencyRow label="Invoice Ekspedisi" value={data.billInvoice} />
             <CurrencyRow label="PPN" value={data.ppn} />

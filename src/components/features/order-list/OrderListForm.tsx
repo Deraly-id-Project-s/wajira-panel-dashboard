@@ -887,9 +887,8 @@ export function OrderListForm({
                       <MoneyInput
                         value={field.value}
                         onChangeValue={field.onChange}
-                        disabled
-                        placeholder="Terisi otomatis..."
-                        className="bg-slate-50 border-slate-200 cursor-default"
+                        placeholder="Masukkan nominal UJ driver"
+                        className="bg-transparent"
                       />
                     </FormControl>
                     <FormMessage className="absolute bottom-0 text-[11px] leading-none mt-0" />

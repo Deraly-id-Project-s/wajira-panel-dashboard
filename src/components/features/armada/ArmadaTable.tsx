@@ -4,6 +4,8 @@ import BaseTable, { ColumnDef } from '@/components/ui/base-table';
 import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import type { Armada } from '@/@types/armada.types';
+import { CopyBox } from '@/components/ui/copy-box';
+import { Badge } from '@/components/ui/badge';
 
 interface ArmadaTableProps {
   armadas: Armada[];
@@ -53,6 +55,61 @@ const getRemainingLabel = (value?: string | null) => {
   return { text: `${diffInDays} hari lagi`, className: 'bg-green-50 text-[#16A34A]' };
 };
 
+const getArmadaTypeBadge = (type?: string | null) => {
+  if (!type) return '-';
+
+  const typeLower = type.toLowerCase();
+  const displayLabel = type.toUpperCase();
+
+  switch (typeLower) {
+    case 'cdd':
+      return (
+        <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200 font-semibold px-2.5 py-0.5">
+          {displayLabel}
+        </Badge>
+      );
+    case 'towing':
+      return (
+        <Badge variant="outline" className="bg-amber-50 text-amber-700 border-amber-200 font-semibold px-2.5 py-0.5">
+          {displayLabel}
+        </Badge>
+      );
+    case 'fuso':
+      return (
+        <Badge variant="outline" className="bg-purple-50 text-purple-700 border-purple-200 font-semibold px-2.5 py-0.5">
+          {displayLabel}
+        </Badge>
+      );
+    default:
+      return (
+        <Badge variant="outline" className="bg-slate-50 text-slate-700 border-slate-200 font-semibold px-2.5 py-0.5">
+          {displayLabel}
+        </Badge>
+      );
+  }
+};
+
+const getArmadaRowMark = (armada: Armada) => {
+  const stnkInfo = getRemainingLabel(armada.stnkAge);
+  const kirInfo = getRemainingLabel(armada.kirAge);
+
+  const getMarkType = (info: { text: string; className: string } | null) => {
+    if (!info) return null;
+    if (info.className.includes('red')) return 'alert';
+    if (info.className.includes('amber')) return 'base';
+    if (info.className.includes('green')) return 'success';
+    return null;
+  };
+
+  const stnkMark = getMarkType(stnkInfo);
+  const kirMark = getMarkType(kirInfo);
+
+  if (stnkMark === 'alert' || kirMark === 'alert') return 'alert';
+  if (stnkMark === 'base' || kirMark === 'base') return 'base';
+  if (stnkMark === 'success' || kirMark === 'success') return 'success';
+  return undefined;
+};
+
 export function ArmadaTable({
   armadas,
   search,
@@ -79,25 +136,25 @@ export function ArmadaTable({
         header: 'NO POLISI',
         accessorKey: 'registrationNumber',
         className: 'font-medium text-slate-900 whitespace-nowrap',
-        cell: (armada) => armada.registrationNumber || '-',
+        cell: (armada) => armada.registrationNumber ? <CopyBox text={armada.registrationNumber} /> : '-',
       },
       {
         header: 'TIPE',
         accessorKey: 'type',
         className: 'text-slate-700 whitespace-nowrap',
-        cell: (armada) => armada.type || '-',
+        cell: (armada) => getArmadaTypeBadge(armada.type),
       },
       {
         header: 'NO MESIN',
         accessorKey: 'machineNumber',
         className: 'text-slate-700 font-medium whitespace-nowrap',
-        cell: (armada) => armada.machineNumber || '-',
+        cell: (armada) => armada.machineNumber ? <CopyBox text={armada.machineNumber} /> : '-',
       },
       {
         header: 'NO RANGKA',
         accessorKey: 'chassisNumber',
         className: 'text-slate-700 whitespace-nowrap',
-        cell: (armada) => armada.chassisNumber || '-',
+        cell: (armada) => armada.chassisNumber ? <CopyBox text={armada.chassisNumber} /> : '-',
       },
       {
         header: 'MASA STNK',
@@ -190,6 +247,7 @@ export function ArmadaTable({
         total: totalData,
       }}
       onPageChange={onPageChange}
+      getRowMark={getArmadaRowMark}
       headerActions={
         canCreate && (
           <div className="flex flex-wrap items-center gap-2">

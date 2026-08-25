@@ -135,7 +135,7 @@ export function DriverTable({
                 cell: (item) => {
                     const active = item.isActive === true || item.isActive === 1;
                     const pending = (activateMutation.isPending && activateMutation.variables === item.id) || (deactivateMutation.isPending && deactivateMutation.variables === item.id);
-                    return <div className="flex items-center justify-center gap-2"><Switch checked={active} onCheckedChange={(checked) => handleToggleStatus(item, checked)} disabled={!canEdit || pending} /><Badge variant={active ? 'default' : 'secondary'}>{active ? 'Aktif' : 'Nonaktif'}</Badge></div>;
+                    return <div className="flex items-center justify-center gap-2"><Switch checked={active} onCheckedChange={(checked) => handleToggleStatus(item, checked)} disabled={!canEdit || pending} /></div>;
                 },
             },
             {

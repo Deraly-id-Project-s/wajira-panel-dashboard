@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { MoreVertical } from 'lucide-react';
 import type { Tarif } from '@/@types/tarif.types';
 import type { PaginationMeta } from '@/@types/pagination.types';
+import { currenciesFormat } from '@/components/ui/currenciesFormat';
 
 interface TarifTableProps {
     data: Tarif[];
@@ -20,16 +21,6 @@ interface TarifTableProps {
     onVersioning: (tarif: Tarif) => void;
     onDelete: (tarif: Tarif) => void;
 }
-
-const formatCurrency = (amount: number | null | undefined) => {
-    if (amount === null || amount === undefined) return '-';
-    return new Intl.NumberFormat('id-ID', {
-        style: 'currency',
-        currency: 'IDR',
-        minimumFractionDigits: 0,
-        maximumFractionDigits: 0,
-    }).format(amount);
-};
 
 export function TarifTable({
     data,
@@ -64,42 +55,42 @@ export function TarifTable({
                 accessorKey: 'distance',
                 sortable: true,
                 alignment: 'center',
-                cell: (item) => item.distance ?? '-',
+                cell: (item) => item.distance ? item.distance + ' Km' : '-',
             },
             {
                 header: 'UJ TOWING',
                 accessorKey: 'ujTowing',
                 sortable: true,
                 alignment: 'right',
-                cell: (item) => formatCurrency(item.ujTowing),
+                cell: (item) => currenciesFormat('idr', item.ujTowing),
             },
             {
                 header: 'UJ CDD',
                 accessorKey: 'ujCdd',
                 sortable: true,
                 alignment: 'right',
-                cell: (item) => formatCurrency(item.ujCdd),
+                cell: (item) => currenciesFormat('idr', item.ujCdd),
             },
             {
                 header: 'UJ FUSO',
                 accessorKey: 'ujFuso',
                 sortable: true,
                 alignment: 'right',
-                cell: (item) => formatCurrency(item.ujFuso),
+                cell: (item) => currenciesFormat('idr', item.ujFuso),
             },
             {
                 header: 'INV CDD',
                 accessorKey: 'invCdd',
                 sortable: true,
                 alignment: 'right',
-                cell: (item) => formatCurrency(item.invCdd),
+                cell: (item) => currenciesFormat('idr', item.invCdd),
             },
             {
                 header: 'INV FUSO',
                 accessorKey: 'invFuso',
                 sortable: true,
                 alignment: 'right',
-                cell: (item) => formatCurrency(item.invFuso),
+                cell: (item) => currenciesFormat('idr', item.invFuso),
             },
             {
                 header: 'ACTION',
