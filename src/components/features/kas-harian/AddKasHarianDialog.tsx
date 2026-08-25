@@ -27,8 +27,9 @@ export default function AddKasHarianDialog({ open, onOpenChange }: Props) {
       date: new Date(),
       note: '',
       debet: 0,
+      debet_usd: 0,
       credit: 0,
-      transaction_category: 'general',
+      credit_usd: 0,
       payment_proof: null,
     },
   });
@@ -46,8 +47,9 @@ export default function AddKasHarianDialog({ open, onOpenChange }: Props) {
         date: new Date(),
         note: '',
         debet: 0,
+        debet_usd: 0,
         credit: 0,
-        transaction_category: 'general',
+        credit_usd: 0,
         payment_proof: null,
       });
     }
@@ -60,8 +62,9 @@ export default function AddKasHarianDialog({ open, onOpenChange }: Props) {
         date: format(data.date, 'yyyy-MM-dd'),
         note: data.note,
         debet: data.debet,
+        debet_usd: data.debet_usd,
         credit: data.credit,
-        transaction_category: data.transaction_category,
+        credit_usd: data.credit_usd,
         payment_proof: data.payment_proof,
       });
 
