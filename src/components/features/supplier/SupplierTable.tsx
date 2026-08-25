@@ -65,10 +65,10 @@ export function SupplierTable({
         className: 'font-medium text-gray-900 truncate max-w-[220px]',
       },
       {
-        header: 'PIC',
-        accessorKey: 'pic',
+        header: 'Alamat',
+        accessorKey: 'address',
         sortable: true,
-        cell: (item) => item.pic || '-',
+        cell: (item) => <span className="line-clamp-2">{item.address || '-'}</span>,
       },
       {
         header: 'Phone',
@@ -87,10 +87,10 @@ export function SupplierTable({
         cell: (item) => item.npwp || '-',
       },
       {
-        header: 'Alamat',
-        accessorKey: 'address',
+        header: 'PIC',
+        accessorKey: 'pic',
         sortable: true,
-        cell: (item) => <span className="line-clamp-2">{item.address || '-'}</span>,
+        cell: (item) => item.pic || '-',
       },
       {
         header: 'Aksi',
