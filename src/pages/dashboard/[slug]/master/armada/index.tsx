@@ -101,7 +101,6 @@ export default function ArmadaPage() {
           onPageChange={setPage}
           onPerPageChange={(value) => {
             setPerPage(value);
-            setPage(1);
           }}
           onAdd={handleAddClick}
           onImport={() => setIsImportOpen(true)}

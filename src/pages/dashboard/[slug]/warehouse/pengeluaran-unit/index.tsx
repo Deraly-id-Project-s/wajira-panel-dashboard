@@ -88,7 +88,6 @@ export default function PengeluaranUnitPage() {
           onSearchChange={setSearchInput}
           onPerPageChange={(value) => {
             setPerPage(value);
-            setPage(1);
           }}
           canEdit={canEdit}
           canDelete={canDelete}

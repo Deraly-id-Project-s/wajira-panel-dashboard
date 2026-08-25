@@ -180,7 +180,7 @@ export default function DriverPage() {
                             </div>
                             <div className="flex items-center gap-2 text-sm text-slate-500 whitespace-nowrap">
                                 <span>Show</span>
-                                <Select value={perPage.toString()} onValueChange={(val) => { setPerPage(Number(val)); setPage(1); }}>
+                                <Select value={perPage.toString()} onValueChange={(val) => { setPerPage(Number(val)); }}>
                                     <SelectTrigger className="w-[70px] bg-white">
                                         <SelectValue placeholder="25" />
                                     </SelectTrigger>

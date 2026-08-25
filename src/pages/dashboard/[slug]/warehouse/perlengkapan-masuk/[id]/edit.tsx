@@ -270,7 +270,7 @@ export default function PerlengkapanMasukEditPage() {
             </div>
             <div className="flex items-center gap-3 text-[15px] text-slate-800">
               <span>Show</span>
-              <Select value={String(perPage)} onValueChange={(val) => { setPerPage(Number(val)); setPage(1); }}>
+              <Select value={String(perPage)} onValueChange={(val) => { setPerPage(Number(val)); }}>
                 <SelectTrigger className="h-[42px] w-[58px] rounded-md border-slate-200 shadow-sm">
                   <SelectValue />
                 </SelectTrigger>

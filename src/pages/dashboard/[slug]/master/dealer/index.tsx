@@ -134,7 +134,6 @@ export default function DealerPage() {
           onPageChange={setPage}
           onPerPageChange={(v) => {
             setPerPage(v);
-            setPage(1);
           }}
           onAdd={handleAddClick}
           onImport={canCreate ? () => setOpenImport(true) : undefined}

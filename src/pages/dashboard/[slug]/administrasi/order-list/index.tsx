@@ -154,7 +154,6 @@ export default function OrderListPage() {
           onPageChange={setPage}
           onPerPageChange={(value) => {
             setPerPage(value);
-            setPage(1);
           }}
           onAdd={handleAdd}
           onDetail={handleDetail}

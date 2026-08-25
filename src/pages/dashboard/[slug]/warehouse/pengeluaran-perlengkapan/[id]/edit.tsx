@@ -264,7 +264,6 @@ export default function PengeluaranPerlengkapanEditPage() {
                 value={String(perPage)}
                 onValueChange={(value) => {
                   setPerPage(Number(value));
-                  setPage(1);
                 }}
               >
                 <SelectTrigger className="h-11 w-[68px] rounded-md border-slate-200 bg-white shadow-none">

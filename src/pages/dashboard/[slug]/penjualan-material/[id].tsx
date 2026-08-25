@@ -321,7 +321,6 @@ export default function SalesMaterialDetailPage() {
           perPage={perPage}
           onPerPageChange={(value) => {
             setPerPage(value);
-            setPage(1);
           }}
           meta={{
             currentPage: safePage,

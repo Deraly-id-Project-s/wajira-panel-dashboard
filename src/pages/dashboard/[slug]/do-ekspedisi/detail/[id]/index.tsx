@@ -357,7 +357,6 @@ export default function DetailDOEkspedisiPage() {
               <span className="text-sm text-slate-600">Show</span>
               <Select value={String(perPage)} onValueChange={(value) => {
                 setPerPage(Number(value));
-                setPage(1);
               }}>
                 <SelectTrigger className="h-12 w-[88px] rounded-md border-[#E5E7EB] bg-white">
                   <SelectValue placeholder="25" />

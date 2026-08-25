@@ -75,7 +75,6 @@ export default function SalesPage() {
           onPageChange={setPage}
           onPerPageChange={(value) => {
             setPerPage(value);
-            setPage(1);
           }}
           canEdit={canEdit}
           canDelete={canDelete}

@@ -83,7 +83,6 @@ export default function BuktiPotongPage() {
 
   const handlePerPageChange = (value: string) => {
     setPerPage(Number(value));
-    setPage(1);
   };
 
   const handleSortChange = (key: string) => {

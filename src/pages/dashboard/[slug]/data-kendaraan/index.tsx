@@ -245,7 +245,6 @@ export default function VehicleFleetPage() {
             onPageChange={setPage}
             onPerPageChange={(value) => {
               setPerPage(value);
-              setPage(1);
             }}
             selectedIds={selectedIds}
             assignedIds={assignedIds}
@@ -279,7 +278,6 @@ export default function VehicleFleetPage() {
             onPageChange={setPage}
             onPerPageChange={(value) => {
               setPerPage(value);
-              setPage(1);
             }}
             onAdd={handleAddClick}
             onImport={() => setIsImportOpen(true)}

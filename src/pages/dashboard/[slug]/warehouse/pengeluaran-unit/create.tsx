@@ -221,7 +221,6 @@ export default function CreatePengeluaranUnitPage() {
                 onSearchChange={setSearchInput}
                 onPerPageChange={(value) => {
                   setPerPage(value);
-                  setPage(1);
                 }}
                 onPageChange={setPage}
                 onSelectedIdsChange={setSelectedIds}

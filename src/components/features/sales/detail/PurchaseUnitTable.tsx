@@ -93,7 +93,6 @@ export function PurchaseUnitTable({ units }: Props) {
         perPage={perPage}
         onPerPageChange={(val) => {
           setPerPage(val);
-          setPage(1);
         }}
         meta={{
           currentPage: page,

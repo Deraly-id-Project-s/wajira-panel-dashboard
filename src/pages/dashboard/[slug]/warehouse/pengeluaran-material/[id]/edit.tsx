@@ -361,7 +361,6 @@ export default function GoodsIssueEditPage() {
           perPage={perPage}
           onPerPageChange={(value) => {
             setPerPage(value);
-            setPage(1);
           }}
           meta={{
             currentPage: safePage,

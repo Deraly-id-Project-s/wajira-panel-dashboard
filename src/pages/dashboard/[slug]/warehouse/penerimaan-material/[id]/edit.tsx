@@ -385,7 +385,6 @@ export default function GoodsReceiptEditPage() {
           perPage={perPage}
           onPerPageChange={(value) => {
             setPerPage(value);
-            setPage(1);
           }}
           meta={{
             currentPage: safePage,

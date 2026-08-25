@@ -124,7 +124,6 @@ export default function VehicleEquipmentPage() {
                         onPageChange={setPage}
                         onPerPageChange={(v) => {
                             setPerPage(v);
-                            setPage(1);
                         }}
                         onAdd={handleAddClick}
                         onEdit={handleEditClick}

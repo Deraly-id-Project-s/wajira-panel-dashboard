@@ -153,7 +153,7 @@ import { Button } from '@/components/ui/button';
     {/* Show per Page */}
     <div className="flex items-center gap-2 text-sm text-slate-500 whitespace-nowrap">
       <span>Show</span>
-      <Select value={String(perPage)} onValueChange={(val) => { setPerPage(Number(val)); setPage(1); }}>
+      <Select value={String(perPage)} onValueChange={(val) => setPerPage(Number(val))}>
         <SelectTrigger className="w-[70px] bg-white">
           <SelectValue placeholder="25" />
         </SelectTrigger>
@@ -839,6 +839,24 @@ const handleExport = () => {
   link.click();
   window.URL.revokeObjectURL(url); // Hapus memori buffer
 };
+```
+
+### D. Paginasi & Show Per Page (Race Condition Prevention)
+Ketika mengubah *limit* data (*Show Per Page*) menggunakan `setPerPage` dari custom hook (misal: `useQueryParamsTable`), **JANGAN** memanggil `setPage(1)` secara berurutan.
+
+Hook `useQueryParamsTable` sudah mengatur ulang parameter `page: 1` secara otomatis saat `setPerPage` dipanggil. Karena router Next.js beroperasi secara asinkron, memanggil `setPage(1)` tepat setelah `setPerPage(val)` akan menghasilkan **race condition** di mana limit per halaman batal berubah (karena ditimpa).
+
+**❌ SALAH:**
+```tsx
+<Select onValueChange={(val) => { 
+  setPerPage(Number(val)); 
+  setPage(1); // Memicu race condition!
+}}>
+```
+
+**✅ BENAR:**
+```tsx
+<Select onValueChange={(val) => setPerPage(Number(val))}>
 ```
 
 ---

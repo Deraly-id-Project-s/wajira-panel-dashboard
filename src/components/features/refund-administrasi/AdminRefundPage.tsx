@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import { ArrowLeft, Plus, Search } from 'lucide-react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { useDebouncedValue } from '@/hooks/useDebouncedValue';
+// Removed useDebouncedValue import as we use useEffect instead
 import { useQueryParamsTable } from '@/hooks/useQueryParamsTable';
 import { useRefundList, useRefundTransactionDetail } from '@/hooks/useRefundAdministrasi';
 import { formatCurrency } from '@/lib/utils/currency';
@@ -29,14 +29,23 @@ export function AdminRefundPage({ title, description, basePath, backHref, transa
     defaultPage: 1,
     defaultPerPage: 25,
   });
-  const debouncedSearch = useDebouncedValue(search, 400);
+  const [searchInput, setSearchInput] = useState(search);
+
+  useEffect(() => {
+    const timeout = window.setTimeout(() => {
+      if (search !== searchInput.trim()) {
+        setSearch(searchInput.trim());
+      }
+    }, 400);
+    return () => window.clearTimeout(timeout);
+  }, [searchInput, search, setSearch]);
 
   const transactionQuery = useRefundTransactionDetail(transactionId);
   const transactionCode = transactionQuery.data?.code ?? '';
   const refundQuery = useRefundList({
     page,
     perPage,
-    search: debouncedSearch || transactionCode || undefined,
+    search: search || transactionCode || undefined,
   });
 
   const refunds = useMemo(
@@ -80,8 +89,8 @@ export function AdminRefundPage({ title, description, basePath, backHref, transa
             <div className="relative w-full max-w-md">
               <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
               <Input
-                value={search}
-                onChange={(event) => setSearch(event.target.value)}
+                value={searchInput}
+                onChange={(event) => setSearchInput(event.target.value)}
                 placeholder="Cari kode refund atau catatan"
                 className="pl-10"
               />

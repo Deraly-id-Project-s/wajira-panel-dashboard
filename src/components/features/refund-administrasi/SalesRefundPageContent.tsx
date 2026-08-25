@@ -194,7 +194,6 @@ export default function SalesRefundPageContent({ transactionId }: { transactionI
           perPage={perPage}
           onPerPageChange={(limit) => {
             setPerPage(limit);
-            setPage(1);
           }}
           meta={
             refundQuery.data?.meta

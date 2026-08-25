@@ -134,7 +134,6 @@ export default function RegionPage() {
           onPageChange={setPage}
           onPerPageChange={(v) => {
             setPerPage(v);
-            setPage(1);
           }}
           onAdd={handleAddClick}
           onImport={canCreate ? () => setIsImportOpen(true) : undefined}

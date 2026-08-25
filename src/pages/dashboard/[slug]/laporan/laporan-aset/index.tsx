@@ -268,7 +268,7 @@ export default function LaporanAssetPage() {
 
             <div className="flex items-center gap-2 text-sm text-slate-500 whitespace-nowrap">
               <span>Show</span>
-              <Select value={String(perPage)} onValueChange={(value) => { setPerPage(Number(value)); setPage(1); }}>
+              <Select value={String(perPage)} onValueChange={(value) => { setPerPage(Number(value)); }}>
                 <SelectTrigger className="w-[80px] rounded-md border-slate-200 bg-white shadow-sm cursor-pointer">
                   <SelectValue />
                 </SelectTrigger>

@@ -223,7 +223,6 @@ export default function TransaksiRefundBeliPage() {
           perPage={perPage}
           onPerPageChange={(limit) => {
             setPerPage(limit);
-            setPage(1);
           }}
           meta={
             refundQuery.data?.meta
