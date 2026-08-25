@@ -75,6 +75,9 @@ export interface BaseTableProps<T> {
   startDate?: string | null;
   endDate?: string | null;
   onDateRangeChange?: (start: string | null, end: string | null) => void;
+
+  // Row mark props
+  getRowMark?: (item: T) => 'alert' | 'success' | 'base' | null | undefined;
 }
 
 export default function BaseTable<T>({
@@ -108,6 +111,7 @@ export default function BaseTable<T>({
   startDate,
   endDate,
   onDateRangeChange,
+  getRowMark,
 }: BaseTableProps<T>) {
   const [localSearch, setLocalSearch] = useState(search || '');
   const [internalSort, setInternalSort] = useState<{ key: string; direction: 'asc' | 'desc' } | null>(
@@ -196,6 +200,31 @@ export default function BaseTable<T>({
     const start = range?.from ? format(range.from, 'yyyy-MM-dd') : null;
     const end = range?.to ? format(range.to, 'yyyy-MM-dd') : null;
     onDateRangeChange(start, end);
+  };
+
+  const getMarkClasses = (mark?: 'alert' | 'success' | 'base' | null | undefined) => {
+    switch (mark) {
+      case 'alert':
+        return {
+          row: 'bg-red-500/[0.09] hover:bg-red-500/[0.06] border-red-100/40 dark:bg-red-950/10 dark:hover:bg-red-950/20',
+          cell: 'bg-red-500/[0.03] group-hover:bg-red-500/[0.06] dark:bg-red-950/10 dark:group-hover:bg-red-950/20',
+        };
+      case 'success':
+        return {
+          row: 'bg-emerald-500/[0.02] hover:bg-emerald-500/[0.05] border-emerald-100/40 dark:bg-emerald-950/10 dark:hover:bg-emerald-950/20',
+          cell: 'bg-emerald-500/[0.02] group-hover:bg-emerald-500/[0.05] dark:bg-emerald-950/10 dark:group-hover:bg-emerald-950/20',
+        };
+      case 'base':
+        return {
+          row: 'bg-amber-500/[0.03] hover:bg-amber-500/[0.06] border-amber-100/40 dark:bg-amber-950/10 dark:hover:bg-amber-950/20',
+          cell: 'bg-amber-500/[0.03] group-hover:bg-amber-500/[0.06] dark:bg-amber-950/10 dark:group-hover:bg-amber-950/20',
+        };
+      default:
+        return {
+          row: 'bg-white hover:bg-slate-50 border-slate-100',
+          cell: 'bg-white group-hover:bg-slate-50',
+        };
+    }
   };
 
   const getRowIdInternal = useCallback((item: T) => {
@@ -542,60 +571,72 @@ export default function BaseTable<T>({
                 </TableCell>
               </TableRow>
             ) : (
-              sortedData.map((item, rowIdx) => (
-                <TableRow
-                  key={rowIdx}
-                  className={cn(
-                    "group border-b bg-white hover:bg-slate-50 border-slate-100 transition-colors",
-                    onRowClick && "cursor-pointer"
-                  )}
-                  onClick={() => onRowClick?.(item)}
-                >
-                  {showCheckbox && (
-                    <TableCell className="w-[50px] min-w-[50px] max-w-[50px] px-4 py-4 text-center sticky left-0 bg-white group-hover:bg-slate-50 z-10 border-r border-slate-200 shadow-[4px_0_6px_-4px_rgba(0,0,0,0.05)]">
-                      <Checkbox
-                        checked={selectedIds?.has(getRowIdInternal(item)) ?? false}
-                        onCheckedChange={(checked) => handleToggleOne(getRowIdInternal(item), Boolean(checked))}
-                        disabled={isCheckboxDisabled?.(item)}
-                        aria-label="Pilih baris"
-                      />
-                    </TableCell>
-                  )}
-                  {columns.map((col, colIdx) => {
-                    const alignment = col.alignment ?? 'left';
-                    const textAlignment = alignment === 'right' ? 'text-right' : alignment === 'center' ? 'text-center' : 'text-left';
-                    const colKey = col.id || col.accessorKey || String(colIdx);
+              sortedData.map((item, rowIdx) => {
+                const mark = getRowMark?.(item);
+                const markClasses = getMarkClasses(mark);
 
-                    const isStickyLeft = col.sticky === 'left' || lockedColumns.has(colKey);
-                    const isStickyRight = col.sticky === 'right';
-                    const isLastStickyLeft = colKey === lastStickyLeftKey;
-                    const leftOffset = columnLeftOffsets[colKey] ?? 0;
-
-                    return (
-                      <TableCell
-                        key={col.id || colIdx}
-                        className={cn(
-                          'px-4 py-4 print:px-2 print:py-2 text-sm print:text-[10px] text-slate-700 transition-colors',
-                          isStickyLeft && cn(
-                            'sticky z-10 bg-white group-hover:bg-slate-50 border-r border-slate-200',
-                            isLastStickyLeft && 'shadow-[4px_0_6px_-4px_rgba(0,0,0,0.05)]'
-                          ),
-                          isStickyRight && 'sticky right-0 bg-white group-hover:bg-slate-50 z-10 border-l border-slate-200 shadow-[-4px_0_6px_-4px_rgba(0,0,0,0.05)] w-[80px] min-w-[80px] max-w-[80px]',
-                          textAlignment,
-                          col.className
-                        )}
-                        style={isStickyLeft ? { left: leftOffset } : undefined}
-                      >
-                        {col.cell
-                          ? col.cell(item, rowIdx)
-                          : col.accessorKey
-                            ? String((item as any)[col.accessorKey] ?? '')
-                            : null}
+                return (
+                  <TableRow
+                    key={rowIdx}
+                    className={cn(
+                      "group border-b transition-colors",
+                      markClasses.row,
+                      onRowClick && "cursor-pointer"
+                    )}
+                    onClick={() => onRowClick?.(item)}
+                  >
+                    {showCheckbox && (
+                      <TableCell className={cn(
+                        "w-[50px] min-w-[50px] max-w-[50px] px-4 py-4 text-center sticky left-0 z-10 border-r border-slate-200 shadow-[4px_0_6px_-4px_rgba(0,0,0,0.05)]",
+                        markClasses.cell
+                      )}>
+                        <Checkbox
+                          checked={selectedIds?.has(getRowIdInternal(item)) ?? false}
+                          onCheckedChange={(checked) => handleToggleOne(getRowIdInternal(item), Boolean(checked))}
+                          disabled={isCheckboxDisabled?.(item)}
+                          aria-label="Pilih baris"
+                        />
                       </TableCell>
-                    );
-                  })}
-                </TableRow>
-              ))
+                    )}
+                    {columns.map((col, colIdx) => {
+                      const alignment = col.alignment ?? 'left';
+                      const textAlignment = alignment === 'right' ? 'text-right' : alignment === 'center' ? 'text-center' : 'text-left';
+                      const colKey = col.id || col.accessorKey || String(colIdx);
+
+                      const isStickyLeft = col.sticky === 'left' || lockedColumns.has(colKey);
+                      const isStickyRight = col.sticky === 'right';
+                      const isLastStickyLeft = colKey === lastStickyLeftKey;
+                      const leftOffset = columnLeftOffsets[colKey] ?? 0;
+
+                      const isFirstCell = !showCheckbox && colIdx === 0;
+
+                      return (
+                        <TableCell
+                          key={col.id || colIdx}
+                          className={cn(
+                            'px-4 py-4 print:px-2 print:py-2 text-sm print:text-[10px] text-slate-700 transition-colors',
+                            isStickyLeft && cn(
+                              'sticky z-10 border-r border-slate-200',
+                              isLastStickyLeft && 'shadow-[4px_0_6px_-4px_rgba(0,0,0,0.05)]'
+                            ),
+                            isStickyRight && 'sticky right-0 z-10 border-l border-slate-200 shadow-[-4px_0_6px_-4px_rgba(0,0,0,0.05)] w-[80px] min-w-[80px] max-w-[80px]',
+                            markClasses.cell,
+                            textAlignment,
+                            col.className
+                          )}
+                          style={isStickyLeft ? { left: leftOffset } : undefined}
+                        >
+                          {col.cell
+                            ? col.cell(item, rowIdx)
+                            : col.accessorKey
+                              ? String((item as any)[col.accessorKey] ?? '')
+                              : null}
+                        </TableCell>
+                      );
+                    })}
+                  </TableRow>
+                );
+              })
             )}
           </TableBody>
           {footer}
