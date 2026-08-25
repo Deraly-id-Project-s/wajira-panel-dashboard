@@ -209,7 +209,10 @@ export default function FinanceBillingTable({ financeBillings, cashFlowDetail, c
     [financeBillings],
   );
   const grandTotal = Number(cashFlowDetail.grand_total || cashFlowDetail.unit_transaction_billing?.grand_total || 0);
-  const cashFlowAmount = Number(cashFlowDetail.amount || cashFlowDetail.debet || cashFlowDetail.credit || grandTotal || 0);
+  const cashFlowCurrency = Number(cashFlowDetail.debet_usd || cashFlowDetail.credit_usd || 0) > 0 ? 'usd' : 'idr';
+  const cashFlowAmount = cashFlowCurrency === 'usd'
+    ? Number(cashFlowDetail.debet_usd || cashFlowDetail.credit_usd || 0)
+    : Number(cashFlowDetail.amount || cashFlowDetail.debet || cashFlowDetail.credit || grandTotal || 0);
   const editingAmount = useMemo(() => {
     if (!editingId) return 0;
     return Number(financeBillings.find((fb) => fb.id === editingId)?.amount || 0);
@@ -397,7 +400,7 @@ export default function FinanceBillingTable({ financeBillings, cashFlowDetail, c
   );
 
   return (
-    <div className="rounded-[26px] border border-slate-200 bg-white p-6 shadow-sm space-y-4">
+    <div className="rounded-md border border-slate-200 bg-white p-6 shadow-sm space-y-4">
       <div className="flex items-center justify-between border-b border-slate-100 pb-4">
         <div>
           <div className="flex items-center gap-3 flex-wrap">
@@ -440,12 +443,12 @@ export default function FinanceBillingTable({ financeBillings, cashFlowDetail, c
       <div className="flex flex-col items-end gap-2 border-t border-slate-100 pt-4 text-sm">
         <div className="flex items-center gap-3">
           <span className="text-slate-500">Total Pembayaran:</span>
-          <span className="font-bold text-slate-900">{currenciesFormat('idr', totalPaid)}</span>
+          <span className="font-bold text-slate-900">{currenciesFormat(cashFlowCurrency, totalPaid)}</span>
         </div>
         <div className="flex items-center gap-3">
           <span className="text-slate-500">Sisa Tagihan:</span>
           <span className={`font-bold ${remainingPayment > 0 ? 'text-amber-600' : 'text-emerald-600'}`}>
-            {currenciesFormat('idr', remainingPayment)}
+            {currenciesFormat(cashFlowCurrency, remainingPayment)}
           </span>
         </div>
       </div>
@@ -551,7 +554,7 @@ export default function FinanceBillingTable({ financeBillings, cashFlowDetail, c
             <AlertDialogTitle>Hapus Pembayaran?</AlertDialogTitle>
             <AlertDialogDescription>
               Anda yakin ingin menghapus pembayaran sebesar{' '}
-              <span className="font-semibold">{deleteTarget ? currenciesFormat('idr', deleteTarget.amount) : ''}</span>?
+              <span className="font-semibold">{deleteTarget ? currenciesFormat(deleteTarget.cash?.code?.toLowerCase().endsWith('_usd') ? 'usd' : 'idr', deleteTarget.amount) : ''}</span>?
               Tindakan ini tidak dapat dibatalkan.
             </AlertDialogDescription>
           </AlertDialogHeader>

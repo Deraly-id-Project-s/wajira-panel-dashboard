@@ -134,6 +134,25 @@ export const useUpdateUnitTransactionState = () => {
   });
 };
 
+export const useUpdateUnitTransactionDocumentTemplate = () => {
+  const queryClient = useQueryClient();
+  const { companyId } = useCompany();
+
+  return useMutation({
+    mutationFn: ({ id, documentTemplateId }: { id: string; documentTemplateId: string | number | null }) =>
+      unitTransactionService.updateDocumentTemplate(id, documentTemplateId),
+    onSuccess: (data) => {
+      if (companyId) {
+        queryClient.invalidateQueries({ queryKey: companyQueryKeys.companyScope(companyId) });
+        queryClient.invalidateQueries({ queryKey: unitTransactionKeys.detail(companyId, data.id) });
+        queryClient.invalidateQueries({ queryKey: unitTransactionKeys.purchaseDetail(companyId, data.id) });
+      }
+      queryClient.invalidateQueries({ queryKey: ['sales-transaction', data.id] });
+      queryClient.invalidateQueries({ queryKey: ['sales-transactions'] });
+    },
+  });
+};
+
 export const useSubmitTransactionAdjustment = () => {
   const queryClient = useQueryClient();
   const { companyId } = useCompany();

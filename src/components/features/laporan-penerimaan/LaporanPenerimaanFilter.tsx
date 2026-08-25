@@ -41,16 +41,16 @@ export default function LaporanPenerimaanFilter({
     if (startDate && endDate) {
       const from = new Date(startDate);
       const to = new Date(endDate);
-      return { 
-        from: Number.isNaN(from.getTime()) ? undefined : from, 
-        to: Number.isNaN(to.getTime()) ? undefined : to 
+      return {
+        from: Number.isNaN(from.getTime()) ? undefined : from,
+        to: Number.isNaN(to.getTime()) ? undefined : to
       };
     }
     if (startDate) {
       const from = new Date(startDate);
-      return { 
-        from: Number.isNaN(from.getTime()) ? undefined : from, 
-        to: undefined 
+      return {
+        from: Number.isNaN(from.getTime()) ? undefined : from,
+        to: undefined
       };
     }
     return undefined;
@@ -198,7 +198,7 @@ export default function LaporanPenerimaanFilter({
                       <Button
                         key={option.id}
                         variant="ghost"
-                        className="w-full justify-start rounded-sm font-normal py-1.5 px-2 h-auto text-sm"
+                        className="w-full justify-start rounded-md font-normal py-1.5 px-2 h-auto text-sm"
                         onClick={() => {
                           setSearchQuery(option.name);
                           setOpenBox(false);
@@ -219,7 +219,7 @@ export default function LaporanPenerimaanFilter({
             </Popover>
           </div>
         )}
- 
+
         <div className="flex flex-col space-y-1.5 w-full sm:w-auto">
           <label className="text-[13px] font-medium text-slate-700">Per Halaman</label>
           <Select value={perPage} onValueChange={setPerPage}>
@@ -234,7 +234,7 @@ export default function LaporanPenerimaanFilter({
           </Select>
         </div>
       </div>
- 
+
       <div className="flex flex-col sm:flex-row items-center gap-2 w-full sm:w-auto">
         <Button onClick={onPrint} variant="outline" className="w-full sm:w-auto h-9">
           <Printer className="h-4 w-4 mr-2" /> Print

@@ -5,7 +5,7 @@ export const accountSchema = z.object({
   code: z.string().min(1, 'Kode akun wajib diisi'),
   name: z.string().min(1, 'Nama akun wajib diisi'),
   description: z.string().optional(),
-  category: z.enum(['general_administration', 'current_assets', 'liabilities']).optional().nullable(),
+  category: z.enum(['general', 'operational', 'director_receivable', 'shareholder_receivable', 'receivable', 'inventory']).optional().nullable(),
   isActive: z.boolean(),
 });
 

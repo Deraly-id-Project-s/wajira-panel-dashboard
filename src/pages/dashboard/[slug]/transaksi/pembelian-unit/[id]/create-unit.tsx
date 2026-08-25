@@ -4,7 +4,7 @@ import { useRouter } from 'next/router';
 import { toast } from 'sonner';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { UnitTransactionForm } from '@/components/features/unit-transaction/UnitTransactionForm';
-import { usePurchaseById } from '@/hooks/useUnitTransaction';
+import { usePurchaseById, useUpdateUnitTransactionDocumentTemplate } from '@/hooks/useUnitTransaction';
 import { useCreateUnitItem, usePurchaseUnitItems } from '@/hooks/useUnitTransactionItem';
 import { ArrowLeft } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
@@ -35,6 +35,7 @@ export default function CreatePurchaseUnitPage() {
   const { data: purchase, isLoading } = usePurchaseById(id as string);
   const { data: existingItems } = usePurchaseUnitItems(id as string);
   const addUnitMutation = useCreateUnitItem();
+  const updateTemplateMutation = useUpdateUnitTransactionDocumentTemplate();
 
   const existingTypeUnitIds = useMemo(
     () =>
@@ -94,6 +95,9 @@ export default function CreatePurchaseUnitPage() {
         dpp_tax_id: data?.dppTaxVersionId ? Number(data?.dppTaxVersionId) : undefined,
         ppn_tax_id: data?.ppnTaxVersionId ? Number(data?.ppnTaxVersionId) : undefined,
       });
+      if ((data.documentTemplateId ?? null) !== (purchase?.documentTemplateId ?? null)) {
+        await updateTemplateMutation.mutateAsync({ id: String(id), documentTemplateId: data.documentTemplateId ?? null });
+      }
       toast.success('Unit berhasil ditambahkan');
       router.push(`/dashboard/${slug}/transaksi/pembelian-unit/${id}`);
     } catch (err: any) {
@@ -138,6 +142,7 @@ export default function CreatePurchaseUnitPage() {
               onCancel={() => router.back()}
               loading={addUnitMutation.isPending}
               excludedTypeUnitIds={existingTypeUnitIds}
+              defaultValues={{ documentTemplateId: purchase?.documentTemplateId ?? null }}
             />
           </CardContent>
         </Card>

@@ -18,6 +18,9 @@ export interface DoEkspedisiOrderList {
   id: number;
   uuid?: string;
   code: string;
+  description: string;
+  status: string;
+  customer?: DoEkspedisiCustomer | null;
   customerName: string;
   loadingIn: string;
   loadingOut: string;
@@ -26,6 +29,16 @@ export interface DoEkspedisiOrderList {
   qty: number;
   tarifs: DoEkspedisiOrderTarifItem[];
   vehicleType?: string;
+  billInvoice: number;
+  ppn: number;
+  pph: number;
+  ujDriver: number;
+  ujTowing: number | null;
+  ujCdd: number | null;
+  ujFuso: number | null;
+  invTowing: number | null;
+  invCdd: number | null;
+  invFuso: number | null;
 }
 
 export interface DoEkspedisiOrderTarifItem {
@@ -50,7 +63,10 @@ export interface DoEkspedisiCustomer {
   id: number;
   uuid?: string;
   name: string;
+  address?: string | null;
+  phone?: string | null;
   pic?: string | null;
+  companyList?: string | null;
 }
 
 export interface DoEkspedisiItemDestination {

@@ -39,6 +39,7 @@ const FEATURE_MAP: Record<string, { path: string; label?: string; group?: string
   'vendor': { path: '/master/vendor', label: 'Vendor' },
   'bbn': { path: '/master/bbn', label: 'BBN' },
   'vehicle-equipment': { path: '/master/vehicle-equipment', label: 'Perlengkapan' },
+  'document-template': { path: '/master/document-template', label: 'Dokumen Template' },
 
   // Administrasi / Transaction
   'transaction-flow': { path: '/arus-transaksi', label: 'Arus Transaksi' },

@@ -1,5 +1,5 @@
 import { useMemo, useState, useEffect, type ReactNode } from 'react';
-import { useForm } from 'react-hook-form';
+import { useForm, type UseFormReturn } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
@@ -28,7 +28,7 @@ export interface UnitTransactionFormProps {
   onCancel?: () => void;
   companyId?: string | number | null;
   excludedTypeUnitIds?: string[];
-  prependFields?: ReactNode;
+  prependFields?: ReactNode | ((form: UseFormReturn<UnitTransactionFormValues>) => ReactNode);
   hideItemFields?: boolean;
   submitDisabled?: boolean;
   cancelDisabled?: boolean;
@@ -82,6 +82,7 @@ export function UnitTransactionForm({
     resolver: zodResolver(unitTransactionSchema),
     defaultValues: {
       unitTypeId: defaultValues?.unitTypeId || '',
+      documentTemplateId: defaultValues?.documentTemplateId ?? null,
       qty: defaultValues?.qty ?? 1,
       price: defaultValues?.price || 0,
       bbnPrice: defaultValues?.bbnPrice || 0,
@@ -159,7 +160,7 @@ export function UnitTransactionForm({
             <div className="my-6 h-px bg-muted/60" />
           </div>
 
-          {prependFields}
+          {typeof prependFields === 'function' ? prependFields(form) : prependFields}
 
           {!hideItemFields && (
             <>

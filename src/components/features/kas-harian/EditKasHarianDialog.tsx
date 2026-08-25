@@ -19,7 +19,6 @@ interface Props {
 
 export default function EditKasHarianDialog({ open, onOpenChange, data }: Props) {
   const { mutateAsync: updateKasHarian, isPending } = useUpdateKasHarian();
-  const lockAmounts = (data?.finance_billings ?? []).length > 0;
   const form = useForm<KasHarianFormInput, unknown, KasHarianFormValues>({
     resolver: zodResolver(kasHarianSchema) as Resolver<KasHarianFormInput, unknown, KasHarianFormValues>,
     defaultValues: {
@@ -27,8 +26,9 @@ export default function EditKasHarianDialog({ open, onOpenChange, data }: Props)
       date: new Date(),
       note: '',
       debet: 0,
+      debet_usd: 0,
       credit: 0,
-      transaction_category: 'general',
+      credit_usd: 0,
       payment_proof: null,
     },
   });
@@ -46,8 +46,9 @@ export default function EditKasHarianDialog({ open, onOpenChange, data }: Props)
         date: data.date ? new Date(data.date) : new Date(),
         note: data.note,
         debet: data.debet,
+        debet_usd: data.debet_usd ?? 0,
         credit: data.credit,
-        transaction_category: data.transaction_category || 'general',
+        credit_usd: data.credit_usd ?? 0,
         payment_proof: null,
       });
     }
@@ -64,8 +65,9 @@ export default function EditKasHarianDialog({ open, onOpenChange, data }: Props)
           date: format(values.date, 'yyyy-MM-dd'),
           note: values.note,
           debet: values.debet,
+          debet_usd: values.debet_usd,
           credit: values.credit,
-          transaction_category: values.transaction_category,
+          credit_usd: values.credit_usd,
           payment_proof: values.payment_proof,
         },
       });
@@ -97,7 +99,6 @@ export default function EditKasHarianDialog({ open, onOpenChange, data }: Props)
         form={form}
         onSubmit={onSubmit}
         companies={companyQuery.data ?? []}
-        lockAmounts={lockAmounts}
         wrapWithForm={false}
       />
     </FormDialog>

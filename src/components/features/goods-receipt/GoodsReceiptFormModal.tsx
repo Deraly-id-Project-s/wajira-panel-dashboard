@@ -72,7 +72,7 @@ export function GoodsReceiptFormModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent showCloseButton={false} className="flex max-h-[90dvh] flex-col rounded-[20px] border-none p-0 shadow-2xl sm:max-w-[392px]">
+      <DialogContent showCloseButton={false} className="flex max-h-[90dvh] flex-col rounded-md border-none p-0 shadow-2xl sm:max-w-[392px]">
         <div className="shrink-0 px-5 pt-6">
           <DialogHeader className="space-y-1 text-left">
             <DialogTitle className="text-[18px] font-semibold text-slate-950">Input Penerimaan Material</DialogTitle>

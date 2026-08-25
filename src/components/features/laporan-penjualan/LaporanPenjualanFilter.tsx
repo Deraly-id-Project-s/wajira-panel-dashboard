@@ -40,16 +40,16 @@ export default function LaporanPenjualanFilter({
     if (startDate && endDate) {
       const from = new Date(startDate);
       const to = new Date(endDate);
-      return { 
-        from: Number.isNaN(from.getTime()) ? undefined : from, 
-        to: Number.isNaN(to.getTime()) ? undefined : to 
+      return {
+        from: Number.isNaN(from.getTime()) ? undefined : from,
+        to: Number.isNaN(to.getTime()) ? undefined : to
       };
     }
     if (startDate) {
       const from = new Date(startDate);
-      return { 
-        from: Number.isNaN(from.getTime()) ? undefined : from, 
-        to: undefined 
+      return {
+        from: Number.isNaN(from.getTime()) ? undefined : from,
+        to: undefined
       };
     }
     return undefined;
@@ -57,10 +57,10 @@ export default function LaporanPenjualanFilter({
   const [customers, setCustomers] = useState<Array<{ id: number; name: string }>>([]);
   const [unitTypes, setUnitTypes] = useState<Array<{ id: number; name: string }>>([]);
   const [spareparts, setSpareparts] = useState<Array<{ id: number; name: string }>>([]);
-  
+
   // Search state
   const [searchQuery, setSearchQuery] = useState('');
-  
+
   // Combobox local state
   const [openBox, setOpenBox] = useState(false);
   const [searchTermInside, setSearchTermInside] = useState('');
@@ -162,7 +162,7 @@ export default function LaporanPenjualanFilter({
   return (
     <div className="flex flex-col sm:flex-row sm:items-end justify-between w-full no-print gap-4">
       <div className="flex flex-col sm:flex-row sm:items-end gap-3 w-full sm:w-auto">
-        
+
         {/* Periode Transaksi */}
         <div className="flex flex-col space-y-1.5 w-full sm:w-auto">
           <label className="text-[13px] font-medium text-slate-700">Periode Transaksi</label>
@@ -178,18 +178,18 @@ export default function LaporanPenjualanFilter({
               {activeTab === 'per-tipe' ? `Masukkan ${reportItem === 'sparepart' ? 'Sparepart' : 'Tipe'} ` : 'Masukkan Customer '}
               <span className="text-red-500">*</span>
             </label>
-            
+
             <Popover open={openBox} onOpenChange={setOpenBox}>
               <PopoverTrigger asChild>
-                <Button 
-                  variant="outline" 
+                <Button
+                  variant="outline"
                   role="combobox"
                   aria-expanded={openBox}
                   className="w-full sm:w-[250px] justify-between text-left font-normal bg-white h-9"
                 >
                   <span className="truncate">
-                    {searchQuery 
-                      ? (currentOptions.find(o => o.name === searchQuery)?.name || searchQuery) 
+                    {searchQuery
+                      ? (currentOptions.find(o => o.name === searchQuery)?.name || searchQuery)
                       : (activeTab === 'per-tipe' ? `Pilih atau cari ${reportItem === 'sparepart' ? 'sparepart' : 'tipe'}...` : 'Pilih atau cari customer...')}
                   </span>
                   <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
@@ -198,34 +198,34 @@ export default function LaporanPenjualanFilter({
               <PopoverContent className="w-[--radix-popover-trigger-width] sm:w-[250px] p-0" align="start">
                 <div className="flex flex-col w-full">
                   <div className="p-2 border-b">
-                     <Input 
-                        placeholder="Ketik untuk mencari..." 
-                        value={searchTermInside}
-                        onChange={e => setSearchTermInside(e.target.value)}
-                        className="h-8 shadow-none focus-visible:ring-0"
-                     />
+                    <Input
+                      placeholder="Ketik untuk mencari..."
+                      value={searchTermInside}
+                      onChange={e => setSearchTermInside(e.target.value)}
+                      className="h-8 shadow-none focus-visible:ring-0"
+                    />
                   </div>
                   <div className="max-h-[200px] overflow-y-auto p-1">
                     {filteredOptions.length === 0 && (
-                       <div className="p-4 text-center text-sm text-gray-500">
-                          Data tidak ditemukan.
-                       </div>
+                      <div className="p-4 text-center text-sm text-gray-500">
+                        Data tidak ditemukan.
+                      </div>
                     )}
                     {filteredOptions.map(opt => (
                       <Button
                         key={opt.id}
                         variant="ghost"
-                        className="w-full justify-start rounded-sm font-normal py-1.5 px-2 h-auto text-sm"
+                        className="w-full justify-start rounded-md font-normal py-1.5 px-2 h-auto text-sm"
                         onClick={() => {
                           setSearchQuery(opt.name);
                           setOpenBox(false);
                         }}
                       >
-                        <Check 
-                           className={cn(
-                             "mr-2 h-4 w-4",
-                             searchQuery === opt.name ? "opacity-100 text-blue-600" : "opacity-0"
-                           )} 
+                        <Check
+                          className={cn(
+                            "mr-2 h-4 w-4",
+                            searchQuery === opt.name ? "opacity-100 text-blue-600" : "opacity-0"
+                          )}
                         />
                         <span className="truncate">{opt.name}</span>
                       </Button>
@@ -237,7 +237,7 @@ export default function LaporanPenjualanFilter({
           </div>
         )}
       </div>
- 
+
       {/* Action Buttons */}
       <div className="flex flex-col sm:flex-row items-center gap-2 w-full sm:w-auto">
         <Button onClick={onPrint} variant="outline" className="w-full sm:w-auto h-9">

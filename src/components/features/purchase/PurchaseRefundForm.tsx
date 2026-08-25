@@ -148,7 +148,7 @@ export function PurchaseRefundForm({
   // ─── Render ───────────────────────────────────────────────────────────────
 
   return (
-    <Card className="rounded-[20px] border border-gray-200 bg-white shadow-[0_1px_3px_rgba(15,23,42,0.06)]">
+    <Card className="rounded-md border border-gray-200 bg-white shadow-[0_1px_3px_rgba(15,23,42,0.06)]">
       <CardContent className="p-6 md:p-8">
         <Form {...form}>
           <form onSubmit={form.handleSubmit(handleFormSubmit)} className="space-y-6">

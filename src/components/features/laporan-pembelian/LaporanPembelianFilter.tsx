@@ -225,7 +225,7 @@ export default function LaporanPembelianFilter({
                       <Button
                         key={opt.id}
                         variant="ghost"
-                        className="w-full justify-start rounded-sm font-normal py-1.5 px-2 h-auto text-sm"
+                        className="w-full justify-start rounded-md font-normal py-1.5 px-2 h-auto text-sm"
                         onClick={() => {
                           setSearchQuery(opt.name);
                           setOpenBox(false);

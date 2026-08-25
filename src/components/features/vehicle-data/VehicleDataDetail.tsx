@@ -29,7 +29,7 @@ function DetailRow({ label, value }: { label: string; value?: string | number | 
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <Card className="rounded-[20px] border border-slate-200 bg-[#fcfcfd] p-5 shadow-sm">
+    <Card className="rounded-md border border-slate-200 bg-[#fcfcfd] p-5 shadow-sm">
       <div className="mb-4 border-b border-slate-200 pb-3 text-base font-semibold text-slate-900">{title}</div>
       {children}
     </Card>

@@ -67,7 +67,7 @@ export function GoodsIssueEquipmentDetailFormModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent showCloseButton={false} className="rounded-[20px] border-none p-0 shadow-2xl sm:max-w-[392px]">
+      <DialogContent showCloseButton={false} className="rounded-md border-none p-0 shadow-2xl sm:max-w-[392px]">
         <div className="px-5 py-6">
           <DialogHeader className="space-y-1 text-left">
             <DialogTitle className="text-[18px] font-semibold text-slate-950">

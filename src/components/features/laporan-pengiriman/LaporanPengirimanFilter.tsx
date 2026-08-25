@@ -193,7 +193,7 @@ export default function LaporanPengirimanFilter({
                       <Button
                         key={option.id}
                         variant="ghost"
-                        className="w-full justify-start rounded-sm font-normal py-1.5 px-2 h-auto text-sm"
+                        className="w-full justify-start rounded-md font-normal py-1.5 px-2 h-auto text-sm"
                         onClick={() => {
                           setSearchQuery(option.name);
                           setOpenBox(false);

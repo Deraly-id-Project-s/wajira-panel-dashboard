@@ -30,6 +30,7 @@ import {
 import { formatDate } from '@/lib/utils/format';
 import { LoadingState } from '@/components/ui/loading-state';
 import { UnitTypeDetailTable } from '@/components/features/unit-transaction/UnitTypeDetailTable';
+import { useDocumentTemplate } from '@/hooks/useDocumentTemplate';
 
 const readApiError = (error: any): string => {
   const details = error?.details ?? error?.response?.data?.errors;
@@ -54,6 +55,7 @@ export default function PurchaseDetailPage() {
 
   const { slug, id } = router.query;
   const { data: purchase, isLoading, isError, refetch: refetchPurchase } = usePurchaseById(id as string);
+  const { data: documentTemplate } = useDocumentTemplate(purchase?.documentTemplateId ?? null);
   const { data: billings = [] } = useUnitBillings(purchase?.id);
   const { data: currentBilling, isLoading: billingLoading } = useCurrentBilling(String(purchase?.id ?? ''));
   const billingId = String(currentBilling?.id ?? '');
@@ -113,7 +115,7 @@ export default function PurchaseDetailPage() {
       }));
 
   useEffect(() => {
-    if (router.query.print === 'true' && !isLoading && purchase) {
+    if (router.query.print === 'true' && !isLoading && purchase?.documentTemplateId) {
       setTimeout(() => {
         window.print();
       }, 800);
@@ -366,6 +368,24 @@ export default function PurchaseDetailPage() {
         ) : null}
 
         <PurchaseDetailCards data={purchase} billingHistories={resolvedBillingHistories} />
+
+        {purchase?.documentTemplateId ? (
+          <div
+            onClick={() => router.push(`/dashboard/${slug}/transaksi/pembelian-unit/print/${purchase.id}`)}
+            className="rounded-md border border-gray-200 bg-white px-4 py-3 text-sm shadow-sm hover:bg-slate-50 transition-colors cursor-pointer flex items-center justify-between"
+          >
+            <div>
+              <span className="text-muted-foreground">Document Template:</span>{' '}
+              <span className="font-medium text-blue-600 hover:underline">{documentTemplate?.name ?? 'Memuat template...'}</span>
+            </div>
+            <span className="text-xs text-blue-600 font-medium hover:underline">Print Dokumen</span>
+          </div>
+        ) : (
+          <div className="rounded-md border border-gray-200 bg-white px-4 py-3 text-sm shadow-sm">
+            <span className="text-muted-foreground">Document Template:</span>{' '}
+            <span className="font-medium text-gray-500">{documentTemplate?.name ?? 'Tidak ada template'}</span>
+          </div>
+        )}
 
         <PurchaseUnitTable purchaseId={purchase.id} slug={slug as string} isPaid={isPaid} canEdit={canEdit} canDelete={canDelete} />
 

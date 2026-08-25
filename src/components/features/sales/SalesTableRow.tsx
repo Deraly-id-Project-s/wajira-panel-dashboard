@@ -141,7 +141,7 @@ export function SalesTableRow({ item, isSelected, onToggle, onDelete, canEdit, c
                         <DropdownMenuItem className="rounded-lg px-3 py-2 text-sm text-slate-900 focus:bg-slate-50 cursor-pointer" onClick={handleRefund} disabled={Boolean(item.isRefunded) || !canEdit}>
                             {item.isRefunded ? 'Sudah Refund' : 'Refund'}
                         </DropdownMenuItem>
-                        <DropdownMenuItem className="rounded-lg px-3 py-2 text-sm text-slate-900 focus:bg-slate-50 cursor-pointer" onClick={() => window.open(slug ? `/dashboard/${slug}/transaksi/penjualan-unit/print/${item.id}` : `/transaksi/penjualan-unit/print/${item.id}`, '_blank')} disabled={!canEdit}>
+                        <DropdownMenuItem className="rounded-lg px-3 py-2 text-sm text-slate-900 focus:bg-slate-50 cursor-pointer" onClick={() => item.documentTemplateId && window.open(slug ? `/dashboard/${slug}/transaksi/penjualan-unit/print/${item.id}` : `/transaksi/penjualan-unit/print/${item.id}`, '_blank')} disabled={!canEdit || !item.documentTemplateId} title={!item.documentTemplateId ? 'Document template belum dipilih.' : undefined}>
                             Print
                         </DropdownMenuItem>
                         <DropdownMenuItem onClick={() => setIsDeleteOpen(true)} className="rounded-lg px-3 py-2 text-sm text-red-600 focus:bg-red-50 focus:text-red-600 cursor-pointer" disabled={!canDelete}>

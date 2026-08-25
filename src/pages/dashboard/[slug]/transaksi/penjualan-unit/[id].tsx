@@ -28,6 +28,7 @@ import { useCompany } from '@/contexts/CompanyContext';
 import { CreditCard, AlertTriangle, CheckCircle2, Info } from 'lucide-react';
 import { TextTruncate } from '@/components/ui/text-truncate';
 import { UnitTypeDetailTable } from '@/components/features/unit-transaction/UnitTypeDetailTable';
+import { useDocumentTemplate } from '@/hooks/useDocumentTemplate';
 
 export default function SalesDetailPage() {
   const router = useRouter();
@@ -38,6 +39,7 @@ export default function SalesDetailPage() {
 
   const { slug, id } = router.query;
   const { data: sales, isLoading, isError, refetch: refetchSales } = useSalesById(id as string);
+  const { data: documentTemplate } = useDocumentTemplate(sales?.documentTemplateId ?? null);
   const { data: billings = [] } = useUnitBillings(sales?.id);
   const { data: currentBilling, isLoading: billingLoading } = useCurrentBilling(String(sales?.id ?? ''));
   const billingId = String(currentBilling?.id ?? '');
@@ -103,7 +105,7 @@ export default function SalesDetailPage() {
       }));
 
   useEffect(() => {
-    if (router.query.print === 'true' && !isLoading && sales) {
+    if (router.query.print === 'true' && !isLoading && sales?.documentTemplateId) {
       setTimeout(() => {
         window.print();
       }, 800);
@@ -372,6 +374,24 @@ export default function SalesDetailPage() {
 
         {/* 3-COLUMN CARDS */}
         <SalesDetailCards data={salesData} billingHistories={resolvedBillingHistories} />
+
+        {sales?.documentTemplateId ? (
+          <div
+            onClick={() => router.push(`/dashboard/${slug}/transaksi/penjualan-unit/print/${sales.id}`)}
+            className="rounded-md border border-gray-200 bg-white px-4 py-3 text-sm shadow-sm hover:bg-slate-50 transition-colors cursor-pointer flex items-center justify-between"
+          >
+            <div>
+              <span className="text-muted-foreground">Document Template:</span>{' '}
+              <span className="font-medium text-blue-600 hover:underline">{documentTemplate?.name ?? 'Memuat template...'}</span>
+            </div>
+            <span className="text-xs text-blue-600 font-medium hover:underline">Print Dokumen</span>
+          </div>
+        ) : (
+          <div className="rounded-md border border-gray-200 bg-white px-4 py-3 text-sm shadow-sm">
+            <span className="text-muted-foreground">Document Template:</span>{' '}
+            <span className="font-medium text-gray-500">{documentTemplate?.name ?? 'Tidak ada template'}</span>
+          </div>
+        )}
 
         {/* UNIT TABLE */}
         <SalesUnitTable lineItems={salesData.lineItems} salesId={sales.id} onAddUnit={handleCreateUnit} canEdit={canEdit} canDelete={canDelete} canCreate={canCreate} isPaid={isPaid} />

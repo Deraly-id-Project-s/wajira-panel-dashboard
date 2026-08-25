@@ -41,10 +41,13 @@ const normalizeCashFlow = (payload: Partial<KasHarian>): KasHarian => ({
   note: payload.note ?? '',
   amount: toNumber(payload.amount),
   debet: toNumber(payload.debet),
+  debet_usd: toNumber(payload.debet_usd),
   debet_original: toNumber(payload.debet_original),
+  debet_usd_original: toNumber(payload.debet_usd_original),
   credit: toNumber(payload.credit),
+  credit_usd: toNumber(payload.credit_usd),
   credit_original: toNumber(payload.credit_original),
-  transaction_category: payload.transaction_category ?? '',
+  credit_usd_original: toNumber(payload.credit_usd_original),
   payment_proof: payload.payment_proof ?? null,
   is_paid: toBoolean(payload.is_paid),
   is_valid: payload.is_valid !== undefined ? toBoolean(payload.is_valid) : undefined,
@@ -141,12 +144,17 @@ const buildCashFlowFormData = (payload: CashFlowPayload) => {
   }
   formData.append('date', payload.date);
   formData.append('note', payload.note);
-  formData.append('transaction_category', payload.transaction_category);
   if ((payload.debet ?? 0) > 0) {
     formData.append('debet', String(payload.debet));
   }
+  if ((payload.debet_usd ?? 0) > 0) {
+    formData.append('debet_usd', String(payload.debet_usd));
+  }
   if ((payload.credit ?? 0) > 0) {
     formData.append('credit', String(payload.credit));
+  }
+  if ((payload.credit_usd ?? 0) > 0) {
+    formData.append('credit_usd', String(payload.credit_usd));
   }
   if (payload.payment_proof) {
     formData.append('payment_proof', payload.payment_proof);

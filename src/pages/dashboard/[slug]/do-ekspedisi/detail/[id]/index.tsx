@@ -6,9 +6,8 @@ import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { DOEkspedisiDetailCard } from '@/components/features/do-ekspedisi/DOEkspedisiDetailCard';
 // import { DOEkspedisiDetailTable } from '@/components/features/do-ekspedisi/DOEkspedisiDetailTable';
 import { DeleteDOEkspedisiModal } from '@/components/features/do-ekspedisi/DeleteDOEkspedisiModal';
-import type { DoEkspedisi, DoEkspedisiItem, DoEkspedisiOrderList, DoEkspedisiOrderTarifItem, DoEkspedisiOrderTarifLoadItem } from '@/@types/do-ekspedisi.types';
+import type { DoEkspedisiItem } from '@/@types/do-ekspedisi.types';
 import { useDeleteDoEkspedisiItem, useDoEkspedisiDetail, useUpdateDoEkspedisi } from '@/hooks/useDoEkspedisi';
-import { useOrderListTarifs, useOrderListTarifItems } from '@/hooks/useOrderList';
 import { useProcessDoExpedition } from '@/hooks/useDoInvoice';
 import { getApiErrorMessage } from '@/utils/apiErrorHandler';
 import { LoadingState } from '@/components/ui/loading-state';
@@ -65,23 +64,6 @@ export default function DetailDOEkspedisiPage() {
   const detailQuery = useDoEkspedisiDetail(id ? String(id) : null);
   const processExpeditionMutation = useProcessDoExpedition();
   const updateMutation = useUpdateDoEkspedisi();
-  const orderListId = detailQuery.data?.orderList?.id ?? null;
-  const tarifQuery = useOrderListTarifs({
-    page: 1,
-    perPage: 100,
-    do_orderlist_id: orderListId ?? undefined,
-    order_by: 'created_at',
-    order_sort: 'desc',
-    enabled: Boolean(orderListId),
-  });
-  const tarifItemQuery = useOrderListTarifItems({
-    page: 1,
-    perPage: 500,
-    do_orderlist_id: orderListId ?? undefined,
-    order_by: 'created_at',
-    order_sort: 'desc',
-    enabled: Boolean(orderListId),
-  });
   const deleteItemMutation = useDeleteDoEkspedisiItem();
 
   const updateStatus = async (status: 'draft' | 'process' | 'done') => {
@@ -128,51 +110,13 @@ export default function DetailDOEkspedisiPage() {
               {getDoStatusLabel(detailQuery.data.status)}
             </Badge>
           )}
-          <span className="text-xs text-slate-500">Dibuat {detailQuery.data?.createdAt ? formatDate(detailQuery.data.createdAt) : ''}</span>
+          <span className="text-xs text-slate-500">Ditambahkan {detailQuery.data?.createdAt ? formatDate(detailQuery.data.createdAt) : ''}</span>
         </div>
       )}
       onBack={backToList}
       actions={actions}
     />
   );
-
-  const effectiveData = React.useMemo<DoEkspedisi | null>(() => {
-    if (!detailQuery.data) return null;
-
-    const tarifHeaders = tarifQuery.data?.data ?? [];
-    const tarifItems = tarifItemQuery.data?.data ?? [];
-    const mergedOrderList: DoEkspedisiOrderList | null = detailQuery.data.orderList
-      ? {
-        ...detailQuery.data.orderList,
-        tarifs: (tarifHeaders.length ? tarifHeaders : detailQuery.data.orderList.tarifs ?? []).map((tarif) => {
-          const matchedItems = tarifItems.filter((item) => {
-            const left = Number(item.doOrderListTarifId ?? 0);
-            const rightA = Number(tarif.id ?? 0);
-            const rightB = Number((tarif as any).tarifId ?? 0);
-            return left === rightA || (rightB && left === rightB);
-          });
-          const mappedTarifItems: DoEkspedisiOrderTarifLoadItem[] = matchedItems.map((item) => ({
-            id: Number(item.id ?? 0),
-            uuid: item.uuid,
-            loadContent: item.loadContent,
-            qty: Number(item.qty ?? 0),
-          }));
-
-          return {
-            ...tarif,
-            loadContent: tarif.loadContent || mappedTarifItems[0]?.loadContent || '-',
-            qty: tarif.qty || mappedTarifItems[0]?.qty || 0,
-            tarifItems: mappedTarifItems.length ? mappedTarifItems : tarif.tarifItems,
-          } satisfies DoEkspedisiOrderTarifItem;
-        }),
-      }
-      : null;
-
-    return {
-      ...detailQuery.data,
-      orderList: mergedOrderList,
-    };
-  }, [detailQuery.data, tarifQuery.data?.data, tarifItemQuery.data?.data]);
 
   // Print effect removed (handled in dedicated print page)
 
@@ -203,7 +147,7 @@ export default function DetailDOEkspedisiPage() {
     }
   }, [detailQuery.isError, detailQuery.error]);
 
-  if (detailQuery.isLoading || tarifQuery.isLoading || tarifItemQuery.isLoading) {
+  if (detailQuery.isLoading) {
     return (
       <DashboardLayout>
         <LoadingState variant="page" />
@@ -278,7 +222,7 @@ export default function DetailDOEkspedisiPage() {
                 className="bg-orange-600 hover:bg-orange-700 text-white min-w-[120px] cursor-pointer font-medium"
               >
                 <Play className="h-4 w-4" />
-                {updateMutation.isPending ? 'Memproses...' : 'Mulai Pengiriman'}
+                {updateMutation.isPending ? 'Memproses...' : 'Serahkan ke Driver'}
               </Button>
             ) : detailQuery.data?.status === 'process' ? (
               <>
@@ -328,7 +272,7 @@ export default function DetailDOEkspedisiPage() {
           </>,
         )}
 
-        {(!effectiveData?.driver || !effectiveData?.vehicle) && (
+        {(!detailQuery.data.driver || !detailQuery.data.vehicle) && (
           <div role="alert" className="flex items-start gap-3 rounded-lg border border-amber-200 bg-amber-50 p-4 text-amber-900">
             <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0 text-amber-600" />
             <div>
@@ -338,8 +282,8 @@ export default function DetailDOEkspedisiPage() {
           </div>
         )}
 
-        <DOEkspedisiDetailCard data={effectiveData ?? detailQuery.data} />
-        <DOEkspedisiRelatedData data={effectiveData ?? detailQuery.data} onRefresh={() => void detailQuery.refetch()} />
+        <DOEkspedisiDetailCard data={detailQuery.data} />
+        <DOEkspedisiRelatedData data={detailQuery.data} onRefresh={() => void detailQuery.refetch()} />
 
         {/* <div className="flex flex-col items-start justify-between gap-4 lg:flex-row lg:items-center">
           <div className="flex w-full flex-col gap-3 sm:flex-row sm:items-center lg:w-auto">

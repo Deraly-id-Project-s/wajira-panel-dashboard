@@ -53,6 +53,7 @@ export interface SalesItem {
   units: UnitItem[];
   price_usd?: number;
   price_per_unit_usd?: number;
+  documentTemplateId?: string | null;
 }
 
 /**

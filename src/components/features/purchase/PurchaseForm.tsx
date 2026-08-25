@@ -17,6 +17,7 @@ import { Save } from "lucide-react"
 import { useSuppliers } from "@/hooks/useSupplier"
 import { useMemo, useEffect } from "react"
 import { SupplierCombobox } from "@/components/features/supplier/SupplierCombobox"
+import { DocumentTemplateSelect } from "@/components/features/document-template/DocumentTemplateSelect"
 
 interface Props {
     defaultValues?: Partial<PurchaseFormValues>
@@ -150,6 +151,22 @@ export default function PurchaseForm({
                                         value={field.value ?? ''}
                                     />
                                 </FormControl>
+                                <FormMessage />
+                            </FormItem>
+                        )}
+                    />
+
+                    <FormField
+                        control={form.control}
+                        name="documentTemplateId"
+                        render={({ field }) => (
+                            <FormItem>
+                                <FormLabel className="text-sm font-medium">Document Template <span className="font-normal text-muted-foreground">(Opsional)</span></FormLabel>
+                                <DocumentTemplateSelect
+                                    value={field.value}
+                                    onValueChange={field.onChange}
+                                    disabled={readOnly}
+                                />
                                 <FormMessage />
                             </FormItem>
                         )}

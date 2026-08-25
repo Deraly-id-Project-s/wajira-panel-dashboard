@@ -27,6 +27,8 @@ interface Props {
   onDelete: (item: KasHarianListItem) => void;
   onToggleStatus?: (item: KasHarianListItem) => void;
   onPageChange: (page: number) => void;
+  canEdit?: boolean;
+  canDelete?: boolean;
 }
 
 const formatDate = (value: string) => {
@@ -48,6 +50,8 @@ export default function KasHarianTable({
   onDelete,
   onToggleStatus,
   onPageChange,
+  canEdit = true,
+  canDelete = true,
 }: Props) {
   const page = meta.currentPage;
   const [sortBy, setSortBy] = useState<string>('date');
@@ -119,7 +123,7 @@ export default function KasHarianTable({
         cell: (item) => <TextTruncate text={item.note || '-'} maxLength={15} />,
       },
       {
-        header: 'DEBET',
+        header: 'DEBET IDR',
         accessorKey: 'debet',
         sortable: true,
         alignment: 'center',
@@ -144,7 +148,7 @@ export default function KasHarianTable({
         ),
       },
       {
-        header: 'KREDIT',
+        header: 'KREDIT IDR',
         accessorKey: 'credit',
         sortable: true,
         alignment: 'center',
@@ -166,6 +170,24 @@ export default function KasHarianTable({
             ) : null}
             <span>{currenciesFormat('idr', item.credit)}</span>
           </div>
+        ),
+      },
+      {
+        header: 'DEBET USD',
+        accessorKey: 'debet_usd',
+        sortable: true,
+        alignment: 'center',
+        cell: (item) => (
+          <span className="font-medium text-green-600">{currenciesFormat('usd', item.debet_usd)}</span>
+        ),
+      },
+      {
+        header: 'KREDIT USD',
+        accessorKey: 'credit_usd',
+        sortable: true,
+        alignment: 'center',
+        cell: (item) => (
+          <span className="font-medium text-red-600">{currenciesFormat('usd', item.credit_usd)}</span>
         ),
       },
       {
@@ -205,7 +227,7 @@ export default function KasHarianTable({
                   Detail
                 </DropdownMenuItem>
               )}
-              {item.cashFlowId ? (
+              {item.cashFlowId && canEdit ? (
                 <DropdownMenuItem onClick={() => onEdit(item)} className="rounded-lg px-3 py-2 text-sm text-slate-900 focus:bg-slate-50 cursor-pointer">
                   Edit
                 </DropdownMenuItem>
@@ -223,7 +245,7 @@ export default function KasHarianTable({
                   )}
                 </>
               ) : null}
-              {item.source === 'manual' ? (
+              {item.source === 'manual' && canDelete ? (
                 <DropdownMenuItem onClick={() => onDelete(item)} className="rounded-lg px-3 py-2 text-sm text-red-600 focus:bg-red-50 focus:text-red-600 cursor-pointer">
                   Hapus
                 </DropdownMenuItem>
@@ -233,7 +255,7 @@ export default function KasHarianTable({
         ),
       },
     ],
-    [onPay, onView, onEdit, onToggleStatus, onDelete]
+    [canDelete, canEdit, onPay, onView, onEdit, onToggleStatus, onDelete]
   );
 
   return (

@@ -102,6 +102,8 @@ export interface OrderListListParams extends PaginationParams {
   order_by?: string;
   order_sort?: 'asc' | 'desc';
   company_id?: string | number;
+  start_date?: string | null;
+  end_date?: string | null;
 }
 
 export interface OrderListTarifListParams extends PaginationParams {

@@ -112,7 +112,7 @@ export function DOEkspedisiDetailForm({
 
   return (
     <form onSubmit={onSubmit ? handleSubmit(onSubmit) : undefined} className="space-y-6">
-      <div className="rounded-[20px] border border-[#E5E7EB] bg-white px-5 py-6 shadow-sm">
+      <div className="rounded-md border border-[#E5E7EB] bg-white px-5 py-6 shadow-sm">
         <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
           <div className="space-y-2 md:col-span-2">
             <Label>Customer</Label>
@@ -156,7 +156,7 @@ export function DOEkspedisiDetailForm({
         </div>
       </div>
 
-      <div className="rounded-[20px] border border-[#E5E7EB] bg-white px-5 py-6 shadow-sm">
+      <div className="rounded-md border border-[#E5E7EB] bg-white px-5 py-6 shadow-sm">
         <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
           <div className="space-y-2">
             <Label htmlFor="invoiceFee">Invoice</Label>

@@ -312,14 +312,14 @@ export function OrderListDetailView({
     company_id: companyId ?? undefined,
   });
 
-  const tarifRecords = tarifQuery.data?.data ?? [];
-  const tarifOptions = React.useMemo(() =>
-    tarifRecords.map((item) => ({
+  const tarifOptions = React.useMemo(() => {
+    const records = tarifQuery.data?.data ?? [];
+    return records.map((item) => ({
       value: String(item.id),
       label: `${item.loadingIn || '-'} - ${item.loadingOut || '-'}`,
       subtitle: item.customer?.name,
-    })),
-    [tarifRecords]);
+    }));
+  }, [tarifQuery.data?.data]);
 
   const toVehicleOptions = React.useCallback((records: any[]) =>
     records.map((item) => ({ value: String(item.id), label: item.registrationNumber, subtitle: item.type.toUpperCase() })), []);
@@ -458,6 +458,10 @@ export function OrderListDetailView({
       qty: Number(cargoItem.qty ?? 1),
     });
     setIsCargoOpen(true);
+  };
+
+  const handleOpenDeleteCargo = (route: OrderListTarifItem, cargoItem: any) => {
+    setDeleteCargoTarget({ route, item: cargoItem });
   };
 
   const handleRouteSubmit = async (values: RouteFormValues) => {
@@ -651,10 +655,10 @@ export function OrderListDetailView({
             <Field label="Lokasi Bongkar" value={data.loadingOut || '-'} icon={MapPin} />
             <Field label="Tujuan Pengiriman" value={data.deliveryDestination || '-'} icon={MapPin} />
           </div>
-          {(data as any).description && (
+          {data.note && (
             <div className="rounded-xl border border-slate-100 bg-slate-50/50 p-4">
               <p className="text-xs font-medium uppercase tracking-wide text-slate-500 mb-1">Catatan / Keterangan</p>
-              <p className="text-sm font-semibold text-slate-950">{(data as any).description}</p>
+              <p className="text-sm font-semibold text-slate-950">{data.note}</p>
             </div>
           )}
         </CardContent>
@@ -777,7 +781,7 @@ export function OrderListDetailView({
                           route={route}
                           isDraft={isDraft}
                           onEditCargo={handleOpenEditCargo}
-                          onDeleteCargo={(route, item) => setDeleteCargoTarget({ route, item })}
+                          onDeleteCargo={handleOpenDeleteCargo}
                         />
                       </div>
                       <div className="space-y-3 rounded-lg bg-orange-50 p-4">
@@ -804,7 +808,7 @@ export function OrderListDetailView({
 
       <Card className="border-slate-200 shadow-sm">
         <CardContent className="space-y-5 p-5 sm:p-6">
-          <SectionHeading icon={Wallet} title="Ringkasan Keuangan" description="Nilai agregat dari DO order list" />
+          <SectionHeading icon={Wallet} title="Ringkasan Invoice" description="Nominal Invoice dari DO order list" />
           <div className="space-y-3 border-t border-slate-100 pt-5">
             <CurrencyRow label="Invoice Ekspedisi" value={data.billInvoice} />
             <CurrencyRow label="PPN" value={data.ppn} />

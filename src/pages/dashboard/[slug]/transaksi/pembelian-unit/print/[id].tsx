@@ -6,11 +6,11 @@ import { fetchUserCompanies } from '@/services/company.service';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { useCompany } from '@/contexts/CompanyContext';
 import { getLetterheadByCompanyId, resolveCompanyId } from '@/lib/print-letterhead';
-import { usePurchaseById } from '@/hooks/useUnitTransaction';
-import { useUnitItemDetailsByTransactionId } from '@/hooks/useUnitItemDetail';
+import { usePurchaseById, useUnitTransactionTypeDetails } from '@/hooks/useUnitTransaction';
 import PurchasePrintDocument from '@/components/features/purchase/PurchasePrintDocument';
 import { Button } from '@/components/ui/button';
 import { LoadingState } from '@/components/ui/loading-state';
+import { useDocumentTemplate } from '@/hooks/useDocumentTemplate';
 
 export default function PurchasePrintPage() {
   const router = useRouter();
@@ -20,7 +20,42 @@ export default function PurchasePrintPage() {
   const [companyName, setCompanyName] = React.useState('WAJIRA JAGRATARA TRANSINDO');
 
   const detailQuery = usePurchaseById(id);
-  const detailsQuery = useUnitItemDetailsByTransactionId(id);
+  const detailsQuery = useUnitTransactionTypeDetails(id || undefined, { page: 1, perPage: 1000 });
+  const templateQuery = useDocumentTemplate(detailQuery.data?.documentTemplateId ?? null);
+
+  const detailsList = React.useMemo(() => {
+    const list = detailsQuery.data?.data ?? [];
+    return list.map((item) => ({
+      id: item.id,
+      unit_transaction_item_id: item.unit_transaction_item_id,
+      code: '',
+      created_at: item.created_at,
+      unit_type_name: item.unit_transaction_item?.unit_type?.name ?? '',
+      color: item.color ?? '-',
+      machine_number: item.machine_number ?? '-',
+      chassis_number: item.chassis_number ?? '-',
+      in_stock: item.in_stock,
+      is_forecast: item.is_forecast,
+      is_sold_unit: item.is_sold_unit,
+      status: item.status ?? '',
+      stock_state: item.stock_state ?? '-',
+      price: item.unit_transaction_item?.price ?? item.unit_transaction_item?.unit_type?.buy_price ?? 0,
+      price_usd: item.unit_transaction_item?.price_usd ?? undefined,
+      unit_transaction_bruto_total: 0,
+      unit_transaction_item_total_hpp: 0,
+      unit_transaction_item_total_dpp: 0,
+      unit_transaction_item_total_ppn: 0,
+      unit_transaction_item_bruto_total: 0,
+      transaction_bbn_total: 0,
+      transaction_other_fee: 0,
+      expedition_fee_total: 0,
+      person: { id: '', name: '' },
+      warehouse_sub_block: {
+        id: item.warehouse_sub_block?.id ?? '',
+        name: item.warehouse_sub_block?.name ?? '',
+      },
+    }));
+  }, [detailsQuery.data?.data]);
 
   const printRef = React.useRef<HTMLDivElement>(null);
 
@@ -47,7 +82,7 @@ export default function PurchasePrintPage() {
       .catch(() => undefined);
   }, [companyId, slug, router.isReady]);
 
-  if (!router.isReady || detailQuery.isLoading || detailsQuery.isLoading) {
+  if (!router.isReady || detailQuery.isLoading || detailsQuery.isLoading || templateQuery.isLoading) {
     return (
       <DashboardLayout>
         <LoadingState variant="page" />
@@ -59,6 +94,16 @@ export default function PurchasePrintPage() {
     return (
       <DashboardLayout>
         <div className="py-20 text-center text-sm text-slate-500">Data pembelian tidak ditemukan.</div>
+      </DashboardLayout>
+    );
+  }
+
+  if (!detailQuery.data.documentTemplateId || !templateQuery.data) {
+    return (
+      <DashboardLayout>
+        <div className="rounded-md border bg-white p-8 text-center text-sm text-slate-500">
+          Document template belum dipilih pada transaksi ini.
+        </div>
       </DashboardLayout>
     );
   }
@@ -97,9 +142,10 @@ export default function PurchasePrintPage() {
         <div className="flex justify-center bg-slate-50 py-8 no-print">
           <PurchasePrintDocument
             purchase={detailQuery.data}
-            items={detailsQuery.data ?? []}
+            items={detailsList}
             letterheadUrl={letterheadUrl}
             companyName={companyName}
+            documentTemplate={templateQuery.data}
             hideControls
             printRef={printRef}
           />

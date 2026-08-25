@@ -12,6 +12,8 @@ export type SalesApiModel = {
   max_capacity?: number | string;
   stock_state?: string;
   created_at?: string;
+  document_template_id?: number | string | null;
+  document_template?: { id?: number | string; uuid?: string } | null;
   unit_transaction_bruto_total?: string | number;
   transaction_bruto_total?: string | number;
   unit_transaction_dpp_total?: string | number;
@@ -270,6 +272,7 @@ export const mapSalesToTableItem = (item: SalesApiModel): UnitTransaction => {
         is_paid: toBool(item.billing_summary?.is_paid),
       }
       : null,
+    documentTemplateId: item.document_template_id != null ? String(item.document_template_id) : item.document_template?.id != null ? String(item.document_template.id) : item.document_template?.uuid ?? null,
   };
 };
 
@@ -341,6 +344,7 @@ export const mapSalesDetailToUI = (item: SalesApiModel): SalesItem => {
     units: [],
     price_usd: item.unit_transaction_items?.[0]?.price_usd ? toNumber(item.unit_transaction_items[0].price_usd) : undefined,
     price_per_unit_usd: item.unit_transaction_items?.[0]?.price_per_unit_usd ? toNumber(item.unit_transaction_items[0].price_per_unit_usd) : undefined,
+    documentTemplateId: item.document_template_id != null ? String(item.document_template_id) : item.document_template?.id != null ? String(item.document_template.id) : item.document_template?.uuid ?? null,
   };
 };
 
@@ -360,6 +364,7 @@ export const mapSalesDetailToEditForm = (item: SalesApiModel): UnitTransactionFo
 
   return {
     unitTypeId: String(item.unit_transaction_items?.[0]?.unit_type_id ?? ''),
+    documentTemplateId: item.document_template_id != null ? String(item.document_template_id) : item.document_template?.id != null ? String(item.document_template.id) : item.document_template?.uuid ?? null,
     qty,
     price: toNumber(item.unit_transaction_items?.[0]?.price),
     bbnPrice: toNumber(item.transaction_bbn_total),

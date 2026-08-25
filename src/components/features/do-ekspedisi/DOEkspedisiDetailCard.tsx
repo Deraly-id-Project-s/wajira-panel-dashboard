@@ -94,6 +94,7 @@ export function DOEkspedisiDetailCard({ data }: DOEkspedisiDetailCardProps) {
   const driverName = data.driver?.name;
   const registrationNumber = data.vehicle?.registrationNumber;
   const customerName = order?.customerName || firstItem?.customerName || firstItem?.customer?.name;
+  const customer = order?.customer || firstItem?.customer;
 
   return (
     <div className="space-y-6">
@@ -158,6 +159,11 @@ export function DOEkspedisiDetailCard({ data }: DOEkspedisiDetailCardProps) {
             }
             icon={CircleUserRound}
           />
+          <DetailField label="Nomor Telepon" value={customer?.phone || '-'} />
+          <DetailField label="PIC Customer" value={customer?.pic || '-'} />
+          <div className="md:col-span-3">
+            <DetailField label="Alamat Customer" value={customer?.address || '-'} icon={MapPin} />
+          </div>
           <DetailField
             label="Kode Order"
             value={
@@ -169,6 +175,8 @@ export function DOEkspedisiDetailCard({ data }: DOEkspedisiDetailCardProps) {
             }
             icon={ClipboardList}
           />
+          <DetailField label="Status Order" value={order?.status || '-'} />
+          <DetailField label="Deskripsi Order" value={order?.description || '-'} />
         </div>
 
         <div className="mt-6 space-y-4">
@@ -180,11 +188,13 @@ export function DOEkspedisiDetailCard({ data }: DOEkspedisiDetailCardProps) {
                 loadContent: cargoItem.loadContent,
                 qty: Number(cargoItem.qty ?? 0),
               }))
-              : [{
-                id: `${item.id}-${index}-fallback`,
-                loadContent: item.loadContent || order?.loadContent || '-',
-                qty: Number(item.qty || order?.qty || 0),
-              }];
+              : item.loadContent || order?.loadContent
+                ? [{
+                  id: `${item.id}-${index}-fallback`,
+                  loadContent: item.loadContent || order?.loadContent || '-',
+                  qty: Number(item.qty || order?.qty || 0),
+                }]
+                : [];
 
             return (
               <div key={`${item.id}-${index}`} className="overflow-hidden rounded-xl border border-slate-200">
@@ -200,12 +210,18 @@ export function DOEkspedisiDetailCard({ data }: DOEkspedisiDetailCardProps) {
                   </div>
                   <div className="mt-6">
                     <p className="mb-2 text-xs font-medium uppercase tracking-wide text-slate-500">Daftar Muatan</p>
-                    <BaseTable<CargoRow>
-                      data={cargo}
-                      columns={cargoColumns}
-                      headerRowClassName="bg-orange-50"
-                      containerClassName="rounded-lg border border-slate-200"
-                    />
+                    {cargo.length > 0 ? (
+                      <BaseTable<CargoRow>
+                        data={cargo}
+                        columns={cargoColumns}
+                        headerRowClassName="bg-orange-50"
+                        containerClassName="rounded-lg border border-slate-200"
+                      />
+                    ) : (
+                      <div className="rounded-lg border border-dashed border-slate-200 px-4 py-6 text-center text-sm text-slate-500">
+                        Data muatan tidak tersedia.
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>

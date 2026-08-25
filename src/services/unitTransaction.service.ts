@@ -17,6 +17,8 @@ type UnitTransactionApiModel = {
   created_at?: string;
   stock_state?: string;
   max_capacity?: number | string;
+  document_template_id?: number | string | null;
+  document_template?: { id?: number | string; uuid?: string } | null;
   unit_transaction_bruto_total?: string | number;
   transaction_bruto_total?: string | number;
   transaction_dpp_total?: string | number;
@@ -123,6 +125,7 @@ type UnitTransactionItemListApiModel = {
     expedition_fee_total?: string | number;
     total_operational_fee?: string | number;
     created_at?: string;
+    document_template_id?: number | string | null;
     person?: {
       id?: number | string;
       name?: string;
@@ -153,6 +156,9 @@ type UnitTransactionTypeDetailApiModel = {
     id?: number | string;
     unit_transaction_id?: number | string;
     unit_type_id?: number | string;
+    price?: number | string;
+    price_usd?: number | string;
+    price_per_unit_usd?: number | string;
     unit_type?: {
       id?: number | string;
       code?: string;
@@ -219,6 +225,9 @@ const mapUnitTransactionTypeDetail = (
         id: String(item.unit_transaction_item.id ?? ''),
         unit_transaction_id: String(item.unit_transaction_item.unit_transaction_id ?? ''),
         unit_type_id: String(item.unit_transaction_item.unit_type_id ?? ''),
+        price: item.unit_transaction_item.price !== undefined ? toNumber(item.unit_transaction_item.price) : undefined,
+        price_usd: item.unit_transaction_item.price_usd !== undefined ? toNumber(item.unit_transaction_item.price_usd) : undefined,
+        price_per_unit_usd: item.unit_transaction_item.price_per_unit_usd !== undefined ? toNumber(item.unit_transaction_item.price_per_unit_usd) : undefined,
         unit_type: item.unit_transaction_item.unit_type
           ? {
               id: String(item.unit_transaction_item.unit_type.id ?? ''),
@@ -324,6 +333,7 @@ const mapUnitTransaction = (item: UnitTransactionApiModel): UnitTransaction => (
       is_paid: Boolean(item.billing_summary?.is_paid),
     }
     : null,
+  documentTemplateId: item.document_template_id != null ? String(item.document_template_id) : item.document_template?.id != null ? String(item.document_template.id) : item.document_template?.uuid ?? null,
 });
 
 const buildUnitTransactionFromRows = (rows: UnitTransactionItemListApiModel[]): UnitTransaction[] => {
@@ -373,6 +383,7 @@ const buildUnitTransactionFromRows = (rows: UnitTransactionItemListApiModel[]): 
         paymentAt: null,
         isRefunded: row?.has_returned_data ?? false,
         remainingPayment: 0,
+        documentTemplateId: row.unit_transaction?.document_template_id != null ? String(row.unit_transaction.document_template_id) : null,
       });
       return;
     }
@@ -496,6 +507,7 @@ const enrichTransactionsFromDetail = async (items: UnitTransaction[]): Promise<U
           supplier: supplierName,
           warehouse: warehouseName,
           stock_state: detailPayload.stock_state ?? item.stock_state,
+          documentTemplateId: detailPayload.document_template_id != null ? String(detailPayload.document_template_id) : detailPayload.document_template?.id != null ? String(detailPayload.document_template.id) : detailPayload.document_template?.uuid ?? null,
         };
       } catch {
         return item;
@@ -605,10 +617,19 @@ const mapUnitTransactionDetail = (item: UnitTransactionApiModel): UnitTransactio
       : null,
     unit_transaction_items: item.unit_transaction_items,
     isUnitTypeDetailValid: item.is_unit_type_detail_valid === true || item.is_unit_type_detail_valid === 1 || String(item.is_unit_type_detail_valid) === 'true',
+    documentTemplateId: item.document_template_id != null ? String(item.document_template_id) : item.document_template?.id != null ? String(item.document_template.id) : item.document_template?.uuid ?? null,
   };
 };
 
 export const unitTransactionService = {
+  async updateDocumentTemplate(id: string, documentTemplateId: string | number | null): Promise<UnitTransactionDetail> {
+    const body = new FormData();
+    body.append('_method', 'PUT');
+    body.append('document_template_id', documentTemplateId == null || documentTemplateId === '' ? '' : String(documentTemplateId));
+    const response = await apiClient.post<LaravelApiResponse<UnitTransactionApiModel>>(`${strictBasePath}/${id}`, body);
+    return mapUnitTransactionDetail(ensureSuccess(response.data));
+  },
+
   async getUnitTransactions(params: PaginationParams & { company_id?: string | number; status?: string; start_date?: string | null; end_date?: string | null } = {}): Promise<UnitTransactionResponse> {
     const requestParams = {
       company_id: params.company_id,
