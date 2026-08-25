@@ -1,5 +1,6 @@
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import BaseTable, { ColumnDef } from '@/components/ui/base-table';
+import { DataImportModal } from '@/components/features/master-data/DataImportModal';
 import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Upload } from 'lucide-react';
@@ -21,7 +22,8 @@ interface CustomerTableProps {
   onAdd: () => void;
   onEdit: (customer: Customer) => void;
   onDelete: (customer: Customer) => void;
-  onImport: () => void;
+  onImport: (file: File) => Promise<void>;
+  isImporting?: boolean;
   onExport: () => void;
   isExporting?: boolean;
   canCreate: boolean;
@@ -44,12 +46,15 @@ export function CustomerTable({
   onEdit,
   onDelete,
   onImport,
+  isImporting = false,
   onExport,
   isExporting = false,
   canCreate,
   canEdit,
   canDelete,
 }: CustomerTableProps) {
+  const [isImportOpen, setIsImportOpen] = useState(false);
+
   const columns = useMemo<ColumnDef<Customer>[]>(
     () => [
       {
@@ -172,7 +177,7 @@ export function CustomerTable({
       headerActions={
         <div className="flex flex-wrap items-center gap-2">
           {canCreate && (
-            <Button onClick={onImport} variant="outline" className="w-full sm:w-auto">
+            <Button onClick={() => setIsImportOpen(true)} variant="outline" className="w-full sm:w-auto">
               <Upload className="h-4 w-4 mr-2" />
               Import
             </Button>
@@ -190,5 +195,14 @@ export function CustomerTable({
         </div>
       }
     />
+      <DataImportModal
+        open={isImportOpen}
+        onOpenChange={setIsImportOpen}
+        entityName="Customer"
+        onImport={onImport}
+        isPending={isImporting}
+        accept=".xlsx,.xls,.csv,text/csv"
+      />
+    </>
   );
 }

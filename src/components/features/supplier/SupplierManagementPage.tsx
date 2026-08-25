@@ -2,7 +2,6 @@ import { useDeferredValue, useMemo, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import type { Supplier as ApiSupplier } from '@/@types/supplier.types';
-import { DataImportModal } from '@/components/features/master-data/DataImportModal';
 import { SupplierFormModal } from '@/components/features/supplier/SupplierFormModal';
 import { SupplierTable } from '@/components/features/supplier/SupplierTable';
 import { DeleteSupplierModal } from '@/components/features/supplier/DeleteSupplierModal';
@@ -81,7 +80,6 @@ export function SupplierManagementPage() {
   const exportSupplier = useExportSupplier();
 
   const [isFormOpen, setIsFormOpen] = useState(false);
-  const [isImportOpen, setIsImportOpen] = useState(false);
   const [editingSupplier, setEditingSupplier] = useState<ApiSupplier | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<ApiSupplier | null>(null);
   const [loadingDetailId, setLoadingDetailId] = useState<string | number | null>(null);
@@ -246,7 +244,8 @@ export function SupplierManagementPage() {
           onAdd={handleAdd}
           onEdit={handleEdit}
           onDelete={setDeleteTarget}
-          onImport={() => setIsImportOpen(true)}
+          onImport={handleImport}
+          isImporting={importSupplier.isPending}
           onExport={handleExport}
           isExporting={exportSupplier.isPending}
           canCreate={canCreate}
@@ -283,16 +282,6 @@ export function SupplierManagementPage() {
         supplierName={deleteTarget?.name ?? null}
         onConfirm={handleConfirmDelete}
         isDeleting={deleteSupplier.isPending}
-      />
-
-      <DataImportModal
-        open={isImportOpen}
-        onOpenChange={setIsImportOpen}
-        title="Import Data Supplier"
-        description="Unggah file .xlsx, .xls, atau .csv untuk mengimport data supplier."
-        onImport={handleImport}
-        isPending={importSupplier.isPending}
-        accept=".xlsx,.xls,.csv,text/csv"
       />
     </>
   );
