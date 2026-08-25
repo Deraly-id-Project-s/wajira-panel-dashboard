@@ -10,9 +10,7 @@ import { PageHeader } from '@/components/ui/page-header';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import AddKasHarianDialog from '@/components/features/kas-harian/AddKasHarianDialog';
 import DeleteKasHarianDialog from '@/components/features/kas-harian/DeleteKasHarianDialog';
-import EditKasHarianDialog from '@/components/features/kas-harian/EditKasHarianDialog';
 import TogglePaymentStatusDialog from '@/components/features/kas-harian/TogglePaymentStatusDialog';
 import KasHarianTable from '@/components/features/kas-harian/KasHarianTable';
 import { useCompany } from '@/contexts/CompanyContext';
@@ -29,12 +27,13 @@ const mapManualCashFlow = (item: KasHarian): KasHarianListItem => ({
   invoiceNumber: item.invoice_number ?? null,
   note: item.note || 'Transaksi kas harian',
   debet: Number(item.debet || 0),
+  debet_usd: Number(item.debet_usd || 0),
   credit: Number(item.credit || 0),
+  credit_usd: Number(item.credit_usd || 0),
   accountName: item.account ? `${item.account.code ?? '-'} - ${item.account.name ?? '-'}` : '-',
   cashName: item.cash?.description || item.cash?.code || '-',
   cashFlowId: item.id,
   financeBillingId: (item.finance_billings ?? [])[0]?.id,
-  transaction_category: item.transaction_category,
   goodsTransactionBillingId: item.goods_transaction_billing_id ?? undefined,
   unitTransactionBillingId: item.unit_transaction_billing_id ?? undefined,
   isValid: item.is_valid ?? undefined,
@@ -55,8 +54,6 @@ export default function KasHarianPage() {
   const [searchValue, setSearchValue] = useState('');
   const [page, setPage] = useState(1);
   const [perPage, setPerPage] = useState(25);
-  const [isAddOpen, setIsAddOpen] = useState(false);
-  const [isEditOpen, setIsEditOpen] = useState(false);
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
   const [isToggleOpen, setIsToggleOpen] = useState(false);
   const [targetStatus, setTargetStatus] = useState(false);
@@ -79,7 +76,7 @@ export default function KasHarianPage() {
     },
     {
       enabled: !isCompanyLoading && companyNumber > 0,
-      refetchInterval: !isAddOpen && !isEditOpen && !isDeleteOpen && !isToggleOpen ? LIVE_UPDATE_INTERVAL : false,
+      refetchInterval: !isDeleteOpen && !isToggleOpen ? LIVE_UPDATE_INTERVAL : false,
     },
   );
 
@@ -107,7 +104,7 @@ export default function KasHarianPage() {
       .filter((item) => {
         if (!searchValue) return true;
         const query = searchValue.toLowerCase();
-        return [item.code, item.invoiceNumber ?? '', item.note, item.accountName, item.cashName ?? '', item.transaction_category ?? ''].some((value) => value.toLowerCase().includes(query));
+        return [item.code, item.invoiceNumber ?? '', item.note, item.accountName, item.cashName ?? ''].some((value) => value.toLowerCase().includes(query));
       })
       .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
   }, [kasHarianQuery.data?.data, searchValue]);
@@ -139,10 +136,9 @@ export default function KasHarianPage() {
   const isError = kasHarianQuery.isError;
 
   const handleEdit = (item: KasHarianListItem) => {
-    const manualItem = (kasHarianQuery.data?.data ?? []).find((cashFlow) => cashFlow.id === item.cashFlowId);
-    if (!manualItem) return;
-    setSelectedItem(manualItem);
-    setIsEditOpen(true);
+    const targetId = item.cashFlowId || item.id;
+    if (!targetId || typeof slug !== 'string') return;
+    void router.push(`/dashboard/${slug}/finance/transaksi-kas-harian/${targetId}/edit`);
   };
 
   const handleDelete = (item: KasHarianListItem) => {
@@ -213,7 +209,7 @@ export default function KasHarianPage() {
               </div>
             </div>
             {canCreate && (
-              <Button type="button" onClick={() => setIsAddOpen(true)} className="w-full sm:w-auto bg-[#1e3a5f] hover:bg-[#152e4d]">
+              <Button type="button" onClick={() => void router.push(`/dashboard/${slug}/finance/transaksi-kas-harian/create`)} className="w-full sm:w-auto bg-[#1e3a5f] hover:bg-[#152e4d]">
                 <Plus className="mr-2 h-4 w-4" />
                 Tambah Data
               </Button>
@@ -237,12 +233,12 @@ export default function KasHarianPage() {
             onDelete={handleDelete}
             onToggleStatus={handleToggleStatus}
             onPageChange={setPage}
+            canEdit={canEdit}
+            canDelete={canDelete}
           />
         </div>
       </div>
 
-      <AddKasHarianDialog open={isAddOpen} onOpenChange={setIsAddOpen} />
-      <EditKasHarianDialog open={isEditOpen} onOpenChange={setIsEditOpen} data={selectedItem} />
       <DeleteKasHarianDialog open={isDeleteOpen} onOpenChange={setIsDeleteOpen} data={selectedItem} />
       <TogglePaymentStatusDialog open={isToggleOpen} onOpenChange={setIsToggleOpen} data={selectedItem} targetStatus={targetStatus} />
     </DashboardLayout>
