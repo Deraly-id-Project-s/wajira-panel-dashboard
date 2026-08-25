@@ -22,37 +22,35 @@ export const kasHarianSchema = z
     date: dateField,
     note: z.string().trim().min(3, 'Keterangan minimal 3 karakter'),
     debet: z.number().min(0, 'Debet tidak valid'),
+    debet_usd: z.number().min(0, 'Debet USD tidak valid'),
     credit: z.number().min(0, 'Kredit tidak valid'),
-    transaction_category: z.string({ required_error: 'Kategori transaksi wajib dipilih' }).min(1, 'Kategori transaksi wajib dipilih'),
+    credit_usd: z.number().min(0, 'Kredit USD tidak valid'),
     payment_proof: fileField,
   })
   .superRefine((value, ctx) => {
-    const hasDebet = value.debet > 0;
-    const hasCredit = value.credit > 0;
+    const hasDebet = value.debet > 0 || value.debet_usd > 0;
+    const hasCredit = value.credit > 0 || value.credit_usd > 0;
 
     if (!hasDebet && !hasCredit) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
-        message: 'Minimal salah satu debet atau kredit harus diisi',
+        message: 'Minimal salah satu nominal debet atau kredit harus diisi',
         path: ['debet'],
       });
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
-        message: 'Minimal salah satu debet atau kredit harus diisi',
+        message: 'Minimal salah satu nominal debet atau kredit harus diisi',
         path: ['credit'],
       });
     }
 
     if (hasDebet && hasCredit) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        message: 'Debet dan kredit tidak boleh diisi bersamaan',
-        path: ['debet'],
-      });
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        message: 'Debet dan kredit tidak boleh diisi bersamaan',
-        path: ['credit'],
+      (['debet', 'debet_usd', 'credit', 'credit_usd'] as const).forEach((field) => {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: 'Debet dan kredit tidak boleh diisi bersamaan',
+          path: [field],
+        });
       });
     }
   });

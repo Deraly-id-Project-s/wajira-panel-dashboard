@@ -17,7 +17,13 @@ export interface CashFlowItem {
   date: string;
   note: string;
   debet: number;
+  debet_usd: number;
+  debet_original: number;
+  debet_usd_original: number;
   credit: number;
+  credit_usd: number;
+  credit_original: number;
+  credit_usd_original: number;
   cash: { description: string };
 }
 
