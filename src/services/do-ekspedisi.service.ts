@@ -104,7 +104,10 @@ const mapCustomer = (item: any): DoEkspedisiCustomer => ({
   id: Number(item?.id ?? 0),
   uuid: item?.uuid,
   name: item?.name ?? '',
+  address: item?.address ?? null,
+  phone: item?.phone ?? null,
   pic: item?.pic ?? item?.pic_name ?? null,
+  companyList: item?.company_list ?? null,
 });
 
 const mapClaimDocumentation = (item: any): DoEkspedisiClaimDocumentation => ({
@@ -179,7 +182,7 @@ const mapDoOrderTarifItem = (entry: any, parent?: any) => {
   };
 };
 
-const mapDoOrderList = (item: any) => {
+const mapDoOrderList = (item: any, selectedTarif?: any) => {
   if (!item || typeof item !== 'object') return null;
 
   const tarifSource = Array.isArray(item.tarifs)
@@ -188,22 +191,38 @@ const mapDoOrderList = (item: any) => {
       ? item.do_order_list_tarifs
       : Array.isArray(item.do_orderlist_tarifs)
         ? item.do_orderlist_tarifs
-        : [];
+        : selectedTarif
+          ? [selectedTarif]
+          : [];
   const tarifs = tarifSource.map((entry: any) => mapDoOrderTarifItem(entry, item));
   const firstTarif = tarifs[0];
+  const customer = item.customer ? mapCustomer(item.customer) : null;
 
   return {
     id: Number(item.id ?? 0),
     uuid: item.uuid,
     code: toText(item.code),
-    customerName: toText(item.customer?.name, item.customer_name),
+    description: toText(item.description, item.note),
+    status: String(item.status ?? ''),
+    customer,
+    customerName: toText(customer?.name, item.customer_name),
     loadingIn: toText(item.loading_in, firstTarif?.loadingIn),
     loadingOut: toText(item.loading_out, firstTarif?.loadingOut),
-    destination: toText(firstTarif?.deliveryDestination),
+    destination: toText(firstTarif?.deliveryDestination, item.do_delivery_destination),
     loadContent: toText(firstTarif?.loadContent),
     qty: toNumber(firstTarif?.qty),
     tarifs,
-    vehicleType: String(item?.vehicle_type ?? item?.vehicleType ?? item?.type ?? '').trim().toLowerCase(),
+    vehicleType: String(selectedTarif?.vehicle_type ?? item?.vehicle_type ?? item?.vehicleType ?? item?.type ?? '').trim().toLowerCase(),
+    billInvoice: toNumber(item.bill_invoice),
+    ppn: toNumber(item.ppn),
+    pph: toNumber(item.pph),
+    ujDriver: toNumber(item.uj_driver),
+    ujTowing: item.uj_towing == null ? null : toNumber(item.uj_towing),
+    ujCdd: item.uj_cdd == null ? null : toNumber(item.uj_cdd),
+    ujFuso: item.uj_fuso == null ? null : toNumber(item.uj_fuso),
+    invTowing: item.inv_towing == null ? null : toNumber(item.inv_towing),
+    invCdd: item.inv_cdd == null ? null : toNumber(item.inv_cdd),
+    invFuso: item.inv_fuso == null ? null : toNumber(item.inv_fuso),
   };
 };
 
@@ -279,7 +298,7 @@ const mapDoEkspedisi = (item: any): DoEkspedisi => {
     totalDriverFee: toNumber(item?.total_driver_fee),
     vehicle: rawVehicle ? mapVehicle(rawVehicle) : null,
     driver: rawDriver ? mapDriver(rawDriver) : null,
-    orderList: mapDoOrderList(rawOrderList),
+    orderList: mapDoOrderList(rawOrderList, orderListTarif),
     items: Array.isArray(item?.items) ? item.items.map(mapDoEkspedisiItem) : undefined,
     createdAt: item?.created_at,
     updatedAt: item?.updated_at,
