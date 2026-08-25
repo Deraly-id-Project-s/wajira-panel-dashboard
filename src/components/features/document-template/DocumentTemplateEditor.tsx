@@ -199,8 +199,22 @@ export function DocumentTemplateEditor({ initialData, isSubmitting, onSubmit, on
   }, [language, setValue, headerEditor, footerEditor, watch]);
 
   const fileUrl = (file: File | null, setPreview: (url: string | null) => void) => {
-    if (!file) return;
-    setPreview(URL.createObjectURL(file));
+    if (!file) {
+      setPreview(null);
+      return;
+    }
+
+    const reader = new FileReader();
+
+    reader.onload = () => {
+      setPreview(typeof reader.result === 'string' ? reader.result : null);
+    };
+
+    reader.onerror = () => {
+      setPreview(null);
+    };
+
+    reader.readAsDataURL(file);
   };
 
   const submit = (values: DocumentTemplateFormValues) => onSubmit(values);
