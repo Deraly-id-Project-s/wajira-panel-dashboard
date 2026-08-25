@@ -299,7 +299,6 @@ export function OrderListDetailView({
     page: 1,
     perPage: 100,
     search: debouncedTarifSearch,
-    enabled: isDraft,
   });
 
   const fusoQuery = useVehicleFleetLookups({ page: 1, perPage: 100, search: debouncedVehicleSearch, company_id: companyId ?? '', type: 'fuso', enabled: isDraft });
@@ -311,7 +310,6 @@ export function OrderListDetailView({
     perPage: 100,
     search: debouncedDriverSearch,
     company_id: companyId ?? undefined,
-    enabled: isDraft,
   });
 
   const tarifRecords = tarifQuery.data?.data ?? [];
@@ -653,10 +651,10 @@ export function OrderListDetailView({
             <Field label="Lokasi Bongkar" value={data.loadingOut || '-'} icon={MapPin} />
             <Field label="Tujuan Pengiriman" value={data.deliveryDestination || '-'} icon={MapPin} />
           </div>
-          {data.description && (
+          {(data as any).description && (
             <div className="rounded-xl border border-slate-100 bg-slate-50/50 p-4">
               <p className="text-xs font-medium uppercase tracking-wide text-slate-500 mb-1">Catatan / Keterangan</p>
-              <p className="text-sm font-semibold text-slate-950">{data.description}</p>
+              <p className="text-sm font-semibold text-slate-950">{(data as any).description}</p>
             </div>
           )}
         </CardContent>
@@ -779,7 +777,7 @@ export function OrderListDetailView({
                           route={route}
                           isDraft={isDraft}
                           onEditCargo={handleOpenEditCargo}
-                          onDeleteCargo={setDeleteCargoTarget}
+                          onDeleteCargo={(route, item) => setDeleteCargoTarget({ route, item })}
                         />
                       </div>
                       <div className="space-y-3 rounded-lg bg-orange-50 p-4">
