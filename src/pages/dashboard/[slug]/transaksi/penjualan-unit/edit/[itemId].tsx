@@ -37,12 +37,12 @@ export default function EditUnitPage() {
   const defaultValues = useMemo<Partial<UnitTransactionHeaderFormValues> | undefined>(() => {
     if (!data?.raw) return undefined;
     return {
-      personId: data.raw.person_id ? String(data.raw.person_id) : data.raw.person?.id ? String(data.raw.person.id) : '',
+      personId: (data.raw as any).person_id ? String((data.raw as any).person_id) : data.raw.person?.id ? String(data.raw.person.id) : '',
       personName: data.raw.person?.name ?? '',
       date: data.raw.created_at ? data.raw.created_at.slice(0, 10) : '',
       personAddress: (data.raw as any).person?.address ?? '',
       personNpwp: (data.raw as any).person?.npwp ?? '',
-      documentTemplateId: data.raw.document_template_id ?? null,
+      documentTemplateId: (data.raw as any).document_template_id ?? data.raw.documentTemplateId ?? null,
     };
   }, [data?.raw]);
 

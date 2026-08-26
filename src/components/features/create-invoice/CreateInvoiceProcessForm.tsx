@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { ArrowLeft, Printer } from 'lucide-react';
+import { Printer } from 'lucide-react';
 import type { CreateInvoiceDetailRow, CreateInvoiceProcessValues } from '@/types/create-invoice.types';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -10,6 +10,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Textarea } from '@/components/ui/textarea';
+import { PageHeader } from '@/components/ui/page-header';
 import { formatDisplayDate, formatMoney, formatInvoiceMoney } from './create-invoice.utils';
 
 interface Props {
@@ -55,17 +56,11 @@ export function CreateInvoiceProcessForm({
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center gap-4">
-        <Button onClick={onBack} variant="ghost" size="icon" className="h-10 w-10 rounded-md border border-slate-200 hover:bg-slate-50 cursor-pointer">
-          <ArrowLeft className="h-5 w-5 text-slate-700" />
-        </Button>
-        <div>
-          <h1 className="text-2xl font-semibold text-slate-950">{title}</h1>
-          <p className="mt-1 text-sm text-slate-500">
-            {mode === 'bulk' ? `${selectedInvoiceCount} invoice dipilih untuk diproses` : 'Kelola informasi invoice dan expedisi'}
-          </p>
-        </div>
-      </div>
+      <PageHeader
+        title={title}
+        subtitle={mode === 'bulk' ? `${selectedInvoiceCount} invoice dipilih untuk diproses` : 'Kelola informasi invoice dan expedisi'}
+        onBack={onBack}
+      />
 
       <Card className="rounded-md border border-gray-200 bg-white p-6 shadow-none md:p-8">
         <div className="space-y-5">

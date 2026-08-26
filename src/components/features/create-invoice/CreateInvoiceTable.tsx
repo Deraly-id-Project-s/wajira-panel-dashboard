@@ -15,6 +15,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { PageHeader } from '@/components/ui/page-header';
 import { getVisiblePageNumbers } from '@/lib/api/pagination';
 import { cn } from '@/lib/utils';
 import { formatDisplayDate } from './create-invoice.utils';
@@ -83,23 +84,22 @@ export function CreateInvoiceTable({
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-semibold">Data Invoice</h1>
-          <p className="text-sm text-muted-foreground">Buat faktur dengan informasi penagihan yang diperlukan.</p>
-        </div>
-
-        <div className="flex flex-wrap items-center gap-2">
-          <Button type="button" variant="outline" onClick={onResetFilters} className="w-full sm:w-auto">
-            <RefreshCw className="mr-2 h-4 w-4" />
-            Reset Filter
-          </Button>
-          <Button type="button" onClick={onAdd} className="w-full sm:w-auto bg-[#1e3a5f] hover:bg-[#152e4d]">
-            <Plus className="mr-2 h-4 w-4" />
-            Tambah Data
-          </Button>
-        </div>
-      </div>
+      <PageHeader
+        title="Data Invoice"
+        subtitle="Buat faktur dengan informasi penagihan yang diperlukan."
+        actions={
+          <div className="flex flex-wrap items-center gap-2">
+            <Button type="button" variant="outline" onClick={onResetFilters} className="w-full sm:w-auto cursor-pointer">
+              <RefreshCw className="mr-2 h-4 w-4" />
+              Reset Filter
+            </Button>
+            <Button type="button" onClick={onAdd} className="w-full sm:w-auto bg-[#1e3a5f] hover:bg-[#152e4d] cursor-pointer">
+              <Plus className="mr-2 h-4 w-4" />
+              Tambah Data
+            </Button>
+          </div>
+        }
+      />
 
       <div className="grid gap-3 xl:grid-cols-[1fr_auto_auto_auto_auto] xl:items-center">
         <div className="relative">

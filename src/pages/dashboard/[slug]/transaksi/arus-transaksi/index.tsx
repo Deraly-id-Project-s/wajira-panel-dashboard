@@ -3,6 +3,7 @@
 import { useMemo, useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
+import { PageHeader } from '@/components/ui/page-header';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select';
@@ -66,13 +67,10 @@ export default function TransactionListPage() {
   return (
     <DashboardLayout>
       <div className="space-y-6">
-        {/* HEADLINE */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div>
-            <h1 className="text-2xl font-semibold text-slate-950">Arus Transaksi Operasional</h1>
-            <p className="text-sm text-muted-foreground">Kelola arus transaksi operasional perusahaan</p>
-          </div>
-        </div>
+        <PageHeader
+          title="Arus Transaksi Operasional"
+          subtitle="Kelola arus transaksi operasional perusahaan"
+        />
 
         <TransactionSummaryCards
           totalBcaUsd={summary?.totalBcaUsd || 0}

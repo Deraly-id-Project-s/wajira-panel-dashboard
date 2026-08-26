@@ -5,6 +5,7 @@ import { Pencil, Printer } from 'lucide-react';
 import { toast } from 'sonner';
 import { getApiErrorMessage } from '@/lib/utils/apiErrorHandler';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
+import { PageHeader } from '@/components/ui/page-header';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -294,24 +295,29 @@ export default function BBNBillDetailPage() {
         </div>
       ) : (
         <div className="space-y-8">
-          <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-            <div>
-              <h1 className="text-[36px] font-semibold tracking-[-0.03em] text-slate-950">Detail Tagihan</h1>
-              <p className="mt-1 text-base text-slate-500">Kelola data tagihan STNK &amp; BPKB</p>
-            </div>
-            <div className="flex gap-3">
-              <Link href={`/dashboard/${slug}/tagihan-bbn/${detailQuery.data.id}/edit`}>
-                <Button variant="outline" className="h-11 rounded-md border-slate-200 bg-white">
-                  <Pencil className="mr-2 h-4 w-4" />
-                  Edit
+          <PageHeader
+            breadcrumbs={[
+              { label: 'Tagihan BBN', onClick: () => router.push(`/dashboard/${slug}/tagihan-bbn`) },
+              { label: 'Detail Tagihan' },
+            ]}
+            title="Detail Tagihan"
+            subtitle="Kelola data tagihan STNK & BPKB"
+            onBack={() => router.push(`/dashboard/${slug}/tagihan-bbn`)}
+            actions={
+              <div className="flex gap-3">
+                <Button asChild variant="outline" className="h-11 rounded-md border-slate-200 bg-white cursor-pointer">
+                  <Link href={`/dashboard/${slug}/tagihan-bbn/${detailQuery.data.id}/edit`}>
+                    <Pencil className="mr-2 h-4 w-4" />
+                    Edit
+                  </Link>
                 </Button>
-              </Link>
-              <Button onClick={() => router.push(`/dashboard/${slug}/tagihan-bbn/print/${detailQuery.data.id}`)} variant="outline" className="w-full sm:w-auto">
-                <Printer className="mr-2 h-4 w-4" />
-                Print
-              </Button>
-            </div>
-          </div>
+                <Button onClick={() => router.push(`/dashboard/${slug}/tagihan-bbn/print/${detailQuery.data.id}`)} variant="outline" className="w-full sm:w-auto cursor-pointer">
+                  <Printer className="mr-2 h-4 w-4" />
+                  Print
+                </Button>
+              </div>
+            }
+          />
 
           <Card className="rounded-[24px] border border-slate-200 bg-white p-5 shadow-sm space-y-5">
             <div className="grid gap-5 grid-cols-1 md:grid-cols-2">

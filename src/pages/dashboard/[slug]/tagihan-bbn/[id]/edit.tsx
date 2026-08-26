@@ -1,10 +1,11 @@
 import * as React from 'react';
 import { useRouter } from 'next/router';
-import { ArrowLeft, Save } from 'lucide-react';
+import { Save } from 'lucide-react';
 import { Controller, useForm } from 'react-hook-form';
 import { toast } from 'sonner';
 import { getApiErrorMessage } from '@/lib/utils/apiErrorHandler';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
+import { PageHeader } from '@/components/ui/page-header';
 import { SearchableSelect } from '@/components/features/vehicle-data/SearchableSelect';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -91,15 +92,16 @@ export default function EditBBNBillPage() {
         </div>
       ) : (
         <div className="space-y-6">
-          <div className="flex items-center gap-3">
-            <Button type="button" onClick={() => router.back()} variant="ghost" size="icon" className="h-10 w-10 rounded-md border border-slate-200 hover:bg-slate-50 cursor-pointer">
-              <ArrowLeft className="h-5 w-5" />
-            </Button>
-            <div>
-              <h1 className="text-[30px] font-semibold tracking-[-0.02em] text-slate-950">Ubah Data Tagihan BBN</h1>
-              <p className="mt-1 text-sm text-slate-500">Perbarui proses ditlantas dan tanggal tagihan sesuai kebutuhan.</p>
-            </div>
-          </div>
+          <PageHeader
+            breadcrumbs={[
+              { label: 'Tagihan BBN', onClick: () => router.push(`/dashboard/${slug}/tagihan-bbn`) },
+              { label: 'Detail Tagihan', onClick: () => router.push(`/dashboard/${slug}/tagihan-bbn/${id}`) },
+              { label: 'Ubah Tagihan' }
+            ]}
+            title="Ubah Data Tagihan BBN"
+            subtitle="Perbarui proses ditlantas dan tanggal tagihan sesuai kebutuhan."
+            onBack={() => router.back()}
+          />
 
           <Card className="rounded-[24px] border border-slate-200 bg-white p-6 shadow-sm">
             <form

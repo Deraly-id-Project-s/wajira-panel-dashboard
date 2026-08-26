@@ -1,8 +1,8 @@
 import * as React from 'react';
-import { ArrowLeft } from 'lucide-react';
 import { useRouter } from 'next/router';
 import { Button } from '@/components/ui/button';
 import { fetchUserCompanies } from '@/services/company.service';
+import { PageHeader } from '@/components/ui/page-header';
 import { CreateInvoicePrintDocument } from '@/components/features/create-invoice/CreateInvoicePrintDocument';
 import { buildDetailRows, buildPrintPayload, buildProcessDefaults, createProcessDraftPayload, getInvoiceProcessDraft } from '@/components/features/create-invoice/create-invoice.utils';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
@@ -47,15 +47,11 @@ export default function CreateInvoicePrintPage() {
   return (
     <DashboardLayout>
       <div className="space-y-6">
-        <div className="no-print flex items-center gap-3 rounded-md border border-gray-200 bg-white px-5 py-4 shadow-none">
-          <Button onClick={() => router.push(`/dashboard/${slug}/administrasi/create-invoice/detail/${id}`)} variant="ghost" size="icon" className="h-10 w-10 rounded-md border border-slate-200 hover:bg-slate-50 cursor-pointer">
-            <ArrowLeft className="h-5 w-5 text-slate-700" />
-          </Button>
-          <div>
-            <h1 className="text-2xl font-semibold text-slate-900">Invoice {payload.invoiceCode}</h1>
-            <p className="text-sm text-slate-500">Dibuat: {payload.draft.date}</p>
-          </div>
-        </div>
+        <PageHeader
+          title={`Invoice ${payload.invoiceCode}`}
+          subtitle={`Dibuat: ${payload.draft.date}`}
+          onBack={() => router.push(`/dashboard/${slug}/administrasi/create-invoice/detail/${id}`)}
+        />
 
         <CreateInvoicePrintDocument payload={payload} letterheadUrl={letterheadUrl} />
       </div>

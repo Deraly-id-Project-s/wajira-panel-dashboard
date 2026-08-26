@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { useMemo, useState } from 'react';
 import { useRouter } from 'next/router';
-import { ArrowLeft, MoreVertical, Plus, Search, Wallet } from 'lucide-react';
+import { MoreVertical, Plus, Search, Wallet } from 'lucide-react';
 import { toast } from 'sonner';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Input } from '@/components/ui/input';
+import { PageHeader } from '@/components/ui/page-header';
 import BaseTable, { ColumnDef } from '@/components/ui/base-table';
 import { useCompany } from '@/contexts/CompanyContext';
 import { useKas } from '@/hooks/useKas';
@@ -263,15 +264,15 @@ export default function PurchaseMaterialDetailPage() {
   return (
     <DashboardLayout>
       <div className="space-y-6">
-        <div className="space-y-3">
-          <Button asChild variant="ghost" size="icon" className="h-10 w-10 rounded-md border border-slate-200 hover:bg-slate-50 cursor-pointer">
-            <Link href={`/dashboard/${slug}/pembelian-material`}>
-              <ArrowLeft className="mr-2 h-4 w-4" />
-              Kembali
-            </Link>
-          </Button>
-          <h1 className="text-[24px] font-semibold text-slate-900">Detail Pembelian</h1>
-        </div>
+        <PageHeader
+          breadcrumbs={[
+            { label: 'Pembelian Material', onClick: () => router.push(`/dashboard/${slug}/pembelian-material`) },
+            { label: 'Detail Pembelian' }
+          ]}
+          title="Detail Pembelian"
+          subtitle="Informasi detail dan item pembelian material"
+          onBack={() => router.push(`/dashboard/${slug}/pembelian-material`)}
+        />
 
         <Card className="rounded-md border border-slate-200 bg-white p-6 shadow-sm">
           <div className="space-y-6">

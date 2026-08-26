@@ -1,9 +1,10 @@
 import { LoadingState } from '@/components/ui/loading-state';
 import Head from 'next/head';
 import { useRouter } from 'next/router';
-import { ArrowLeft, Info, ChevronRight } from 'lucide-react';
+import { Info } from 'lucide-react';
 import { format } from 'date-fns';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
+import { PageHeader } from '@/components/ui/page-header';
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { CopyBox } from '@/components/ui/copy-box';
@@ -35,15 +36,6 @@ export default function BuktiPotongDetailPage() {
         <title>Detail Bukti Potong - Wajira Dashboard</title>
       </Head>
 
-      {/* BREADCRUMB HEADER */}
-      <div className="flex items-center gap-2 text-sm text-slate-500">
-        <span className="hover:text-slate-800 cursor-pointer" onClick={() => router.push(`/dashboard/${slug}/administrasi/bukti-potong`)}>
-          Bukti Potong
-        </span>
-        <ChevronRight className="h-4 w-4 shrink-0 text-slate-400" />
-        <span className="font-medium text-slate-800">Detail Bukti Potong</span>
-      </div>
-
       {isLoading ? (
         <div className="rounded-md border border-slate-200 bg-white">
           <LoadingState variant="page" text="Memuat detail bukti potong..." />
@@ -55,25 +47,15 @@ export default function BuktiPotongDetailPage() {
         </div>
       ) : (
         <div className="space-y-6">
-          {/* HEADER */}
-          <div className="flex items-center justify-between gap-4 w-full">
-            <div className="flex items-center gap-4">
-              <Button
-                onClick={() => router.push(typeof slug === 'string' ? `/dashboard/${slug}/administrasi/bukti-potong` : '/dashboard')}
-                variant="ghost"
-                size="icon"
-                className="h-10 w-10 rounded-xl border border-slate-200 hover:bg-slate-50 cursor-pointer"
-              >
-                <ArrowLeft className="h-5 w-5 text-slate-700" />
-              </Button>
-              <div>
-                <div className="flex items-center gap-3">
-                  <h1 className="text-2xl font-semibold">Detail Bukti Potong</h1>
-                </div>
-                <p className="text-sm text-muted-foreground">Informasi detail mengenai data bukti potong</p>
-              </div>
-            </div>
-          </div>
+          <PageHeader
+            breadcrumbs={[
+              { label: 'Bukti Potong', onClick: () => router.push(typeof slug === 'string' ? `/dashboard/${slug}/administrasi/bukti-potong` : '/dashboard') },
+              { label: 'Detail Bukti Potong' },
+            ]}
+            title="Detail Bukti Potong"
+            subtitle="Informasi detail mengenai data bukti potong"
+            onBack={() => router.push(typeof slug === 'string' ? `/dashboard/${slug}/administrasi/bukti-potong` : '/dashboard')}
+          />
 
           {/* 1. GENERAL INFO CARD */}
           <div className="rounded-md border border-slate-200 bg-white p-6 shadow-sm space-y-6">

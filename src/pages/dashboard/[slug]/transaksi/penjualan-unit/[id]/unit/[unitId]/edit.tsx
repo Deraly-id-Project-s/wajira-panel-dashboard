@@ -2,7 +2,7 @@ import { useMemo } from 'react';
 import { useRouter } from 'next/router';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { Card, CardContent } from '@/components/ui/card';
-import { ArrowLeft } from 'lucide-react';
+import { PageHeader } from '@/components/ui/page-header';
 import { UnitTransactionForm } from '@/components/features/unit-transaction/UnitTransactionForm';
 import { type UnitTransactionFormValues } from '@/components/features/unit-transaction/unit-transaction.schema';
 import { toast } from 'sonner';
@@ -132,20 +132,21 @@ export default function EditNestedUnitPage() {
     return (
         <DashboardLayout>
             <div className="space-y-6">
-                <div>
-                    <button onClick={() => router.back()} className="mb-2 flex items-center gap-2 text-sm text-muted-foreground transition-colors hover:text-foreground">
-                        <ArrowLeft className="h-4 w-4" />
-                        Kembali
-                    </button>
-
-                    <div className="flex flex-col gap-1">
-                        <h1 className="text-2xl font-bold tracking-tight">Edit Unit</h1>
+                <PageHeader
+                    breadcrumbs={[
+                        { label: 'Penjualan Unit', onClick: () => router.push(`/dashboard/${slugValue}/transaksi/penjualan-unit`) },
+                        { label: 'Detail Penjualan', onClick: () => router.push(`/dashboard/${slugValue}/transaksi/penjualan-unit/${salesId}`) },
+                        { label: 'Edit Unit' }
+                    ]}
+                    title="Edit Unit"
+                    subtitle={
                         <div className="flex items-center gap-2 text-sm">
-                            <span className="text-muted-foreground">Kode Jual</span>
-                            <span className="text-blue-600 font-medium">{invoiceCode}</span>
+                            <span className="text-muted-foreground">Kode Jual:</span>
+                            <span className="inline-flex items-center gap-1.5 font-semibold text-orange-600 hover:text-orange-700">{invoiceCode}</span>
                         </div>
-                    </div>
-                </div>
+                    }
+                    onBack={() => router.push(`/dashboard/${slugValue}/transaksi/penjualan-unit/${salesId}`)}
+                />
 
                 <Card className="rounded-md">
                     <CardContent className="p-6">

@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { ArrowLeft, Printer } from 'lucide-react';
+import { Printer } from 'lucide-react';
 import { useRouter } from 'next/router';
 import { useQueries } from '@tanstack/react-query';
 import { useReactToPrint } from 'react-to-print';
@@ -18,6 +18,7 @@ import { getLetterheadByCompanyId, resolveCompanyId } from '@/lib/print-letterhe
 import { getDoInvoiceById } from '@/services/do-invoice.service';
 import { Button } from '@/components/ui/button';
 import { LoadingState } from '@/components/ui/loading-state';
+import { PageHeader } from '@/components/ui/page-header';
 
 const parseIds = (value: string | string[] | undefined) => {
   const raw = Array.isArray(value) ? value[0] : value;
@@ -107,21 +108,17 @@ export default function BulkCreateInvoicePrintPage() {
   return (
     <DashboardLayout>
       <div className="space-y-6">
-        <div className="no-print flex items-center justify-between gap-3 rounded-md border border-gray-200 bg-white px-5 py-4 shadow-none">
-          <div className="flex items-center gap-3">
-            <Button onClick={() => router.push(`/dashboard/${slug}/administrasi/create-invoice`)} variant="ghost" size="icon" className="h-10 w-10 rounded-md border border-slate-200 hover:bg-slate-50 cursor-pointer">
-              <ArrowLeft className="h-5 w-5 text-slate-700" />
+        <PageHeader
+          title="Cetak Massal Invoice"
+          subtitle={`Total terpilih: ${invoices.length} dokumen`}
+          onBack={() => router.push(`/dashboard/${slug}/administrasi/create-invoice`)}
+          actions={
+            <Button type="button" onClick={() => handlePrint()} variant="outline" className="w-full sm:w-auto cursor-pointer">
+              <Printer className="mr-2 h-4 w-4" />
+              Print All ({invoices.length})
             </Button>
-            <div>
-              <h1 className="text-2xl font-semibold text-slate-900">Cetak Massal Invoice</h1>
-              <p className="text-sm text-slate-500">Total terpilih: {invoices.length} dokumen</p>
-            </div>
-          </div>
-          <Button type="button" onClick={() => handlePrint()} variant="outline" className="w-full sm:w-auto">
-            <Printer className="h-4 w-4" />
-            Print All ({invoices.length})
-          </Button>
-        </div>
+          }
+        />
 
         <div ref={printRef} className="space-y-8 bg-slate-50 p-4 rounded-md border border-gray-200 print:bg-white print:p-0 print:border-none print:space-y-0">
           {invoices.map((invoice) => {
