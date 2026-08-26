@@ -1,4 +1,4 @@
-import { UpsertUnitBillingPayload, UnitBilling } from '@/@types/unit-billing.types';
+import { UpsertUnitBillingPayload, UnitBilling } from '@/types/unit-billing.types';
 import { apiClient } from '@/lib/api/client';
 import { ensureSuccess, LaravelApiResponse } from '@/lib/api/response';
 import { unitBillingService } from '@/services/unitBilling.service';

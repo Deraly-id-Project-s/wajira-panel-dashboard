@@ -2,7 +2,7 @@
 
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
-import { Kas } from "@/@types/kas.types"
+import { Kas } from "@/types/kas.types"
 import { useDeleteKas } from "@/hooks/useKas"
 import { toast } from "sonner"
 

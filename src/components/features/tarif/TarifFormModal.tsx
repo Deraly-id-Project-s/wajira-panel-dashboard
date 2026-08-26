@@ -4,7 +4,7 @@ import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from '
 import { FormDialog } from '@/components/ui/form-dialog';
 import { Input } from '@/components/ui/input';
 import { MoneyInput } from '@/components/ui/money-input';
-import type { TarifPayload } from '@/@types/tarif.types';
+import type { TarifPayload } from '@/types/tarif.types';
 
 export interface TarifFormData {
     distance: string;

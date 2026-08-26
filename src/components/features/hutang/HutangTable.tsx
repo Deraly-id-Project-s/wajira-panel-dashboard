@@ -1,4 +1,4 @@
-import { Hutang } from '@/@types/hutang.types';
+import { Hutang } from '@/types/hutang.types';
 import { MoreVertical, Search } from 'lucide-react';
 import Link from 'next/link';
 import { useState } from 'react';

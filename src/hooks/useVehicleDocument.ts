@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import type { PaginationParams } from '@/@types/pagination.types';
-import type { VehicleDocumentFilters, VehicleDocumentPayload, VehicleRegistrationFilters, VehicleRegistrationPayload } from '@/@types/vehicle-document.types';
+import type { PaginationParams } from '@/types/pagination.types';
+import type { VehicleDocumentFilters, VehicleDocumentPayload, VehicleRegistrationFilters, VehicleRegistrationPayload } from '@/types/vehicle-document.types';
 import {
   createVehicleDocument,
   deleteVehicleDocument,

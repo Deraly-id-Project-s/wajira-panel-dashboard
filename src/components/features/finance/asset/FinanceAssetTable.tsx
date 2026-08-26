@@ -2,7 +2,7 @@ import React, { useMemo } from 'react';
 import { Download, MoreVertical, Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import type { FinanceAsset } from '@/@types/finance-asset.types';
+import type { FinanceAsset } from '@/types/finance-asset.types';
 import BaseTable, { ColumnDef } from '@/components/ui/base-table';
 import { CopyBox } from '@/components/ui/copy-box';
 import { currenciesFormat } from '@/components/ui/currenciesFormat';

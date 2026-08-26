@@ -7,8 +7,8 @@ import type {
   DoEkspedisiItemPayload,
   DoEkspedisiListParams,
   DoEkspedisiPayload,
-} from '@/@types/do-ekspedisi.types';
-import type { PaginationParams } from '@/@types/pagination.types';
+} from '@/types/do-ekspedisi.types';
+import type { PaginationParams } from '@/types/pagination.types';
 import {
   createDoEkspedisi,
   applyExpeditionClaim,

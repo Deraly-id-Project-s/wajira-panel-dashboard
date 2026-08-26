@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { Eye, FilePenLine, MoreVertical, Plus, Trash2 } from 'lucide-react';
-import type { OrderList, OrderListStatus } from '@/@types/order-list.types';
+import type { OrderList, OrderListStatus } from '@/types/order-list.types';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,

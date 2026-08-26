@@ -1,6 +1,6 @@
 import { apiClient } from '@/lib/api/client';
 import { ensureSuccess, type LaravelApiResponse } from '@/lib/api/response';
-import type { TarifPriceVersion, TarifPriceVersionFilterParams, TarifPriceVersionFormValues } from '@/@types/tarif-price-version.types';
+import type { TarifPriceVersion, TarifPriceVersionFilterParams, TarifPriceVersionFormValues } from '@/types/tarif-price-version.types';
 
 const basePath = '/wapi/master-data/tarif-price-version';
 

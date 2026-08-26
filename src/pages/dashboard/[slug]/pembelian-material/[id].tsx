@@ -24,10 +24,10 @@ import {
 } from '@/hooks/useMaterialTransaction';
 import { getVisiblePageNumbers } from '@/lib/api/pagination';
 import { ApiResponseError, ApiValidationError } from '@/lib/api/response';
-import type { MaterialTransactionDetailItem } from '@/@types/material-transaction.types';
+import type { MaterialTransactionDetailItem } from '@/types/material-transaction.types';
 import { PurchaseMaterialDetailItemModal } from '@/components/features/material-purchase/PurchaseMaterialDetailItemModal';
 import { PurchaseMaterialPaymentModal } from '@/components/features/material-purchase/PurchaseMaterialPaymentModal';
-import type { MaterialTransactionBillingFormValues, MaterialTransactionItemFormValues } from '@/scheme/material-transaction.schema';
+import type { MaterialTransactionBillingFormValues, MaterialTransactionItemFormValues } from '@/schemas/material-transaction.schema';
 import { LoadingState } from '@/components/ui/loading-state';
 
 const formatDate = (value?: string) => {

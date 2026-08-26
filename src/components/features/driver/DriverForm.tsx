@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Switch } from '@/components/ui/switch';
 import RequiredMark from '@/components/ui/required-mark';
-import type { Driver, DriverPayload } from '@/@types/driver.types';
+import type { Driver, DriverPayload } from '@/types/driver.types';
 
 type DriverFormValues = {
   name: string;

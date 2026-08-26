@@ -23,7 +23,7 @@ import {
 } from '@/hooks/useUnitTypePriceVersion';
 import { UnitTypePriceVersionTable } from '@/components/features/type-unit/UnitTypePriceVersionTable';
 import { UnitTypePriceVersionForm } from '@/components/features/type-unit/UnitTypePriceVersionForm';
-import type { UnitTypePriceVersion, UnitTypePriceVersionFormValues } from '@/@types/unit-type-price-version.types';
+import type { UnitTypePriceVersion, UnitTypePriceVersionFormValues } from '@/types/unit-type-price-version.types';
 import { toast } from 'sonner';
 import { usePermissionGuard } from '@/hooks/usePermissionGuard';
 

@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { useRouter } from 'next/router';
 import { toast } from 'sonner';
-import type { DoInvoiceTableRow } from '@/@types/create-invoice.types';
+import type { DoInvoiceTableRow } from '@/types/create-invoice.types';
 import { CreateInvoiceDeleteDialog } from '@/components/features/create-invoice/CreateInvoiceDeleteDialog';
 import { CreateInvoiceModal } from '@/components/features/create-invoice/CreateInvoiceModal';
 import { CreateInvoiceTable } from '@/components/features/create-invoice/CreateInvoiceTable';
@@ -10,7 +10,7 @@ import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { useDebouncedValue } from '@/hooks/useDebouncedValue';
 import { useCreateDoInvoice, useDeleteDoInvoice, useDoInvoices } from '@/hooks/useDoInvoice';
 
-import { getApiErrorMessage } from '@/utils/apiErrorHandler';
+import { getApiErrorMessage } from '@/lib/utils/apiErrorHandler';
 
 export default function CreateInvoiceListPage() {
   const router = useRouter();

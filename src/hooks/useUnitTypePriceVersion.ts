@@ -1,5 +1,5 @@
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import type { UnitTypePriceVersionFilterParams } from '@/@types/unit-type-price-version.types';
+import type { UnitTypePriceVersionFilterParams } from '@/types/unit-type-price-version.types';
 import {
   getUnitTypePriceVersions,
   createUnitTypePriceVersion,

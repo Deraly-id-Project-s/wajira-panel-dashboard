@@ -1,11 +1,11 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import type { PaginationParams } from '@/@types/pagination.types';
+import type { PaginationParams } from '@/types/pagination.types';
 import type {
   GoodsReceiptEquipmentPayload,
   GoodsReceiptEquipmentBillingPayload,
   GoodsReceiptEquipmentPaymentPayload,
   GoodsTransactionDetailEquipmentPayload,
-} from '@/@types/goods-receipt-equipment.types';
+} from '@/types/goods-receipt-equipment.types';
 import {
   getGoodsReceiptEquipments,
   getGoodsReceiptEquipmentById,

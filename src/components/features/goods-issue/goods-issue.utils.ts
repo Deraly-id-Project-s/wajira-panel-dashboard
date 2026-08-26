@@ -1,5 +1,5 @@
-import type { GoodsIssue, GoodsIssueBilling, GoodsIssueDetail } from '@/@types/goods-issue.types';
-import type { Kas } from '@/@types/kas.types';
+import type { GoodsIssue, GoodsIssueBilling, GoodsIssueDetail } from '@/types/goods-issue.types';
+import type { Kas } from '@/types/kas.types';
 
 import { format } from 'date-fns';
 import { id } from 'date-fns/locale';

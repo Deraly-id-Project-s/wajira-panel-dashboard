@@ -17,7 +17,7 @@ import {
     useExportDriver,
 } from '@/hooks/useDriver';
 import { useCompany } from '@/contexts/CompanyContext';
-import type { Driver } from '@/@types/driver.types';
+import type { Driver } from '@/types/driver.types';
 import { usePermissionGuard } from '@/hooks/usePermissionGuard';
 
 export default function DriverPage() {

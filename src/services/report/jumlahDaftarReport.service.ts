@@ -5,7 +5,7 @@ import {
   SkpdReportItem,
   TnkbReportItem,
   ReportPaginationResponse,
-} from '@/@types/jumlah-daftar-report.types';
+} from '@/types/jumlah-daftar-report.types';
 
 export interface JumlahDaftarReportParams {
   page?: number;

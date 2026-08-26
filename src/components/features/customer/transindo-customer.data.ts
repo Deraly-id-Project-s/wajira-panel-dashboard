@@ -1,4 +1,4 @@
-import type { Customer } from '@/@types/customer.types';
+import type { Customer } from '@/types/customer.types';
 
 export let DUMMY_TRANSINDO_CUSTOMERS: Customer[] = [
   {

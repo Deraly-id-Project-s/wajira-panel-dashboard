@@ -1,4 +1,4 @@
-import type { GoodsStockMaterial, GoodsStockMaterialParams, GoodsStockMaterialResponse } from '@/@types/goods-stock-material.types';
+import type { GoodsStockMaterial, GoodsStockMaterialParams, GoodsStockMaterialResponse } from '@/types/goods-stock-material.types';
 import { apiClient } from '@/lib/api/client';
 import { type LaravelApiResponse, ensureSuccess } from '@/lib/api/response';
 

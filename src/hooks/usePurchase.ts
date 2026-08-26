@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { purchaseService } from '@/services/purchase.service';
-import { CreatePurchaseRequest, UpdatePurchaseRequest, CreatePurchaseUnitRequest } from '@/@types/purchase.types';
+import { CreatePurchaseRequest, UpdatePurchaseRequest, CreatePurchaseUnitRequest } from '@/types/purchase.types';
 import { companyQueryKeys } from '@/lib/query/company-key';
 
 /* =====================================

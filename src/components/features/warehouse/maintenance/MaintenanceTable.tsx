@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import BaseTable, { ColumnDef } from '@/components/ui/base-table';
-import type { MaintenanceItem } from '@/@types/maintenance.types';
+import type { MaintenanceItem } from '@/types/maintenance.types';
 import { format } from 'date-fns';
 import { id } from 'date-fns/locale';
 

@@ -8,7 +8,7 @@ import { DeleteRegionModal } from '@/components/features/region/DeleteRegionModa
 import { ImportRegionModal } from '@/components/features/region/ImportRegionModal';
 import { toast } from 'sonner';
 import { useRegions, useCreateRegion, useUpdateRegion, useDeleteRegion, useImportRegion, useExportRegion } from '@/hooks/useRegion';
-import type { Region } from '@/@types/region.types';
+import type { Region } from '@/types/region.types';
 import { usePermissionGuard } from '@/hooks/usePermissionGuard';
 
 export default function RegionPage() {

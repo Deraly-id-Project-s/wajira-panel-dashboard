@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { MoneyInput } from '@/components/ui/money-input';
 import { MaterialFormData } from './MaterialFormModal';
-import type { Material } from '@/@types/material.types';
+import type { Material } from '@/types/material.types';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 interface EditMaterialModalProps {

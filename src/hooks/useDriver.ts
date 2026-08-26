@@ -10,8 +10,8 @@ import {
     activateDriver,
     deactivateDriver,
 } from '@/services/driver.service';
-import type { PaginationParams } from '@/@types/pagination.types';
-import type { DriverPayload } from '@/@types/driver.types';
+import type { PaginationParams } from '@/types/pagination.types';
+import type { DriverPayload } from '@/types/driver.types';
 import { companyQueryKeys } from '@/lib/query/company-key';
 
 export function useDrivers(params: PaginationParams & { search?: string; company_id?: string | number; enabled?: boolean }) {

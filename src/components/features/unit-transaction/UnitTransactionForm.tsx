@@ -8,7 +8,7 @@ import { formatCurrency } from '@/lib/utils/currency';
 import { Button } from '@/components/ui/button';
 import { Save, Plus, ChevronsUpDown, Check } from 'lucide-react';
 import { useTypeUnits } from '@/hooks/useTypeUnit';
-import type { TypeUnit } from '@/@types/type-unit.types';
+import type { TypeUnit } from '@/types/type-unit.types';
 import { Label } from '@/components/ui/label';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';

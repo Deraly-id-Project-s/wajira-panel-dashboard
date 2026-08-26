@@ -10,8 +10,8 @@ import type {
   GoodsIssuePayment,
   GoodsIssuePaymentPayload,
   GoodsIssueUploadInvoicePayload,
-} from '@/@types/goods-issue.types';
-import type { PaginationParams } from '@/@types/pagination.types';
+} from '@/types/goods-issue.types';
+import type { PaginationParams } from '@/types/pagination.types';
 import { apiClient } from '@/lib/api/client';
 import { buildLaravelPaginationQuery } from '@/lib/api/pagination';
 import { ApiResponseError, ApiValidationError, type LaravelApiResponse, ensureSuccess, toPaginatedResult } from '@/lib/api/response';

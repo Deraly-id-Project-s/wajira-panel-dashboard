@@ -5,7 +5,7 @@ import { PageHeader } from '@/components/ui/page-header';
 import { DocumentTemplateEditor } from '@/components/features/document-template/DocumentTemplateEditor';
 import { useCreateDocumentTemplate } from '@/hooks/useDocumentTemplate';
 import { usePermissionGuard } from '@/hooks/usePermissionGuard';
-import type { DocumentTemplateFormValues } from '@/scheme/document-template.schema';
+import type { DocumentTemplateFormValues } from '@/schemas/document-template.schema';
 
 export default function CreateDocumentTemplatePage() {
   const router = useRouter();

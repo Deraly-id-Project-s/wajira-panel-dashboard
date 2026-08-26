@@ -1,5 +1,5 @@
-import { PaginationMeta } from '@/@types/pagination.types';
-import { TransformedReceiptUnitData } from '@/@types/penerimaan-unit.types';
+import { PaginationMeta } from '@/types/pagination.types';
+import { TransformedReceiptUnitData } from '@/types/penerimaan-unit.types';
 import { apiClient } from '@/lib/api/client';
 import { ensureSuccess, LaravelApiResponse } from '@/lib/api/response';
 

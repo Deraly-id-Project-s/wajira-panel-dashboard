@@ -1,5 +1,5 @@
-import type { GoodsReceiptEquipment, GoodsReceiptEquipmentBilling, GoodsReceiptEquipmentDetail } from '@/@types/goods-receipt-equipment.types';
-import type { Kas } from '@/@types/kas.types';
+import type { GoodsReceiptEquipment, GoodsReceiptEquipmentBilling, GoodsReceiptEquipmentDetail } from '@/types/goods-receipt-equipment.types';
+import type { Kas } from '@/types/kas.types';
 
 import { format } from 'date-fns';
 import { id } from 'date-fns/locale';

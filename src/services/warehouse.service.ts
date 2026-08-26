@@ -8,7 +8,7 @@ import {
   WarehouseActivityListParams,
   WarehouseActivityListResponse,
   WarehouseActivityUnitDetail,
-} from '@/@types/warehouse.types';
+} from '@/types/warehouse.types';
 import { apiClient } from '@/lib/api/client';
 import { ensureSuccess, LaravelApiResponse } from '@/lib/api/response';
 

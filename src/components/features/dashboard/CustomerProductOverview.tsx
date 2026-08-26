@@ -1,4 +1,4 @@
-import { CustomerOverview, ProductOverview } from '@/@types/dashboard';
+import { CustomerOverview, ProductOverview } from '@/types/dashboard';
 import { Card } from '@/components/ui/card';
 import { currenciesFormat } from '@/components/ui/currenciesFormat';
 import { ReferenceLink } from '@/components/ui/reference-link';

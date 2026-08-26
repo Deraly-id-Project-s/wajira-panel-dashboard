@@ -5,7 +5,7 @@ import { PageHeader } from '@/components/ui/page-header';
 import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import BaseTable, { ColumnDef } from '@/components/ui/base-table';
-import type { GoodsIssue } from '@/@types/goods-issue.types';
+import type { GoodsIssue } from '@/types/goods-issue.types';
 import { formatCurrency, formatDate, getIssueStatusLabel } from './goods-issue.utils';
 
 interface GoodsIssueTableProps {

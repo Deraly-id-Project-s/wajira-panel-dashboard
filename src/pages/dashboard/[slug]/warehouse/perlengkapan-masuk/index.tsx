@@ -28,12 +28,12 @@ import { GoodsReceiptEquipmentTable } from '@/components/features/warehouse/rece
 import { GoodsReceiptEquipmentFormModal } from '@/components/features/warehouse/receipt-equipment/GoodsReceiptEquipmentFormModal';
 import { GoodsReceiptEquipmentPaymentModal } from '@/components/features/warehouse/receipt-equipment/GoodsReceiptEquipmentPaymentModal';
 import { UploadInvoiceModal } from '@/components/features/material-receipt/UploadInvoiceModal';
-import type { GoodsReceiptEquipment } from '@/@types/goods-receipt-equipment.types';
-import type { GoodsReceiptEquipmentFormValues } from '@/scheme/goods-receipt-equipment.schema';
-import type { GoodsReceiptEquipmentPaymentFormValues } from '@/scheme/goods-receipt-equipment.schema';
+import type { GoodsReceiptEquipment } from '@/types/goods-receipt-equipment.types';
+import type { GoodsReceiptEquipmentFormValues } from '@/schemas/goods-receipt-equipment.schema';
+import type { GoodsReceiptEquipmentPaymentFormValues } from '@/schemas/goods-receipt-equipment.schema';
 import { getReceiptBilling } from '@/components/features/warehouse/receipt-equipment/goodsReceiptEquipment.utils';
 
-import { getApiErrorMessage } from '@/utils/apiErrorHandler';
+import { getApiErrorMessage } from '@/lib/utils/apiErrorHandler';
 import { usePermissionGuard } from '@/hooks/usePermissionGuard';
 
 const getErrorMessage = (error: any): string => {

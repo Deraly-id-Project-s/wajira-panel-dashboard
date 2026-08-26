@@ -8,7 +8,7 @@ import { useStockUnits } from '@/hooks/useStockUnit';
 import { useCompany } from '@/contexts/CompanyContext';
 import { Card } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import type { StockStatus } from '@/@types/stock-unit.types';
+import type { StockStatus } from '@/types/stock-unit.types';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';

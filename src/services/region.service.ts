@@ -1,5 +1,5 @@
-import type { Region, RegionListResponse, RegionPayload } from '@/@types/region.types';
-import type { PaginationParams } from '@/@types/pagination.types';
+import type { Region, RegionListResponse, RegionPayload } from '@/types/region.types';
+import type { PaginationParams } from '@/types/pagination.types';
 import { apiClient } from '@/lib/api/client';
 import { buildLaravelPaginationQuery } from '@/lib/api/pagination';
 import { ApiResponseError, LaravelApiResponse, ensureSuccess, toPaginatedResult, ApiValidationError } from '@/lib/api/response';

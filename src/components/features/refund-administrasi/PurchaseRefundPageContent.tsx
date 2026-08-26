@@ -7,7 +7,7 @@ import {
   ChevronRight,
   AlertTriangle,
 } from 'lucide-react';
-import type { UnitTransactionRefund } from '@/@types/refund.type';
+import type { UnitTransactionRefund } from '@/types/refund.type';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';

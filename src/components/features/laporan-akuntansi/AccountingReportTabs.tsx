@@ -1,6 +1,6 @@
 'use client';
 
-import { AccountingReportTab } from '@/@types/accounting-report.types';
+import { AccountingReportTab } from '@/types/accounting-report.types';
 import { ACCOUNTING_REPORT_TABS } from './laporan-akuntansi.constants';
 import { cn } from '@/lib/utils';
 

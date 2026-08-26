@@ -3,7 +3,7 @@ import BaseTable, { ColumnDef } from '@/components/ui/base-table';
 import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Upload } from 'lucide-react';
-import type { Vendor } from '@/@types/vendor.types';
+import type { Vendor } from '@/types/vendor.types';
 import { ReferenceLink } from '@/components/ui/reference-link';
 import { CopyBox } from '@/components/ui/copy-box';
 

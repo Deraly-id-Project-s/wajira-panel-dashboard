@@ -4,7 +4,7 @@
  */
 
 import { useQuery, UseQueryResult } from '@tanstack/react-query';
-import { DashboardApiResponse } from '@/@types/dashboard';
+import { DashboardApiResponse } from '@/types/dashboard';
 import { dashboardService } from '@/lib/api/dashboard.service';
 import { toast } from 'sonner';
 import { useEffect } from 'react';

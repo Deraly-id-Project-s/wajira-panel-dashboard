@@ -3,7 +3,7 @@ import { MoreHorizontal, Plus, Pencil, Trash2, MoreVertical } from 'lucide-react
 import BaseTable, { type ColumnDef } from '@/components/ui/base-table';
 import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import type { DocumentTemplate } from '@/@types/document-template.types';
+import type { DocumentTemplate } from '@/types/document-template.types';
 
 interface Props {
   data: DocumentTemplate[];

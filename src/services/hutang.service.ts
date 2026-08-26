@@ -1,4 +1,4 @@
-import { Hutang, HutangPayment } from '@/@types/hutang.types';
+import { Hutang, HutangPayment } from '@/types/hutang.types';
 import { v4 as uuidv4 } from 'uuid';
 
 const generateHutangData = (): Hutang[] => {

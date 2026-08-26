@@ -6,14 +6,14 @@ import { Card } from '@/components/ui/card';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { PageHeader } from '@/components/ui/page-header';
 import { AccountForm } from './AccountForm';
-import { accountSchema, type AccountFormValues } from '@/scheme/account-master.schema';
+import { accountSchema, type AccountFormValues } from '@/schemas/account-master.schema';
 import { useAccountGroups } from '@/hooks/useAccountGroup';
 import { useCreateAccount } from '@/hooks/useAccount';
 import { useCompany } from '@/contexts/CompanyContext';
 import { ApiValidationError } from '@/lib/api/response';
 import { toast } from 'sonner';
 import { getAccountTypeFromCategory } from '@/lib/account';
-import type { AccountGroup } from '@/@types/account-group.types';
+import type { AccountGroup } from '@/types/account-group.types';
 
 export const AccountCreatePage = () => {
   const router = useRouter();

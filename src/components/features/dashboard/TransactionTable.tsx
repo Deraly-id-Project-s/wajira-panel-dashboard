@@ -1,4 +1,4 @@
-import { TransactionEntry } from '@/@types/dashboard';
+import { TransactionEntry } from '@/types/dashboard';
 import { Card } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useMemo, useState } from 'react';

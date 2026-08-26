@@ -1,4 +1,4 @@
-import { ProfitLossReport } from '@/@types/accounting-report.types';
+import { ProfitLossReport } from '@/types/accounting-report.types';
 import { cn } from '@/lib/utils';
 
 import AccountingDocument from './AccountingDocument';

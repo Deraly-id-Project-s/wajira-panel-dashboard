@@ -7,7 +7,7 @@ import { useTarifDetail } from '@/hooks/useTarif';
 import { useCreateTarifPriceVersion, useDeleteTarifPriceVersion, useTarifPriceVersions, useUpdateTarifPriceVersion } from '@/hooks/useTarifPriceVersion';
 import { TarifPriceVersionTable } from '@/components/features/tarif/TarifPriceVersionTable';
 import { TarifPriceVersionForm } from '@/components/features/tarif/TarifPriceVersionForm';
-import type { TarifPriceVersion, TarifPriceVersionFormValues } from '@/@types/tarif-price-version.types';
+import type { TarifPriceVersion, TarifPriceVersionFormValues } from '@/types/tarif-price-version.types';
 import { currenciesFormat } from '@/components/ui/currenciesFormat';
 import { toast } from 'sonner';
 import { usePermissionGuard } from '@/hooks/usePermissionGuard';

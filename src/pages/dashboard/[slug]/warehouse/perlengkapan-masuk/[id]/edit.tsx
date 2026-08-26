@@ -25,10 +25,10 @@ import { GoodsReceiptEquipmentFormModal } from '@/components/features/warehouse/
 import { GoodsReceiptEquipmentDetailFormModal } from '@/components/features/warehouse/receipt-equipment/GoodsReceiptEquipmentDetailFormModal';
 import { GoodsReceiptEquipmentDetailTable } from '@/components/features/warehouse/receipt-equipment/GoodsReceiptEquipmentDetailTable';
 import { formatDate } from '@/components/features/warehouse/receipt-equipment/goodsReceiptEquipment.utils';
-import type { GoodsTransactionDetailEquipment } from '@/@types/goods-receipt-equipment.types';
-import type { GoodsReceiptEquipmentFormValues, GoodsReceiptEquipmentItemFormValues } from '@/scheme/goods-receipt-equipment.schema';
+import type { GoodsTransactionDetailEquipment } from '@/types/goods-receipt-equipment.types';
+import type { GoodsReceiptEquipmentFormValues, GoodsReceiptEquipmentItemFormValues } from '@/schemas/goods-receipt-equipment.schema';
 
-import { getApiErrorMessage } from '@/utils/apiErrorHandler';
+import { getApiErrorMessage } from '@/lib/utils/apiErrorHandler';
 import { LoadingState } from '@/components/ui/loading-state';
 
 const getErrorMessage = (error: any): string => {

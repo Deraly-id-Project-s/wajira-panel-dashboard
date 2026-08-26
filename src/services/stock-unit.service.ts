@@ -1,5 +1,5 @@
-import { StockUnit, StockStatus, Status } from '@/@types/stock-unit.types';
-import type { PaginationParams } from '@/@types/pagination.types';
+import { StockUnit, StockStatus, Status } from '@/types/stock-unit.types';
+import type { PaginationParams } from '@/types/pagination.types';
 import { apiClient } from '@/lib/api/client';
 import { buildLaravelPaginationQuery } from '@/lib/api/pagination';
 import { LaravelApiResponse, ensureSuccess, toPaginatedResult } from '@/lib/api/response';

@@ -3,8 +3,8 @@ import BaseTable, { ColumnDef } from '@/components/ui/base-table';
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from '@/components/ui/dropdown-menu';
 import { Button } from '@/components/ui/button';
 import { MoreVertical } from 'lucide-react';
-import type { Tarif } from '@/@types/tarif.types';
-import type { PaginationMeta } from '@/@types/pagination.types';
+import type { Tarif } from '@/types/tarif.types';
+import type { PaginationMeta } from '@/types/pagination.types';
 import { currenciesFormat } from '@/components/ui/currenciesFormat';
 
 interface TarifTableProps {

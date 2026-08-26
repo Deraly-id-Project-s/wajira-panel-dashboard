@@ -7,7 +7,7 @@ import { Form } from '@/components/ui/form';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { PageHeader } from '@/components/ui/page-header';
 import { AccountGroupForm } from './AccountGroupForm';
-import { accountGroupSchema, type AccountGroupFormValues } from '@/scheme/account-group.schema';
+import { accountGroupSchema, type AccountGroupFormValues } from '@/schemas/account-group.schema';
 import { useCreateAccountGroup } from '@/hooks/useAccountGroup';
 import { ApiValidationError } from '@/lib/api/response';
 import { toast } from 'sonner';

@@ -1,7 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { getVehicleEquipments, getVehicleEquipmentById, createVehicleEquipment, updateVehicleEquipment, deleteVehicleEquipment } from '@/services/vehicle-equipment.service';
-import type { PaginationParams } from '@/@types/pagination.types';
-import type { VehicleEquipmentPayload } from '@/@types/vehicle-equipment.types';
+import type { PaginationParams } from '@/types/pagination.types';
+import type { VehicleEquipmentPayload } from '@/types/vehicle-equipment.types';
 
 export function useVehicleEquipments(params: PaginationParams & { search?: string } = { page: 1, perPage: 25 }) {
     return useQuery({

@@ -3,7 +3,7 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { terimaPiutangSchema, TerimaPiutangFormValues } from '@/scheme/piutang.schema';
+import { terimaPiutangSchema, TerimaPiutangFormValues } from '@/schemas/piutang.schema';
 import { toast } from 'sonner';
 import { Input } from '@/components/ui/input';
 import { MoneyInput } from '@/components/ui/money-input';

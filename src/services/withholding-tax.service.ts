@@ -6,7 +6,7 @@ import type {
   WithholdingTaxListParams,
   WithholdingTaxListResponse,
   WithholdingTaxPayload,
-} from '@/@types/withholding-tax.types';
+} from '@/types/withholding-tax.types';
 
 // Separate base paths for finance and transaction
 // const financeBasePath = '/wapi/finance/withholding-tax';

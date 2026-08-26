@@ -8,7 +8,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import type { OrderListStatus } from '@/@types/order-list.types';
+import type { OrderListStatus } from '@/types/order-list.types';
 import { getOrderStatusLabel } from './order-list.utils';
 
 interface OrderStatusConfirmDialogProps {

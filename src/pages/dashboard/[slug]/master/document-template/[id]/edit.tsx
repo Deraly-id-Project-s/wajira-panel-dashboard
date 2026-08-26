@@ -6,7 +6,7 @@ import { LoadingState } from '@/components/ui/loading-state';
 import { DocumentTemplateEditor } from '@/components/features/document-template/DocumentTemplateEditor';
 import { useDocumentTemplate, useUpdateDocumentTemplate } from '@/hooks/useDocumentTemplate';
 import { usePermissionGuard } from '@/hooks/usePermissionGuard';
-import type { DocumentTemplateFormValues } from '@/scheme/document-template.schema';
+import type { DocumentTemplateFormValues } from '@/schemas/document-template.schema';
 
 export default function EditDocumentTemplatePage() {
   const router = useRouter();

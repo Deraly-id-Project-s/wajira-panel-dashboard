@@ -13,8 +13,8 @@ import { BrandFormModal } from './BrandFormModal';
 import { useBrands, useCreateBrand, useUpdateBrand, useDeleteBrand } from '@/hooks/useBrand';
 import { useQueryParamsTable } from '@/hooks/useQueryParamsTable';
 import { usePermissionGuard } from '@/hooks/usePermissionGuard';
-import { brandSchema, type BrandFormValues } from '@/scheme/brand.schema';
-import type { Brand } from '@/@types/brand.types';
+import { brandSchema, type BrandFormValues } from '@/schemas/brand.schema';
+import type { Brand } from '@/types/brand.types';
 import { toast } from 'sonner';
 import { ApiResponseError, ApiValidationError } from '@/lib/api/response';
 

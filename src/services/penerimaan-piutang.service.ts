@@ -1,4 +1,4 @@
-import { PenerimaanPiutang, PenerimaanPiutangDetail } from '@/@types/penerimaan-piutang.types';
+import { PenerimaanPiutang, PenerimaanPiutangDetail } from '@/types/penerimaan-piutang.types';
 import { LiabilityPaymentHistory } from '@/types/pembayaran-hutang.types';
 
 const generateData = (): PenerimaanPiutang[] => {

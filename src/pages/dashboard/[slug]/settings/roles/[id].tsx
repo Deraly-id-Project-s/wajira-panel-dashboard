@@ -17,7 +17,7 @@ import { useCompany } from '@/contexts/CompanyContext';
 import { useQuery } from '@tanstack/react-query';
 import { apiClient } from '@/lib/api/client';
 import type { Module } from '@/services/module.service';
-import type { Permission } from '@/@types/permission.types';
+import type { Permission } from '@/types/permission.types';
 
 export default function RoleDetailPage() {
   const router = useRouter();

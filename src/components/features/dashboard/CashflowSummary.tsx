@@ -1,4 +1,4 @@
-import { CashflowSummary as CashflowSummaryType } from '@/@types/dashboard';
+import { CashflowSummary as CashflowSummaryType } from '@/types/dashboard';
 import { Card } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableRow } from '@/components/ui/table';
 import { formatCurrency } from '@/lib/utils/currency';

@@ -1,7 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { getTarifs, getTarifById, createTarif, updateTarif, deleteTarif } from '@/services/tarif.service';
-import type { PaginationParams } from '@/@types/pagination.types';
-import type { TarifPayload } from '@/@types/tarif.types';
+import type { PaginationParams } from '@/types/pagination.types';
+import type { TarifPayload } from '@/types/tarif.types';
 import { useCompany } from '@/contexts/CompanyContext';
 import { companyQueryKeys } from '@/lib/query/company-key';
 

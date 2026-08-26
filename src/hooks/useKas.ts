@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { getKas, createKas, updateKas, deleteKas, importKas } from '@/services/kas.service';
-import type { KasPayload } from '@/@types/kas.types';
+import type { KasPayload } from '@/types/kas.types';
 
 // Strictly scoped query keys
 export const kasKeys = {

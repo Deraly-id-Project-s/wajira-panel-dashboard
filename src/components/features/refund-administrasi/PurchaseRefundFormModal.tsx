@@ -3,7 +3,7 @@ import { z } from 'zod';
 import { type FieldErrors, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { CalendarDays, PackageSearch } from 'lucide-react';
-import type { UnitTransactionRefund } from '@/@types/refund.type';
+import type { UnitTransactionRefund } from '@/types/refund.type';
 import { useCreateRefund, useRefundDetail, useRefundSelectableItems, useUpdateRefund } from '@/hooks/useRefundAdministrasi';
 import { createRefundSchema, type CreateRefundFormValues } from '@/schemas/refund.schema';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';

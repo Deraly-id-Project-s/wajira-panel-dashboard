@@ -1,7 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { getRegions, getRegionById, importRegion, createRegion, updateRegion, deleteRegion, exportRegion } from '@/services/region.service';
-import type { PaginationParams } from '@/@types/pagination.types';
-import type { RegionPayload } from '@/@types/region.types';
+import type { PaginationParams } from '@/types/pagination.types';
+import type { RegionPayload } from '@/types/region.types';
 
 export function useRegions(params: PaginationParams & { search?: string } = { page: 1, perPage: 25 }) {
     return useQuery({

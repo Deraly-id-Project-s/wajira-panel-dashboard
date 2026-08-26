@@ -1,5 +1,5 @@
-import type { RefundApprovalStatus, RefundTransactionType } from '@/@types/finance-refund.types';
-import type { UnitTransactionRefund } from '@/@types/refund.type';
+import type { RefundApprovalStatus, RefundTransactionType } from '@/types/finance-refund.types';
+import type { UnitTransactionRefund } from '@/types/refund.type';
 
 export const refundStatusLabel: Record<RefundApprovalStatus, string> = {
   waiting: 'Menunggu',

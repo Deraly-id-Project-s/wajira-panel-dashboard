@@ -9,7 +9,7 @@ import { zodResolver } from "@hookform/resolvers/zod"
 import {
     bayarHutangSchema,
     BayarHutangFormValues,
-} from "@/scheme/hutang.schema"
+} from "@/schemas/hutang.schema"
 import { useBayarHutang } from "@/hooks/useHutang"
 import { toast } from "sonner"
 import { Input } from "@/components/ui/input"

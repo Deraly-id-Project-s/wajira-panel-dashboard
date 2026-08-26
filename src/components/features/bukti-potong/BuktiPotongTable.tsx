@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import type { WithholdingTaxItem, WithholdingTaxListResponse } from '@/@types/withholding-tax.types';
+import type { WithholdingTaxItem, WithholdingTaxListResponse } from '@/types/withholding-tax.types';
 import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { format } from 'date-fns';

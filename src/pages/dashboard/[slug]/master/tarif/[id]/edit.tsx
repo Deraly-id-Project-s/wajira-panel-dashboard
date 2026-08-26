@@ -3,7 +3,7 @@ import { useRouter } from 'next/router';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { TarifForm } from '@/components/features/tarif/TarifForm';
 import { useTarifDetail, useUpdateTarif } from '@/hooks/useTarif';
-import type { TarifPayload } from '@/@types/tarif.types';
+import type { TarifPayload } from '@/types/tarif.types';
 import { toast } from 'sonner';
 
 export default function EditTarifPage() {

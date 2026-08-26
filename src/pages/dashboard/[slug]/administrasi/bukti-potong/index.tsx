@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import Head from 'next/head';
 import { Search, Plus, Download } from 'lucide-react';
 import { useRouter } from 'next/router';
-import type { WithholdingTaxItem } from '@/@types/withholding-tax.types';
+import type { WithholdingTaxItem } from '@/types/withholding-tax.types';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';

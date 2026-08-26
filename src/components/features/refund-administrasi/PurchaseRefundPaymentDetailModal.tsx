@@ -2,7 +2,7 @@ import { useEffect } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { CalendarDays } from 'lucide-react';
-import type { UnitTransactionRefund, UnitTransactionRefundPayment } from '@/@types/refund.type';
+import type { UnitTransactionRefund, UnitTransactionRefundPayment } from '@/types/refund.type';
 import { useCreateRefundPayment, useUpdateRefundPayment } from '@/hooks/useRefundAdministrasi';
 import { createRefundPaymentSchema, type CreateRefundPaymentFormValues } from '@/schemas/refund.schema';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';

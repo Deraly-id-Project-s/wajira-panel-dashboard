@@ -1,6 +1,6 @@
 import type { CSSProperties } from 'react';
 import { Loader2, Search } from 'lucide-react';
-import type { BBNBillDetail, BBNBillBillingItem } from '@/@types/bbn-bill.types';
+import type { BBNBillDetail, BBNBillBillingItem } from '@/types/bbn-bill.types';
 import { formatBillCode, formatCurrency, formatShortDate } from './utils';
 
 interface Props {

@@ -1,4 +1,4 @@
-import { Piutang } from '@/@types/piutang.types';
+import { Piutang } from '@/types/piutang.types';
 import { MoreVertical, Search, ArrowUpDown } from 'lucide-react';
 import Link from 'next/link';
 import { useState } from 'react';

@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { liabilityService } from '@/services/liability.service';
-import type { CreatePenerimaanPiutangPaymentPayload } from '@/@types/penerimaan-piutang.types';
+import type { CreatePenerimaanPiutangPaymentPayload } from '@/types/penerimaan-piutang.types';
 import { useCompany } from '@/contexts/CompanyContext';
 import { companyQueryKeys } from '@/lib/query/company-key';
 

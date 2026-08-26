@@ -13,8 +13,8 @@ import { SearchableSelect } from '@/components/features/vehicle-data/SearchableS
 import { useDrivers } from '@/hooks/useDriver';
 import { useArmadas } from '@/hooks/useArmada';
 import { useDebouncedValue } from '@/hooks/useDebouncedValue';
-import type { GoodsIssueEquipment } from '@/@types/goods-issue-equipment.types';
-import { goodsIssueEquipmentSchema, type GoodsIssueEquipmentFormValues } from '@/scheme/goods-issue-equipment.schema';
+import type { GoodsIssueEquipment } from '@/types/goods-issue-equipment.types';
+import { goodsIssueEquipmentSchema, type GoodsIssueEquipmentFormValues } from '@/schemas/goods-issue-equipment.schema';
 
 interface GoodsIssueEquipmentFormModalProps {
   open: boolean;

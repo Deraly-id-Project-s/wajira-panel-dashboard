@@ -15,7 +15,7 @@ import { cn } from '@/lib/utils';
 import { useMaintenance } from '@/hooks/warehouse/useMaintenance';
 import { MaintenanceTable } from '@/components/features/warehouse/maintenance/MaintenanceTable';
 import { MaintenanceDetailModal } from '@/components/features/warehouse/maintenance/MaintenanceDetailModal';
-import type { MaintenanceItem } from '@/@types/maintenance.types';
+import type { MaintenanceItem } from '@/types/maintenance.types';
 import { usePermissionGuard } from '@/hooks/usePermissionGuard';
 
 export default function MaintenanceListPage() {

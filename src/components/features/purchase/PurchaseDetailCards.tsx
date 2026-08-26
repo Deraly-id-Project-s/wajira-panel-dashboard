@@ -1,7 +1,7 @@
 import { Card, CardContent } from '@/components/ui/card';
-import { UnitTransactionDetail } from '@/@types/unit-transaction.types';
+import { UnitTransactionDetail } from '@/types/unit-transaction.types';
 import { Calendar, User, FileText, DollarSign, CreditCard } from 'lucide-react';
-import { getHistoryTotalIdrEquivalent, getHistoryUsdAmount, getHistoryBcaIdrAmount, getHistoryCashIdrAmount } from '@/utils/payment-helpers';
+import { getHistoryTotalIdrEquivalent, getHistoryUsdAmount, getHistoryBcaIdrAmount, getHistoryCashIdrAmount } from '@/lib/utils/payment-helpers';
 import { currenciesFormat } from '@/components/ui/currenciesFormat';
 import { CopyBox } from '@/components/ui/copy-box';
 import { useRouter } from 'next/router';

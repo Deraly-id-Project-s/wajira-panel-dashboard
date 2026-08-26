@@ -4,7 +4,7 @@ import { format } from 'date-fns';
 import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import BaseTable, { ColumnDef } from '@/components/ui/base-table';
-import type { VehicleDocumentSummary } from '@/@types/vehicle-document.types';
+import type { VehicleDocumentSummary } from '@/types/vehicle-document.types';
 
 interface Props {
   items: VehicleDocumentSummary[];

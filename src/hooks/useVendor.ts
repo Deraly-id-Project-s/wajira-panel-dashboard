@@ -1,7 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { getVendors, getVendorById, importVendor, createVendor, updateVendor, deleteVendor, exportVendor } from '@/services/vendor.service';
-import type { PaginationParams } from '@/@types/pagination.types';
-import type { VendorPayload } from '@/@types/vendor.types';
+import type { PaginationParams } from '@/types/pagination.types';
+import type { VendorPayload } from '@/types/vendor.types';
 import { companyQueryKeys } from '@/lib/query/company-key';
 
 export function useVendors(params: PaginationParams & { search?: string; company_id?: string | number }) {

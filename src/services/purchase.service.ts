@@ -2,7 +2,7 @@
 
 import { apiClient } from '@/lib/api/client';
 import { ensureSuccess, mapLaravelPaginationMeta, type LaravelApiResponse } from '@/lib/api/response';
-import { PaginationParams } from '@/@types/pagination.types';
+import { PaginationParams } from '@/types/pagination.types';
 
 import {
   Purchase,
@@ -14,7 +14,7 @@ import {
   PurchasePaginatedResponse,
   PurchaseUnitItemPaginatedResponse,
   PurchaseUnitItemRow,
-} from '@/@types/purchase.types';
+} from '@/types/purchase.types';
 
 // Local in-memory store for UI state only.
 let purchases: Purchase[] = [];

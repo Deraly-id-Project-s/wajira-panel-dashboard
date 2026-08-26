@@ -12,8 +12,8 @@ import type {
   DoInvoiceTarif,
   DoInvoiceVehicle,
   CreateFinanceInvoicePaymentPayload,
-} from '@/@types/create-invoice.types';
-import type { PaginationParams } from '@/@types/pagination.types';
+} from '@/types/create-invoice.types';
+import type { PaginationParams } from '@/types/pagination.types';
 import { apiClient } from '@/lib/api/client';
 import { ApiValidationError, ensureSuccess, type LaravelApiResponse, toPaginatedResult } from '@/lib/api/response';
 

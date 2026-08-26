@@ -11,7 +11,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { toast } from 'sonner';
-import { WarehouseStockUnit } from '@/@types/unit-transaction.types';
+import { WarehouseStockUnit } from '@/types/unit-transaction.types';
 import { StockPickerTable } from '@/components/features/sales/detail/StockPickerTable';
 import { SalesDetailCards } from '@/components/features/sales/detail/SalesDetailCards';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';

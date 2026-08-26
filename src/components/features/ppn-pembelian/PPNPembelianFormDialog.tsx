@@ -1,8 +1,8 @@
 'use client';
 
 import { zodResolver } from '@hookform/resolvers/zod';
-import type { ApiError } from '@/@types/api';
-import { type PPNPembelian, UpdatePPNPembelianSchema, type UpdatePPNPembelianFormValues } from '@/@types/ppn.types';
+import type { ApiError } from '@/types/api';
+import { type PPNPembelian, UpdatePPNPembelianSchema, type UpdatePPNPembelianFormValues } from '@/types/ppn.types';
 import { useUpdatePPNPembelian } from '@/hooks/usePPN';
 import { FormDialog } from '@/components/ui/form-dialog';
 import { DatePicker } from '@/components/ui/date-picker';

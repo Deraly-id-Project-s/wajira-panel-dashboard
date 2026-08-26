@@ -9,7 +9,7 @@ import { MoneyInput } from '@/components/ui/money-input';
 import { Textarea } from '@/components/ui/textarea';
 import { SearchableSelect, type SearchableSelectOption } from '@/components/features/vehicle-data/SearchableSelect';
 import { useRouter } from 'next/router';
-import type { DoEkspedisi, DoEkspedisiItem } from '@/@types/do-ekspedisi.types';
+import type { DoEkspedisi, DoEkspedisiItem } from '@/types/do-ekspedisi.types';
 import { formatCurrency } from '@/lib/utils/currency';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import RequiredMark from '@/components/ui/required-mark';

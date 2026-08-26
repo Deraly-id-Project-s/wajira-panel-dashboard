@@ -1,4 +1,4 @@
-import type { OrderList, OrderListStatus, OrderListTarifItem, OrderListVehicleType } from '@/@types/order-list.types';
+import type { OrderList, OrderListStatus, OrderListTarifItem, OrderListVehicleType } from '@/types/order-list.types';
 import { formatCurrency } from '@/lib/utils/currency';
 
 export const ORDER_LIST_STATUS_OPTIONS: Array<{ value: OrderListStatus; label: string }> = [

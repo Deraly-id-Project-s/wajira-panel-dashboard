@@ -3,8 +3,8 @@ import { useMemo } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 
-import type { FinanceRefundRecord, RefundTransactionType } from '@/@types/finance-refund.types';
-import type { UnitTransactionRefund } from '@/@types/refund.type';
+import type { FinanceRefundRecord, RefundTransactionType } from '@/types/finance-refund.types';
+import type { UnitTransactionRefund } from '@/types/refund.type';
 import { useApproveFinanceRefund } from '@/hooks/useFinanceRefund';
 import { useKas } from '@/hooks/useKas';
 import { useRefundList } from '@/hooks/useRefundAdministrasi';

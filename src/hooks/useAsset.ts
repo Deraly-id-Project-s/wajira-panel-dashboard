@@ -1,7 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { getAssets, getAssetById, importAsset, createAsset, updateAsset, deleteAsset, exportAsset } from '@/services/asset.service';
-import type { PaginationParams } from '@/@types/pagination.types';
-import type { AssetPayload } from '@/@types/asset.types';
+import type { PaginationParams } from '@/types/pagination.types';
+import type { AssetPayload } from '@/types/asset.types';
 import { companyQueryKeys } from '@/lib/query/company-key';
 
 export function useAssets(companyId: string | number | null, params: PaginationParams & { search?: string } = { page: 1, perPage: 100 }) {

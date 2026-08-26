@@ -5,7 +5,7 @@ import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { DOEkspedisiTable } from '@/components/features/do-ekspedisi/DOEkspedisiTable';
 import { DeleteDOEkspedisiModal } from '@/components/features/do-ekspedisi/DeleteDOEkspedisiModal';
 import { DOEkspedisiEditDialog, type DOEkspedisiEditValues } from '@/components/features/do-ekspedisi/DOEkspedisiEditDialog';
-import type { DoEkspedisi } from '@/@types/do-ekspedisi.types';
+import type { DoEkspedisi } from '@/types/do-ekspedisi.types';
 import { useDebouncedValue } from '@/hooks/useDebouncedValue';
 import {
   useDeleteDoEkspedisi,
@@ -17,7 +17,7 @@ import {
 } from '@/hooks/useDoEkspedisi';
 import { useProcessDoExpedition } from '@/hooks/useDoInvoice';
 import { PageHeader } from '@/components/ui/page-header';
-import { getApiErrorMessage } from '@/utils/apiErrorHandler';
+import { getApiErrorMessage } from '@/lib/utils/apiErrorHandler';
 
 const toApiDate = (value?: Date) => {
   if (!value) return '';

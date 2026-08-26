@@ -7,8 +7,8 @@ import { toast } from 'sonner';
 import { FormDialog } from '@/components/ui/form-dialog';
 import { fetchUserCompanies } from '@/services/company.service';
 import { useUpdateKasHarian } from '@/hooks/useKasHarian';
-import { kasHarianSchema, type KasHarianFormInput, type KasHarianFormValues } from '@/scheme/kas-harian.schema';
-import type { KasHarian } from '@/@types/kas-harian.types';
+import { kasHarianSchema, type KasHarianFormInput, type KasHarianFormValues } from '@/schemas/kas-harian.schema';
+import type { KasHarian } from '@/types/kas-harian.types';
 import KasHarianForm from './KasHarianForm';
 
 interface Props {

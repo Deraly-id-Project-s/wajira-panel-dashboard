@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import type { UnitTransactionTypeDetail } from '@/@types/unit-transaction.types';
+import type { UnitTransactionTypeDetail } from '@/types/unit-transaction.types';
 import BaseTable, { type ColumnDef } from '@/components/ui/base-table';
 import { Badge } from '@/components/ui/badge';
 import { useUnitTransactionTypeDetails } from '@/hooks/useUnitTransaction';

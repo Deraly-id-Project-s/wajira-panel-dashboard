@@ -1,7 +1,7 @@
 import React from 'react';
 import { format } from 'date-fns';
 import { CalendarDays, CircleUserRound, ClipboardList, MapPin, ReceiptText, Truck, WalletCards } from 'lucide-react';
-import type { DoEkspedisi, DoEkspedisiOrderTarifItem } from '@/@types/do-ekspedisi.types';
+import type { DoEkspedisi, DoEkspedisiOrderTarifItem } from '@/types/do-ekspedisi.types';
 import { Card, CardContent } from '@/components/ui/card';
 import BaseTable, { type ColumnDef } from '@/components/ui/base-table';
 import { useRouter } from 'next/router';

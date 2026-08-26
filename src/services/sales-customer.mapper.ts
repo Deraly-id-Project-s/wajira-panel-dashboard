@@ -1,4 +1,4 @@
-import { Customer } from '@/@types/customer.types';
+import { Customer } from '@/types/customer.types';
 
 export type SalesCustomerOption = {
   label: string;

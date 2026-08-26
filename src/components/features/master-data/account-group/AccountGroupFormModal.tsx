@@ -1,7 +1,7 @@
 import { FormDialog } from '@/components/ui/form-dialog';
 import { Form } from '@/components/ui/form';
 import { AccountGroupForm } from './AccountGroupForm';
-import type { AccountGroupFormValues } from '@/scheme/account-group.schema';
+import type { AccountGroupFormValues } from '@/schemas/account-group.schema';
 import type { UseFormReturn } from 'react-hook-form';
 
 interface AccountGroupFormModalProps {

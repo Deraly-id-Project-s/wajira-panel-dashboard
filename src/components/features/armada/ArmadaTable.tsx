@@ -3,7 +3,7 @@ import { Plus, MoreVertical, Upload, CircleAlert } from 'lucide-react';
 import BaseTable, { ColumnDef } from '@/components/ui/base-table';
 import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import type { Armada } from '@/@types/armada.types';
+import type { Armada } from '@/types/armada.types';
 import { CopyBox } from '@/components/ui/copy-box';
 import { Badge } from '@/components/ui/badge';
 

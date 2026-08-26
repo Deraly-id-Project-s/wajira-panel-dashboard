@@ -1,7 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { getCustomerById, getCustomers, createCustomer, updateCustomer, deleteCustomer, importCustomer, exportCustomer } from '@/services/customer.service';
-import { CustomerPayload } from '@/@types/customer.types';
-import type { PaginationParams } from '@/@types/pagination.types';
+import { CustomerPayload } from '@/types/customer.types';
+import type { PaginationParams } from '@/types/pagination.types';
 import { companyQueryKeys } from '@/lib/query/company-key';
 
 export function useCustomers(params: PaginationParams & { search?: string; company_id?: string | number; enabled?: boolean }) {

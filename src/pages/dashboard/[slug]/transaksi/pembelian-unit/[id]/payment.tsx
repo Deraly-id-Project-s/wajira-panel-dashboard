@@ -19,7 +19,7 @@ import {
 import { useCompany } from '@/contexts/CompanyContext';
 import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
-import { getHistoryTotalIdrEquivalent } from '@/utils/payment-helpers';
+import { getHistoryTotalIdrEquivalent } from '@/lib/utils/payment-helpers';
 import { LoadingState } from '@/components/ui/loading-state';
 
 const readApiError = (error: any): string => {

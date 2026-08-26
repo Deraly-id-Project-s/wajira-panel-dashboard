@@ -1,5 +1,5 @@
 import { useCallback, useMemo, useState } from 'react';
-import { User } from '@/@types/user.types';
+import { User } from '@/types/user.types';
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from '@/components/ui/dropdown-menu';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';

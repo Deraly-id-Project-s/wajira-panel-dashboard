@@ -8,7 +8,7 @@ import { FormDialog } from '@/components/ui/form-dialog';
 import { useCompany } from '@/contexts/CompanyContext';
 import { fetchUserCompanies } from '@/services/company.service';
 import { useCreateKasHarian } from '@/hooks/useKasHarian';
-import { kasHarianSchema, type KasHarianFormInput, type KasHarianFormValues } from '@/scheme/kas-harian.schema';
+import { kasHarianSchema, type KasHarianFormInput, type KasHarianFormValues } from '@/schemas/kas-harian.schema';
 import KasHarianForm from './KasHarianForm';
 
 interface Props {

@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { AssetFormData } from './AssetFormModal';
-import type { Asset } from '@/@types/asset.types';
+import type { Asset } from '@/types/asset.types';
 
 interface EditAssetModalProps {
     isOpen: boolean;

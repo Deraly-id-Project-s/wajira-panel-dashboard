@@ -2,10 +2,10 @@ import { useRef } from 'react';
 import jsPDF from 'jspdf';
 import { Download, Printer } from 'lucide-react';
 import { useReactToPrint } from 'react-to-print';
-import type { UnitTransactionDetail, UnitTransactionItemDetail } from '@/@types/unit-transaction.types';
+import type { UnitTransactionDetail, UnitTransactionItemDetail } from '@/types/unit-transaction.types';
 import { Button } from '@/components/ui/button';
 import { formatCurrency } from '@/lib/utils/currency';
-import type { DocumentTemplate } from '@/@types/document-template.types';
+import type { DocumentTemplate } from '@/types/document-template.types';
 import { getObjectStorageUrl, StorageImage } from '@/components/ui/storage-image';
 
 interface Props {

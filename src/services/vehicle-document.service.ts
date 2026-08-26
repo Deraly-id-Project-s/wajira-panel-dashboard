@@ -1,5 +1,5 @@
-import type { PaginationParams } from '@/@types/pagination.types';
-import type { VehicleType } from '@/@types/vehicle-data.types';
+import type { PaginationParams } from '@/types/pagination.types';
+import type { VehicleType } from '@/types/vehicle-data.types';
 import type {
   VehicleDocumentDetail,
   VehicleDocumentFilters,
@@ -11,7 +11,7 @@ import type {
   VehicleRegistrationDetail,
   VehicleRegistrationListResponse,
   VehicleRegistrationPayload,
-} from '@/@types/vehicle-document.types';
+} from '@/types/vehicle-document.types';
 import { apiClient } from '@/lib/api/client';
 import { buildLaravelPaginationQuery } from '@/lib/api/pagination';
 import { ApiResponseError, ApiValidationError, ensureSuccess, LaravelApiResponse, toPaginatedResult } from '@/lib/api/response';

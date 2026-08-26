@@ -1,4 +1,4 @@
-import { User, CreateUserRequest, UpdateUserRequest, UserListParams, UserStatusResponse } from '@/@types/user.types';
+import { User, CreateUserRequest, UpdateUserRequest, UserListParams, UserStatusResponse } from '@/types/user.types';
 import { apiClient } from '@/lib/api/client';
 import { ensureSuccess, type LaravelApiResponse, ApiResponseError } from '@/lib/api/response';
 

@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import type { RefundBeli, RefundBeliPagination } from '@/@types/refund-beli.types';
+import type { RefundBeli, RefundBeliPagination } from '@/types/refund-beli.types';
 import { Button } from '@/components/ui/button';
 import type { SortOrder } from '@/hooks/useTableSort';
 import { MoreVertical } from 'lucide-react';

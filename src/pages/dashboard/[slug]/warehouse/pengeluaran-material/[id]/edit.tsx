@@ -21,7 +21,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { GoodsIssueItemModal } from '@/components/features/goods-issue/GoodsIssueItemModal';
 import { SearchableSelect } from '@/components/features/vehicle-data/SearchableSelect';
 import { formatCurrency } from '@/components/features/goods-issue/goods-issue.utils';
-import type { GoodsIssueItem } from '@/@types/goods-issue.types';
+import type { GoodsIssueItem } from '@/types/goods-issue.types';
 import { useCompany } from '@/contexts/CompanyContext';
 import { useCustomers } from '@/hooks/useCustomer';
 import {
@@ -33,7 +33,7 @@ import {
 } from '@/hooks/useGoodsIssue';
 import { useMaterials } from '@/hooks/useMaterial';
 import { ApiResponseError, ApiValidationError } from '@/lib/api/response';
-import { goodsIssueSchema, type GoodsIssueFormValues, type GoodsIssueItemFormValues } from '@/scheme/goods-issue.schema';
+import { goodsIssueSchema, type GoodsIssueFormValues, type GoodsIssueItemFormValues } from '@/schemas/goods-issue.schema';
 import { LoadingState } from '@/components/ui/loading-state';
 
 const toDateValue = (value?: string) => {

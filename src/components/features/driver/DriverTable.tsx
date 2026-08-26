@@ -8,8 +8,8 @@ import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
 import { useActivateDriver, useDeactivateDriver } from '@/hooks/useDriver';
 import { getDriverPassword } from '@/services/driver.service';
-import type { Driver } from '@/@types/driver.types';
-import type { PaginationMeta } from '@/@types/pagination.types';
+import type { Driver } from '@/types/driver.types';
+import type { PaginationMeta } from '@/types/pagination.types';
 
 interface DriverTableProps {
     data: Driver[];

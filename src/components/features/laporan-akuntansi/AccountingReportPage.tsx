@@ -11,7 +11,7 @@ import {
   MonthlyVatReport,
   ProfitLossReport,
   YearlyVatReport,
-} from '@/@types/accounting-report.types';
+} from '@/types/accounting-report.types';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { PageHeader } from '@/components/ui/page-header';
 import {

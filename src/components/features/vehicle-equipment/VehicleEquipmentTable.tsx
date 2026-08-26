@@ -3,7 +3,7 @@ import { Plus, MoreVertical } from 'lucide-react';
 import BaseTable, { ColumnDef } from '@/components/ui/base-table';
 import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import type { VehicleEquipment } from '@/@types/vehicle-equipment.types';
+import type { VehicleEquipment } from '@/types/vehicle-equipment.types';
 
 interface VehicleEquipmentTableProps {
   equipments: VehicleEquipment[];

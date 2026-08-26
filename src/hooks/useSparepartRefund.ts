@@ -5,7 +5,7 @@ import type {
   CreateSparepartRefundPayload,
   UpdateSparepartRefundPaymentPayload,
   UpdateSparepartRefundPayload,
-} from '@/@types/sparepart-refund.types';
+} from '@/types/sparepart-refund.types';
 
 export const sparepartRefundKeys = {
   all: ['sparepart-refunds'] as const,

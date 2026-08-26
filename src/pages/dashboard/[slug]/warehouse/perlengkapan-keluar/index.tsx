@@ -14,7 +14,7 @@ import { Card } from '@/components/ui/card';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Input } from '@/components/ui/input';
 import BaseTable, { ColumnDef } from '@/components/ui/base-table';
-import type { MaterialTransaction } from '@/@types/material-transaction.types';
+import type { MaterialTransaction } from '@/types/material-transaction.types';
 import {
   materialTransactionKeys,
   useCreateMaterialTransaction,
@@ -27,7 +27,7 @@ import { useWarehouseOptions } from '@/hooks/usePengeluaranUnit';
 import { useQueryParamsTable } from '@/hooks/useQueryParamsTable';
 import { getVisiblePageNumbers } from '@/lib/api/pagination';
 import { ApiResponseError, ApiValidationError } from '@/lib/api/response';
-import type { MaterialTransactionFormValues } from '@/scheme/material-transaction.schema';
+import type { MaterialTransactionFormValues } from '@/schemas/material-transaction.schema';
 import { getMaterialTransactionById } from '@/services/material-transaction.service';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';

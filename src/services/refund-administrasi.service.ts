@@ -1,7 +1,7 @@
 import { apiClient } from '@/lib/api/client';
 import { ensureSuccess, LaravelApiResponse, mapLaravelPaginationMeta } from '@/lib/api/response';
-import { UnitTransactionRefundListResponse, CreateRefundPayload, CreateRefundPaymentPayload, UnitTransactionRefund, UpdateRefundPayload, UpdateRefundPaymentPayload } from '@/@types/refund.type';
-import type { UnitTransactionItemDetail } from '@/@types/unit-transaction.types';
+import { UnitTransactionRefundListResponse, CreateRefundPayload, CreateRefundPaymentPayload, UnitTransactionRefund, UpdateRefundPayload, UpdateRefundPaymentPayload } from '@/types/refund.type';
+import type { UnitTransactionItemDetail } from '@/types/unit-transaction.types';
 
 const BASE_PATH = '/wapi/transaction/unit-transaction/unit-transaction-refund';
 const PAYMENT_PATH = '/wapi/transaction/unit-transaction/unit-transaction-refund-payment';

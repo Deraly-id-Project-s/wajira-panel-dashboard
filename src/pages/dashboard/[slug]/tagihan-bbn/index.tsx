@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { useRouter } from 'next/router';
 import { toast } from 'sonner';
-import { getApiErrorMessage } from '@/utils/apiErrorHandler';
+import { getApiErrorMessage } from '@/lib/utils/apiErrorHandler';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { useCompany } from '@/contexts/CompanyContext';
 import { useKas } from '@/hooks/useKas';
@@ -15,7 +15,7 @@ import {
 import { useDitlantasProcessOptions } from '@/hooks/useVehicleDocument';
 import { BBNBillFormDialog, BBNBillPaymentDialog, DeleteBBNBillDialog } from '@/components/features/tagihan-bbn/BBNBillDialogs';
 import { BBNBillTable } from '@/components/features/tagihan-bbn/BBNBillTable';
-import type { BBNBill, BBNBillPayload } from '@/@types/bbn-bill.types';
+import type { BBNBill, BBNBillPayload } from '@/types/bbn-bill.types';
 import { getCashLabel } from '@/components/features/tagihan-bbn/utils';
 
 export default function BBNBillListPage() {

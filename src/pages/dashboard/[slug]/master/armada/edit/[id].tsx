@@ -5,9 +5,9 @@ import { toast } from 'sonner';
 import { useRouter } from 'next/router';
 import { ChevronLeft } from 'lucide-react';
 import { useArmadaDetail, useUpdateArmada } from '@/hooks/useArmada';
-import type { ArmadaPayload } from '@/@types/armada.types';
+import type { ArmadaPayload } from '@/types/armada.types';
 
-import { getApiErrorMessage } from '@/utils/apiErrorHandler';
+import { getApiErrorMessage } from '@/lib/utils/apiErrorHandler';
 import { PageHeader } from '@/components/ui/page-header';
 
 export default function EditArmadaPage() {

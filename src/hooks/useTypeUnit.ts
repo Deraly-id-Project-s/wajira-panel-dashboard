@@ -1,6 +1,6 @@
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { getTypeUnits, getTypeUnitById, getTypeUnitDetail, createTypeUnit, updateTypeUnit, deleteTypeUnit, importTypeUnit } from '@/services/type-unit.service';
-import { TypeUnitPayload } from '@/@types/type-unit.types';
+import { TypeUnitPayload } from '@/types/type-unit.types';
 
 const TYPE_UNIT_LIST_KEY = 'type-units';
 const TYPE_UNIT_ITEM_KEY = 'type-unit';

@@ -4,7 +4,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { UseFormReturn } from 'react-hook-form';
-import type { CustomerFormValues } from '@/scheme/customer.schema';
+import type { CustomerFormValues } from '@/schemas/customer.schema';
 import RequiredMark from '@/components/ui/required-mark';
 
 interface CustomerFormDialogProps {

@@ -8,9 +8,9 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { MoneyInput } from '@/components/ui/money-input';
 import { SearchableSelect } from '@/components/features/vehicle-data/SearchableSelect';
-import type { Material } from '@/@types/material.types';
-import type { MaterialTransaction, MaterialTransactionDetailItem } from '@/@types/material-transaction.types';
-import { materialTransactionItemSchema, type MaterialTransactionItemFormValues } from '@/scheme/material-transaction.schema';
+import type { Material } from '@/types/material.types';
+import type { MaterialTransaction, MaterialTransactionDetailItem } from '@/types/material-transaction.types';
+import { materialTransactionItemSchema, type MaterialTransactionItemFormValues } from '@/schemas/material-transaction.schema';
 
 interface PurchaseMaterialDetailItemModalProps {
   open: boolean;

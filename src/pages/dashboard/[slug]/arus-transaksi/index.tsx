@@ -11,7 +11,7 @@ import { useCompany } from '@/contexts/CompanyContext';
 import { TransactionTable } from '@/components/features/transaction/TransactionTable';
 import { DeleteTransactionDialog } from '@/components/features/transaction/DeleteTransactionDialog';
 import { Plus, Search, Upload } from 'lucide-react';
-import { Transaction } from '@/@types/transaction.types';
+import { Transaction } from '@/types/transaction.types';
 import { usePermissionGuard } from '@/hooks/usePermissionGuard';
 import { LoadingState } from '@/components/ui/loading-state';
 import { toast } from 'sonner';

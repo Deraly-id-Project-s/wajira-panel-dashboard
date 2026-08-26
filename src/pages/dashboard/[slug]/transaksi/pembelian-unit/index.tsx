@@ -5,7 +5,7 @@ import { toast } from 'sonner';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import PurchaseTable from '@/components/features/purchase/PurchaseTable';
 import DeleteUnitTransactionDialog from '@/components/features/unit-transaction/DeleteUnitTransactionDialog';
-import { PageHeader } from '@/components/common/PageHeader';
+import { PageHeader } from '@/components/ui/page-header';
 import { useDeletePurchase } from '@/hooks/usePurchase';
 import { useUnitTransactions } from '@/hooks/useUnitTransaction';
 import { useQueryClient } from '@tanstack/react-query';

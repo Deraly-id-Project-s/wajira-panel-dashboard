@@ -9,7 +9,7 @@ import { SparepartFormDialog } from "@/components/features/sparepart/SparepartFo
 import { DeleteSparepartDialog } from "@/components/features/sparepart/DeleteSparepartDialog"
 import { DataImportModal } from "@/components/features/master-data/DataImportModal"
 import { useCompany } from "@/contexts/CompanyContext"
-import { Sparepart } from "@/@types/sparepart.types"
+import { Sparepart } from "@/types/sparepart.types"
 import { usePermissionGuard } from "@/hooks/usePermissionGuard"
 
 export default function SparepartPage() {

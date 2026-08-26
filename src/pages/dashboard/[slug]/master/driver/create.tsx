@@ -5,7 +5,7 @@ import { PageHeader } from '@/components/ui/page-header';
 import { DriverForm } from '@/components/features/driver/DriverForm';
 import { useCompany } from '@/contexts/CompanyContext';
 import { useCreateDriver } from '@/hooks/useDriver';
-import type { DriverPayload } from '@/@types/driver.types';
+import type { DriverPayload } from '@/types/driver.types';
 
 export default function CreateDriverPage() {
   const router = useRouter();

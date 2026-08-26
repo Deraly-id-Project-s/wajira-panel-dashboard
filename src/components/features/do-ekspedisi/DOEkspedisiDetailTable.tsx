@@ -3,7 +3,7 @@ import { MoreVertical } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import BaseTable, { ColumnDef } from '@/components/ui/base-table';
-import type { DoEkspedisiItem } from '@/@types/do-ekspedisi.types';
+import type { DoEkspedisiItem } from '@/types/do-ekspedisi.types';
 import { formatCurrency } from '@/lib/utils/currency';
 
 interface DOEkspedisiDetailTableProps {

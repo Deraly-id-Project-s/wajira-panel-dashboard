@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { Eye, MoreVertical, Pencil, Plus, Trash2, Info } from 'lucide-react';
-import { UnitTransactionItem } from '@/@types/unit-transaction.types';
+import { UnitTransactionItem } from '@/types/unit-transaction.types';
 import { useRouter } from 'next/router';
 import { toast } from 'sonner';
 import { useBulkDeleteUnitItem, useDeleteUnitItem, usePurchaseUnitItems } from '@/hooks/useUnitTransactionItem';

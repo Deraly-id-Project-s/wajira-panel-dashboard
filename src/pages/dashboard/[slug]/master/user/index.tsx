@@ -6,7 +6,7 @@ import { useUsers } from '@/hooks/useUser';
 import { UserTable } from '@/components/features/user/UserTable';
 import { UserFormDialog } from '@/components/features/user/UserFormDialog';
 import { DeleteUserDialog } from '@/components/features/user/DeleteUserDialog';
-import { User } from '@/@types/user.types';
+import { User } from '@/types/user.types';
 import { usePermissionGuard } from '@/hooks/usePermissionGuard';
 
 export default function UserPage() {

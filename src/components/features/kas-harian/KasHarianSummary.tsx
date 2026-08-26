@@ -4,7 +4,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { CreditCard, TrendingUp, TrendingDown } from 'lucide-react';
 import { DatePickerWithRange } from '@/components/ui/date-range-picker';
 import { formatCurrency } from '@/lib/utils/currency';
-import type { KasHarian } from '@/@types/kas-harian.types';
+import type { KasHarian } from '@/types/kas-harian.types';
 import type { DateRange } from 'react-day-picker';
 import { addDays, differenceInCalendarDays, endOfDay, format, isAfter, startOfMonth, startOfDay } from 'date-fns';
 

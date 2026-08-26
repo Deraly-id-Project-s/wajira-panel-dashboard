@@ -10,9 +10,9 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { DatePicker } from '@/components/ui/date-picker';
 import { SearchableSelect } from '@/components/features/vehicle-data/SearchableSelect';
-import type { MaterialTransaction } from '@/@types/material-transaction.types';
-import type { WarehouseOption } from '@/@types/pengeluaran-unit.types';
-import { materialTransactionSchema, type MaterialTransactionFormValues } from '@/scheme/material-transaction.schema';
+import type { MaterialTransaction } from '@/types/material-transaction.types';
+import type { WarehouseOption } from '@/types/pengeluaran-unit.types';
+import { materialTransactionSchema, type MaterialTransactionFormValues } from '@/schemas/material-transaction.schema';
 
 interface MaterialReceiptFormModalProps {
   open: boolean;

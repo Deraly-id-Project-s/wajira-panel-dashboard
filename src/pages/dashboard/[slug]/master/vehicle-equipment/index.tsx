@@ -7,7 +7,7 @@ import { DeleteVehicleEquipmentModal } from '@/components/features/vehicle-equip
 import { useVehicleEquipments, useCreateVehicleEquipment, useUpdateVehicleEquipment, useDeleteVehicleEquipment } from '@/hooks/useVehicleEquipment';
 import { Card } from '@/components/ui/card';
 import { toast } from 'sonner';
-import type { VehicleEquipment } from '@/@types/vehicle-equipment.types';
+import type { VehicleEquipment } from '@/types/vehicle-equipment.types';
 import { usePermissionGuard } from '@/hooks/usePermissionGuard';
 
 export default function VehicleEquipmentPage() {

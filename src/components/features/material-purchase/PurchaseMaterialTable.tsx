@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import BaseTable, { ColumnDef } from '@/components/ui/base-table';
-import type { MaterialTransaction } from '@/@types/material-transaction.types';
+import type { MaterialTransaction } from '@/types/material-transaction.types';
 
 interface PurchaseMaterialTableProps {
   slug: string;

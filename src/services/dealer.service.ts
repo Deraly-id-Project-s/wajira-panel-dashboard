@@ -1,5 +1,5 @@
-import type { Dealer, DealerListResponse } from '@/@types/dealer.types';
-import type { PaginationParams } from '@/@types/pagination.types';
+import type { Dealer, DealerListResponse } from '@/types/dealer.types';
+import type { PaginationParams } from '@/types/pagination.types';
 import { apiClient } from '@/lib/api/client';
 import { buildLaravelPaginationQuery } from '@/lib/api/pagination';
 import { ApiResponseError, LaravelApiResponse, ensureSuccess, toPaginatedResult, ApiValidationError } from '@/lib/api/response';
@@ -75,7 +75,7 @@ export const importDealer = async (file: File, companyId?: string | number): Pro
     }
 };
 
-const buildPayload = (data: Partial<import('@/@types/dealer.types').DealerPayload>, opts?: { asUpdate?: boolean }) => {
+const buildPayload = (data: Partial<import('@/types/dealer.types').DealerPayload>, opts?: { asUpdate?: boolean }) => {
     const formData = new FormData();
     if (opts?.asUpdate) formData.append('_method', 'PUT');
     
@@ -93,7 +93,7 @@ const buildPayload = (data: Partial<import('@/@types/dealer.types').DealerPayloa
     return formData;
 };
 
-export const createDealer = async (data: Partial<import('@/@types/dealer.types').DealerPayload>): Promise<void> => {
+export const createDealer = async (data: Partial<import('@/types/dealer.types').DealerPayload>): Promise<void> => {
     const formData = buildPayload(data);
 
     try {
@@ -113,7 +113,7 @@ export const createDealer = async (data: Partial<import('@/@types/dealer.types')
     }
 };
 
-export const updateDealer = async (id: string | number, data: Partial<import('@/@types/dealer.types').DealerPayload>): Promise<void> => {
+export const updateDealer = async (id: string | number, data: Partial<import('@/types/dealer.types').DealerPayload>): Promise<void> => {
     const formData = buildPayload(data, { asUpdate: true });
 
     try {

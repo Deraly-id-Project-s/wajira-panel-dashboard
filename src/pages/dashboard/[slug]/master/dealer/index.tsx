@@ -10,7 +10,7 @@ import { useDealers, useCreateDealer, useUpdateDealer, useDeleteDealer, useImpor
 import { DataImportModal } from '@/components/features/master-data/DataImportModal';
 import { useCompany } from '@/contexts/CompanyContext';
 import { usePermissionGuard } from '@/hooks/usePermissionGuard';
-import type { Dealer } from '@/@types/dealer.types';
+import type { Dealer } from '@/types/dealer.types';
 
 export default function DealerPage() {
   const { companyId } = useCompany();

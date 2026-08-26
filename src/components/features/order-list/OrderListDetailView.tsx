@@ -23,7 +23,7 @@ import { toast } from 'sonner';
 import { useRouter } from 'next/router';
 import BaseTable from '@/components/ui/base-table';
 
-import type { OrderList, OrderListStatus, OrderListTarifItem, OrderListVehicleType } from '@/@types/order-list.types';
+import type { OrderList, OrderListStatus, OrderListTarifItem, OrderListVehicleType } from '@/types/order-list.types';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';

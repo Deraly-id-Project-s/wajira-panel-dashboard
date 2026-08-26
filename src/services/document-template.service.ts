@@ -1,4 +1,4 @@
-import type { DocumentTemplate, DocumentTemplateListParams, DocumentTemplateListResponse, DocumentTemplatePayload } from '@/@types/document-template.types';
+import type { DocumentTemplate, DocumentTemplateListParams, DocumentTemplateListResponse, DocumentTemplatePayload } from '@/types/document-template.types';
 import { apiClient } from '@/lib/api/client';
 import { buildLaravelPaginationQuery } from '@/lib/api/pagination';
 import { ApiResponseError, ensureSuccess, LaravelApiResponse, toPaginatedResult } from '@/lib/api/response';

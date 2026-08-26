@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import type { FinanceRefundQueryParams, FinanceRefundRecord, RefundTransactionType, UpdateFinanceRefundPayload } from '@/@types/finance-refund.types';
+import type { FinanceRefundQueryParams, FinanceRefundRecord, RefundTransactionType, UpdateFinanceRefundPayload } from '@/types/finance-refund.types';
 import { financeRefundService } from '@/services/finance-refund.service';
 import { useCompany } from '@/contexts/CompanyContext';
 import { companyQueryKeys } from '@/lib/query/company-key';

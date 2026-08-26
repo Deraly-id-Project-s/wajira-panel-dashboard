@@ -22,8 +22,8 @@ import type {
   DoEkspedisiOrderTarifLoadItem,
   DoEkspedisiVehicle,
   LookupOption,
-} from '@/@types/do-ekspedisi.types';
-import type { PaginationParams } from '@/@types/pagination.types';
+} from '@/types/do-ekspedisi.types';
+import type { PaginationParams } from '@/types/pagination.types';
 import { apiClient } from '@/lib/api/client';
 import { ApiResponseError, ApiValidationError, ensureSuccess, type LaravelApiResponse, toPaginatedResult } from '@/lib/api/response';
 

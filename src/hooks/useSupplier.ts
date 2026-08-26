@@ -1,7 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { getSuppliers, createSupplier, updateSupplier, deleteSupplier, importSupplier, exportSupplier } from '@/services/supplier.service';
-import type { SupplierPayload } from '@/@types/supplier.types';
-import type { PaginationParams } from '@/@types/pagination.types';
+import type { SupplierPayload } from '@/types/supplier.types';
+import type { PaginationParams } from '@/types/pagination.types';
 import { companyQueryKeys } from '@/lib/query/company-key';
 
 export function useSuppliers(

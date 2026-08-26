@@ -8,7 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { SearchableSelect } from '@/components/features/vehicle-data/SearchableSelect';
 import { useDitlantasProcessOptions } from '@/hooks/useVehicleDocument';
-import type { VehicleDocumentPayload, VehicleDocumentSummary } from '@/@types/vehicle-document.types';
+import type { VehicleDocumentPayload, VehicleDocumentSummary } from '@/types/vehicle-document.types';
 
 interface FormValues {
   ditlantasProcessId: string;

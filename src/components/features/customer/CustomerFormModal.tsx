@@ -1,4 +1,4 @@
-import type { CustomerFormValues } from '@/scheme/customer.schema';
+import type { CustomerFormValues } from '@/schemas/customer.schema';
 import { FormDialog } from '@/components/ui/form-dialog';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';

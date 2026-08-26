@@ -10,8 +10,8 @@ import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, Command
 import { useForm, Controller } from 'react-hook-form';
 import { MoneyInput } from '@/components/ui/money-input';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { sparepartSchema, SparepartFormValues } from '@/scheme/sparepart.schema';
-import { Sparepart } from '@/@types/sparepart.types';
+import { sparepartSchema, SparepartFormValues } from '@/schemas/sparepart.schema';
+import { Sparepart } from '@/types/sparepart.types';
 import { useCreateSparepart, useSparepartCategories, useUpdateSparepart } from '@/hooks/useSparepart';
 import { toast } from 'sonner';
 import { CreateSparepartCategoryDialog } from './CreateSparepartCategoryDialog';

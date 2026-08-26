@@ -8,7 +8,7 @@ import type {
   FinanceBillingListResponse,
   FinanceBillingListResult,
   FinanceBillingPayload,
-} from '@/@types/finance-billing.types';
+} from '@/types/finance-billing.types';
 import { apiClient } from '@/lib/api/client';
 import { ensureSuccess, mapLaravelPaginationMeta, type LaravelApiResponse } from '@/lib/api/response';
 

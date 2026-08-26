@@ -5,11 +5,11 @@ import { toast } from 'sonner';
 import { useRouter } from 'next/router';
 import { ChevronLeft } from 'lucide-react';
 import { useCreateArmada } from '@/hooks/useArmada';
-import type { ArmadaPayload } from '@/@types/armada.types';
+import type { ArmadaPayload } from '@/types/armada.types';
 import { useCompany } from '@/contexts/CompanyContext';
 import { VehicleDataForm } from '@/components/features/vehicle-data/VehicleDataForm';
 import { useCreateVehicleData } from '@/hooks/useVehicleData';
-import type { VehicleDataPayload } from '@/@types/vehicle-data.types';
+import type { VehicleDataPayload } from '@/types/vehicle-data.types';
 
 export default function CreateVehicleFleetPage() {
   const router = useRouter();

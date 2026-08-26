@@ -6,7 +6,7 @@ import RequiredMark from '@/components/ui/required-mark';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Upload, X } from 'lucide-react';
 import type { UseFormReturn } from 'react-hook-form';
-import type { BrandFormValues } from '@/scheme/brand.schema';
+import type { BrandFormValues } from '@/schemas/brand.schema';
 
 interface BrandFormModalProps {
     open: boolean;

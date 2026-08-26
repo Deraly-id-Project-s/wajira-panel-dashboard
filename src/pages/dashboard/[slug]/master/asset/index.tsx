@@ -10,7 +10,7 @@ import { toast } from 'sonner';
 import { useAssets, useCreateAsset, useUpdateAsset, useDeleteAsset, useImportAsset, useExportAsset } from '@/hooks/useAsset';
 import { useCompany } from '@/contexts/CompanyContext';
 import { usePermissionGuard } from '@/hooks/usePermissionGuard';
-import type { Asset } from '@/@types/asset.types';
+import type { Asset } from '@/types/asset.types';
 
 export default function AssetPage() {
   const { companyId } = useCompany();

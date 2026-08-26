@@ -1,7 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { getFinanceAssets, getFinanceAssetById, updateFinanceAsset, deleteFinanceAsset, exportFinanceAsset, createFinanceAsset, getFinanceAssetFormula } from '@/services/finance-asset.service';
-import type { PaginationParams } from '@/@types/pagination.types';
-import type { FinanceAssetPayload, FinanceAssetFormulaParams } from '@/@types/finance-asset.types';
+import type { PaginationParams } from '@/types/pagination.types';
+import type { FinanceAssetPayload, FinanceAssetFormulaParams } from '@/types/finance-asset.types';
 
 export function useFinanceAssets(companyId: string | number | null, params: PaginationParams & { search?: string } = { page: 1, perPage: 25 }) {
     return useQuery({

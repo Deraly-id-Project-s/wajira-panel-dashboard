@@ -2,8 +2,8 @@ import { useMemo } from 'react';
 import BaseTable, { ColumnDef } from '@/components/ui/base-table';
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from '@/components/ui/dropdown-menu';
 import { ImageIcon, MoreVertical, Pencil, Trash } from 'lucide-react';
-import type { Brand } from '@/@types/brand.types';
-import type { PaginationMeta } from '@/@types/pagination.types';
+import type { Brand } from '@/types/brand.types';
+import type { PaginationMeta } from '@/types/pagination.types';
 import { format } from 'date-fns';
 import { id as localeId } from 'date-fns/locale';
 

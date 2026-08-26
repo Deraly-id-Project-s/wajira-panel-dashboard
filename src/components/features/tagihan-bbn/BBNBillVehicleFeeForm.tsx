@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { ArrowLeft, Save } from 'lucide-react';
 import { Controller, useForm } from 'react-hook-form';
-import type { BBNBillVehicleData, BBNBillVehicleFeePayload } from '@/@types/bbn-bill.types';
+import type { BBNBillVehicleData, BBNBillVehicleFeePayload } from '@/types/bbn-bill.types';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';

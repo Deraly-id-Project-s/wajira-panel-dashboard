@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import type { BrandDetail, BrandPayload } from '@/@types/brand.types';
-import type { PaginationParams } from '@/@types/pagination.types';
+import type { BrandDetail, BrandPayload } from '@/types/brand.types';
+import type { PaginationParams } from '@/types/pagination.types';
 import { createBrand, deleteBrand, getBrandById, getBrands, updateBrand } from '@/services/brand.service';
 
 export const brandKeys = {

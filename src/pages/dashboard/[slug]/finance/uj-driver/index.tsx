@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import Head from 'next/head';
 import { Search } from 'lucide-react';
-import type { UJDriverItem } from '@/@types/uj-driver.types';
+import type { UJDriverItem } from '@/types/uj-driver.types';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { PageHeader } from '@/components/ui/page-header';
 import { Input } from '@/components/ui/input';

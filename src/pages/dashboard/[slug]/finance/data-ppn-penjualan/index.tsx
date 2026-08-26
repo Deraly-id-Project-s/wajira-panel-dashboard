@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import Head from 'next/head';
 import { Search, X } from 'lucide-react';
 import { toast } from 'sonner';
-import type { PPNPenjualan } from '@/@types/ppn.types';
+import type { PPNPenjualan } from '@/types/ppn.types';
 import PPNPenjualanFormDialog from '@/components/features/ppn-penjualan/PPNPenjualanFormDialog';
 import PPNPenjualanTable from '@/components/features/ppn-penjualan/PPNPenjualanTable';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';

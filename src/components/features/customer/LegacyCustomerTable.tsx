@@ -3,7 +3,7 @@ import { MoreHorizontal, Plus, Upload } from 'lucide-react';
 import BaseTable, { ColumnDef } from '@/components/ui/base-table';
 import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import type { Customer } from '@/@types/customer.types';
+import type { Customer } from '@/types/customer.types';
 
 interface LegacyCustomerTableProps {
   customers: Customer[];

@@ -1,4 +1,4 @@
-import { Transaction, TransactionSummary, CreateTransactionRequest } from '@/@types/transaction.types';
+import { Transaction, TransactionSummary, CreateTransactionRequest } from '@/types/transaction.types';
 import { apiClient } from '@/lib/api/client';
 import { ensureSuccess, type LaravelApiResponse, ApiResponseError } from '@/lib/api/response';
 

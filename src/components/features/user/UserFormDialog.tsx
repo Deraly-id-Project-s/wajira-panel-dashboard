@@ -3,13 +3,13 @@
 import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { createUserSchema, updateUserSchema, CreateUserFormValues, UpdateUserFormValues } from '@/scheme/user.schema';
+import { createUserSchema, updateUserSchema, CreateUserFormValues, UpdateUserFormValues } from '@/schemas/user.schema';
 import { FormDialog } from '@/components/ui/form-dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
-import { User } from '@/@types/user.types';
+import { User } from '@/types/user.types';
 import { useAssignRole, useCreateUser, useUpdateUser, useActivateUser, useDeactivateUser } from '@/hooks/useUser';
 import { useRoles } from '@/hooks/useRole';
 import { toast } from 'sonner';

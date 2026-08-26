@@ -4,7 +4,7 @@ import { MoreVertical } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { currenciesFormat } from '@/components/ui/currenciesFormat';
-import type { PenerimaanPiutang } from '@/@types/penerimaan-piutang.types';
+import type { PenerimaanPiutang } from '@/types/penerimaan-piutang.types';
 import type { LiabilityListMeta } from '@/types/pembayaran-hutang.types';
 import BaseTable, { ColumnDef } from '@/components/ui/base-table';
 

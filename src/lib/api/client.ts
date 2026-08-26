@@ -4,7 +4,7 @@
  */
 
 import axios, { AxiosError, InternalAxiosRequestConfig } from 'axios';
-import { ApiError } from '@/@types/api';
+import { ApiError } from '@/types/api';
 import { getAccessToken, removeAccessToken } from '@/lib/auth/token';
 import { clearStoredCompanyId, clearStoredPermissions } from '@/lib/session/storage';
 

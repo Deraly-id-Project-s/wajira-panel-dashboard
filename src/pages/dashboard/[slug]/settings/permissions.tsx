@@ -15,7 +15,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Eye, Shield, Calendar, Clock } from 'lucide-react';
 import { format } from 'date-fns';
 import { id as localeId } from 'date-fns/locale';
-import type { Permission } from '@/@types/permission.types';
+import type { Permission } from '@/types/permission.types';
 import BaseTable, { ColumnDef } from '@/components/ui/base-table';
 
 export default function PermissionsPage() {

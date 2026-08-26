@@ -8,7 +8,7 @@ import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import TransactionForm from '@/components/features/transaction/TransactionForm';
 import { useCreateTransaction } from '@/hooks/useTransaction';
 import { useCompany } from '@/contexts/CompanyContext';
-import { TransactionFormValues } from '@/scheme/transaction.schema';
+import { TransactionFormValues } from '@/schemas/transaction.schema';
 import { PageHeader } from '@/components/ui/page-header';
 
 export default function CreateTransactionPage() {

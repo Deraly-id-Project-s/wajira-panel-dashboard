@@ -1,4 +1,4 @@
-import { FilterLaporan } from "@/@types/laporan.types"
+import { FilterLaporan } from "@/types/laporan.types"
 
 export const getLaporanData = async (
     filter: FilterLaporan

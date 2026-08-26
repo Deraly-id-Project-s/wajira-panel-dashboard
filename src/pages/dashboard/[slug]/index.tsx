@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { DateRange } from 'react-day-picker';
 import { format } from 'date-fns';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
-import { PageHeader } from '@/components/common/PageHeader';
+import { PageHeader } from '@/components/ui/page-header';
 import { DatePickerWithRange } from '@/components/ui/date-range-picker';
 import { Button } from '@/components/ui/button';
 import { Eye, FileDown, FileCheck, FileText, FileSpreadsheet, FileX, FileUp, FileEdit, RotateCw } from 'lucide-react';

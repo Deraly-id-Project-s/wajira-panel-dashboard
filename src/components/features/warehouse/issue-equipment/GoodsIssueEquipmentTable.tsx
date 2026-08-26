@@ -4,7 +4,7 @@ import { MoreVertical } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import BaseTable, { ColumnDef } from '@/components/ui/base-table';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import type { GoodsIssueEquipment } from '@/@types/goods-issue-equipment.types';
+import type { GoodsIssueEquipment } from '@/types/goods-issue-equipment.types';
 import { format } from 'date-fns';
 import { id } from 'date-fns/locale';
 

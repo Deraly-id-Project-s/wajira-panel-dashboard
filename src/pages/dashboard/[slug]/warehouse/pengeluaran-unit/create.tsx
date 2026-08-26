@@ -22,7 +22,7 @@ import {
   PengeluaranUnitFormSchemaSubmitValues,
   PengeluaranUnitFormSchemaValues,
   pengeluaranUnitFormSchema,
-} from '@/scheme/pengeluaran-unit.schema';
+} from '@/schemas/pengeluaran-unit.schema';
 import { toSavePayload } from '@/services/pengeluaran-unit.service';
 
 const getErrorMessageText = (error: unknown, fallback: string): string => {

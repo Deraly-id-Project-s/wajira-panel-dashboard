@@ -6,7 +6,7 @@ import { DataImportModal } from '@/components/features/master-data/DataImportMod
 import { DeleteVehicleDocumentDialog } from '@/components/features/vehicle-document/DeleteVehicleDocumentDialog';
 import { VehicleDocumentDialog } from '@/components/features/vehicle-document/VehicleDocumentDialog';
 import { VehicleDocumentTable } from '@/components/features/vehicle-document/VehicleDocumentTable';
-import type { VehicleDocumentPayload, VehicleDocumentSummary } from '@/@types/vehicle-document.types';
+import type { VehicleDocumentPayload, VehicleDocumentSummary } from '@/types/vehicle-document.types';
 import {
   useCreateVehicleDocument,
   useDeleteVehicleDocument,

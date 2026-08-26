@@ -5,12 +5,12 @@ import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { PurchaseMaterialFormModal } from '@/components/features/material-purchase/PurchaseMaterialFormModal';
 import { PurchaseMaterialTable } from '@/components/features/material-purchase/PurchaseMaterialTable';
-import type { MaterialTransaction } from '@/@types/material-transaction.types';
+import type { MaterialTransaction } from '@/types/material-transaction.types';
 import { useCreateMaterialTransaction, useDeleteMaterialTransaction, useMaterialTransactions, useUpdateMaterialTransaction } from '@/hooks/useMaterialTransaction';
 import { useWarehouseOptions } from '@/hooks/usePengeluaranUnit';
 import { useQueryParamsTable } from '@/hooks/useQueryParamsTable';
 import { ApiResponseError, ApiValidationError } from '@/lib/api/response';
-import type { MaterialTransactionFormValues } from '@/scheme/material-transaction.schema';
+import type { MaterialTransactionFormValues } from '@/schemas/material-transaction.schema';
 
 export default function PurchaseMaterialPage() {
   const router = useRouter();

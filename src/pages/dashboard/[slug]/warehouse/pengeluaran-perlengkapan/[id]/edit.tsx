@@ -23,8 +23,8 @@ import {
 import { GoodsIssueEquipmentFormModal } from '@/components/features/warehouse/issue-equipment/GoodsIssueEquipmentFormModal';
 import { GoodsIssueEquipmentDetailFormModal } from '@/components/features/warehouse/issue-equipment/GoodsIssueEquipmentDetailFormModal';
 import { GoodsIssueEquipmentDetailTable } from '@/components/features/warehouse/issue-equipment/GoodsIssueEquipmentDetailTable';
-import type { GoodsTransactionDetailEquipment } from '@/@types/goods-issue-equipment.types';
-import type { GoodsIssueEquipmentFormValues, GoodsIssueEquipmentItemFormValues } from '@/scheme/goods-issue-equipment.schema';
+import type { GoodsTransactionDetailEquipment } from '@/types/goods-issue-equipment.types';
+import type { GoodsIssueEquipmentFormValues, GoodsIssueEquipmentItemFormValues } from '@/schemas/goods-issue-equipment.schema';
 
 const formatLongDate = (value?: string) => {
   if (!value) return '-';
@@ -37,7 +37,7 @@ const formatLongDate = (value?: string) => {
   });
 };
 
-import { getApiErrorMessage } from '@/utils/apiErrorHandler';
+import { getApiErrorMessage } from '@/lib/utils/apiErrorHandler';
 import { LoadingState } from '@/components/ui/loading-state';
 
 const getErrorMessage = (error: any): string => {

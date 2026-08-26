@@ -7,7 +7,7 @@ import { PageHeader } from '@/components/ui/page-header';
 import { Card } from '@/components/ui/card';
 import { toast } from 'sonner';
 import { useTypeUnit, useUpdateTypeUnit } from '@/hooks/useTypeUnit';
-import { typeUnitSchema, type TypeUnitFormValues } from '@/scheme/type-unit.schema';
+import { typeUnitSchema, type TypeUnitFormValues } from '@/schemas/type-unit.schema';
 import { TypeUnitForm } from '@/components/features/type-unit/TypeUnitForm';
 import { ChevronRight } from 'lucide-react';
 import { LoadingState } from '@/components/ui/loading-state';

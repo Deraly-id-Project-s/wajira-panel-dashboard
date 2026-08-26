@@ -3,7 +3,7 @@ import { MoreVertical } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import BaseTable, { ColumnDef } from '@/components/ui/base-table';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import type { GoodsTransactionDetailEquipment } from '@/@types/goods-receipt-equipment.types';
+import type { GoodsTransactionDetailEquipment } from '@/types/goods-receipt-equipment.types';
 import { formatCurrency } from './goodsReceiptEquipment.utils';
 
 interface GoodsReceiptEquipmentDetailTableProps {

@@ -1,4 +1,4 @@
-import { BalanceSheetDocument, BalanceSheetReport } from '@/@types/accounting-report.types';
+import { BalanceSheetDocument, BalanceSheetReport } from '@/types/accounting-report.types';
 
 import AccountingDocument from './AccountingDocument';
 import { formatAccountingNumber } from './laporan-akuntansi.utils';

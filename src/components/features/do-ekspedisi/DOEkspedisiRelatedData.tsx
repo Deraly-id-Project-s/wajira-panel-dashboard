@@ -1,5 +1,5 @@
 import React from 'react';
-import type { DoEkspedisi } from '@/@types/do-ekspedisi.types';
+import type { DoEkspedisi } from '@/types/do-ekspedisi.types';
 import { DOEkspedisiDriverNotes } from './DOEkspedisiDriverNotes';
 import { DOEkspedisiExpenses } from './DOEkspedisiExpenses';
 import { DOEkspedisiClaims } from './DOEkspedisiClaims';

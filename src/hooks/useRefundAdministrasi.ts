@@ -3,8 +3,8 @@ import { useMemo } from 'react';
 import { refundAdministrasiService } from '@/services/refund-administrasi.service';
 import { useCompany } from '@/contexts/CompanyContext';
 import { companyQueryKeys } from '@/lib/query/company-key';
-import { CreateRefundPayload, CreateRefundPaymentPayload, UpdateRefundPayload, UpdateRefundPaymentPayload } from '@/@types/refund.type';
-import type { UnitTransactionItemDetail } from '@/@types/unit-transaction.types';
+import { CreateRefundPayload, CreateRefundPaymentPayload, UpdateRefundPayload, UpdateRefundPaymentPayload } from '@/types/refund.type';
+import type { UnitTransactionItemDetail } from '@/types/unit-transaction.types';
 
 const refundAdministrasiKeys = {
   list: (companyId: string | number, options: { page?: number; perPage?: number; search?: string; unit_transaction_id?: string }) =>

@@ -12,8 +12,8 @@ import { DatePicker } from '@/components/ui/date-picker';
 import { SearchableSelect } from '@/components/features/vehicle-data/SearchableSelect';
 import { useSuppliers } from '@/hooks/useSupplier';
 import { useDebouncedValue } from '@/hooks/useDebouncedValue';
-import type { GoodsReceiptEquipment } from '@/@types/goods-receipt-equipment.types';
-import { goodsReceiptEquipmentSchema, type GoodsReceiptEquipmentFormValues } from '@/scheme/goods-receipt-equipment.schema';
+import type { GoodsReceiptEquipment } from '@/types/goods-receipt-equipment.types';
+import { goodsReceiptEquipmentSchema, type GoodsReceiptEquipmentFormValues } from '@/schemas/goods-receipt-equipment.schema';
 
 interface GoodsReceiptEquipmentFormModalProps {
   open: boolean;

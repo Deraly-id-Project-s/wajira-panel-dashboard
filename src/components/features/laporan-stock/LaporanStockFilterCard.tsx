@@ -15,7 +15,7 @@ import { Calendar } from "@/components/ui/calendar"
 import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover"
 import { format } from "date-fns"
 import { FileText } from "lucide-react"
-import { JenisLaporanStock } from "@/@types/laporan-stock.types"
+import { JenisLaporanStock } from "@/types/laporan-stock.types"
 import { formatDateUI } from '@/lib/utils/date';
 
 export default function LaporanStockFilterCard() {

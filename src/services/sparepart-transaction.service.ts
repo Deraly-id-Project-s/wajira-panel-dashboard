@@ -1,6 +1,6 @@
 import { apiClient } from '@/lib/api/client';
 import { ensureSuccess, mapLaravelPaginationMeta, type LaravelApiResponse } from '@/lib/api/response';
-import { PaginationParams, PaginationMeta } from '@/@types/pagination.types';
+import { PaginationParams, PaginationMeta } from '@/types/pagination.types';
 import {
   SparepartTransaction,
   SparepartTransactionResponse,
@@ -9,7 +9,7 @@ import {
   SparepartTransactionBillingHistory,
   CreateSparepartTransactionBillingHistoryPayload,
   UpdateSparepartTransactionBillingHistoryPayload,
-} from '@/@types/sparepart-transaction.types';
+} from '@/types/sparepart-transaction.types';
 
 const basePath = '/wapi/transaction/sparepart-transaction/sparepart-transaction';
 const billingPath = '/wapi/transaction/sparepart-transaction/sparepart-transaction-billing-history';

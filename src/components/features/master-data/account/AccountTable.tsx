@@ -4,8 +4,8 @@ import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { MoreVertical, Pencil, Plus, Trash, Lock } from 'lucide-react';
-import type { Account } from '@/@types/account.types';
-import type { PaginationMeta } from '@/@types/pagination.types';
+import type { Account } from '@/types/account.types';
+import type { PaginationMeta } from '@/types/pagination.types';
 import { Badge } from '@/components/ui/badge';
 
 interface AccountTableProps {

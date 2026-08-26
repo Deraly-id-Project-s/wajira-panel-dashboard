@@ -15,7 +15,7 @@ import { SearchableSelect } from './SearchableSelect';
 import { useCompany } from '@/contexts/CompanyContext';
 import { useDealers } from '@/hooks/useDealer';
 import { useRegions } from '@/hooks/useRegion';
-import type { VehicleData, VehicleDataPayload, VehicleType } from '@/@types/vehicle-data.types';
+import type { VehicleData, VehicleDataPayload, VehicleType } from '@/types/vehicle-data.types';
 
 interface VehicleDataFormProps {
   title: string;

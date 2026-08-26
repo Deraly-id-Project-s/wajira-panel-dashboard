@@ -1,10 +1,10 @@
 import { ReactNode, useMemo, useCallback } from 'react';
-import { WarehouseStockUnit } from '@/@types/unit-transaction.types';
+import { WarehouseStockUnit } from '@/types/unit-transaction.types';
 import BaseTable, { ColumnDef } from '@/components/ui/base-table';
 import { CopyBox } from '@/components/ui/copy-box';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
-import { TypeUnit } from '@/@types/type-unit.types';
+import { TypeUnit } from '@/types/type-unit.types';
 import { ReferenceLink } from '@/components/ui/reference-link';
 import { useRouter } from 'next/router';
 

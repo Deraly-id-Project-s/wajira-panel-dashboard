@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { CreateUnitBillingHistoryPayload, CreateUnitBillingPayloadV2, UpsertUnitBillingPayload } from '@/@types/unit-billing.types';
+import { CreateUnitBillingHistoryPayload, CreateUnitBillingPayloadV2, UpsertUnitBillingPayload } from '@/types/unit-billing.types';
 import { unitBillingService } from '@/services/unitBilling.service';
 import { useCompany } from '@/contexts/CompanyContext';
 import { companyQueryKeys } from '@/lib/query/company-key';

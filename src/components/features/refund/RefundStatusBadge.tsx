@@ -1,4 +1,4 @@
-import type { RefundApprovalStatus } from '@/@types/finance-refund.types';
+import type { RefundApprovalStatus } from '@/types/finance-refund.types';
 import { Badge } from '@/components/ui/badge';
 import { getRefundStatusClasses, refundStatusLabel } from './refund.utils';
 

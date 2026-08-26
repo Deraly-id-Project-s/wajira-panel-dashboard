@@ -2,7 +2,7 @@ import React, { useMemo } from 'react';
 import BaseTable, { ColumnDef } from '@/components/ui/base-table';
 import { currenciesFormat } from '@/components/ui/currenciesFormat';
 import { formatDateUI } from '@/lib/utils/date';
-import type { WithholdingTaxItem } from '@/@types/withholding-tax.types';
+import type { WithholdingTaxItem } from '@/types/withholding-tax.types';
 import { CopyBox } from '@/components/ui/copy-box';
 import { TextTruncate } from '@/components/ui/text-truncate';
 

@@ -1,7 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { getDealers, getDealerById, importDealer, createDealer, updateDealer, deleteDealer, exportDealer } from '@/services/dealer.service';
-import type { PaginationParams } from '@/@types/pagination.types';
-import type { DealerPayload } from '@/@types/dealer.types';
+import type { PaginationParams } from '@/types/pagination.types';
+import type { DealerPayload } from '@/types/dealer.types';
 import { companyQueryKeys } from '@/lib/query/company-key';
 
 export function useDealers(

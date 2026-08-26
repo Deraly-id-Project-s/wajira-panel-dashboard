@@ -12,8 +12,8 @@ import { MoneyInput } from '@/components/ui/money-input';
 import { formatCurrency } from '@/lib/utils/currency';
 import { formatDate } from '@/lib/utils/format';
 import { useApplyExpeditionClaim, useAvailableExpeditionClaims } from '@/hooks/useDoEkspedisi';
-import { getApiErrorMessage } from '@/utils/apiErrorHandler';
-import type { DoEkspedisi, DoEkspedisiClaimApplication } from '@/@types/do-ekspedisi.types';
+import { getApiErrorMessage } from '@/lib/utils/apiErrorHandler';
+import type { DoEkspedisi, DoEkspedisiClaimApplication } from '@/types/do-ekspedisi.types';
 
 interface DOEkspedisiClaimApplicationsProps {
   data: DoEkspedisi;

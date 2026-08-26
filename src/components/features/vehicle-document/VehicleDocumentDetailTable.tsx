@@ -3,7 +3,7 @@ import { format } from 'date-fns';
 import { Pencil } from 'lucide-react';
 import BaseTable, { ColumnDef } from '@/components/ui/base-table';
 import { Button } from '@/components/ui/button';
-import type { VehicleDocumentItem } from '@/@types/vehicle-document.types';
+import type { VehicleDocumentItem } from '@/types/vehicle-document.types';
 
 interface Props {
   items: VehicleDocumentItem[];

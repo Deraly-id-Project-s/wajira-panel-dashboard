@@ -1,4 +1,4 @@
-import { AccountOverview } from '@/@types/dashboard';
+import { AccountOverview } from '@/types/dashboard';
 import { Card } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { formatMoney } from '@/lib/utils/format';

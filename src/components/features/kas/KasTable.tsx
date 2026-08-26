@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import { Kas } from '@/@types/kas.types';
+import { Kas } from '@/types/kas.types';
 import { CopyBox } from '@/components/ui/copy-box';
 import { currenciesFormat } from '@/components/ui/currenciesFormat';
 import BaseTable, { ColumnDef } from '@/components/ui/base-table';

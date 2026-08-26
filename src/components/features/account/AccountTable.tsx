@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { CopyBox } from '@/components/ui/copy-box';
 import { ReferenceLink } from '@/components/ui/reference-link';
 import { getAccountCategoryLabel } from '@/lib/account';
-import type { Account } from '@/@types/account.types';
+import type { Account } from '@/types/account.types';
 import { useRouter } from 'next/router';
 import { MoreVertical, Lock } from 'lucide-react';
 import BaseTable, { ColumnDef } from '@/components/ui/base-table';

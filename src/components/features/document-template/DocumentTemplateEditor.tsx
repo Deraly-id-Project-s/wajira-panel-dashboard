@@ -11,8 +11,8 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { FileInput } from '@/components/ui/file-input';
 import { getObjectStorageUrl, StorageImage } from '@/components/ui/storage-image';
-import type { DocumentTemplate } from '@/@types/document-template.types';
-import { documentTemplateSchema, type DocumentTemplateFormValues } from '@/scheme/document-template.schema';
+import type { DocumentTemplate } from '@/types/document-template.types';
+import { documentTemplateSchema, type DocumentTemplateFormValues } from '@/schemas/document-template.schema';
 
 const dummyRows = [
   ['1', 'Honda Vario 160', 'Hitam', 'MH1PC...', 'JFX1...', 'Rp 28.500.000'],

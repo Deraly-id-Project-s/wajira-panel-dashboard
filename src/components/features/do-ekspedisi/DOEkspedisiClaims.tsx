@@ -12,7 +12,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { MoneyInput } from '@/components/ui/money-input';
 import { formatCurrency } from '@/lib/utils/currency';
 import { useDoDetailResourceMutation } from '@/hooks/useDoEkspedisi';
-import type { DoEkspedisi, DoEkspedisiClaim, DoEkspedisiClaimDocumentation } from '@/@types/do-ekspedisi.types';
+import type { DoEkspedisi, DoEkspedisiClaim, DoEkspedisiClaimDocumentation } from '@/types/do-ekspedisi.types';
 
 interface DOEkspedisiClaimsProps {
   data: DoEkspedisi;

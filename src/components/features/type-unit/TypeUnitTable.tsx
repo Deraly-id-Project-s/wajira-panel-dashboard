@@ -3,8 +3,8 @@ import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuIte
 import { Button } from '@/components/ui/button';
 import { useRouter } from 'next/router';
 import { MoreVertical, Plus, Upload } from 'lucide-react';
-import type { PaginationMeta } from '@/@types/pagination.types';
-import type { TypeUnit } from '@/@types/type-unit.types';
+import type { PaginationMeta } from '@/types/pagination.types';
+import type { TypeUnit } from '@/types/type-unit.types';
 import { currenciesFormat } from '@/components/ui/currenciesFormat';
 import { CopyBox } from '@/components/ui/copy-box';
 import { ReferenceLink } from '@/components/ui/reference-link';

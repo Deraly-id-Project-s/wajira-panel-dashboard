@@ -1,4 +1,4 @@
-import type { TypeUnit, TypeUnitListResponse, TypeUnitPayload, UnitBrand } from '@/@types/type-unit.types';
+import type { TypeUnit, TypeUnitListResponse, TypeUnitPayload, UnitBrand } from '@/types/type-unit.types';
 import { apiClient } from '@/lib/api/client';
 import { ApiResponseError, LaravelApiResponse, ensureSuccess } from '@/lib/api/response';
 

@@ -1,5 +1,5 @@
-import type { PaginatedResult, PaginationParams } from '@/@types/pagination.types';
-import type { OrderListVehicleType } from '@/@types/order-list.types';
+import type { PaginatedResult, PaginationParams } from '@/types/pagination.types';
+import type { OrderListVehicleType } from '@/types/order-list.types';
 import { apiClient } from '@/lib/api/client';
 import { buildLaravelPaginationQuery } from '@/lib/api/pagination';
 import { ensureSuccess, type LaravelApiResponse, toPaginatedResult } from '@/lib/api/response';

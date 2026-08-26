@@ -4,7 +4,7 @@ import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from '
 import { FormDialog } from '@/components/ui/form-dialog';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import type { Driver, DriverPayload } from '@/@types/driver.types';
+import type { Driver, DriverPayload } from '@/types/driver.types';
 
 export interface DriverFormData {
   name: string;

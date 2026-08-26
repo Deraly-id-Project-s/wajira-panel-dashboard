@@ -2,7 +2,7 @@
 
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { Sparepart } from '@/@types/sparepart.types';
+import { Sparepart } from '@/types/sparepart.types';
 import { useDeleteSparepart } from '@/hooks/useSparepart';
 import { toast } from 'sonner';
 

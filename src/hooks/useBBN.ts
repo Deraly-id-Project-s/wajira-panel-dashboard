@@ -1,7 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { getBBNs, getBBNById, createBBN, updateBBN, deleteBBN, importBBN, exportBBN } from '@/services/bbn.service';
-import type { PaginationParams } from '@/@types/pagination.types';
-import type { BBNPayload } from '@/@types/bbn.types';
+import type { PaginationParams } from '@/types/pagination.types';
+import type { BBNPayload } from '@/types/bbn.types';
 
 export function useBBNs(params: PaginationParams & { search?: string }) {
     return useQuery({

@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { getPermissionById, getPermissions } from '@/services/permission.service';
-import { Permission } from '@/@types/permission.types';
+import { Permission } from '@/types/permission.types';
 
 export const permissionKeys = {
   all: ['permissions'] as const,

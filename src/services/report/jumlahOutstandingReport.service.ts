@@ -1,5 +1,5 @@
 import { apiClient } from '@/lib/api/client';
-import { ReportPaginationResponse } from '@/@types/jumlah-daftar-report.types';
+import { ReportPaginationResponse } from '@/types/jumlah-daftar-report.types';
 
 export interface OutstandingVendor {
   id: number;

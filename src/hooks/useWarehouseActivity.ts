@@ -5,7 +5,7 @@ import {
   ReceiptStockPayload,
   UpdateWarehouseActivityPayload,
   WarehouseActivityListParams,
-} from '@/@types/warehouse.types';
+} from '@/types/warehouse.types';
 import {
   createWarehouseData,
   createWarehouseActivity,

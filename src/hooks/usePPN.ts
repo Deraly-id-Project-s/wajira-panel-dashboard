@@ -1,5 +1,5 @@
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import type { BulkUpdatePPNPayload, PPNFilterParams, UpdatePPNMutationPayload } from '@/@types/ppn.types';
+import type { BulkUpdatePPNPayload, PPNFilterParams, UpdatePPNMutationPayload } from '@/types/ppn.types';
 import { bulkUpdatePPN, getPPNList, updatePPN } from '@/services/api/ppn';
 
 const PPN_KEY = 'ppn';

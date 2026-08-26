@@ -9,7 +9,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { MoneyInput } from '@/components/ui/money-input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import type { BBNBill, BBNBillPayload } from '@/@types/bbn-bill.types';
+import type { BBNBill, BBNBillPayload } from '@/types/bbn-bill.types';
 import type { SearchableSelectOption } from '@/components/features/vehicle-data/SearchableSelect';
 import { calculateOutstanding, formatBillCode, formatCurrency, toDateValue, toPayloadDate } from '@/components/features/tagihan-bbn/utils';
 

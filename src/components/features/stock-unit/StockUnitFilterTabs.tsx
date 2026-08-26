@@ -1,4 +1,4 @@
-import { StockStatus } from '@/@types/stock-unit.types';
+import { StockStatus } from '@/types/stock-unit.types';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 interface StockUnitFilterTabsProps {

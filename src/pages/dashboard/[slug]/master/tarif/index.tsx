@@ -10,7 +10,7 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'sonner';
 import { useTarifs, useDeleteTarif, useCreateTarif } from '@/hooks/useTarif';
-import type { Tarif, TarifPayload } from '@/@types/tarif.types';
+import type { Tarif, TarifPayload } from '@/types/tarif.types';
 import { usePermissionGuard } from '@/hooks/usePermissionGuard';
 import { TarifFormModal } from '@/components/features/tarif/TarifFormModal';
 

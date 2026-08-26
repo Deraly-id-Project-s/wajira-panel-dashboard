@@ -1,7 +1,7 @@
 import { useDeferredValue, useMemo, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import type { Customer as ApiCustomer } from '@/@types/customer.types';
+import type { Customer as ApiCustomer } from '@/types/customer.types';
 import { DataImportModal } from '@/components/features/master-data/DataImportModal';
 import { CustomerFormModal } from '@/components/features/customer/CustomerFormModal';
 import { CustomerTable } from '@/components/features/customer/CustomerTable';
@@ -11,7 +11,7 @@ import { useCompany } from '@/contexts/CompanyContext';
 import { useQueryParamsTable } from '@/hooks/useQueryParamsTable';
 import { useCreateCustomer, useCustomers, useDeleteCustomer, useExportCustomer, useImportCustomer, useUpdateCustomer } from '@/hooks/useCustomer';
 import { ApiResponseError, ApiValidationError } from '@/lib/api/response';
-import { customerSchema, type CustomerFormValues } from '@/scheme/customer.schema';
+import { customerSchema, type CustomerFormValues } from '@/schemas/customer.schema';
 import { getCustomerById } from '@/services/customer.service';
 import { toast } from 'sonner';
 import { usePermissionGuard } from '@/hooks/usePermissionGuard';

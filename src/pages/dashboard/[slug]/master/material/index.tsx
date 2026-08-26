@@ -8,7 +8,7 @@ import { DeleteMaterialModal } from '@/components/features/material/DeleteMateri
 import { ImportMaterialModal } from '@/components/features/material/ImportMaterialModal';
 import { toast } from 'sonner';
 import { useMaterials, useCreateMaterial, useUpdateMaterial, useDeleteMaterial, useImportMaterial, useExportMaterial } from '@/hooks/useMaterial';
-import type { Material } from '@/@types/material.types';
+import type { Material } from '@/types/material.types';
 import { usePermissionGuard } from '@/hooks/usePermissionGuard';
 
 export default function MaterialPage() {

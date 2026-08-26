@@ -4,7 +4,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { UseFormReturn } from 'react-hook-form';
-import type { CreateSupplierFormValues } from '@/scheme/supplier.schema';
+import type { CreateSupplierFormValues } from '@/schemas/supplier.schema';
 import RequiredMark from '@/components/ui/required-mark';
 import { sanitizePhone } from '@/lib/utils/format';
 

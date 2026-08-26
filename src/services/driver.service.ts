@@ -1,5 +1,5 @@
-import type { Driver, DriverListResponse, DriverPayload } from '@/@types/driver.types';
-import type { PaginationParams } from '@/@types/pagination.types';
+import type { Driver, DriverListResponse, DriverPayload } from '@/types/driver.types';
+import type { PaginationParams } from '@/types/pagination.types';
 import { apiClient } from '@/lib/api/client';
 import { buildLaravelPaginationQuery } from '@/lib/api/pagination';
 import { ApiResponseError, ApiValidationError, LaravelApiResponse, ensureSuccess, toPaginatedResult } from '@/lib/api/response';

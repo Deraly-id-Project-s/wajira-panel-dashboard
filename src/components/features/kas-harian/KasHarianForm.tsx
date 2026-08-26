@@ -2,7 +2,7 @@ import { useMemo } from 'react';
 import type { UseFormReturn } from 'react-hook-form';
 import { Save } from 'lucide-react';
 import type { Company } from '@/services/company.service';
-import type { KasHarianFormInput, KasHarianFormValues } from '@/scheme/kas-harian.schema';
+import type { KasHarianFormInput, KasHarianFormValues } from '@/schemas/kas-harian.schema';
 import { Button } from '@/components/ui/button';
 import { DatePicker } from '@/components/ui/date-picker';
 import { FileInput } from '@/components/ui/file-input';

@@ -4,7 +4,7 @@ import { toast } from 'sonner';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { VehicleRegistrationForm } from '@/components/features/vehicle-document/VehicleRegistrationForm';
 import { useUpdateVehicleRegistration, useVehicleDocumentDetail } from '@/hooks/useVehicleDocument';
-import type { VehicleRegistrationPayload } from '@/@types/vehicle-document.types';
+import type { VehicleRegistrationPayload } from '@/types/vehicle-document.types';
 import { LoadingState } from '@/components/ui/loading-state';
 
 export default function EditVehicleRegistrationPage() {

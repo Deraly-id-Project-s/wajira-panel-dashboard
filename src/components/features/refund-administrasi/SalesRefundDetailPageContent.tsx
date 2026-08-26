@@ -1,7 +1,7 @@
 import { useState, useMemo } from 'react';
 import { useRouter } from 'next/router';
 import { ChevronRight, MoreVertical, Plus, ArrowLeft, FileText, Package } from 'lucide-react';
-import type { UnitTransactionRefundPayment } from '@/@types/refund.type';
+import type { UnitTransactionRefundPayment } from '@/types/refund.type';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';

@@ -1,6 +1,6 @@
 import { SalesItem, SalesLineItem } from '@/components/features/sales/sales.data';
 import type { UnitTransactionFormValues } from '@/components/features/unit-transaction/unit-transaction.schema';
-import { UnitTransaction } from '@/@types/unit-transaction.types';
+import { UnitTransaction } from '@/types/unit-transaction.types';
 
 export type SalesApiModel = {
   id?: number | string;

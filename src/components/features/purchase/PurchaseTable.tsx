@@ -1,6 +1,6 @@
 import { useCallback, useMemo, useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { UnitTransaction } from '@/@types/unit-transaction.types';
+import { UnitTransaction } from '@/types/unit-transaction.types';
 import { Eye, MoreVertical, Pencil, Plus, Search, Trash2, RotateCcw, AlertTriangle, Printer } from 'lucide-react';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
@@ -9,7 +9,7 @@ import { useRouter } from 'next/router';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { currenciesFormat } from '@/components/ui/currenciesFormat';
-import { PaginationMeta } from '@/@types/pagination.types';
+import { PaginationMeta } from '@/types/pagination.types';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import SearchVehicleModal from '@/components/features/vehicle/SearchVehicleModal';

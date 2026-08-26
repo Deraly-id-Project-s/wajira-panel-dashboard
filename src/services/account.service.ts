@@ -1,5 +1,5 @@
-import type { Account, AccountDetail, AccountListResponse, AccountPayload } from '@/@types/account.types';
-import type { PaginationParams } from '@/@types/pagination.types';
+import type { Account, AccountDetail, AccountListResponse, AccountPayload } from '@/types/account.types';
+import type { PaginationParams } from '@/types/pagination.types';
 import { apiClient } from '@/lib/api/client';
 import { buildLaravelPaginationQuery } from '@/lib/api/pagination';
 import { ApiResponseError, ApiValidationError, LaravelApiResponse, ensureSuccess, toPaginatedResult } from '@/lib/api/response';

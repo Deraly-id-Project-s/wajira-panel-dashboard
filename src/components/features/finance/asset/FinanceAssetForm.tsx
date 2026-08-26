@@ -8,7 +8,7 @@ import { MoneyInput } from '@/components/ui/money-input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
-import type { FinanceAsset, FinanceAssetPayload } from '@/@types/finance-asset.types';
+import type { FinanceAsset, FinanceAssetPayload } from '@/types/finance-asset.types';
 import { useAssets } from '@/hooks/useAsset';
 import { useCompany } from '@/contexts/CompanyContext';
 import { useFinanceAssetFormula } from '@/hooks/useFinanceAsset';

@@ -6,7 +6,7 @@ import { OrderListDetailView } from '@/components/features/order-list/OrderListD
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { useOrderListDetail, useUpdateOrderListState } from '@/hooks/useOrderList';
 import { LoadingState } from '@/components/ui/loading-state';
-import type { OrderListStatus } from '@/@types/order-list.types';
+import type { OrderListStatus } from '@/types/order-list.types';
 import { OrderStatusConfirmDialog } from '@/components/features/order-list/OrderStatusConfirmDialog';
 import { usePermissionGuard } from '@/hooks/usePermissionGuard';
 

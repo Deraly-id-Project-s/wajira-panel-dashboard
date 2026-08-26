@@ -1,4 +1,4 @@
-import type { ApiError } from '@/@types/api';
+import type { ApiError } from '@/types/api';
 import type {
   BulkUpdatePPNPayload,
   BulkUpdatePPNResponse,
@@ -10,7 +10,7 @@ import type {
   UnitTransactionItemDetail,
   UnitType,
   UpdatePPNMutationPayload,
-} from '@/@types/ppn.types';
+} from '@/types/ppn.types';
 import { apiClient } from '@/lib/api/client';
 import { ensureSuccess, mapLaravelPaginationMeta, type LaravelApiResponse } from '@/lib/api/response';
 

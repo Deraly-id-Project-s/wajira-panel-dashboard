@@ -6,11 +6,11 @@ import type {
   VehicleDataLookupItem,
   VehicleDataPayload,
   VendorLookupItem,
-} from '@/@types/vehicle-data.types';
+} from '@/types/vehicle-data.types';
 import { apiClient } from '@/lib/api/client';
 import { buildLaravelPaginationQuery } from '@/lib/api/pagination';
 import { ApiResponseError, ApiValidationError, ensureSuccess, LaravelApiResponse, toPaginatedResult } from '@/lib/api/response';
-import type { PaginationParams } from '@/@types/pagination.types';
+import type { PaginationParams } from '@/types/pagination.types';
 import { getVendors } from '@/services/vendor.service';
 
 const basePath = '/wapi/transaction/vehicle-data';

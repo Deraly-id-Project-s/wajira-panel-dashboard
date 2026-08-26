@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
-import type { GoodsStockMaterialParams } from '@/@types/goods-stock-material.types';
+import type { GoodsStockMaterialParams } from '@/types/goods-stock-material.types';
 import { getGoodsTransactionStockMaterial } from '@/services/warehouse/goodsTransactionStock.service';
 
 export const warehouseStockMaterialKeys = {

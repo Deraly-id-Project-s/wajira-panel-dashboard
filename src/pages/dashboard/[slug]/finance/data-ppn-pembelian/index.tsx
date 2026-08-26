@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import Head from 'next/head';
 import { Search, X } from 'lucide-react';
 import { toast } from 'sonner';
-import type { PPNPembelian } from '@/@types/ppn.types';
+import type { PPNPembelian } from '@/types/ppn.types';
 import PPNPembelianFormDialog from '@/components/features/ppn-pembelian/PPNPembelianFormDialog';
 import PPNPembelianTable from '@/components/features/ppn-pembelian/PPNPembelianTable';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';

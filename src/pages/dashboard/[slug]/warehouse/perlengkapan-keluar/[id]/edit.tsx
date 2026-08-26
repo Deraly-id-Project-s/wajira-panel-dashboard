@@ -20,7 +20,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import BaseTable, { ColumnDef } from '@/components/ui/base-table';
 import { Textarea } from '@/components/ui/textarea';
-import type { MaterialTransactionDetailItem } from '@/@types/material-transaction.types';
+import type { MaterialTransactionDetailItem } from '@/types/material-transaction.types';
 import { useMaterials } from '@/hooks/useMaterial';
 import {
   useCreateMaterialTransactionItem,
@@ -36,7 +36,7 @@ import { useWarehouseOptions } from '@/hooks/usePengeluaranUnit';
 import { useQueryParamsTable } from '@/hooks/useQueryParamsTable';
 import { getVisiblePageNumbers } from '@/lib/api/pagination';
 import { ApiResponseError, ApiValidationError } from '@/lib/api/response';
-import { materialTransactionSchema, type MaterialTransactionFormValues, type MaterialTransactionItemFormValues } from '@/scheme/material-transaction.schema';
+import { materialTransactionSchema, type MaterialTransactionFormValues, type MaterialTransactionItemFormValues } from '@/schemas/material-transaction.schema';
 import { LoadingState } from '@/components/ui/loading-state';
 
 const toDateValue = (value?: string) => {

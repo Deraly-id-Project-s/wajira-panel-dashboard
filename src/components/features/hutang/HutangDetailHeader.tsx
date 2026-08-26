@@ -1,6 +1,6 @@
 import { Card } from "@/components/ui/card"
 import { CalendarDays, FileText, ListChecks, User } from "lucide-react" // Changed icon
-import { Hutang } from "@/@types/hutang.types"
+import { Hutang } from "@/types/hutang.types"
 import { formatCurrency } from "@/lib/utils/currency"
 
 interface Props {

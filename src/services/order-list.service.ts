@@ -19,7 +19,7 @@ import type {
   UpdateOrderListPayload,
   UpdateOrderListTarifPayload,
   UpdateOrderListStatePayload,
-} from '@/@types/order-list.types';
+} from '@/types/order-list.types';
 import { apiClient } from '@/lib/api/client';
 import { buildLaravelPaginationQuery } from '@/lib/api/pagination';
 import { ApiResponseError, ApiValidationError, ensureSuccess, type LaravelApiResponse, toPaginatedResult } from '@/lib/api/response';

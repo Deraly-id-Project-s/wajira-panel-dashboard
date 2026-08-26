@@ -1,6 +1,6 @@
 import { apiClient } from '@/lib/api/client';
 import { ensureSuccess, type LaravelApiResponse } from '@/lib/api/response';
-import { Permission } from '@/@types/permission.types';
+import { Permission } from '@/types/permission.types';
 
 const basePath = '/wapi/permissions';
 

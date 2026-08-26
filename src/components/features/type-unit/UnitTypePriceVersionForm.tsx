@@ -12,7 +12,7 @@ import {
   UnitTypePriceVersionSchema,
   type UnitTypePriceVersionFormValues,
   type UnitTypePriceVersion
-} from '@/@types/unit-type-price-version.types';
+} from '@/types/unit-type-price-version.types';
 
 interface UnitTypePriceVersionFormProps {
   open: boolean;

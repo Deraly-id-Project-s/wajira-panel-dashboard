@@ -4,8 +4,8 @@ import type {
   DoInvoiceDeletePayload,
   DoInvoiceListParams,
   DoInvoiceProcessPayload,
-} from '@/@types/create-invoice.types';
-import type { PaginationParams } from '@/@types/pagination.types';
+} from '@/types/create-invoice.types';
+import type { PaginationParams } from '@/types/pagination.types';
 import {
   createDoInvoice,
   createFinanceInvoiceBillingPayment,
@@ -15,7 +15,7 @@ import {
   processExpeditionById,
   processInvoiceById,
 } from '@/services/do-invoice.service';
-import type { CreateFinanceInvoicePaymentPayload } from '@/@types/create-invoice.types';
+import type { CreateFinanceInvoicePaymentPayload } from '@/types/create-invoice.types';
 
 export function useDoInvoices(params: PaginationParams & DoInvoiceListParams & { enabled?: boolean }) {
   const { enabled = true, ...rest } = params;

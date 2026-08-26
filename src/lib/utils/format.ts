@@ -3,7 +3,7 @@
  * Helper functions untuk format numbers, currency, dan dates
  */
 
-import { Currency } from '@/@types/dashboard';
+import { Currency } from '@/types/dashboard';
 
 /**
  * Format number dengan thousand separator (titik untuk IDR)

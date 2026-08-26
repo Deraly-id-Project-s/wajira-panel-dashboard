@@ -6,7 +6,7 @@ import { PageHeader } from '@/components/ui/page-header';
 import { DocumentTemplateTable } from '@/components/features/document-template/DocumentTemplateTable';
 import { useDeleteDocumentTemplate, useDocumentTemplates } from '@/hooks/useDocumentTemplate';
 import { usePermissionGuard } from '@/hooks/usePermissionGuard';
-import type { DocumentTemplate } from '@/@types/document-template.types';
+import type { DocumentTemplate } from '@/types/document-template.types';
 
 export default function DocumentTemplateListPage() {
   const router = useRouter();

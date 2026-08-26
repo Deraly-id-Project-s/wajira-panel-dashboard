@@ -2,7 +2,7 @@ import React, { useMemo } from 'react';
 import { Plus, MoreVertical, Upload } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import type { Region } from '@/@types/region.types';
+import type { Region } from '@/types/region.types';
 import BaseTable, { ColumnDef } from '@/components/ui/base-table';
 
 interface RegionTableProps {

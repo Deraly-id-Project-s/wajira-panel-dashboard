@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { UpsertUnitBillingPayload } from '@/@types/unit-billing.types';
+import { UpsertUnitBillingPayload } from '@/types/unit-billing.types';
 import { useCompany } from '@/contexts/CompanyContext';
 import { useSalesDetail } from '@/hooks/useSales';
 import { useUnitBillings } from '@/hooks/useUnitBilling';

@@ -5,7 +5,7 @@ import { PageHeader } from '@/components/ui/page-header';
 import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import BaseTable, { ColumnDef } from '@/components/ui/base-table';
-import type { GoodsReceipt } from '@/@types/goods-receipt.types';
+import type { GoodsReceipt } from '@/types/goods-receipt.types';
 import { formatCurrency, formatDate, getReceiptStatusLabel } from './goods-receipt.utils';
 
 interface GoodsReceiptTableProps {

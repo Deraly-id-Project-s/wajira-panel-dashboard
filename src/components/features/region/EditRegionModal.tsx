@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { RegionFormData } from './RegionFormModal';
-import type { Region } from '@/@types/region.types';
+import type { Region } from '@/types/region.types';
 
 interface EditRegionModalProps {
     isOpen: boolean;

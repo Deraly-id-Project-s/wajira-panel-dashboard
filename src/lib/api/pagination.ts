@@ -1,4 +1,4 @@
-import type { PaginationParams } from '@/@types/pagination.types';
+import type { PaginationParams } from '@/types/pagination.types';
 
 export const buildLaravelPaginationQuery = (params: PaginationParams) => ({
   page: params.page ?? 1,

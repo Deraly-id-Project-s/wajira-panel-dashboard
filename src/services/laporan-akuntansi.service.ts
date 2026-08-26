@@ -4,7 +4,7 @@ import {
   MonthlyVatReport,
   ProfitLossReport,
   YearlyVatReport,
-} from '@/@types/accounting-report.types';
+} from '@/types/accounting-report.types';
 import {
   getDummyBalanceSheetReport,
   getDummyMonthlyVatInputReport,

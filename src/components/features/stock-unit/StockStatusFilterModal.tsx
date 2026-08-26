@@ -3,7 +3,7 @@
 import * as React from "react"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { StockStatus } from '@/@types/stock-unit.types';
+import { StockStatus } from '@/types/stock-unit.types';
 import { cn } from '@/lib/utils';
 
 interface StockStatusFilterModalProps {

@@ -10,8 +10,8 @@ import { Textarea } from '@/components/ui/textarea';
 import { SearchableSelect } from '@/components/features/vehicle-data/SearchableSelect';
 import { useVehicleEquipments } from '@/hooks/useVehicleEquipment';
 import { useDebouncedValue } from '@/hooks/useDebouncedValue';
-import type { GoodsTransactionDetailEquipment } from '@/@types/goods-issue-equipment.types';
-import { goodsIssueEquipmentItemSchema, type GoodsIssueEquipmentItemFormValues } from '@/scheme/goods-issue-equipment.schema';
+import type { GoodsTransactionDetailEquipment } from '@/types/goods-issue-equipment.types';
+import { goodsIssueEquipmentItemSchema, type GoodsIssueEquipmentItemFormValues } from '@/schemas/goods-issue-equipment.schema';
 
 interface GoodsIssueEquipmentDetailFormModalProps {
   open: boolean;

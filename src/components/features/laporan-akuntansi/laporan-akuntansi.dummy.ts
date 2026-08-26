@@ -6,7 +6,7 @@ import {
   ProfitLossReport,
   YearlyVatReport,
   YearlyVatReportRow,
-} from '@/@types/accounting-report.types';
+} from '@/types/accounting-report.types';
 import {
   formatAccountingLongDate,
   formatAccountingMonthYear,

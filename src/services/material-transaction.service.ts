@@ -10,9 +10,9 @@ import type {
   MaterialTransactionListResponse,
   MaterialTransactionPayload,
   MaterialTransactionType,
-} from '@/@types/material-transaction.types';
-import type { PaginationParams } from '@/@types/pagination.types';
-import type { WarehouseOption } from '@/@types/pengeluaran-unit.types';
+} from '@/types/material-transaction.types';
+import type { PaginationParams } from '@/types/pagination.types';
+import type { WarehouseOption } from '@/types/pengeluaran-unit.types';
 import { apiClient } from '@/lib/api/client';
 import { buildLaravelPaginationQuery } from '@/lib/api/pagination';
 import { ApiResponseError, ApiValidationError, type LaravelApiResponse, ensureSuccess, toPaginatedResult } from '@/lib/api/response';

@@ -1,5 +1,5 @@
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import type { TarifPriceVersionFilterParams } from '@/@types/tarif-price-version.types';
+import type { TarifPriceVersionFilterParams } from '@/types/tarif-price-version.types';
 import { createTarifPriceVersion, deleteTarifPriceVersion, getTarifPriceVersions, updateTarifPriceVersion } from '@/services/tarifPriceVersion.service';
 
 const PRICE_VERSION_KEY = 'tarif-price-version';

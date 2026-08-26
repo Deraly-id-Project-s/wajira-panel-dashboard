@@ -5,7 +5,7 @@ import type {
   CashFlowListResult,
   CashFlowPayload,
   KasHarian,
-} from '@/@types/kas-harian.types';
+} from '@/types/kas-harian.types';
 import { apiClient } from '@/lib/api/client';
 import { ensureSuccess, mapLaravelPaginationMeta, type LaravelApiResponse } from '@/lib/api/response';
 

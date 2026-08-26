@@ -1,5 +1,5 @@
-import type { RawRefundBeliResponse, RefundBeli, RefundBeliListResponse, RefundBeliListResult, RefundBeliQueryParams } from '@/@types/refund-beli.types';
-import type { RawRefundJualResponse, RefundJual, RefundJualListResponse, RefundJualListResult, RefundJualQueryParams } from '@/@types/refund-jual.types';
+import type { RawRefundBeliResponse, RefundBeli, RefundBeliListResponse, RefundBeliListResult, RefundBeliQueryParams } from '@/types/refund-beli.types';
+import type { RawRefundJualResponse, RefundJual, RefundJualListResponse, RefundJualListResult, RefundJualQueryParams } from '@/types/refund-jual.types';
 import { apiClient } from '@/lib/api/client';
 import { ensureSuccess, mapLaravelPaginationMeta, type LaravelApiResponse } from '@/lib/api/response';
 

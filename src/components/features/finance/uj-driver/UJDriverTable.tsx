@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import type { UJDriverItem, UJDriverPaginationResponse } from '@/@types/uj-driver.types';
+import type { UJDriverItem, UJDriverPaginationResponse } from '@/types/uj-driver.types';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { formatCurrency } from '@/lib/utils/currency';

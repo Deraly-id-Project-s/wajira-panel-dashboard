@@ -11,9 +11,9 @@ import { LoadingState } from '@/components/ui/loading-state';
 import { PageHeader } from '@/components/ui/page-header';
 import { useCompany } from '@/contexts/CompanyContext';
 import { useCreateKasHarian, useKasHarianDetail, useUpdateKasHarian } from '@/hooks/useKasHarian';
-import { kasHarianSchema, type KasHarianFormInput, type KasHarianFormValues } from '@/scheme/kas-harian.schema';
+import { kasHarianSchema, type KasHarianFormInput, type KasHarianFormValues } from '@/schemas/kas-harian.schema';
 import { fetchUserCompanies } from '@/services/company.service';
-import { getApiErrorMessage } from '@/utils/apiErrorHandler';
+import { getApiErrorMessage } from '@/lib/utils/apiErrorHandler';
 import KasHarianForm from './KasHarianForm';
 
 interface Props {

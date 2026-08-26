@@ -7,7 +7,7 @@ import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { useDoEkspedisiDetail } from '@/hooks/useDoEkspedisi';
 import { useOrderListTarifs, useOrderListTarifItems } from '@/hooks/useOrderList';
 import { Button } from '@/components/ui/button';
-import type { DoEkspedisi, DoEkspedisiOrderList, DoEkspedisiOrderTarifItem, DoEkspedisiOrderTarifLoadItem } from '@/@types/do-ekspedisi.types';
+import type { DoEkspedisi, DoEkspedisiOrderList, DoEkspedisiOrderTarifItem, DoEkspedisiOrderTarifLoadItem } from '@/types/do-ekspedisi.types';
 import { LoadingState } from '@/components/ui/loading-state';
 
 export default function DOEkspedisiPrintPage() {

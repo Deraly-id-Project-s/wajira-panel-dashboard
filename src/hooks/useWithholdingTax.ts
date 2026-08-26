@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import type { WithholdingTaxListParams, WithholdingTaxPayload } from '@/@types/withholding-tax.types';
+import type { WithholdingTaxListParams, WithholdingTaxPayload } from '@/types/withholding-tax.types';
 import {
   createWithholdingTax,
   deleteWithholdingTax,

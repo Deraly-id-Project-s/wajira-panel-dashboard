@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import type { PaginationParams } from '@/@types/pagination.types';
-import type { ArmadaListParams, ArmadaPayload } from '@/@types/armada.types';
+import type { PaginationParams } from '@/types/pagination.types';
+import type { ArmadaListParams, ArmadaPayload } from '@/types/armada.types';
 import { createArmada, deleteArmada, getArmadaById, getArmadas, importArmada, updateArmada } from '@/services/armada.service';
 
 export function useArmadas(params: PaginationParams & ArmadaListParams & { enabled?: boolean }) {

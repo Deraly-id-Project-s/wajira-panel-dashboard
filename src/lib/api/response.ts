@@ -1,4 +1,4 @@
-import type { LaravelPagination, PaginatedResult, PaginationMeta } from '@/@types/pagination.types';
+import type { LaravelPagination, PaginatedResult, PaginationMeta } from '@/types/pagination.types';
 
 export interface LaravelApiResponse<T> {
   status: boolean;

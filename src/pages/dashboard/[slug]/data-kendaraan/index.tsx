@@ -6,7 +6,7 @@ import { DataImportModal } from '@/components/features/master-data/DataImportMod
 import { toast } from 'sonner';
 import { useRouter } from 'next/router';
 import { useArmadas, useDeleteArmada, useImportArmada } from '@/hooks/useArmada';
-import type { Armada } from '@/@types/armada.types';
+import type { Armada } from '@/types/armada.types';
 import { useCompany } from '@/contexts/CompanyContext';
 import { VehicleDataTable } from '@/components/features/vehicle-data/VehicleDataTable';
 import { DeleteVehicleDataDialog } from '@/components/features/vehicle-data/DeleteVehicleDataDialog';
@@ -18,7 +18,7 @@ import {
   useVendorLookup,
   useAssignVehicleData,
 } from '@/hooks/useVehicleData';
-import type { VehicleData } from '@/@types/vehicle-data.types';
+import type { VehicleData } from '@/types/vehicle-data.types';
 
 export default function VehicleFleetPage() {
   const router = useRouter();

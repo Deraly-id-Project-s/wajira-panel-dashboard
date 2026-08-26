@@ -6,7 +6,7 @@ import { Card } from '@/components/ui/card';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { DatePicker } from '@/components/ui/date-picker';
 import BaseTable, { ColumnDef } from '@/components/ui/base-table';
-import type { VehicleData } from '@/@types/vehicle-data.types';
+import type { VehicleData } from '@/types/vehicle-data.types';
 import { SearchableSelect, type SearchableSelectOption } from './SearchableSelect';
 
 interface VehicleDataTableProps {

@@ -1,4 +1,4 @@
-import { AccountingReportTab } from '@/@types/accounting-report.types';
+import { AccountingReportTab } from '@/types/accounting-report.types';
 
 export interface AccountingTabDefinition {
   value: AccountingReportTab;

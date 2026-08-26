@@ -2,7 +2,7 @@ import { toast } from 'sonner';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { useDeleteKasHarian } from '@/hooks/useKasHarian';
-import type { KasHarian } from '@/@types/kas-harian.types';
+import type { KasHarian } from '@/types/kas-harian.types';
 
 interface Props {
   open: boolean;

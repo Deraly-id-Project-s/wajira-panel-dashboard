@@ -4,7 +4,7 @@ import {
   UnitBilling,
   UnitBillingHistory,
   UpsertUnitBillingPayload,
-} from '@/@types/unit-billing.types';
+} from '@/types/unit-billing.types';
 import { apiClient } from '@/lib/api/client';
 import { ensureSuccess, LaravelApiResponse, toPaginatedResult } from '@/lib/api/response';
 

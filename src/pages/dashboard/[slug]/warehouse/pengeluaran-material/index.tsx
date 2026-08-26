@@ -7,8 +7,8 @@ import { GoodsIssueTable } from '@/components/features/goods-issue/GoodsIssueTab
 import { GoodsIssueFormModal } from '@/components/features/goods-issue/GoodsIssueFormModal';
 import { GoodsIssuePaymentModal } from '@/components/features/goods-issue/GoodsIssuePaymentModal';
 import { GoodsReceiptUploadModal } from '@/components/features/goods-receipt/GoodsReceiptUploadModal';
-import type { ApiError } from '@/@types/api';
-import type { GoodsIssue } from '@/@types/goods-issue.types';
+import type { ApiError } from '@/types/api';
+import type { GoodsIssue } from '@/types/goods-issue.types';
 import { useCompany } from '@/contexts/CompanyContext';
 import { useCustomers } from '@/hooks/useCustomer';
 import {
@@ -23,7 +23,7 @@ import {
 import { useKas } from '@/hooks/useKas';
 import { useQueryParamsTable } from '@/hooks/useQueryParamsTable';
 import { ApiResponseError, ApiValidationError } from '@/lib/api/response';
-import type { GoodsIssueFormValues, GoodsIssuePaymentFormValues } from '@/scheme/goods-issue.schema';
+import type { GoodsIssueFormValues, GoodsIssuePaymentFormValues } from '@/schemas/goods-issue.schema';
 import { usePermissionGuard } from '@/hooks/usePermissionGuard';
 
 const translateBackendMessageToIndonesian = (message: string) => {

@@ -20,7 +20,7 @@ import { useRouter } from 'next/router';
 import { CopyBox } from '@/components/ui/copy-box';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
-import type { StockStatus, StockUnit } from '@/@types/stock-unit.types';
+import type { StockStatus, StockUnit } from '@/types/stock-unit.types';
 import StockUnitFilterDropdown from '@/components/features/stock-unit/StockUnitFilterTabs';
 
 const statusConfig: Record<string, { label: string; className: string }> = {

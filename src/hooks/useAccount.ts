@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import type { AccountPayload } from '@/@types/account.types';
-import type { PaginationParams } from '@/@types/pagination.types';
+import type { AccountPayload } from '@/types/account.types';
+import type { PaginationParams } from '@/types/pagination.types';
 import { createAccount, deleteAccount, getAccountById, getAccountHierarchy, getAccounts, importAccount, updateAccount, bulkUpdateAccounts } from '@/services/account.service';
 
 export const useAccounts = (params: PaginationParams & { search?: string; company_id?: string | number; enabled?: boolean }) => {

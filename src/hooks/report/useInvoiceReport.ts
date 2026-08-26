@@ -2,7 +2,7 @@ import { useQuery, useQueries } from '@tanstack/react-query';
 import { useMemo } from 'react';
 import { getInvoiceReport } from '@/services/report/invoiceReport.service';
 import { getDoInvoiceById } from '@/services/do-invoice.service';
-import type { DoInvoice } from '@/@types/create-invoice.types';
+import type { DoInvoice } from '@/types/create-invoice.types';
 
 export function useInvoiceReport({
   page,

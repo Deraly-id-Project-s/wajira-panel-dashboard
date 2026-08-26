@@ -1,7 +1,7 @@
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
 import { cn } from "@/lib/utils"
 import { ArrowUpRight, ArrowDownRight } from "lucide-react"
-import { KpiData } from "@/@types/dashboard"
+import { KpiData } from "@/types/dashboard"
 import { formatNumber } from "@/lib/utils/format"
 
 interface KpiCardProps {

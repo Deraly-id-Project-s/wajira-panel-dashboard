@@ -2,7 +2,7 @@ import * as React from 'react';
 import { useRouter } from 'next/router';
 import { ChevronLeft } from 'lucide-react';
 import { toast } from 'sonner';
-import type { Tarif } from '@/@types/tarif.types';
+import type { Tarif } from '@/types/tarif.types';
 import type { SearchableSelectOption } from '@/components/features/vehicle-data/SearchableSelect';
 import { OrderListForm, type OrderListFormItemValue, type OrderListFormValues } from '@/components/features/order-list/OrderListForm';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';

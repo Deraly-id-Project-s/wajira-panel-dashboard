@@ -9,8 +9,8 @@ import { CopyBox } from '@/components/ui/copy-box';
 import { currenciesFormat } from '@/components/ui/currenciesFormat';
 import { formatDate } from '@/lib/utils/format';
 import { cn } from '@/lib/utils';
-import type { PaginationMeta } from '@/@types/pagination.types';
-import type { SparepartTransactionRefund } from '@/@types/sparepart-refund.types';
+import type { PaginationMeta } from '@/types/pagination.types';
+import type { SparepartTransactionRefund } from '@/types/sparepart-refund.types';
 
 interface Props {
   data: SparepartTransactionRefund[];

@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { DispatchUnitTableParams, PengeluaranUnitListParams, SavePengeluaranUnitPayload } from '@/@types/pengeluaran-unit.types';
+import { DispatchUnitTableParams, PengeluaranUnitListParams, SavePengeluaranUnitPayload } from '@/types/pengeluaran-unit.types';
 import {
   createPengeluaranUnit,
   dispatchPengeluaranStock,

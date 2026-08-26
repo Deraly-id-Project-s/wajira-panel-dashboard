@@ -3,7 +3,7 @@ import { useRouter } from 'next/router';
 import { ArrowLeft, Save } from 'lucide-react';
 import { Controller, useForm } from 'react-hook-form';
 import { toast } from 'sonner';
-import { getApiErrorMessage } from '@/utils/apiErrorHandler';
+import { getApiErrorMessage } from '@/lib/utils/apiErrorHandler';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { SearchableSelect } from '@/components/features/vehicle-data/SearchableSelect';
 import { Button } from '@/components/ui/button';

@@ -8,7 +8,7 @@ import StockUnitTable from '@/components/features/stock-unit/StockUnitTable';
 import StockUnitFilterDropdown from '@/components/features/stock-unit/StockUnitFilterTabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { AlertCircle } from 'lucide-react';
-import type { StockStatus } from '@/@types/stock-unit.types';
+import type { StockStatus } from '@/types/stock-unit.types';
 
 type OutstandingTableProps = {
   type: 'purchase' | 'sales';

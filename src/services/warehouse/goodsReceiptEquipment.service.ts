@@ -1,4 +1,4 @@
-import type { PaginationParams } from '@/@types/pagination.types';
+import type { PaginationParams } from '@/types/pagination.types';
 import type {
   GoodsReceiptEquipment,
   GoodsReceiptEquipmentDetail,
@@ -9,7 +9,7 @@ import type {
   GoodsReceiptEquipmentBillingPayload,
   GoodsReceiptEquipmentPaymentPayload,
   GoodsTransactionDetailEquipment,
-} from '@/@types/goods-receipt-equipment.types';
+} from '@/types/goods-receipt-equipment.types';
 import { apiClient } from '@/lib/api/client';
 import { buildLaravelPaginationQuery } from '@/lib/api/pagination';
 import { ApiResponseError, ApiValidationError, type LaravelApiResponse, ensureSuccess, toPaginatedResult } from '@/lib/api/response';

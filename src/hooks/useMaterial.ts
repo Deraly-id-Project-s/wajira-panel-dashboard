@@ -1,7 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { getMaterials, getMaterialById, importMaterial, createMaterial, updateMaterial, deleteMaterial, exportMaterial } from '@/services/material.service';
-import type { PaginationParams } from '@/@types/pagination.types';
-import type { MaterialPayload } from '@/@types/material.types';
+import type { PaginationParams } from '@/types/pagination.types';
+import type { MaterialPayload } from '@/types/material.types';
 
 export function useMaterials(params: PaginationParams & { search?: string; has_transaction?: boolean; sort_order?: 'asc' | 'desc' } = { page: 1, perPage: 25 }) {
     return useQuery({

@@ -2,7 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Upload, FileText, X } from 'lucide-react';
-import type { GoodsIssueEquipment } from '@/@types/goods-issue-equipment.types';
+import type { GoodsIssueEquipment } from '@/types/goods-issue-equipment.types';
 import { toast } from 'sonner';
 
 interface GoodsIssueEquipmentUploadInvoiceModalProps {

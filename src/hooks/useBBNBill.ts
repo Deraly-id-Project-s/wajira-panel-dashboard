@@ -1,11 +1,11 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import type { PaginationParams } from '@/@types/pagination.types';
+import type { PaginationParams } from '@/types/pagination.types';
 import type {
   BBNBillBillingItemPayload,
   BBNBillBillingPayload,
   BBNBillPayload,
   BBNBillVehicleFeePayload,
-} from '@/@types/bbn-bill.types';
+} from '@/types/bbn-bill.types';
 import {
   createBBNBill,
   createBBNBillBilling,

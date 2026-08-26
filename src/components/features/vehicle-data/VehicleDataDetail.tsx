@@ -3,7 +3,7 @@ import { ArrowLeft, Pencil } from 'lucide-react';
 import { format } from 'date-fns';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import type { VehicleData } from '@/@types/vehicle-data.types';
+import type { VehicleData } from '@/types/vehicle-data.types';
 import { formatDateUI } from '@/lib/utils/date';
 
 interface VehicleDataDetailProps {

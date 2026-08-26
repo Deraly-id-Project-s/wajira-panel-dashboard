@@ -4,7 +4,7 @@ import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { PageHeader } from '@/components/ui/page-header';
 import { Button } from '@/components/ui/button';
 import { useRoles, useDeleteRole } from '@/hooks/useRole';
-import { Role } from '@/@types/role.types';
+import { Role } from '@/types/role.types';
 import { toast } from 'sonner';
 import { Plus, MoreVertical, CircleAlert } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';

@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
 import Head from 'next/head';
 import { Search } from 'lucide-react';
-import type { RefundTransactionType } from '@/@types/finance-refund.types';
+import type { RefundTransactionType } from '@/types/finance-refund.types';
 import FinanceRefundTable from '@/components/features/finance-refund/FinanceRefundTable';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { Button } from '@/components/ui/button';

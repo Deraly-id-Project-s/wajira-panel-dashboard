@@ -6,7 +6,7 @@ import { LoadingState } from '@/components/ui/loading-state';
 import { DriverForm } from '@/components/features/driver/DriverForm';
 import { useCompany } from '@/contexts/CompanyContext';
 import { useDriverDetail, useUpdateDriver } from '@/hooks/useDriver';
-import type { DriverPayload } from '@/@types/driver.types';
+import type { DriverPayload } from '@/types/driver.types';
 
 export default function EditDriverPage() {
   const router = useRouter();

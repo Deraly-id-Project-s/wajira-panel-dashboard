@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card } from '@/components/ui/card';
 import { MoneyInput } from '@/components/ui/money-input';
-import type { TarifPayload, Tarif } from '@/@types/tarif.types';
+import type { TarifPayload, Tarif } from '@/types/tarif.types';
 
 export interface TarifFormData {
     distance: string;

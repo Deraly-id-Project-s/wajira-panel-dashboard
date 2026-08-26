@@ -1,5 +1,5 @@
-import type { FinanceRefundListResponse, FinanceRefundQueryParams, FinanceRefundRecord, UpdateFinanceRefundPayload } from '@/@types/finance-refund.types';
-import type { UnitTransactionRefundPayment } from '@/@types/refund.type';
+import type { FinanceRefundListResponse, FinanceRefundQueryParams, FinanceRefundRecord, UpdateFinanceRefundPayload } from '@/types/finance-refund.types';
+import type { UnitTransactionRefundPayment } from '@/types/refund.type';
 import { apiClient } from '@/lib/api/client';
 import { ensureSuccess, LaravelApiResponse } from '@/lib/api/response';
 import { normalizeRefundStatus, normalizeRefundTransactionType } from '@/components/features/refund/refund.utils';

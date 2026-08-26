@@ -1,10 +1,10 @@
 import { Check, ChevronsUpDown, Plus } from 'lucide-react';
 import { useState } from 'react';
 import type { UseFormReturn } from 'react-hook-form';
-import type { Brand } from '@/@types/brand.types';
+import type { Brand } from '@/types/brand.types';
 import { useBrands } from '@/hooks/useBrand';
 import { cn } from '@/lib/utils';
-import type { TypeUnitFormValues } from '@/scheme/type-unit.schema';
+import type { TypeUnitFormValues } from '@/schemas/type-unit.schema';
 import { Button } from '@/components/ui/button';
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
 import { FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';

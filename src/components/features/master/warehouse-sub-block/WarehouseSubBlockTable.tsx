@@ -6,7 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { MoreVertical, Pencil, Plus, Trash, CheckCircle, PowerOff, Power, Upload, Download } from 'lucide-react';
 import { CopyBox } from '@/components/ui/copy-box';
 import type { WarehouseSubBlock } from '@/services/warehouseBlock.service';
-import type { PaginationMeta } from '@/@types/pagination.types';
+import type { PaginationMeta } from '@/types/pagination.types';
 
 interface WarehouseSubBlockTableProps {
   data: WarehouseSubBlock[];

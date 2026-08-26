@@ -4,8 +4,8 @@ import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { MoreVertical, Pencil, Plus, Trash, CheckCircle2, Lock } from 'lucide-react';
-import type { UnitTypePriceVersion } from '@/@types/unit-type-price-version.types';
-import type { PaginationMeta } from '@/@types/pagination.types';
+import type { UnitTypePriceVersion } from '@/types/unit-type-price-version.types';
+import type { PaginationMeta } from '@/types/pagination.types';
 import { Badge } from '@/components/ui/badge';
 import { currenciesFormat } from '@/components/ui/currenciesFormat';
 

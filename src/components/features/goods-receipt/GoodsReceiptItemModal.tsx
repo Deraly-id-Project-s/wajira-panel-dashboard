@@ -10,9 +10,9 @@ import { MoneyInput } from '@/components/ui/money-input';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { SearchableSelect } from '@/components/features/vehicle-data/SearchableSelect';
-import type { GoodsReceiptItem } from '@/@types/goods-receipt.types';
-import type { Material } from '@/@types/material.types';
-import { goodsReceiptItemSchema, type GoodsReceiptItemFormValues } from '@/scheme/goods-receipt.schema';
+import type { GoodsReceiptItem } from '@/types/goods-receipt.types';
+import type { Material } from '@/types/material.types';
+import { goodsReceiptItemSchema, type GoodsReceiptItemFormValues } from '@/schemas/goods-receipt.schema';
 import { formatCurrency } from './goods-receipt.utils';
 
 interface GoodsReceiptItemModalProps {

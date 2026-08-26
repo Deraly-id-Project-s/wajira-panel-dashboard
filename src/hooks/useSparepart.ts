@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { createSparepart, createSparepartCategory, deleteSparepart, getSparepartCategories, getSpareparts, importSparepart, updateSparepart } from '@/services/sparepart.service';
-import type { SparepartPayload } from '@/@types/sparepart.types';
+import type { SparepartPayload } from '@/types/sparepart.types';
 
 export function useSpareparts(companyId?: string | number) {
   return useQuery({

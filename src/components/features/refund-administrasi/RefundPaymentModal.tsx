@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import type { UnitTransactionRefund } from '@/@types/refund.type';
+import type { UnitTransactionRefund } from '@/types/refund.type';
 import { createRefundPaymentSchema, type CreateRefundPaymentFormValues } from '@/schemas/refund.schema';
 import { useCreateRefundPayment } from '@/hooks/useRefundAdministrasi';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';

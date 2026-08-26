@@ -3,8 +3,8 @@ import type {
   MaterialTransactionBillingPayload,
   MaterialTransactionItemPayload,
   MaterialTransactionPayload,
-} from '@/@types/material-transaction.types';
-import type { PaginationParams } from '@/@types/pagination.types';
+} from '@/types/material-transaction.types';
+import type { PaginationParams } from '@/types/pagination.types';
 import {
   createMaterialTransaction,
   createMaterialTransactionBilling,

@@ -33,7 +33,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { useKasHarianDetail, useUpdateKasHarian } from '@/hooks/useKasHarian';
 import { cn } from '@/lib/utils';
-import { getApiErrorMessage } from '@/utils/apiErrorHandler';
+import { getApiErrorMessage } from '@/lib/utils/apiErrorHandler';
 
 const formatDate = (value?: string) => {
   if (!value) return '-';

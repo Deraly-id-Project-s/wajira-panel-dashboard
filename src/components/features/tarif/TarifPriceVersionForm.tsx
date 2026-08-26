@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { MoneyInput } from '@/components/ui/money-input';
 import { LoadingState } from '@/components/ui/loading-state';
-import { TarifPriceVersionSchema, type TarifPriceVersion, type TarifPriceVersionFormValues } from '@/@types/tarif-price-version.types';
+import { TarifPriceVersionSchema, type TarifPriceVersion, type TarifPriceVersionFormValues } from '@/types/tarif-price-version.types';
 
 interface Props { open: boolean; onOpenChange: (open: boolean) => void; initialData?: TarifPriceVersion; onSubmit: (data: TarifPriceVersionFormValues) => void; isSubmitting?: boolean; }
 export function TarifPriceVersionForm({ open, onOpenChange, initialData, onSubmit, isSubmitting }: Props) {

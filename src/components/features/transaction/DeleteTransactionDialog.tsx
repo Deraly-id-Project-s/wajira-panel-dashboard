@@ -4,7 +4,7 @@
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '../../ui/alert-dialog';
 import { useDeleteTransaction } from '@/hooks/useTransaction';
 import { toast } from 'sonner';
-import { Transaction } from '@/@types/transaction.types';
+import { Transaction } from '@/types/transaction.types';
 
 interface Props {
   open: boolean;

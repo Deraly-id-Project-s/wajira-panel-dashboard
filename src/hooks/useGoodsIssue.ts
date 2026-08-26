@@ -5,8 +5,8 @@ import type {
   GoodsIssuePayload,
   GoodsIssuePaymentPayload,
   GoodsIssueUploadInvoicePayload,
-} from '@/@types/goods-issue.types';
-import type { PaginationParams } from '@/@types/pagination.types';
+} from '@/types/goods-issue.types';
+import type { PaginationParams } from '@/types/pagination.types';
 import {
   createGoodsIssue,
   createGoodsIssueBilling,

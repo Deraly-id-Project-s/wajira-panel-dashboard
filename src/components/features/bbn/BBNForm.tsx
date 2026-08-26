@@ -12,7 +12,7 @@ import { Card } from '@/components/ui/card';
 import { useDealers } from '@/hooks/useDealer';
 import { useRegions } from '@/hooks/useRegion';
 import { useCompany } from '@/contexts/CompanyContext';
-import type { BBNPayload, BBN } from '@/@types/bbn.types';
+import type { BBNPayload, BBN } from '@/types/bbn.types';
 
 export interface BBNFormData {
     dealerId: string;

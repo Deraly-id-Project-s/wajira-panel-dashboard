@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import BaseTable, { ColumnDef } from '@/components/ui/base-table';
-import { PenerimaanUnit } from '@/@types/penerimaan-unit.types';
+import { PenerimaanUnit } from '@/types/penerimaan-unit.types';
 import DeletePenerimaanUnitDialog from './DeletePenerimaanUnitDialog';
 import {
   DropdownMenu,

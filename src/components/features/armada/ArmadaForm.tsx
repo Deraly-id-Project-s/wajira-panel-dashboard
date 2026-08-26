@@ -4,8 +4,8 @@ import { useRouter } from 'next/router';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { ARMADA_EQUIPMENT_FIELDS } from '@/@types/armada.types';
-import type { Armada, ArmadaEquipmentField, ArmadaPayload } from '@/@types/armada.types';
+import { ARMADA_EQUIPMENT_FIELDS } from '@/types/armada.types';
+import type { Armada, ArmadaEquipmentField, ArmadaPayload } from '@/types/armada.types';
 
 export interface ArmadaFormData {
   registrationNumber: string;

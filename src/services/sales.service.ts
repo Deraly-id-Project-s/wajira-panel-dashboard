@@ -1,9 +1,9 @@
-import { LaravelPagination } from '@/@types/pagination.types';
+import { LaravelPagination } from '@/types/pagination.types';
 import { apiClient } from '@/lib/api/client';
 import { ensureSuccess, LaravelApiResponse } from '@/lib/api/response';
 import { SalesApiModel, mapSalesDetailToUI, mapSalesToTableItem, mapSalesToUI } from '@/services/sales.mapper';
 import { unitTransactionService } from '@/services/unitTransaction.service';
-import { UnitTransactionDetail } from '@/@types/unit-transaction.types';
+import { UnitTransactionDetail } from '@/types/unit-transaction.types';
 
 const basePath = '/wapi/transaction/unit-transaction/unit-transaction';
 const fallbackBasePath = '/wapi/transaction/unit-transaction';

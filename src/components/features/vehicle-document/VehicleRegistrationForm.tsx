@@ -13,8 +13,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useDealers } from '@/hooks/useDealer';
 import { useRegions } from '@/hooks/useRegion';
 import { useVendorLookup } from '@/hooks/useVehicleData';
-import type { VehicleDataPayload, VehicleType } from '@/@types/vehicle-data.types';
-import type { VehicleRegistrationDetail, VehicleRegistrationPayload } from '@/@types/vehicle-document.types';
+import type { VehicleDataPayload, VehicleType } from '@/types/vehicle-data.types';
+import type { VehicleRegistrationDetail, VehicleRegistrationPayload } from '@/types/vehicle-document.types';
 
 interface Props {
   initialData: VehicleRegistrationDetail;

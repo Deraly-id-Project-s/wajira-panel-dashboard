@@ -1,7 +1,7 @@
-import type { Sparepart, SparepartCategory, SparepartListResponse, SparepartPayload } from '@/@types/sparepart.types';
+import type { Sparepart, SparepartCategory, SparepartListResponse, SparepartPayload } from '@/types/sparepart.types';
 import { apiClient } from '@/lib/api/client';
 import { ApiResponseError, LaravelApiResponse, ensureSuccess } from '@/lib/api/response';
-import type { LaravelPagination } from '@/@types/pagination.types';
+import type { LaravelPagination } from '@/types/pagination.types';
 
 interface SparepartApiModel {
   id: number;

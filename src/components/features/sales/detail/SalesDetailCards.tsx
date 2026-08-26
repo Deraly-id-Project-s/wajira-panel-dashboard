@@ -3,10 +3,10 @@ import { FileText, DollarSign, CreditCard, Calendar, User, Motorbike } from 'luc
 import { SalesItem } from '../sales.data';
 import { useRouter } from 'next/router';
 import { currenciesFormat } from '@/components/ui/currenciesFormat';
-import { getHistoryTotalIdrEquivalent, getHistoryUsdAmount, getHistoryBcaIdrAmount, getHistoryCashIdrAmount } from '@/utils/payment-helpers';
+import { getHistoryTotalIdrEquivalent, getHistoryUsdAmount, getHistoryBcaIdrAmount, getHistoryCashIdrAmount } from '@/lib/utils/payment-helpers';
 import { CopyBox } from '@/components/ui/copy-box';
 import { ReferenceLink } from '@/components/ui/reference-link';
-import { TypeUnit } from '@/@types/type-unit.types';
+import { TypeUnit } from '@/types/type-unit.types';
 
 interface Props {
   data: SalesItem;

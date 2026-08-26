@@ -7,9 +7,9 @@ import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import TransactionForm from '@/components/features/transaction/TransactionForm';
 import { useUpdateTransaction } from '@/hooks/useTransaction';
 import { getTransactionById } from '@/services/transaction.service';
-import { Transaction } from '@/@types/transaction.types';
+import { Transaction } from '@/types/transaction.types';
 import { useCompany } from '@/contexts/CompanyContext';
-import { TransactionFormValues } from '@/scheme/transaction.schema';
+import { TransactionFormValues } from '@/schemas/transaction.schema';
 import { PageHeader } from '@/components/ui/page-header';
 import { LoadingState } from '@/components/ui/loading-state';
 

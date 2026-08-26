@@ -1,11 +1,11 @@
-import type { PaginationParams } from '@/@types/pagination.types';
+import type { PaginationParams } from '@/types/pagination.types';
 import type {
   GoodsIssueEquipment,
   GoodsIssueEquipmentDetail,
   GoodsIssueEquipmentPayload,
   GoodsIssueEquipmentResponse,
   GoodsTransactionDetailEquipment,
-} from '@/@types/goods-issue-equipment.types';
+} from '@/types/goods-issue-equipment.types';
 import { apiClient } from '@/lib/api/client';
 import { buildLaravelPaginationQuery } from '@/lib/api/pagination';
 import { ApiResponseError, ApiValidationError, type LaravelApiResponse, ensureSuccess, toPaginatedResult } from '@/lib/api/response';

@@ -3,7 +3,7 @@ import { Plus, MoreVertical, Upload } from 'lucide-react';
 import BaseTable, { ColumnDef } from '@/components/ui/base-table';
 import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import type { Material } from '@/@types/material.types';
+import type { Material } from '@/types/material.types';
 
 interface MaterialTableProps {
   materials: Material[];

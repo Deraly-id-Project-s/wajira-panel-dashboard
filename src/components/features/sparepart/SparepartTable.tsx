@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { Sparepart } from '@/@types/sparepart.types';
+import { Sparepart } from '@/types/sparepart.types';
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from '@/components/ui/dropdown-menu';
 import { Button } from '@/components/ui/button';
 import { MoreVertical, Plus, Upload } from 'lucide-react';

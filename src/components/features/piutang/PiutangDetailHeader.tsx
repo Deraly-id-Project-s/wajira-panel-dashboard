@@ -1,5 +1,5 @@
 import { Button } from '@/components/ui/button';
-import { Piutang } from '@/@types/piutang.types';
+import { Piutang } from '@/types/piutang.types';
 import { CalendarDays, FileText, ListChecks, User, ChevronLeft } from 'lucide-react';
 import { useRouter } from 'next/router';
 import { formatCurrency } from "@/lib/utils/currency"

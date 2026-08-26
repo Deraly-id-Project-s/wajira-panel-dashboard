@@ -1,10 +1,10 @@
-import { PaginationParams } from '@/@types/pagination.types';
+import { PaginationParams } from '@/types/pagination.types';
 import {
   CreateUnitTransactionItemPayload,
   UnitTransactionItem,
   UnitTransactionItemListResponse,
   UpdateUnitTransactionItemPayload,
-} from '@/@types/unit-transaction.types';
+} from '@/types/unit-transaction.types';
 import { apiClient } from '@/lib/api/client';
 import {
   ensureSuccess,

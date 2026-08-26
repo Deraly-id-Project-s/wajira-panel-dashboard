@@ -6,8 +6,8 @@ import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip
 import { Badge } from '@/components/ui/badge';
 import { CheckCircle2, Lock, MoreVertical, Pencil, Plus, Trash } from 'lucide-react';
 import { currenciesFormat } from '@/components/ui/currenciesFormat';
-import type { PaginationMeta } from '@/@types/pagination.types';
-import type { TarifPriceVersion } from '@/@types/tarif-price-version.types';
+import type { PaginationMeta } from '@/types/pagination.types';
+import type { TarifPriceVersion } from '@/types/tarif-price-version.types';
 import { formatDate } from '@/lib/utils/format';
 
 interface Props {

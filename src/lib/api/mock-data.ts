@@ -3,7 +3,7 @@
  * Data dummy yang structure-nya sesuai dengan expected API response
  */
 
-import { DashboardApiResponse } from '@/@types/dashboard';
+import { DashboardApiResponse } from '@/types/dashboard';
 
 export const MOCK_DASHBOARD_DATA: DashboardApiResponse = {
   kpis: [

@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import type { WithholdingTaxReportListParams, UpdateWithholdingTaxReportPayload } from '@/@types/laporan-bukti-potong.types';
+import type { WithholdingTaxReportListParams, UpdateWithholdingTaxReportPayload } from '@/types/laporan-bukti-potong.types';
 import {
   getWithholdingTaxReports,
   getWithholdingTaxReportById,

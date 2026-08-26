@@ -2,7 +2,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   CreateUnitTransactionItemPayload,
   UpdateUnitTransactionItemPayload,
-} from '@/@types/unit-transaction.types';
+} from '@/types/unit-transaction.types';
 import { useCompany } from '@/contexts/CompanyContext';
 import { companyQueryKeys } from '@/lib/query/company-key';
 import { unitTransactionItemService } from '@/services/unitTransactionItem.service';

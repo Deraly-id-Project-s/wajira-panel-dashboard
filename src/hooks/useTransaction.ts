@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import * as service from '@/services/transaction.service';
-import { Transaction, CreateTransactionRequest } from '@/@types/transaction.types';
+import { Transaction, CreateTransactionRequest } from '@/types/transaction.types';
 
 const LIVE_REFETCH_INTERVAL = 10_000;
 

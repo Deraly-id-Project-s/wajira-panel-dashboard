@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { useRouter } from 'next/router';
 import { toast } from 'sonner';
-import type { OrderList, OrderListStatus } from '@/@types/order-list.types';
+import type { OrderList, OrderListStatus } from '@/types/order-list.types';
 import { OrderListDeleteDialog } from '@/components/features/order-list/OrderListDeleteDialog';
 import { OrderListTable } from '@/components/features/order-list/OrderListTable';
 import { OrderStatusConfirmDialog } from '@/components/features/order-list/OrderStatusConfirmDialog';

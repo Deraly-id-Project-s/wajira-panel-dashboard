@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { CreateUnitItemDetailPayload, UpdateUnitItemDetailPayload } from '@/@types/unit-transaction.types';
+import { CreateUnitItemDetailPayload, UpdateUnitItemDetailPayload } from '@/types/unit-transaction.types';
 import { unitItemDetailService } from '@/services/unitItemDetail.service';
 
 export const useUnitTransactionItemById = (unitItemId?: string) => {

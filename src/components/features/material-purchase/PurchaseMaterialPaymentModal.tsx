@@ -10,9 +10,9 @@ import { MoneyInput } from '@/components/ui/money-input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { DatePicker } from '@/components/ui/date-picker';
-import type { Kas } from '@/@types/kas.types';
-import type { MaterialTransaction } from '@/@types/material-transaction.types';
-import { materialTransactionBillingSchema, type MaterialTransactionBillingFormValues } from '@/scheme/material-transaction.schema';
+import type { Kas } from '@/types/kas.types';
+import type { MaterialTransaction } from '@/types/material-transaction.types';
+import { materialTransactionBillingSchema, type MaterialTransactionBillingFormValues } from '@/schemas/material-transaction.schema';
 
 interface PurchaseMaterialPaymentModalProps {
   open: boolean;

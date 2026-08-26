@@ -6,7 +6,7 @@ import { useCreateFinanceAsset } from '@/hooks/useFinanceAsset';
 import { useRouter } from 'next/router';
 import { toast } from 'sonner';
 import { useCompany } from '@/contexts/CompanyContext';
-import type { FinanceAssetPayload } from '@/@types/finance-asset.types';
+import type { FinanceAssetPayload } from '@/types/finance-asset.types';
 
 export default function FinanceAssetCreatePage() {
     const router = useRouter();

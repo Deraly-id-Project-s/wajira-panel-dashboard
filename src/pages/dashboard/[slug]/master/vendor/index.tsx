@@ -10,7 +10,7 @@ import { toast } from 'sonner';
 import { useVendors, useCreateVendor, useUpdateVendor, useDeleteVendor, useImportVendor, useExportVendor } from '@/hooks/useVendor';
 import { useCompany } from '@/contexts/CompanyContext';
 import { usePermissionGuard } from '@/hooks/usePermissionGuard';
-import type { Vendor } from '@/@types/vendor.types';
+import type { Vendor } from '@/types/vendor.types';
 
 export default function VendorPage() {
   const { companyId: localCompanyId } = useCompany();

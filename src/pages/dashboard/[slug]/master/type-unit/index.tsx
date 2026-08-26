@@ -8,7 +8,7 @@ import { useTypeUnits, useDeleteTypeUnit, useImportTypeUnit } from '@/hooks/useT
 import { TypeUnitTable } from '@/components/features/type-unit/TypeUnitTable';
 import { DeleteTypeUnitDialog } from '@/components/features/type-unit/DeleteTypeUnitDialog';
 import { DataImportModal } from '@/components/features/master-data/DataImportModal';
-import type { TypeUnit } from '@/@types/type-unit.types';
+import type { TypeUnit } from '@/types/type-unit.types';
 import { useCompany } from '@/contexts/CompanyContext';
 import { usePermissionGuard } from '@/hooks/usePermissionGuard';
 import { LoadingState } from '@/components/ui/loading-state';

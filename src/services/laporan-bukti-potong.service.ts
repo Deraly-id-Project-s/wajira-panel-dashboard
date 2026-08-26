@@ -3,7 +3,7 @@ import type {
   WithholdingTaxReportListParams,
   WithholdingTaxReportListResponse,
   UpdateWithholdingTaxReportPayload,
-} from '@/@types/laporan-bukti-potong.types';
+} from '@/types/laporan-bukti-potong.types';
 
 import { apiClient } from '@/lib/api/client';
 import { buildLaravelPaginationQuery } from '@/lib/api/pagination';

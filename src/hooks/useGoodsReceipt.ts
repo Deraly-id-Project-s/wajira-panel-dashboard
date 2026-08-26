@@ -5,8 +5,8 @@ import type {
   GoodsReceiptPayload,
   GoodsReceiptPaymentPayload,
   GoodsReceiptUploadInvoicePayload,
-} from '@/@types/goods-receipt.types';
-import type { PaginationParams } from '@/@types/pagination.types';
+} from '@/types/goods-receipt.types';
+import type { PaginationParams } from '@/types/pagination.types';
 import {
   createGoodsReceipt,
   createGoodsReceiptBilling,

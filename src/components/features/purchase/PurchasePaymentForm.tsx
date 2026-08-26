@@ -4,7 +4,7 @@ import { cn } from '@/lib/utils';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { UnitBilling, UnitBillingHistory } from '@/@types/unit-billing.types';
+import { UnitBilling, UnitBillingHistory } from '@/types/unit-billing.types';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { MoneyInput } from '@/components/ui/money-input';
@@ -17,7 +17,7 @@ import {
     getHistoryCashIdrAmount,
     getHistoryUsdAmount,
     getHistoryTotalIdrEquivalent
-} from '@/utils/payment-helpers';
+} from '@/lib/utils/payment-helpers';
 import {
     AlertDialog,
     AlertDialogAction,

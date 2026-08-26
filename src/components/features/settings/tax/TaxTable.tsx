@@ -5,7 +5,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { MoreVertical, Pencil, Plus, Trash, Lock, Play, Eye } from 'lucide-react';
 import type { Tax } from '@/services/tax.service';
-import type { PaginationMeta } from '@/@types/pagination.types';
+import type { PaginationMeta } from '@/types/pagination.types';
 import { CopyBox } from '@/components/ui/copy-box';
 
 interface TaxTableProps {

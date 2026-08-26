@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Search } from 'lucide-react';
-import type { UJDriverItem, CreateUJDriverPaymentPayload } from '@/@types/uj-driver.types';
+import type { UJDriverItem, CreateUJDriverPaymentPayload } from '@/types/uj-driver.types';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';

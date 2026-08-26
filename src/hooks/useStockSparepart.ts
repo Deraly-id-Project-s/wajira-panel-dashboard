@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { getStockSpareparts } from '@/services/stock-sparepart.service';
-import type { PaginationParams } from '@/@types/pagination.types';
+import type { PaginationParams } from '@/types/pagination.types';
 
 export const useStockSpareparts = (
   companyId: number | string | null,

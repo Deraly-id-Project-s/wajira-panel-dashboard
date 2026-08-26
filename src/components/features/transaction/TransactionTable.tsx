@@ -1,4 +1,4 @@
-import { Transaction } from '@/@types/transaction.types';
+import { Transaction } from '@/types/transaction.types';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { MoreVertical, ArrowUpDown, ArrowUp, ArrowDown, Search } from 'lucide-react';
 import { Button } from '@/components/ui/button';

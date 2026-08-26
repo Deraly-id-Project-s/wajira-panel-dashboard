@@ -4,7 +4,7 @@ import { format } from 'date-fns';
 import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import BaseTable, { ColumnDef } from '@/components/ui/base-table';
-import type { DoEkspedisi } from '@/@types/do-ekspedisi.types';
+import type { DoEkspedisi } from '@/types/do-ekspedisi.types';
 import { CopyBox } from '@/components/ui/copy-box';
 import { formatDate } from '@/lib/utils/format';
 import { useRouter } from 'next/router';

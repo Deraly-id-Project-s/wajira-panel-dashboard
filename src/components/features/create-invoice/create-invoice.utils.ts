@@ -6,7 +6,7 @@ import type {
   DoInvoiceExpedition,
   DoInvoiceTableRow,
   InvoiceProcessDraft,
-} from '@/@types/create-invoice.types';
+} from '@/types/create-invoice.types';
 
 const PROCESS_DRAFT_STORAGE_KEY = 'wajira_do_invoice_process_drafts_v2';
 

@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import type { DocumentTemplateListParams, DocumentTemplatePayload } from '@/@types/document-template.types';
+import type { DocumentTemplateListParams, DocumentTemplatePayload } from '@/types/document-template.types';
 import { createDocumentTemplate, deleteDocumentTemplate, getDocumentTemplateById, getDocumentTemplates, updateDocumentTemplate } from '@/services/document-template.service';
 
 const key = 'document-templates';

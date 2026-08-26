@@ -3,7 +3,7 @@ import { useQueries } from '@tanstack/react-query';
 import { useRouter } from 'next/router';
 import { toast } from 'sonner';
 
-import type { CreateInvoiceProcessValues } from '@/@types/create-invoice.types';
+import type { CreateInvoiceProcessValues } from '@/types/create-invoice.types';
 import { CreateInvoiceProcessForm } from '@/components/features/create-invoice/CreateInvoiceProcessForm';
 import { buildDetailRows, buildProcessDefaults, createBulkProcessDraftPayload, saveInvoiceProcessDraft } from '@/components/features/create-invoice/create-invoice.utils';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
@@ -19,7 +19,7 @@ const parseIds = (value: string | string[] | undefined) => {
 
 const isDefined = <T,>(value: T | undefined | null): value is T => value != null;
 
-import { getApiErrorMessage } from '@/utils/apiErrorHandler';
+import { getApiErrorMessage } from '@/lib/utils/apiErrorHandler';
 import { LoadingState } from '@/components/ui/loading-state';
 
 export default function ProcessCreateInvoicePage() {

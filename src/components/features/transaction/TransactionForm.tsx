@@ -4,7 +4,7 @@ import { format } from 'date-fns';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { ArrowDownLeft, ArrowUpRight, Banknote, Landmark, Save, WalletCards } from 'lucide-react';
-import { transactionSchema, type TransactionFormValues } from '@/scheme/transaction.schema';
+import { transactionSchema, type TransactionFormValues } from '@/schemas/transaction.schema';
 import { Button } from '@/components/ui/button';
 import { DatePicker } from '@/components/ui/date-picker';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';

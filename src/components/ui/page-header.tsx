@@ -14,6 +14,8 @@ export interface PageHeaderProps {
   title: React.ReactNode;
   /** Subtitle or metadata (e.g. badges, codes) */
   subtitle?: React.ReactNode;
+  /** Description (alias for subtitle for backward compatibility) */
+  description?: React.ReactNode;
   /** Callback when back button is clicked. If not provided, back button is hidden. */
   onBack?: () => void;
   /** Action buttons rendered on the right side */
@@ -28,11 +30,13 @@ export function PageHeader({
   breadcrumbs,
   title,
   subtitle,
+  description,
   onBack,
   actions,
   className = '',
   hideOnPrint = true,
 }: PageHeaderProps) {
+  const displaySubtitle = subtitle ?? description;
   return (
     <div className={`space-y-6 ${hideOnPrint ? 'print:hidden' : ''} ${className}`}>
       {/* BREADCRUMB HEADER */}
@@ -68,9 +72,9 @@ export function PageHeader({
           )}
           <div className="space-y-1">
             <h1 className="text-2xl font-semibold text-slate-900">{title}</h1>
-            {subtitle && (
+            {displaySubtitle && (
               <div className="flex items-center gap-2 text-sm text-muted-foreground flex-wrap">
-                {subtitle}
+                {displaySubtitle}
               </div>
             )}
           </div>

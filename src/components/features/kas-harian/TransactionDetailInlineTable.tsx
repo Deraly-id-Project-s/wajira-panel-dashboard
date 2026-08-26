@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 import { MoreVertical, Plus, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
-import type { FinanceBillingItem } from '@/@types/finance-billing.types';
+import type { FinanceBillingItem } from '@/types/finance-billing.types';
 import { useCreateFinanceBillingItem, useDeleteFinanceBillingItem, useUpdateFinanceBillingItem } from '@/hooks/useFinanceBilling';
 import { formatCurrency } from '@/lib/utils/currency';
 import { Button } from '@/components/ui/button';
@@ -10,7 +10,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { Input } from '@/components/ui/input';
 import { MoneyInput } from '@/components/ui/money-input';
 import BaseTable, { ColumnDef } from '@/components/ui/base-table';
-import { getApiErrorMessage } from '@/utils/apiErrorHandler';
+import { getApiErrorMessage } from '@/lib/utils/apiErrorHandler';
 
 type EditableRowId = number | 'new';
 

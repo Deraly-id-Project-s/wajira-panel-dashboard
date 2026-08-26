@@ -1,5 +1,5 @@
-import type { BBN, BBNListResponse, BBNPayload } from '@/@types/bbn.types';
-import type { PaginationParams } from '@/@types/pagination.types';
+import type { BBN, BBNListResponse, BBNPayload } from '@/types/bbn.types';
+import type { PaginationParams } from '@/types/pagination.types';
 import { apiClient } from '@/lib/api/client';
 import { ApiResponseError, LaravelApiResponse, ensureSuccess, ApiValidationError } from '@/lib/api/response';
 

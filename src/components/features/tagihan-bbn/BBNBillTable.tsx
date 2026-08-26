@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import { MoreVertical, Plus } from 'lucide-react';
-import type { BBNBill } from '@/@types/bbn-bill.types';
+import type { BBNBill } from '@/types/bbn-bill.types';
 import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import BaseTable, { ColumnDef } from '@/components/ui/base-table';

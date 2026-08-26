@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import type { PaginationParams } from '@/@types/pagination.types';
-import type { GoodsIssueEquipmentPayload } from '@/@types/goods-issue-equipment.types';
+import type { PaginationParams } from '@/types/pagination.types';
+import type { GoodsIssueEquipmentPayload } from '@/types/goods-issue-equipment.types';
 import {
   getGoodsIssueEquipments,
   getGoodsIssueEquipmentById,

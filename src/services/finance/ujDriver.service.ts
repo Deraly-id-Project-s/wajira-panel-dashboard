@@ -3,7 +3,7 @@ import type {
   CreateUJDriverPaymentPayload,
   UJDriverFilterParams,
   UJDriverPaginationResponse
-} from '@/@types/uj-driver.types';
+} from '@/types/uj-driver.types';
 import { apiClient } from '@/lib/api/client';
 import { ApiValidationError, ensureSuccess, type LaravelApiResponse } from '@/lib/api/response';
 

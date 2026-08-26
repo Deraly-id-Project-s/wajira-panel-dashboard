@@ -1,12 +1,12 @@
-import type { Driver } from '@/@types/driver.types';
-import type { Armada } from '@/@types/armada.types';
+import type { Driver } from '@/types/driver.types';
+import type { Armada } from '@/types/armada.types';
 import type {
   MaintenanceItem,
   MaintenanceDetail,
   MaintenanceVehicleEquipment,
   MaintenanceListParams,
   MaintenanceResponse,
-} from '@/@types/maintenance.types';
+} from '@/types/maintenance.types';
 import { apiClient } from '@/lib/api/client';
 import { buildLaravelPaginationQuery } from '@/lib/api/pagination';
 import { type LaravelApiResponse, ensureSuccess, toPaginatedResult } from '@/lib/api/response';

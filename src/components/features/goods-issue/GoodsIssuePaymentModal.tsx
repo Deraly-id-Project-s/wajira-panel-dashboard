@@ -11,9 +11,9 @@ import { MoneyInput } from '@/components/ui/money-input';
 import { Textarea } from '@/components/ui/textarea';
 import { DatePicker } from '@/components/ui/date-picker';
 import { SearchableSelect } from '@/components/features/vehicle-data/SearchableSelect';
-import type { GoodsIssue } from '@/@types/goods-issue.types';
-import type { Kas } from '@/@types/kas.types';
-import { goodsIssuePaymentSchema, type GoodsIssuePaymentFormValues } from '@/scheme/goods-issue.schema';
+import type { GoodsIssue } from '@/types/goods-issue.types';
+import type { Kas } from '@/types/kas.types';
+import { goodsIssuePaymentSchema, type GoodsIssuePaymentFormValues } from '@/schemas/goods-issue.schema';
 import { formatCurrency, getPaymentMethodLabel } from './goods-issue.utils';
 
 interface GoodsIssuePaymentModalProps {

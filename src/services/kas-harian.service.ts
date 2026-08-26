@@ -1,4 +1,4 @@
-import { KasHarian } from "@/@types/kas-harian.types"
+import { KasHarian } from "@/types/kas-harian.types"
 
 let kasHarianDB: KasHarian[] = [
     {

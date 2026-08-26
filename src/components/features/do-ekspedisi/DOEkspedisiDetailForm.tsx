@@ -8,7 +8,7 @@ import { Label } from '@/components/ui/label';
 import { MoneyInput } from '@/components/ui/money-input';
 import { Textarea } from '@/components/ui/textarea';
 import { SearchableSelect, type SearchableSelectOption } from '@/components/features/vehicle-data/SearchableSelect';
-import type { DoEkspedisiItem } from '@/@types/do-ekspedisi.types';
+import type { DoEkspedisiItem } from '@/types/do-ekspedisi.types';
 import { formatCurrency } from '@/lib/utils/currency';
 
 interface DOEkspedisiDestinationFormData {

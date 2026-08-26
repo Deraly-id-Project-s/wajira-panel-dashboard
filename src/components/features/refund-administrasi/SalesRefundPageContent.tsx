@@ -1,7 +1,7 @@
 import { useCallback, useMemo, useState } from 'react';
 import { useRouter } from 'next/router';
 import { ArrowLeft, ChevronRight, Eye, MoreVertical, Pencil, Plus, Trash2 } from 'lucide-react';
-import type { UnitTransactionRefund } from '@/@types/refund.type';
+import type { UnitTransactionRefund } from '@/types/refund.type';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';

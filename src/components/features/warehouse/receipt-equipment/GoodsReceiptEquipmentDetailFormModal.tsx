@@ -9,8 +9,8 @@ import { Input } from '@/components/ui/input';
 import { SearchableSelect } from '@/components/features/vehicle-data/SearchableSelect';
 import { useVehicleEquipments } from '@/hooks/useVehicleEquipment';
 import { useDebouncedValue } from '@/hooks/useDebouncedValue';
-import type { GoodsTransactionDetailEquipment } from '@/@types/goods-receipt-equipment.types';
-import { goodsReceiptEquipmentItemSchema, type GoodsReceiptEquipmentItemFormValues } from '@/scheme/goods-receipt-equipment.schema';
+import type { GoodsTransactionDetailEquipment } from '@/types/goods-receipt-equipment.types';
+import { goodsReceiptEquipmentItemSchema, type GoodsReceiptEquipmentItemFormValues } from '@/schemas/goods-receipt-equipment.schema';
 
 interface GoodsReceiptEquipmentDetailFormModalProps {
   open: boolean;

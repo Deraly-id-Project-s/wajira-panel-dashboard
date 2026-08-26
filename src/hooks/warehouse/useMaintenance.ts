@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
-import type { MaintenanceListParams } from '@/@types/maintenance.types';
+import type { MaintenanceListParams } from '@/types/maintenance.types';
 import { getMaintenanceList } from '@/services/warehouse/maintenance.service';
 
 export const warehouseMaintenanceKeys = {

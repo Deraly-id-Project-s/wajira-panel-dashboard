@@ -1,4 +1,4 @@
-import { HutangPayment } from "@/@types/hutang.types"
+import { HutangPayment } from "@/types/hutang.types"
 import { useTableSort } from "@/hooks/useTableSort"
 import { SortableHeader } from "@/components/ui/sortable-header"
 import {

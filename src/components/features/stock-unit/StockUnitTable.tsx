@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import { StockStatus, StockUnit } from '@/@types/stock-unit.types';
+import { StockStatus, StockUnit } from '@/types/stock-unit.types';
 import BaseTable, { ColumnDef } from '@/components/ui/base-table';
 import { cn } from '@/lib/utils';
 import { CopyBox } from '@/components/ui/copy-box';

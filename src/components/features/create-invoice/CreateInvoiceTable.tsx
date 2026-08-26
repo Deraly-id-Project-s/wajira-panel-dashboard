@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { CalendarDays, Check, Eye, MoreVertical, Plus, Printer, RefreshCw, Search, Trash2 } from 'lucide-react';
-import type { DoInvoiceTableRow } from '@/@types/create-invoice.types';
+import type { DoInvoiceTableRow } from '@/types/create-invoice.types';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';

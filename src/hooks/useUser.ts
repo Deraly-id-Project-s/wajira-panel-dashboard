@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { getUsers, createUser, updateUser, deleteUser, fetchUsersOptions, type UserOption, activateUser, deactivateUser, assignRole, revokeRole } from '@/services/user.service';
-import { CreateUserRequest, UpdateUserRequest, UserListParams } from '@/@types/user.types';
+import { CreateUserRequest, UpdateUserRequest, UserListParams } from '@/types/user.types';
 
 // Strict Query Keys
 export const userKeys = {

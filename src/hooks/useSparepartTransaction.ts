@@ -1,12 +1,12 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { sparepartTransactionService } from '@/services/sparepart-transaction.service';
-import { PaginationParams } from '@/@types/pagination.types';
+import { PaginationParams } from '@/types/pagination.types';
 import {
   CreateSparepartTransactionPayload,
   UpdateSparepartTransactionPayload,
   CreateSparepartTransactionBillingHistoryPayload,
   UpdateSparepartTransactionBillingHistoryPayload,
-} from '@/@types/sparepart-transaction.types';
+} from '@/types/sparepart-transaction.types';
 
 export const sparepartTransactionKeys = {
   all: ['sparepart-transactions'] as const,

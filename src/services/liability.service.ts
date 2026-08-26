@@ -1,6 +1,6 @@
 import { apiClient } from '@/lib/api/client';
 import { ensureSuccess, LaravelApiResponse, toPaginatedResult } from '@/lib/api/response';
-import type { LaravelPagination } from '@/@types/pagination.types';
+import type { LaravelPagination } from '@/types/pagination.types';
 import type {
   CreateLiabilityPaymentPayload,
   LiabilityDetail,

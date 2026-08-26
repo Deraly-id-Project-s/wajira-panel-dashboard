@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
-import type { KasHarianListItem } from '@/@types/kas-harian.types';
-import type { PaginationMeta } from '@/@types/pagination.types';
+import type { KasHarianListItem } from '@/types/kas-harian.types';
+import type { PaginationMeta } from '@/types/pagination.types';
 import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { currenciesFormat } from '@/components/ui/currenciesFormat';

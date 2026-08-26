@@ -6,7 +6,7 @@ import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { PageHeader } from '@/components/ui/page-header';
 import BaseTable, { ColumnDef } from '@/components/ui/base-table';
 import { useRefundList } from '@/hooks/useRefundAdministrasi';
-import { UnitTransactionRefund } from '@/@types/refund.type';
+import { UnitTransactionRefund } from '@/types/refund.type';
 import { RefundStatusBadge } from '@/components/features/refund/RefundStatusBadge';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, ChevronRight, Eye, MoreVertical, Pencil, Plus } from 'lucide-react';

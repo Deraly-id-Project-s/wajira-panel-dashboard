@@ -1,11 +1,11 @@
-import { PaginationParams } from '@/@types/pagination.types';
+import { PaginationParams } from '@/types/pagination.types';
 import {
   CreateUnitItemDetailPayload,
   UnitTransactionItemDetail,
   UnitTransactionItemDetailListResponse,
   UnitTransactionItemSummary,
   UpdateUnitItemDetailPayload,
-} from '@/@types/unit-transaction.types';
+} from '@/types/unit-transaction.types';
 import { apiClient } from '@/lib/api/client';
 import { ensureSuccess, LaravelApiResponse, toPaginatedResult } from '@/lib/api/response';
 

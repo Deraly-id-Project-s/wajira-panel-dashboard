@@ -11,7 +11,7 @@ import { FileInput } from '@/components/ui/file-input';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { formatDate } from '@/lib/utils/format';
 import { useDoDetailResourceMutation } from '@/hooks/useDoEkspedisi';
-import type { DoEkspedisi, DoEkspedisiDriverNote } from '@/@types/do-ekspedisi.types';
+import type { DoEkspedisi, DoEkspedisiDriverNote } from '@/types/do-ekspedisi.types';
 import { ImagePreview } from '@/components/ui/image-preview';
 
 interface DOEkspedisiDriverNotesProps {

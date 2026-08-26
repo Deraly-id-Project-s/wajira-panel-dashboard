@@ -1,5 +1,5 @@
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import type { FinanceBillingItemPayload, FinanceBillingPayload } from '@/@types/finance-billing.types';
+import type { FinanceBillingItemPayload, FinanceBillingPayload } from '@/types/finance-billing.types';
 import { createFinanceBilling, createFinanceBillingItem, deleteFinanceBilling, deleteFinanceBillingItem, fetchFinanceBilling, fetchFinanceBillingDetail, updateFinanceBilling, updateFinanceBillingItem } from '@/services/financeBilling.service';
 
 const FINANCE_BILLING_KEY = 'finance-billing';

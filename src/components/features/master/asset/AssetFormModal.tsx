@@ -4,7 +4,7 @@ import { FormDialog } from '@/components/ui/form-dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { AssetType } from '@/@types/asset.types';
+import { AssetType } from '@/types/asset.types';
 
 export interface AssetFormData {
     company_id: number;

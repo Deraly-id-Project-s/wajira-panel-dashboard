@@ -1,4 +1,4 @@
-import type { CreateSupplierFormValues } from '@/scheme/supplier.schema';
+import type { CreateSupplierFormValues } from '@/schemas/supplier.schema';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import RequiredMark from '@/components/ui/required-mark';

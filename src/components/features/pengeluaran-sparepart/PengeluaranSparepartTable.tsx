@@ -3,8 +3,8 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import BaseTable, { ColumnDef } from '@/components/ui/base-table';
-import { WarehouseActivity } from '@/@types/warehouse.types';
-import { PaginationMeta } from '@/@types/pagination.types';
+import { WarehouseActivity } from '@/types/warehouse.types';
+import { PaginationMeta } from '@/types/pagination.types';
 import { MoreVertical, Pencil, Eye } from 'lucide-react';
 import {
   DropdownMenu,

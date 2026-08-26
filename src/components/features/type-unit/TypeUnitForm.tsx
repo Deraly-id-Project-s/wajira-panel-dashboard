@@ -1,6 +1,6 @@
 import { Save } from 'lucide-react';
 import type { UseFormReturn } from 'react-hook-form';
-import type { TypeUnitFormValues } from '@/scheme/type-unit.schema';
+import type { TypeUnitFormValues } from '@/schemas/type-unit.schema';
 import { Button } from '@/components/ui/button';
 import { Form } from '@/components/ui/form';
 import { TypeUnitFormFields } from './TypeUnitFormFields';

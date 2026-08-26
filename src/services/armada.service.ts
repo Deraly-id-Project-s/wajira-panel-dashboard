@@ -1,6 +1,6 @@
-import { ARMADA_EQUIPMENT_FIELDS } from '@/@types/armada.types';
-import type { Armada, ArmadaEquipment, ArmadaListParams, ArmadaListResponse, ArmadaPayload } from '@/@types/armada.types';
-import type { PaginationParams } from '@/@types/pagination.types';
+import { ARMADA_EQUIPMENT_FIELDS } from '@/types/armada.types';
+import type { Armada, ArmadaEquipment, ArmadaListParams, ArmadaListResponse, ArmadaPayload } from '@/types/armada.types';
+import type { PaginationParams } from '@/types/pagination.types';
 import { apiClient } from '@/lib/api/client';
 import { buildLaravelPaginationQuery } from '@/lib/api/pagination';
 import { ApiResponseError, ApiValidationError, LaravelApiResponse, ensureSuccess, toPaginatedResult } from '@/lib/api/response';

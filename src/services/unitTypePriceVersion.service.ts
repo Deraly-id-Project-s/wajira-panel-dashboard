@@ -1,6 +1,6 @@
 import { apiClient } from '@/lib/api/client';
 import { ensureSuccess, type LaravelApiResponse } from '@/lib/api/response';
-import type { UnitTypePriceVersion, UnitTypePriceVersionFilterParams } from '@/@types/unit-type-price-version.types';
+import type { UnitTypePriceVersion, UnitTypePriceVersionFilterParams } from '@/types/unit-type-price-version.types';
 
 const basePath = '/wapi/master-data/unit-type-price-version';
 

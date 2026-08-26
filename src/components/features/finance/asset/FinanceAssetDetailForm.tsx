@@ -5,7 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { MoneyInput } from '@/components/ui/money-input';
 import { Badge } from '@/components/ui/badge';
-import type { FinanceAsset } from '@/@types/finance-asset.types';
+import type { FinanceAsset } from '@/types/finance-asset.types';
 import { ArrowLeft } from 'lucide-react';
 
 interface FinanceAssetDetailFormProps {

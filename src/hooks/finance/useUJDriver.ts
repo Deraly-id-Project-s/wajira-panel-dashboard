@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import type { UJDriverFilterParams, CreateUJDriverPaymentPayload } from '@/@types/uj-driver.types';
+import type { UJDriverFilterParams, CreateUJDriverPaymentPayload } from '@/types/uj-driver.types';
 import { getUJDriverList, createUJDriverBillingPayment } from '@/services/finance/ujDriver.service';
 
 const UJ_DRIVER_KEYS = {

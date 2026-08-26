@@ -1,6 +1,6 @@
 import { useState } from "react"
 import { PiutangService } from "@/services/piutang.service"
-import { PiutangPayment } from "@/@types/piutang.types"
+import { PiutangPayment } from "@/types/piutang.types"
 
 export function usePiutang() {
     const [data, setData] = useState(

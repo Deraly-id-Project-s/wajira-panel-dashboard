@@ -8,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useCompany } from '@/contexts/CompanyContext';
 import { useSparepartTransactions } from '@/hooks/useSparepartTransaction';
 import { useCreateSparepartRefund, useUpdateSparepartRefund } from '@/hooks/useSparepartRefund';
-import type { SparepartTransactionRefund } from '@/@types/sparepart-refund.types';
+import type { SparepartTransactionRefund } from '@/types/sparepart-refund.types';
 import { toast } from 'sonner';
 
 interface Values { sparepart_transaction_id: string; amount: number; payment_date: string; note: string; }

@@ -1,6 +1,6 @@
 import React from 'react';
 import { format } from 'date-fns';
-import type { DoEkspedisi } from '@/@types/do-ekspedisi.types';
+import type { DoEkspedisi } from '@/types/do-ekspedisi.types';
 
 interface Props {
   data: DoEkspedisi;

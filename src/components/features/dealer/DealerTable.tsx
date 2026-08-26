@@ -3,7 +3,7 @@ import BaseTable, { ColumnDef } from '@/components/ui/base-table';
 import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Upload } from 'lucide-react';
-import type { Dealer } from '@/@types/dealer.types';
+import type { Dealer } from '@/types/dealer.types';
 
 interface DealerTableProps {
     dealers: Dealer[];

@@ -2,7 +2,7 @@ import * as React from 'react';
 import { Search } from 'lucide-react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Controller, useForm } from 'react-hook-form';
-import type { DoEkspedisi } from '@/@types/do-ekspedisi.types';
+import type { DoEkspedisi } from '@/types/do-ekspedisi.types';
 import { SearchableSelect, type SearchableSelectOption } from '@/components/features/vehicle-data/SearchableSelect';
 import { Button } from '@/components/ui/button';
 import { DatePicker } from '@/components/ui/date-picker';

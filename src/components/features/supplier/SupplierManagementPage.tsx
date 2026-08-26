@@ -1,7 +1,7 @@
 import { useDeferredValue, useMemo, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import type { Supplier as ApiSupplier } from '@/@types/supplier.types';
+import type { Supplier as ApiSupplier } from '@/types/supplier.types';
 import { DataImportModal } from '@/components/features/master-data/DataImportModal';
 import { SupplierFormModal } from '@/components/features/supplier/SupplierFormModal';
 import { SupplierTable } from '@/components/features/supplier/SupplierTable';
@@ -11,7 +11,7 @@ import { useCompany } from '@/contexts/CompanyContext';
 import { useQueryParamsTable } from '@/hooks/useQueryParamsTable';
 import { useCreateSupplier, useSuppliers, useDeleteSupplier, useExportSupplier, useImportSupplier, useUpdateSupplier } from '@/hooks/useSupplier';
 import { ApiResponseError, ApiValidationError } from '@/lib/api/response';
-import { createSupplierSchema, type CreateSupplierFormValues } from '@/scheme/supplier.schema';
+import { createSupplierSchema, type CreateSupplierFormValues } from '@/schemas/supplier.schema';
 import { getSupplierById } from '@/services/supplier.service';
 import { useAuthMe } from '@/features/auth/hooks/use-auth-me';
 import { usePermissionGuard } from '@/hooks/usePermissionGuard';

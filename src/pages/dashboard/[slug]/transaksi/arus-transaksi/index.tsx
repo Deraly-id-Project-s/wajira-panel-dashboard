@@ -12,7 +12,7 @@ import { TransactionTable } from '@/components/features/transaction/TransactionT
 import { TransactionSummaryCards } from '@/components/features/transaction/TransactionSummaryCards';
 import { DeleteTransactionDialog } from '@/components/features/transaction/DeleteTransactionDialog';
 import { Plus, Search } from 'lucide-react';
-import { Transaction } from '@/@types/transaction.types';
+import { Transaction } from '@/types/transaction.types';
 import { usePermissionGuard } from '@/hooks/usePermissionGuard';
 import { LoadingState } from '@/components/ui/loading-state';
 

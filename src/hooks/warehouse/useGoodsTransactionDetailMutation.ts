@@ -1,5 +1,5 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import type { GoodsTransactionDetailEquipmentPayload } from '@/@types/goods-issue-equipment.types';
+import type { GoodsTransactionDetailEquipmentPayload } from '@/types/goods-issue-equipment.types';
 import {
   createGoodsTransactionDetail,
   updateGoodsTransactionDetail,

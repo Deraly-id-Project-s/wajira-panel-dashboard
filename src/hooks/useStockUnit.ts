@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { getStockUnits } from '@/services/stock-unit.service';
-import type { PaginationParams } from '@/@types/pagination.types';
+import type { PaginationParams } from '@/types/pagination.types';
 
 export const useStockUnits = (
   companyId: number | string | null,

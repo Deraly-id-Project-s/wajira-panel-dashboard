@@ -1,5 +1,5 @@
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import type { CashFlowFilterParams, CashFlowPayload } from '@/@types/kas-harian.types';
+import type { CashFlowFilterParams, CashFlowPayload } from '@/types/kas-harian.types';
 import { createCashFlow, deleteCashFlow, fetchCashFlow, fetchCashFlowDetail, updateCashFlow, toggleCashFlowPaymentStatus } from '@/services/cashFlowService';
 
 const CASH_FLOW_KEY = 'cash-flow';

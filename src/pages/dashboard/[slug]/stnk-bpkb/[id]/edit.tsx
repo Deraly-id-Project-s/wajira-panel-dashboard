@@ -8,7 +8,7 @@ import { Card } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { VehicleDocumentDetailTable } from '@/components/features/vehicle-document/VehicleDocumentDetailTable';
 import { useVehicleDocumentDetail } from '@/hooks/useVehicleDocument';
-import type { VehicleDocumentItem } from '@/@types/vehicle-document.types';
+import type { VehicleDocumentItem } from '@/types/vehicle-document.types';
 import { LoadingState } from '@/components/ui/loading-state';
 
 const formatDate = (value?: string) => {

@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { VendorFormData } from './VendorFormModal';
-import type { Vendor } from '@/@types/vendor.types';
+import type { Vendor } from '@/types/vendor.types';
 
 interface EditVendorModalProps {
     isOpen: boolean;

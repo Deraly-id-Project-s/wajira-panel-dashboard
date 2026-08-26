@@ -7,7 +7,7 @@ import { DeleteBBNModal } from '@/components/features/bbn/DeleteBBNModal';
 import { DataImportModal } from '@/components/features/master-data/DataImportModal';
 import { toast } from 'sonner';
 import { useBBNs, useDeleteBBN, useImportBBN, useExportBBN } from '@/hooks/useBBN';
-import type { BBN } from '@/@types/bbn.types';
+import type { BBN } from '@/types/bbn.types';
 import { usePermissionGuard } from '@/hooks/usePermissionGuard';
 
 export default function BBNPage() {

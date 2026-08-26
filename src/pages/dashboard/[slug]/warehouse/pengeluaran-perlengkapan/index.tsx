@@ -23,9 +23,9 @@ import { useUploadGoodsTransactionInvoice } from '@/hooks/warehouse/useGoodsTran
 import { GoodsIssueEquipmentTable } from '@/components/features/warehouse/issue-equipment/GoodsIssueEquipmentTable';
 import { GoodsIssueEquipmentFormModal } from '@/components/features/warehouse/issue-equipment/GoodsIssueEquipmentFormModal';
 import { GoodsIssueEquipmentUploadInvoiceModal } from '@/components/features/warehouse/issue-equipment/GoodsIssueEquipmentUploadInvoiceModal';
-import type { GoodsIssueEquipment } from '@/@types/goods-issue-equipment.types';
-import type { GoodsIssueEquipmentFormValues } from '@/scheme/goods-issue-equipment.schema';
-import { getApiErrorMessage } from '@/utils/apiErrorHandler';
+import type { GoodsIssueEquipment } from '@/types/goods-issue-equipment.types';
+import type { GoodsIssueEquipmentFormValues } from '@/schemas/goods-issue-equipment.schema';
+import { getApiErrorMessage } from '@/lib/utils/apiErrorHandler';
 import { usePermissionGuard } from '@/hooks/usePermissionGuard';
 
 const getErrorMessage = (error: any): string => {

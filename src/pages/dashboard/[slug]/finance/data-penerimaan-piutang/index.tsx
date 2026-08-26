@@ -5,7 +5,7 @@ import { PageHeader } from '@/components/ui/page-header';
 import PenerimaanPiutangTable from '@/components/features/penerimaan-piutang/PenerimaanPiutangTable';
 import { useDeletePenerimaanPiutang, usePenerimaanPiutang } from '@/hooks/usePenerimaanPiutang';
 import { usePermissionGuard } from '@/hooks/usePermissionGuard';
-import type { PenerimaanPiutang } from '@/@types/penerimaan-piutang.types';
+import type { PenerimaanPiutang } from '@/types/penerimaan-piutang.types';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { LoadingState } from '@/components/ui/loading-state';
 

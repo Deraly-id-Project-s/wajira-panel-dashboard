@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react';
 import { Card } from '@/components/ui/card';
 import { LineChart, Line, ResponsiveContainer, Tooltip, XAxis, YAxis, CartesianGrid } from 'recharts';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import type { FinanceSeriesPoint, FinanceSeriesValues } from '@/@types/dashboard';
+import type { FinanceSeriesPoint, FinanceSeriesValues } from '@/types/dashboard';
 import { formatCompactNumber } from '@/lib/utils/format';
 
 interface FinanceChartProps {

@@ -1,4 +1,4 @@
-import { PiutangPayment } from "@/@types/piutang.types"
+import { PiutangPayment } from "@/types/piutang.types"
 import { useTableSort } from "@/hooks/useTableSort"
 import { SortableHeader } from "@/components/ui/sortable-header"
 import {

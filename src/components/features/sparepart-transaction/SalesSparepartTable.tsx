@@ -1,13 +1,13 @@
 import { useCallback, useMemo, useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { SparepartTransaction } from '@/@types/sparepart-transaction.types';
+import { SparepartTransaction } from '@/types/sparepart-transaction.types';
 import { Eye, MoreVertical, Pencil, Plus, Search, Trash2, Undo2 } from 'lucide-react';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { useRouter } from 'next/router';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { currenciesFormat } from '@/components/ui/currenciesFormat';
-import { PaginationMeta } from '@/@types/pagination.types';
+import { PaginationMeta } from '@/types/pagination.types';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import BaseTable, { ColumnDef } from '@/components/ui/base-table';

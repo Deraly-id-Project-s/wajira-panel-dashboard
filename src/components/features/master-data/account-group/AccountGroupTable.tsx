@@ -3,8 +3,8 @@ import BaseTable, { ColumnDef } from '@/components/ui/base-table';
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from '@/components/ui/dropdown-menu';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { MoreVertical, Pencil, Trash, Lock } from 'lucide-react';
-import type { AccountGroup } from '@/@types/account-group.types';
-import type { PaginationMeta } from '@/@types/pagination.types';
+import type { AccountGroup } from '@/types/account-group.types';
+import type { PaginationMeta } from '@/types/pagination.types';
 import { Badge } from '@/components/ui/badge';
 import { CopyBox } from '@/components/ui/copy-box';
 

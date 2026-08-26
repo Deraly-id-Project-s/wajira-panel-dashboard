@@ -10,7 +10,7 @@ import type {
   UpdateOrderListPayload,
   UpdateOrderListTarifPayload,
   UpdateOrderListStatePayload,
-} from '@/@types/order-list.types';
+} from '@/types/order-list.types';
 import {
   createOrderList,
   createOrderListTarif,

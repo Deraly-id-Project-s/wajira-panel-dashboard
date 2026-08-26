@@ -1,5 +1,5 @@
-import type { Asset, AssetListResponse, AssetPayload } from '@/@types/asset.types';
-import type { PaginationParams } from '@/@types/pagination.types';
+import type { Asset, AssetListResponse, AssetPayload } from '@/types/asset.types';
+import type { PaginationParams } from '@/types/pagination.types';
 import { apiClient } from '@/lib/api/client';
 import { buildLaravelPaginationQuery } from '@/lib/api/pagination';
 import { ApiResponseError, LaravelApiResponse, ensureSuccess, toPaginatedResult, ApiValidationError } from '@/lib/api/response';

@@ -1,7 +1,7 @@
 import type {
   DoEkspedisiItemDestination,
   DoEkspedisiItemDestinationPayload,
-} from '@/@types/do-ekspedisi.types';
+} from '@/types/do-ekspedisi.types';
 import {
   createDoEkspedisiItemDestination,
   deleteDoEkspedisiItemDestination,

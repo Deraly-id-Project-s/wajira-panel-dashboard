@@ -1,4 +1,4 @@
-import { MonthlyVatReport } from '@/@types/accounting-report.types';
+import { MonthlyVatReport } from '@/types/accounting-report.types';
 import {
   Table,
   TableBody,

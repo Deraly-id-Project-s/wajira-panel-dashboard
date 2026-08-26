@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import type { AccountGroupDetail, AccountGroupPayload } from '@/@types/account-group.types';
-import type { PaginationParams } from '@/@types/pagination.types';
+import type { AccountGroupDetail, AccountGroupPayload } from '@/types/account-group.types';
+import type { PaginationParams } from '@/types/pagination.types';
 import { createAccountGroup, deleteAccountGroup, getAccountGroupById, getAccountGroups, quickCreateAccountGroup, updateAccountGroup, importAccountGroup } from '@/services/account-group.service';
 import type { QuickCreateAccountGroupPayload } from '@/services/account-group.service';
 import { companyQueryKeys } from '@/lib/query/company-key';

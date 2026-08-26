@@ -3,10 +3,10 @@
 import { useMemo, useState } from 'react';
 import { useRouter } from 'next/router';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
-import { PageHeader } from '@/components/common/PageHeader';
+import { PageHeader } from '@/components/ui/page-header';
 import BaseTable, { ColumnDef } from '@/components/ui/base-table';
 import { useRefundList } from '@/hooks/useRefundAdministrasi';
-import { UnitTransactionRefund } from '@/@types/refund.type';
+import { UnitTransactionRefund } from '@/types/refund.type';
 import { RefundStatusBadge } from '@/components/features/refund/RefundStatusBadge';
 import { Button } from '@/components/ui/button';
 import { Eye, Trash2, MoreVertical } from 'lucide-react';

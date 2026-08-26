@@ -29,7 +29,7 @@ import {
   getReceiptBilling,
   resolveInvoiceUrl,
 } from '@/components/features/warehouse/receipt-equipment/goodsReceiptEquipment.utils';
-import type { GoodsReceiptEquipmentPaymentFormValues } from '@/scheme/goods-receipt-equipment.schema';
+import type { GoodsReceiptEquipmentPaymentFormValues } from '@/schemas/goods-receipt-equipment.schema';
 import { LoadingState } from '@/components/ui/loading-state';
 
 const getErrorMessage = (error: any): string => {

@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
-import type { PaginationParams } from '@/@types/pagination.types';
+import type { PaginationParams } from '@/types/pagination.types';
 import { getGoodsTransactionDetails } from '@/services/warehouse/goodsTransactionDetail.service';
 import { goodsIssueEquipmentKeys } from './useGoodsIssueEquipment';
 

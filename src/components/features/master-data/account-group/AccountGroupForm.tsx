@@ -2,7 +2,7 @@ import { FormField, FormItem, FormLabel, FormControl, FormMessage } from '@/comp
 import { Input } from '@/components/ui/input';
 import RequiredMark from '@/components/ui/required-mark';
 import { Textarea } from '@/components/ui/textarea';
-import type { AccountGroupFormValues } from '@/scheme/account-group.schema';
+import type { AccountGroupFormValues } from '@/schemas/account-group.schema';
 import type { UseFormReturn } from 'react-hook-form';
 
 interface AccountGroupFormProps {

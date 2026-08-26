@@ -1,7 +1,7 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Card } from '@/components/ui/card';
-import type { MaintenanceItem } from '@/@types/maintenance.types';
+import type { MaintenanceItem } from '@/types/maintenance.types';
 
 interface MaintenanceDetailModalProps {
   open: boolean;

@@ -1,6 +1,6 @@
 import React from 'react';
 import { FinanceAssetForm } from './FinanceAssetForm';
-import type { FinanceAsset, FinanceAssetPayload } from '@/@types/finance-asset.types';
+import type { FinanceAsset, FinanceAssetPayload } from '@/types/finance-asset.types';
 
 export interface FinanceAssetEditFormProps {
     initialData: FinanceAsset;

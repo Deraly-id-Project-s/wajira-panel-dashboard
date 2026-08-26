@@ -1,5 +1,5 @@
-import { Kas, KasListResponse, KasPayload, KasType } from '@/@types/kas.types';
-import type { LaravelPagination } from '@/@types/pagination.types';
+import { Kas, KasListResponse, KasPayload, KasType } from '@/types/kas.types';
+import type { LaravelPagination } from '@/types/pagination.types';
 import { apiClient } from '@/lib/api/client';
 import { ApiResponseError, LaravelApiResponse, ensureSuccess } from '@/lib/api/response';
 

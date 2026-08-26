@@ -1,7 +1,7 @@
 import { format } from 'date-fns';
 import { id } from 'date-fns/locale';
 
-import { AccountingReportTab } from '@/@types/accounting-report.types';
+import { AccountingReportTab } from '@/types/accounting-report.types';
 import { ACCOUNTING_REPORT_TABS } from './laporan-akuntansi.constants';
 
 const COMPANY_NAME_MATCHERS = [

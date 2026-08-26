@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import type { PPNPenjualan } from '@/@types/ppn.types';
-import type { PaginationMeta } from '@/@types/pagination.types';
+import type { PPNPenjualan } from '@/types/ppn.types';
+import type { PaginationMeta } from '@/types/pagination.types';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';

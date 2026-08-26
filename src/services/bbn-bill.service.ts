@@ -13,8 +13,8 @@ import type {
   BBNBillVehicleData,
   BBNBillVehicleFeePayload,
   BBNBillVehicleRegistrationFees,
-} from '@/@types/bbn-bill.types';
-import type { PaginationParams } from '@/@types/pagination.types';
+} from '@/types/bbn-bill.types';
+import type { PaginationParams } from '@/types/pagination.types';
 import { apiClient } from '@/lib/api/client';
 import { buildLaravelPaginationQuery } from '@/lib/api/pagination';
 import { ApiResponseError, ApiValidationError, ensureSuccess, LaravelApiResponse, toPaginatedResult } from '@/lib/api/response';

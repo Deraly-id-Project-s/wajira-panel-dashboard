@@ -1,4 +1,4 @@
-import { Piutang, PiutangPayment } from '@/@types/piutang.types';
+import { Piutang, PiutangPayment } from '@/types/piutang.types';
 
 // Helper to generate dummy data
 const generatePiutangData = (): Piutang[] => {

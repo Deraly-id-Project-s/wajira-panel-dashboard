@@ -9,9 +9,9 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { DatePicker } from '@/components/ui/date-picker';
 import { SearchableSelect } from '@/components/features/vehicle-data/SearchableSelect';
-import type { GoodsReceipt } from '@/@types/goods-receipt.types';
-import type { Supplier } from '@/@types/supplier.types';
-import { goodsReceiptSchema, type GoodsReceiptFormValues } from '@/scheme/goods-receipt.schema';
+import type { GoodsReceipt } from '@/types/goods-receipt.types';
+import type { Supplier } from '@/types/supplier.types';
+import { goodsReceiptSchema, type GoodsReceiptFormValues } from '@/schemas/goods-receipt.schema';
 
 interface GoodsReceiptFormModalProps {
   open: boolean;

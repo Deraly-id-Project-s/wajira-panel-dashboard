@@ -1,4 +1,4 @@
-import { FilterLaporanStock } from "@/@types/laporan-stock.types"
+import { FilterLaporanStock } from "@/types/laporan-stock.types"
 
 // TODO: Replace with actual API call
 export const getLaporanStock = async (

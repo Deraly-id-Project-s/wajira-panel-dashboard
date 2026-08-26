@@ -3,10 +3,10 @@ import { useRouter } from 'next/router';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { BBNForm } from '@/components/features/bbn/BBNForm';
 import { useCreateBBN } from '@/hooks/useBBN';
-import type { BBNPayload } from '@/@types/bbn.types';
+import type { BBNPayload } from '@/types/bbn.types';
 import { toast } from 'sonner';
 
-import { getApiErrorMessage } from '@/utils/apiErrorHandler';
+import { getApiErrorMessage } from '@/lib/utils/apiErrorHandler';
 
 export default function CreateBBNPage() {
     const router = useRouter();

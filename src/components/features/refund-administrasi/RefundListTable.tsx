@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
 import { useRouter } from 'next/router';
-import type { PaginationMeta } from '@/@types/pagination.types';
-import type { UnitTransactionRefund } from '@/@types/refund.type';
+import type { PaginationMeta } from '@/types/pagination.types';
+import type { UnitTransactionRefund } from '@/types/refund.type';
 import { RefundStatusBadge } from '@/components/features/refund/RefundStatusBadge';
 import { Button } from '@/components/ui/button';
 import { Eye } from 'lucide-react';

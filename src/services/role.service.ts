@@ -1,7 +1,7 @@
 import { apiClient } from '@/lib/api/client';
 import { ensureSuccess, type LaravelApiResponse, ApiResponseError } from '@/lib/api/response';
-import { UserRoleItem } from '@/@types/user.types';
-import { Role, RolePayload } from '@/@types/role.types';
+import { UserRoleItem } from '@/types/user.types';
+import { Role, RolePayload } from '@/types/role.types';
 
 type RoleApiModel = {
   id: number;

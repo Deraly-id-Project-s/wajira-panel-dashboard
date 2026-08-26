@@ -2,16 +2,16 @@ import { useEffect, useState } from 'react';
 import Head from 'next/head';
 import { useRouter } from 'next/router';
 import { toast } from 'sonner';
-import type { Transaction } from '@/@types/transaction.types';
+import type { Transaction } from '@/types/transaction.types';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { Card, CardContent } from '@/components/ui/card';
 import { LoadingState } from '@/components/ui/loading-state';
 import { PageHeader } from '@/components/ui/page-header';
 import { useCompany } from '@/contexts/CompanyContext';
 import { useCreateTransaction, useUpdateTransaction } from '@/hooks/useTransaction';
-import type { TransactionFormValues } from '@/scheme/transaction.schema';
+import type { TransactionFormValues } from '@/schemas/transaction.schema';
 import { getTransactionById } from '@/services/transaction.service';
-import { getApiErrorMessage } from '@/utils/apiErrorHandler';
+import { getApiErrorMessage } from '@/lib/utils/apiErrorHandler';
 import TransactionForm from './TransactionForm';
 
 interface Props {

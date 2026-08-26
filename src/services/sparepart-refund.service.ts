@@ -8,7 +8,7 @@ import type {
   SparepartTransactionRefundPayment,
   UpdateSparepartRefundPayload,
   UpdateSparepartRefundPaymentPayload,
-} from '@/@types/sparepart-refund.types';
+} from '@/types/sparepart-refund.types';
 
 const refundPath = '/wapi/transaction/unit-transaction/sparepart-transaction-refund';
 const paymentPath = '/wapi/transaction/unit-transaction/sparepart-transaction-refund-payment';

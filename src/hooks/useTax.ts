@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import type { TaxListParams, TaxPayload } from '@/@types/tax.types';
+import type { TaxListParams, TaxPayload } from '@/types/tax.types';
 import { createTax, deleteTax, getTaxDetail, getDefaultTaxByCode, getTaxes, updateTax } from '@/services/tax.service';
 
 export function useTaxes(params?: TaxListParams & { enabled?: boolean }) {

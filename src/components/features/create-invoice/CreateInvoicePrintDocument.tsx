@@ -2,7 +2,7 @@ import { useMemo, useRef } from 'react';
 import jsPDF from 'jspdf';
 import { Download, Printer } from 'lucide-react';
 import { useReactToPrint } from 'react-to-print';
-import type { CreateInvoicePrintPayload } from '@/@types/create-invoice.types';
+import type { CreateInvoicePrintPayload } from '@/types/create-invoice.types';
 import { Button } from '@/components/ui/button';
 import { formatDisplayDate, formatLongDate, formatMoney, formatInvoiceMoney } from './create-invoice.utils';
 

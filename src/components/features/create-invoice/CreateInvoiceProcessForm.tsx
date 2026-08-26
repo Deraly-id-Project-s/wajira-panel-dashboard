@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { ArrowLeft, Printer } from 'lucide-react';
-import type { CreateInvoiceDetailRow, CreateInvoiceProcessValues } from '@/@types/create-invoice.types';
+import type { CreateInvoiceDetailRow, CreateInvoiceProcessValues } from '@/types/create-invoice.types';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';

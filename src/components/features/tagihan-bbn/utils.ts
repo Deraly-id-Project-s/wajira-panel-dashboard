@@ -1,4 +1,4 @@
-import type { Kas } from '@/@types/kas.types';
+import type { Kas } from '@/types/kas.types';
 
 export const formatBillCode = (id: number | string) => `INV-${String(id).padStart(5, '0')}`;
 

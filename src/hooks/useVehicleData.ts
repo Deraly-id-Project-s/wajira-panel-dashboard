@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import type { PaginationParams } from '@/@types/pagination.types';
-import type { VehicleDataAssignPayload, VehicleDataFilters, VehicleDataPayload } from '@/@types/vehicle-data.types';
+import type { PaginationParams } from '@/types/pagination.types';
+import type { VehicleDataAssignPayload, VehicleDataFilters, VehicleDataPayload } from '@/types/vehicle-data.types';
 import {
   assignVehicleDataToDitlantas,
   createVehicleData,

@@ -9,14 +9,14 @@ import {
   PersonOption,
   SavePengeluaranUnitPayload,
   WarehouseOption,
-} from '@/@types/pengeluaran-unit.types';
+} from '@/types/pengeluaran-unit.types';
 import { apiClient } from '@/lib/api/client';
 import { ensureSuccess, LaravelApiResponse } from '@/lib/api/response';
 import {
   pengeluaranUnitListDataSchema,
   pengeluaranUnitSchema,
   savePengeluaranUnitSchema,
-} from '@/scheme/pengeluaran-unit.schema';
+} from '@/schemas/pengeluaran-unit.schema';
 
 const basePath = '/wapi/warehouse/warehouse-activity';
 const warehouseDataPath = '/wapi/warehouse/warehouse-data';

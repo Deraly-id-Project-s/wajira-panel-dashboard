@@ -7,8 +7,8 @@ import { GoodsReceiptTable } from '@/components/features/goods-receipt/GoodsRece
 import { GoodsReceiptFormModal } from '@/components/features/goods-receipt/GoodsReceiptFormModal';
 import { GoodsReceiptPaymentModal } from '@/components/features/goods-receipt/GoodsReceiptPaymentModal';
 import { GoodsReceiptUploadModal } from '@/components/features/goods-receipt/GoodsReceiptUploadModal';
-import type { ApiError } from '@/@types/api';
-import type { GoodsReceipt } from '@/@types/goods-receipt.types';
+import type { ApiError } from '@/types/api';
+import type { GoodsReceipt } from '@/types/goods-receipt.types';
 import { useCompany } from '@/contexts/CompanyContext';
 import { useKas } from '@/hooks/useKas';
 import {
@@ -23,7 +23,7 @@ import {
 import { useSuppliers } from '@/hooks/useSupplier';
 import { useQueryParamsTable } from '@/hooks/useQueryParamsTable';
 import { ApiResponseError, ApiValidationError } from '@/lib/api/response';
-import type { GoodsReceiptFormValues, GoodsReceiptPaymentFormValues } from '@/scheme/goods-receipt.schema';
+import type { GoodsReceiptFormValues, GoodsReceiptPaymentFormValues } from '@/schemas/goods-receipt.schema';
 import { usePermissionGuard } from '@/hooks/usePermissionGuard';
 
 const translateBackendMessageToIndonesian = (message: string) => {

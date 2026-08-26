@@ -5,7 +5,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { MoreVertical, Pencil, Plus, Trash, Eye } from 'lucide-react';
 import { CopyBox } from '@/components/ui/copy-box';
 import type { WarehouseBlock } from '@/services/warehouseBlock.service';
-import type { PaginationMeta } from '@/@types/pagination.types';
+import type { PaginationMeta } from '@/types/pagination.types';
 
 interface WarehouseBlockTableProps {
   data: WarehouseBlock[];

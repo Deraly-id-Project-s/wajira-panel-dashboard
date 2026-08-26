@@ -20,7 +20,7 @@ import BaseTable, { ColumnDef } from '@/components/ui/base-table';
 import { Textarea } from '@/components/ui/textarea';
 import { GoodsReceiptItemModal } from '@/components/features/goods-receipt/GoodsReceiptItemModal';
 import { SearchableSelect } from '@/components/features/vehicle-data/SearchableSelect';
-import type { GoodsReceiptItem } from '@/@types/goods-receipt.types';
+import type { GoodsReceiptItem } from '@/types/goods-receipt.types';
 import { useCompany } from '@/contexts/CompanyContext';
 import { useMaterials } from '@/hooks/useMaterial';
 import {
@@ -32,7 +32,7 @@ import {
 } from '@/hooks/useGoodsReceipt';
 import { useSuppliers } from '@/hooks/useSupplier';
 import { ApiResponseError, ApiValidationError } from '@/lib/api/response';
-import { goodsReceiptSchema, type GoodsReceiptFormValues, type GoodsReceiptItemFormValues } from '@/scheme/goods-receipt.schema';
+import { goodsReceiptSchema, type GoodsReceiptFormValues, type GoodsReceiptItemFormValues } from '@/schemas/goods-receipt.schema';
 import { formatCurrency } from '@/components/features/goods-receipt/goods-receipt.utils';
 import { LoadingState } from '@/components/ui/loading-state';
 

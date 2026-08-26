@@ -5,7 +5,7 @@ import { useReactToPrint } from 'react-to-print';
 import type { SalesItem } from '@/components/features/sales/sales.data';
 import { Button } from '@/components/ui/button';
 import { formatCurrency } from '@/lib/utils/currency';
-import type { DocumentTemplate } from '@/@types/document-template.types';
+import type { DocumentTemplate } from '@/types/document-template.types';
 import { getObjectStorageUrl, StorageImage } from '@/components/ui/storage-image';
 
 interface PrintItem {
