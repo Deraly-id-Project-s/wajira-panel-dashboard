@@ -120,7 +120,7 @@ export default function PenerimaanUnitDetailPage() {
               <h1 className="text-2xl font-semibold text-slate-900">Detail Penerimaan Unit</h1>
               <div className="text-sm text-muted-foreground flex items-center gap-2">
                 <span>Kode Transaksi:</span>
-                <span className="text-blue-600 font-semibold">{detailData?.activity_number || detailData?.noPenerimaan || '-'}</span>
+                <span className="inline-flex items-center gap-1.5 font-semibold text-orange-600 hover:text-orange-700">{detailData?.activity_number || detailData?.noPenerimaan || '-'}</span>
                 <Badge variant="outline" className={`font-semibold ${stateInfo.bg}`}>
                   {stateInfo.text}
                 </Badge>
@@ -233,7 +233,7 @@ export default function PenerimaanUnitDetailPage() {
 
       {/* DIALOG UPDATE STATUS */}
       <Dialog open={isUpdateStateDialogOpen} onOpenChange={setIsUpdateStateDialogOpen}>
-        <DialogContent className="sm:max-w-[425px] p-6 rounded-2xl">
+        <DialogContent className="sm:max-w-[425px] p-6 rounded-md">
           <DialogHeader>
             <DialogTitle className="text-lg font-bold text-slate-800">Ubah Status Penerimaan</DialogTitle>
             <DialogDescription className="text-xs text-slate-500">

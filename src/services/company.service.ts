@@ -25,13 +25,48 @@ export interface Company {
 
 type CompanyListApiResponse = LaravelApiResponse<Company[] | Company>;
 
-export async function fetchUserCompanies(): Promise<Company[]> {
+interface FetchUserCompaniesOptions {
+  forceRefresh?: boolean;
+}
+
+export async function fetchUserCompanies(options: FetchUserCompaniesOptions = {}): Promise<Company[]> {
+  const CACHE_KEY = 'user_companies';
+
+  if (!options.forceRefresh && typeof window !== 'undefined') {
+    const cached = localStorage.getItem(CACHE_KEY);
+    if (cached) {
+      try {
+        const parsed = JSON.parse(cached);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          return parsed;
+        }
+      } catch (err) {
+        console.warn('[CompanyService] Failed to parse cached companies:', err);
+      }
+    }
+  }
+
   const response = await apiClient.get<CompanyListApiResponse>('/wapi/global/company');
   const data = ensureSuccess(response.data);
   const list = Array.isArray(data) ? data : data ? [data] : [];
-  
+  const filtered = list.filter((company) => company.id !== 5);
+
+  if (typeof window !== 'undefined') {
+    try {
+      localStorage.setItem(CACHE_KEY, JSON.stringify(filtered));
+    } catch (err) {
+      console.warn('[CompanyService] Failed to save companies to localStorage:', err);
+    }
+  }
+
   // Filter out PT Adhiyas Agradasta (id = 5) from frontend display globally
-  return list.filter((company) => company.id !== 5);
+  return filtered;
+}
+
+export function clearCachedUserCompanies(): void {
+  if (typeof window !== 'undefined') {
+    localStorage.removeItem('user_companies');
+  }
 }
 
 export async function fetchCompanyDetail(slug: string): Promise<Company> {

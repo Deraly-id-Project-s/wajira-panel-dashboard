@@ -18,10 +18,22 @@ export function formatMoneyInput(value: string | number, currency: 'IDR' | 'USD'
     if (!formatted) return '';
     return `$ ${formatted}`;
   }
-  const strVal = typeof value === 'number' ? Math.max(0, Math.floor(value)).toString() : value;
-  const numeric = strVal.replace(/\D/g, '');
-  if (!numeric) return '';
-  return 'Rp. ' + numeric.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+
+  let strVal = '';
+  if (typeof value === 'number') {
+    strVal = Math.round(value).toString();
+  } else {
+    const trimmed = String(value).trim();
+    const isRawNumber = /^-?\d+(\.\d+)?$/.test(trimmed);
+    if (isRawNumber) {
+      strVal = Math.round(parseFloat(trimmed)).toString();
+    } else {
+      strVal = trimmed.replace(/\D/g, '');
+    }
+  }
+
+  if (!strVal) return '';
+  return 'Rp. ' + strVal.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
 }
 
 export function parseMoneyInput(value: string | number, currency: 'IDR' | 'USD' = 'IDR'): number {
@@ -32,7 +44,15 @@ export function parseMoneyInput(value: string | number, currency: 'IDR' | 'USD' 
     const amount = Number(normalized);
     return Number.isFinite(amount) ? amount : 0;
   }
-  const normalized = String(value).replace(/\D/g, '');
+
+  const trimmed = String(value).trim();
+  const isRawNumber = /^-?\d+(\.\d+)?$/.test(trimmed);
+  if (isRawNumber) {
+    const parsed = parseFloat(trimmed);
+    return Number.isFinite(parsed) ? Math.round(parsed) : 0;
+  }
+
+  const normalized = trimmed.replace(/\D/g, '');
   if (!normalized) return 0;
   const amount = Number(normalized);
   return Number.isFinite(amount) ? amount : 0;

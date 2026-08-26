@@ -25,6 +25,7 @@ import { UnitTypePriceVersionTable } from '@/components/features/type-unit/UnitT
 import { UnitTypePriceVersionForm } from '@/components/features/type-unit/UnitTypePriceVersionForm';
 import type { UnitTypePriceVersion, UnitTypePriceVersionFormValues } from '@/@types/unit-type-price-version.types';
 import { toast } from 'sonner';
+import { usePermissionGuard } from '@/hooks/usePermissionGuard';
 
 const statusConfig: Record<string, { label: string; className: string }> = {
   normal: { label: 'Normal', className: 'border-emerald-200 bg-emerald-50 text-emerald-700 font-semibold' },
@@ -53,6 +54,11 @@ export default function TypeUnitDetailPage() {
   const router = useRouter();
   const { slug, id } = router.query;
   const { companyId } = useCompany();
+
+  const { hasPermission } = usePermissionGuard();
+  const canCreate = hasPermission('master-data:create');
+  const canEdit = hasPermission('master-data:edit');
+  const canDelete = hasPermission('master-data:delete');
 
   // Search & Filter States
   const [filterColor, setFilterColor] = useState('');
@@ -265,7 +271,7 @@ export default function TypeUnitDetailPage() {
         </div>
 
         {/* SINGLE WIDE DETAILED CARD */}
-        <Card className="rounded-2xl border-slate-200 bg-white shadow-sm overflow-hidden">
+        <Card className="rounded-md border-slate-200 bg-white shadow-sm overflow-hidden">
           <CardContent className="p-6">
             <h3 className="text-lg font-bold text-slate-900 border-b pb-3 mb-4 flex items-center gap-2">
               <ShieldCheck className="h-5 w-5 text-blue-600" /> Spesifikasi Unit Tipe
@@ -344,7 +350,7 @@ export default function TypeUnitDetailPage() {
         </Card>
 
         {/* STOCK TABLE COMPONENT */}
-        <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm space-y-4">
+        <div className="rounded-md border border-slate-200 bg-white p-6 shadow-sm space-y-4">
           <div className="flex flex-col gap-1 md:flex-row md:items-center md:justify-between border-b pb-4">
             <div>
               <h3 className="text-lg font-bold text-slate-900">Daftar Unit Barang</h3>
@@ -429,7 +435,7 @@ export default function TypeUnitDetailPage() {
         </div>
 
         {/* PRICE VERSIONING TABLE COMPONENT */}
-        <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm space-y-4">
+        <div className="rounded-md border border-slate-200 bg-white p-6 shadow-sm space-y-4">
           <div className="border-b pb-4">
             <h3 className="text-lg font-bold text-slate-900">Riwayat Versi Harga</h3>
             <p className="text-sm text-slate-500 text-muted-foreground">Kelola riwayat harga beli & harga jual untuk tipe unit ini</p>
@@ -453,6 +459,9 @@ export default function TypeUnitDetailPage() {
             onAdd={handleAddPrice}
             onEdit={handleEditPrice}
             onDelete={handleDeletePrice}
+            canCreate={canCreate}
+            canEdit={canEdit}
+            canDelete={canDelete}
           />
         </div>
       </div>

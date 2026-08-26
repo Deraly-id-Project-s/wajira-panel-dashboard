@@ -93,7 +93,7 @@ export function SupplierTable({
         cell: (item) => <span className="line-clamp-2">{item.address || '-'}</span>,
       },
       {
-        header: 'Action',
+        header: 'Aksi',
         alignment: 'center',
         sticky: 'right',
         cell: (item) => (

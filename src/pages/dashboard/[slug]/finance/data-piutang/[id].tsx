@@ -182,12 +182,12 @@ export default function PiutangDetailPage() {
                                         <CopyBox text={detail.code} />
                                     </div>
 
-                                    <div className="flex items-center gap-2">
+                                    <div className="flex flex-col sm:flex-row items-center gap-2 w-full sm:w-auto">
                                         <CalendarDays className="h-4 w-4 text-gray-400" />
                                         <span>{formatDate(infoDate)}</span>
                                     </div>
 
-                                    <div className="flex items-center gap-2">
+                                    <div className="flex flex-col sm:flex-row items-center gap-2 w-full sm:w-auto">
                                         <User className="h-4 w-4 text-gray-400" />
                                         <span>{detail?.person?.name ?? '-'}</span>
                                     </div>

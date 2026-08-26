@@ -1,6 +1,5 @@
 import type { CustomerFormValues } from '@/scheme/customer.schema';
-import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { FormDialog } from '@/components/ui/form-dialog';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import RequiredMark from '@/components/ui/required-mark';
@@ -31,156 +30,144 @@ export function CustomerFormModal({
   isSubmitting = false,
 }: CustomerFormModalProps) {
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="w-full max-w-md sm:max-w-[425px] max-h-[90vh] overflow-hidden flex flex-col rounded-md border-0 bg-white p-0 shadow-2xl">
-        <DialogHeader className="px-6 py-5 border-b shrink-0 text-left">
-          <DialogTitle className="text-[18px] font-semibold text-[#171717]">{title}</DialogTitle>
-          <DialogDescription className="text-[15px] text-[#71717A]">{description}</DialogDescription>
-        </DialogHeader>
+    <Form {...form}>
+      <FormDialog
+        open={open}
+        onOpenChange={onOpenChange}
+        title={title}
+        description={description}
+        onSubmit={form.handleSubmit(onSubmit)}
+        submitLabel={submitLabel}
+        isSubmitting={isSubmitting}
+      >
+        <FormField
+          control={form.control}
+          name="name"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel className="text-sm font-medium text-gray-700">
+                Nama Customer<RequiredMark />
+              </FormLabel>
+              <FormControl>
+                <Input
+                  {...field}
+                  placeholder="Tambahkan nama customer"
+                  className={`bg-white ${form.formState.errors.name ? 'border-red-500' : ''}`}
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
 
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="flex-1 flex flex-col overflow-hidden">
-            <div className="flex-1 overflow-y-auto px-6 space-y-4">
-              <FormField
-                control={form.control}
-                name="name"
-                render={({ field }) => (
-                  <FormItem className="space-y-2">
-                    <FormLabel className="text-[14px] font-medium text-[#171717]">
-                      Nama Customer<RequiredMark />
-                    </FormLabel>
-                    <FormControl>
-                      <Input
-                        {...field}
-                        placeholder="Tambahkan nama customer"
-                        className="h-12 rounded-md border-[#E4E4E7] px-4 text-[15px] placeholder:text-[#A1A1AA]"
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+        <FormField
+          control={form.control}
+          name="pic"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel className="text-sm font-medium text-gray-700">PIC</FormLabel>
+              <FormControl>
+                <Input
+                  {...field}
+                  placeholder="Tambahkan PIC"
+                  className={`bg-white ${form.formState.errors.pic ? 'border-red-500' : ''}`}
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
 
-              <FormField
-                control={form.control}
-                name="pic"
-                render={({ field }) => (
-                  <FormItem className="space-y-2">
-                    <FormLabel className="text-[14px] font-medium text-[#171717]">PIC</FormLabel>
-                    <FormControl>
-                      <Input
-                        {...field}
-                        placeholder="Tambahkan PIC"
-                        className="h-12 rounded-md border-[#E4E4E7] px-4 text-[15px] placeholder:text-[#A1A1AA]"
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+        <FormField
+          control={form.control}
+          name="phone"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel className="text-sm font-medium text-gray-700">
+                Phone<RequiredMark />
+              </FormLabel>
+              <FormControl>
+                <Input
+                  {...field}
+                  placeholder="Tambahkan nomer telepon"
+                  className={`bg-white ${form.formState.errors.phone ? 'border-red-500' : ''}`}
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
 
-              <FormField
-                control={form.control}
-                name="phone"
-                render={({ field }) => (
-                  <FormItem className="space-y-2">
-                    <FormLabel className="text-[14px] font-medium text-[#171717]">
-                      Phone<RequiredMark />
-                    </FormLabel>
-                    <FormControl>
-                      <Input
-                        {...field}
-                        placeholder="Tambahkan nomer telepon"
-                        className="h-12 rounded-md border-[#E4E4E7] px-4 text-[15px] placeholder:text-[#A1A1AA]"
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+        <FormField
+          control={form.control}
+          name="npwp"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel className="text-sm font-medium text-gray-700">
+                NPWP<RequiredMark />
+              </FormLabel>
+              <FormControl>
+                <Input
+                  {...field}
+                  placeholder="Tambahkan NPWP"
+                  maxLength={16}
+                  minLength={15}
+                  className={`bg-white ${form.formState.errors.npwp ? 'border-red-500' : ''}`}
+                  onChange={(e) => {
+                    field.onChange(e.target.value.replace(/[^\d]/g, ''));
+                  }}
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
 
-              <FormField
-                control={form.control}
-                name="npwp"
-                render={({ field }) => (
-                  <FormItem className="space-y-2">
-                    <FormLabel className="text-[14px] font-medium text-[#171717]">
-                      NPWP<RequiredMark />
-                    </FormLabel>
-                    <FormControl>
-                      <Input
-                        {...field}
-                        placeholder="Tambahkan NPWP"
-                        maxLength={16}
-                        minLength={15}
-                        className="h-12 rounded-md border-[#E4E4E7] px-4 text-[15px] placeholder:text-[#A1A1AA]"
-                        onChange={(e) => {
-                          field.onChange(e.target.value.replace(/[^\d]/g, ''));
-                        }}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+        <FormField
+          control={form.control}
+          name="map_link"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel className="text-sm font-medium text-gray-700">
+                <div className="flex flex-row justify-between w-full">
+                  <span>
+                    Maps
+                  </span>
+                  <ReferenceLink href="https://www.google.com/maps" target="_blank">gmaps</ReferenceLink>
+                </div>
+              </FormLabel>
+              <FormControl>
+                <Input
+                  {...field}
+                  placeholder="Tambahkan link maps"
+                  className={`bg-white ${form.formState.errors.map_link ? 'border-red-500' : ''}`}
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
 
-              <FormField
-                control={form.control}
-                name="map_link"
-                render={({ field }) => (
-                  <FormItem className="space-y-2">
-                    <FormLabel className="text-[14px] font-medium text-[#171717]">
-                      <div className="flex flex-row justify-between w-full">
-                        <span>
-                          Maps
-                        </span>
-                        <ReferenceLink href="https://www.google.com/maps" target="_blank">gmaps</ReferenceLink>
-                      </div>
-                    </FormLabel>
-                    <FormControl>
-                      <Input
-                        {...field}
-                        placeholder="Tambahkan link maps"
-                        className="h-12 rounded-md border-[#E4E4E7] px-4 text-[15px] placeholder:text-[#A1A1AA]"
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="address"
-                render={({ field }) => (
-                  <FormItem className="space-y-2">
-                    <FormLabel className="text-[14px] font-medium text-[#171717]">
-                      Alamat<RequiredMark />
-                    </FormLabel>
-                    <FormControl>
-                      <Textarea
-                        {...field}
-                        placeholder="Tambahkan Alamat"
-                        className="min-h-[100px] rounded-md border-[#E4E4E7] px-4 py-3 text-[15px] placeholder:text-[#A1A1AA] resize-none"
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
-
-            <div className="shrink-0 flex gap-3 px-6 py-4 border-t bg-gray-50">
-              <Button type="button" variant="outline" className="flex-1 h-11 rounded-md border-[#D4D4D8] text-[15px] text-[#171717]" onClick={() => onOpenChange(false)}>
-                Batal
-              </Button>
-              <Button type="submit" className="flex-1 h-11 rounded-md bg-[#1F3B5B] text-[15px] font-medium text-white hover:bg-[#19314b]" disabled={isSubmitting}>
-                {isSubmitting ? 'Menyimpan...' : submitLabel}
-              </Button>
-            </div>
-          </form>
-        </Form>
-      </DialogContent>
-    </Dialog >
+        <FormField
+          control={form.control}
+          name="address"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel className="text-sm font-medium text-gray-700">
+                Alamat<RequiredMark />
+              </FormLabel>
+              <FormControl>
+                <Textarea
+                  {...field}
+                  placeholder="Tambahkan Alamat"
+                  className={`bg-white resize-none min-h-[100px] ${form.formState.errors.address ? 'border-red-500' : ''}`}
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+      </FormDialog>
+    </Form>
   );
 }

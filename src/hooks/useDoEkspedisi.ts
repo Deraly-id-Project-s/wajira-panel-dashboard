@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type {
+  ApplyExpeditionClaimPayload,
   DoEkspedisiItemDestinationListParams,
   DoEkspedisiItemDestinationPayload,
   DoEkspedisiItemListParams,
@@ -10,12 +11,16 @@ import type {
 import type { PaginationParams } from '@/@types/pagination.types';
 import {
   createDoEkspedisi,
+  applyExpeditionClaim,
+  createDoDetailResource,
   createDoEkspedisiItem,
   createDoEkspedisiItemDestination,
   deleteDoEkspedisi,
   deleteDoEkspedisiItem,
   deleteDoEkspedisiItemDestination,
+  deleteDoDetailResource,
   getDoEkspedisiById,
+  getAvailableExpeditionClaims,
   getDoEkspedisiItemById,
   getDoEkspedisiItemDestinationById,
   getDoEkspedisiItemDestinations,
@@ -28,6 +33,8 @@ import {
   updateDoEkspedisi,
   updateDoEkspedisiItem,
   updateDoEkspedisiItemDestination,
+  updateDoDetailResource,
+  type DetailResource,
 } from '@/services/do-ekspedisi.service';
 
 export function useDoEkspedisis(params: PaginationParams & DoEkspedisiListParams & { enabled?: boolean }) {
@@ -233,5 +240,36 @@ export function useDoEkspedisiDriverLookup(search: string, enabled = true) {
     queryFn: () => lookupDoEkspedisiDrivers(search),
     enabled,
     staleTime: 30_000,
+  });
+}
+
+export function useDoDetailResourceMutation(resource: DetailResource, expeditionId: string | number) {
+  const queryClient = useQueryClient();
+  const invalidate = () => queryClient.invalidateQueries({ queryKey: ['do-ekspedisi', 'detail', String(expeditionId)] });
+  return {
+    create: useMutation({ mutationFn: (payload: Record<string, unknown> | FormData) => createDoDetailResource(resource, payload), onSuccess: invalidate }),
+    update: useMutation({ mutationFn: ({ id, payload }: { id: string | number; payload: Record<string, unknown> | FormData }) => updateDoDetailResource(resource, id, payload), onSuccess: invalidate }),
+    remove: useMutation({ mutationFn: (id: string | number) => deleteDoDetailResource(resource, id), onSuccess: invalidate }),
+  };
+}
+
+export function useAvailableExpeditionClaims(driverId: number | null, enabled = true) {
+  return useQuery({
+    queryKey: ['expedition-claim', 'available', driverId],
+    queryFn: () => getAvailableExpeditionClaims(driverId as number),
+    enabled: enabled && Boolean(driverId),
+  });
+}
+
+export function useApplyExpeditionClaim(expeditionId: string | number) {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (payload: ApplyExpeditionClaimPayload) => applyExpeditionClaim(payload),
+    onSuccess: (_, payload) => {
+      queryClient.invalidateQueries({ queryKey: ['do-ekspedisi'] });
+      queryClient.invalidateQueries({ queryKey: ['do-ekspedisi', 'detail', String(expeditionId)] });
+      queryClient.invalidateQueries({ queryKey: ['expedition-claim', 'available', payload.driver_id] });
+    },
   });
 }

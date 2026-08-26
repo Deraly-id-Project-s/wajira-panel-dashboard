@@ -2,7 +2,7 @@ import { ChevronDown, Check, Menu, X, PanelLeftClose, PanelLeftOpen } from 'luci
 import { useEffect, useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { useCompany } from '@/contexts/CompanyContext';
-import { fetchUserCompanies, Company } from '@/services/company.service';
+import { Company } from '@/services/company.service';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { cn } from '@/lib/utils';
 import { useRouter } from 'next/router';
@@ -10,11 +10,14 @@ import Link from 'next/link';
 import { useCompanyMenu } from '@/hooks/use-company-menu';
 import { MenuItem } from '@/types/menu.types';
 import { clearCompanyScopedQueries } from '@/lib/session/query-cache';
+import Image from 'next/image';
+import { AuthService } from '@/features/auth/services/auth.service';
 
-function CompanySelector({ companies, companyId, setCompanyId }: { companies: Company[], companyId: string | null, setCompanyId: (id: string) => void }) {
+function CompanySelector({ companies, companyId }: { companies: Company[], companyId: string | null }) {
   const [isOpen, setIsOpen] = useState(false);
   const router = useRouter();
   const queryClient = useQueryClient();
+  const { setCompanyId } = useCompany();
   const selectedCompany = companies.find((c) => String(c.id) === String(companyId));
 
   const handleSelectCompany = (company: Company) => {
@@ -23,6 +26,9 @@ function CompanySelector({ companies, companyId, setCompanyId }: { companies: Co
       return;
     }
 
+    AuthService.clearCachedCompanyAccess();
+    queryClient.removeQueries({ queryKey: ['auth', 'permissions'] });
+    queryClient.removeQueries({ queryKey: ['auth', 'sidebar'] });
     clearCompanyScopedQueries(queryClient);
     setCompanyId(String(company.id));
     setIsOpen(false);
@@ -35,7 +41,7 @@ function CompanySelector({ companies, companyId, setCompanyId }: { companies: Co
       <PopoverTrigger asChild>
         <button className="flex w-full items-center justify-between rounded-md border cursor-pointer border-gray-300 bg-white px-3 py-1.5 text-left shadow-sm hover:bg-gray-50 transition-colors">
           <div className="flex flex-col overflow-hidden">
-            <span className="text-[10px] uppercase font-semibold text-gray-400">Company</span>
+            <span className="text-[10px] uppercase font-semibold text-red-400">Perusahaan</span>
             <span className="font-medium text-gray-900 truncate uppercase">{selectedCompany ? selectedCompany.name : 'Select Company'}</span>
           </div>
           <ChevronDown className={cn('h-4 w-4 text-gray-500 transition-transform', isOpen && 'rotate-180')} />
@@ -60,33 +66,74 @@ function CompanySelector({ companies, companyId, setCompanyId }: { companies: Co
   );
 }
 
-export function Sidebar() {
+interface SidebarProps {
+  isDesktopCollapsed?: boolean;
+  onDesktopCollapsedChange?: (collapsed: boolean) => void;
+}
+
+export function Sidebar({
+  isDesktopCollapsed: controlledDesktopCollapsed,
+  onDesktopCollapsedChange,
+}: SidebarProps = {}) {
   const router = useRouter();
-  const slugQuery = router.query.slug;
-  const slug = Array.isArray(slugQuery) ? slugQuery[0] : slugQuery || '';
-
-  const { companyId, setCompanyId } = useCompany();
-  const [companies, setCompanies] = useState<Company[]>([]);
+  const { companyId, companies } = useCompany();
   const [isMobileOpen, setIsMobileOpen] = useState(false);
-  const [isDesktopCollapsed, setIsDesktopCollapsed] = useState(false);
-
-  useEffect(() => {
-    fetchUserCompanies().then((data) => {
-      setCompanies(data);
-    });
-  }, []);
-
-  const { menus, isLoading: isMenuLoading } = useCompanyMenu(companies);
-
-  useEffect(() => {
-    if (slug && companies.length > 0) {
-      const matchedCompany = companies.find((c) => c.slug === slug || String(c.id) === String(slug));
-
-      if (matchedCompany && String(matchedCompany.id) !== String(companyId)) {
-        setCompanyId(String(matchedCompany.id));
+  const [internalDesktopCollapsed, setInternalDesktopCollapsed] = useState(() => {
+    if (typeof window !== 'undefined') {
+      const config = localStorage.getItem('site_config');
+      if (config) {
+        try {
+          const parsed = JSON.parse(config);
+          if (Array.isArray(parsed)) {
+            const item = parsed.find((i: any) => i && i.key === 'sidebar_collapsed');
+            return item ? !!item.value : false;
+          } else if (typeof parsed === 'object' && parsed !== null) {
+            return !!parsed.sidebar_collapsed;
+          }
+        } catch (e) {
+          console.warn(e);
+        }
       }
     }
-  }, [slug, companies, companyId, setCompanyId]);
+    return false;
+  });
+  const isDesktopCollapsed = controlledDesktopCollapsed ?? internalDesktopCollapsed;
+
+  const setIsDesktopCollapsed = (collapsed: boolean) => {
+    if (controlledDesktopCollapsed === undefined) {
+      setInternalDesktopCollapsed(collapsed);
+      if (typeof window !== 'undefined') {
+        try {
+          const existing = localStorage.getItem('site_config');
+          let configList: Array<{ key: string; value: any }> = [];
+          if (existing) {
+            try {
+              const parsed = JSON.parse(existing);
+              if (Array.isArray(parsed)) {
+                configList = parsed;
+              } else if (typeof parsed === 'object' && parsed !== null) {
+                configList = Object.entries(parsed).map(([key, value]) => ({ key, value }));
+              }
+            } catch (e) {
+              configList = [];
+            }
+          }
+          const existingIndex = configList.findIndex((item) => item && item.key === 'sidebar_collapsed');
+          if (existingIndex > -1) {
+            configList[existingIndex].value = collapsed;
+          } else {
+            configList.push({ key: 'sidebar_collapsed', value: collapsed });
+          }
+          localStorage.setItem('site_config', JSON.stringify(configList));
+        } catch (err) {
+          console.warn(err);
+        }
+      }
+    }
+    onDesktopCollapsedChange?.(collapsed);
+  };
+
+  const { menus, isLoading: isMenuLoading } = useCompanyMenu(companies);
 
   // Close mobile sidebar on route change
   useEffect(() => {
@@ -95,7 +142,7 @@ export function Sidebar() {
 
 
   const sidebarContent = (
-    <aside className={cn("flex h-full w-full flex-col border-r border-gray-200 bg-[#F9FAFB] transition-[width] duration-300 ease-in-out", isDesktopCollapsed ? "w-[72px]" : "w-64")}>
+    <aside className="flex h-full w-full flex-col border-r border-gray-200 bg-[#F9FAFB]">
       <div className={cn("flex h-16 shrink-0 items-center border-b border-gray-200", isDesktopCollapsed ? "px-0 justify-center" : "px-4")}>
         <div className="flex w-full items-center gap-2">
           {isDesktopCollapsed ? (
@@ -105,7 +152,8 @@ export function Sidebar() {
                 className="p-2 rounded-md hover:bg-gray-200 text-gray-500 transition-colors"
                 title="Expand Sidebar"
               >
-                <PanelLeftOpen className="w-5 h-5" />
+                <Image src="/wajira-logo.png" alt="Wajira Logo" height={40} width={40} priority />
+                {/* <PanelLeftOpen className="w-5 h-5" /> */}
               </button>
             </div>
           ) : (
@@ -113,7 +161,6 @@ export function Sidebar() {
               <CompanySelector
                 companies={companies}
                 companyId={companyId}
-                setCompanyId={setCompanyId}
               />
 
               <button
@@ -130,10 +177,10 @@ export function Sidebar() {
 
       <div className={cn("flex-1 overflow-y-auto py-6", isDesktopCollapsed ? "px-2" : "px-4")}>
         <div className="mb-4 flex items-center justify-between text-sm font-semibold text-gray-500">
-          {!isDesktopCollapsed && <span className="uppercase text-xs tracking-wider">Main Menu</span>}
+          {!isDesktopCollapsed && <span className="uppercase text-xs tracking-wider">Menu Utama</span>}
           <button
             onClick={() => setIsDesktopCollapsed(!isDesktopCollapsed)}
-            className={cn("p-1.5 rounded-md hover:bg-gray-200 text-gray-400 hover:text-gray-600 transition-colors", isDesktopCollapsed && "mx-auto")}
+            className={cn("hidden md:block p-1.5 rounded-md hover:bg-gray-200 text-gray-400 hover:text-gray-600 transition-colors", isDesktopCollapsed && "mx-auto")}
             title="Toggle Sidebar"
           >
             {isDesktopCollapsed ? <PanelLeftOpen className="w-[18px] h-[18px]" /> : <PanelLeftClose className="w-[18px] h-[18px]" />}
@@ -236,7 +283,7 @@ function SidebarNavItem({ item, isCollapsed }: { item: MenuItem; isCollapsed?: b
         className={cn(
           'flex items-center justify-between rounded-md py-[9px] text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary',
           isCollapsed ? 'w-10 justify-center px-0' : 'w-full px-3',
-          isChildActive ? 'text-[#111827] bg-gray-100' : 'text-gray-600 hover:bg-gray-50',
+          isChildActive ? 'text-gray-600 bg-gray-100' : 'text-gray-600 hover:bg-gray-50',
         )}
       >
         <div className="flex items-center gap-3">
@@ -291,11 +338,11 @@ function SidebarSubNavItem({
         href={item.href || '#'}
         className={cn(
           'group relative ml-1 block rounded-md pl-3 pr-2 py-2 text-sm transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary',
-          active ? 'bg-[#E5E7EB] text-[#111827] font-[500]' : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900',
+          active ? 'bg-red-100 text-gray-600 font-[500]' : 'text-gray-600 hover:bg-red-100 hover:text-red-900',
         )}
         aria-current={active ? 'page' : undefined}
       >
-        {active && <div className="absolute left-0 top-0 h-full w-[3px] rounded-r-md bg-primary transition-transform duration-300 animate-in slide-in-from-left-1" />}
+        {active && <div className="absolute left-0 top-0 h-full w-[4px] rounded-l-lg transform translate-x-[1px] bg-orange-300 transition-transform duration-300 animate-in slide-in-from-left-1" />}
         {item.label}
       </Link>
     );
@@ -307,7 +354,7 @@ function SidebarSubNavItem({
         onClick={() => setOpen(!open)}
         className={cn(
           'flex w-full items-center justify-between rounded-md pl-3 pr-2 py-2 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary',
-          isSubChildActive ? 'text-[#111827]' : 'text-gray-600 hover:bg-gray-100',
+          isSubChildActive ? 'text-gray-600' : 'text-gray-600 hover:bg-gray-100',
         )}
       >
         <span>{item.label}</span>
@@ -325,11 +372,11 @@ function SidebarSubNavItem({
                 href={subChild.href || '#'}
                 className={cn(
                   'group relative ml-2 block rounded-md pl-3 pr-2 py-2 text-sm transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary',
-                  active ? 'bg-[#E5E7EB] text-[#111827] font-[500]' : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900',
+                  active ? 'bg-[#E5E7EB] text-gray-600 font-[500]' : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900',
                 )}
                 aria-current={active ? 'page' : undefined}
               >
-                {active && <div className="absolute left-0 top-0 h-full w-[3px] rounded-r-md bg-primary transition-transform duration-300 animate-in slide-in-from-left-1" />}
+                {active && <div className="absolute left-0 top-0 h-full w-[4px] rounded-l-lg transform translate-x-[1px] bg-orange-300 transition-transform duration-300 animate-in slide-in-from-left-1" />}
                 {subChild.label}
               </Link>
             );

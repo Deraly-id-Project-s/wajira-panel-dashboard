@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { createUserSchema, updateUserSchema, CreateUserFormValues, UpdateUserFormValues } from '@/scheme/user.schema';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+import { FormDialog } from '@/components/ui/form-dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -39,7 +39,7 @@ export function UserFormDialog({ open, onOpenChange, user }: Props) {
   const { data: roleOptions = [], isLoading: isRolesLoading } = useRoles();
   const { data: companyOptions = [], isLoading: isCompaniesLoading } = useQuery({
     queryKey: ['user-companies'],
-    queryFn: fetchUserCompanies,
+    queryFn: () => fetchUserCompanies(),
   });
 
   // Using a union type for potential values
@@ -156,89 +156,25 @@ export function UserFormDialog({ open, onOpenChange, user }: Props) {
   const isBusy = createMutation.isPending || updateMutation.isPending || assignRoleMutation.isPending || activateMutation.isPending || deactivateMutation.isPending || form.formState.isSubmitting;
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-[800px] sm:max-w-[700px]">
-        <DialogHeader>
-          <DialogTitle>{isEdit ? 'Ubah Data Pengguna' : 'Tambah Data Pengguna'}</DialogTitle>
-          <DialogDescription className="hidden">Form untuk {isEdit ? 'mengubah' : 'menambah'} data user</DialogDescription>
-        </DialogHeader>
-
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <FormField
-                control={form.control}
-                name="email"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Email<RequiredMark /></FormLabel>
-                    <FormControl>
-                      <Input type="email" placeholder="user@mail.com" {...field} disabled={isBusy || isEdit} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="username"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Username<RequiredMark /></FormLabel>
-                    <FormControl>
-                      <Input placeholder="username" {...field} disabled={isBusy || isEdit} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <FormField
-                control={form.control}
-                name="firstname"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Nama Depan<RequiredMark /></FormLabel>
-                    <FormControl>
-                      <Input placeholder="Nama depan" {...field} disabled={isBusy} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="lastname"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Nama Belakang</FormLabel>
-                    <FormControl>
-                      <Input placeholder="Nama belakang" {...field} disabled={isBusy} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
-
+    <FormDialog
+      open={open}
+      onOpenChange={onOpenChange}
+      title={isEdit ? 'Ubah Data Pengguna' : 'Tambah Data Pengguna'}
+      onSubmit={(e: React.FormEvent) => { e.preventDefault(); void form.handleSubmit(onSubmit)(); }}
+      maxWidthClassName="max-w-[700px]"
+      isSubmitting={isBusy}
+    >
+      <Form {...form}>
+        <div className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <FormField
               control={form.control}
-              name="password"
+              name="email"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Password {isEdit && '(Opsional)'}{!isEdit && <RequiredMark />}</FormLabel>
+                  <FormLabel>Email<RequiredMark /></FormLabel>
                   <FormControl>
-                    <div className="relative">
-                      <Input type={showPassword ? 'text' : 'password'} placeholder={isEdit ? 'Kosongkan jika tidak diubah' : 'Masukkan password'} {...field} disabled={isBusy} />
-                      <Button type="button" variant="ghost" size="icon" className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent" onClick={() => setShowPassword(!showPassword)} disabled={isBusy}>
-                        {showPassword ? <EyeOff className="h-4 w-4 text-muted-foreground" /> : <Eye className="h-4 w-4 text-muted-foreground" />}
-                        <span className="sr-only">Toggle password visibility</span>
-                      </Button>
-                    </div>
+                    <Input type="email" placeholder="user@mail.com" {...field} disabled={isBusy || isEdit} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -247,18 +183,28 @@ export function UserFormDialog({ open, onOpenChange, user }: Props) {
 
             <FormField
               control={form.control}
-              name="password_confirmation"
+              name="username"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Konfirmasi Password{!isEdit && <RequiredMark />}</FormLabel>
+                  <FormLabel>Username<RequiredMark /></FormLabel>
                   <FormControl>
-                    <div className="relative">
-                      <Input type={showConfirmPassword ? 'text' : 'password'} placeholder="Ulangi password" {...field} disabled={isBusy} />
-                      <Button type="button" variant="ghost" size="icon" className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent" onClick={() => setShowConfirmPassword(!showConfirmPassword)} disabled={isBusy}>
-                        {showConfirmPassword ? <EyeOff className="h-4 w-4 text-muted-foreground" /> : <Eye className="h-4 w-4 text-muted-foreground" />}
-                        <span className="sr-only">Toggle password visibility</span>
-                      </Button>
-                    </div>
+                    <Input placeholder="username" {...field} disabled={isBusy || isEdit} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <FormField
+              control={form.control}
+              name="firstname"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Nama Depan<RequiredMark /></FormLabel>
+                  <FormControl>
+                    <Input placeholder="Nama depan" {...field} disabled={isBusy} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -267,93 +213,138 @@ export function UserFormDialog({ open, onOpenChange, user }: Props) {
 
             <FormField
               control={form.control}
-              name="roles"
+              name="lastname"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Hak Akses<RequiredMark /></FormLabel>
-                  <Select onValueChange={field.onChange} defaultValue={field.value} value={field.value} disabled={isBusy || isRolesLoading}>
-                    <FormControl>
-                      <SelectTrigger className="w-full">
-                        <SelectValue placeholder={isRolesLoading ? 'Memuat role...' : 'Pilih role'} />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {roleOptions.map((role) => (
-                        <SelectItem key={role.id} value={role.name}>
-                          {role.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <FormLabel>Nama Belakang</FormLabel>
+                  <FormControl>
+                    <Input placeholder="Nama belakang" {...field} disabled={isBusy} />
+                  </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
             />
+          </div>
 
-            <FormField
-              control={form.control}
-              name="company_ids"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Perusahaan</FormLabel>
+          <FormField
+            control={form.control}
+            name="password"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Password {isEdit && '(Opsional)'}{!isEdit && <RequiredMark />}</FormLabel>
+                <FormControl>
+                  <div className="relative">
+                    <Input type={showPassword ? 'text' : 'password'} placeholder={isEdit ? 'Kosongkan jika tidak diubah' : 'Masukkan password'} {...field} disabled={isBusy} />
+                    <Button type="button" variant="ghost" size="icon" className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent" onClick={() => setShowPassword(!showPassword)} disabled={isBusy}>
+                      {showPassword ? <EyeOff className="h-4 w-4 text-muted-foreground" /> : <Eye className="h-4 w-4 text-muted-foreground" />}
+                      <span className="sr-only">Toggle password visibility</span>
+                    </Button>
+                  </div>
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="password_confirmation"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Konfirmasi Password{!isEdit && <RequiredMark />}</FormLabel>
+                <FormControl>
+                  <div className="relative">
+                    <Input type={showConfirmPassword ? 'text' : 'password'} placeholder="Ulangi password" {...field} disabled={isBusy} />
+                    <Button type="button" variant="ghost" size="icon" className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent" onClick={() => setShowConfirmPassword(!showConfirmPassword)} disabled={isBusy}>
+                      {showConfirmPassword ? <EyeOff className="h-4 w-4 text-muted-foreground" /> : <Eye className="h-4 w-4 text-muted-foreground" />}
+                      <span className="sr-only">Toggle password visibility</span>
+                    </Button>
+                  </div>
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="roles"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Hak Akses<RequiredMark /></FormLabel>
+                <Select onValueChange={field.onChange} defaultValue={field.value} value={field.value} disabled={isBusy || isRolesLoading}>
                   <FormControl>
-                    <MultiSelect
-                      options={companyOptions.map((company) => ({
-                        label: company.name,
-                        value: Number(company.id),
-                      }))}
-                      value={field.value || []}
-                      onChange={field.onChange}
-                      placeholder={isCompaniesLoading ? 'Memuat perusahaan...' : 'Pilih perusahaan'}
-                      disabled={isBusy || isCompaniesLoading}
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder={isRolesLoading ? 'Memuat role...' : 'Pilih role'} />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    {roleOptions.map((role) => (
+                      <SelectItem key={role.id} value={role.name}>
+                        {role.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="company_ids"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Perusahaan</FormLabel>
+                <FormControl>
+                  <MultiSelect
+                    options={companyOptions.map((company) => ({
+                      label: company.name,
+                      value: Number(company.id),
+                    }))}
+                    value={field.value || []}
+                    onChange={field.onChange}
+                    placeholder={isCompaniesLoading ? 'Memuat perusahaan...' : 'Pilih perusahaan'}
+                    disabled={isBusy || isCompaniesLoading}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="is_active"
+            render={({ field }) => (
+              <FormItem className="space-y-2">
+                <FormLabel>Jadikan Aktif<RequiredMark /></FormLabel>
+                <FormControl>
+                  <div className="flex items-center space-x-3 h-9">
+                    <Switch
+                      checked={Boolean(field.value)}
+                      onCheckedChange={field.onChange}
+                      disabled={isBusy}
                     />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+                    <span className={`text-sm font-medium ${Boolean(field.value) ? 'text-green-600' : 'text-slate-400'}`}>
+                      {Boolean(field.value) ? 'Aktif' : 'Nonaktif'}
+                    </span>
+                  </div>
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
 
-            <FormField
-              control={form.control}
-              name="is_active"
-              render={({ field }) => (
-                <FormItem className="space-y-2">
-                  <FormLabel>Jadikan Aktif<RequiredMark /></FormLabel>
-                  <FormControl>
-                    <div className="flex items-center space-x-3 h-9">
-                      <Switch
-                        checked={Boolean(field.value)}
-                        onCheckedChange={field.onChange}
-                        disabled={isBusy}
-                      />
-                      <span className={`text-sm font-medium ${Boolean(field.value) ? 'text-green-600' : 'text-slate-400'}`}>
-                        {Boolean(field.value) ? 'Aktif' : 'Nonaktif'}
-                      </span>
-                    </div>
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <div className="rounded-lg border border-blue-100 bg-blue-50/55 p-3 text-[12px] text-blue-800 flex items-start gap-2 leading-relaxed">
-              <Info className="h-4 w-4 text-blue-500 shrink-0 mt-0.5" />
-              <span>
-                Pengaturan ini digunakan untuk memberi atau mencabut akses aktif pengguna agar dapat masuk (login) ke dalam sistem dashboard.
-              </span>
-            </div>
-
-            <div className="space-y-2 pt-4">
-              <Button type="submit" className="w-full bg-primary text-primary-foreground hover:bg-primary/90" disabled={isBusy}>
-                {isBusy ? 'Menyimpan...' : 'Simpan'}
-              </Button>
-              <Button type="button" variant="outline" className="w-full" onClick={() => onOpenChange(false)} disabled={isBusy}>
-                Batal
-              </Button>
-            </div>
-          </form>
-        </Form>
-      </DialogContent>
-    </Dialog>
+          <div className="rounded-lg border border-blue-100 bg-blue-50/55 p-3 text-[12px] text-blue-800 flex items-start gap-2 leading-relaxed">
+            <Info className="h-4 w-4 text-blue-500 shrink-0 mt-0.5" />
+            <span>
+              Pengaturan ini digunakan untuk memberi atau mencabut akses aktif pengguna agar dapat masuk (login) ke dalam sistem dashboard.
+            </span>
+          </div>
+        </div>
+      </Form>
+    </FormDialog>
   );
 }

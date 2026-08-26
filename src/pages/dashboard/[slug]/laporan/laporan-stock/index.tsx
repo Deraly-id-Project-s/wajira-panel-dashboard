@@ -72,20 +72,22 @@ export default function LaporanStockPage() {
         switch (activeTab) {
             case 'stock-detail':
                 return (
-                    <div className="flex flex-wrap items-end gap-4">
-                        <div className="space-y-2">
+                    <div className="flex flex-col sm:flex-row sm:items-end gap-3 w-full sm:w-auto">
+                        <div className="space-y-1.5 w-full sm:w-auto">
                             <label className="text-[13px] font-medium text-slate-700">No Mesin</label>
-                            <Input
-                                value={machineNumber}
-                                onChange={(event) => setMachineNumber(event.target.value)}
-                                placeholder="Masukkan nomor mesin"
-                                className="w-[240px] bg-white"
-                            />
+                            <div className="w-full sm:w-[240px]">
+                                <Input
+                                    value={machineNumber}
+                                    onChange={(event) => setMachineNumber(event.target.value)}
+                                    placeholder="Masukkan nomor mesin"
+                                    className="w-full bg-white h-9"
+                                />
+                            </div>
                         </div>
-                        <div className="flex items-center gap-2 text-sm text-slate-500 whitespace-nowrap mb-1">
+                        <div className="flex items-center gap-2 text-sm text-slate-500 whitespace-nowrap h-9">
                             <span>Show</span>
                             <Select value={String(stockDetailPerPage)} onValueChange={(value) => setStockDetailPerPage(Number(value))}>
-                                <SelectTrigger className="w-[70px] bg-white cursor-pointer">
+                                <SelectTrigger className="w-[70px] bg-white cursor-pointer h-9">
                                     <SelectValue placeholder="25" />
                                 </SelectTrigger>
                                 <SelectContent>
@@ -100,17 +102,17 @@ export default function LaporanStockPage() {
                 );
             case 'purchase-order':
                 return (
-                    <div className="flex flex-wrap items-end gap-4">
-                        <div className="space-y-2">
+                    <div className="flex flex-col sm:flex-row sm:items-end gap-3 w-full sm:w-auto">
+                        <div className="space-y-1.5 w-full sm:w-auto">
                             <label className="text-[13px] font-medium text-slate-700">Periode Transaksi</label>
-                            <div className="w-[280px]">
+                            <div className="w-full sm:w-[280px]">
                                 <DatePickerWithRange date={poDateRange} onChange={setPoDateRange} />
                             </div>
                         </div>
-                        <div className="flex items-center gap-2 text-sm text-slate-500 whitespace-nowrap mb-1">
+                        <div className="flex items-center gap-2 text-sm text-slate-500 whitespace-nowrap h-9">
                             <span>Show</span>
                             <Select value={String(poPerPage)} onValueChange={(value) => setPoPerPage(Number(value))}>
-                                <SelectTrigger className="w-[70px] bg-white cursor-pointer">
+                                <SelectTrigger className="w-[70px] bg-white cursor-pointer h-9">
                                     <SelectValue placeholder="25" />
                                 </SelectTrigger>
                                 <SelectContent>
@@ -125,17 +127,17 @@ export default function LaporanStockPage() {
                 );
             case 'sales-order':
                 return (
-                    <div className="flex flex-wrap items-end gap-4">
-                        <div className="space-y-2">
+                    <div className="flex flex-col sm:flex-row sm:items-end gap-3 w-full sm:w-auto">
+                        <div className="space-y-1.5 w-full sm:w-auto">
                             <label className="text-[13px] font-medium text-slate-700">Periode Transaksi</label>
-                            <div className="w-[280px]">
+                            <div className="w-full sm:w-[280px]">
                                 <DatePickerWithRange date={soDateRange} onChange={setSoDateRange} />
                             </div>
                         </div>
-                        <div className="flex items-center gap-2 text-sm text-slate-500 whitespace-nowrap mb-1">
+                        <div className="flex items-center gap-2 text-sm text-slate-500 whitespace-nowrap h-9">
                             <span>Show</span>
                             <Select value={String(soPerPage)} onValueChange={(value) => setSoPerPage(Number(value))}>
-                                <SelectTrigger className="w-[70px] bg-white cursor-pointer">
+                                <SelectTrigger className="w-[70px] bg-white cursor-pointer h-9">
                                     <SelectValue placeholder="25" />
                                 </SelectTrigger>
                                 <SelectContent>
@@ -150,10 +152,10 @@ export default function LaporanStockPage() {
                 );
             default:
                 return (
-                    <div className="flex items-center gap-2 text-sm text-slate-500 whitespace-nowrap mb-1">
+                    <div className="flex items-center gap-2 text-sm text-slate-500 whitespace-nowrap h-9">
                         <span>Show</span>
                         <Select value={String(stockPerPage)} onValueChange={(value) => setStockPerPage(Number(value))}>
-                            <SelectTrigger className="w-[70px] bg-white cursor-pointer">
+                            <SelectTrigger className="w-[70px] bg-white cursor-pointer h-9">
                                 <SelectValue placeholder="25" />
                             </SelectTrigger>
                             <SelectContent>
@@ -209,15 +211,15 @@ export default function LaporanStockPage() {
 
                     {/* Unified Filter Toolbar */}
                     <div className="flex flex-col gap-4 sm:flex-row sm:items-end justify-between w-full no-print">
-                        <div className="flex items-end gap-4 w-full sm:w-auto">
+                        <div className="w-full sm:w-auto">
                             {pageFilter}
                         </div>
-                        <div className="flex items-center gap-3 self-start sm:self-auto">
-                            <Button onClick={() => currentActions?.print()} variant="outline" className="w-full sm:w-auto">
-                                <Printer className="h-4 w-4" /> Print
+                        <div className="flex flex-col sm:flex-row items-center gap-2 w-full sm:w-auto">
+                            <Button onClick={() => currentActions?.print()} variant="outline" className="w-full sm:w-auto h-9">
+                                <Printer className="h-4 w-4 mr-2" /> Print
                             </Button>
-                            <Button onClick={() => currentActions?.download()} variant="outline" className="w-full sm:w-auto">
-                                <Download className="h-4 w-4" /> Download
+                            <Button onClick={() => currentActions?.download()} variant="outline" className="w-full sm:w-auto h-9">
+                                <Download className="h-4 w-4 mr-2" /> Download
                             </Button>
                         </div>
                     </div>

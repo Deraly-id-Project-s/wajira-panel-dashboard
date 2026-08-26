@@ -1,8 +1,13 @@
 import type { NextConfig } from "next";
 
 const isProduction = process.env.NODE_ENV === "production";
+const objectBucketOrigin = (process.env.OBJECT_BUCKET_URL || 'http://localhost:9000').replace(/\/+$/, '');
 
 const nextConfig: NextConfig = {
+  env: {
+    OBJECT_BUCKET_URL: process.env.OBJECT_BUCKET_URL || '',
+    OBJECT_BUKCET: process.env.OBJECT_BUKCET || '',
+  },
   reactStrictMode: true,
   output: "standalone",
   productionBrowserSourceMaps: false,
@@ -25,7 +30,7 @@ const nextConfig: NextConfig = {
     const contentSecurityPolicy = isProduction
       ? [
         "default-src 'self'",
-        "img-src 'self' data: https:",
+        `img-src 'self' data: https: ${objectBucketOrigin}`,
         "style-src 'self' 'unsafe-inline'",
         "script-src 'self'",
         "font-src 'self' https://fonts.gstatic.com",
@@ -36,7 +41,7 @@ const nextConfig: NextConfig = {
       ].join("; ")
       : [
         "default-src 'self'",
-        "img-src 'self' data: https: blob:",
+        `img-src 'self' data: https: blob: ${objectBucketOrigin}`,
         "style-src 'self' 'unsafe-inline'",
         "script-src 'self' 'unsafe-eval' 'unsafe-inline'",
         "font-src 'self' https://fonts.gstatic.com",

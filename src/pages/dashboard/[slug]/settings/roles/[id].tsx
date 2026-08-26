@@ -1,8 +1,9 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useRouter } from 'next/router';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { PageHeader } from '@/components/ui/page-header';
 import { Button } from '@/components/ui/button';
+import BaseTable, { ColumnDef } from '@/components/ui/base-table';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useRoleDetail } from '@/hooks/useRole';
@@ -10,14 +11,97 @@ import { useUserOptions, useAssignRole, useRevokeRole } from '@/hooks/useUser';
 import { toast } from 'sonner';
 import { ChevronLeft, Shield, UserPlus, UserMinus } from 'lucide-react';
 import { ApiResponseError } from '@/lib/api/response';
+import type { LaravelApiResponse } from '@/lib/api/response';
 import { LoadingState } from '@/components/ui/loading-state';
+import { useCompany } from '@/contexts/CompanyContext';
+import { useQuery } from '@tanstack/react-query';
+import { apiClient } from '@/lib/api/client';
+import type { Module } from '@/services/module.service';
+import type { Permission } from '@/@types/permission.types';
 
 export default function RoleDetailPage() {
   const router = useRouter();
   const { slug, id } = router.query;
+  const { companyId } = useCompany();
 
   const { data: role, isLoading: isLoadingRole, isError: isErrorRole, refetch } = useRoleDetail(id as string);
   const { data: userOptions = [], isLoading: isLoadingUsers } = useUserOptions();
+
+  const userColumns = useMemo<ColumnDef<any>[]>(() => {
+    const cols: ColumnDef<any>[] = [
+      {
+        header: 'Nama',
+        accessorKey: 'name',
+        className: 'font-medium text-gray-900',
+        cell: (user) => (
+          <div>
+            <div>{user.name}</div>
+            <div className="text-[10px] text-gray-400 font-normal mt-0.5">
+              {user.firstname || ''} {user.lastname || ''}
+            </div>
+          </div>
+        ),
+      },
+      {
+        header: 'Username & Email',
+        cell: (user) => (
+          <div>
+            <div className="text-gray-700 font-medium">{user.username}</div>
+            <div className="text-gray-500 mt-0.5">{user.email}</div>
+          </div>
+        ),
+      },
+      {
+        header: 'Status',
+        cell: (user) => (
+          <span
+            className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold border ${
+              user.is_active === 1
+                ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                : 'bg-slate-50 text-slate-700 border-slate-200'
+            }`}
+          >
+            {user.is_active === 1 ? 'Aktif' : 'Non-aktif'}
+          </span>
+        ),
+      },
+    ];
+
+    if (role?.name?.toLowerCase() !== 'admin') {
+      cols.push({
+        header: 'Aksi',
+        alignment: 'center',
+        sticky: 'right',
+        cell: (user) => (
+          <div className="flex justify-center">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setUserToRevoke({ id: user.id, name: user.name })}
+              className="h-8 w-8 text-red-500 hover:text-red-600 hover:bg-red-50 rounded-full"
+              title="Revoke Peran / Lepas Peran"
+            >
+              <UserMinus size={15} />
+            </Button>
+          </div>
+        ),
+      });
+    }
+
+    return cols;
+  }, [role?.name]);
+
+  const { data: modules = [], isLoading: isLoadingModules } = useQuery<Module[]>({
+    queryKey: ['global-modules', companyId],
+    queryFn: async () => {
+      if (!companyId) return [];
+      const response = await apiClient.get<LaravelApiResponse<Module[]>>('/wapi/global/module', {
+        params: { company_id: companyId }
+      });
+      return response.data?.data || [];
+    },
+    enabled: !!companyId,
+  });
 
   const assignRoleMutation = useAssignRole();
   const revokeRoleMutation = useRevokeRole();
@@ -65,9 +149,34 @@ export default function RoleDetailPage() {
     (userOpt) => !role?.users?.some((u) => u.id === userOpt.id)
   );
 
+  const getMatchingPermsForModule = (moduleSlug: string, rolePerms: Permission[]) => {
+    return rolePerms.filter((p) => {
+      const parts = p.name.split(':');
+      const prefix = parts[0];
+
+      if (moduleSlug === 'user') {
+        return ['user', 'role', 'permission', 'settings'].includes(prefix) || p.name === 'user' || p.name === 'role' || p.name === 'permission' || p.name === 'settings';
+      }
+
+      return prefix === moduleSlug || p.name === moduleSlug;
+    });
+  };
+
+  const modulesWithAccess = role ? modules.map((mod) => {
+    const activeFeatures = role.features?.filter((roleFeature) =>
+      mod.features?.some((moduleFeature) => moduleFeature.id === roleFeature.id)
+    ) || [];
+    const activePerms = getMatchingPermsForModule(mod.slug, role.permissions || []);
+    return {
+      ...mod,
+      activeFeatures,
+      activePerms,
+    };
+  }).filter((m) => m.activeFeatures.length > 0 || m.activePerms.length > 0) : [];
+
   return (
     <DashboardLayout>
-      <div className="max-w-5xl mx-auto p-6 space-y-6">
+      <div className="mx-auto p-6 space-y-6">
         {/* Header */}
         <PageHeader
           breadcrumbs={[
@@ -86,10 +195,10 @@ export default function RoleDetailPage() {
             Gagal memuat detail peran atau peran tidak ditemukan.
           </div>
         ) : (
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            {/* Left/Main Column - Users & Management */}
-            <div className="lg:col-span-2 space-y-6">
-              {/* Card: Role Info Header (Without technical stuff like guard_name) */}
+          <div className="space-y-6">
+            {/* Users & Management Section */}
+            <div className="space-y-6">
+              {/* Card: Role Info Header */}
               <div className="bg-white rounded-md border p-6 shadow-sm space-y-4">
                 <div className="flex items-center gap-3">
                   <div className="h-10 w-10 rounded-md bg-indigo-50 flex items-center justify-center text-indigo-600">
@@ -144,78 +253,62 @@ export default function RoleDetailPage() {
                     Tidak ada pengguna yang terdaftar pada peran ini.
                   </div>
                 ) : (
-                  <div className="border rounded-md overflow-hidden bg-white">
-                    <table className="min-w-full text-xs text-left">
-                      <thead className="bg-slate-50/80 border-b">
-                        <tr>
-                          <th className="px-4 py-3 font-semibold text-gray-700 uppercase tracking-wider">Nama</th>
-                          <th className="px-4 py-3 font-semibold text-gray-700 uppercase tracking-wider">Username & Email</th>
-                          <th className="px-4 py-3 font-semibold text-gray-700 uppercase tracking-wider">Status</th>
-                          {role.name.toLowerCase() !== 'admin' && (
-                            <th className="px-4 py-3 font-semibold text-gray-700 uppercase tracking-wider text-center">Aksi</th>
-                          )}
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y">
-                        {role.users.map((user) => (
-                          <tr key={user.id} className="hover:bg-slate-50/50 transition-colors">
-                            <td className="px-4 py-3.5 font-medium text-gray-900">
-                              <div>{user.name}</div>
-                              <div className="text-[10px] text-gray-400 font-normal mt-0.5">
-                                {user.firstname || ''} {user.lastname || ''}
-                              </div>
-                            </td>
-                            <td className="px-4 py-3.5">
-                              <div className="text-gray-700 font-medium">{user.username}</div>
-                              <div className="text-gray-500 mt-0.5">{user.email}</div>
-                            </td>
-                            <td className="px-4 py-3.5">
-                              <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold border ${user.is_active === 1
-                                ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
-                                : 'bg-slate-50 text-slate-700 border-slate-200'
-                                }`}>
-                                {user.is_active === 1 ? 'Aktif' : 'Non-aktif'}
-                              </span>
-                            </td>
-                            {role.name.toLowerCase() !== 'admin' && (
-                              <td className="px-4 py-3.5 text-center">
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  onClick={() => setUserToRevoke({ id: user.id, name: user.name })}
-                                  className="h-8 w-8 text-red-500 hover:text-red-600 hover:bg-red-50 rounded-full"
-                                  title="Revoke Peran / Lepas Peran"
-                                >
-                                  <UserMinus size={15} />
-                                </Button>
-                              </td>
-                            )}
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
+                  <BaseTable
+                    data={role.users}
+                    columns={userColumns}
+                  />
                 )}
               </div>
             </div>
 
-            {/* Right Column - Permissions List */}
-            <div className="bg-white rounded-md border p-6 shadow-sm space-y-6 h-fit max-h-[80vh] flex flex-col">
+            {/* Bottom Section - Features & Permissions Grouped by Module */}
+            <div className="bg-white rounded-md border p-6 shadow-sm space-y-6">
               <div>
-                <h3 className="text-base font-semibold text-gray-900">Izin Akses (Permissions)</h3>
-                <p className="text-xs text-gray-500 mt-0.5">Daftar hak akses yang diaktifkan untuk peran ini.</p>
+                <h3 className="text-base font-semibold text-gray-900">Hak Akses & Fitur (RBAC)</h3>
+                <p className="text-xs text-gray-500 mt-0.5">Daftar modul, fitur, dan perizinan spesifik yang diaktifkan untuk peran ini.</p>
               </div>
 
-              {!role.permissions || role.permissions.length === 0 ? (
+              {modulesWithAccess.length === 0 ? (
                 <div className="text-sm text-gray-500 bg-gray-50/50 rounded-md p-8 text-center border border-dashed font-medium">
-                  Tidak ada izin akses yang terdaftar.
+                  Tidak ada fitur atau izin akses yang aktif untuk peran ini.
                 </div>
               ) : (
-                <div className="space-y-2 overflow-y-auto pr-1 flex-1">
-                  {role.permissions.map((perm) => (
-                    <div key={perm.id} className="p-3 rounded-md border border-slate-100 bg-slate-50/40 flex flex-col gap-1">
-                      <span className="font-mono text-xs font-bold text-indigo-700">{perm.name}</span>
-                      <span className="text-[11px] text-gray-500 leading-normal font-medium">{perm.description || 'Tidak ada deskripsi.'}</span>
+                <div className="space-y-6">
+                  {modulesWithAccess.map((mod) => (
+                    <div key={mod.id} className="border border-slate-100 rounded-xl bg-slate-50/25 p-6 space-y-4">
+                      {/* Module Title */}
+                      <div className="border-b border-slate-100 pb-2">
+                        <h4 className="text-sm font-bold text-slate-800 uppercase tracking-wider">{mod.name}</h4>
+                      </div>
+
+                      {/* Features Badges */}
+                      {mod.activeFeatures.length > 0 && (
+                        <div className="space-y-2">
+                          <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Fitur Aktif</span>
+                          <div className="flex flex-wrap gap-2">
+                            {mod.activeFeatures.map((feature) => (
+                              <span key={feature.id} className="inline-flex items-center px-3 py-1 rounded-lg text-xs font-semibold bg-indigo-50 text-indigo-700 border border-indigo-100 shadow-sm">
+                                {feature.name}
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Permissions List */}
+                      {mod.activePerms.length > 0 && (
+                        <div className="space-y-2 pt-3 border-t border-slate-100/50">
+                          <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Permissions</span>
+                          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+                            {mod.activePerms.map((perm) => (
+                              <div key={perm.id} className="p-3 rounded-lg border border-slate-100 bg-white shadow-sm flex flex-col gap-1 min-w-0">
+                                <span className="font-mono text-xs font-bold text-indigo-950 truncate" title={perm.name}>{perm.name}</span>
+                                <span className="text-[10px] text-slate-500 font-medium leading-normal line-clamp-2">{perm.description || 'Tidak ada deskripsi.'}</span>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
                     </div>
                   ))}
                 </div>

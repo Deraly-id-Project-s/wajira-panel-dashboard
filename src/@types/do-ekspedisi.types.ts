@@ -18,6 +18,9 @@ export interface DoEkspedisiOrderList {
   id: number;
   uuid?: string;
   code: string;
+  description: string;
+  status: string;
+  customer?: DoEkspedisiCustomer | null;
   customerName: string;
   loadingIn: string;
   loadingOut: string;
@@ -26,6 +29,16 @@ export interface DoEkspedisiOrderList {
   qty: number;
   tarifs: DoEkspedisiOrderTarifItem[];
   vehicleType?: string;
+  billInvoice: number;
+  ppn: number;
+  pph: number;
+  ujDriver: number;
+  ujTowing: number | null;
+  ujCdd: number | null;
+  ujFuso: number | null;
+  invTowing: number | null;
+  invCdd: number | null;
+  invFuso: number | null;
 }
 
 export interface DoEkspedisiOrderTarifItem {
@@ -50,7 +63,10 @@ export interface DoEkspedisiCustomer {
   id: number;
   uuid?: string;
   name: string;
+  address?: string | null;
+  phone?: string | null;
   pic?: string | null;
+  companyList?: string | null;
 }
 
 export interface DoEkspedisiItemDestination {
@@ -112,6 +128,81 @@ export interface DoEkspedisi {
   items?: DoEkspedisiItem[];
   createdAt?: string;
   updatedAt?: string;
+  status: string;
+  ujNominal: number;
+  ujNominalBeforeClaim: number;
+  claimDeductionNominal: number;
+  startDate?: string | null;
+  endDate?: string | null;
+  driverNotes: DoEkspedisiDriverNote[];
+  expeditionExpenses: DoEkspedisiExpense[];
+  expeditionClaims: DoEkspedisiClaim[];
+  driverExpeditionClaims: DoEkspedisiClaimApplication[];
+}
+
+export interface DoEkspedisiDriverNote {
+  id: number;
+  uuid?: string;
+  doExpeditionsId: number;
+  effectiveDate: string;
+  subject: string;
+  image?: string | null;
+  description: string;
+}
+
+export interface DoEkspedisiExpense {
+  id: number;
+  uuid?: string;
+  doExpeditionsId: number;
+  driverId?: number | null;
+  subject: string;
+  description: string;
+  nominal: number;
+}
+
+export interface DoEkspedisiClaim {
+  id: number;
+  uuid?: string;
+  doExpeditionsId: number;
+  driverId: number;
+  subject: string;
+  description: string;
+  isClaim: boolean;
+  claimNominal: number;
+  nominal: number;
+  remainingNominal: number;
+  appliedNominal: number;
+  sourceExpeditionCode?: string;
+  documentations: DoEkspedisiClaimDocumentation[];
+}
+
+export interface DoEkspedisiClaimApplication {
+  id: number;
+  uuid?: string;
+  doExpeditionId: number;
+  doExpeditionClaimId: number;
+  driverId: number;
+  nominal: number;
+  type: 'cash' | 'transfer';
+  date: string;
+  claim?: DoEkspedisiClaim | null;
+}
+
+export interface ApplyExpeditionClaimPayload {
+  do_expedition_claim_id: number;
+  do_expedition_id: number;
+  driver_id: number;
+  nominal: number;
+  type: 'cash' | 'transfer';
+  date: string;
+}
+
+export interface DoEkspedisiClaimDocumentation {
+  id: number;
+  uuid?: string;
+  doExpeditionClaimId: number;
+  image?: string | null;
+  caption: string;
 }
 
 export interface DoEkspedisiListParams {
@@ -143,6 +234,9 @@ export interface DoEkspedisiPayload {
   vehicle_id: string | number;
   driver_id: string | number;
   driver_note?: string;
+  status?: string;
+  start_date?: string | null;
+  end_date?: string | null;
 }
 
 export interface DoEkspedisiItemPayload {

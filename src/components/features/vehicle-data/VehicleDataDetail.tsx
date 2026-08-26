@@ -29,7 +29,7 @@ function DetailRow({ label, value }: { label: string; value?: string | number | 
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <Card className="rounded-[20px] border border-slate-200 bg-[#fcfcfd] p-5 shadow-sm">
+    <Card className="rounded-md border border-slate-200 bg-[#fcfcfd] p-5 shadow-sm">
       <div className="mb-4 border-b border-slate-200 pb-3 text-base font-semibold text-slate-900">{title}</div>
       {children}
     </Card>
@@ -42,7 +42,7 @@ export function VehicleDataDetail({ data, slug }: VehicleDataDetailProps) {
   return (
     <div className="space-y-6">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex items-center gap-2">
+        <div className="flex flex-col sm:flex-row items-center gap-2 w-full sm:w-auto">
           <Button onClick={() => router.back()} variant="ghost" size="icon" className="h-10 w-10 rounded-md border border-slate-200 hover:bg-slate-50 cursor-pointer">
             <ArrowLeft className="h-4 w-4" />
           </Button>

@@ -38,7 +38,7 @@ export default function AccountingReportFilters({
         </div>
       </div>
 
-      <div className="flex items-center gap-2">
+      <div className="flex flex-col sm:flex-row items-center gap-2 w-full sm:w-auto">
         <Button type="button" onClick={onPrint} variant="outline" className="w-full sm:w-auto">
           <Printer className="h-4 w-4 mr-2" />
           Print

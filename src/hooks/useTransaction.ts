@@ -67,3 +67,9 @@ export const useDeleteTransaction = (companyId: string) => {
     },
   });
 };
+
+export const useExportTransactions = () =>
+  useMutation({
+    mutationFn: ({ companyId, search }: { companyId: string; search?: string }) =>
+      service.exportTransactions(companyId, search),
+  });

@@ -1,10 +1,9 @@
-import { Search } from 'lucide-react';
+import { useMemo } from 'react';
 import { Button } from '@/components/ui/button';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import BaseTable, { ColumnDef } from '@/components/ui/base-table';
 import type { MaintenanceItem } from '@/@types/maintenance.types';
 import { format } from 'date-fns';
 import { id } from 'date-fns/locale';
-import { LoadingState } from '@/components/ui/loading-state';
 
 interface MaintenanceTableProps {
   data: MaintenanceItem[];
@@ -26,61 +25,70 @@ export function MaintenanceTable({
   onViewDetail,
   startIndex,
 }: MaintenanceTableProps) {
+  const columns = useMemo<ColumnDef<MaintenanceItem>[]>(
+    () => [
+      {
+        header: 'NO',
+        alignment: 'left',
+        className: 'font-medium text-slate-900',
+        cell: (_, index) => startIndex + index,
+      },
+      {
+        header: 'TANGGAL',
+        accessorKey: 'transactionDate',
+        className: 'text-slate-700',
+        cell: (item) => formatDate(item.transactionDate),
+      },
+      {
+        header: 'DRIVER/PIC',
+        accessorKey: 'driver.name',
+        className: 'text-slate-700 font-medium',
+        cell: (item) => item.driver?.name || '-',
+      },
+      {
+        header: 'NO POLISI',
+        accessorKey: 'vehicleFleet.registrationNumber',
+        className: 'text-slate-700',
+        cell: (item) => item.vehicleFleet?.registrationNumber || '-',
+      },
+      {
+        header: 'ARMADA',
+        accessorKey: 'vehicleFleet.type',
+        className: 'uppercase text-slate-700',
+        cell: (item) => item.vehicleFleet?.type || '-',
+      },
+      {
+        header: 'KETERANGAN',
+        accessorKey: 'description',
+        className: 'text-slate-700',
+        cell: (item) => item.description || '-',
+      },
+      {
+        header: 'Aksi',
+        alignment: 'center',
+        sticky: 'right',
+        cell: (item) => (
+          <div className="flex justify-center">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => onViewDetail(item)}
+              className="h-8 rounded-lg border-slate-200 text-xs font-medium text-slate-700 hover:bg-slate-50 hover:text-slate-950"
+            >
+              Detail
+            </Button>
+          </div>
+        ),
+      },
+    ],
+    [onViewDetail, startIndex],
+  );
+
   return (
-    <Table>
-      <TableHeader className="bg-[#f8f9fa] border-b border-gray-200">
-        <TableRow className="border-slate-200 hover:bg-transparent">
-          <TableHead className="w-[60px] px-4 py-4 text-left text-xs font-semibold uppercase text-slate-500 whitespace-nowrap">NO</TableHead>
-          <TableHead className="px-4 py-4 text-left text-xs font-semibold uppercase text-slate-500 whitespace-nowrap">TANGGAL</TableHead>
-          <TableHead className="px-4 py-4 text-left text-xs font-semibold uppercase text-slate-500 whitespace-nowrap">DRIVER/PIC</TableHead>
-          <TableHead className="px-4 py-4 text-left text-xs font-semibold uppercase text-slate-500 whitespace-nowrap">NO POLISI</TableHead>
-          <TableHead className="px-4 py-4 text-left text-xs font-semibold uppercase text-slate-500 whitespace-nowrap">ARMADA</TableHead>
-          <TableHead className="px-4 py-4 text-left text-xs font-semibold uppercase text-slate-500 whitespace-nowrap">KETERANGAN</TableHead>
-          <TableHead className="w-[100px] px-4 py-4 text-center text-xs font-semibold uppercase text-slate-500 whitespace-nowrap sticky right-0 bg-[#f8f9fa] z-10 border-l border-slate-200 shadow-[-4px_0_6px_-4px_rgba(0,0,0,0.05)]">Aksi</TableHead>
-        </TableRow>
-      </TableHeader>
-      <TableBody>
-        {isLoading ? (
-          <TableRow className="group">
-            <TableCell colSpan={7} className="py-16 h-28 text-center text-slate-500 text-sm">
-              <LoadingState variant="section" text="Memuat data..." />
-            </TableCell>
-          </TableRow>
-        ) : data.length === 0 ? (
-          <TableRow className="group">
-            <TableCell colSpan={100} className="py-16 h-28 text-center text-slate-500 text-sm">
-              <div className="flex flex-col items-center justify-center gap-2">
-                <div className="rounded-full bg-slate-50 p-4 mb-2">
-                  <Search className="h-8 w-8 text-slate-400" />
-                </div>
-                <p className="text-base font-semibold text-slate-900">Tidak ada data ditemukan</p>
-                <p className="text-sm text-slate-500">Belum ada data atau coba gunakan kata kunci pencarian lain.</p>
-              </div>
-            </TableCell>
-          </TableRow>
-        ) : (
-          data.map((item, index) => (
-            <TableRow key={item.id} className="group border-slate-200 bg-white hover:bg-slate-50 transition-colors">
-              <TableCell className="px-4 py-4 text-sm font-medium text-slate-900 text-left">{startIndex + index}</TableCell>
-              <TableCell className="px-4 py-4 text-sm text-slate-700 text-left">{formatDate(item.transactionDate)}</TableCell>
-              <TableCell className="px-4 py-4 text-sm text-slate-700 font-medium text-left">{item.driver?.name || '-'}</TableCell>
-              <TableCell className="px-4 py-4 text-sm text-slate-700 text-left">{item.vehicleFleet?.registrationNumber || '-'}</TableCell>
-              <TableCell className="px-4 py-4 text-sm text-slate-700 uppercase text-left">{item.vehicleFleet?.type || '-'}</TableCell>
-              <TableCell className="px-4 py-4 text-sm text-slate-700 text-left">{item.description || '-'}</TableCell>
-              <TableCell className="px-4 py-4 text-center sticky right-0 bg-white z-10 border-l border-slate-200 shadow-[-4px_0_6px_-4px_rgba(0,0,0,0.05)]">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => onViewDetail(item)}
-                  className="h-8 rounded-lg border-slate-200 text-xs font-medium text-slate-700 hover:bg-slate-50 hover:text-slate-950"
-                >
-                  Detail
-                </Button>
-              </TableCell>
-            </TableRow>
-          ))
-        )}
-      </TableBody>
-    </Table>
+    <BaseTable
+      data={data}
+      columns={columns}
+      loading={isLoading}
+    />
   );
 }

@@ -12,11 +12,11 @@ import { LogOut } from 'lucide-react';
 import { useRouter, useParams } from 'next/navigation';
 import { useAuthMe } from '@/features/auth/hooks/use-auth-me';
 import { performClientLogout } from '@/lib/session/logout';
-import { fetchUserCompanies, Company } from '@/services/company.service';
 import { useCompanyMenu } from '@/hooks/use-company-menu';
 import { MenuItem } from '@/types/menu.types';
 import { cn } from '@/lib/utils';
 import { ParsedImage } from '@/components/ui/parsed-image';
+import { useCompany } from '@/contexts/CompanyContext';
 
 const RECENT_STORAGE_KEY = 'global-search-recent';
 
@@ -52,17 +52,7 @@ export function Topbar() {
   const slug = params?.slug as string;
 
   const searchInputRef = useRef<HTMLInputElement>(null);
-  const [companies, setCompanies] = useState<Company[]>([]);
-
-  useEffect(() => {
-    fetchUserCompanies()
-      .then((data) => {
-        setCompanies(data || []);
-      })
-      .catch((err) => {
-        console.error('Failed to fetch user companies:', err);
-      });
-  }, []);
+  const { companies } = useCompany();
 
   // Keyboard shortcut handler (Cmd + K or Ctrl + K)
   useEffect(() => {
@@ -243,7 +233,7 @@ export function Topbar() {
     <>
       <header className="flex h-16 items-center justify-between border-b border-gray-200 bg-white px-4 md:px-6">
         {/* Left — spacer on mobile (hamburger is fixed, handled by Sidebar) */}
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3 flex-1 mr-4 md:mr-0 md:flex-initial">
           {/* Spacer so content doesn't sit behind hamburger on mobile */}
           <div className="w-8 md:hidden" />
 
@@ -283,10 +273,10 @@ export function Topbar() {
           {/* ── Mobile Search Button ── */}
           <button
             onClick={() => setMobileSearchOpen(true)}
-            className="md:hidden flex items-center gap-2 rounded-md border border-gray-200 bg-gray-50 px-3 py-2 text-sm text-gray-400 hover:bg-white transition"
+            className="md:hidden flex items-center gap-2 rounded-md border border-gray-200 bg-gray-50 px-3 py-2 text-sm text-gray-400 hover:bg-white transition w-full"
           >
-            <Search className="h-4 w-4" />
-            <span>Search...</span>
+            <Search className="h-4 w-4 shrink-0" />
+            <span className="truncate">Search...</span>
           </button>
         </div>
 
@@ -325,7 +315,7 @@ export function Topbar() {
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-[180px] p-2 rounded-md">
               <DropdownMenuItem onClick={handleProfileClick} className="cursor-pointer font-medium text-slate-900 text-[13px] py-2 px-3 rounded-lg hover:bg-slate-50 focus:bg-slate-50">
-                Profile
+                Profil Pengguna
               </DropdownMenuItem>
               <DropdownMenuSeparator className="my-1" />
               <DropdownMenuItem onClick={handleLogout} className="cursor-pointer font-medium text-red-600 text-[13px] py-2 px-3 rounded-lg hover:bg-red-50 focus:bg-red-50 focus:text-red-600">

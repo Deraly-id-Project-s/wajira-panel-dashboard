@@ -1,5 +1,5 @@
 import { SalesItem, SalesLineItem } from '@/components/features/sales/sales.data';
-import { EditUnitFormData } from '@/components/features/sales/edit/edit-unit.schema';
+import type { UnitTransactionFormValues } from '@/components/features/unit-transaction/unit-transaction.schema';
 import { UnitTransaction } from '@/@types/unit-transaction.types';
 
 export type SalesApiModel = {
@@ -12,6 +12,8 @@ export type SalesApiModel = {
   max_capacity?: number | string;
   stock_state?: string;
   created_at?: string;
+  document_template_id?: number | string | null;
+  document_template?: { id?: number | string; uuid?: string } | null;
   unit_transaction_bruto_total?: string | number;
   transaction_bruto_total?: string | number;
   unit_transaction_dpp_total?: string | number;
@@ -270,6 +272,7 @@ export const mapSalesToTableItem = (item: SalesApiModel): UnitTransaction => {
         is_paid: toBool(item.billing_summary?.is_paid),
       }
       : null,
+    documentTemplateId: item.document_template_id != null ? String(item.document_template_id) : item.document_template?.id != null ? String(item.document_template.id) : item.document_template?.uuid ?? null,
   };
 };
 
@@ -341,6 +344,7 @@ export const mapSalesDetailToUI = (item: SalesApiModel): SalesItem => {
     units: [],
     price_usd: item.unit_transaction_items?.[0]?.price_usd ? toNumber(item.unit_transaction_items[0].price_usd) : undefined,
     price_per_unit_usd: item.unit_transaction_items?.[0]?.price_per_unit_usd ? toNumber(item.unit_transaction_items[0].price_per_unit_usd) : undefined,
+    documentTemplateId: item.document_template_id != null ? String(item.document_template_id) : item.document_template?.id != null ? String(item.document_template.id) : item.document_template?.uuid ?? null,
   };
 };
 
@@ -353,24 +357,24 @@ export const mapSalesDetailCard = (item: SalesApiModel) => ({
   ppn: getPpnTotal(item),
 });
 
-export const mapSalesDetailToEditForm = (item: SalesApiModel): EditUnitFormData => {
+export const mapSalesDetailToEditForm = (item: SalesApiModel): UnitTransactionFormValues => {
   const qty = Math.max(toNumber(item.max_capacity), 1);
   const totalDpp = getDppTotal(item);
   const totalPpn = getPpnTotal(item);
 
   return {
-    customer: item.person?.name ?? '',
-    tipeUnit: item.unit_transaction_items?.[0]?.unit_type?.name ?? 'Product A',
+    unitTypeId: String(item.unit_transaction_items?.[0]?.unit_type_id ?? ''),
+    documentTemplateId: item.document_template_id != null ? String(item.document_template_id) : item.document_template?.id != null ? String(item.document_template.id) : item.document_template?.uuid ?? null,
     qty,
-    harga: toNumber(item.unit_transaction_items?.[0]?.price),
-    biayaBbn: toNumber(item.transaction_bbn_total),
-    biayaEkspedisi: item.unit_transaction_items?.reduce((acc, row) => acc + toNumber(row.expedition_fee), 0) ?? 0,
-    biayaLain: toNumber(item.transaction_other_fee),
-    hppSatuan: totalDpp / qty,
-    totalHpp: totalDpp,
-    dppSatuan: totalDpp / qty,
-    totalDpp,
-    ppnSatuan: totalPpn / qty,
-    totalPpn,
+    price: toNumber(item.unit_transaction_items?.[0]?.price),
+    bbnPrice: toNumber(item.transaction_bbn_total),
+    expeditionFee: item.unit_transaction_items?.reduce((acc, row) => acc + toNumber(row.expedition_fee), 0) ?? 0,
+    otherFee: toNumber(item.transaction_other_fee),
+    hppPerUnit: totalDpp / qty,
+    hppTotal: totalDpp,
+    dppPerUnit: totalDpp / qty,
+    dppTotal: totalDpp,
+    ppnPerUnit: totalPpn / qty,
+    ppnTotal: totalPpn,
   };
 };

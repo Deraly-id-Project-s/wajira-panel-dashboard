@@ -50,6 +50,10 @@
   --font-geist-mono: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
 }
 
+@utility button-theme-1 {
+  @apply bg-orange-500 hover:bg-orange-600 opacity-70 w-full sm:w-auto text-white font-medium shadow-sm transition-colors;
+}
+
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);

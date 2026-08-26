@@ -10,7 +10,7 @@ interface CashflowSummaryProps {
 
 function SummaryTable({ title, rows }: { title: string; rows: CashflowSummaryType['incomes'] }) {
   return (
-    <Card className="rounded-sm border border-slate-200 bg-white shadow-sm overflow-hidden">
+    <Card className="rounded-md border border-slate-200 bg-white shadow-sm overflow-hidden">
       <div className="flex items-center justify-between bg-[#1f304f] px-5 py-4">
         <span className="text-[15px] font-semibold text-white">{title}</span>
         <span className="text-[15px] font-semibold text-white">Jumlah</span>
@@ -39,8 +39,8 @@ function SummaryTable({ title, rows }: { title: string; rows: CashflowSummaryTyp
 function LoadingState() {
   return (
     <div className="grid gap-4 md:grid-cols-2">
-      <div className="h-56 animate-pulse rounded-[20px] bg-slate-100" />
-      <div className="h-56 animate-pulse rounded-[20px] bg-slate-100" />
+      <div className="h-56 animate-pulse rounded-md bg-slate-100" />
+      <div className="h-56 animate-pulse rounded-md bg-slate-100" />
     </div>
   );
 }

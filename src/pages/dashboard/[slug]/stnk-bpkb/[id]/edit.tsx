@@ -115,7 +115,7 @@ export default function EditVehicleDocumentPage() {
             </div>
           </div>
 
-          <Card className="rounded-[20px] border border-slate-200 bg-white p-6 shadow-sm">
+          <Card className="rounded-md border border-slate-200 bg-white p-6 shadow-sm">
             <h2 className="mb-4 text-lg font-semibold text-slate-900">Informasi Header Dokumen</h2>
             <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-4">
               <div>

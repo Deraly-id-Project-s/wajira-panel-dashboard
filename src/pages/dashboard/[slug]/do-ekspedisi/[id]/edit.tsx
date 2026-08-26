@@ -1,8 +1,8 @@
 import React from 'react';
-import { ChevronLeft } from 'lucide-react';
 import { useRouter } from 'next/router';
 import { toast } from 'sonner';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
+import { PageHeader } from '@/components/ui/page-header';
 import { DOEkspedisiForm, type DOEkspedisiFormData } from '@/components/features/do-ekspedisi/DOEkspedisiForm';
 import {
   useCreateDoEkspedisiItem,
@@ -128,18 +128,21 @@ export default function EditDOEkspedisiPage() {
   return (
     <DashboardLayout>
       <div className="space-y-6">
-        <div className="flex items-start gap-3">
-          <button onClick={() => router.back()} className="rounded-md p-1 transition-colors hover:bg-slate-100">
-            <ChevronLeft className="h-5 w-5 text-slate-500" />
-          </button>
-          <div>
-            <h1 className="text-[18px] font-semibold text-slate-900 md:text-[20px]">Form Data Ekspedisi</h1>
-            <p className="text-sm text-slate-500">Nomor Polisi <span className="font-medium text-[#2563EB]">{detailQuery.data.vehicle?.registrationNumber || '-'}</span></p>
-          </div>
-        </div>
+        <PageHeader
+          breadcrumbs={[
+            { label: 'DO Ekspedisi', onClick: () => router.push(`/dashboard/${slug}/do-ekspedisi`) },
+            { label: 'Edit DO' },
+          ]}
+          title="Form Data Ekspedisi"
+          subtitle={(
+            <p className="text-sm text-slate-500">
+              Nomor Polisi <span className="font-semibold text-orange-600">{detailQuery.data.vehicle?.registrationNumber || '-'}</span>
+            </p>
+          )}
+          onBack={() => router.back()}
+        />
 
         <div className="space-y-5">
-          <h2 className="border-b border-[#E5E7EB] pb-4 text-[18px] font-semibold text-slate-900">Form Detail DO</h2>
           <DOEkspedisiForm
             mode="edit"
             initialExpedition={detailQuery.data}

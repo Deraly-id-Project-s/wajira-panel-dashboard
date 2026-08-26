@@ -111,6 +111,34 @@ export const deleteTransaction = async (id: string): Promise<void> => {
   }
 };
 
+export const exportTransactions = async (companyId: string, search = ''): Promise<void> => {
+  const response = await apiClient.get(`${basePath}/export`, {
+    params: {
+      company_id: companyId,
+      description: search || undefined,
+    },
+    responseType: 'blob',
+  });
+
+  const contentType = response.headers['content-type'];
+  const isJson = typeof contentType === 'string' && contentType.includes('application/json');
+
+  if (isJson) {
+    const textData = await (response.data as Blob).text();
+    const jsonResponse = JSON.parse(textData);
+    throw new ApiResponseError(jsonResponse.message ?? 'Gagal mengekspor arus transaksi');
+  }
+
+  const url = window.URL.createObjectURL(new Blob([response.data as Blob]));
+  const link = document.createElement('a');
+  link.href = url;
+  link.setAttribute('download', `Arus_Transaksi_${Date.now()}.xlsx`);
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  window.URL.revokeObjectURL(url);
+};
+
 export const getTransactionSummary = async (companyId: string): Promise<TransactionSummary> => {
   // Fetch first page with a higher limit to approximate totals.
   const result = await getTransactions(companyId, 1, 500, '');

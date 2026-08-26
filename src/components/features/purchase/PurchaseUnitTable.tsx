@@ -97,7 +97,7 @@ export default function PurchaseUnitTable({ purchaseId, slug, isPaid, canEdit, c
     {
       header: 'Tipe Unit',
       cell: (item) => (
-        <ReferenceLink href={`/dashboard/${slug}/master-data/tipe-unit?search=${getUnitTypeName(item.unit_type_id)}`}>
+        <ReferenceLink target='_blank' href={`/dashboard/${slug}/master-data/tipe-unit?search=${getUnitTypeName(item.unit_type_id)}`}>
           {getUnitTypeName(item.unit_type_id)}
         </ReferenceLink>
       ),
@@ -233,10 +233,11 @@ export default function PurchaseUnitTable({ purchaseId, slug, isPaid, canEdit, c
             }}
             onPageChange={setCurrentPage}
             headerActions={
-              <div className="flex items-center gap-2">
+              <div className="flex flex-col sm:flex-row items-center gap-2 w-full sm:w-auto">
                 <Button
                   size="sm"
                   variant="destructive"
+                  className="w-full sm:w-auto"
                   disabled={selectedIds.size === 0 || bulkDeleteMutation.isPending && isPaid || !canDelete}
                   onClick={() => !isPaid && setBulkDeleteOpen(true)}
                 >

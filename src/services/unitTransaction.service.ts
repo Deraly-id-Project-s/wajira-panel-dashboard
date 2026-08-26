@@ -1,5 +1,11 @@
 import { PaginationParams } from '@/@types/pagination.types';
-import { UnitTransaction, UnitTransactionDetail, UnitTransactionResponse } from '@/@types/unit-transaction.types';
+import {
+  UnitTransaction,
+  UnitTransactionDetail,
+  UnitTransactionResponse,
+  UnitTransactionTypeDetail,
+  UnitTransactionTypeDetailListResponse,
+} from '@/@types/unit-transaction.types';
 import { apiClient } from '@/lib/api/client';
 import { ensureSuccess, LaravelApiResponse, toPaginatedResult } from '@/lib/api/response';
 
@@ -11,6 +17,8 @@ type UnitTransactionApiModel = {
   created_at?: string;
   stock_state?: string;
   max_capacity?: number | string;
+  document_template_id?: number | string | null;
+  document_template?: { id?: number | string; uuid?: string } | null;
   unit_transaction_bruto_total?: string | number;
   transaction_bruto_total?: string | number;
   transaction_dpp_total?: string | number;
@@ -117,6 +125,7 @@ type UnitTransactionItemListApiModel = {
     expedition_fee_total?: string | number;
     total_operational_fee?: string | number;
     created_at?: string;
+    document_template_id?: number | string | null;
     person?: {
       id?: number | string;
       name?: string;
@@ -126,6 +135,44 @@ type UnitTransactionItemListApiModel = {
       name?: string;
     };
   };
+};
+
+type UnitTransactionTypeDetailApiModel = {
+  id?: number | string;
+  unit_transaction_item_id?: number | string;
+  warehouse_sub_block_id?: number | string | null;
+  uuid?: string;
+  color?: string | null;
+  machine_number?: string | null;
+  chassis_number?: string | null;
+  in_stock?: boolean | number | string;
+  is_forecast?: boolean | number | string;
+  status?: string | null;
+  stock_state?: string | null;
+  is_sold_unit?: boolean | number | string;
+  created_at?: string;
+  updated_at?: string;
+  unit_transaction_item?: {
+    id?: number | string;
+    unit_transaction_id?: number | string;
+    unit_type_id?: number | string;
+    price?: number | string;
+    price_usd?: number | string;
+    price_per_unit_usd?: number | string;
+    unit_type?: {
+      id?: number | string;
+      code?: string;
+      name?: string;
+      unit_type?: string | null;
+      unit_model?: string | null;
+      buy_price?: number | string;
+      sell_price?: number | string;
+    } | null;
+  } | null;
+  warehouse_sub_block?: {
+    id?: number | string;
+    name?: string;
+  } | null;
 };
 
 const basePath = '/wapi/transaction/unit-transaction/unit-transaction';
@@ -149,6 +196,58 @@ const withBaseFallback = async <T>(
 };
 
 const toNumber = (value: string | number | undefined): number => Number(value ?? 0);
+
+const toBoolean = (value: boolean | number | string | undefined): boolean =>
+  value === true || value === 1 || value === '1' || value === 'true';
+
+const mapUnitTransactionTypeDetail = (
+  item: UnitTransactionTypeDetailApiModel,
+): UnitTransactionTypeDetail => ({
+  id: String(item.id ?? ''),
+  unit_transaction_item_id: String(item.unit_transaction_item_id ?? ''),
+  warehouse_sub_block_id:
+    item.warehouse_sub_block_id === null || item.warehouse_sub_block_id === undefined
+      ? null
+      : String(item.warehouse_sub_block_id),
+  uuid: item.uuid ?? '',
+  color: item.color ?? null,
+  machine_number: item.machine_number ?? null,
+  chassis_number: item.chassis_number ?? null,
+  in_stock: toBoolean(item.in_stock),
+  is_forecast: toBoolean(item.is_forecast),
+  status: item.status ?? null,
+  stock_state: item.stock_state ?? null,
+  is_sold_unit: toBoolean(item.is_sold_unit),
+  created_at: item.created_at,
+  updated_at: item.updated_at,
+  unit_transaction_item: item.unit_transaction_item
+    ? {
+        id: String(item.unit_transaction_item.id ?? ''),
+        unit_transaction_id: String(item.unit_transaction_item.unit_transaction_id ?? ''),
+        unit_type_id: String(item.unit_transaction_item.unit_type_id ?? ''),
+        price: item.unit_transaction_item.price !== undefined ? toNumber(item.unit_transaction_item.price) : undefined,
+        price_usd: item.unit_transaction_item.price_usd !== undefined ? toNumber(item.unit_transaction_item.price_usd) : undefined,
+        price_per_unit_usd: item.unit_transaction_item.price_per_unit_usd !== undefined ? toNumber(item.unit_transaction_item.price_per_unit_usd) : undefined,
+        unit_type: item.unit_transaction_item.unit_type
+          ? {
+              id: String(item.unit_transaction_item.unit_type.id ?? ''),
+              code: item.unit_transaction_item.unit_type.code ?? '',
+              name: item.unit_transaction_item.unit_type.name ?? '',
+              unit_type: item.unit_transaction_item.unit_type.unit_type ?? null,
+              unit_model: item.unit_transaction_item.unit_type.unit_model ?? null,
+              buy_price: toNumber(item.unit_transaction_item.unit_type.buy_price),
+              sell_price: toNumber(item.unit_transaction_item.unit_type.sell_price),
+            }
+          : null,
+      }
+    : null,
+  warehouse_sub_block: item.warehouse_sub_block
+    ? {
+        id: String(item.warehouse_sub_block.id ?? ''),
+        name: item.warehouse_sub_block.name,
+      }
+    : null,
+});
 
 const mapBillingHistoryRow = (row: NonNullable<NonNullable<UnitTransactionApiModel['unit_transaction_billing']>['unit_transaction_billing_histories']>[number]) => ({
   id: String(row.id ?? ''),
@@ -234,6 +333,7 @@ const mapUnitTransaction = (item: UnitTransactionApiModel): UnitTransaction => (
       is_paid: Boolean(item.billing_summary?.is_paid),
     }
     : null,
+  documentTemplateId: item.document_template_id != null ? String(item.document_template_id) : item.document_template?.id != null ? String(item.document_template.id) : item.document_template?.uuid ?? null,
 });
 
 const buildUnitTransactionFromRows = (rows: UnitTransactionItemListApiModel[]): UnitTransaction[] => {
@@ -283,6 +383,7 @@ const buildUnitTransactionFromRows = (rows: UnitTransactionItemListApiModel[]): 
         paymentAt: null,
         isRefunded: row?.has_returned_data ?? false,
         remainingPayment: 0,
+        documentTemplateId: row.unit_transaction?.document_template_id != null ? String(row.unit_transaction.document_template_id) : null,
       });
       return;
     }
@@ -406,6 +507,7 @@ const enrichTransactionsFromDetail = async (items: UnitTransaction[]): Promise<U
           supplier: supplierName,
           warehouse: warehouseName,
           stock_state: detailPayload.stock_state ?? item.stock_state,
+          documentTemplateId: detailPayload.document_template_id != null ? String(detailPayload.document_template_id) : detailPayload.document_template?.id != null ? String(detailPayload.document_template.id) : detailPayload.document_template?.uuid ?? null,
         };
       } catch {
         return item;
@@ -515,10 +617,19 @@ const mapUnitTransactionDetail = (item: UnitTransactionApiModel): UnitTransactio
       : null,
     unit_transaction_items: item.unit_transaction_items,
     isUnitTypeDetailValid: item.is_unit_type_detail_valid === true || item.is_unit_type_detail_valid === 1 || String(item.is_unit_type_detail_valid) === 'true',
+    documentTemplateId: item.document_template_id != null ? String(item.document_template_id) : item.document_template?.id != null ? String(item.document_template.id) : item.document_template?.uuid ?? null,
   };
 };
 
 export const unitTransactionService = {
+  async updateDocumentTemplate(id: string, documentTemplateId: string | number | null): Promise<UnitTransactionDetail> {
+    const body = new FormData();
+    body.append('_method', 'PUT');
+    body.append('document_template_id', documentTemplateId == null || documentTemplateId === '' ? '' : String(documentTemplateId));
+    const response = await apiClient.post<LaravelApiResponse<UnitTransactionApiModel>>(`${strictBasePath}/${id}`, body);
+    return mapUnitTransactionDetail(ensureSuccess(response.data));
+  },
+
   async getUnitTransactions(params: PaginationParams & { company_id?: string | number; status?: string; start_date?: string | null; end_date?: string | null } = {}): Promise<UnitTransactionResponse> {
     const requestParams = {
       company_id: params.company_id,
@@ -587,6 +698,36 @@ export const unitTransactionService = {
 
     const detailPayload = ((payload as any)?.data ? ((payload as any).data as UnitTransactionApiModel) : (payload as UnitTransactionApiModel)) ?? ({} as UnitTransactionApiModel);
     return mapUnitTransactionDetail(detailPayload);
+  },
+
+  async getUnitTransactionTypeDetails(
+    id: string,
+    params: PaginationParams = {},
+  ): Promise<UnitTransactionTypeDetailListResponse> {
+    const response = await apiClient.get<LaravelApiResponse<any>>(
+      `${strictBasePath}/${id}/get-unit-type-details`,
+      {
+        params: {
+          page: params.page ?? 1,
+          per_page: params.perPage ?? 10,
+        },
+      },
+    );
+    const payload = ensureSuccess(response.data);
+
+    if (Array.isArray(payload)) {
+      return {
+        data: payload.map(mapUnitTransactionTypeDetail),
+        meta: {
+          currentPage: 1,
+          perPage: payload.length || params.perPage || 10,
+          total: payload.length,
+          lastPage: 1,
+        },
+      };
+    }
+
+    return toPaginatedResult(payload, mapUnitTransactionTypeDetail);
   },
 
   async updateUnitTransactionState(

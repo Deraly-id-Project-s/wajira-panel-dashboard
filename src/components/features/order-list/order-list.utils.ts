@@ -2,16 +2,18 @@ import type { OrderList, OrderListStatus, OrderListTarifItem, OrderListVehicleTy
 import { formatCurrency } from '@/lib/utils/currency';
 
 export const ORDER_LIST_STATUS_OPTIONS: Array<{ value: OrderListStatus; label: string }> = [
-  { value: 'pending', label: 'Pending' },
+  { value: 'draft', label: 'Draft' },
+  { value: 'deliver', label: 'Deliver' },
   { value: 'process', label: 'Process' },
-  { value: 'deliver', label: 'Delivered' },
+  { value: 'done', label: 'Done' },
   { value: 'reject', label: 'Reject' },
 ];
 
 export const ORDER_LIST_EDIT_STATUS_OPTIONS: Array<{ value: OrderListStatus; label: string }> = [
-  { value: 'pending', label: 'Pending' },
+  { value: 'draft', label: 'Draft' },
+  { value: 'deliver', label: 'Deliver' },
   { value: 'process', label: 'Process' },
-  { value: 'deliver', label: 'Delivered' },
+  { value: 'done', label: 'Done' },
 ];
 
 export const ORDER_LIST_VEHICLE_OPTIONS: Array<{ value: OrderListVehicleType; label: string }> = [
@@ -24,11 +26,16 @@ export const getVehicleTypeLabel = (value?: OrderListVehicleType | null) =>
   ORDER_LIST_VEHICLE_OPTIONS.find((option) => option.value === value)?.label ?? '-';
 
 export const getOrderVehicleTypeLabel = (order: OrderList, item?: OrderListTarifItem) => {
-  const orderType = getVehicleTypeLabel(order.vehicleType);
-  if (orderType !== '-') return orderType;
-
   const tarifType = getVehicleTypeLabel(item?.vehicleType);
   if (tarifType !== '-') return tarifType;
+
+  const routeTypes = Array.from(
+    new Set(order.tarifs.map((route) => getVehicleTypeLabel(route.vehicleType)).filter((type) => type !== '-')),
+  );
+  if (routeTypes.length) return routeTypes.join(', ');
+
+  const orderType = getVehicleTypeLabel(order.vehicleType);
+  if (orderType !== '-') return orderType;
 
   const vehicleTypes = Array.from(
     new Set(order.vehicles.map((vehicle) => vehicle.type).filter((type): type is string => Boolean(type))),
@@ -42,6 +49,7 @@ export const getOrderStatusLabel = (status?: OrderListStatus | null) =>
 export const getOrderStatusBadgeClassName = (status?: OrderListStatus | null) => {
   switch (status) {
     case 'deliver':
+    case 'done':
       return 'border-emerald-200 bg-emerald-50 text-emerald-700';
     case 'process':
       return 'border-amber-200 bg-amber-50 text-amber-700';

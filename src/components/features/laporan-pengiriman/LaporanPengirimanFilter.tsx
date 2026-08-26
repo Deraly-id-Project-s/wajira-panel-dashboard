@@ -141,17 +141,17 @@ export default function LaporanPengirimanFilter({
   };
 
   return (
-    <div className="flex items-end justify-between w-full no-print gap-4">
-      <div className="flex items-end gap-6 flex-wrap">
-        <div className="flex flex-col space-y-2">
+    <div className="flex flex-col sm:flex-row sm:items-end justify-between w-full no-print gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-end gap-3 w-full sm:w-auto">
+        <div className="flex flex-col space-y-1.5 w-full sm:w-auto">
           <label className="text-[13px] font-medium text-slate-700">Periode Transaksi</label>
-          <div className="w-[280px]">
+          <div className="w-full sm:w-[280px]">
             <DatePickerWithRange date={dateRange} onChange={handleDateChange} />
           </div>
         </div>
 
         {activeTab !== 'per-nota' && (
-          <div className="flex flex-col space-y-2">
+          <div className="flex flex-col space-y-1.5 w-full sm:w-auto">
             <label className="text-[13px] font-medium text-slate-700">
               {activeTab === 'per-tipe' ? 'Masukkan Tipe ' : 'Masukkan Customer '}
               <span className="text-red-500">*</span>
@@ -163,7 +163,7 @@ export default function LaporanPengirimanFilter({
                   variant="outline"
                   role="combobox"
                   aria-expanded={openBox}
-                  className="w-[260px] justify-between text-left font-normal bg-white"
+                  className="w-full sm:w-[260px] justify-between text-left font-normal bg-white h-9"
                 >
                   <span className="truncate">
                     {searchQuery
@@ -175,7 +175,7 @@ export default function LaporanPengirimanFilter({
                   <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                 </Button>
               </PopoverTrigger>
-              <PopoverContent className="w-[260px] p-0" align="start">
+              <PopoverContent className="w-[--radix-popover-trigger-width] sm:w-[260px] p-0" align="start">
                 <div className="flex flex-col w-full">
                   <div className="p-2 border-b">
                     <Input
@@ -193,7 +193,7 @@ export default function LaporanPengirimanFilter({
                       <Button
                         key={option.id}
                         variant="ghost"
-                        className="w-full justify-start rounded-sm font-normal py-1.5 px-2 h-auto text-sm"
+                        className="w-full justify-start rounded-md font-normal py-1.5 px-2 h-auto text-sm"
                         onClick={() => {
                           setSearchQuery(option.name);
                           setOpenBox(false);
@@ -215,10 +215,10 @@ export default function LaporanPengirimanFilter({
           </div>
         )}
 
-        <div className="flex flex-col space-y-2">
+        <div className="flex flex-col space-y-1.5 w-full sm:w-auto">
           <label className="text-[13px] font-medium text-slate-700">Per Halaman</label>
           <Select value={perPage} onValueChange={setPerPage}>
-            <SelectTrigger className="w-[130px] bg-white cursor-pointer">
+            <SelectTrigger className="w-full sm:w-[130px] bg-white cursor-pointer h-9">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -230,11 +230,11 @@ export default function LaporanPengirimanFilter({
         </div>
       </div>
 
-      <div className="flex items-center gap-2">
-        <Button onClick={onPrint} variant="outline" className="w-full sm:w-auto">
+      <div className="flex flex-col sm:flex-row items-center gap-2 w-full sm:w-auto">
+        <Button onClick={onPrint} variant="outline" className="w-full sm:w-auto h-9">
           <Printer className="h-4 w-4 mr-2" /> Print
         </Button>
-        <Button onClick={onDownload} variant="outline" className="w-full sm:w-auto">
+        <Button onClick={onDownload} variant="outline" className="w-full sm:w-auto h-9">
           <Download className="h-4 w-4 mr-2" /> Download
         </Button>
       </div>

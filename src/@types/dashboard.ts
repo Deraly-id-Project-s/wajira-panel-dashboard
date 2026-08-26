@@ -241,3 +241,43 @@ export interface TransactionStatsRaw {
   total?: number;
 }
 
+export type ProductTransactionMetric = {
+  sales_transaction_count: number;
+  purchase_transaction_count: number;
+  sales_qty: number;
+  purchase_qty: number;
+  sales_amount: number;
+  purchase_amount: number;
+};
+
+export type ProductTransactionSummary = ProductTransactionMetric & {
+  product_type: 'unit_type' | 'sparepart';
+  total_products: number;
+  transacted_products: number;
+};
+
+export type ProductTransactionTrendPoint = ProductTransactionMetric & {
+  label: string;
+  product_type: 'unit_type' | 'sparepart';
+};
+
+export type ProductTrendPoint = ProductTransactionMetric & { label: string };
+
+export type ProductTransactionTrend = {
+  product_type: 'unit_type' | 'sparepart';
+  product_id: number;
+  product_name: string;
+  group_name: string;
+  trend: ProductTrendPoint[];
+  total_sales_transactions?: number;
+  total_purchase_transactions?: number;
+};
+
+export interface ProductTransactionOverviewResponse {
+  summary: {
+    total: ProductTransactionMetric;
+    by_product_type: ProductTransactionSummary[];
+  };
+  transaction_trend: ProductTransactionTrendPoint[];
+  product_trend: ProductTransactionTrend[];
+}

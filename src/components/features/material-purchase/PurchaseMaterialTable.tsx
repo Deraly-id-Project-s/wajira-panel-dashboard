@@ -1,14 +1,10 @@
 import Link from 'next/link';
 import { useMemo } from 'react';
-import { MoreVertical, Plus, Search } from 'lucide-react';
+import { MoreVertical, Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Card } from '@/components/ui/card';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { Input } from '@/components/ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { getVisiblePageNumbers } from '@/lib/api/pagination';
+import BaseTable, { ColumnDef } from '@/components/ui/base-table';
 import type { MaterialTransaction } from '@/@types/material-transaction.types';
 
 interface PurchaseMaterialTableProps {
@@ -81,33 +77,73 @@ export function PurchaseMaterialTable({
   dateHeader = 'TGL TAGIHAN',
   counterpartyHeader = 'SUPPLIER',
   routeBasePath = 'pembelian-material',
-  loadingText = 'Memuat data pembelian material...',
-  emptyText = 'Tidak ada data pembelian material.',
 }: PurchaseMaterialTableProps) {
-  const totalPages = Math.max(1, Math.ceil((totalData || 0) / perPage));
-  const pageNumbers = useMemo(() => getVisiblePageNumbers(totalPages, page, 5), [page, totalPages]);
-  const startData = totalData === 0 ? 0 : (page - 1) * perPage + 1;
-  const endData = Math.min(page * perPage, totalData);
-
-  const renderActionMenu = (item: MaterialTransaction) => (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button variant="ghost" className="h-9 w-9 rounded-full p-0">
-          <MoreVertical className="h-4 w-4 text-slate-700" />
-        </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-40 rounded-md border-slate-200 p-2 shadow-lg">
-        <DropdownMenuItem onClick={() => onEdit(item)} className="cursor-pointer rounded-md px-3 py-2 text-[16px]">
-          Edit
-        </DropdownMenuItem>
-        <DropdownMenuItem asChild className="cursor-pointer rounded-md px-3 py-2 text-[16px]">
-          <Link href={`/dashboard/${slug}/${routeBasePath}/${item.id}`}>Detail</Link>
-        </DropdownMenuItem>
-        <DropdownMenuItem onClick={() => onDelete(item)} className="cursor-pointer rounded-md px-3 py-2 text-[16px] text-red-600 focus:text-red-600">
-          Hapus
-        </DropdownMenuItem>
-      </DropdownMenuContent>
-    </DropdownMenu>
+  const columns = useMemo<ColumnDef<MaterialTransaction>[]>(
+    () => [
+      {
+        header: codeHeader,
+        accessorKey: 'code',
+        className: 'text-slate-800 font-medium',
+        cell: (item) => item.code || '-',
+      },
+      {
+        header: dateHeader,
+        accessorKey: 'transactionDate',
+        className: 'text-slate-800',
+        cell: (item) => formatDate(item.transactionDate),
+      },
+      {
+        header: counterpartyHeader,
+        accessorKey: 'supplierName',
+        className: 'text-slate-800',
+        cell: (item) => item.supplierName || '-',
+      },
+      {
+        header: 'NOMINAL',
+        accessorKey: 'totalAmount',
+        className: 'text-slate-800 font-medium',
+        cell: (item) => formatCurrency(item.totalAmount),
+      },
+      {
+        header: 'STATUS',
+        cell: (item) => {
+          const statusMeta = getPaymentStatusMeta(item);
+          return (
+            <Badge variant="outline" className={`rounded-full px-3 py-1 text-xs font-semibold ${statusMeta.className}`}>
+              {statusMeta.label}
+            </Badge>
+          );
+        },
+      },
+      {
+        header: 'Aksi',
+        alignment: 'center',
+        sticky: 'right',
+        cell: (item) => (
+          <div className="flex justify-center">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" className="h-9 w-9 rounded-full p-0 text-slate-600 hover:bg-slate-100 hover:text-slate-900">
+                  <MoreVertical className="h-4 w-4 text-slate-700" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-40 rounded-md border-slate-200 p-2 shadow-lg">
+                <DropdownMenuItem onClick={() => onEdit(item)} className="cursor-pointer rounded-md px-3 py-2 text-sm">
+                  Edit
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild className="cursor-pointer rounded-md px-3 py-2 text-sm">
+                  <Link href={`/dashboard/${slug}/${routeBasePath}/${item.id}`}>Detail</Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => onDelete(item)} className="cursor-pointer rounded-md px-3 py-2 text-sm text-red-600 focus:text-red-600">
+                  Hapus
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+        ),
+      },
+    ],
+    [codeHeader, counterpartyHeader, dateHeader, onDelete, onEdit, routeBasePath, slug],
   );
 
   return (
@@ -117,135 +153,30 @@ export function PurchaseMaterialTable({
         <p className="mt-1 text-sm text-slate-500">{description}</p>
       </div>
 
-      <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
-          <div className="relative w-full sm:w-[332px]">
-            <Search className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
-            <Input
-              value={search}
-              onChange={(event) => onSearchChange(event.target.value)}
-              placeholder="Search here"
-              className="h-11 rounded-md border-slate-200 bg-white pl-11 shadow-sm"
-            />
-          </div>
-
-          <div className="flex items-center gap-3 text-[16px] text-slate-700">
-            <span>Show</span>
-            <Select value={String(perPage)} onValueChange={(value) => onPerPageChange(Number(value))}>
-              <SelectTrigger className="h-11 w-[68px] rounded-md border-slate-200 bg-white shadow-sm">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="25">25</SelectItem>
-                <SelectItem value="50">50</SelectItem>
-                <SelectItem value="100">100</SelectItem>
-              </SelectContent>
-            </Select>
-            <span>Page</span>
-          </div>
-        </div>
-
-        <Button onClick={onAdd} className="w-full sm:w-auto bg-[#1e3a5f] hover:bg-[#152e4d]">
-          <Plus className="mr-2 h-4 w-4" />
-          Tambah Data
-        </Button>
-      </div>
-
-      <Card className="relative overflow-hidden rounded-md border border-slate-200 bg-white shadow-sm">
-        <div className={!isLoading && data.length > 0 ? 'pr-24' : undefined}>
-          <Table className="min-w-[820px]">
-            <TableHeader className="bg-slate-100">
-              <TableRow className="border-slate-200">
-                <TableHead className="px-5 py-4 text-[14px] font-semibold uppercase text-slate-900">{codeHeader}</TableHead>
-                <TableHead className="px-5 py-4 text-[14px] font-semibold uppercase text-slate-900">{dateHeader}</TableHead>
-                <TableHead className="px-5 py-4 text-[14px] font-semibold uppercase text-slate-900">{counterpartyHeader}</TableHead>
-                <TableHead className="px-5 py-4 text-[14px] font-semibold uppercase text-slate-900">NOMINAL</TableHead>
-                <TableHead className="px-5 py-4 text-[14px] font-semibold uppercase text-slate-900">STATUS</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {isLoading ? (
-                <TableRow className="group">
-                  <TableCell colSpan={5} className="h-28 text-center text-slate-500">
-                    {loadingText}
-                  </TableCell>
-                </TableRow>
-              ) : data.length === 0 ? (
-                <TableRow className="group">
-                  <TableCell colSpan={5} className="h-28 text-center text-slate-500">
-                    {emptyText}
-                  </TableCell>
-                </TableRow>
-              ) : (
-                data.map((item) => {
-                  const statusMeta = getPaymentStatusMeta(item);
-                  return (
-                    <TableRow key={item.id} className="group border-slate-200 hover:bg-slate-50/70">
-                      <TableCell className="px-5 py-4 text-[16px] text-slate-800">{item.code}</TableCell>
-                      <TableCell className="px-5 py-4 text-[16px] text-slate-800">{formatDate(item.transactionDate)}</TableCell>
-                      <TableCell className="px-5 py-4 text-[16px] text-slate-800">{item.supplierName}</TableCell>
-                      <TableCell className="px-5 py-4 text-[16px] text-slate-800">{formatCurrency(item.totalAmount)}</TableCell>
-                      <TableCell className="px-5 py-4">
-                        <Badge variant="outline" className={`rounded-full px-3 py-1 text-[12px] font-semibold ${statusMeta.className}`}>
-                          {statusMeta.label}
-                        </Badge>
-                      </TableCell>
-                    </TableRow>
-                  )
-                })
-              )}
-            </TableBody>
-          </Table>
-        </div>
-
-        {!isLoading && data.length > 0 ? (
-          <div className="absolute right-0 top-0 z-30 w-24 bg-white shadow-[-8px_0_12px_-10px_rgba(15,23,42,0.45)]">
-            <table className="w-full caption-bottom text-sm">
-              <thead className="bg-slate-100">
-                <tr className="border-b border-slate-200">
-                  <th className="h-10 px-5 py-4 text-right text-[14px] font-semibold uppercase text-slate-900">Aksi</th>
-                </tr>
-              </thead>
-              <tbody>
-                {data.map((item) => (
-                  <tr key={item.id} className="border-b border-slate-200 transition-colors hover:bg-slate-50/70">
-                    <td className="px-5 py-4 text-right">{renderActionMenu(item)}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        ) : null}
-      </Card>
-
-      <div className="flex flex-col gap-4 px-2 lg:flex-row lg:items-center lg:justify-between">
-        <p className="text-[14px] text-slate-500">Showing {startData}-{endData} of {totalData} data</p>
-
-        <div className="flex items-center gap-1 text-[16px]">
-          <Button variant="ghost" onClick={() => onPageChange(page - 1)} disabled={page <= 1} className="text-slate-700">
-            Previous
+      <BaseTable
+        data={data}
+        columns={columns}
+        loading={isLoading}
+        searchPlaceholder="Search here"
+        search={search}
+        onSearchChange={onSearchChange}
+        showLimitChange
+        perPage={perPage}
+        onPerPageChange={onPerPageChange}
+        meta={{
+          currentPage: page,
+          perPage,
+          lastPage: Math.max(1, Math.ceil((totalData || 0) / perPage)),
+          total: totalData,
+        }}
+        onPageChange={onPageChange}
+        headerActions={
+          <Button onClick={onAdd} className="w-full sm:w-auto bg-[#1e3a5f] hover:bg-[#152e4d]">
+            <Plus className="mr-2 h-4 w-4" />
+            Tambah Data
           </Button>
-          {pageNumbers.map((pageNumber) => (
-            <Button
-              key={pageNumber}
-              variant={pageNumber === page ? 'outline' : 'ghost'}
-              onClick={() => onPageChange(pageNumber)}
-              className={pageNumber === page ? 'h-10 min-w-10 rounded-md border-slate-200 bg-white' : 'h-10 min-w-10 rounded-md text-slate-700'}
-            >
-              {pageNumber}
-            </Button>
-          ))}
-          {totalPages > 5 && page < totalPages - 2 ? <span className="px-2 text-slate-500">...</span> : null}
-          {totalPages > 5 && !pageNumbers.includes(totalPages) ? (
-            <Button variant="ghost" onClick={() => onPageChange(totalPages)} className="h-10 min-w-10 rounded-md text-slate-700">
-              {totalPages}
-            </Button>
-          ) : null}
-          <Button variant="ghost" onClick={() => onPageChange(page + 1)} disabled={page >= totalPages} className="text-slate-700">
-            Next
-          </Button>
-        </div>
-      </div>
+        }
+      />
     </div>
   );
 }

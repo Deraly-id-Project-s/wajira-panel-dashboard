@@ -15,6 +15,8 @@ const unitTransactionKeys = {
     }),
   detail: (companyId: string | number, id: string) => companyQueryKeys.detail(companyId, 'unit-transactions', id),
   purchaseDetail: (companyId: string | number, id: string) => companyQueryKeys.detail(companyId, 'purchase-by-id', id),
+  typeDetails: (companyId: string | number, id: string, page: number, perPage: number) =>
+    companyQueryKeys.list(companyId, 'unit-transaction-type-details', { id, page, perPage }),
 };
 
 export const useUnitTransactions = (options: { page?: number; perPage?: number; search?: string; status?: string; start_date?: string | null; end_date?: string | null } = {}) => {
@@ -71,6 +73,28 @@ export const usePurchaseById = (id?: string) => {
   });
 };
 
+export const useUnitTransactionTypeDetails = (
+  id?: string,
+  options: { page?: number; perPage?: number } = {},
+) => {
+  const { companyId } = useCompany();
+  const page = options.page ?? 1;
+  const perPage = options.perPage ?? 10;
+
+  return useQuery({
+    queryKey: companyId
+      ? unitTransactionKeys.typeDetails(companyId, id ?? '', page, perPage)
+      : ['unit-transaction-type-details', 'unscoped', id, page, perPage],
+    queryFn: () => unitTransactionService.getUnitTransactionTypeDetails(id as string, { page, perPage }),
+    enabled: Boolean(id) && Boolean(companyId),
+    placeholderData: (previousData) => previousData,
+    refetchOnWindowFocus: true,
+    refetchOnReconnect: true,
+    refetchOnMount: 'always',
+    staleTime: 0,
+  });
+};
+
 export const useUpdateUnitTransactionState = () => {
   const queryClient = useQueryClient();
   const { companyId } = useCompany();
@@ -106,6 +130,25 @@ export const useUpdateUnitTransactionState = () => {
       queryClient.invalidateQueries({ queryKey: ['unit-billing-history', '', data.id] });
       queryClient.invalidateQueries({ queryKey: ['purchase-unit-items', data.id] });
       queryClient.invalidateQueries({ queryKey: ['sales-by-id'] });
+    },
+  });
+};
+
+export const useUpdateUnitTransactionDocumentTemplate = () => {
+  const queryClient = useQueryClient();
+  const { companyId } = useCompany();
+
+  return useMutation({
+    mutationFn: ({ id, documentTemplateId }: { id: string; documentTemplateId: string | number | null }) =>
+      unitTransactionService.updateDocumentTemplate(id, documentTemplateId),
+    onSuccess: (data) => {
+      if (companyId) {
+        queryClient.invalidateQueries({ queryKey: companyQueryKeys.companyScope(companyId) });
+        queryClient.invalidateQueries({ queryKey: unitTransactionKeys.detail(companyId, data.id) });
+        queryClient.invalidateQueries({ queryKey: unitTransactionKeys.purchaseDetail(companyId, data.id) });
+      }
+      queryClient.invalidateQueries({ queryKey: ['sales-transaction', data.id] });
+      queryClient.invalidateQueries({ queryKey: ['sales-transactions'] });
     },
   });
 };

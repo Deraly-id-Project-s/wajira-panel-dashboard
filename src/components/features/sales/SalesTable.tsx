@@ -198,7 +198,7 @@ export function SalesTable({
           }
 
           return (
-            <div className="flex items-center gap-2">
+            <div className="flex flex-col sm:flex-row items-center gap-2 w-full sm:w-auto">
               {(showUnBilled || showUnVerified) && (
                 <TooltipProvider>
                   <Tooltip>
@@ -231,7 +231,7 @@ export function SalesTable({
         sortable: true,
         alignment: 'left',
         cell: (item) => (
-          <div className="flex items-center gap-2">
+          <div className="flex flex-col sm:flex-row items-center gap-2 w-full sm:w-auto">
             <ReferenceLink href={`/dashboard/${slug}/customer?search=${encodeURIComponent(item.supplier || '')}`}>
               {item.supplier || '-'}
             </ReferenceLink>
@@ -360,7 +360,9 @@ export function SalesTable({
                   </DropdownMenuItem>
                   <DropdownMenuItem
                     className="rounded-lg px-3 py-2 text-sm text-slate-900 focus:bg-slate-50 cursor-pointer"
-                    onClick={() => window.open(slug ? `/dashboard/${slug}/transaksi/penjualan-unit/print/${item.id}` : `/transaksi/penjualan-unit/print/${item.id}`, '_blank')}
+                    disabled={!item.documentTemplateId}
+                    title={!item.documentTemplateId ? 'Document template belum dipilih.' : undefined}
+                    onClick={() => item.documentTemplateId && window.open(slug ? `/dashboard/${slug}/transaksi/penjualan-unit/print/${item.id}` : `/transaksi/penjualan-unit/print/${item.id}`, '_blank')}
                   >
                     <Printer className="mr-2 h-4 w-4" /> Print
                   </DropdownMenuItem>
@@ -433,7 +435,7 @@ export function SalesTable({
       </div>
 
       {onAdd && (
-        <Button onClick={onAdd} disabled={!canCreate} className="w-full sm:w-auto bg-[#1e3a5f] hover:bg-[#152e4d]">
+        <Button onClick={onAdd} disabled={!canCreate} className="button-theme-1!">
           <Plus className="mr-2 h-4 w-4" />
           Tambah Data
         </Button>

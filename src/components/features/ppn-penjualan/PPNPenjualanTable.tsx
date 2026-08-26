@@ -119,7 +119,7 @@ export default function PPNPenjualanTable({
       setAmount('');
       setNsfpNumber('');
     } catch (err: any) {
-      toast.error(err?.message || 'Gagal melakukan bulk update PPN Penjualan');
+      toast.error(err?.message || 'Gagal melakukan Update Data PPN Penjualan');
     }
   };
 
@@ -266,7 +266,7 @@ export default function PPNPenjualanTable({
         cell: (item) => currenciesFormat('idr', item.payment_amount),
       },
       {
-        header: 'Action',
+        header: 'Aksi',
         alignment: 'center',
         sticky: 'right',
         cell: (item) => (
@@ -326,24 +326,24 @@ export default function PPNPenjualanTable({
         }}
         onPageChange={onPageChange}
         headerActions={
-          <div className="flex items-center gap-2">
+          <div className="flex flex-col sm:flex-row items-center gap-2 w-full sm:w-auto">
             <Button
               type="button"
               onClick={() => setIsOpenBulkModal(true)}
               disabled={selectedIds.size === 0}
               className="bg-primary text-primary-foreground hover:bg-primary/90 h-9 px-3 text-xs gap-1.5 font-medium rounded-lg shadow-sm"
             >
-              <Settings size={14} /> Bulk Update ({selectedIds.size})
+              <Settings size={14} /> Update Data ({selectedIds.size})
             </Button>
           </div>
         }
       />
 
       <Dialog open={isOpenBulkModal} onOpenChange={setIsOpenBulkModal}>
-        <DialogContent className="sm:max-w-4xl md:max-w-5xl w-[90vw] p-6 rounded-2xl">
+        <DialogContent className="sm:max-w-4xl md:max-w-5xl w-[90vw] p-6 rounded-md">
           <DialogHeader>
             <DialogTitle className="text-xl font-bold text-slate-800">
-              Bulk Update Data PPN Penjualan ({selectedIds.size} Data Terpilih)
+              Update Data Data PPN Penjualan ({selectedIds.size} Data Terpilih)
             </DialogTitle>
           </DialogHeader>
 

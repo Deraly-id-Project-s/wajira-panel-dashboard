@@ -1,4 +1,5 @@
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { FormDialog } from '@/components/ui/form-dialog';
+import { Form } from '@/components/ui/form';
 import { AccountGroupForm } from './AccountGroupForm';
 import type { AccountGroupFormValues } from '@/scheme/account-group.schema';
 import type { UseFormReturn } from 'react-hook-form';
@@ -25,14 +26,18 @@ export const AccountGroupFormModal = ({
     submitLabel = 'Simpan',
 }: AccountGroupFormModalProps) => {
     return (
-        <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent className="w-full max-w-md sm:max-w-[425px] max-h-[90vh] overflow-hidden flex flex-col rounded-md border-0 bg-white p-0 shadow-2xl">
-                <DialogHeader className="px-6 py-5 border-b shrink-0 text-left">
-                    <DialogTitle className="text-[18px] font-semibold text-[#171717]">{title}</DialogTitle>
-                    <DialogDescription className="text-[15px] text-[#71717A]">{description}</DialogDescription>
-                </DialogHeader>
-                <AccountGroupForm form={form} onSubmit={onSubmit} onCancel={() => onOpenChange(false)} isSubmitting={isSubmitting} submitLabel={submitLabel} />
-            </DialogContent>
-        </Dialog>
+        <Form {...form}>
+            <FormDialog
+                open={open}
+                onOpenChange={onOpenChange}
+                title={title}
+                description={description}
+                onSubmit={form.handleSubmit(onSubmit)}
+                submitLabel={submitLabel}
+                isSubmitting={isSubmitting}
+            >
+                <AccountGroupForm form={form} />
+            </FormDialog>
+        </Form>
     );
 };

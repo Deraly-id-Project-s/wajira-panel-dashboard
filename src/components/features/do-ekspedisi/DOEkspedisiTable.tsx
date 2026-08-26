@@ -1,15 +1,17 @@
-import React from 'react';
-import { Search, MoreVertical, Printer, Edit, FileText, Trash2 } from 'lucide-react';
+import React, { useMemo } from 'react';
+import { MoreVertical, Printer, Edit, FileText, Trash2 } from 'lucide-react';
 import { format } from 'date-fns';
-import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import BaseTable, { ColumnDef } from '@/components/ui/base-table';
 import type { DoEkspedisi } from '@/@types/do-ekspedisi.types';
+import { CopyBox } from '@/components/ui/copy-box';
+import { formatDate } from '@/lib/utils/format';
+import { useRouter } from 'next/router';
+import { ReferenceLink } from '@/components/ui/reference-link';
+import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
-import { LoadingState } from '@/components/ui/loading-state';
+import { currenciesFormat } from '@/components/ui/currenciesFormat';
 
 interface DOEkspedisiTableProps {
   data: DoEkspedisi[];
@@ -28,11 +30,38 @@ interface DOEkspedisiTableProps {
   onPrint: (item: DoEkspedisi) => void;
 }
 
-const renderPagination = (page: number, totalPages: number): Array<number | string> => {
-  if (totalPages <= 7) return Array.from({ length: totalPages }, (_, index) => index + 1);
-  if (page <= 4) return [1, 2, 3, 4, '...', totalPages];
-  if (page >= totalPages - 3) return [1, '...', totalPages - 3, totalPages - 2, totalPages - 1, totalPages];
-  return [1, '...', page - 1, page, page + 1, '...', totalPages];
+const getDoStatusBadgeClassName = (status: string) => {
+  switch (String(status).toLowerCase()) {
+    case 'draft':
+      return 'border-slate-200 bg-slate-50 text-slate-700';
+    case 'process':
+      return 'border-blue-200 bg-blue-50 text-blue-700 font-semibold';
+    case 'done':
+      return 'border-emerald-200 bg-emerald-50 text-emerald-700 font-semibold';
+    case 'failed':
+      return 'border-rose-200 bg-rose-50 text-rose-700 font-semibold';
+    case 'pending':
+      return 'border-amber-200 bg-amber-50 text-amber-700 font-semibold';
+    default:
+      return 'border-slate-200 bg-slate-50 text-slate-700';
+  }
+};
+
+const getDoStatusLabel = (status: string) => {
+  switch (String(status).toLowerCase()) {
+    case 'draft':
+      return 'Draft';
+    case 'process':
+      return 'Proses';
+    case 'done':
+      return 'Selesai';
+    case 'failed':
+      return 'Gagal';
+    case 'pending':
+      return 'Tertunda';
+    default:
+      return status || '-';
+  }
 };
 
 export const DOEkspedisiTable = React.memo(function DOEkspedisiTable({
@@ -51,173 +80,119 @@ export const DOEkspedisiTable = React.memo(function DOEkspedisiTable({
   onDelete,
   onPrint,
 }: DOEkspedisiTableProps) {
-  const startData = totalData === 0 ? 0 : (page - 1) * perPage + 1;
-  const endData = totalData === 0 ? 0 : Math.min(page * perPage, totalData);
+  const router = useRouter();
+  const slug = typeof router.query.slug === 'string' ? router.query.slug : '';
 
-  const renderPaginationNumbers = () => {
-    const pages = renderPagination(page, totalPages);
-    return pages.map((p, idx) => (
-      <Button
-        key={idx}
-        variant="ghost"
-        size="sm"
-        disabled={p === '...'}
-        onClick={() => typeof p === 'number' && onPageChange(p)}
-        className={cn(
-          'h-9 min-w-9 rounded-md border px-3 text-sm font-medium shadow-none',
-          p === page
-            ? 'border-slate-200 bg-white text-slate-950 shadow-sm'
-            : p === '...'
-              ? 'border-transparent bg-transparent text-slate-500 cursor-default hover:bg-transparent hover:border-transparent'
-              : 'border-transparent bg-transparent text-slate-700 hover:border-slate-200 hover:bg-white',
-        )}
-      >
-        {p}
-      </Button>
-    ));
-  };
+  const columns = useMemo<ColumnDef<DoEkspedisi>[]>(
+    () => [
+      {
+        header: 'Kode DO',
+        accessorKey: 'doCode',
+        alignment: 'center',
+        className: 'font-medium text-slate-800',
+        cell: (item) => item?.doCode ? <CopyBox text={item?.doCode} /> : '-',
+      },
+      {
+        header: 'Kode Order',
+        alignment: 'center',
+        cell: (item) => item?.orderCode ? <CopyBox text={item?.orderCode} /> : '-',
+      },
+      {
+        header: 'Tanggal',
+        accessorKey: 'date',
+        alignment: 'center',
+        cell: (item) => (item?.date ? formatDate(item?.date) : '-'),
+      },
+      {
+        header: 'Nama Driver',
+        accessorKey: 'driver.name',
+        alignment: 'center',
+        cell: (item) => item?.driver ? <ReferenceLink href={`/dashboard/${slug}/master/driver?search=${item?.driver?.name}`}>{item?.driver?.name}</ReferenceLink> : '-',
+      },
+      {
+        header: 'No Polisi',
+        accessorKey: 'vehicle.registrationNumber',
+        alignment: 'center',
+        cell: (item) => item.vehicle?.registrationNumber || '-',
+      },
+      {
+        header: 'Tipe',
+        accessorKey: 'vehicle.type',
+        alignment: 'center',
+        cell: (item) => item.vehicle?.type || '-',
+      },
+      {
+        header: 'Uang Jalan',
+        accessorKey: 'ujNominal',
+        alignment: 'right',
+        cell: (item) => <span className="font-semibold text-slate-800">{currenciesFormat('idr', item.ujNominal)}</span>,
+      },
+      {
+        header: 'Status',
+        accessorKey: 'status',
+        alignment: 'center',
+        cell: (item) => (
+          <Badge variant="outline" className={cn('rounded-full px-2.5 py-0.5 text-xs', getDoStatusBadgeClassName(item.status))}>
+            {getDoStatusLabel(item.status)}
+          </Badge>
+        ),
+      },
+      {
+        header: 'Aksi',
+        alignment: 'center',
+        sticky: 'right',
+        cell: (item) => (
+          <div className="flex justify-center">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" className="h-8 w-8 p-0 rounded-full text-slate-600 hover:bg-slate-100 hover:text-slate-900">
+                  <MoreVertical className="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="min-w-[150px] rounded-md border-slate-200 p-1.5 shadow-lg">
+                <DropdownMenuItem onClick={() => onEdit(item)} className="rounded-lg px-3 py-2 text-sm text-slate-900 focus:bg-slate-50 cursor-pointer">
+                  <Edit className="mr-2 h-4 w-4" />
+                  Edit
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => onDetail(item)} className="rounded-lg px-3 py-2 text-sm text-slate-900 focus:bg-slate-50 cursor-pointer">
+                  <FileText className="mr-2 h-4 w-4" />
+                  Detail
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => onPrint(item)} className="rounded-lg px-3 py-2 text-sm text-slate-900 focus:bg-slate-50 cursor-pointer">
+                  <Printer className="mr-2 h-4 w-4" />
+                  Print
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => onDelete(item)} className="rounded-lg px-3 py-2 text-sm text-red-600 focus:bg-red-50 focus:text-red-600 cursor-pointer">
+                  <Trash2 className="mr-2 h-4 w-4" />
+                  Hapus
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+        ),
+      },
+    ],
+    [onDelete, onDetail, onEdit, onPrint, slug],
+  );
 
   return (
-    <div className="space-y-4">
-      <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-        <div className="flex items-center gap-4 w-full sm:w-auto">
-          <div className="relative w-full sm:w-[300px]">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-            <Input
-              placeholder="Search here"
-              value={search}
-              onChange={(event) => onSearchChange(event.target.value)}
-              className="pl-9 bg-white"
-            />
-          </div>
-
-          <div className="flex items-center gap-2 text-sm text-slate-500 whitespace-nowrap">
-            <span>Show</span>
-            <Select value={String(perPage)} onValueChange={(value) => onPerPageChange(Number(value))}>
-              <SelectTrigger className="w-[70px] bg-white">
-                <SelectValue placeholder="25" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="25">25</SelectItem>
-                <SelectItem value="50">50</SelectItem>
-                <SelectItem value="100">100</SelectItem>
-              </SelectContent>
-            </Select>
-            <span>Page</span>
-          </div>
-        </div>
-      </div>
-
-      <div className="rounded-md border border-gray-200 bg-white overflow-x-auto shadow-none">
-        <Table className="min-w-[980px]">
-          <TableHeader className="bg-[#f8f9fa] border-b border-gray-200">
-            <TableRow className="hover:bg-[#f8f9fa]">
-              <TableHead className="text-center text-xs font-semibold uppercase text-slate-500 px-4 py-4">Kode DO</TableHead>
-              <TableHead className="text-center text-xs font-semibold uppercase text-slate-500 px-4 py-4">Kode Order</TableHead>
-              <TableHead className="text-center text-xs font-semibold uppercase text-slate-500 px-4 py-4">Tanggal</TableHead>
-              <TableHead className="text-center text-xs font-semibold uppercase text-slate-500 px-4 py-4">Nama Driver</TableHead>
-              <TableHead className="text-center text-xs font-semibold uppercase text-slate-500 px-4 py-4">No Polisi</TableHead>
-              <TableHead className="text-center text-xs font-semibold uppercase text-slate-500 px-4 py-4">Tipe</TableHead>
-              <TableHead className="w-[80px] px-4 py-4 text-center text-xs font-semibold text-slate-500 uppercase sticky right-0 bg-[#f8f9fa] z-10 border-l border-slate-200 shadow-[-4px_0_6px_-4px_rgba(0,0,0,0.05)]">Action</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {isLoading ? (
-              <tr>
-                <td colSpan={100} className="px-4 py-16 text-center bg-white">
-                  <LoadingState variant="section" text="Memuat data..." />
-                </td>
-              </tr>
-            ) : data.length > 0 ? (
-              data.map((item) => (
-                <TableRow key={item.id} className="group border-b border-[#EEF2F6] last:border-0 hover:bg-gray-50 transition-colors">
-                  <TableCell className="px-4 py-4 text-center text-sm font-medium text-slate-800">{item.doCode || '-'}</TableCell>
-                  <TableCell className="px-4 py-4 text-center text-sm text-slate-600">{item.orderCode || item.orderList?.code || '-'}</TableCell>
-                  <TableCell className="px-4 py-4 text-center text-sm text-slate-600">
-                    {item.date ? format(new Date(item.date), 'dd/MM/yyyy') : '-'}
-                  </TableCell>
-                  <TableCell className="px-4 py-4 text-center text-sm text-slate-600">{item.driver?.name || '-'}</TableCell>
-                  <TableCell className="px-4 py-4 text-center text-sm text-slate-600">{item.vehicle?.registrationNumber || '-'}</TableCell>
-                  <TableCell className="px-4 py-4 text-center text-sm text-slate-600">{item.vehicle?.type || '-'}</TableCell>
-                  <TableCell className="px-4 py-4 text-center sticky right-0 bg-white group-hover:bg-gray-50 z-10 border-l border-slate-200 shadow-[-4px_0_6px_-4px_rgba(0,0,0,0.05)]">
-                    <div className="flex justify-center">
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" className="h-8 w-8 p-0 rounded-full text-slate-600 hover:bg-slate-100 hover:text-slate-900">
-                            <MoreVertical className="h-4 w-4" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end" className="min-w-[150px] rounded-md border-slate-200 p-1.5 shadow-lg">
-                          <DropdownMenuItem onClick={() => onEdit(item)} className="rounded-lg px-3 py-2 text-sm text-slate-900 focus:bg-slate-50 cursor-pointer">
-                            <Edit className="mr-2 h-4 w-4" />
-                            Edit
-                          </DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => onDetail(item)} className="rounded-lg px-3 py-2 text-sm text-slate-900 focus:bg-slate-50 cursor-pointer">
-                            <FileText className="mr-2 h-4 w-4" />
-                            Detail
-                          </DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => onPrint(item)} className="rounded-lg px-3 py-2 text-sm text-slate-900 focus:bg-slate-50 cursor-pointer">
-                            <Printer className="mr-2 h-4 w-4" />
-                            Print
-                          </DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => onDelete(item)} className="rounded-lg px-3 py-2 text-sm text-red-600 focus:bg-red-50 focus:text-red-600 cursor-pointer">
-                            <Trash2 className="mr-2 h-4 w-4" />
-                            Hapus
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ))
-            ) : (
-              <TableRow className="group">
-                <TableCell colSpan={100} className="py-16 h-32 text-center text-slate-500">
-                  <div className="flex flex-col items-center justify-center gap-2">
-                    <div className="rounded-full bg-slate-50 p-4 mb-2">
-                      <Search className="h-8 w-8 text-slate-400" />
-                    </div>
-                    <p className="text-base font-semibold text-slate-900">Tidak ada data ditemukan</p>
-                    <p className="text-sm text-slate-500">Belum ada data atau coba gunakan kata kunci pencarian lain.</p>
-                  </div>
-                </TableCell>
-              </TableRow>
-            )}
-          </TableBody>
-        </Table>
-      </div>
-
-      <div className="flex flex-col gap-4 text-sm text-slate-500 lg:flex-row lg:items-center lg:justify-between px-1">
-        <div>
-          Showing {startData}-{endData} of {totalData} data
-        </div>
-
-        {totalPages > 1 && (
-          <div className="flex flex-wrap items-center justify-end gap-1 text-slate-800">
-            <Button
-              variant="ghost"
-              size="sm"
-              className="h-9 rounded-md px-2 text-sm font-medium hover:bg-transparent disabled:text-slate-300"
-              onClick={() => onPageChange(page - 1)}
-              disabled={page === 1}
-            >
-              Previous
-            </Button>
-
-            {renderPaginationNumbers()}
-
-            <Button
-              variant="ghost"
-              size="sm"
-              className="h-9 rounded-md px-2 text-sm font-medium hover:bg-transparent disabled:text-slate-300"
-              onClick={() => onPageChange(page + 1)}
-              disabled={page === totalPages}
-            >
-              Next
-            </Button>
-          </div>
-        )}
-      </div>
-    </div>
+    <BaseTable
+      data={data}
+      columns={columns}
+      loading={isLoading}
+      searchPlaceholder="Search here"
+      search={search}
+      onSearchChange={onSearchChange}
+      showLimitChange
+      perPage={perPage}
+      onPerPageChange={onPerPageChange}
+      meta={{
+        currentPage: page,
+        perPage,
+        lastPage: totalPages,
+        total: totalData,
+      }}
+      onPageChange={onPageChange}
+    />
   );
 });

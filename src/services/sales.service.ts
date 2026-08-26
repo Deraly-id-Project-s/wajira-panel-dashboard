@@ -26,6 +26,7 @@ export type SalesPayload = {
   transaction_date?: string;
   price_usd?: number;
   price_per_unit_usd?: number;
+  document_template_id?: number | string | null;
 };
 
 const appendIfDefined = (form: FormData, key: string, value: string | number | undefined) => {
@@ -52,6 +53,7 @@ const appendPayload = (form: FormData, payload: SalesPayload) => {
   appendIfDefined(form, 'transaction_date', payload.transaction_date);
   appendIfDefined(form, 'price_usd', payload.price_usd);
   appendIfDefined(form, 'price_per_unit_usd', payload.price_per_unit_usd);
+  form.append('document_template_id', payload.document_template_id == null ? '' : String(payload.document_template_id));
 };
 
 const toUrlEncodedPayload = (payload: SalesPayload): URLSearchParams => {
@@ -95,6 +97,7 @@ const toUrlEncodedPayload = (payload: SalesPayload): URLSearchParams => {
   if (payload.price_per_unit_usd !== undefined && payload.price_per_unit_usd !== null) {
     params.append('price_per_unit_usd', String(payload.price_per_unit_usd));
   }
+  params.append('document_template_id', payload.document_template_id == null ? '' : String(payload.document_template_id));
   return params;
 };
 

@@ -1,9 +1,8 @@
 import React, { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
+import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from '@/components/ui/form';
+import { FormDialog } from '@/components/ui/form-dialog';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import type { Driver, DriverPayload } from '@/@types/driver.types';
 
@@ -62,18 +61,13 @@ export function DriverFormModal({
   companyId,
   userId,
 }: DriverFormModalProps) {
-  const isEdit = !!initialData;
-
-  const {
-    register,
-    handleSubmit,
-    reset,
-    formState: { errors },
-  } = useForm<DriverFormData>({ defaultValues: emptyValues });
+  const form = useForm<DriverFormData>({
+    defaultValues: emptyValues,
+  });
 
   useEffect(() => {
     if (isOpen && initialData) {
-      reset({
+      form.reset({
         name: initialData.name || '',
         address: initialData.address || '',
         phone: initialData.phone || '',
@@ -91,9 +85,9 @@ export function DriverFormModal({
         image: null,
       });
     } else if (!isOpen) {
-      reset(emptyValues);
+      form.reset(emptyValues);
     }
-  }, [isOpen, initialData, reset]);
+  }, [isOpen, initialData, form]);
 
   const onSubmit = (data: DriverFormData) => {
     onSave({
@@ -118,73 +112,103 @@ export function DriverFormModal({
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="w-full max-w-md sm:max-w-[425px] max-h-[90vh] overflow-hidden flex flex-col rounded-md border-0 bg-white p-0 shadow-2xl">
-        <DialogHeader className="px-6 py-5 border-b shrink-0 text-left">
-          <DialogTitle className="text-[18px] font-semibold text-[#171717]">{isEdit ? 'Edit Data Driver' : 'Tambah Data Driver'}</DialogTitle>
-          <DialogDescription className="text-[15px] text-[#71717A]">
-            {isEdit ? 'Perbarui detail driver' : 'Masukkan detail driver baru'}
-          </DialogDescription>
-        </DialogHeader>
+    <Form {...form}>
+      <FormDialog
+        open={isOpen}
+        onOpenChange={(open) => !open && onClose()}
+        title={initialData ? 'Edit Data Driver' : 'Tambah Data Driver'}
+        description={initialData ? 'Perbarui detail driver' : 'Masukkan detail driver baru'}
+        onSubmit={form.handleSubmit(onSubmit)}
+        submitLabel="Simpan"
+        isSubmitting={isSubmitting}
+      >
+        <div className="space-y-4 max-h-[60vh] overflow-y-auto px-1 py-1">
+          <FormField
+            control={form.control}
+            name="name"
+            rules={{ required: 'Nama Driver wajib diisi', maxLength: { value: 249, message: 'Maks 249 karakter' } }}
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Nama Driver <span className="text-red-500">*</span></FormLabel>
+                <FormControl>
+                  <Input placeholder="Tambahkan nama driver" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
 
-        {isOpen && (
-          <form onSubmit={handleSubmit(onSubmit)} className="flex-1 flex flex-col overflow-hidden">
-            <div className="flex-1 overflow-y-auto px-6 py-5 space-y-4">
-              {/* Nama Driver */}
-              <div className="space-y-1.5">
-                <Label htmlFor="driver-name">Nama Driver</Label>
-                <Input
-                  id="driver-name"
-                  placeholder="Tambahkan nama driver"
-                  {...register('name', { required: 'Nama Driver wajib diisi', maxLength: { value: 249, message: 'Maks 249 karakter' } })}
-                  className={errors.name ? 'border-red-500' : ''}
-                  disabled={isSubmitting}
-                />
-                {errors.name && <p className="text-red-500 text-xs">{errors.name.message}</p>}
-              </div>
+          <FormField
+            control={form.control}
+            name="address"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Alamat</FormLabel>
+                <FormControl>
+                  <Textarea placeholder="Tambahkan alamat" className="resize-none" rows={3} {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
 
-              {/* Alamat */}
-              <div className="space-y-1.5">
-                <Label htmlFor="driver-address">Alamat</Label>
-                <Textarea id="driver-address" placeholder="Tambahkan alamat" {...register('address')} className="resize-none" rows={3} disabled={isSubmitting} />
-              </div>
+          <FormField
+            control={form.control}
+            name="identityNumber"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>KTP</FormLabel>
+                <FormControl>
+                  <Input placeholder="Tambahkan nomor KTP" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
 
-              {/* KTP */}
-              <div className="space-y-1.5">
-                <Label htmlFor="driver-ktp">KTP</Label>
-                <Input id="driver-ktp" placeholder="Tambahkan nomor KTP" {...register('identityNumber')} disabled={isSubmitting} />
-              </div>
+          <FormField
+            control={form.control}
+            name="phone"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Phone</FormLabel>
+                <FormControl>
+                  <Input placeholder="Tambahkan nomor telepon" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
 
-              {/* Phone */}
-              <div className="space-y-1.5">
-                <Label htmlFor="driver-phone">Phone</Label>
-                <Input id="driver-phone" placeholder="Tambahkan nomor telepon" {...register('phone')} disabled={isSubmitting} />
-              </div>
+          <FormField
+            control={form.control}
+            name="driveLicenseNumber"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Nomor SIM</FormLabel>
+                <FormControl>
+                  <Input placeholder="Tambahkan nomor SIM" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
 
-              {/* Nomor SIM */}
-              <div className="space-y-1.5">
-                <Label htmlFor="driver-sim">Nomor SIM</Label>
-                <Input id="driver-sim" placeholder="Tambahkan nomor SIM" {...register('driveLicenseNumber')} disabled={isSubmitting} />
-              </div>
-
-              {/* Tgl. Gabung */}
-              <div className="space-y-1.5">
-                <Label htmlFor="driver-join-date">Tgl. Gabung</Label>
-                <Input id="driver-join-date" type="date" {...register('joinDate')} disabled={isSubmitting} />
-              </div>
-            </div>
-
-            <div className="shrink-0 flex gap-3 px-6 py-4 border-t bg-gray-50">
-              <Button type="button" variant="outline" className="flex-1 h-11 rounded-md border-[#D4D4D8] text-[15px] text-[#171717]" onClick={onClose} disabled={isSubmitting}>
-                Batal
-              </Button>
-              <Button type="submit" className="flex-1 h-11 rounded-md bg-[#1F3B5B] text-[15px] font-medium text-white hover:bg-[#19314b]" disabled={isSubmitting}>
-                {isSubmitting ? 'Menyimpan...' : 'Simpan'}
-              </Button>
-            </div>
-          </form>
-        )}
-      </DialogContent>
-    </Dialog>
+          <FormField
+            control={form.control}
+            name="joinDate"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Tgl. Gabung</FormLabel>
+                <FormControl>
+                  <Input type="date" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </div>
+      </FormDialog>
+    </Form>
   );
 }

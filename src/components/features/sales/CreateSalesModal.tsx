@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
-import { EditUnitForm } from '@/components/features/sales/edit/EditUnitForm';
-import { EditUnitFormData } from '@/components/features/sales/edit/edit-unit.schema';
+import { UnitTransactionForm } from '@/components/features/unit-transaction/UnitTransactionForm';
+import { type UnitTransactionFormValues } from '@/components/features/unit-transaction/unit-transaction.schema';
 import { toast } from 'sonner';
 import { useCreateSales } from '@/hooks/useSales';
 import { useCustomers } from '@/hooks/useCustomer';
@@ -45,7 +45,7 @@ export function CreateSalesModal({ isOpen, onClose, onSuccess }: CreateSalesModa
         }));
     }, [customerData?.data]);
 
-    const handleSubmit = async (data: EditUnitFormData) => {
+    const handleSubmit = async (data: UnitTransactionFormValues) => {
         const customerId = Number(selectedCustomer?.id ?? 0);
         if (!customerId) {
             toast.error('Customer wajib dipilih');
@@ -60,14 +60,15 @@ export function CreateSalesModal({ isOpen, onClose, onSuccess }: CreateSalesModa
             type: 'sales' as const,
             max_capacity: Number(data.qty ?? 0),
             stock_state: 'draft',
-            unit_type_id: Number(data.tipeUnit || 0),
+            unit_type_id: Number(data.unitTypeId || 0),
             qty_total: Number(data.qty ?? 0),
-            price: Number(data.harga ?? 0),
-            bbn_price: Number(data.biayaBbn ?? 0),
-            expedition_fee: Number(data.biayaEkspedisi ?? 0),
-            other_fee: Number(data.biayaLain ?? 0),
+            price: Number(data.price ?? 0),
+            bbn_price: Number(data.bbnPrice ?? 0),
+            expedition_fee: Number(data.expeditionFee ?? 0),
+            other_fee: Number(data.otherFee ?? 0),
             dpp_tax_id: data.dppTaxVersionId ? Number(data.dppTaxVersionId) : undefined,
             ppn_tax_id: data.ppnTaxVersionId ? Number(data.ppnTaxVersionId) : undefined,
+            document_template_id: data.documentTemplateId ?? null,
         };
 
         if (!payload.max_capacity || payload.max_capacity <= 0) {
@@ -105,22 +106,22 @@ export function CreateSalesModal({ isOpen, onClose, onSuccess }: CreateSalesModa
                 </DialogHeader>
 
                 <div className="mt-2">
-                    <EditUnitForm
-                        hideCustomerField={true}
+                    <UnitTransactionForm
+                        type="sales"
+                        allowCreateTypeUnit
                         defaultValues={{
-                            customer: selectedCustomer?.name ?? '',
-                            tipeUnit: '',
+                            unitTypeId: '',
                             qty: 1,
-                            harga: 0,
-                            hppSatuan: 0,
-                            totalHpp: 0,
-                            dppSatuan: 0,
-                            totalDpp: 0,
-                            ppnSatuan: 0,
-                            totalPpn: 0,
-                            biayaBbn: 0,
-                            biayaEkspedisi: 0,
-                            biayaLain: 0,
+                            price: 0,
+                            hppPerUnit: 0,
+                            hppTotal: 0,
+                            dppPerUnit: 0,
+                            dppTotal: 0,
+                            ppnPerUnit: 0,
+                            ppnTotal: 0,
+                            bbnPrice: 0,
+                            expeditionFee: 0,
+                            otherFee: 0,
                         }}
                         prependFields={
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
@@ -170,7 +171,6 @@ export function CreateSalesModal({ isOpen, onClose, onSuccess }: CreateSalesModa
                         }
                         onSubmit={handleSubmit}
                         onCancel={onClose}
-                        showAddUnitButton
                     />
                 </div>
             </DialogContent>

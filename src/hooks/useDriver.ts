@@ -7,22 +7,25 @@ import {
     deleteDriver,
     importDriver,
     exportDriver,
+    activateDriver,
+    deactivateDriver,
 } from '@/services/driver.service';
 import type { PaginationParams } from '@/@types/pagination.types';
 import type { DriverPayload } from '@/@types/driver.types';
 import { companyQueryKeys } from '@/lib/query/company-key';
 
-export function useDrivers(params: PaginationParams & { search?: string; company_id?: string | number }) {
+export function useDrivers(params: PaginationParams & { search?: string; company_id?: string | number; enabled?: boolean }) {
+    const { enabled = true, ...rest } = params;
     return useQuery({
-        queryKey: params.company_id
-            ? companyQueryKeys.list(params.company_id, 'drivers', {
-                page: params.page,
-                perPage: params.perPage,
-                search: params.search ?? '',
+        queryKey: rest.company_id
+            ? companyQueryKeys.list(rest.company_id, 'drivers', {
+                page: rest.page,
+                perPage: rest.perPage,
+                search: rest.search ?? '',
             })
             : ['company', 'unselected', 'drivers'],
-        queryFn: () => getDrivers(params),
-        enabled: Boolean(params.company_id),
+        queryFn: () => getDrivers(rest),
+        enabled: enabled && Boolean(rest.company_id),
         placeholderData: (prev) => prev,
         staleTime: 30_000,
     });
@@ -53,10 +56,32 @@ export function useUpdateDriver() {
         mutationFn: ({ id, data }: { id: string | number; data: DriverPayload }) =>
             updateDriver(id, data),
         onSuccess: (_data, variables) => {
+            queryClient.invalidateQueries({ queryKey: ['drivers', variables.id] });
             if (!variables.data.company_id) return;
             queryClient.invalidateQueries({ queryKey: companyQueryKeys.companyScope(variables.data.company_id) });
         },
     });
+}
+
+function useDriverStatusMutation(mutationFn: (id: string | number) => Promise<void>) {
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn,
+        onSuccess: (_data, id) => {
+            queryClient.invalidateQueries({ queryKey: ['drivers', id] });
+            queryClient.invalidateQueries({
+                predicate: (query) => Array.isArray(query.queryKey) && query.queryKey.includes('drivers'),
+            });
+        },
+    });
+}
+
+export function useActivateDriver() {
+    return useDriverStatusMutation(activateDriver);
+}
+
+export function useDeactivateDriver() {
+    return useDriverStatusMutation(deactivateDriver);
 }
 
 export function useDeleteDriver() {

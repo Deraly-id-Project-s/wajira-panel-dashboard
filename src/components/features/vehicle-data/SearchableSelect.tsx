@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { Check, ChevronsUpDown, Search } from 'lucide-react';
+import { Check, ChevronsUpDown, Search, Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Command, CommandEmpty, CommandGroup, CommandItem, CommandList } from '@/components/ui/command';
@@ -25,6 +25,10 @@ interface SearchableSelectProps {
   onLoadMore?: () => void;
   hasMore?: boolean;
   className?: string;
+  onActionClick?: () => void;
+  actionLabel?: string;
+  disabledValues?: string[];
+  disabledLabel?: string;
 }
 
 export function SearchableSelect({
@@ -40,6 +44,10 @@ export function SearchableSelect({
   onLoadMore,
   hasMore = false,
   className,
+  onActionClick,
+  actionLabel,
+  disabledValues = [],
+  disabledLabel = 'Sudah ditambahkan',
 }: SearchableSelectProps) {
   const [open, setOpen] = React.useState(false);
   const [query, setQuery] = React.useState('');
@@ -74,23 +82,27 @@ export function SearchableSelect({
   return (
     <Popover open={open} onOpenChange={setOpen} modal={true}>
       <PopoverTrigger asChild>
-        <Button
+        <button
           type="button"
-          variant="outline"
           role="combobox"
           aria-expanded={open}
+          aria-controls="searchable-select-list"
           disabled={disabled}
-          className={cn('w-full justify-between font-normal', !selectedOption && 'text-muted-foreground', className)}
+          className={cn(
+            'flex h-10 w-full items-center justify-between rounded-md border border-input bg-transparent px-3 py-2 text-sm ring-offset-background disabled:cursor-not-allowed disabled:opacity-50 min-w-0 font-normal',
+            !selectedOption && 'text-muted-foreground',
+            className
+          )}
         >
           <span className="truncate text-left">{selectedOption ? selectedOption.label : placeholder}</span>
           <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-        </Button>
+        </button>
       </PopoverTrigger>
       <PopoverContent
-        className="w-[--radix-popover-trigger-width] p-0 pointer-events-auto"
+        className="w-[--radix-popover-trigger-width] p-0 pointer-events-auto flex flex-col"
         align="start"
       >
-        <Command shouldFilter={false}>
+        <Command shouldFilter={false} className="flex-1 min-h-0">
           <div className="flex h-9 items-center gap-2 border-b px-3" data-slot="command-input-wrapper">
             <Search className="size-4 shrink-0 opacity-50" />
             <input autoComplete="off"
@@ -111,6 +123,7 @@ export function SearchableSelect({
             />
           </div>
           <CommandList
+            id="searchable-select-list"
             className="flex-1 min-h-0"
             onScroll={(event) => {
               const target = event.currentTarget;
@@ -127,7 +140,8 @@ export function SearchableSelect({
                 <CommandItem
                   key={option.value}
                   value={option.value}
-                  onSelect={() => selectOption(option)}
+                  disabled={disabledValues.includes(option.value)}
+                  onSelect={() => !disabledValues.includes(option.value) && selectOption(option)}
                   className="flex items-start gap-2 cursor-pointer py-1"
                 >
                   <Check className={cn('mt-0.5 h-4 w-4', value === option.value ? 'opacity-100' : 'opacity-0')} />
@@ -135,6 +149,7 @@ export function SearchableSelect({
                     <div className="truncate">{option.label}</div>
                     {option.subtitle ? <div className="text-xs text-muted-foreground">{option.subtitle}</div> : null}
                   </div>
+                  {disabledValues.includes(option.value) ? <span className="ml-auto shrink-0 text-xs text-muted-foreground">{disabledLabel}</span> : null}
                 </CommandItem>
               ))}
             </CommandGroup>
@@ -143,6 +158,24 @@ export function SearchableSelect({
             )}
           </CommandList>
         </Command>
+        {onActionClick && (
+          <div className="border-t p-1.5 bg-gray-50 flex justify-center shrink-0">
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              className="w-full text-xs font-semibold text-blue-600 hover:text-blue-700 hover:bg-blue-50/50 justify-center h-8 gap-1 rounded-md"
+              onClick={(e) => {
+                e.stopPropagation();
+                onActionClick();
+                setOpen(false);
+              }}
+            >
+              <Plus className="h-3.5 w-3.5" />
+              {actionLabel || 'Tambah Data Baru'}
+            </Button>
+          </div>
+        )}
       </PopoverContent>
     </Popover>
   );

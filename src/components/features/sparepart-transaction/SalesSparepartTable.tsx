@@ -1,7 +1,7 @@
 import { useCallback, useMemo, useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { SparepartTransaction } from '@/@types/sparepart-transaction.types';
-import { Eye, MoreVertical, Pencil, Plus, Search, Trash2 } from 'lucide-react';
+import { Eye, MoreVertical, Pencil, Plus, Search, Trash2, Undo2 } from 'lucide-react';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { useRouter } from 'next/router';
 import { Input } from '@/components/ui/input';
@@ -94,7 +94,7 @@ export default function SalesSparepartTable({
 
   const getBillingLabel = useCallback((item: SparepartTransaction) => {
     if (item.is_refunded) return 'Refund';
-    return item.billing_summary?.is_paid ? 'Lunas' : 'Belum Lunas';
+    return item.sparepart_transaction_billing?.is_paid ? 'Lunas' : 'Belum Lunas';
   }, []);
 
   const currentPage = meta?.currentPage ?? 1;
@@ -230,6 +230,11 @@ export default function SalesSparepartTable({
               <DropdownMenuItem onClick={() => router.push(`/dashboard/${slug}/transaksi/penjualan-sparepart/${item.id}`)}>
                 <Eye className="mr-2 h-4 w-4" /> Detail
               </DropdownMenuItem>
+              {!item.is_refunded && canCreate && (
+                <DropdownMenuItem onClick={() => router.push(`/dashboard/${slug}/transaksi/refund-sparepart/create?sparepart_transaction_id=${item.id}`)}>
+                  <Undo2 className="mr-2 h-4 w-4" /> Refund
+                </DropdownMenuItem>
+              )}
               {canEdit && (
                 <DropdownMenuItem onClick={() => router.push(`/dashboard/${slug}/transaksi/penjualan-sparepart/edit/${item.id}`)}>
                   <Pencil className="mr-2 h-4 w-4" /> Edit
@@ -239,11 +244,11 @@ export default function SalesSparepartTable({
                 <DropdownMenuItem
                   className={cn(
                     "text-red-600 focus:text-red-600 focus:bg-red-50 cursor-pointer",
-                    item.billing_summary?.is_paid && "opacity-50 cursor-not-allowed hover:bg-transparent hover:text-red-600 focus:bg-transparent"
+                    item.sparepart_transaction_billing?.is_paid && "opacity-50 cursor-not-allowed hover:bg-transparent hover:text-red-600 focus:bg-transparent"
                   )}
-                  disabled={item.billing_summary?.is_paid}
+                  disabled={item.sparepart_transaction_billing?.is_paid}
                   onClick={(e) => {
-                    if (item.billing_summary?.is_paid) {
+                    if (item.sparepart_transaction_billing?.is_paid) {
                       e.preventDefault();
                       return;
                     }
@@ -258,7 +263,7 @@ export default function SalesSparepartTable({
         ),
       },
     ],
-    [slug, canEdit, canDelete, onDelete, getBillingLabel, router, getCustomerName, getSparepartName]
+    [slug, canCreate, canEdit, canDelete, onDelete, getBillingLabel, router, getCustomerName, getSparepartName]
   );
 
   const headerActions = (

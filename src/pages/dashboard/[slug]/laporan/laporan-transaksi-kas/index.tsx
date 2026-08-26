@@ -3,7 +3,7 @@ import { useRouter } from 'next/router';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { PageHeader } from '@/components/ui/page-header';
 import { LaporanKasTable } from '@/components/features/laporan-kas/LaporanKasTable';
-import {  Search, Printer } from 'lucide-react';
+import { Search, Printer } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { DatePickerWithRange } from '@/components/ui/date-range-picker';
 import { DateRange } from 'react-day-picker';
@@ -118,16 +118,16 @@ export default function LaporanTransaksiKasPage() {
         </div>
 
         {/* Filters */}
-        <div className="flex flex-col sm:flex-row items-center justify-between gap-4 no-print">
-          <div className="flex items-end gap-4 flex-wrap">
+        <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 no-print">
+          <div className="flex flex-col sm:flex-row sm:items-end gap-3 w-full sm:w-auto">
             {/* Cari Transaksi */}
-            <div className="flex flex-col space-y-2">
+            <div className="flex flex-col space-y-1.5 w-full sm:w-auto">
               <label className="text-[13px] font-medium text-slate-700">Cari Transaksi</label>
               <div className="relative w-full sm:w-[280px]">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 h-4 w-4" />
                 <Input
                   placeholder="Search here"
-                  className="pl-9 bg-white"
+                  className="pl-9 bg-white h-9"
                   value={searchInput}
                   onChange={(e) => setSearchInput(e.target.value)}
                 />
@@ -135,21 +135,21 @@ export default function LaporanTransaksiKasPage() {
             </div>
 
             {/* Periode Transaksi */}
-            <div className="flex flex-col space-y-2">
+            <div className="flex flex-col space-y-1.5 w-full sm:w-auto">
               <label className="text-[13px] font-medium text-slate-700">Periode Transaksi</label>
-              <div className="w-[280px]">
+              <div className="w-full sm:w-[280px]">
                 <DatePickerWithRange date={dateRange} onChange={setDateRangeState} />
               </div>
             </div>
 
             {/* Tampilkan per halaman */}
-            <div className="flex items-center gap-2 text-sm text-slate-500 whitespace-nowrap mb-1">
+            <div className="flex items-center gap-2 text-sm text-slate-500 whitespace-nowrap h-9">
               <span>Show</span>
               <Select
                 value={String(pagination.perPage)}
                 onValueChange={(val) => setPerPage(Number(val))}
               >
-                <SelectTrigger className="w-[70px] bg-white">
+                <SelectTrigger className="w-[70px] bg-white h-9">
                   <SelectValue placeholder="25" />
                 </SelectTrigger>
                 <SelectContent>

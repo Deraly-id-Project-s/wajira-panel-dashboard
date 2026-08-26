@@ -151,23 +151,13 @@ export default function PenerimaanSparepartDetailPage() {
               <h1 className="text-2xl font-semibold text-slate-900">Detail Penerimaan Sparepart</h1>
               <div className="text-sm text-muted-foreground flex items-center gap-2">
                 <span>Kode Transaksi:</span>
-                <span className="text-blue-600 font-semibold">{detailData?.activity_number || detailData?.noPenerimaan || '-'}</span>
+                <span className="inline-flex items-center gap-1.5 font-semibold text-orange-600 hover:text-orange-700">{detailData?.activity_number || detailData?.noPenerimaan || '-'}</span>
                 <Badge variant="outline" className={`font-semibold ${stateInfo.bg}`}>
                   {stateInfo.text}
                 </Badge>
               </div>
             </div>
           </div>
-
-          {detailData?.state !== 'done' && (
-            <Button
-              onClick={handleProcessStock}
-              disabled={isProcessing}
-              className="bg-emerald-600 hover:bg-emerald-700 text-white font-medium px-5 h-10 rounded-lg shadow-sm flex items-center gap-2 cursor-pointer"
-            >
-              {isProcessing ? 'Memproses...' : 'Proses Penerimaan'}
-            </Button>
-          )}
         </div>
 
         <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
@@ -311,7 +301,7 @@ export default function PenerimaanSparepartDetailPage() {
 
       {/* DIALOG UPDATE STATUS */}
       <Dialog open={isUpdateStateDialogOpen} onOpenChange={setIsUpdateStateDialogOpen}>
-        <DialogContent className="sm:max-w-[425px] p-6 rounded-2xl">
+        <DialogContent className="sm:max-w-[425px] p-6 rounded-md">
           <DialogHeader>
             <DialogTitle className="text-lg font-bold text-slate-800">Ubah Status Penerimaan</DialogTitle>
             <DialogDescription className="text-xs text-slate-500">

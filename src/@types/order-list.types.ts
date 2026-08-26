@@ -1,7 +1,7 @@
 import type { Customer } from './customer.types';
 import type { PaginatedResult, PaginationParams } from './pagination.types';
 
-export type OrderListStatus = 'deliver' | 'process' | 'pending' | 'reject';
+export type OrderListStatus = 'draft' | 'deliver' | 'process' | 'done' | 'reject';
 export type OrderListVehicleType = 'towing' | 'cdd' | 'fuso';
 
 export interface OrderListCustomer extends Partial<Customer> {
@@ -30,6 +30,7 @@ export interface OrderListTarifReference {
   ujFuso?: number | null;
   invCdd?: number | null;
   invFuso?: number | null;
+  invTowing?: number | null;
   customer?: Partial<Customer>;
 }
 
@@ -40,6 +41,10 @@ export interface OrderListTarifItem {
   tarifId: number;
   deliveryDestination: string;
   vehicleType?: OrderListVehicleType | null;
+  vehicleId?: number | null;
+  driverId?: number | null;
+  vehicle?: OrderListVehicle;
+  driver?: { id: number; name: string; code?: string };
   loadingIn: string;
   loadingOut: string;
   loadContent?: string;
@@ -73,10 +78,18 @@ export interface OrderList {
   vehicleType?: OrderListVehicleType | null;
   billInvoice: number;
   ppn: number;
+  pph?: number;
   note: string;
   ujDriver: number;
+  ujTowing?: number | null;
+  ujCdd?: number | null;
+  ujFuso?: number | null;
+  invTowing?: number | null;
+  invCdd?: number | null;
+  invFuso?: number | null;
   loadingIn: string;
   loadingOut: string;
+  deliveryDestination: string;
   vehicles: OrderListVehicle[];
   customer?: OrderListCustomer;
   tarifs: OrderListTarifItem[];
@@ -88,6 +101,9 @@ export interface OrderList {
 export interface OrderListListParams extends PaginationParams {
   order_by?: string;
   order_sort?: 'asc' | 'desc';
+  company_id?: string | number;
+  start_date?: string | null;
+  end_date?: string | null;
 }
 
 export interface OrderListTarifListParams extends PaginationParams {
@@ -106,14 +122,8 @@ export interface OrderListTarifItemListParams extends PaginationParams {
 
 export interface CreateOrderListPayload {
   customer_id: number;
-  status: OrderListStatus;
-  bill_invoice: number;
-  vehicle_type: OrderListVehicleType;
-  note?: string;
-  ppn?: number;
-  uj_driver?: number;
-  loading_in?: string;
-  loading_out?: string;
+  company_id: number;
+  description?: string;
 }
 
 export interface UpdateOrderListPayload {
@@ -123,7 +133,7 @@ export interface UpdateOrderListPayload {
   bill_invoice?: number;
   vehicle_type?: OrderListVehicleType;
   note?: string;
-  ppn?: number;
+  description?: string;
   uj_driver?: number;
   loading_in?: string;
   loading_out?: string;
@@ -132,15 +142,22 @@ export interface UpdateOrderListPayload {
 export interface CreateOrderListTarifPayload {
   do_orderlist_id: number;
   tarif_id: number;
-  qty: number;
-  load_content: string;
+  vehicle_type: OrderListVehicleType;
   delivery_destination: string;
+  vehicle_id: number;
+  driver_id: number;
 }
 
 export interface UpdateOrderListTarifPayload {
   delivery_destination: string;
-  qty?: number;
-  load_content?: string;
+  tarif_id?: number;
+  vehicle_type?: OrderListVehicleType;
+  vehicle_id?: number;
+  driver_id?: number;
+}
+
+export interface UpdateOrderListStatePayload {
+  status: OrderListStatus;
 }
 
 export interface CreateOrderListTarifItemPayload {

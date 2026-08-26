@@ -16,7 +16,7 @@ export function UserMenu() {
                 </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-                <DropdownMenuItem>Profile</DropdownMenuItem>
+                <DropdownMenuItem>Profil Pengguna</DropdownMenuItem>
                 <DropdownMenuItem>Logout</DropdownMenuItem>
             </DropdownMenuContent>
         </DropdownMenu>

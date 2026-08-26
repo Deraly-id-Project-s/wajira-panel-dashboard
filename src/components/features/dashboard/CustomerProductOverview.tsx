@@ -49,7 +49,7 @@ function StatItem({
 }
 
 function LoadingCard() {
-  return <div className="h-80 animate-pulse rounded-[20px] bg-slate-100" />;
+  return <div className="h-80 animate-pulse rounded-md bg-slate-100" />;
 }
 
 function CustomProductTooltip({ active, payload }: { active?: boolean; payload?: any[] }) {
@@ -59,7 +59,7 @@ function CustomProductTooltip({ active, payload }: { active?: boolean; payload?:
   return (
     <div className="rounded-lg bg-slate-900 px-3 py-2 text-white shadow-xl text-xs space-y-1">
       <p className="font-semibold text-slate-200">{item.name}</p>
-      <div className="flex items-center gap-2">
+      <div className="flex flex-col sm:flex-row items-center gap-2 w-full sm:w-auto">
         <span className="text-slate-400">Total Terjual:</span>
         <span className="font-bold text-emerald-400">{item.value.toLocaleString('id-ID')} unit</span>
       </div>
@@ -93,7 +93,7 @@ export function CustomerOverviewCard({ data, isLoading }: CustomerOverviewCardPr
   };
 
   return (
-    <Card className="rounded-[20px] border border-slate-200 bg-white p-7 shadow-sm">
+    <Card className="rounded-md border border-slate-200 bg-white p-7 shadow-sm">
       <h3 className="mb-8 text-center text-[17px] font-bold text-slate-900">Overview Customer</h3>
       <div className="mb-8 grid grid-cols-3 gap-4 items-start">
         <StatItem label="Jumlah Customer" value={data.totalCustomers.toString()} />
@@ -173,7 +173,7 @@ export function ProductOverviewCard({ data, isLoading }: ProductOverviewCardProp
   console.log(data);
 
   return (
-    <Card className="rounded-[20px] border border-slate-200 bg-white p-7 shadow-sm h-full flex flex-col justify-between">
+    <Card className="rounded-md border border-slate-200 bg-white p-7 shadow-sm h-full flex flex-col justify-between">
       <div>
         <h3 className="mb-6 text-center text-[17px] font-bold text-slate-900">Overview Produk</h3>
 

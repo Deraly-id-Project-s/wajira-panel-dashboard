@@ -8,7 +8,9 @@ import LaporanPenjualanFilter from '@/components/features/laporan-penjualan/Lapo
 import LaporanPenjualanPerNota from '@/components/features/laporan-penjualan/LaporanPenjualanPerNota';
 import LaporanPenjualanPerTipe from '@/components/features/laporan-penjualan/LaporanPenjualanPerTipe';
 import LaporanPenjualanPerCustomer from '@/components/features/laporan-penjualan/LaporanPenjualanPerCustomer';
+import LaporanPenjualanSparepart from '@/components/features/laporan-penjualan/LaporanPenjualanSparepart';
 import { useLaporanPenjualan } from '@/hooks/useLaporanPenjualan';
+import type { SalesSparepartTransactionItem, SalesTransactionItem } from '@/services/laporan-penjualan.service';
 import { format } from 'date-fns';
 import { useRouter } from 'next/router';
 import { useCompany } from '@/contexts/CompanyContext';
@@ -17,6 +19,7 @@ import { PrintLetterPage } from '@/components/common/PrintLetterPage';
 
 export default function LaporanPenjualanPage() {
     const [activeTab, setActiveTab] = useState('per-nota');
+    const [reportItem, setReportItem] = useState<'unit' | 'sparepart'>('unit');
     const router = useRouter();
     const { companyId } = useCompany();
     const {
@@ -28,7 +31,10 @@ export default function LaporanPenjualanPage() {
         resetFiltersForTab,
         startDate,
         endDate,
-    } = useLaporanPenjualan();
+    } = useLaporanPenjualan(reportItem);
+
+    const unitData = data as SalesTransactionItem[];
+    const sparepartData = data as SalesSparepartTransactionItem[];
 
     const slugParam = router.query.slug;
     const resolvedCompanyId = resolveCompanyId(slugParam, companyId);
@@ -37,6 +43,11 @@ export default function LaporanPenjualanPage() {
     const handleTabChange = (tab: string) => {
         setActiveTab(tab);
         resetFiltersForTab(tab);
+    };
+
+    const handleReportItemChange = (value: string) => {
+        setReportItem(value as 'unit' | 'sparepart');
+        setPage(1);
     };
 
     const handlePrint = () => {
@@ -58,14 +69,31 @@ export default function LaporanPenjualanPage() {
             ? `Periode: ${format(new Date(startDate), 'dd/MM/yyyy')} s.d. ${format(new Date(endDate), 'dd/MM/yyyy')}`
             : 'Tahun 2026';
 
-        csvContent += `"${getReportTitle()}"\n`;
+        csvContent += `"${getReportTitle()} ${reportItem.toUpperCase()}"\n`;
         csvContent += `"PT WAJIRA JAGRATARA MORINDO"\n`;
         csvContent += `"${periodText}"\n\n`;
 
-        if (activeTab === 'per-nota') {
+        if (reportItem === 'sparepart') {
+            const showCustomer = activeTab === 'per-customer';
+            csvContent += `NO,NO PENJUALAN,TGL JUAL,${showCustomer ? 'NAMA CUSTOMER,' : ''}SPAREPART,KODE SPAREPART,QTY,HARGA JUAL,DISKON,TOTAL JUAL,STATUS\n`;
+
+            sparepartData.forEach((item, idx) => {
+                csvContent += `${idx + 1},`;
+                csvContent += `"${item.transaction_code}",`;
+                csvContent += `"${new Date(item.transaction_date).toLocaleDateString('id-ID')}",`;
+                if (showCustomer) csvContent += `"${item.person_name || '-'}",`;
+                csvContent += `"${item.sparepart_name || '-'}",`;
+                csvContent += `"${item.sparepart_code || '-'}",`;
+                csvContent += `${item.qty || 0},`;
+                csvContent += `${item.price || 0},`;
+                csvContent += `${item.discount || 0},`;
+                csvContent += `${item.total || 0},`;
+                csvContent += `"${item.payment_status || (item.is_paid ? 'Lunas' : 'Belum Lunas')}"\n`;
+            });
+        } else if (activeTab === 'per-nota') {
             csvContent += 'NO,NO PENJUALAN,TGL JUAL,TIPE UNIT,QTY,HARGA JUAL,BIAYA BBN,BIAYA EKSPEDISI,BIAYA LAINNYA,HPP,DPP,PPN,JUMLAH\n';
 
-            data.forEach((item, idx) => {
+            unitData.forEach((item, idx) => {
                 csvContent += `${idx + 1},`;
                 csvContent += `"${item.transaction_code}",`;
                 csvContent += `"${new Date(item.transaction_date).toLocaleDateString('id-ID')}",`;
@@ -83,7 +111,7 @@ export default function LaporanPenjualanPage() {
         } else if (activeTab === 'per-tipe') {
             csvContent += 'NO,NO PENJUALAN,TGL JUAL,TIPE UNIT,QTY,HARGA,BIAYA BBN,BIAYA EKSPEDISI,BIAYA LAIN,TOTAL JUAL\n';
 
-            data.forEach((item, idx) => {
+            unitData.forEach((item, idx) => {
                 csvContent += `${idx + 1},`;
                 csvContent += `"${item.transaction_code}",`;
                 csvContent += `"${new Date(item.transaction_date).toLocaleDateString('id-ID')}",`;
@@ -98,7 +126,7 @@ export default function LaporanPenjualanPage() {
         } else {
             csvContent += 'NO,NO PENJUALAN,TGL JUAL,NAMA CUSTOMER,QTY,HARGA,BIAYA BBN,BIAYA EKSPEDISI,BIAYA LAIN,TOTAL JUAL\n';
 
-            data.forEach((item, idx) => {
+            unitData.forEach((item, idx) => {
                 csvContent += `${idx + 1},`;
                 csvContent += `"${item.transaction_code}",`;
                 csvContent += `"${new Date(item.transaction_date).toLocaleDateString('id-ID')}",`;
@@ -116,7 +144,7 @@ export default function LaporanPenjualanPage() {
         const url = URL.createObjectURL(blob);
         const link = document.createElement('a');
         const uniqueId = new Date().getTime();
-        const fileName = `Laporan_Penjualan_${activeTab}_${uniqueId}.csv`;
+        const fileName = `Laporan_Penjualan_${reportItem}_${activeTab}_${uniqueId}.csv`;
         link.setAttribute('href', url);
         link.setAttribute('download', fileName);
         link.style.visibility = 'hidden';
@@ -138,6 +166,7 @@ export default function LaporanPenjualanPage() {
                 <div className="space-y-4">
                     <LaporanPenjualanFilter
                         activeTab={activeTab}
+                        reportItem={reportItem}
                         startDate={startDate}
                         endDate={endDate}
                         onApplyFilters={applyFilters}
@@ -169,6 +198,13 @@ export default function LaporanPenjualanPage() {
                             </TabsList>
                         </div>
 
+                        <Tabs value={reportItem} onValueChange={handleReportItemChange} className="no-print">
+                            <TabsList className="h-auto bg-slate-100 p-1">
+                                <TabsTrigger value="unit" className="px-5 py-2">Unit Tipe</TabsTrigger>
+                                <TabsTrigger value="sparepart" className="px-5 py-2">Sparepart</TabsTrigger>
+                            </TabsList>
+                        </Tabs>
+
                         <PrintLetterPage
                             id="laporan-penjualan-print"
                             className="laporan-penjualan-print-area"
@@ -177,7 +213,7 @@ export default function LaporanPenjualanPage() {
                             <div className="laporan-penjualan-print-content">
                                 <div className="flex flex-col items-center justify-center text-center space-y-1 mb-8">
                                     <h2 className="text-[13px] font-bold uppercase text-gray-900 tracking-wide">
-                                        REKAP PENJUALAN {activeTab.replace('-', ' ')}
+                                        REKAP PENJUALAN {reportItem.toUpperCase()} {activeTab.replace('-', ' ')}
                                     </h2>
                                     <p className="text-[13px] font-bold text-gray-900 tracking-wide">
                                         PT WAJIRA JAGRATARA MORINDO
@@ -190,30 +226,27 @@ export default function LaporanPenjualanPage() {
                                 </div>
 
                                 <TabsContent value="per-nota" className="mt-0">
-                                    <LaporanPenjualanPerNota
-                                        data={data}
-                                        pagination={pagination}
-                                        isLoading={isLoading}
-                                        onPageChange={setPage}
-                                    />
+                                    {reportItem === 'sparepart' ? (
+                                        <LaporanPenjualanSparepart activeTab={activeTab} data={sparepartData} pagination={pagination} isLoading={isLoading} onPageChange={setPage} />
+                                    ) : (
+                                        <LaporanPenjualanPerNota data={unitData} pagination={pagination} isLoading={isLoading} onPageChange={setPage} />
+                                    )}
                                 </TabsContent>
 
                                 <TabsContent value="per-tipe" className="mt-0">
-                                    <LaporanPenjualanPerTipe
-                                        data={data}
-                                        pagination={pagination}
-                                        isLoading={isLoading}
-                                        onPageChange={setPage}
-                                    />
+                                    {reportItem === 'sparepart' ? (
+                                        <LaporanPenjualanSparepart activeTab={activeTab} data={sparepartData} pagination={pagination} isLoading={isLoading} onPageChange={setPage} />
+                                    ) : (
+                                        <LaporanPenjualanPerTipe data={unitData} pagination={pagination} isLoading={isLoading} onPageChange={setPage} />
+                                    )}
                                 </TabsContent>
 
                                 <TabsContent value="per-customer" className="mt-0">
-                                    <LaporanPenjualanPerCustomer
-                                        data={data}
-                                        pagination={pagination}
-                                        isLoading={isLoading}
-                                        onPageChange={setPage}
-                                    />
+                                    {reportItem === 'sparepart' ? (
+                                        <LaporanPenjualanSparepart activeTab={activeTab} data={sparepartData} pagination={pagination} isLoading={isLoading} onPageChange={setPage} />
+                                    ) : (
+                                        <LaporanPenjualanPerCustomer data={unitData} pagination={pagination} isLoading={isLoading} onPageChange={setPage} />
+                                    )}
                                 </TabsContent>
                             </div>
                         </PrintLetterPage>

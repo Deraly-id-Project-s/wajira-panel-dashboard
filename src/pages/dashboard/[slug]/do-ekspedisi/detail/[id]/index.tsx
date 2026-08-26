@@ -1,19 +1,58 @@
 import React from 'react';
-import { ChevronLeft, Printer } from 'lucide-react';
+import { AlertTriangle, CheckCircle2, Pencil, Play, Printer } from 'lucide-react';
 import { useRouter } from 'next/router';
 import { toast } from 'sonner';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { DOEkspedisiDetailCard } from '@/components/features/do-ekspedisi/DOEkspedisiDetailCard';
 // import { DOEkspedisiDetailTable } from '@/components/features/do-ekspedisi/DOEkspedisiDetailTable';
 import { DeleteDOEkspedisiModal } from '@/components/features/do-ekspedisi/DeleteDOEkspedisiModal';
-import type { DoEkspedisi, DoEkspedisiItem, DoEkspedisiOrderList, DoEkspedisiOrderTarifItem, DoEkspedisiOrderTarifLoadItem } from '@/@types/do-ekspedisi.types';
-import { useDeleteDoEkspedisiItem, useDoEkspedisiDetail } from '@/hooks/useDoEkspedisi';
-import { useOrderListTarifs, useOrderListTarifItems } from '@/hooks/useOrderList';
+import type { DoEkspedisiItem } from '@/@types/do-ekspedisi.types';
+import { useDeleteDoEkspedisiItem, useDoEkspedisiDetail, useUpdateDoEkspedisi } from '@/hooks/useDoEkspedisi';
 import { useProcessDoExpedition } from '@/hooks/useDoInvoice';
 import { getApiErrorMessage } from '@/utils/apiErrorHandler';
 import { LoadingState } from '@/components/ui/loading-state';
+import { PageHeader } from '@/components/ui/page-header';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { cn } from '@/lib/utils';
+import { formatDate } from '@/lib/utils/format';
+import { DOEkspedisiRelatedData } from '@/components/features/do-ekspedisi/DOEkspedisiRelatedData';
 
 // pagination helper removed (unused in print/detail view)
+
+const getDoStatusBadgeClassName = (status: string) => {
+  switch (String(status).toLowerCase()) {
+    case 'draft':
+      return 'border-slate-200 bg-slate-50 text-slate-700';
+    case 'process':
+      return 'border-blue-200 bg-blue-50 text-blue-700 font-semibold';
+    case 'done':
+      return 'border-emerald-200 bg-emerald-50 text-emerald-700 font-semibold';
+    case 'failed':
+      return 'border-rose-200 bg-rose-50 text-rose-700 font-semibold';
+    case 'pending':
+      return 'border-amber-200 bg-amber-50 text-amber-700 font-semibold';
+    default:
+      return 'border-slate-200 bg-slate-50 text-slate-700';
+  }
+};
+
+const getDoStatusLabel = (status: string) => {
+  switch (String(status).toLowerCase()) {
+    case 'draft':
+      return 'Draft';
+    case 'process':
+      return 'Proses';
+    case 'done':
+      return 'Selesai';
+    case 'failed':
+      return 'Gagal';
+    case 'pending':
+      return 'Tertunda';
+    default:
+      return status || '-';
+  }
+};
 
 export default function DetailDOEkspedisiPage() {
   const router = useRouter();
@@ -24,62 +63,60 @@ export default function DetailDOEkspedisiPage() {
 
   const detailQuery = useDoEkspedisiDetail(id ? String(id) : null);
   const processExpeditionMutation = useProcessDoExpedition();
-  const orderListId = detailQuery.data?.orderList?.id ?? null;
-  const tarifQuery = useOrderListTarifs({
-    page: 1,
-    perPage: 100,
-    do_orderlist_id: orderListId ?? undefined,
-    order_by: 'created_at',
-    order_sort: 'desc',
-    enabled: Boolean(orderListId),
-  });
-  const tarifItemQuery = useOrderListTarifItems({
-    page: 1,
-    perPage: 500,
-    do_orderlist_id: orderListId ?? undefined,
-    order_by: 'created_at',
-    order_sort: 'desc',
-    enabled: Boolean(orderListId),
-  });
+  const updateMutation = useUpdateDoEkspedisi();
   const deleteItemMutation = useDeleteDoEkspedisiItem();
 
-  const effectiveData = React.useMemo<DoEkspedisi | null>(() => {
-    if (!detailQuery.data) return null;
+  const updateStatus = async (status: 'draft' | 'process' | 'done') => {
+    if (!id || !detailQuery.data) return;
 
-    const tarifHeaders = tarifQuery.data?.data ?? [];
-    const tarifItems = tarifItemQuery.data?.data ?? [];
-    const mergedOrderList: DoEkspedisiOrderList | null = detailQuery.data.orderList
-      ? {
-        ...detailQuery.data.orderList,
-        tarifs: (tarifHeaders.length ? tarifHeaders : detailQuery.data.orderList.tarifs ?? []).map((tarif) => {
-          const matchedItems = tarifItems.filter((item) => {
-            const left = Number(item.doOrderListTarifId ?? 0);
-            const rightA = Number(tarif.id ?? 0);
-            const rightB = Number((tarif as any).tarifId ?? 0);
-            return left === rightA || (rightB && left === rightB);
-          });
-          const mappedTarifItems: DoEkspedisiOrderTarifLoadItem[] = matchedItems.map((item) => ({
-            id: Number(item.id ?? 0),
-            uuid: item.uuid,
-            loadContent: item.loadContent,
-            qty: Number(item.qty ?? 0),
-          }));
+    const now = new Date().toISOString();
+    try {
+      await updateMutation.mutateAsync({
+        id: String(id),
+        payload: {
+          date: detailQuery.data.date,
+          vehicle_id: detailQuery.data.vehicleId ?? '',
+          driver_id: detailQuery.data.driverId ?? '',
+          driver_note: detailQuery.data.driverNote,
+          status,
+          start_date: status === 'draft' ? null : status === 'process' ? (detailQuery.data.startDate || now) : detailQuery.data.startDate,
+          end_date: status === 'draft' ? null : status === 'done' ? now : detailQuery.data.endDate,
+        },
+      });
+      toast.success(status === 'process' ? 'Pengiriman dimulai' : status === 'done' ? 'DO Ekspedisi telah selesai' : 'DO Ekspedisi dikembalikan ke Draft');
+      await detailQuery.refetch();
+    } catch (error) {
+      toast.error(getApiErrorMessage(error));
+    }
+  };
 
-          return {
-            ...tarif,
-            loadContent: tarif.loadContent || mappedTarifItems[0]?.loadContent || '-',
-            qty: tarif.qty || mappedTarifItems[0]?.qty || 0,
-            tarifItems: mappedTarifItems.length ? mappedTarifItems : tarif.tarifItems,
-          } satisfies DoEkspedisiOrderTarifItem;
-        }),
-      }
-      : null;
+  const backToList = React.useCallback(() => {
+    if (slug) void router.push(`/dashboard/${slug}/do-ekspedisi`);
+  }, [router, slug]);
 
-    return {
-      ...detailQuery.data,
-      orderList: mergedOrderList,
-    };
-  }, [detailQuery.data, tarifQuery.data?.data, tarifItemQuery.data?.data]);
+  const pageHeader = (actions?: React.ReactNode) => (
+    <PageHeader
+      breadcrumbs={[
+        { label: 'DO Ekspedisi', onClick: backToList },
+        { label: 'Detail DO' },
+      ]}
+      title="Detail Delivery Order Ekspedisi"
+      subtitle={(
+        <div className="flex flex-wrap items-center gap-2">
+          <span>Kode DO:</span>
+          <span className="font-semibold text-orange-600">{detailQuery.data?.doCode}</span>
+          {detailQuery.data && (
+            <Badge variant="outline" className={cn('rounded-full px-3 py-1', getDoStatusBadgeClassName(detailQuery.data.status))}>
+              {getDoStatusLabel(detailQuery.data.status)}
+            </Badge>
+          )}
+          <span className="text-xs text-slate-500">Ditambahkan {detailQuery.data?.createdAt ? formatDate(detailQuery.data.createdAt) : ''}</span>
+        </div>
+      )}
+      onBack={backToList}
+      actions={actions}
+    />
+  );
 
   // Print effect removed (handled in dedicated print page)
 
@@ -110,7 +147,7 @@ export default function DetailDOEkspedisiPage() {
     }
   }, [detailQuery.isError, detailQuery.error]);
 
-  if (detailQuery.isLoading || tarifQuery.isLoading || tarifItemQuery.isLoading) {
+  if (detailQuery.isLoading) {
     return (
       <DashboardLayout>
         <LoadingState variant="page" />
@@ -131,17 +168,7 @@ export default function DetailDOEkspedisiPage() {
     return (
       <DashboardLayout>
         <div className="space-y-4">
-          <div className="flex items-start gap-3">
-            <button
-              onClick={() => slug && router.push(`/dashboard/${slug}/do-ekspedisi`)}
-              className="rounded-md p-1 transition-colors hover:bg-slate-100"
-            >
-              <ChevronLeft className="h-5 w-5 text-slate-500" />
-            </button>
-            <div>
-              <h1 className="text-2xl font-semibold text-slate-950">Detail Delivery Order Ekspedisi</h1>
-            </div>
-          </div>
+          {pageHeader()}
 
           <div className="rounded-lg border border-red-200 bg-red-50 p-6 text-center">
             <p className="mb-4 text-red-700">
@@ -166,17 +193,7 @@ export default function DetailDOEkspedisiPage() {
     return (
       <DashboardLayout>
         <div className="space-y-4">
-          <div className="flex items-start gap-3">
-            <button
-              onClick={() => slug && router.push(`/dashboard/${slug}/do-ekspedisi`)}
-              className="rounded-md p-1 transition-colors hover:bg-slate-100"
-            >
-              <ChevronLeft className="h-5 w-5 text-slate-500" />
-            </button>
-            <div>
-              <h1 className="text-2xl font-semibold text-slate-950">Detail Delivery Order Ekspedisi</h1>
-            </div>
-          </div>
+          {pageHeader()}
 
           <div className="rounded-lg border border-yellow-200 bg-yellow-50 p-6 text-center">
             <p className="mb-4 text-yellow-700">Data DO Ekspedisi tidak ditemukan</p>
@@ -195,33 +212,78 @@ export default function DetailDOEkspedisiPage() {
   return (
     <DashboardLayout>
       <div className="space-y-6">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div className="flex items-start gap-3">
-            <button onClick={() => slug && router.push(`/dashboard/${slug}/do-ekspedisi`)} className="rounded-md p-1 transition-colors hover:bg-slate-100">
-              <ChevronLeft className="h-5 w-5 text-slate-500" />
-            </button>
+        {pageHeader(
+          <>
+            {detailQuery.data?.status === 'draft' ? (
+              <Button
+                type="button"
+                disabled={updateMutation.isPending || !detailQuery.data.driverId || !detailQuery.data.vehicleId}
+                onClick={() => void updateStatus('process')}
+                className="bg-orange-600 hover:bg-orange-700 text-white min-w-[120px] cursor-pointer font-medium"
+              >
+                <Play className="h-4 w-4" />
+                {updateMutation.isPending ? 'Memproses...' : 'Serahkan ke Driver'}
+              </Button>
+            ) : detailQuery.data?.status === 'process' ? (
+              <>
+                <Button
+                  type="button"
+                  disabled={updateMutation.isPending}
+                  onClick={() => {
+                    if (window.confirm('Tandai pengiriman ini sebagai selesai? Claim driver baru dapat dikelola setelah langkah ini.')) void updateStatus('done');
+                  }}
+                  className="min-w-[150px] bg-emerald-600 font-medium text-white hover:bg-emerald-700"
+                >
+                  <CheckCircle2 className="h-4 w-4" />
+                  {updateMutation.isPending ? 'Menyimpan...' : 'Selesaikan DO'}
+                </Button>
+                <Button type="button" variant="outline" disabled={updateMutation.isPending} onClick={() => void updateStatus('draft')} className="min-w-[120px] border-slate-300 font-medium text-slate-700 hover:bg-slate-50">
+                  Kembali ke Draft
+                </Button>
+              </>
+            ) : null}
+
+            {detailQuery.data?.status === 'draft' && (
+              <Button
+                variant="outline"
+                onClick={() => slug && id && void router.push(`/dashboard/${slug}/do-ekspedisi/${id}/edit`)}
+                className="border-slate-200 text-slate-700 hover:bg-slate-50 font-medium"
+              >
+                <Pencil className="h-4 w-4" />
+                Edit
+              </Button>
+            )}
+            <Button
+              onClick={async () => {
+                if (!id || !slug) return;
+                try {
+                  await processExpeditionMutation.mutateAsync({ id: Number(id) });
+                  router.push(`/dashboard/${slug}/do-ekspedisi/print/${id}`);
+                } catch (error: any) {
+                  toast.error(getApiErrorMessage(error));
+                }
+              }}
+              disabled={processExpeditionMutation.isPending || detailQuery.data.status === 'draft' || !detailQuery.data.driverId || !detailQuery.data.vehicleId}
+              className="bg-[#1e3a5f] text-white hover:bg-[#152e4d] font-medium"
+            >
+              <Printer className="h-4 w-4" />
+              {processExpeditionMutation.isPending ? 'Menyiapkan...' : 'Print DO'}
+            </Button>
+          </>,
+        )}
+
+        {(!detailQuery.data.driver || !detailQuery.data.vehicle) && (
+          <div role="alert" className="flex items-start gap-3 rounded-lg border border-amber-200 bg-amber-50 p-4 text-amber-900">
+            <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0 text-amber-600" />
             <div>
-              <h1 className="text-2xl font-semibold text-slate-950">Detail Delivery Order Ekspedisi</h1>
+              <p className="font-semibold">Driver atau kendaraan belum dipilih</p>
+              <p className="mt-1 text-sm text-amber-800">Silakan klik Edit untuk melengkapi driver dan kendaraan sebelum memulai pengiriman.</p>
             </div>
           </div>
-          <button
-            onClick={async () => {
-              if (!id || !slug) return;
-              try {
-                await processExpeditionMutation.mutateAsync({ id: Number(id) });
-                router.push(`/dashboard/${slug}/do-ekspedisi/print/${id}`);
-              } catch (error: any) {
-                toast.error(getApiErrorMessage(error));
-              }
-            }}
-            className="inline-flex items-center gap-2 rounded-md bg-[#1e3a5f] px-4 py-2.5 text-sm font-semibold text-white hover:bg-[#152e4d]"
-          >
-            <Printer className="h-4 w-4" />
-            Print DO
-          </button>
-        </div>
+        )}
 
-        <DOEkspedisiDetailCard data={effectiveData ?? detailQuery.data} />
+        <DOEkspedisiDetailCard data={detailQuery.data} />
+        <DOEkspedisiRelatedData data={detailQuery.data} onRefresh={() => void detailQuery.refetch()} />
 
         {/* <div className="flex flex-col items-start justify-between gap-4 lg:flex-row lg:items-center">
           <div className="flex w-full flex-col gap-3 sm:flex-row sm:items-center lg:w-auto">
@@ -235,7 +297,7 @@ export default function DetailDOEkspedisiPage() {
               />
             </div>
 
-            <div className="flex items-center gap-2">
+            <div className="flex flex-col sm:flex-row items-center gap-2 w-full sm:w-auto">
               <span className="text-sm text-slate-600">Show</span>
               <Select value={String(perPage)} onValueChange={(value) => {
                 setPerPage(Number(value));

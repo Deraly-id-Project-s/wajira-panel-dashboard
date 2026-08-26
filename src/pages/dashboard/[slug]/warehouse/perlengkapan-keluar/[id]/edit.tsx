@@ -18,8 +18,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { DatePicker } from '@/components/ui/date-picker';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import BaseTable, { ColumnDef } from '@/components/ui/base-table';
 import { Textarea } from '@/components/ui/textarea';
 import type { MaterialTransactionDetailItem } from '@/@types/material-transaction.types';
 import { useMaterials } from '@/hooks/useMaterial';
@@ -209,6 +208,71 @@ export default function MaterialReleaseEditPage() {
     }
   };
 
+  const columns = useMemo<ColumnDef<MaterialTransactionDetailItem>[]>(
+    () => [
+      {
+        header: 'NO',
+        alignment: 'center',
+        cell: (_, index) => startData + index,
+      },
+      {
+        header: 'NO PENJUALAN',
+        accessorKey: 'orderCode',
+        className: 'text-slate-800',
+        cell: (item) => item.orderCode ?? '-',
+      },
+      {
+        header: 'KODE BARANG',
+        accessorKey: 'material.code',
+        className: 'text-slate-800 font-medium',
+        cell: (item) => item.material?.code ?? '-',
+      },
+      {
+        header: 'NAMA BARANG',
+        accessorKey: 'material.name',
+        className: 'text-slate-800 font-medium',
+        cell: (item) => item.material?.name ?? '-',
+      },
+      {
+        header: 'QTY',
+        accessorKey: 'qty',
+        alignment: 'center',
+        className: 'text-slate-800',
+        cell: (item) => item.qty,
+      },
+      {
+        header: 'Aksi',
+        alignment: 'center',
+        sticky: 'right',
+        cell: (item) => (
+          <div className="flex items-center justify-center gap-1">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8 rounded-full text-slate-600 hover:bg-slate-100 hover:text-slate-900"
+              onClick={() => {
+                setEditingItem(item);
+                setEditingItemId(item.id);
+                setOpenItemModal(true);
+              }}
+            >
+              <Pencil className="h-4 w-4" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8 rounded-full text-red-500 hover:bg-red-50 hover:text-red-600"
+              onClick={() => setDeleteTargets([item])}
+            >
+              <Trash2 className="h-4 w-4" />
+            </Button>
+          </div>
+        ),
+      },
+    ],
+    [startData],
+  );
+
   if (transactionQuery.isLoading) {
     return (
       <DashboardLayout>
@@ -235,7 +299,7 @@ export default function MaterialReleaseEditPage() {
           ]}
           title="Data Pengeluaran Perlengkapan"
           subtitle={
-            <div className="flex items-center gap-2">
+            <div className="flex flex-col sm:flex-row items-center gap-2 w-full sm:w-auto">
               No Pengeluaran
               {transactionQuery.data?.code && (
                 <span className="font-medium text-[#1f4163]">{transactionQuery.data.code}</span>
@@ -245,7 +309,7 @@ export default function MaterialReleaseEditPage() {
           onBack={() => router.push(`/dashboard/${slug}/warehouse/perlengkapan-keluar`)}
         />
 
-        <Card className="rounded-[20px] border border-slate-200 bg-white p-5 shadow-none">
+        <Card className="rounded-md border border-slate-200 bg-white p-5 shadow-none">
           <div className="space-y-6">
             <div className="border-b border-slate-200 pb-6">
               <h2 className="text-[20px] font-semibold text-slate-950">Informasi Pengeluaran</h2>
@@ -316,135 +380,45 @@ export default function MaterialReleaseEditPage() {
           </div>
         </Card>
 
-        <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-          <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
-            <div className="relative w-full sm:w-[304px]">
-              <Search className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
-              <Input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search here" className="h-[42px] rounded-md border-slate-200 pl-11 shadow-sm" />
-            </div>
-            <div className="flex items-center gap-3 text-[16px] text-slate-800">
-              <span>Show</span>
-              <Select value={String(perPage)} onValueChange={(value) => setPerPage(Number(value))}>
-                <SelectTrigger className="h-[42px] w-[60px] rounded-md border-slate-200 shadow-sm">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="25">25</SelectItem>
-                  <SelectItem value="50">50</SelectItem>
-                  <SelectItem value="100">100</SelectItem>
-                </SelectContent>
-              </Select>
-              <span>Page</span>
-            </div>
-          </div>
-
-          <div className="flex flex-wrap items-center gap-3">
-            <Button onClick={() => { setEditingItem(null); setEditingItemId(undefined); setOpenItemModal(true); }} className="w-full sm:w-auto bg-[#1e3a5f] hover:bg-[#152e4d]">
-              <Plus className="mr-2 h-4 w-4" />
-              Tambah
-            </Button>
-            <Button
-              variant="outline"
-              disabled={selectedIds.length === 0}
-              onClick={() => setDeleteTargets(items.filter((item) => selectedIds.includes(item.id)))}
-              className="h-11 rounded-md border-red-300 px-6 text-[18px] text-red-600 hover:bg-red-50 hover:text-red-700"
-            >
-              Hapus
-            </Button>
-          </div>
-        </div>
-
-        <div className="flex items-center gap-2 text-[15px] text-slate-500">
-          <span className="text-emerald-500">✓</span>
-          <span>{selectedIds.length} data terpilih</span>
-        </div>
-
-        <Card className="overflow-hidden rounded-[12px] border border-slate-200 bg-white shadow-none">
-          <Table>
-            <TableHeader className="bg-slate-100/90">
-              <TableRow className="border-slate-200">
-                <TableHead className="w-12 px-4 py-4">
-                  <Checkbox
-                    checked={allSelected}
-                    onCheckedChange={(checked) => {
-                      setSelectedIds(checked ? items.map((item) => item.id) : []);
-                    }}
-                  />
-                </TableHead>
-                <TableHead className="px-4 py-4 text-center text-[14px] font-semibold uppercase text-slate-950">NO</TableHead>
-                <TableHead className="px-4 py-4 text-[14px] font-semibold uppercase text-slate-950">NO PENJUALAN</TableHead>
-                <TableHead className="px-4 py-4 text-[14px] font-semibold uppercase text-slate-950">KODE BARANG</TableHead>
-                <TableHead className="px-4 py-4 text-[14px] font-semibold uppercase text-slate-950">NAMA BARANG</TableHead>
-                <TableHead className="px-4 py-4 text-center text-[14px] font-semibold uppercase text-slate-950">QTY</TableHead>
-                <TableHead className="px-4 py-4 text-center text-[14px] font-semibold uppercase text-slate-950">Aksi</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {itemsQuery.isLoading || itemsQuery.isFetching ? (
-                <TableRow>
-                  <TableCell colSpan={100} className="h-28 text-center"><LoadingState variant="section" text="Memuat item material..." /></TableCell>
-                </TableRow>
-              ) : items.length === 0 ? (
-                <TableRow>
-                  <TableCell colSpan={7} className="h-24 text-center text-slate-500">Belum ada item material.</TableCell>
-                </TableRow>
-              ) : (
-                items.map((item, index) => (
-                  <TableRow key={item.id} className="border-slate-200">
-                    <TableCell className="px-4 py-3">
-                      <Checkbox
-                        checked={selectedIds.includes(item.id)}
-                        onCheckedChange={(checked) => {
-                          setSelectedIds((current) => (checked ? [...current, item.id] : current.filter((id) => id !== item.id)));
-                        }}
-                      />
-                    </TableCell>
-                    <TableCell className="px-4 py-3 text-center text-[15px] text-slate-800">{startData + index}</TableCell>
-                    <TableCell className="px-4 py-3 text-[15px] text-slate-800">{item.orderCode ?? '-'}</TableCell>
-                    <TableCell className="px-4 py-3 text-[15px] text-slate-800">{item.material?.code ?? '-'}</TableCell>
-                    <TableCell className="px-4 py-3 text-[15px] text-slate-800">{item.material?.name ?? '-'}</TableCell>
-                    <TableCell className="px-4 py-3 text-center text-[15px] text-slate-800">{item.qty}</TableCell>
-                    <TableCell className="px-4 py-3">
-                      <div className="flex items-center justify-center gap-3">
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => {
-                            setEditingItem(item);
-                            setEditingItemId(item.id);
-                            setOpenItemModal(true);
-                          }}
-                        >
-                          <Pencil className="h-4 w-4 text-slate-600" />
-                        </Button>
-                        <Button variant="ghost" size="icon" onClick={() => setDeleteTargets([item])}>
-                          <Trash2 className="h-4 w-4 text-red-500" />
-                        </Button>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))
+        <BaseTable
+          data={items}
+          columns={columns}
+          loading={itemsQuery.isLoading || itemsQuery.isFetching}
+          showCheckbox
+          selectedIds={new Set(selectedIds.map(String))}
+          onSelectedIdsChange={(set) => setSelectedIds(Array.from(set).map(Number))}
+          getRowId={(item) => String(item.id)}
+          searchPlaceholder="Search here"
+          search={search}
+          onSearchChange={setSearch}
+          showLimitChange
+          perPage={perPage}
+          onPerPageChange={setPerPage}
+          meta={{
+            currentPage: page,
+            perPage,
+            lastPage: totalPages,
+            total: totalData,
+          }}
+          onPageChange={setPage}
+          headerActions={
+            <div className="flex flex-col sm:flex-row items-center gap-2 w-full sm:w-auto">
+              {selectedIds.length > 0 && (
+                <Button
+                  variant="outline"
+                  onClick={() => setDeleteTargets(items.filter((item) => selectedIds.includes(item.id)))}
+                  className="border-red-300 text-red-600 hover:bg-red-50 hover:text-red-700"
+                >
+                  Hapus ({selectedIds.length})
+                </Button>
               )}
-            </TableBody>
-          </Table>
-        </Card>
-
-        <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-          <p className="text-[14px] text-slate-500">Showing {startData}-{endData} of {totalData} data</p>
-          <div className="flex items-center gap-1 text-[16px]">
-            <Button variant="ghost" onClick={() => setPage(page - 1)} disabled={page <= 1}>Previous</Button>
-            {pageNumbers.map((pageNumber) => (
-              <Button key={pageNumber} variant={pageNumber === page ? 'outline' : 'ghost'} onClick={() => setPage(pageNumber)} className={pageNumber === page ? 'h-10 min-w-10 rounded-md border-slate-200 bg-white' : 'h-10 min-w-10 rounded-md'}>
-                {pageNumber}
+              <Button onClick={() => { setEditingItem(null); setEditingItemId(undefined); setOpenItemModal(true); }} className="w-full sm:w-auto bg-[#1e3a5f] hover:bg-[#152e4d]">
+                <Plus className="mr-2 h-4 w-4" />
+                Tambah
               </Button>
-            ))}
-            {totalPages > 5 && !pageNumbers.includes(totalPages) ? <span className="px-2 text-slate-500">...</span> : null}
-            {totalPages > 5 && !pageNumbers.includes(totalPages) ? (
-              <Button variant="ghost" onClick={() => setPage(totalPages)} className="h-10 min-w-10 rounded-md">{totalPages}</Button>
-            ) : null}
-            <Button variant="ghost" onClick={() => setPage(page + 1)} disabled={page >= totalPages}>Next</Button>
-          </div>
-        </div>
+            </div>
+          }
+        />
       </div>
 
       <MaterialReceiptItemModal

@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Input } from '@/components/ui/input';
+import { FileInput } from '@/components/ui/file-input';
 
 interface DOEkspedisiUploadDialogProps {
   open: boolean;
@@ -32,7 +32,7 @@ export function DOEkspedisiUploadDialog({ open, onOpenChange, onSubmit, isSubmit
             if (file) void onSubmit(file);
           }}
         >
-          <Input type="file" onChange={(event) => setFile(event.target.files?.[0] ?? null)} className="h-9 rounded-lg border-slate-200" />
+          <FileInput value={file} onFileChange={setFile} className="h-9 rounded-lg border-slate-200" />
           <Button type="submit" disabled={!file || isSubmitting} className="h-9 w-full rounded-lg bg-[#1f4163] hover:bg-[#183552]">
             {isSubmitting ? 'Menyimpan...' : 'Simpan'}
           </Button>

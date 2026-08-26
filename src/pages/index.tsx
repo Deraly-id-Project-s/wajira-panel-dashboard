@@ -48,7 +48,7 @@ export default function Home() {
 
           {/* ================= FEATURES ================= */}
           <section className="mt-24 grid gap-8 md:grid-cols-3 w-full">
-            <Card className="rounded-2xl p-8 shadow-sm hover:shadow-md transition-shadow border-none bg-white/50 backdrop-blur-sm">
+            <Card className="rounded-md p-8 shadow-sm hover:shadow-md transition-shadow border-none bg-white/50 backdrop-blur-sm">
               <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center mb-6">
                 <LayoutDashboard className="h-6 w-6 text-primary" />
               </div>
@@ -61,7 +61,7 @@ export default function Home() {
               </p>
             </Card>
 
-            <Card className="rounded-2xl p-8 shadow-sm hover:shadow-md transition-shadow border-none bg-white/50 backdrop-blur-sm">
+            <Card className="rounded-md p-8 shadow-sm hover:shadow-md transition-shadow border-none bg-white/50 backdrop-blur-sm">
               <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center mb-6">
                 <BarChart3 className="h-6 w-6 text-primary" />
               </div>
@@ -74,7 +74,7 @@ export default function Home() {
               </p>
             </Card>
 
-            <Card className="rounded-2xl p-8 shadow-sm hover:shadow-md transition-shadow border-none bg-white/50 backdrop-blur-sm">
+            <Card className="rounded-md p-8 shadow-sm hover:shadow-md transition-shadow border-none bg-white/50 backdrop-blur-sm">
               <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center mb-6">
                 <Shield className="h-6 w-6 text-primary" />
               </div>

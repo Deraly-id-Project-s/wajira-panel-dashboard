@@ -1,31 +1,40 @@
-import { z } from "zod"
+import { z } from 'zod';
 
-export const transactionSchema = z.object({
-    date: z.string().min(1, "Tanggal wajib diisi"),
-    name: z.string().min(3, "Nama transaksi minimal 3 karakter"),
-    debitUSD: z.coerce.number().optional(),
-    creditUSD: z.coerce.number().optional(),
-    debitIDR: z.coerce.number().optional(),
-    creditIDR: z.coerce.number().optional(),
-    debitCash: z.coerce.number().optional(),
-    creditCash: z.coerce.number().optional(),
+const amountField = z.coerce.number().min(0, 'Nominal tidak boleh negatif').optional();
+
+export const transactionSchema = z
+  .object({
+    date: z.string().min(1, 'Tanggal wajib diisi'),
+    name: z.string().trim().min(3, 'Nama transaksi minimal 3 karakter'),
+    debitUSD: amountField,
+    creditUSD: amountField,
+    debitIDR: amountField,
+    creditIDR: amountField,
+    debitCash: amountField,
+    creditCash: amountField,
     description: z.string().optional(),
-}).refine(
-    (data) => {
-        const values = [
-            data.debitUSD,
-            data.creditUSD,
-            data.debitIDR,
-            data.creditIDR,
-            data.debitCash,
-            data.creditCash,
-        ]
-        return values.some((v) => v !== undefined && v > 0)
-    },
-    {
-        message: "Minimal satu nilai nominal transaksi harus diisi (Debit/Kredit)",
-        path: ["name"], // Attach error to name field generally, or handle specifically in form
-    }
-)
+  })
+  .superRefine((data, ctx) => {
+    const hasDebit = Number(data.debitUSD || 0) > 0 || Number(data.debitIDR || 0) > 0 || Number(data.debitCash || 0) > 0;
+    const hasCredit = Number(data.creditUSD || 0) > 0 || Number(data.creditIDR || 0) > 0 || Number(data.creditCash || 0) > 0;
 
-export type TransactionFormValues = z.infer<typeof transactionSchema>
+    if (!hasDebit && !hasCredit) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'Minimal satu nominal debet atau kredit harus diisi',
+        path: ['debitUSD'],
+      });
+    }
+
+    if (hasDebit && hasCredit) {
+      (['debitUSD', 'debitIDR', 'debitCash', 'creditUSD', 'creditIDR', 'creditCash'] as const).forEach((field) => {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: 'Debet dan kredit tidak boleh diisi bersamaan',
+          path: [field],
+        });
+      });
+    }
+  });
+
+export type TransactionFormValues = z.infer<typeof transactionSchema>;

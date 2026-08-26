@@ -173,11 +173,11 @@ export const AccountGroupListPage = () => {
                 <span>Page</span>
               </div>
             </div>
-            <div className="flex flex-wrap items-center gap-2">
+            <div className="flex flex-col sm:flex-row items-center gap-2 w-full sm:w-auto">
               {canCreate && (
                 <>
                   <Button onClick={() => setOpenImport(true)} variant="outline" className="w-full sm:w-auto">
-                    <Upload className="h-4 w-4 mr-2" />
+                    <Download className="h-4 w-4 mr-2" />
                     Import
                   </Button>
                   <Button onClick={handleAdd} className="w-full sm:w-auto bg-[#1e3a5f] hover:bg-[#152e4d]">

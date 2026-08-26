@@ -1,18 +1,33 @@
 export const ACCOUNT_CATEGORY_OPTIONS = [
   {
-    value: 'general_administration',
-    label: 'Administrasi dan Umum',
+    value: 'general',
+    label: 'Umum',
     type: 'debet',
   },
   {
-    value: 'current_assets',
-    label: 'Aktiva Lancar',
+    value: 'operational',
+    label: 'Operasional',
     type: 'debet',
   },
   {
-    value: 'liabilities',
-    label: 'Pasiva Kewajiban',
-    type: 'credit',
+    value: 'director_receivable',
+    label: 'Piutang Direksi',
+    type: 'debet',
+  },
+  {
+    value: 'shareholder_receivable',
+    label: 'Piutang Pemegang Saham',
+    type: 'debet',
+  },
+  {
+    value: 'receivable',
+    label: 'Piutang',
+    type: 'debet',
+  },
+  {
+    value: 'inventory',
+    label: 'Persediaan',
+    type: 'debet',
   },
 ] as const;
 

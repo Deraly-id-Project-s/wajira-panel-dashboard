@@ -66,6 +66,10 @@ export const getGeneralMenus = (slug: string): MenuItem[] => {
           label: 'Blok Gudang',
           href: master('/warehouse-block'),
         },
+        {
+          label: 'Dokumen Template',
+          href: master('/document-template'),
+        },
       ],
     },
     {
@@ -99,6 +103,10 @@ export const getGeneralMenus = (slug: string): MenuItem[] => {
             {
               label: 'Penjualan Sparepart',
               href: base('/transaksi/penjualan-sparepart'),
+            },
+            {
+              label: 'Refund Sparepart',
+              href: base('/transaksi/refund-sparepart'),
             },
           ]
         },

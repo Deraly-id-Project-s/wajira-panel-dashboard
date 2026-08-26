@@ -2,13 +2,12 @@
 
 import { useRouter } from 'next/router';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
-import { EditUnitForm } from '@/components/features/sales/edit/EditUnitForm';
-import { ArrowLeft, ChevronLeft, ChevronRight, CreditCard } from 'lucide-react';
+import { UnitTransactionForm } from '@/components/features/unit-transaction/UnitTransactionForm';
 import { PageHeader } from '@/components/ui/page-header';
 import { toast } from 'sonner';
 import { useCreateSales } from '@/hooks/useSales';
 import { useCompany } from '@/contexts/CompanyContext';
-import { EditUnitFormData } from '@/components/features/sales/edit/edit-unit.schema';
+import { type UnitTransactionFormValues } from '@/components/features/unit-transaction/unit-transaction.schema';
 import { useEffect, useMemo, useState } from 'react';
 import { generateSalesCode } from '@/lib/utils/sales';
 import { getCustomerById, getCustomers } from '@/services/customer.service';
@@ -21,10 +20,9 @@ import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, Command
 import { Check, ChevronsUpDown } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useCreateUnitItem } from '@/hooks/useUnitTransactionItem';
-import { useCreateTypeUnit, useTypeUnits } from '@/hooks/useTypeUnit';
-import { getTypeUnitById } from '@/services/type-unit.service';
-import { useBrands } from '@/hooks/useBrand';
-import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { useTypeUnits } from '@/hooks/useTypeUnit';
+import { FormField, FormControl, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import { DocumentTemplateSelect } from '@/components/features/document-template/DocumentTemplateSelect';
 
 type SalesCreateFormState = {
   customerId: string;
@@ -44,14 +42,12 @@ export default function CreateSalesPage() {
   const { companyId } = useCompany();
   const createSalesMutation = useCreateSales();
   const createItemMutation = useCreateUnitItem();
-  const createTypeUnitMutation = useCreateTypeUnit();
   const { data: unitTypeData, isLoading: isLoadingUnitTypes } = useTypeUnits({
     sort_by: 'created_at',
     sort_order: 'asc',
     // in_stock: 'true',
     company_id: companyId || 1
   });
-  const { data: brandsData, isLoading: isLoadingBrands } = useBrands();
   const slugQuery = router.query.slug;
   const slug = Array.isArray(slugQuery) ? slugQuery[0] : slugQuery || '';
   const salesPath = slug ? `/dashboard/${slug}/transaksi/penjualan-unit` : '/transaksi/penjualan-unit';
@@ -62,8 +58,6 @@ export default function CreateSalesPage() {
   const [isCustomerOpen, setIsCustomerOpen] = useState(false);
   const [isLoadingCustomerList, setIsLoadingCustomerList] = useState(false);
   const [isLoadingCustomerDetail, setIsLoadingCustomerDetail] = useState(false);
-  const [isOpenCreateTypeUnitModal, setIsOpenCreateTypeUnitModal] = useState(false);
-  const [typeUnitImage, setTypeUnitImage] = useState<File | null>(null);
 
   const [form, setForm] = useState<SalesCreateFormState>({
     customerId: '',
@@ -79,18 +73,6 @@ export default function CreateSalesPage() {
   useEffect(() => {
     setForm((prev) => ({ ...prev, code: generatedCode }));
   }, [generatedCode]);
-
-  const unitTypeOptions = useMemo(() => {
-    return (unitTypeData?.data ?? []).map((item) => ({
-      value: String(item.id),
-      label: item.name,
-    }));
-  }, [unitTypeData?.data]);
-
-  const brandOptions = useMemo(() => {
-    const maybeList = (brandsData as any)?.data;
-    return Array.isArray(maybeList) ? maybeList : [];
-  }, [brandsData]);
 
   useEffect(() => {
     let isMounted = true;
@@ -138,7 +120,7 @@ export default function CreateSalesPage() {
     }
   };
 
-  const handleSubmit = async (data: EditUnitFormData) => {
+  const handleSubmit = async (data: UnitTransactionFormValues) => {
     const toNumber = (value: unknown) => {
       const normalized = Number(value ?? 0);
       return Number.isFinite(normalized) ? normalized : 0;
@@ -146,12 +128,12 @@ export default function CreateSalesPage() {
 
     const customerId = Number(form.customerId || 0);
     const companyIdNumber = Number(companyId || 0);
-    const unitTypeId = Number(data.tipeUnit || form.unitTypeId || 0);
+    const unitTypeId = Number(data.unitTypeId || form.unitTypeId || 0);
     const qty = toNumber(data.qty);
-    const price = toNumber(data.harga);
-    const biayaBbn = toNumber(data.biayaBbn);
-    const biayaEkspedisi = toNumber(data.biayaEkspedisi);
-    const biayaLain = toNumber(data.biayaLain);
+    const price = toNumber(data.price);
+    const biayaBbn = toNumber(data.bbnPrice);
+    const biayaEkspedisi = toNumber(data.expeditionFee);
+    const biayaLain = toNumber(data.otherFee);
     const dppTaxVersionId = data.dppTaxVersionId ? Number(data.dppTaxVersionId) : undefined;
     const ppnTaxVersionId = data.ppnTaxVersionId ? Number(data.ppnTaxVersionId) : undefined;
 
@@ -186,6 +168,7 @@ export default function CreateSalesPage() {
       other_fee: biayaLain,
       dpp_tax_id: dppTaxVersionId,
       ppn_tax_id: ppnTaxVersionId,
+      document_template_id: data.documentTemplateId ?? null,
     };
 
     if (!transactionPayload.code?.trim()) {
@@ -237,48 +220,6 @@ export default function CreateSalesPage() {
     }
   };
 
-  const handleCreateTypeUnit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-
-    const formData = new FormData(e.currentTarget);
-    const code = String(formData.get('code') || '').trim();
-    const name = String(formData.get('name') || '').trim();
-    const brandId = Number(formData.get('brandId') || 0);
-    const description = String(formData.get('description') || '').trim();
-    const netto = formData.get('nettoWeight');
-    const bruto = formData.get('brutoWeight');
-
-    if (!code) {
-      toast.error('Kode tipe wajib diisi');
-      return;
-    }
-
-    if (!brandId) {
-      toast.error('Merk kendaraan wajib dipilih');
-      return;
-    }
-
-    try {
-      await createTypeUnitMutation.mutateAsync({
-        code,
-        name: name || code,
-        brandId,
-        unitType: description || undefined,
-        unitModel: description || undefined,
-        nettoWeight: netto ? Number(netto) : undefined,
-        brutoWeight: bruto ? Number(bruto) : undefined,
-        image: typeUnitImage,
-      });
-
-      toast.success('Tipe unit berhasil ditambahkan');
-      setIsOpenCreateTypeUnitModal(false);
-      setTypeUnitImage(null);
-    } catch (error: any) {
-      const message = error?.response?.data?.message || error?.message || 'Gagal menambahkan tipe unit';
-      toast.error(message);
-    }
-  };
-
   return (
     <DashboardLayout>
       <div className="space-y-6">
@@ -298,24 +239,25 @@ export default function CreateSalesPage() {
         />
 
         <div className="rounded-md border bg-white p-5 md:p-6 shadow-sm">
-          <EditUnitForm
+          <UnitTransactionForm
+            type="sales"
+            allowCreateTypeUnit
             defaultValues={{
-              customer: selectedCustomer?.label ?? '',
-              tipeUnit: form.unitTypeId,
+              unitTypeId: form.unitTypeId,
               qty: form.qty,
-              harga: form.price,
-              hppSatuan: 0,
-              totalHpp: 0,
-              dppSatuan: 0,
-              totalDpp: 0,
-              ppnSatuan: 0,
-              totalPpn: 0,
-              biayaBbn: 0,
-              biayaEkspedisi: 0,
-              biayaLain: 0,
+              price: form.price,
+              hppPerUnit: 0,
+              hppTotal: 0,
+              dppPerUnit: 0,
+              dppTotal: 0,
+              ppnPerUnit: 0,
+              ppnTotal: 0,
+              bbnPrice: 0,
+              expeditionFee: 0,
+              otherFee: 0,
             }}
-            prependFields={
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            prependFields={(rhfForm) => (
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <div className="space-y-2 flex flex-col">
                   <Label className="text-sm font-medium">Tanggal</Label>
                   <Input
@@ -326,7 +268,7 @@ export default function CreateSalesPage() {
                   />
                 </div>
 
-                <div className="space-y-2 flex flex-col">
+                <div className="space-y-2 flex flex-col md:col-span-2">
                   <Label className="text-sm font-medium">Customer</Label>
                   <Popover open={isCustomerOpen} onOpenChange={setIsCustomerOpen}>
                     <PopoverTrigger asChild>
@@ -365,13 +307,26 @@ export default function CreateSalesPage() {
                   <Label className="text-sm font-medium">NPWP</Label>
                   <Input value={form.npwp} readOnly disabled className="bg-transparent" placeholder="NPWP customer" />
                 </div>
+
+                <FormField
+                  control={rhfForm.control}
+                  name="documentTemplateId"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-sm font-medium">Document Template <span className="font-normal text-muted-foreground">(Opsional)</span></FormLabel>
+                      <FormControl>
+                        <DocumentTemplateSelect
+                          value={field.value}
+                          onValueChange={field.onChange}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
               </div>
-            }
-            hideCustomerField
-            productOptions={unitTypeOptions}
-            searchableTypeUnit
-            showAddUnitButton
-            onAddUnitClick={() => setIsOpenCreateTypeUnitModal(true)}
+            )}
+            typeUnitOptions={unitTypeData?.data ?? []}
             onSubmit={handleSubmit}
             onCancel={() => router.push(salesPath)}
             submitDisabled={createSalesMutation.isPending || createItemMutation.isPending || isLoadingCustomerList || isLoadingCustomerDetail || isLoadingUnitTypes}
@@ -380,63 +335,6 @@ export default function CreateSalesPage() {
         </div>
       </div>
 
-      <Dialog open={isOpenCreateTypeUnitModal} onOpenChange={setIsOpenCreateTypeUnitModal}>
-        <DialogContent className="sm:max-w-[480px]">
-          <DialogHeader>
-            <DialogTitle>Tambah Data Tipe</DialogTitle>
-          </DialogHeader>
-          <form className="space-y-4" onSubmit={handleCreateTypeUnit}>
-            <div className="space-y-2">
-              <Label htmlFor="code">Kode Tipe</Label>
-              <Input id="code" name="code" placeholder="Masukkan kode tipe" required />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="name">Nama Tipe</Label>
-              <Input id="name" name="name" placeholder="Masukkan nama tipe" required />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="description">Deskripsi</Label>
-              <Input id="description" name="description" placeholder="Masukkan deskripsi" />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="brandId">Merk Kendaraan</Label>
-              <select id="brandId" name="brandId" className="w-full border rounded-md h-10 px-3" required defaultValue="" disabled={isLoadingBrands}>
-                <option value="" disabled>
-                  {isLoadingBrands ? 'Memuat merk...' : 'Pilih merk'}
-                </option>
-                {brandOptions.map((brand: any) => (
-                  <option key={brand.id} value={brand.id}>
-                    {brand.name}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-2">
-                <Label htmlFor="nettoWeight">Berat Netto</Label>
-                <Input id="nettoWeight" name="nettoWeight" type="number" step="0.01" placeholder="Masukkan berat" />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="brutoWeight">Berat Bruto</Label>
-                <Input id="brutoWeight" name="brutoWeight" type="number" step="0.01" placeholder="Masukkan berat" />
-              </div>
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="image">Gambar (opsional)</Label>
-              <Input id="image" name="image" type="file" accept="image/*" onChange={(e) => setTypeUnitImage(e.target.files?.[0] || null)} />
-            </div>
-
-            <DialogFooter className="pt-2">
-              <Button type="button" variant="ghost" onClick={() => setIsOpenCreateTypeUnitModal(false)}>
-                Batal
-              </Button>
-              <Button type="submit" disabled={createTypeUnitMutation.isPending} className="bg-[#1e293b] hover:bg-[#0f172a] text-white">
-                {createTypeUnitMutation.isPending ? 'Menyimpan...' : 'Simpan'}
-              </Button>
-            </DialogFooter>
-          </form>
-        </DialogContent>
-      </Dialog>
     </DashboardLayout>
   );
 }

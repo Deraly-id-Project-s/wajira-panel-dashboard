@@ -9,6 +9,7 @@ import type { Account } from '@/@types/account.types';
 import { useRouter } from 'next/router';
 import { MoreVertical, Lock } from 'lucide-react';
 import BaseTable, { ColumnDef } from '@/components/ui/base-table';
+import { Badge } from '@/components/ui/badge';
 
 interface AccountTableProps {
   data: Account[];
@@ -110,7 +111,47 @@ export function AccountTable({
         header: 'KATEGORI AKUN',
         accessorKey: 'category',
         sortable: true,
-        cell: (account) => getAccountCategoryLabel(account.category),
+        cell: (account) => {
+          if (!account.category) return <span className="text-gray-400">-</span>;
+
+          let badgeClass = '';
+          let label = account.category;
+
+          switch (account.category) {
+            case 'general':
+              badgeClass = 'bg-blue-50 text-blue-700 border-blue-200 hover:bg-blue-50';
+              label = 'Umum';
+              break;
+            case 'operational':
+              badgeClass = 'bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-50';
+              label = 'Operasional';
+              break;
+            case 'director_receivable':
+              badgeClass = 'bg-purple-50 text-purple-700 border-purple-200 hover:bg-purple-50';
+              label = 'Piutang Direksi';
+              break;
+            case 'shareholder_receivable':
+              badgeClass = 'bg-indigo-50 text-indigo-700 border-indigo-200 hover:bg-indigo-50';
+              label = 'Piutang Pemegang Saham';
+              break;
+            case 'receivable':
+              badgeClass = 'bg-amber-50 text-amber-700 border-amber-200 hover:bg-amber-50';
+              label = 'Piutang';
+              break;
+            case 'inventory':
+              badgeClass = 'bg-rose-50 text-rose-700 border-rose-200 hover:bg-rose-50';
+              label = 'Persediaan';
+              break;
+            default:
+              badgeClass = 'bg-gray-50 text-gray-700 border-gray-200 hover:bg-gray-50';
+          }
+
+          return (
+            <Badge variant="outline" className={badgeClass}>
+              {label}
+            </Badge>
+          );
+        },
       },
       {
         header: 'aksi',

@@ -270,7 +270,7 @@ export default function PurchaseRefundFormPageContent({ mode, refundId }: Purcha
               <h1 className="text-2xl font-semibold text-slate-900">Tambah Data Refund Pembelian</h1>
               <div className="text-sm text-muted-foreground flex items-center gap-2">
                 <span>Kode Beli:</span>
-                <span className="text-blue-600 font-semibold">{parentPurchase?.code}</span>
+                <span className="inline-flex items-center gap-1.5 font-semibold text-orange-600 hover:text-orange-700">{parentPurchase?.code}</span>
               </div>
             </div>
           </div>

@@ -37,7 +37,13 @@ export const getAccessToken = (): string | null => {
 
 export const removeAccessToken = (): void => {
   if (isBrowser()) {
+    // ini ta tambahkan preferensi buat hapus seluruh data yang tersimpan pada local storage pada data statis
     localStorage.removeItem(ACCESS_TOKEN_KEY);
+    localStorage.removeItem('user_companies');
+    localStorage.removeItem('auth_user_profile');
+    localStorage.removeItem('user_permissions');
+    localStorage.removeItem('dashboard_permissions');
+    localStorage.removeItem('user_sidebar');
   }
   inMemoryToken = null;
 };

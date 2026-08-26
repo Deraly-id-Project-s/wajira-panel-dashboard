@@ -1,12 +1,18 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { getLaporanPenjualan, SalesTransactionParams, SalesTransactionItem } from '@/services/laporan-penjualan.service';
+import {
+  getLaporanPenjualan,
+  getLaporanPenjualanSparepart,
+  SalesTransactionParams,
+  SalesTransactionItem,
+  SalesSparepartTransactionItem,
+} from '@/services/laporan-penjualan.service';
 import { toast } from 'sonner';
 import { useCompany } from '@/contexts/CompanyContext';
 
 export type ReportType = 'per-nota' | 'per-type' | 'per-customer';
 
 interface UseLaporanPenjualanReturn {
-  data: SalesTransactionItem[];
+  data: Array<SalesTransactionItem | SalesSparepartTransactionItem>;
   pagination: {
     currentPage: number;
     lastPage: number;
@@ -34,8 +40,8 @@ interface UseLaporanPenjualanReturn {
   refetch: () => void;
 }
 
-export const useLaporanPenjualan = (): UseLaporanPenjualanReturn => {
-  const [data, setData] = useState<SalesTransactionItem[]>([]);
+export const useLaporanPenjualan = (reportItem: 'unit' | 'sparepart' = 'unit'): UseLaporanPenjualanReturn => {
+  const [data, setData] = useState<Array<SalesTransactionItem | SalesSparepartTransactionItem>>([]);
   const [pagination, setPagination] = useState({
     currentPage: 1,
     lastPage: 1,
@@ -75,7 +81,9 @@ export const useLaporanPenjualan = (): UseLaporanPenjualanReturn => {
       // Oleh karena itu, kita MENGHAPUS pengiriman parameter ini ke backend,
       // dan mengandalkan 100% Filter Sisi Klien (Client-Side Filtering) yang sudah kita buat di bawah.
       
-      const result = await getLaporanPenjualan(params);
+      const result = reportItem === 'sparepart'
+        ? await getLaporanPenjualanSparepart(params)
+        : await getLaporanPenjualan(params);
 
       // Prevent stale response from older request overriding newest result.
       if (requestId !== latestRequestRef.current) {
@@ -83,7 +91,7 @@ export const useLaporanPenjualan = (): UseLaporanPenjualanReturn => {
       }
       
       // If backend fails to filter properly, apply client-side filtering fallback.
-      let filteredData = Array.isArray(result?.data) ? result.data : [];
+      let filteredData: Array<SalesTransactionItem | SalesSparepartTransactionItem> = Array.isArray(result?.data) ? result.data : [];
 
       if (startDate && endDate) {
         filteredData = filteredData.filter(item => {
@@ -101,9 +109,12 @@ export const useLaporanPenjualan = (): UseLaporanPenjualanReturn => {
       if (currentSearch) {
         const q = String(currentSearch).toLowerCase();
         filteredData = filteredData.filter(item => {
-          const uName = String(item.unit_name || '').toLowerCase();
+          const code = String(item.transaction_code || '').toLowerCase();
+          const uName = String('unit_name' in item ? item.unit_name || '' : '').toLowerCase();
+          const sparepartName = String('sparepart_name' in item ? item.sparepart_name || '' : '').toLowerCase();
+          const sparepartCode = String('sparepart_code' in item ? item.sparepart_code || '' : '').toLowerCase();
           const pName = String(item.person_name || '').toLowerCase();
-          return uName.includes(q) || pName.includes(q);
+          return code.includes(q) || uName.includes(q) || sparepartName.includes(q) || sparepartCode.includes(q) || pName.includes(q);
         });
       }
 
@@ -135,7 +146,7 @@ export const useLaporanPenjualan = (): UseLaporanPenjualanReturn => {
         setIsLoading(false);
       }
     }
-  }, [currentPage, currentPerPage, startDate, endDate, selectedCustomer, currentSearch, companyId]);
+  }, [currentPage, currentPerPage, startDate, endDate, selectedCustomer, currentSearch, companyId, reportItem]);
 
   useEffect(() => {
     fetchData();

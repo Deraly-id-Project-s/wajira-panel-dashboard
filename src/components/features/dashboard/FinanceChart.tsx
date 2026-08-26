@@ -55,8 +55,8 @@ function CustomTooltip({ active, payload }: any) {
     <div className="rounded-md bg-primary px-3 py-2 text-xs text-white shadow-lg">
       <div className="space-y-1">
         {payload.map((item: any) => (
-          <div key={item.name} className="flex items-center gap-2">
-            <span className="inline-block h-2 w-2 rounded-sm" style={{ backgroundColor: item.color }} />
+          <div key={item.name} className="flex flex-col sm:flex-row items-center gap-2 w-full sm:w-auto">
+            <span className="inline-block h-2 w-2 rounded-md" style={{ backgroundColor: item.color }} />
             <span className="font-medium">{item.name}</span>
             <span className="font-semibold">Rp {tooltipFormatter(item.value)}</span>
           </div>
@@ -126,7 +126,7 @@ export function FinanceChart({ data, isLoading }: FinanceChartProps) {
         {/* Filter Controls */}
         <div className="flex flex-wrap items-center gap-3">
           {/* Filter 1: Mode (Pemasukan / Pengeluaran) */}
-          <div className="flex items-center gap-2">
+          <div className="flex flex-col sm:flex-row items-center gap-2 w-full sm:w-auto">
             <span className="text-sm font-medium text-slate-600">Tampilkan</span>
             <Select value={mode} onValueChange={(val: ChartMode) => setMode(val)}>
               <SelectTrigger className="w-40">
@@ -140,7 +140,7 @@ export function FinanceChart({ data, isLoading }: FinanceChartProps) {
           </div>
 
           {/* Filter 2: Transaction Type (Penjualan / Pembelian) */}
-          <div className="flex items-center gap-2">
+          <div className="flex flex-col sm:flex-row items-center gap-2 w-full sm:w-auto">
             <span className="text-sm font-medium text-slate-600">Tipe</span>
             <Select value={transactionType} onValueChange={(val: TransactionType) => setTransactionType(val)}>
               <SelectTrigger className="w-40">
@@ -179,7 +179,7 @@ export function FinanceChart({ data, isLoading }: FinanceChartProps) {
       <div className="mt-4 flex flex-wrap items-center gap-6">
         {SERIES_META.map((series) => (
           <div key={series.key} className="flex items-center gap-2 text-sm text-slate-600">
-            <span className="inline-block h-2.5 w-2.5 rounded-sm" style={{ backgroundColor: series.color }} />
+            <span className="inline-block h-2.5 w-2.5 rounded-md" style={{ backgroundColor: series.color }} />
             {series.label}
           </div>
         ))}

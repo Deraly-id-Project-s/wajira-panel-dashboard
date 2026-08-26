@@ -321,7 +321,7 @@ export default function PengeluaranPerlengkapanEditPage() {
             Showing {filteredItems.length === 0 ? 0 : (safePage - 1) * perPage + 1}-
             {Math.min(safePage * perPage, filteredItems.length)} of {filteredItems.length} data
           </p>
-          <div className="flex items-center gap-2">
+          <div className="flex flex-col sm:flex-row items-center gap-2 w-full sm:w-auto">
             <Button
               variant="ghost"
               className="h-9 px-3 rounded-lg"

@@ -8,9 +8,12 @@ import { Printer, Download, ChevronsUpDown, Check } from 'lucide-react';
 import { getSuppliers, getUnitTypes } from '@/services/laporan-pembelian.service';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { cn } from '@/lib/utils';
+import { getSpareparts } from '@/services/sparepart.service';
+import { useCompany } from '@/contexts/CompanyContext';
 
 interface LaporanPembelianFilterProps {
   activeTab: string;
+  reportItem: 'unit' | 'sparepart';
   startDate: string | null;
   endDate: string | null;
   onApplyFilters: (filters: {
@@ -25,12 +28,14 @@ interface LaporanPembelianFilterProps {
 
 export default function LaporanPembelianFilter({
   activeTab,
+  reportItem,
   startDate,
   endDate,
   onApplyFilters,
   onPrint,
   onDownload,
 }: LaporanPembelianFilterProps) {
+  const { companyId } = useCompany();
   const dateRange = useMemo(() => {
     if (startDate && endDate) {
       const from = new Date(startDate);
@@ -51,6 +56,7 @@ export default function LaporanPembelianFilter({
   }, [startDate, endDate]);
   const [suppliers, setSuppliers] = useState<Array<{ id: number; name: string }>>([]);
   const [unitTypes, setUnitTypes] = useState<Array<{ id: number; name: string }>>([]);
+  const [spareparts, setSpareparts] = useState<Array<{ id: number; name: string }>>([]);
 
   // Search state
   const [searchQuery, setSearchQuery] = useState('');
@@ -76,25 +82,34 @@ export default function LaporanPembelianFilter({
         console.error(e);
       }
     };
+    const fetchSpareparts = async () => {
+      try {
+        const result = await getSpareparts(companyId ?? undefined);
+        setSpareparts(result.data.map(item => ({ id: Number(item.id), name: item.name })));
+      } catch (e) {
+        console.error(e);
+      }
+    };
 
     if (activeTab === 'per-supplier') {
       fetchSuppliers();
     } else if (activeTab === 'per-tipe') {
-      fetchUnitTypes();
+      if (reportItem === 'sparepart') fetchSpareparts();
+      else fetchUnitTypes();
     }
-  }, [activeTab]);
+  }, [activeTab, companyId, reportItem]);
 
   // Handle clear local inputs when tab changes
   useEffect(() => {
     setSearchQuery('');
-  }, [activeTab]);
+  }, [activeTab, reportItem]);
 
   // Clear inner search term when popover closes
   useEffect(() => {
     if (!openBox) setSearchTermInside('');
   }, [openBox]);
 
-  const rawOptions = activeTab === 'per-supplier' ? suppliers : unitTypes;
+  const rawOptions = activeTab === 'per-supplier' ? suppliers : reportItem === 'sparepart' ? spareparts : unitTypes;
   const currentOptions = Array.isArray(rawOptions) ? rawOptions : [];
 
   useEffect(() => {
@@ -106,7 +121,7 @@ export default function LaporanPembelianFilter({
 
     if (activeTab === 'per-supplier') {
       const matchedSupplier = currentOptions.find(s => s.name?.toLowerCase() === searchQuery.trim().toLowerCase());
-      if (matchedSupplier) {
+      if (matchedSupplier && reportItem === 'unit') {
         supplierId = matchedSupplier.id;
       } else {
         search = searchQuery.trim();
@@ -122,7 +137,7 @@ export default function LaporanPembelianFilter({
       search,
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [searchQuery, activeTab]);
+  }, [searchQuery, activeTab, reportItem]);
 
   const handleDateChange = (newRange: DateRange | undefined) => {
     const appliedStartDate = newRange?.from ? format(newRange.from, 'yyyy-MM-dd') : null;
@@ -133,7 +148,7 @@ export default function LaporanPembelianFilter({
 
     if (activeTab === 'per-supplier') {
       const matchedSupplier = currentOptions.find(s => s.name?.toLowerCase() === searchQuery.trim().toLowerCase());
-      if (matchedSupplier) {
+      if (matchedSupplier && reportItem === 'unit') {
         supplierId = matchedSupplier.id;
       } else {
         search = searchQuery.trim();
@@ -155,22 +170,22 @@ export default function LaporanPembelianFilter({
   );
 
   return (
-    <div className="flex items-end justify-between w-full no-print gap-4">
-      <div className="flex items-end gap-6 flex-wrap">
+    <div className="flex flex-col sm:flex-row sm:items-end justify-between w-full no-print gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-end gap-3 w-full sm:w-auto">
 
         {/* Periode Transaksi */}
-        <div className="flex flex-col space-y-2">
+        <div className="flex flex-col space-y-1.5 w-full sm:w-auto">
           <label className="text-[13px] font-medium text-slate-700">Periode Transaksi</label>
-          <div className="w-[280px]">
+          <div className="w-full sm:w-[280px]">
             <DatePickerWithRange date={dateRange} onChange={handleDateChange} />
           </div>
         </div>
 
         {/* Dynamic Searchable Select Field (Hidden for 'per-nota') */}
         {activeTab !== 'per-nota' && (
-          <div className="flex flex-col space-y-2">
+          <div className="flex flex-col space-y-1.5 w-full sm:w-auto">
             <label className="text-[13px] font-medium text-slate-700">
-              {activeTab === 'per-tipe' ? 'Masukkan Tipe ' : 'Masukkan Supplier '}
+              {activeTab === 'per-tipe' ? `Masukkan ${reportItem === 'sparepart' ? 'Sparepart' : 'Tipe'} ` : 'Masukkan Supplier '}
               <span className="text-red-500">*</span>
             </label>
 
@@ -180,17 +195,17 @@ export default function LaporanPembelianFilter({
                   variant="outline"
                   role="combobox"
                   aria-expanded={openBox}
-                  className="w-[250px] justify-between text-left font-normal bg-white rounded-md border-slate-200 shadow-sm"
+                  className="w-full sm:w-[250px] justify-between text-left font-normal bg-white rounded-md border-slate-200 shadow-sm h-9"
                 >
                   <span className="truncate">
                     {searchQuery
                       ? (currentOptions.find(o => o.name === searchQuery)?.name || searchQuery)
-                      : (activeTab === 'per-tipe' ? 'Pilih atau cari tipe...' : 'Pilih atau cari supplier...')}
+                      : (activeTab === 'per-tipe' ? `Pilih atau cari ${reportItem === 'sparepart' ? 'sparepart' : 'tipe'}...` : 'Pilih atau cari supplier...')}
                   </span>
                   <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                 </Button>
               </PopoverTrigger>
-              <PopoverContent className="w-[250px] p-0" align="start">
+              <PopoverContent className="w-[--radix-popover-trigger-width] sm:w-[250px] p-0" align="start">
                 <div className="flex flex-col w-full">
                   <div className="p-2 border-b">
                     <Input
@@ -210,7 +225,7 @@ export default function LaporanPembelianFilter({
                       <Button
                         key={opt.id}
                         variant="ghost"
-                        className="w-full justify-start rounded-sm font-normal py-1.5 px-2 h-auto text-sm"
+                        className="w-full justify-start rounded-md font-normal py-1.5 px-2 h-auto text-sm"
                         onClick={() => {
                           setSearchQuery(opt.name);
                           setOpenBox(false);
@@ -234,11 +249,11 @@ export default function LaporanPembelianFilter({
       </div>
 
       {/* Action Buttons */}
-      <div className="flex items-center gap-2">
-        <Button onClick={onPrint} variant="outline" className="w-full sm:w-auto">
+      <div className="flex flex-col sm:flex-row items-center gap-2 w-full sm:w-auto">
+        <Button onClick={onPrint} variant="outline" className="w-full sm:w-auto h-9">
           <Printer className="h-4 w-4 mr-2" /> Print
         </Button>
-        <Button onClick={onDownload} variant="outline" className="w-full sm:w-auto">
+        <Button onClick={onDownload} variant="outline" className="w-full sm:w-auto h-9">
           <Download className="h-4 w-4 mr-2" /> Download
         </Button>
       </div>

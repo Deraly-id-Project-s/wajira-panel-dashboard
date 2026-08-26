@@ -154,12 +154,12 @@ export default function DetailPenerimaanPiutangPage() {
                     <p className="font-medium text-gray-900">{detail.code}</p>
                   </div>
 
-                  <div className="flex items-center gap-2">
+                  <div className="flex flex-col sm:flex-row items-center gap-2 w-full sm:w-auto">
                     <CalendarDays className="h-4 w-4 text-gray-400" />
                     <span>{formatDate(infoDate)}</span>
                   </div>
 
-                  <div className="flex items-center gap-2">
+                  <div className="flex flex-col sm:flex-row items-center gap-2 w-full sm:w-auto">
                     <User className="h-4 w-4 text-gray-400" />
                     <span>{detail.person.name}</span>
                   </div>

@@ -8,6 +8,7 @@ import { useArmadaDetail, useUpdateArmada } from '@/hooks/useArmada';
 import type { ArmadaPayload } from '@/@types/armada.types';
 
 import { getApiErrorMessage } from '@/utils/apiErrorHandler';
+import { PageHeader } from '@/components/ui/page-header';
 
 export default function EditArmadaPage() {
   const router = useRouter();
@@ -52,17 +53,20 @@ export default function EditArmadaPage() {
   return (
     <DashboardLayout>
       <div className="space-y-6">
-        <div className="flex items-center space-x-2">
-          <button onClick={() => router.back()} className="rounded-md p-1 transition-colors hover:bg-gray-100">
-            <ChevronLeft className="h-5 w-5 text-gray-500" />
-          </button>
-          <div>
-            <h1 className="text-xl font-semibold text-gray-900">Detail Armada</h1>
-            <p className="text-sm text-gray-500">
-              Nomor Polisi <span className="font-medium text-[#1e3a5f]">{initialData.registrationNumber}</span>
-            </p>
-          </div>
-        </div>
+        <PageHeader
+          breadcrumbs={[
+            { label: 'Armada' },
+            { label: 'Data Armada' }
+          ]}
+          title="Edit Armada"
+          subtitle={
+            <>
+              <span>No Polisi:</span>
+              <span className="inline-flex items-center gap-1.5 font-semibold text-orange-600 hover:text-orange-700">{initialData.registrationNumber}</span>
+            </>
+          }
+          onBack={() => router.push(`/dashboard/${slug}/master/armada`)}
+        />
 
         <ArmadaForm title="Edit Armada" initialData={initialData} onSubmit={handleSave} isSubmitting={updateMutation.isPending} />
       </div>

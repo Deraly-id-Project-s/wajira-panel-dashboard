@@ -21,6 +21,7 @@ export interface SparepartTransactionBilling {
   grand_total: number;
   last_payment_at: string | null;
   is_paid: boolean;
+  is_remaining_payment?: number | string | null;
   created_at: string;
   updated_at: string;
   sparepart_transaction_billing_histories?: SparepartTransactionBillingHistory[];

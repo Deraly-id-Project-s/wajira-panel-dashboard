@@ -4,9 +4,8 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import type { ApiError } from '@/@types/api';
 import { type PPNPembelian, UpdatePPNPembelianSchema, type UpdatePPNPembelianFormValues } from '@/@types/ppn.types';
 import { useUpdatePPNPembelian } from '@/hooks/usePPN';
-import { Button } from '@/components/ui/button';
+import { FormDialog } from '@/components/ui/form-dialog';
 import { DatePicker } from '@/components/ui/date-picker';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { MoneyInput } from '@/components/ui/money-input';
@@ -106,96 +105,89 @@ export default function PPNPembelianFormDialog({ open, onClose, initialData }: P
   };
 
   return (
-    <Dialog open={open} onOpenChange={(nextOpen) => (!nextOpen ? onClose() : undefined)}>
-      <DialogContent className="sm:max-w-md max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle>Edit PPN</DialogTitle>
-          <DialogDescription>Edit detail PPN</DialogDescription>
-        </DialogHeader>
+    <FormDialog
+      open={open}
+      onOpenChange={(nextOpen: boolean) => (!nextOpen ? onClose() : undefined)}
+      title="Edit PPN"
+      description="Edit detail PPN"
+      onSubmit={(e: React.FormEvent) => { e.preventDefault(); void form.handleSubmit(onSubmit)(); }}
+      onCancel={onClose}
+      maxWidthClassName="max-w-md"
+      isSubmitting={updateMutation.isPending}
+    >
+      {initialData ? (
+        <Form {...form}>
+          <div className="space-y-4">
+            <div className="grid gap-2">
+              <FormLabel>Kode Beli</FormLabel>
+              <Input value={initialData.code} readOnly placeholder="Generated XX" />
+            </div>
 
-        {initialData ? (
-          <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 mt-2">
-              <div className="grid gap-2">
-                <FormLabel>Kode Beli</FormLabel>
-                <Input value={initialData.code} readOnly placeholder="Generated XX" />
-              </div>
+            <div className="grid gap-2">
+              <FormLabel>No Mesin</FormLabel>
+              <Input value={initialData.unit_transaction_item_detail?.machine_number || ''} readOnly placeholder="Tambahkan no mesin" />
+            </div>
 
-              <div className="grid gap-2">
-                <FormLabel>No Mesin</FormLabel>
-                <Input value={initialData.unit_transaction_item_detail?.machine_number || ''} readOnly placeholder="Tambahkan no mesin" />
-              </div>
+            <FormField
+              control={form.control}
+              name="fp_date"
+              render={({ field }) => (
+                <FormItem className="flex flex-col">
+                  <FormLabel>Tanggal FPM</FormLabel>
+                  <DatePicker value={field.value} onChange={field.onChange} placeholder="Jan 20, 2025" />
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
-              <FormField
-                control={form.control}
-                name="fp_date"
-                render={({ field }) => (
-                  <FormItem className="flex flex-col">
-                    <FormLabel>Tanggal FPM</FormLabel>
-                    <DatePicker value={field.value} onChange={field.onChange} placeholder="Jan 20, 2025" />
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+            <FormField
+              control={form.control}
+              name="nsfp_age"
+              render={({ field }) => (
+                <FormItem className="flex flex-col">
+                  <FormLabel>Masa FPM</FormLabel>
+                  <DatePicker value={field.value} onChange={field.onChange} placeholder="Jan 20, 2025" />
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
-              <FormField
-                control={form.control}
-                name="nsfp_age"
-                render={({ field }) => (
-                  <FormItem className="flex flex-col">
-                    <FormLabel>Masa FPM</FormLabel>
-                    <DatePicker value={field.value} onChange={field.onChange} placeholder="Jan 20, 2025" />
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+            <FormField
+              control={form.control}
+              name="nsfp_number"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Nomor NSFP</FormLabel>
+                  <FormControl>
+                    <Input {...field} value={field.value ?? ''} placeholder="Masukkan nomor NSFP" />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
-              <FormField
-                control={form.control}
-                name="nsfp_number"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Nomor NSFP</FormLabel>
-                    <FormControl>
-                      <Input {...field} value={field.value ?? ''} placeholder="Masukkan nomor NSFP" />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="amount"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Biaya</FormLabel>
-                    <FormControl>
-                      <div className="relative">
-                        <MoneyInput 
-                          value={field.value ?? 0} 
-                          onChangeValue={(value) => field.onChange(value)} 
-                          placeholder="Tambahkan biaya" 
-                        />
-                      </div>
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <div className="flex flex-col gap-3 pt-4">
-                <Button type="submit" className="w-full bg-[#1e293b] hover:bg-[#0f172a]" disabled={updateMutation.isPending}>
-                  {updateMutation.isPending ? 'Menyimpan...' : 'Simpan'}
-                </Button>
-                <Button type="button" variant="outline" className="w-full" onClick={onClose} disabled={updateMutation.isPending}>
-                  Batal
-                </Button>
-              </div>
-            </form>
-          </Form>
-        ) : null}
-      </DialogContent>
-    </Dialog>
+            <FormField
+              control={form.control}
+              name="amount"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Biaya</FormLabel>
+                  <FormControl>
+                    <div className="relative">
+                      <MoneyInput
+                        value={field.value ?? 0}
+                        onChangeValue={(value) => field.onChange(value)}
+                        placeholder="Tambahkan biaya"
+                      />
+                    </div>
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
+        </Form>
+      ) : null}
+    </FormDialog>
   );
 }

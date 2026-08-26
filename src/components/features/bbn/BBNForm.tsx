@@ -87,7 +87,7 @@ export function BBNForm({ initialData, onSubmit, isSubmitting, title }: BBNFormP
     return (
         <div className="space-y-6">
             {/* Header Form */}
-            <div className="flex items-center gap-2">
+            <div className="flex flex-col sm:flex-row items-center gap-2 w-full sm:w-auto">
                 <Button onClick={() => router.back()} variant="ghost" size="icon" className="h-10 w-10 rounded-md border border-slate-200 hover:bg-slate-50 cursor-pointer">
                     <ArrowLeft className="h-5 w-5" />
                 </Button>
@@ -181,7 +181,7 @@ export function BBNForm({ initialData, onSubmit, isSubmitting, title }: BBNFormP
 
                                 <div className="space-y-2 flex flex-col">
                                     <Label htmlFor="vehicleType" className="text-gray-900 font-medium">Jenis</Label>
-                                    <div className="flex items-center gap-2">
+                                    <div className="flex flex-col sm:flex-row items-center gap-2 w-full sm:w-auto">
                                         <div className="w-full">
                                             <Controller
                                                 name="vehicleType"

@@ -298,6 +298,14 @@ const normalizeCreateUpdatePayload = (payload: CreateWarehouseActivityPayload | 
     body.append('person_id', payload.person_id);
   }
 
+  if ('sparepart_transaction_id' in payload && payload.sparepart_transaction_id) {
+    body.append('sparepart_transaction_id', payload.sparepart_transaction_id);
+  }
+
+  if ('state' in payload && payload.state) {
+    body.append('state', payload.state);
+  }
+
   if (payload.supplier_name) {
     // Compatibility fallback: some backend variants accept one of these aliases.
     body.append('supplier_name', payload.supplier_name);
@@ -399,12 +407,8 @@ export const getWarehouseActivityById = async (id: string): Promise<WarehouseAct
 
 export const createWarehouseActivity = async (payload: CreateWarehouseActivityPayload): Promise<WarehouseActivity> => {
   const body = normalizeCreateUpdatePayload({
+    ...payload,
     activity_type: payload.activity_type ?? 'receipt',
-    activity_date: payload.activity_date,
-    description: payload.description,
-    person_id: payload.person_id,
-    supplier_name: payload.supplier_name,
-    type: payload.type,
   });
 
   const response = await apiClient.post<LaravelApiResponse<unknown>>(basePath, body, {

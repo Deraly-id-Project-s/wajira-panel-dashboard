@@ -336,7 +336,7 @@ export default function PaymentPage() {
           subtitle={
             <>
               <span>Kode Jual:</span>
-              <span className="text-blue-600 font-semibold">{salesData.kodeJual}</span>
+              <span className="inline-flex items-center gap-1.5 font-semibold text-orange-600 hover:text-orange-700">{salesData.kodeJual}</span>
             </>
           }
           onBack={() => router.push(`/dashboard/${slug}/transaksi/penjualan-unit/${salesId}`)}

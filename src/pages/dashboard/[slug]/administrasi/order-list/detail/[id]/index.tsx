@@ -4,40 +4,22 @@ import { ChevronLeft } from 'lucide-react';
 import { toast } from 'sonner';
 import { OrderListDetailView } from '@/components/features/order-list/OrderListDetailView';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
-import { useOrderListDetail, useOrderLists, useOrderListTarifs, useOrderListTarifItems } from '@/hooks/useOrderList';
-import { composeOrderListWithTarifs } from '@/services/order-list.service';
+import { useOrderListDetail, useUpdateOrderListState } from '@/hooks/useOrderList';
 import { LoadingState } from '@/components/ui/loading-state';
+import type { OrderListStatus } from '@/@types/order-list.types';
+import { OrderStatusConfirmDialog } from '@/components/features/order-list/OrderStatusConfirmDialog';
+import { usePermissionGuard } from '@/hooks/usePermissionGuard';
 
 export default function OrderListDetailPage() {
   const router = useRouter();
   const slug = typeof router.query.slug === 'string' ? router.query.slug : '';
   const id = router.isReady && typeof router.query.id === 'string' ? Number(router.query.id) : null;
+  const { hasPermission } = usePermissionGuard();
+  const canEdit = hasPermission('transaction:edit');
+  const [nextStatus, setNextStatus] = React.useState<OrderListStatus | null>(null);
 
   const detailQuery = useOrderListDetail(id);
-  const orderListLookupQuery = useOrderLists({
-    page: 1,
-    perPage: 25,
-    search: detailQuery.data?.code ?? '',
-    order_by: 'created_at',
-    order_sort: 'desc',
-    enabled: Boolean(detailQuery.data?.code),
-  });
-  const tarifItemQuery = useOrderListTarifs({
-    page: 1,
-    perPage: 100,
-    do_orderlist_id: id ?? undefined,
-    order_by: 'created_at',
-    order_sort: 'desc',
-    enabled: Boolean(id),
-  });
-  const tarifLoadItemQuery = useOrderListTarifItems({
-    page: 1,
-    perPage: 500,
-    do_orderlist_id: id ?? undefined,
-    order_by: 'created_at',
-    order_sort: 'desc',
-    enabled: Boolean(id),
-  });
+  const updateStateMutation = useUpdateOrderListState();
 
   // Handle error notifications
   React.useEffect(() => {
@@ -49,36 +31,20 @@ export default function OrderListDetailPage() {
       toast.error(errorMsg);
     }
   }, [detailQuery.isError, detailQuery.error]);
-  const effectiveData = React.useMemo(() => {
-    if (!detailQuery.data) return null;
-    const listRecord = orderListLookupQuery.data?.data.find((item) => item.id === detailQuery.data?.id);
-    
-    const rawEntries = tarifItemQuery.data?.data?.length ? tarifItemQuery.data.data : detailQuery.data.tarifs;
-    const tarifs = rawEntries.map((entry) => {
-      const match = detailQuery.data?.tarifs?.find(
-        (t) => t.tarifId === entry.tarifId || (t.uuid && t.uuid === entry.uuid)
-      );
-      return {
-        ...entry,
-        tarif: entry.tarif ?? match?.tarif,
-        driverFee: entry.driverFee || match?.driverFee || 0,
-        expeditionInvoice: entry.expeditionInvoice || match?.expeditionInvoice || 0,
-      };
-    });
+  const effectiveData = detailQuery.data ?? null;
 
-    const tarifLoadItems = tarifLoadItemQuery.data?.data ?? [];
+  const handleConfirmStatus = async () => {
+    if (!id || !nextStatus) return;
+    try {
+      await updateStateMutation.mutateAsync({ id, payload: { status: nextStatus } });
+      toast.success('Status order berhasil diperbarui');
+      setNextStatus(null);
+    } catch (error: any) {
+      toast.error(error.message || 'Gagal memperbarui status order');
+    }
+  };
 
-    return composeOrderListWithTarifs(
-      {
-        ...detailQuery.data,
-        vehicles: detailQuery.data.vehicles.length ? detailQuery.data.vehicles : (listRecord?.vehicles ?? []),
-      },
-      tarifs,
-      tarifLoadItems,
-    );
-  }, [detailQuery.data, orderListLookupQuery.data?.data, tarifItemQuery.data?.data, tarifLoadItemQuery.data?.data]);
-
-  if (!router.isReady || detailQuery.isLoading || tarifItemQuery.isLoading || tarifLoadItemQuery.isLoading || orderListLookupQuery.isLoading) {
+  if (!router.isReady || detailQuery.isLoading) {
     return (
       <DashboardLayout>
         <LoadingState variant="page" />
@@ -156,6 +122,17 @@ export default function OrderListDetailPage() {
       <OrderListDetailView
         data={effectiveData}
         onBack={() => router.push(`/dashboard/${slug}/administrasi/order-list`)}
+        canUpdateStatus={canEdit}
+        isUpdatingStatus={updateStateMutation.isPending}
+        onUpdateStatus={setNextStatus}
+      />
+      <OrderStatusConfirmDialog
+        open={nextStatus !== null}
+        onOpenChange={(open) => !open && setNextStatus(null)}
+        onConfirm={handleConfirmStatus}
+        isUpdating={updateStateMutation.isPending}
+        itemName={effectiveData.code}
+        newStatus={nextStatus ?? undefined}
       />
     </DashboardLayout>
   );

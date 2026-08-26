@@ -1,13 +1,11 @@
-import React from 'react';
-import { Search, Plus, MoreVertical, Upload, CircleAlert } from 'lucide-react';
-import { Card } from '@/components/ui/card';
+import React, { useMemo } from 'react';
+import { Plus, MoreVertical, Upload, CircleAlert } from 'lucide-react';
+import BaseTable, { ColumnDef } from '@/components/ui/base-table';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import type { Armada } from '@/@types/armada.types';
-import { LoadingState } from '@/components/ui/loading-state';
+import { CopyBox } from '@/components/ui/copy-box';
+import { Badge } from '@/components/ui/badge';
 
 interface ArmadaTableProps {
   armadas: Armada[];
@@ -46,22 +44,70 @@ const getRemainingLabel = (value?: string | null) => {
   const diffInDays = Math.ceil(diffInMs / (1000 * 60 * 60 * 24));
 
   if (diffInDays < 0) {
-    return { text: `${Math.abs(diffInDays)} hari lalu`, className: 'text-[#DC2626]' };
+    return { text: `${Math.abs(diffInDays)} hari lalu`, className: 'bg-red-50 text-[#DC2626]' };
   }
   if (diffInDays <= 30) {
-    return { text: `${diffInDays} hari lagi`, className: 'text-[#DC2626]' };
+    return { text: `${diffInDays} hari lagi`, className: 'bg-red-50 text-[#DC2626]' };
   }
   if (diffInDays <= 90) {
-    return { text: `${diffInDays} hari lagi`, className: 'text-[#F59E0B]' };
+    return { text: `${diffInDays} hari lagi`, className: 'bg-amber-50 text-[#F59E0B]' };
   }
-  return { text: `${diffInDays} hari lagi`, className: 'text-[#16A34A]' };
+  return { text: `${diffInDays} hari lagi`, className: 'bg-green-50 text-[#16A34A]' };
 };
 
-const renderPagination = (page: number, totalPages: number): Array<number | string> => {
-  if (totalPages <= 7) return Array.from({ length: totalPages }, (_, index) => index + 1);
-  if (page <= 4) return [1, 2, 3, 4, '...', totalPages];
-  if (page >= totalPages - 3) return [1, '...', totalPages - 3, totalPages - 2, totalPages - 1, totalPages];
-  return [1, '...', page - 1, page, page + 1, '...', totalPages];
+const getArmadaTypeBadge = (type?: string | null) => {
+  if (!type) return '-';
+
+  const typeLower = type.toLowerCase();
+  const displayLabel = type.toUpperCase();
+
+  switch (typeLower) {
+    case 'cdd':
+      return (
+        <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200 font-semibold px-2.5 py-0.5">
+          {displayLabel}
+        </Badge>
+      );
+    case 'towing':
+      return (
+        <Badge variant="outline" className="bg-amber-50 text-amber-700 border-amber-200 font-semibold px-2.5 py-0.5">
+          {displayLabel}
+        </Badge>
+      );
+    case 'fuso':
+      return (
+        <Badge variant="outline" className="bg-purple-50 text-purple-700 border-purple-200 font-semibold px-2.5 py-0.5">
+          {displayLabel}
+        </Badge>
+      );
+    default:
+      return (
+        <Badge variant="outline" className="bg-slate-50 text-slate-700 border-slate-200 font-semibold px-2.5 py-0.5">
+          {displayLabel}
+        </Badge>
+      );
+  }
+};
+
+const getArmadaRowMark = (armada: Armada) => {
+  const stnkInfo = getRemainingLabel(armada.stnkAge);
+  const kirInfo = getRemainingLabel(armada.kirAge);
+
+  const getMarkType = (info: { text: string; className: string } | null) => {
+    if (!info) return null;
+    if (info.className.includes('red')) return 'alert';
+    if (info.className.includes('amber')) return 'base';
+    if (info.className.includes('green')) return 'success';
+    return null;
+  };
+
+  const stnkMark = getMarkType(stnkInfo);
+  const kirMark = getMarkType(kirInfo);
+
+  if (stnkMark === 'alert' || kirMark === 'alert') return 'alert';
+  if (stnkMark === 'base' || kirMark === 'base') return 'base';
+  if (stnkMark === 'success' || kirMark === 'success') return 'success';
+  return undefined;
 };
 
 export function ArmadaTable({
@@ -84,211 +130,140 @@ export function ArmadaTable({
   canEdit,
   canDelete,
 }: ArmadaTableProps) {
-  const startData = totalData === 0 ? 0 : (page - 1) * perPage + 1;
-  const endData = totalData === 0 ? 0 : Math.min(page * perPage, totalData);
+  const columns = useMemo<ColumnDef<Armada>[]>(
+    () => [
+      {
+        header: 'NO POLISI',
+        accessorKey: 'registrationNumber',
+        className: 'font-medium text-slate-900 whitespace-nowrap',
+        cell: (armada) => armada.registrationNumber ? <CopyBox text={armada.registrationNumber} /> : '-',
+      },
+      {
+        header: 'TIPE',
+        accessorKey: 'type',
+        className: 'text-slate-700 whitespace-nowrap',
+        cell: (armada) => getArmadaTypeBadge(armada.type),
+      },
+      {
+        header: 'NO MESIN',
+        accessorKey: 'machineNumber',
+        className: 'text-slate-700 font-medium whitespace-nowrap',
+        cell: (armada) => armada.machineNumber ? <CopyBox text={armada.machineNumber} /> : '-',
+      },
+      {
+        header: 'NO RANGKA',
+        accessorKey: 'chassisNumber',
+        className: 'text-slate-700 whitespace-nowrap',
+        cell: (armada) => armada.chassisNumber ? <CopyBox text={armada.chassisNumber} /> : '-',
+      },
+      {
+        header: 'MASA STNK',
+        alignment: 'center',
+        cell: (armada) => {
+          const stnkInfo = getRemainingLabel(armada.stnkAge);
+          return (
+            <div className="whitespace-nowrap">
+              <div>{formatDate(armada.stnkAge)}</div>
+              {stnkInfo && (
+                <div className="mt-1 flex justify-center">
+                  <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium ${stnkInfo.className}`}>
+                    <span>{stnkInfo.text}</span>
+                    {stnkInfo.className.includes('red') || stnkInfo.className.includes('amber') ? <CircleAlert className="h-3.5 w-3.5" /> : null}
+                  </span>
+                </div>
+              )}
+            </div>
+          );
+        },
+      },
+      {
+        header: 'MASA KIR',
+        alignment: 'center',
+        cell: (armada) => {
+          const kirInfo = getRemainingLabel(armada.kirAge);
+          return (
+            <div className="whitespace-nowrap">
+              <div>{formatDate(armada.kirAge)}</div>
+              {kirInfo && (
+                <div className="mt-1 flex justify-center">
+                  <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium ${kirInfo.className}`}>
+                    <span>{kirInfo.text}</span>
+                    {kirInfo.className.includes('red') || kirInfo.className.includes('amber') ? <CircleAlert className="h-3.5 w-3.5" /> : null}
+                  </span>
+                </div>
+              )}
+            </div>
+          );
+        },
+      },
+      {
+        header: 'Aksi',
+        alignment: 'center',
+        sticky: 'right',
+        cell: (armada) => (
+          <div className="flex justify-center">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" className="h-8 w-8 p-0 rounded-full text-slate-600 hover:bg-slate-100 hover:text-slate-900">
+                  <MoreVertical className="h-4 w-4 text-gray-500" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-[160px] rounded-md border-slate-200 p-1.5 shadow-lg">
+                {onDetail && (
+                  <DropdownMenuItem onClick={() => onDetail(armada)} className="rounded-lg px-3 py-2 text-sm text-slate-900 focus:bg-slate-50 cursor-pointer">
+                    Detail
+                  </DropdownMenuItem>
+                )}
+                <DropdownMenuItem onClick={() => onEdit(armada)} disabled={!canEdit} className="rounded-lg px-3 py-2 text-sm text-slate-900 focus:bg-slate-50 cursor-pointer">
+                  Edit
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => onDelete(armada)} disabled={!canDelete} className="rounded-lg px-3 py-2 text-sm text-red-600 focus:bg-red-50 focus:text-red-600 cursor-pointer">
+                  Hapus
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+        ),
+      },
+    ],
+    [canDelete, canEdit, onDelete, onDetail, onEdit],
+  );
 
   return (
-    <div className="space-y-4">
-      <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-        <div className="flex items-center gap-4 w-full sm:w-auto">
-          <div className="relative w-full sm:w-[300px]">
-            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
-            <Input placeholder="Search here" className="bg-white pl-9" value={search} onChange={(e) => onSearchChange(e.target.value)} />
-          </div>
-
-          <div className="flex items-center gap-2 text-sm text-slate-500 whitespace-nowrap">
-            <span>Show</span>
-            <Select value={String(perPage)} onValueChange={(value) => onPerPageChange(Number(value))}>
-              <SelectTrigger className="w-[70px] bg-white">
-                <SelectValue placeholder="25" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="25">25</SelectItem>
-                <SelectItem value="50">50</SelectItem>
-                <SelectItem value="100">100</SelectItem>
-              </SelectContent>
-            </Select>
-            <span>Page</span>
-          </div>
-        </div>
-
-        <div className="flex flex-wrap items-center gap-2">
-          {canCreate && (
-            <>
-              {onImport && (
-                <Button onClick={onImport} variant="outline" className="w-full sm:w-auto">
-                  <Upload className="h-4 w-4 mr-2" />
-                  Import
-                </Button>
-              )}
-              <Button onClick={onAdd} className="w-full sm:w-auto bg-[#1e3a5f] hover:bg-[#152e4d]">
-                <Plus className="h-4 w-4 mr-2" />
-                Tambah
+    <BaseTable
+      data={armadas}
+      columns={columns}
+      loading={isLoading}
+      searchPlaceholder="Search here"
+      search={search}
+      onSearchChange={onSearchChange}
+      showLimitChange
+      perPage={perPage}
+      onPerPageChange={onPerPageChange}
+      meta={{
+        currentPage: page,
+        perPage,
+        lastPage: totalPages,
+        total: totalData,
+      }}
+      onPageChange={onPageChange}
+      getRowMark={getArmadaRowMark}
+      headerActions={
+        canCreate && (
+          <div className="flex flex-wrap items-center gap-2">
+            {onImport && (
+              <Button onClick={onImport} variant="outline" className="w-full sm:w-auto">
+                <Upload className="h-4 w-4 mr-2" />
+                Import
               </Button>
-            </>
-          )}
-        </div>
-      </div>
-
-      <div className="rounded-md border border-gray-200 bg-white overflow-x-auto shadow-none">
-        <Table className="min-w-[1100px]">
-          <TableHeader className="bg-[#f8f9fa] border-b border-gray-200">
-            <TableRow>
-              <TableHead className="px-4 py-4 text-left text-xs font-semibold uppercase text-slate-500">NO POLISI</TableHead>
-              <TableHead className="px-4 py-4 text-left text-xs font-semibold uppercase text-slate-500">TIPE</TableHead>
-              <TableHead className="px-4 py-4 text-left text-xs font-semibold uppercase text-slate-500">NO MESIN</TableHead>
-              <TableHead className="px-4 py-4 text-left text-xs font-semibold uppercase text-slate-500">NO RANGKA</TableHead>
-              <TableHead className="px-4 py-4 text-center text-xs font-semibold uppercase text-slate-500">MASA STNK</TableHead>
-              <TableHead className="px-4 py-4 text-center text-xs font-semibold uppercase text-slate-500">MASA KIR</TableHead>
-              <TableHead className="w-[80px] px-4 py-4 text-center text-xs font-semibold text-slate-500 uppercase sticky right-0 bg-[#f8f9fa] z-10 border-l border-slate-200 shadow-[-4px_0_6px_-4px_rgba(0,0,0,0.05)]">Aksi</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {isLoading ? (
-              <tr>
-                <td colSpan={100} className="px-4 py-16 text-center bg-white">
-                  <LoadingState variant="section" text="Memuat data..." />
-                </td>
-              </tr>
-            ) : armadas.length > 0 ? (
-              armadas.map((armada) => {
-                const stnkInfo = getRemainingLabel(armada.stnkAge);
-                const kirInfo = getRemainingLabel(armada.kirAge);
-
-                return (
-                  <TableRow key={armada.id} className="group border-b hover:bg-gray-50/70 border-slate-100 transition-colors">
-                    <TableCell className="px-4 py-4 text-left text-sm font-medium text-slate-900 whitespace-nowrap">{armada.registrationNumber}</TableCell>
-                    <TableCell className="px-4 py-4 text-left text-sm text-slate-700 whitespace-nowrap">{armada.type}</TableCell>
-                    <TableCell className="px-4 py-4 text-left text-sm text-slate-700 font-medium whitespace-nowrap">{armada.machineNumber}</TableCell>
-                    <TableCell className="px-4 py-4 text-left text-sm text-slate-700 whitespace-nowrap">{armada.chassisNumber}</TableCell>
-                    <TableCell className="px-4 py-4 text-center text-sm text-slate-700 whitespace-nowrap">
-                      <div>{formatDate(armada.stnkAge)}</div>
-                      {stnkInfo && (
-                        <div className="mt-1 flex justify-center">
-                          <span
-                            className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium ${stnkInfo.className.includes('#DC2626')
-                              ? 'bg-red-50 text-[#DC2626]'
-                              : stnkInfo.className.includes('#F59E0B')
-                                ? 'bg-amber-50 text-[#F59E0B]'
-                                : 'bg-green-50 text-[#16A34A]'
-                              }`}
-                          >
-                            <span>{stnkInfo.text}</span>
-                            {(stnkInfo.className.includes('#DC2626') || stnkInfo.className.includes('#F59E0B')) && <CircleAlert className="h-3.5 w-3.5" />}
-                          </span>
-                        </div>
-                      )}
-                    </TableCell>
-                    <TableCell className="px-4 py-4 text-center text-sm text-slate-700 whitespace-nowrap">
-                      <div>{formatDate(armada.kirAge)}</div>
-                      {kirInfo && (
-                        <div className="mt-1 flex justify-center">
-                          <span
-                            className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium ${kirInfo.className.includes('#DC2626')
-                              ? 'bg-red-50 text-[#DC2626]'
-                              : kirInfo.className.includes('#F59E0B')
-                                ? 'bg-amber-50 text-[#F59E0B]'
-                                : 'bg-green-50 text-[#16A34A]'
-                              }`}
-                          >
-                            <span>{kirInfo.text}</span>
-                            {(kirInfo.className.includes('#DC2626') || kirInfo.className.includes('#F59E0B')) && <CircleAlert className="h-3.5 w-3.5" />}
-                          </span>
-                        </div>
-                      )}
-                    </TableCell>
-                    <TableCell className="px-4 py-4 text-center sticky right-0 bg-white group-hover:bg-gray-50 z-10 border-l border-slate-200 shadow-[-4px_0_6px_-4px_rgba(0,0,0,0.05)]">
-                      <div className="flex justify-center">
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" className="h-8 w-8 p-0">
-                              <MoreVertical className="h-4 w-4 text-gray-500" />
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end" className="w-[160px]">
-                            {onDetail && (
-                              <DropdownMenuItem onClick={() => onDetail(armada)} className="cursor-pointer">
-                                Detail
-                              </DropdownMenuItem>
-                            )}
-                            <DropdownMenuItem onClick={() => onEdit(armada)} disabled={!canEdit} className="cursor-pointer">
-                              Edit
-                            </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => onDelete(armada)} disabled={!canDelete} className="cursor-pointer text-red-600 focus:text-red-600">
-                              Hapus
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                );
-              })
-            ) : (
-              <TableRow className="group">
-                <TableCell colSpan={100} className="h-32 text-center text-slate-500 px-4 py-16 text-sm">
-                  <div className="flex flex-col items-center justify-center gap-2">
-                    <div className="rounded-full bg-slate-50 p-4 mb-2">
-                      <Search className="h-8 w-8 text-slate-400" />
-                    </div>
-                    <p className="text-base font-semibold text-slate-900">Tidak ada data ditemukan</p>
-                    <p className="text-sm text-slate-500">Belum ada data atau coba gunakan kata kunci pencarian lain.</p>
-                  </div>
-                </TableCell>
-              </TableRow>
             )}
-          </TableBody>
-        </Table>
-      </div>
-
-      <div className="flex flex-col gap-4 text-sm text-slate-500 lg:flex-row lg:items-center lg:justify-between px-1">
-        <div>
-          Showing {startData}-{endData} of {totalData} data
-        </div>
-
-        {totalPages > 1 && (
-          <div className="flex flex-wrap items-center justify-end gap-1 text-slate-800">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => onPageChange(page - 1)}
-              disabled={page === 1}
-              className="h-9 rounded-md px-2 text-sm font-medium hover:bg-transparent disabled:text-slate-300 text-gray-500"
-            >
-              Previous
-            </Button>
-
-            {renderPagination(page, totalPages).map((item, index) => (
-              <Button
-                key={`${item}-${index}`}
-                variant="ghost"
-                size="sm"
-                disabled={item === '...'}
-                onClick={() => typeof item === 'number' && onPageChange(item)}
-                className={
-                  item === page
-                    ? 'h-9 min-w-9 rounded-md border px-3 text-sm font-medium shadow-sm border-slate-200 bg-white text-slate-950'
-                    : item === '...'
-                      ? 'h-9 min-w-9 rounded-md border px-3 text-sm font-medium border-transparent bg-transparent text-slate-500 cursor-default hover:bg-transparent hover:border-transparent'
-                      : 'h-9 min-w-9 rounded-md border px-3 text-sm font-medium border-transparent bg-transparent text-slate-700 hover:border-slate-200 hover:bg-white'
-                }
-              >
-                {item}
-              </Button>
-            ))}
-
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => onPageChange(page + 1)}
-              disabled={page === totalPages}
-              className="h-9 rounded-md px-2 text-sm font-medium hover:bg-transparent disabled:text-slate-300 text-gray-500"
-            >
-              Next
+            <Button onClick={onAdd} className="w-full sm:w-auto bg-[#1e3a5f] hover:bg-[#152e4d]">
+              <Plus className="h-4 w-4 mr-2" />
+              Tambah
             </Button>
           </div>
-        )}
-      </div>
-    </div>
+        )
+      }
+    />
   );
 }

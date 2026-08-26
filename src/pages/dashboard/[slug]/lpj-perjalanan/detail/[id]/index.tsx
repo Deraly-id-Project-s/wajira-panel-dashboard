@@ -58,7 +58,7 @@ export default function DetailLPJPerjalananPage() {
   return (
     <DashboardLayout>
       <div className="space-y-6">
-        <div className="flex items-center gap-2">
+        <div className="flex flex-col sm:flex-row items-center gap-2 w-full sm:w-auto">
           <button type="button" onClick={() => router.push(`/dashboard/${slug}/lpj-perjalanan`)} className="rounded-md p-1 transition-colors hover:bg-gray-100">
             <ChevronLeft className="h-5 w-5 text-gray-500" />
           </button>

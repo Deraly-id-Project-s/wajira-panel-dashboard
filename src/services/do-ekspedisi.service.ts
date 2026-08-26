@@ -1,6 +1,12 @@
 import type {
   DoEkspedisi,
+  ApplyExpeditionClaimPayload,
   DoEkspedisiCustomer,
+  DoEkspedisiClaim,
+  DoEkspedisiClaimApplication,
+  DoEkspedisiClaimDocumentation,
+  DoEkspedisiDriverNote,
+  DoEkspedisiExpense,
   DoEkspedisiDriver,
   DoEkspedisiItem,
   DoEkspedisiItemDestination,
@@ -27,6 +33,10 @@ const expeditionItemDestinationBasePath = '/wapi/transaction/do-expedition-item-
 const customerLookupPath = '/wapi/master-data/customer';
 const vehicleLookupPath = '/wapi/master-data/vehicle-fleet';
 const driverLookupPath = '/wapi/master-data/driver';
+export const driverNotePath = '/wapi/transaction/driver-note';
+export const expeditionExpensePath = '/wapi/transaction/expedition-expense';
+export const expeditionClaimPath = '/wapi/transaction/expedition-claim';
+export const claimDocumentationPath = '/wapi/transaction/expedition-claim-documentation';
 
 const toNumber = (value: unknown) => {
   if (value == null || value === '') return 0;
@@ -94,7 +104,53 @@ const mapCustomer = (item: any): DoEkspedisiCustomer => ({
   id: Number(item?.id ?? 0),
   uuid: item?.uuid,
   name: item?.name ?? '',
+  address: item?.address ?? null,
+  phone: item?.phone ?? null,
   pic: item?.pic ?? item?.pic_name ?? null,
+  companyList: item?.company_list ?? null,
+});
+
+const mapClaimDocumentation = (item: any): DoEkspedisiClaimDocumentation => ({
+  id: Number(item?.id ?? 0), uuid: item?.uuid,
+  doExpeditionClaimId: Number(item?.do_expedition_claim_id ?? item?.expedition_claim_id ?? 0),
+  image: item?.image ?? null, caption: item?.caption ?? '',
+});
+
+const mapDriverNote = (item: any): DoEkspedisiDriverNote => ({
+  id: Number(item?.id ?? 0), uuid: item?.uuid,
+  doExpeditionsId: Number(item?.do_expeditions_id ?? item?.do_expedition_id ?? 0),
+  effectiveDate: item?.effective_date ?? '', subject: item?.subject ?? '',
+  image: item?.image ?? null, description: item?.description ?? '',
+});
+
+const mapExpense = (item: any): DoEkspedisiExpense => ({
+  id: Number(item?.id ?? 0), uuid: item?.uuid,
+  doExpeditionsId: Number(item?.do_expeditions_id ?? item?.do_expedition_id ?? 0),
+  driverId: item?.driver_id == null ? null : Number(item.driver_id), subject: item?.subject ?? '',
+  description: item?.description ?? '', nominal: toNumber(item?.nominal),
+});
+
+const mapClaim = (item: any): DoEkspedisiClaim => ({
+  id: Number(item?.id ?? 0), uuid: item?.uuid,
+  doExpeditionsId: Number(item?.do_expeditions_id ?? item?.do_expedition_id ?? 0),
+  driverId: Number(item?.driver_id ?? 0), subject: item?.subject ?? '', description: item?.description ?? '',
+  isClaim: Boolean(item?.is_claim), claimNominal: toNumber(item?.claim_nominal),
+  nominal: toNumber(item?.nominal ?? item?.claim_nominal), remainingNominal: toNumber(item?.remaining_nominal),
+  appliedNominal: Math.max(0, toNumber(item?.claim_nominal) - toNumber(item?.remaining_nominal)),
+  sourceExpeditionCode: toText(item?.expedition?.code, item?.source_expedition_code),
+  documentations: (item?.documentations ?? item?.expedition_claim_documentations ?? []).map(mapClaimDocumentation),
+});
+
+const mapClaimApplication = (item: any): DoEkspedisiClaimApplication => ({
+  id: Number(item?.id ?? 0),
+  uuid: item?.uuid,
+  doExpeditionId: Number(item?.do_expedition_id ?? 0),
+  doExpeditionClaimId: Number(item?.do_expedition_claim_id ?? 0),
+  driverId: Number(item?.driver_id ?? 0),
+  nominal: toNumber(item?.nominal),
+  type: item?.type === 'transfer' ? 'transfer' : 'cash',
+  date: item?.date ?? '',
+  claim: item?.claim ? mapClaim(item.claim) : null,
 });
 
 const mapDoOrderTarifItem = (entry: any, parent?: any) => {
@@ -126,7 +182,7 @@ const mapDoOrderTarifItem = (entry: any, parent?: any) => {
   };
 };
 
-const mapDoOrderList = (item: any) => {
+const mapDoOrderList = (item: any, selectedTarif?: any) => {
   if (!item || typeof item !== 'object') return null;
 
   const tarifSource = Array.isArray(item.tarifs)
@@ -135,22 +191,38 @@ const mapDoOrderList = (item: any) => {
       ? item.do_order_list_tarifs
       : Array.isArray(item.do_orderlist_tarifs)
         ? item.do_orderlist_tarifs
-        : [];
+        : selectedTarif
+          ? [selectedTarif]
+          : [];
   const tarifs = tarifSource.map((entry: any) => mapDoOrderTarifItem(entry, item));
   const firstTarif = tarifs[0];
+  const customer = item.customer ? mapCustomer(item.customer) : null;
 
   return {
     id: Number(item.id ?? 0),
     uuid: item.uuid,
     code: toText(item.code),
-    customerName: toText(item.customer?.name, item.customer_name),
+    description: toText(item.description, item.note),
+    status: String(item.status ?? ''),
+    customer,
+    customerName: toText(customer?.name, item.customer_name),
     loadingIn: toText(item.loading_in, firstTarif?.loadingIn),
     loadingOut: toText(item.loading_out, firstTarif?.loadingOut),
-    destination: toText(firstTarif?.deliveryDestination),
+    destination: toText(firstTarif?.deliveryDestination, item.do_delivery_destination),
     loadContent: toText(firstTarif?.loadContent),
     qty: toNumber(firstTarif?.qty),
     tarifs,
-    vehicleType: String(item?.vehicle_type ?? item?.vehicleType ?? item?.type ?? '').trim().toLowerCase(),
+    vehicleType: String(selectedTarif?.vehicle_type ?? item?.vehicle_type ?? item?.vehicleType ?? item?.type ?? '').trim().toLowerCase(),
+    billInvoice: toNumber(item.bill_invoice),
+    ppn: toNumber(item.ppn),
+    pph: toNumber(item.pph),
+    ujDriver: toNumber(item.uj_driver),
+    ujTowing: item.uj_towing == null ? null : toNumber(item.uj_towing),
+    ujCdd: item.uj_cdd == null ? null : toNumber(item.uj_cdd),
+    ujFuso: item.uj_fuso == null ? null : toNumber(item.uj_fuso),
+    invTowing: item.inv_towing == null ? null : toNumber(item.inv_towing),
+    invCdd: item.inv_cdd == null ? null : toNumber(item.inv_cdd),
+    invFuso: item.inv_fuso == null ? null : toNumber(item.inv_fuso),
   };
 };
 
@@ -201,30 +273,47 @@ const mapDoEkspedisiItem = (item: any): DoEkspedisiItem => {
   };
 };
 
-const mapDoEkspedisi = (item: any): DoEkspedisi => ({
-  id: Number(item?.id ?? 0),
-  uuid: item?.uuid,
-  doCode: toText(item?.do_code, item?.code),
-  orderCode: toText(item?.do_order_list?.code, item?.do_orderlist?.code, item?.order_list?.code, item?.order_code),
-  date: item?.date ?? '',
-  vehicleId: item?.vehicle_id == null ? null : Number(item.vehicle_id),
-  driverId: item?.driver_id == null ? null : Number(item.driver_id),
-  driverNote: toText(item?.driver_note, item?.note),
-  itemsCount: Number(item?.items_count ?? item?.items?.length ?? 0),
-  bruttoValue: toNumber(item?.brutto_value),
-  totalPpn: toNumber(item?.total_ppn),
-  totalPph: toNumber(item?.total_pph),
-  totalServiceFee: toNumber(item?.total_service_fee),
-  totalAdditionalCost: toNumber(item?.total_additional_cost),
-  totalOtherFee: toNumber(item?.total_other_fee),
-  totalDriverFee: toNumber(item?.total_driver_fee),
-  vehicle: item?.vehicle ? mapVehicle(item.vehicle) : null,
-  driver: item?.driver ? mapDriver(item.driver) : null,
-  orderList: mapDoOrderList(item?.do_order_list ?? item?.do_orderlist ?? item?.order_list),
-  items: Array.isArray(item?.items) ? item.items.map(mapDoEkspedisiItem) : undefined,
-  createdAt: item?.created_at,
-  updatedAt: item?.updated_at,
-});
+const mapDoEkspedisi = (item: any): DoEkspedisi => {
+  const orderListTarif = item?.orderListTarif ?? item?.order_list_tarif;
+  const rawVehicle = item?.vehicle ?? orderListTarif?.vehicle;
+  const rawDriver = item?.driver ?? orderListTarif?.driver;
+  const rawOrderList = item?.do_order_list ?? item?.do_orderlist ?? item?.order_list ?? orderListTarif?.doOrderList ?? orderListTarif?.do_order_list;
+  
+  return {
+    id: Number(item?.id ?? 0),
+    uuid: item?.uuid,
+    doCode: toText(item?.do_code, item?.code),
+    orderCode: toText(rawOrderList?.code, item?.orderCode, item?.order_code),
+    date: item?.date ?? '',
+    vehicleId: item?.vehicle_id == null ? (orderListTarif?.vehicle_id == null ? null : Number(orderListTarif.vehicle_id)) : Number(item.vehicle_id),
+    driverId: item?.driver_id == null ? (orderListTarif?.driver_id == null ? null : Number(orderListTarif.driver_id)) : Number(item.driver_id),
+    driverNote: toText(item?.driver_note, item?.note),
+    itemsCount: Number(item?.items_count ?? item?.items?.length ?? 0),
+    bruttoValue: toNumber(item?.brutto_value),
+    totalPpn: toNumber(item?.total_ppn),
+    totalPph: toNumber(item?.total_pph),
+    totalServiceFee: toNumber(item?.total_service_fee),
+    totalAdditionalCost: toNumber(item?.total_additional_cost),
+    totalOtherFee: toNumber(item?.total_other_fee),
+    totalDriverFee: toNumber(item?.total_driver_fee),
+    vehicle: rawVehicle ? mapVehicle(rawVehicle) : null,
+    driver: rawDriver ? mapDriver(rawDriver) : null,
+    orderList: mapDoOrderList(rawOrderList, orderListTarif),
+    items: Array.isArray(item?.items) ? item.items.map(mapDoEkspedisiItem) : undefined,
+    createdAt: item?.created_at,
+    updatedAt: item?.updated_at,
+    status: String(item?.status ?? 'draft'),
+    ujNominal: toNumber(item?.uj_nominal ?? item?.ujNominal),
+    ujNominalBeforeClaim: toNumber(item?.uj_nominal_before_claim ?? item?.uj_nominal ?? item?.ujNominal),
+    claimDeductionNominal: toNumber(item?.claim_deduction_nominal),
+    startDate: item?.start_date ?? null,
+    endDate: item?.end_date ?? null,
+    driverNotes: (item?.driver_notes ?? []).map(mapDriverNote),
+    expeditionExpenses: (item?.expedition_expenses ?? []).map(mapExpense),
+    expeditionClaims: (item?.expedition_claims ?? []).map(mapClaim),
+    driverExpeditionClaims: (item?.driver_expedition_claims ?? []).map(mapClaimApplication),
+  };
+};
 
 const enrichVehiclesWithType = async (items: DoEkspedisi[]): Promise<DoEkspedisi[]> => {
   const missingVehicleIds = Array.from(
@@ -279,6 +368,9 @@ const buildMainPayload = (payload: DoEkspedisiPayload, asUpdate = false) => {
       formData.append('driver_note', payload.driver_note);
       formData.append('note', payload.driver_note);
     }
+    if (payload.status != null) {
+      formData.append('status', payload.status);
+    }
     return formData;
   }
 
@@ -289,6 +381,15 @@ const buildMainPayload = (payload: DoEkspedisiPayload, asUpdate = false) => {
   if (payload.driver_note != null) {
     params.append('driver_note', payload.driver_note);
     params.append('note', payload.driver_note);
+  }
+  if (payload.status != null) {
+    params.append('status', payload.status);
+  }
+  if (payload.start_date !== undefined) {
+    params.append('start_date', payload.start_date ?? '');
+  }
+  if (payload.end_date !== undefined) {
+    params.append('end_date', payload.end_date ?? '');
   }
   return params;
 };
@@ -615,4 +716,40 @@ export const lookupDoEkspedisiDrivers = async (search = ''): Promise<LookupOptio
     label: item.name ?? '',
     subtitle: item.code ?? item.phone ?? undefined,
   }));
+};
+
+export type DetailResource = 'note' | 'expense' | 'claim' | 'documentation';
+const detailPaths: Record<DetailResource, string> = {
+  note: driverNotePath, expense: expeditionExpensePath, claim: expeditionClaimPath, documentation: claimDocumentationPath,
+};
+
+const detailResponse = async (response: { data: LaravelApiResponse<any> }) => ensureSuccess(response.data);
+
+export const createDoDetailResource = async (resource: DetailResource, payload: Record<string, unknown> | FormData) => {
+  const response = await apiClient.post<LaravelApiResponse<any>>(detailPaths[resource], payload);
+  return detailResponse(response);
+};
+
+export const updateDoDetailResource = async (resource: DetailResource, id: string | number, payload: Record<string, unknown> | FormData) => {
+  const response = await apiClient.put<LaravelApiResponse<any>>(`${detailPaths[resource]}/${id}`, payload);
+  return detailResponse(response);
+};
+
+export const deleteDoDetailResource = async (resource: DetailResource, id: string | number) => {
+  const response = await apiClient.delete<LaravelApiResponse<null>>(`${detailPaths[resource]}/${id}`);
+  ensureSuccess(response.data);
+};
+
+export const getAvailableExpeditionClaims = async (driverId: number): Promise<DoEkspedisiClaim[]> => {
+  const response = await apiClient.get<LaravelApiResponse<any>>(expeditionClaimPath, {
+    params: { driver_id: driverId, page: 1, per_page: 100 },
+  });
+  const normalized = normalizePagination(ensureSuccess(response.data));
+
+  return (normalized.data ?? []).map(mapClaim).filter((claim: DoEkspedisiClaim) => claim.remainingNominal > 0);
+};
+
+export const applyExpeditionClaim = async (payload: ApplyExpeditionClaimPayload): Promise<DoEkspedisiClaimApplication> => {
+  const response = await apiClient.post<LaravelApiResponse<any>>(`${expeditionClaimPath}/apply`, payload);
+  return mapClaimApplication(ensureSuccess(response.data));
 };

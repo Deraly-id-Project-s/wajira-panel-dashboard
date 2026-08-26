@@ -91,4 +91,3 @@ export const deleteTarif = async (id: string | number): Promise<void> => {
         throw new ApiResponseError(payload.message ?? 'Failed to delete tarif');
     }
 };
-

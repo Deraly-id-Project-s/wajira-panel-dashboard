@@ -1,10 +1,10 @@
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
-import { ArrowDown, ArrowUp, ArrowUpDown, Search, Info } from 'lucide-react';
+import { ArrowDown, ArrowUp, ArrowUpDown, Search, Info, Lock, Unlock } from 'lucide-react';
 import { LoadingState } from '@/components/ui/loading-state';
 import { cn } from '@/lib/utils';
 import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from '@/components/ui/tooltip';
@@ -75,6 +75,9 @@ export interface BaseTableProps<T> {
   startDate?: string | null;
   endDate?: string | null;
   onDateRangeChange?: (start: string | null, end: string | null) => void;
+
+  // Row mark props
+  getRowMark?: (item: T) => 'alert' | 'success' | 'base' | null | undefined;
 }
 
 export default function BaseTable<T>({
@@ -108,11 +111,81 @@ export default function BaseTable<T>({
   startDate,
   endDate,
   onDateRangeChange,
+  getRowMark,
 }: BaseTableProps<T>) {
   const [localSearch, setLocalSearch] = useState(search || '');
   const [internalSort, setInternalSort] = useState<{ key: string; direction: 'asc' | 'desc' } | null>(
     defaultSort || null
   );
+  const [lockedColumns, setLockedColumns] = useState<Set<string | number>>(new Set());
+  const [columnLeftOffsets, setColumnLeftOffsets] = useState<Record<string | number, number>>({});
+  const tableContainerRef = useRef<HTMLDivElement>(null);
+
+  const updateLeftOffsets = useCallback(() => {
+    if (!tableContainerRef.current) return;
+    const headerCells = tableContainerRef.current.querySelectorAll('thead th');
+    const offsets: Record<string | number, number> = {};
+
+    let currentLeft = 0;
+    if (showCheckbox && headerCells[0]) {
+      currentLeft = (headerCells[0] as HTMLElement).offsetWidth;
+    }
+
+    const startIdx = showCheckbox ? 1 : 0;
+    columns.forEach((col, idx) => {
+      const colKey = col.id || col.accessorKey || String(idx);
+      const isLocked = lockedColumns.has(colKey) || col.sticky === 'left';
+
+      if (isLocked) {
+        offsets[colKey] = currentLeft;
+        const cellEl = headerCells[startIdx + idx] as HTMLElement;
+        if (cellEl) {
+          currentLeft += cellEl.offsetWidth;
+        } else {
+          currentLeft += 120;
+        }
+      }
+    });
+
+    setColumnLeftOffsets(offsets);
+  }, [columns, showCheckbox, lockedColumns]);
+
+  const lastStickyLeftKey = useMemo(() => {
+    let lastKey: string | number | null = null;
+    columns.forEach((col, idx) => {
+      const colKey = col.id || col.accessorKey || String(idx);
+      if (lockedColumns.has(colKey) || col.sticky === 'left') {
+        lastKey = colKey;
+      }
+    });
+    return lastKey;
+  }, [columns, lockedColumns]);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      updateLeftOffsets();
+    }, 50);
+    return () => clearTimeout(timer);
+  }, [data, loading, lockedColumns, updateLeftOffsets]);
+
+  useEffect(() => {
+    updateLeftOffsets();
+    window.addEventListener('resize', updateLeftOffsets);
+    return () => window.removeEventListener('resize', updateLeftOffsets);
+  }, [updateLeftOffsets]);
+
+  const toggleLockColumn = (colKey: string | number, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setLockedColumns((prev) => {
+      const next = new Set(prev);
+      if (next.has(colKey)) {
+        next.delete(colKey);
+      } else {
+        next.add(colKey);
+      }
+      return next;
+    });
+  };
 
   const dateRange = useMemo<DateRange | undefined>(() => {
     if (!startDate && !endDate) return undefined;
@@ -127,6 +200,31 @@ export default function BaseTable<T>({
     const start = range?.from ? format(range.from, 'yyyy-MM-dd') : null;
     const end = range?.to ? format(range.to, 'yyyy-MM-dd') : null;
     onDateRangeChange(start, end);
+  };
+
+  const getMarkClasses = (mark?: 'alert' | 'success' | 'base' | null | undefined) => {
+    switch (mark) {
+      case 'alert':
+        return {
+          row: 'bg-red-500/[0.09] hover:bg-red-500/[0.06] border-red-100/40 dark:bg-red-950/10 dark:hover:bg-red-950/20',
+          cell: 'bg-red-500/[0.03] group-hover:bg-red-500/[0.06] dark:bg-red-950/10 dark:group-hover:bg-red-950/20',
+        };
+      case 'success':
+        return {
+          row: 'bg-emerald-500/[0.02] hover:bg-emerald-500/[0.05] border-emerald-100/40 dark:bg-emerald-950/10 dark:hover:bg-emerald-950/20',
+          cell: 'bg-emerald-500/[0.02] group-hover:bg-emerald-500/[0.05] dark:bg-emerald-950/10 dark:group-hover:bg-emerald-950/20',
+        };
+      case 'base':
+        return {
+          row: 'bg-amber-500/[0.03] hover:bg-amber-500/[0.06] border-amber-100/40 dark:bg-amber-950/10 dark:hover:bg-amber-950/20',
+          cell: 'bg-amber-500/[0.03] group-hover:bg-amber-500/[0.06] dark:bg-amber-950/10 dark:group-hover:bg-amber-950/20',
+        };
+      default:
+        return {
+          row: 'bg-white hover:bg-slate-50 border-slate-100',
+          cell: 'bg-white group-hover:bg-slate-50',
+        };
+    }
   };
 
   const getRowIdInternal = useCallback((item: T) => {
@@ -233,7 +331,7 @@ export default function BaseTable<T>({
     if (!selectedIds || !isCheckboxDisabled) return false;
     const allChecked = sortedData.length > 0 && sortedData.every((item) => selectedIds.has(getRowIdInternal(item)));
     if (allChecked) return false;
-    
+
     return sortedData.some((item) => {
       const isChecked = selectedIds.has(getRowIdInternal(item));
       return !isChecked && isCheckboxDisabled(item);
@@ -344,7 +442,10 @@ export default function BaseTable<T>({
         )
       )}
 
-      <div className={cn('relative overflow-hidden rounded-md border border-slate-200 bg-white shadow-none', containerClassName)}>
+      <div
+        ref={tableContainerRef}
+        className={cn('relative overflow-hidden rounded-md border border-slate-200 bg-white shadow-none', containerClassName)}
+      >
         <Table className="w-max min-w-full print:w-full print:table-fixed">
           <TableHeader className={cn('border-b border-gray-200', headerRowClassName)}>
             {headerGroups && headerGroups}
@@ -366,22 +467,37 @@ export default function BaseTable<T>({
 
                 const isSortable = col.sortable && col.accessorKey;
                 const sortKey = String(col.accessorKey || col.id || '');
+                const colKey = col.id || col.accessorKey || String(idx);
                 const isSorted = activeSort?.key === sortKey;
+
+                const isStickyLeft = col.sticky === 'left' || lockedColumns.has(colKey);
+                const isStickyRight = col.sticky === 'right';
+                const isLastStickyLeft = colKey === lastStickyLeftKey;
+                const leftOffset = columnLeftOffsets[colKey] ?? 0;
+                const canLock = !col.sticky;
 
                 return (
                   <TableHead
                     key={col.id || idx}
                     onClick={() => isSortable && handleSort(sortKey)}
                     className={cn(
-                      'px-4 py-4 print:px-2 print:py-2 text-xs print:text-[10px] font-semibold uppercase text-slate-500 whitespace-nowrap print:whitespace-normal',
-                      isSortable && 'cursor-pointer select-none group',
-                      col.sticky === 'right' && cn('sticky right-0 z-10 border-l border-slate-200 shadow-[-4px_0_6px_-4px_rgba(0,0,0,0.05)] w-[80px] min-w-[80px] max-w-[80px]', headerRowClassName),
-                      col.sticky === 'left' && cn('sticky left-0 z-10 border-r border-slate-200 shadow-[4px_0_6px_-4px_rgba(0,0,0,0.05)] w-[80px] min-w-[80px] max-w-[80px]', headerRowClassName),
+                      'px-4 py-4 print:px-2 print:py-2 text-xs print:text-[10px] font-semibold uppercase text-slate-500 whitespace-nowrap print:whitespace-normal group',
+                      isSortable && 'cursor-pointer select-none',
+                      isStickyLeft && cn(
+                        'sticky z-10 border-r border-slate-200',
+                        isLastStickyLeft && 'shadow-[4px_0_6px_-4px_rgba(0,0,0,0.05)]',
+                        headerRowClassName
+                      ),
+                      isStickyRight && cn(
+                        'sticky right-0 z-10 border-l border-slate-200 shadow-[-4px_0_6px_-4px_rgba(0,0,0,0.05)] w-[80px] min-w-[80px] max-w-[80px]',
+                        headerRowClassName
+                      ),
                       textAlignment,
                       col.headerClassName
                     )}
+                    style={isStickyLeft ? { left: leftOffset } : undefined}
                   >
-                    <div className={cn('flex items-center gap-1', justifyClass)}>
+                    <div className={cn('flex items-center gap-1.5', justifyClass)}>
                       <span>{col.header}</span>
                       {col.tooltip && (
                         <TooltipProvider>
@@ -411,6 +527,24 @@ export default function BaseTable<T>({
                           <ArrowUpDown className="h-3 w-3 opacity-0 group-hover:opacity-70 transition-opacity duration-150 shrink-0" />
                         )
                       )}
+                      {canLock && (
+                        <button
+                          onClick={(e) => toggleLockColumn(colKey, e)}
+                          className={cn(
+                            "p-1 rounded hover:bg-slate-100/80 text-slate-400 hover:text-slate-700 transition-all shrink-0 cursor-pointer",
+                            lockedColumns.has(colKey)
+                              ? "text-indigo-600 opacity-100"
+                              : "opacity-0 group-hover:opacity-100"
+                          )}
+                          title={lockedColumns.has(colKey) ? "Unlock column" : "Lock column"}
+                        >
+                          {lockedColumns.has(colKey) ? (
+                            <Lock className="h-3 w-3" />
+                          ) : (
+                            <Unlock className="h-3 w-3" />
+                          )}
+                        </button>
+                      )}
                     </div>
                   </TableHead>
                 );
@@ -437,50 +571,72 @@ export default function BaseTable<T>({
                 </TableCell>
               </TableRow>
             ) : (
-              sortedData.map((item, rowIdx) => (
-                <TableRow
-                  key={rowIdx}
-                  className={cn(
-                    "group border-b bg-white hover:bg-slate-50 border-slate-100 transition-colors",
-                    onRowClick && "cursor-pointer"
-                  )}
-                  onClick={() => onRowClick?.(item)}
-                >
-                  {showCheckbox && (
-                    <TableCell className="w-[50px] min-w-[50px] max-w-[50px] px-4 py-4 text-center sticky left-0 bg-white group-hover:bg-slate-50 z-10 border-r border-slate-200 shadow-[4px_0_6px_-4px_rgba(0,0,0,0.05)]">
-                      <Checkbox
-                        checked={selectedIds?.has(getRowIdInternal(item)) ?? false}
-                        onCheckedChange={(checked) => handleToggleOne(getRowIdInternal(item), Boolean(checked))}
-                        disabled={isCheckboxDisabled?.(item)}
-                        aria-label="Pilih baris"
-                      />
-                    </TableCell>
-                  )}
-                  {columns.map((col, colIdx) => {
-                    const alignment = col.alignment ?? 'left';
-                    const textAlignment = alignment === 'right' ? 'text-right' : alignment === 'center' ? 'text-center' : 'text-left';
+              sortedData.map((item, rowIdx) => {
+                const mark = getRowMark?.(item);
+                const markClasses = getMarkClasses(mark);
 
-                    return (
-                      <TableCell
-                        key={col.id || colIdx}
-                        className={cn(
-                          'px-4 py-4 print:px-2 print:py-2 text-sm print:text-[10px] text-slate-700 transition-colors',
-                          col.sticky === 'right' && 'sticky right-0 bg-white group-hover:bg-slate-50 z-10 border-l border-slate-200 shadow-[-4px_0_6px_-4px_rgba(0,0,0,0.05)] w-[80px] min-w-[80px] max-w-[80px]',
-                          col.sticky === 'left' && 'sticky left-0 bg-white group-hover:bg-slate-50 z-10 border-r border-slate-200 shadow-[4px_0_6px_-4px_rgba(0,0,0,0.05)] w-[80px] min-w-[80px] max-w-[80px]',
-                          textAlignment,
-                          col.className
-                        )}
-                      >
-                        {col.cell
-                          ? col.cell(item, rowIdx)
-                          : col.accessorKey
-                            ? String((item as any)[col.accessorKey] ?? '')
-                            : null}
+                return (
+                  <TableRow
+                    key={rowIdx}
+                    className={cn(
+                      "group border-b transition-colors",
+                      markClasses.row,
+                      onRowClick && "cursor-pointer"
+                    )}
+                    onClick={() => onRowClick?.(item)}
+                  >
+                    {showCheckbox && (
+                      <TableCell className={cn(
+                        "w-[50px] min-w-[50px] max-w-[50px] px-4 py-4 text-center sticky left-0 z-10 border-r border-slate-200 shadow-[4px_0_6px_-4px_rgba(0,0,0,0.05)]",
+                        markClasses.cell
+                      )}>
+                        <Checkbox
+                          checked={selectedIds?.has(getRowIdInternal(item)) ?? false}
+                          onCheckedChange={(checked) => handleToggleOne(getRowIdInternal(item), Boolean(checked))}
+                          disabled={isCheckboxDisabled?.(item)}
+                          aria-label="Pilih baris"
+                        />
                       </TableCell>
-                    );
-                  })}
-                </TableRow>
-              ))
+                    )}
+                    {columns.map((col, colIdx) => {
+                      const alignment = col.alignment ?? 'left';
+                      const textAlignment = alignment === 'right' ? 'text-right' : alignment === 'center' ? 'text-center' : 'text-left';
+                      const colKey = col.id || col.accessorKey || String(colIdx);
+
+                      const isStickyLeft = col.sticky === 'left' || lockedColumns.has(colKey);
+                      const isStickyRight = col.sticky === 'right';
+                      const isLastStickyLeft = colKey === lastStickyLeftKey;
+                      const leftOffset = columnLeftOffsets[colKey] ?? 0;
+
+                      const isFirstCell = !showCheckbox && colIdx === 0;
+
+                      return (
+                        <TableCell
+                          key={col.id || colIdx}
+                          className={cn(
+                            'px-4 py-4 print:px-2 print:py-2 text-sm print:text-[10px] text-slate-700 transition-colors',
+                            isStickyLeft && cn(
+                              'sticky z-10 border-r border-slate-200',
+                              isLastStickyLeft && 'shadow-[4px_0_6px_-4px_rgba(0,0,0,0.05)]'
+                            ),
+                            isStickyRight && 'sticky right-0 z-10 border-l border-slate-200 shadow-[-4px_0_6px_-4px_rgba(0,0,0,0.05)] w-[80px] min-w-[80px] max-w-[80px]',
+                            markClasses.cell,
+                            textAlignment,
+                            col.className
+                          )}
+                          style={isStickyLeft ? { left: leftOffset } : undefined}
+                        >
+                          {col.cell
+                            ? col.cell(item, rowIdx)
+                            : col.accessorKey
+                              ? String((item as any)[col.accessorKey] ?? '')
+                              : null}
+                        </TableCell>
+                      );
+                    })}
+                  </TableRow>
+                );
+              })
             )}
           </TableBody>
           {footer}

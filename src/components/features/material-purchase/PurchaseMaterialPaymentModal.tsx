@@ -101,7 +101,7 @@ export function PurchaseMaterialPaymentModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[calc(100vh-2rem)] overflow-hidden rounded-[20px] border border-slate-200 px-0 py-0 sm:max-w-[410px]">
+      <DialogContent className="max-h-[calc(100vh-2rem)] overflow-hidden rounded-md border border-slate-200 px-0 py-0 sm:max-w-[410px]">
         <div className="overflow-y-auto px-6 py-7">
           <DialogHeader className="space-y-0">
             <DialogTitle className="text-[20px] font-semibold text-slate-900">{title}</DialogTitle>

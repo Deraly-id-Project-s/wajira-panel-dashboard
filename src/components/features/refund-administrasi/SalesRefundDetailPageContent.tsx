@@ -199,7 +199,7 @@ export default function SalesRefundDetailPageContent({ transactionId, refundId }
               <h1 className="text-2xl font-semibold text-slate-900">Detail Data Refund Penjualan</h1>
               <div className="text-sm text-muted-foreground flex items-center gap-2">
                 <span>Kode Refund:</span>
-                <span className="text-blue-600 font-semibold">{refund.code}</span>
+                <span className="inline-flex items-center gap-1.5 font-semibold text-orange-600 hover:text-orange-700">{refund.code}</span>
               </div>
             </div>
           </div>
@@ -300,7 +300,7 @@ export default function SalesRefundDetailPageContent({ transactionId, refundId }
                   <h2 className="text-base font-semibold text-slate-800">Riwayat Pembayaran Refund</h2>
                   <p className="text-xs text-slate-500">Daftar transaksi pembayaran refund yang telah dicatat</p>
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex flex-col sm:flex-row items-center gap-2 w-full sm:w-auto">
                   <Button onClick={() => setIsAddDetailOpen(true)} disabled={lessPayment === 0} className="w-full sm:w-auto bg-[#1e3a5f] hover:bg-[#152e4d]">
                     <Plus className="h-4 w-4 mr-2" />
                     Tambah Data Pembayaran Refund

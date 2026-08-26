@@ -2,8 +2,8 @@ import { useRouter } from 'next/router';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { Card, CardContent } from '@/components/ui/card';
 import { ArrowLeft } from 'lucide-react';
-import { EditUnitForm } from '@/components/features/sales/edit/EditUnitForm';
-import { EditUnitFormData } from '@/components/features/sales/edit/edit-unit.schema';
+import { UnitTransactionForm } from '@/components/features/unit-transaction/UnitTransactionForm';
+import { type UnitTransactionFormValues } from '@/components/features/unit-transaction/unit-transaction.schema';
 import { useMemo } from 'react';
 import { toast } from 'sonner';
 import { useSalesDetail } from '@/hooks/useSales';
@@ -13,6 +13,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { useCompany } from '@/contexts/CompanyContext';
 import { PageHeader } from '@/components/ui/page-header';
 import { LoadingState } from '@/components/ui/loading-state';
+import { useUpdateUnitTransactionDocumentTemplate } from '@/hooks/useUnitTransaction';
 
 /**
  * Tambah Unit Page - Nested under Sales Detail
@@ -26,6 +27,7 @@ export default function CreateUnitPage() {
   const salesId = Array.isArray(id) ? id[0] : id;
   const { data: salesDetail, isLoading: isLoadingDetail } = useSalesDetail(salesId);
   const createItemMutation = useCreateUnitItem();
+  const updateTemplateMutation = useUpdateUnitTransactionDocumentTemplate();
   const { data: typeUnitData, isLoading: isLoadingTypeUnits } = useTypeUnits({
     sort_by: 'created_at',
     sort_order: 'asc',
@@ -43,23 +45,16 @@ export default function CreateUnitPage() {
     [salesItemsResponse],
   );
 
-  const productOptions = useMemo(() => {
-    return (typeUnitData?.data ?? []).map((item) => ({
-      value: String(item.id),
-      label: item.name,
-    }));
-  }, [typeUnitData?.data]);
-
   const invoiceCode = salesDetail?.raw?.code ?? '-';
 
-  const handleSubmit = async (data: EditUnitFormData) => {
+  const handleSubmit = async (data: UnitTransactionFormValues) => {
     try {
       if (!salesId) {
         toast.error('ID penjualan tidak valid');
         return;
       }
 
-      const unitTypeId = String(data.tipeUnit ?? '').trim();
+      const unitTypeId = String(data.unitTypeId ?? '').trim();
       const qty = Number(data.qty ?? 0);
 
       if (!unitTypeId) {
@@ -90,15 +85,19 @@ export default function CreateUnitPage() {
         unit_transaction_id: salesId,
         unit_type_id: unitTypeId,
         qty_total: qty,
-        price: Number(data.harga ?? 0),
-        bbn_price: Number(data.biayaBbn ?? 0),
-        expedition_fee: Number(data.biayaEkspedisi ?? 0),
-        other_fee: Number(data.biayaLain ?? 0),
+        price: Number(data.price ?? 0),
+        bbn_price: Number(data.bbnPrice ?? 0),
+        expedition_fee: Number(data.expeditionFee ?? 0),
+        other_fee: Number(data.otherFee ?? 0),
         company_id: companyId ?? undefined,
         type: 'sales',
         dpp_tax_id: data.dppTaxVersionId ? Number(data.dppTaxVersionId) : undefined,
         ppn_tax_id: data.ppnTaxVersionId ? Number(data.ppnTaxVersionId) : undefined,
       });
+      const currentTemplateId = salesDetail?.ui?.documentTemplateId ?? null;
+      if ((data.documentTemplateId ?? null) !== currentTemplateId) {
+        await updateTemplateMutation.mutateAsync({ id: salesId, documentTemplateId: data.documentTemplateId ?? null });
+      }
 
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: ['sales-transaction', salesId] }),
@@ -149,31 +148,32 @@ export default function CreateUnitPage() {
           subtitle={
             <>
               <span>Kode Penjualan:</span>
-              <span className="text-blue-600 font-semibold">{invoiceCode}</span>
+              <span className="inline-flex items-center gap-1.5 font-semibold text-orange-600 hover:text-orange-700">{invoiceCode}</span>
             </>
           }
         />
 
         <Card className="rounded-md">
           <CardContent className="p-6">
-            <EditUnitForm
+            <UnitTransactionForm
+              type="sales"
+              allowCreateTypeUnit
               defaultValues={{
-                customer: salesDetail?.ui?.customer ?? '',
-                tipeUnit: '',
+                unitTypeId: '',
                 qty: 1,
-                harga: 0,
-                biayaBbn: 0,
-                biayaEkspedisi: 0,
-                biayaLain: 0,
-                totalHpp: 0,
-                totalDpp: 0,
-                totalPpn: 0,
-                hppSatuan: 0,
-                dppSatuan: 0,
-                ppnSatuan: 0,
+                price: 0,
+                bbnPrice: 0,
+                expeditionFee: 0,
+                otherFee: 0,
+                hppTotal: 0,
+                dppTotal: 0,
+                ppnTotal: 0,
+                hppPerUnit: 0,
+                dppPerUnit: 0,
+                ppnPerUnit: 0,
+                documentTemplateId: salesDetail?.ui?.documentTemplateId ?? null,
               }}
-              productOptions={productOptions}
-              searchableTypeUnit
+              typeUnitOptions={typeUnitData?.data ?? []}
               onSubmit={handleSubmit}
               onCancel={() => router.back()}
               submitDisabled={createItemMutation.isPending || isLoadingTypeUnits}

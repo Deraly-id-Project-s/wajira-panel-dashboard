@@ -9,7 +9,7 @@ import { Badge } from '@/components/ui/badge';
 import { PurchaseDetailCards } from '@/components/features/purchase/PurchaseDetailCards';
 import PurchaseUnitTable from '@/components/features/purchase/PurchaseUnitTable';
 import BaseTable, { ColumnDef } from '@/components/ui/base-table';
-import { usePurchaseById, useUpdateUnitTransactionState } from '@/hooks/useUnitTransaction';
+import { usePurchaseById } from '@/hooks/useUnitTransaction';
 import { useUnitBillings, useCurrentBilling, useBillingHistory, useUpdateBillingIsPaid } from '@/hooks/useUnitBilling';
 import { usePurchaseUnitItems } from '@/hooks/useUnitTransactionItem';
 import { useTypeUnits } from '@/hooks/useTypeUnit';
@@ -29,9 +29,8 @@ import {
 } from '@/components/ui/dialog';
 import { formatDate } from '@/lib/utils/format';
 import { LoadingState } from '@/components/ui/loading-state';
-
-const PURCHASE_PREPARE_STOCK_STATE = 'inbound_incoming_goods';
-const PURCHASE_RECEIVED_STOCK_STATE = 'inbound_receipt';
+import { UnitTypeDetailTable } from '@/components/features/unit-transaction/UnitTypeDetailTable';
+import { useDocumentTemplate } from '@/hooks/useDocumentTemplate';
 
 const readApiError = (error: any): string => {
   const details = error?.details ?? error?.response?.data?.errors;
@@ -55,18 +54,19 @@ export default function PurchaseDetailPage() {
   const canDelete = hasPermission('transaction:delete');
 
   const { slug, id } = router.query;
-  const { data: purchase, isLoading, isError } = usePurchaseById(id as string);
+  const { data: purchase, isLoading, isError, refetch: refetchPurchase } = usePurchaseById(id as string);
+  const { data: documentTemplate } = useDocumentTemplate(purchase?.documentTemplateId ?? null);
   const { data: billings = [] } = useUnitBillings(purchase?.id);
   const { data: currentBilling, isLoading: billingLoading } = useCurrentBilling(String(purchase?.id ?? ''));
   const billingId = String(currentBilling?.id ?? '');
   const { data: billingHistories = [], isLoading: historyLoading } = useBillingHistory(billingId || undefined, String(purchase?.id ?? ''));
   const { data: unitItemsResponse, isLoading: unitItemsLoading } = usePurchaseUnitItems(purchase?.id);
-  const updateState = useUpdateUnitTransactionState();
   const updateBillingIsPaid = useUpdateBillingIsPaid();
   const { data: typeUnits } = useTypeUnits();
 
   const [isMarkAsPaidDialogOpen, setIsMarkAsPaidDialogOpen] = useState(false);
   const [isReceiveDialogOpen, setIsReceiveDialogOpen] = useState(false);
+  const [isWarehouseProcessing, setIsWarehouseProcessing] = useState(false);
 
   useEffect(() => {
     if (!isLoading && purchase && purchase?.type !== 'purchase') {
@@ -82,17 +82,19 @@ export default function PurchaseDetailPage() {
   ));
   const hasPaidBilling = billings.some((item: any) => Boolean(item.is_paid));
   const isPaid = billingSummary?.is_paid ?? (hasPaidBilling || (totalPaid >= totalTagihan && totalTagihan > 0));
-  const currentStockState = String(purchase?.stock_state ?? '').toLowerCase();
   const isRefunded = purchase?.has_refund_transaction;
-  const canReceive = isPaid && purchase?.isUnitTypeDetailValid === true && (purchase?.warehouse_activity ? purchase?.warehouse_activity?.state === 'draft' : true);
 
   const receiveButtonText = useMemo(() => {
-    if (updateState.isPending) return 'Memproses...';
+    if (isWarehouseProcessing) return 'Memproses...';
     if (purchase?.warehouse_activity?.state === 'done') return 'Selesai Diproses';
     if (purchase?.warehouse_activity?.state === 'process') return 'Sedang Diproses';
     if (purchase?.warehouse_activity?.state === 'draft') return 'Proses Penerimaan';
+    if (purchase?.warehouse_activity) return 'Sudah Diproses';
     return 'Proses Barang';
-  }, [updateState.isPending, purchase?.warehouse_activity?.state]);
+  }, [isWarehouseProcessing, purchase?.warehouse_activity]);
+  const canReceive = isPaid
+    && purchase?.isUnitTypeDetailValid === true
+    && receiveButtonText === 'Proses Barang';
   const unitItems = unitItemsResponse?.data ?? [];
   const resolvedBillingHistories =
     billingHistories.length > 0
@@ -113,7 +115,7 @@ export default function PurchaseDetailPage() {
       }));
 
   useEffect(() => {
-    if (router.query.print === 'true' && !isLoading && purchase) {
+    if (router.query.print === 'true' && !isLoading && purchase?.documentTemplateId) {
       setTimeout(() => {
         window.print();
       }, 800);
@@ -181,12 +183,14 @@ export default function PurchaseDetailPage() {
     }
   };
 
-  console.log(purchase)
-
-
   const handleReceipt = async () => {
     if (!purchase?.id) return;
+    if (purchase.warehouse_activity) {
+      setIsReceiveDialogOpen(false);
+      return;
+    }
 
+    setIsWarehouseProcessing(true);
     try {
       const warehouseId = String(purchase.warehouse?.id ?? '').trim();
       const personId = String(purchase.person?.id ?? '').trim();
@@ -246,22 +250,6 @@ export default function PurchaseDetailPage() {
         return;
       }
 
-      let stockStateForWarehouse = currentStockState;
-      if (stockStateForWarehouse !== PURCHASE_PREPARE_STOCK_STATE) {
-        await updateState.mutateAsync({
-          id: purchase.id,
-          stockState: PURCHASE_PREPARE_STOCK_STATE,
-          unitTransactionDetails: detailIds,
-        });
-        stockStateForWarehouse = PURCHASE_PREPARE_STOCK_STATE;
-      }
-
-      if (stockStateForWarehouse !== PURCHASE_PREPARE_STOCK_STATE) {
-        toast.error('State transaksi harus inbound_incoming_goods sebelum membuat warehouse activity.');
-        setIsReceiveDialogOpen(false);
-        return;
-      }
-
       const description = String(`Penerimaan Stok Transaksi beli ${purchase?.code} Sebanyak ${detailIds?.length} Unit`);
 
       const activityId = await warehouseActivityService.createReceiptActivity({
@@ -273,26 +261,17 @@ export default function PurchaseDetailPage() {
       });
 
       await warehouseActivityService.receiptStock(activityId, detailIds);
+      await refetchPurchase();
 
-      await updateState.mutateAsync({
-        id: purchase.id,
-        stockState: PURCHASE_RECEIVED_STOCK_STATE,
-      });
-
-      toast.success('Status pembelian diperbarui ke receipt dan stok warehouse berhasil diproses.');
+      toast.success('Stok warehouse berhasil diproses.');
       setIsReceiveDialogOpen(false);
     } catch (error: any) {
       const message = readApiError(error);
-
-      toast.error(message || 'Gagal update state ke receipt', {
-        action: {
-          label: 'Retry',
-          onClick: () => {
-            void handleReceipt();
-          },
-        },
-      });
+      await refetchPurchase();
+      toast.error(message || 'Gagal memproses stok warehouse.');
       setIsReceiveDialogOpen(false);
+    } finally {
+      setIsWarehouseProcessing(false);
     }
   };
 
@@ -328,7 +307,7 @@ export default function PurchaseDetailPage() {
           subtitle={
             <>
               <span>Kode Beli:</span>
-              <span className="text-blue-600 font-semibold">{purchase.code}</span>
+              <span className="inline-flex items-center gap-1.5 font-semibold text-orange-600 hover:text-orange-700">{purchase.code}</span>
               {isPaid ? (
                 <Badge variant="outline" className="border-emerald-200 bg-emerald-50 text-emerald-700 font-semibold">
                   Lunas
@@ -342,7 +321,7 @@ export default function PurchaseDetailPage() {
           }
           actions={
             <>
-              <Button disabled={isRefunded || !canEdit} className="bg-emerald-500 hover:bg-emerald-600 text-white disabled:cursor-not-allowed disabled:opacity-50" onClick={() => router.push(`/dashboard/${slug}/transaksi/pembelian-unit/${purchase.id}/payment`)}>
+              <Button disabled={isRefunded || !canEdit} className="bg-emerald-500 hover:bg-emerald-600 text-white disabled:cursor-not-allowed disabled:opacity-50 w-full sm:w-auto" onClick={() => router.push(`/dashboard/${slug}/transaksi/pembelian-unit/${purchase.id}/payment`)}>
                 <CreditCard className="mr-2 h-4 w-4" />
                 {isPaid ? 'Sudah Dibayar' : 'Bayar'}
               </Button>
@@ -350,7 +329,7 @@ export default function PurchaseDetailPage() {
                 type="button"
                 variant="outline"
                 disabled={!canEdit || isPaid || isRefunded || updateBillingIsPaid.isPending || purchase?.unit_transaction_billing == null}
-                className="border-blue-600 text-blue-600 hover:bg-blue-50 disabled:cursor-not-allowed disabled:opacity-50"
+                className="border-blue-600 text-blue-600 hover:bg-blue-50 disabled:cursor-not-allowed disabled:opacity-50 w-full sm:w-auto"
                 onClick={() => setIsMarkAsPaidDialogOpen(true)}
               >
                 <CheckCircle2 className="mr-2 h-4 w-4" />
@@ -358,7 +337,7 @@ export default function PurchaseDetailPage() {
               </Button>
               <Button
                 variant="outline"
-                className="bg-white hover:bg-gray-50 border-gray-200"
+                className="bg-white hover:bg-gray-50 border-gray-200 w-full sm:w-auto"
                 disabled={!canReceive || !canEdit}
                 onClick={() => setIsReceiveDialogOpen(true)}
               >
@@ -366,6 +345,7 @@ export default function PurchaseDetailPage() {
               </Button>
               <Button
                 variant="outline"
+                className="w-full sm:w-auto"
                 disabled={!canEdit}
                 onClick={() => router.push(`/dashboard/${slug}/transaksi/pembelian-unit/edit/${purchase?.id}`)}>
                 <Edit className="mr-2 h-4 w-4" />
@@ -389,7 +369,27 @@ export default function PurchaseDetailPage() {
 
         <PurchaseDetailCards data={purchase} billingHistories={resolvedBillingHistories} />
 
+        {purchase?.documentTemplateId ? (
+          <div
+            onClick={() => router.push(`/dashboard/${slug}/transaksi/pembelian-unit/print/${purchase.id}`)}
+            className="rounded-md border border-gray-200 bg-white px-4 py-3 text-sm shadow-sm hover:bg-slate-50 transition-colors cursor-pointer flex items-center justify-between"
+          >
+            <div>
+              <span className="text-muted-foreground">Document Template:</span>{' '}
+              <span className="font-medium text-blue-600 hover:underline">{documentTemplate?.name ?? 'Memuat template...'}</span>
+            </div>
+            <span className="text-xs text-blue-600 font-medium hover:underline">Print Dokumen</span>
+          </div>
+        ) : (
+          <div className="rounded-md border border-gray-200 bg-white px-4 py-3 text-sm shadow-sm">
+            <span className="text-muted-foreground">Document Template:</span>{' '}
+            <span className="font-medium text-gray-500">{documentTemplate?.name ?? 'Tidak ada template'}</span>
+          </div>
+        )}
+
         <PurchaseUnitTable purchaseId={purchase.id} slug={slug as string} isPaid={isPaid} canEdit={canEdit} canDelete={canDelete} />
+
+        <UnitTypeDetailTable transactionId={purchase.id} />
 
         <div className="space-y-3">
           <div>
@@ -470,7 +470,7 @@ export default function PurchaseDetailPage() {
               type="button"
               variant="outline"
               onClick={() => setIsReceiveDialogOpen(false)}
-              disabled={updateState.isPending}
+              disabled={isWarehouseProcessing}
             >
               Batal
             </Button>
@@ -478,9 +478,9 @@ export default function PurchaseDetailPage() {
               type="button"
               className="bg-blue-600 hover:bg-blue-700 text-white"
               onClick={handleReceipt}
-              disabled={updateState.isPending}
+              disabled={isWarehouseProcessing}
             >
-              {updateState.isPending ? 'Memproses...' : 'Ya, Proses Barang'}
+              {isWarehouseProcessing ? 'Memproses...' : 'Ya, Proses Barang'}
             </Button>
           </DialogFooter>
         </DialogContent>

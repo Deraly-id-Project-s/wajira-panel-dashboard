@@ -161,7 +161,7 @@ export default function StockUnitPage() {
           perPage={tablePerPage} // Pass tablePerPage state
           totalData={tableTotalData} // Pass tableTotalData state
           statusTabs={(
-            <div className="flex items-center gap-2">
+            <div className="flex flex-col sm:flex-row items-center gap-2 w-full sm:w-auto">
               <Select
                 value={inStock === undefined ? 'all' : inStock ? 'true' : 'false'}
                 onValueChange={(val) => {
@@ -195,7 +195,7 @@ export default function StockUnitPage() {
                     <SlidersHorizontal className="h-4 w-4 text-slate-500" /> Filter Lanjutan
                   </Button>
                 </DialogTrigger>
-                <DialogContent className="sm:max-w-[480px] p-6 rounded-2xl">
+                <DialogContent className="sm:max-w-[480px] p-6 rounded-md">
                   <DialogHeader>
                     <DialogTitle className="text-lg font-bold text-slate-800">Filter Lanjutan Stok Unit</DialogTitle>
                     <DialogDescription className="text-xs text-slate-500">

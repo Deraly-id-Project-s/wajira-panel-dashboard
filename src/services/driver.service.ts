@@ -14,6 +14,9 @@ const mapDriver = (item: any): Driver => ({
   code: item.code,
   type: item.type,
   name: item.name || '',
+  username: item.username ?? null,
+  isActive: item.is_active,
+  lastLogin: item.last_login ?? null,
   address: item.address || '',
   phone: item.phone || '',
   npwp: item.npwp || '',
@@ -30,6 +33,7 @@ const mapDriver = (item: any): Driver => ({
   joinedAt: item.join_date ?? item.joined_at ?? null,
   createdAt: item.created_at,
   updatedAt: item.updated_at,
+  company: item.company ?? null,
 });
 
 export const getDrivers = async (
@@ -67,6 +71,9 @@ const buildDriverPayload = (data: DriverPayload, opts?: { asUpdate?: boolean }) 
   if (opts?.asUpdate) formData.append('_method', 'PUT');
 
   formData.append('name', data.name);
+  if (data.username !== undefined) formData.append('username', data.username ?? '');
+  if (data.password) formData.append('password', data.password);
+  if (data.is_active !== undefined) formData.append('is_active', data.is_active ? '1' : '0');
   if (data.address !== undefined) formData.append('address', data.address ?? '');
   if (data.phone !== undefined) formData.append('phone', data.phone ?? '');
   if (data.user_id !== undefined) formData.append('user_id', String(data.user_id));
@@ -129,6 +136,25 @@ export const deleteDriver = async (id: string | number): Promise<void> => {
   if (!payload.status) {
     throw new ApiResponseError(payload.message ?? 'Failed to delete driver');
   }
+};
+
+export const activateDriver = async (id: string | number): Promise<void> => {
+  const response = await apiClient.put<LaravelApiResponse<any>>(`${basePath}/${id}/activate-driver`);
+  if (!response.data.status) {
+    throw new ApiResponseError(response.data.message ?? 'Failed to activate driver');
+  }
+};
+
+export const deactivateDriver = async (id: string | number): Promise<void> => {
+  const response = await apiClient.put<LaravelApiResponse<any>>(`${basePath}/${id}/deactivate-driver`);
+  if (!response.data.status) {
+    throw new ApiResponseError(response.data.message ?? 'Failed to deactivate driver');
+  }
+};
+
+export const getDriverPassword = async (id: string | number): Promise<string> => {
+  const response = await apiClient.get<LaravelApiResponse<{ secure_password: string }>>(`${basePath}/${id}/get-driver-password`);
+  return ensureSuccess(response.data).secure_password;
 };
 
 export const importDriver = async (id: string | number, file: File): Promise<void> => {

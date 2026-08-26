@@ -71,7 +71,7 @@ export function MultiSelect({
                   handleSelect(option.value);
                 }}
                 className={cn(
-                  'relative flex w-full cursor-pointer select-none items-center rounded-sm py-1.5 px-2 text-sm outline-none transition-colors hover:bg-slate-50 text-slate-700',
+                  'relative flex w-full cursor-pointer select-none items-center rounded-md py-1.5 px-2 text-sm outline-none transition-colors hover:bg-slate-50 text-slate-700',
                   isSelected && 'bg-slate-50'
                 )}
               >

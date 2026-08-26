@@ -1,7 +1,7 @@
 import { useCallback, useMemo, useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { UnitTransaction } from '@/@types/unit-transaction.types';
-import { Eye, MoreVertical, Pencil, Plus, Search, Trash2, RotateCcw, AlertTriangle } from 'lucide-react';
+import { Eye, MoreVertical, Pencil, Plus, Search, Trash2, RotateCcw, AlertTriangle, Printer } from 'lucide-react';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { format } from 'date-fns';
@@ -191,7 +191,7 @@ export default function PurchaseTable({
           }
 
           return (
-            <div className="flex items-center gap-2">
+            <div className="flex flex-col sm:flex-row items-center gap-2 w-full sm:w-auto">
               {(showUnBilled || showUnVerified) && (
                 <TooltipProvider>
                   <Tooltip>
@@ -329,6 +329,21 @@ export default function PurchaseTable({
                   <DropdownMenuItem onClick={() => router.push(`/dashboard/${slug}/transaksi/refund-beli?unit_transaction_id=${item.id}`)}>
                     <RotateCcw className="mr-2 h-4 w-4" /> Refund Beli
                   </DropdownMenuItem>
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <span className="block">
+                          <DropdownMenuItem
+                            disabled={!item.documentTemplateId}
+                            onClick={() => item.documentTemplateId && window.open(`/dashboard/${slug}/transaksi/pembelian-unit/print/${item.id}`, '_blank')}
+                          >
+                            <Printer className="mr-2 h-4 w-4" /> Print
+                          </DropdownMenuItem>
+                        </span>
+                      </TooltipTrigger>
+                      {!item.documentTemplateId && <TooltipContent>Document template belum dipilih.</TooltipContent>}
+                    </Tooltip>
+                  </TooltipProvider>
                 </>
               )}
               {canDelete && (
@@ -399,12 +414,12 @@ export default function PurchaseTable({
 
       {/* RIGHT CONTROLS */}
       {onAdd && canCreate && (
-        <Button onClick={onAdd} className="w-full sm:w-auto bg-[#1e3a5f] hover:bg-[#152e4d]">
+        <Button onClick={onAdd} className="button-theme-1!">
           <Plus className="mr-2 h-4 w-4" />
           Tambah Data
         </Button>
       )}
-    </div>
+    </div >
   );
 
   return (

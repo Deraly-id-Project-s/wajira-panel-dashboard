@@ -8,6 +8,12 @@ export interface Role {
   updated_at?: string | null;
   users_count?: number;
   permissions?: Permission[];
+  features?: Array<{
+    id: number;
+    slug?: string;
+    name: string;
+    description?: string | null;
+  }>;
   users?: Array<{
     id: number;
     avatar: string | null;
@@ -26,5 +32,7 @@ export interface Role {
 
 export interface RolePayload {
   name: string;
+  company_id?: number | string | null;
+  feature_ids?: number[];
   permissions?: string[];
 }
