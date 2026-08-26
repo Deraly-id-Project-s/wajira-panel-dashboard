@@ -2,8 +2,9 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/router';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { ArrowLeft, Search, Save, ChevronRight } from 'lucide-react';
+import { Search, Save } from 'lucide-react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
+import { PageHeader } from '@/components/ui/page-header';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -230,34 +231,23 @@ export default function SalesRefundFormPageContent({ transactionId, mode, refund
   return (
     <DashboardLayout>
       <div className="space-y-6">
-        {/* BREADCRUMB HEADER */}
-        <div className="flex items-center gap-2 text-sm text-slate-500">
-          <span className="hover:text-slate-800 cursor-pointer" onClick={() => router.push(`/dashboard/${slug}/transaksi/`)}>
-            Penjualan Unit
-          </span>
-          <ChevronRight className="h-4 w-4 shrink-0 text-slate-400" />
-          <span className="hover:text-slate-800 cursor-pointer" onClick={() => router.push(`/dashboard/${slug}/transaksi/penjualan-unit/${transactionId}/refund`)}>
-            Data Refund Penjualan
-          </span>
-          <ChevronRight className="h-4 w-4 shrink-0 text-slate-400" />
-          <span className="font-medium text-slate-800">{mode === 'create' ? 'Tambah Data Refund Penjualan' : 'Edit Data Refund Penjualan'}</span>
-        </div>
-
-        {/* HEADLINE & ACTIONS */}
-        <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-          <div className="flex items-center gap-4">
-            <Button onClick={() => router.push(`/dashboard/${slug}/transaksi/penjualan-unit/${transactionId}/refund`)} variant="ghost" size="icon" className="h-10 w-10 rounded-md border border-slate-200 hover:bg-slate-50 cursor-pointer">
-              <ArrowLeft className="h-5 w-5 text-slate-700" />
-            </Button>
-            <div className="space-y-1">
-              <h1 className="text-2xl font-semibold text-slate-900">{mode === 'create' ? 'Tambah Data Refund Penjualan' : 'Edit Data Refund Penjualan'}</h1>
-              <div className="text-sm text-muted-foreground flex items-center gap-2">
-                <span>Kode Jual:</span>
-                <span className="inline-flex items-center gap-1.5 font-semibold text-orange-600 hover:text-orange-700">{selectableItemsQuery.transactionQuery?.data?.code}</span>
-              </div>
+        <PageHeader
+          breadcrumbs={[
+            { label: 'Penjualan Unit', onClick: () => router.push(`/dashboard/${slug}/transaksi/`) },
+            { label: 'Data Refund Penjualan', onClick: () => router.push(`/dashboard/${slug}/transaksi/penjualan-unit/${transactionId}/refund`) },
+            { label: mode === 'create' ? 'Tambah Data Refund Penjualan' : 'Edit Data Refund Penjualan' }
+          ]}
+          title={mode === 'create' ? 'Tambah Data Refund Penjualan' : 'Edit Data Refund Penjualan'}
+          subtitle={
+            <div className="flex items-center gap-2">
+              <span>Kode Jual:</span>
+              <span className="inline-flex items-center gap-1.5 font-semibold text-orange-600 hover:text-orange-700">
+                {selectableItemsQuery.transactionQuery?.data?.code || '-'}
+              </span>
             </div>
-          </div>
-        </div>
+          }
+          onBack={() => router.push(`/dashboard/${slug}/transaksi/penjualan-unit/${transactionId}/refund`)}
+        />
 
         {/* Main Forms Card */}
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">

@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
 import { toast } from 'sonner';
-import { ChevronRight, ArrowLeft, FileText, Package, Pencil } from 'lucide-react';
+import { FileText, Package, Pencil } from 'lucide-react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
+import { PageHeader } from '@/components/ui/page-header';
 import PengeluaranUnitDetailTable from '@/components/features/pengeluaran-unit/PengeluaranUnitDetailTable';
 import { useDispatchPengeluaranStock } from '@/hooks/usePengeluaranUnit';
 import { useWarehouseActivityDetail, useWarehouseActivityStateUpdate } from '@/hooks/useWarehouseActivity';
@@ -99,33 +100,25 @@ export default function PengeluaranUnitDetailPage() {
   return (
     <DashboardLayout>
       <div className="space-y-6">
-        {/* BREADCRUMB HEADER */}
-        <div className="flex items-center gap-2 text-sm text-slate-500">
-          <span className="hover:text-slate-800 cursor-pointer" onClick={() => router.push(`/dashboard/${slug}/warehouse/pengeluaran-unit`)}>
-            Pengeluaran Unit
-          </span>
-          <ChevronRight className="h-4 w-4 shrink-0 text-slate-400" />
-          <span className="font-medium text-slate-800">Detail Pengeluaran Unit</span>
-        </div>
-
-        {/* HEADLINE & ACTIONS */}
-        <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-          <div className="flex items-center gap-4">
-            <Button onClick={() => router.push(`/dashboard/${slug}/warehouse/pengeluaran-unit`)} variant="ghost" size="icon" className="h-10 w-10 rounded-md border border-slate-200 hover:bg-slate-50 cursor-pointer">
-              <ArrowLeft className="h-5 w-5 text-slate-700" />
-            </Button>
-            <div className="space-y-1">
-              <h1 className="text-2xl font-semibold text-slate-900">Detail Pengeluaran Unit</h1>
-              <div className="text-sm text-muted-foreground flex items-center gap-2">
-                <span>Kode Transaksi:</span>
-                <span className="inline-flex items-center gap-1.5 font-semibold text-orange-600 hover:text-orange-700">{detailData?.activity_number || detailData?.noPenerimaan || '-'}</span>
-                <Badge variant="outline" className={`font-semibold ${stateInfo.bg}`}>
-                  {stateInfo.text}
-                </Badge>
-              </div>
+        <PageHeader
+          breadcrumbs={[
+            { label: 'Pengeluaran Unit', onClick: () => router.push(`/dashboard/${slug}/warehouse/pengeluaran-unit`) },
+            { label: 'Detail Pengeluaran Unit' }
+          ]}
+          title="Detail Pengeluaran Unit"
+          subtitle={
+            <div className="flex items-center gap-2">
+              <span>Kode Transaksi:</span>
+              <span className="inline-flex items-center gap-1.5 font-semibold text-orange-600 hover:text-orange-700">
+                {detailData?.activity_number || detailData?.noPenerimaan || '-'}
+              </span>
+              <Badge variant="outline" className={`font-semibold ${stateInfo.bg}`}>
+                {stateInfo.text}
+              </Badge>
             </div>
-          </div>
-        </div>
+          }
+          onBack={() => router.push(`/dashboard/${slug}/warehouse/pengeluaran-unit`)}
+        />
 
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
           {/* Card 1: Informasi Pengeluaran */}

@@ -4,6 +4,7 @@ import { Search } from 'lucide-react';
 import type { RefundTransactionType } from '@/types/finance-refund.types';
 import FinanceRefundTable from '@/components/features/finance-refund/FinanceRefundTable';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
+import { PageHeader } from '@/components/ui/page-header';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -47,10 +48,7 @@ export function FinanceRefundPage({ title, description, transactionType }: Finan
       </Head>
 
       <div className="space-y-6">
-        <div>
-          <h1 className="text-2xl font-semibold text-slate-950">{title}</h1>
-          <p className="text-sm text-slate-500">{description}</p>
-        </div>
+        <PageHeader title={title} subtitle={description} />
 
         <div className="space-y-4">
           <div className="flex flex-col sm:flex-row items-center justify-between gap-4 py-1">
