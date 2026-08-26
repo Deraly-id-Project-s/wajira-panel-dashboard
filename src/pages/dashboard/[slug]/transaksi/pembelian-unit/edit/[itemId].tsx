@@ -2,14 +2,13 @@ import { useRouter } from 'next/router';
 import { toast } from 'sonner';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { PageHeader } from '@/components/ui/page-header';
-import PurchaseForm from '@/components/features/purchase/PurchaseForm';
+import { UnitTransactionHeaderForm, type UnitTransactionHeaderFormValues } from '@/components/features/unit-transaction/UnitTransactionHeaderForm';
 import { usePurchaseById, useUpdatePurchase } from '@/hooks/usePurchase';
 import { Card, CardContent } from '@/components/ui/card';
 import { ChevronRight } from 'lucide-react';
 import { useMemo } from 'react';
 import { useCompany } from '@/contexts/CompanyContext';
 import { LoadingState } from '@/components/ui/loading-state';
-import type { PurchaseFormValues } from '@/@types/purchase.types';
 
 export default function EditPurchasePage() {
   const router = useRouter();
@@ -23,23 +22,23 @@ export default function EditPurchasePage() {
   const defaultValues = useMemo(() => {
     if (!purchase) return undefined;
     return {
-      supplierName: purchase.supplierName,
+      personId: purchase.companyId ? String(purchase.companyId) : '',
+      personName: purchase.supplierName,
       date: purchase.date ? purchase.date.slice(0, 10) : '',
-      code: purchase.code,
-      supplierAddress: purchase.supplierAddress,
-      supplierNpwp: purchase.supplierNpwp,
+      personAddress: purchase.supplierAddress,
+      personNpwp: purchase.supplierNpwp,
       documentTemplateId: purchase.documentTemplateId ?? null,
     };
   }, [purchase]);
 
-  const handleSubmit = async (data: PurchaseFormValues) => {
+  const handleSubmit = async (data: UnitTransactionHeaderFormValues) => {
     if (!purchase) return;
     try {
       await updateMutation.mutateAsync({
         id: itemId as string,
         payload: {
           company_id: Number(companyId),
-          person_id: Number(purchase.companyId),
+          person_id: Number(data.personId),
           code: purchase.code,
           type: 'purchase',
           max_capacity: String(purchase.maxCapacity ?? 0),
@@ -96,7 +95,14 @@ export default function EditPurchasePage() {
 
         <Card className="rounded-md border border-gray-200 shadow-none">
           <CardContent className="p-6">
-            <PurchaseForm defaultValues={defaultValues} onSubmit={handleSubmit} onCancel={() => router.back()} loading={updateMutation.isPending} companyId={companyId} />
+            <UnitTransactionHeaderForm
+              type="purchase"
+              defaultValues={defaultValues}
+              onSubmit={handleSubmit}
+              onCancel={() => router.back()}
+              loading={updateMutation.isPending}
+              companyId={companyId}
+            />
           </CardContent>
         </Card>
       </div>

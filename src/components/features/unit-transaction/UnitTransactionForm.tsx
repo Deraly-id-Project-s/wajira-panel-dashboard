@@ -99,6 +99,14 @@ export function UnitTransactionForm({
   const bbnPrice = Number(form.watch('bbnPrice') ?? 0);
   const expeditionFee = Number(form.watch('expeditionFee') ?? 0);
   const otherFee = Number(form.watch('otherFee') ?? 0);
+  const pricePerUnitUsd = form.watch('pricePerUnitUsd');
+
+  useEffect(() => {
+    if (isUsd) {
+      const calculated = Number(pricePerUnitUsd ?? 0) * Number(qty ?? 0);
+      form.setValue('priceUsd', calculated, { shouldDirty: true, shouldValidate: true });
+    }
+  }, [pricePerUnitUsd, qty, isUsd, form]);
 
   const { formula } = useUnitFormula({
     qty_total: qty,
@@ -310,7 +318,7 @@ export function UnitTransactionForm({
                             name={field.name}
                             value={field.value ?? 0}
                             onChangeValue={(val) => field.onChange(val === 0 ? undefined : val)}
-                            disabled={readOnly}
+                            disabled={true}
                             onBlur={field.onBlur}
                             className="border-amber-200 focus:border-amber-300 focus:ring-amber-200 bg-white"
                           />

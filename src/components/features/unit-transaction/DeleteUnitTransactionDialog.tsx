@@ -16,7 +16,7 @@ interface Props {
     loading?: boolean
 }
 
-export default function DeleteSalesDialog({
+export default function DeleteUnitTransactionDialog({
     open,
     onClose,
     onConfirm,
