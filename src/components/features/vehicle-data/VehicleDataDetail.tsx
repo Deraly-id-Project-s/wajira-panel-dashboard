@@ -1,6 +1,6 @@
 import { useRouter } from 'next/router';
-import { ArrowLeft, Pencil } from 'lucide-react';
-import { format } from 'date-fns';
+import { Pencil } from 'lucide-react';
+import { PageHeader } from '@/components/ui/page-header';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import type { VehicleData } from '@/types/vehicle-data.types';
@@ -41,21 +41,17 @@ export function VehicleDataDetail({ data, slug }: VehicleDataDetailProps) {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex flex-col sm:flex-row items-center gap-2 w-full sm:w-auto">
-          <Button onClick={() => router.back()} variant="ghost" size="icon" className="h-10 w-10 rounded-md border border-slate-200 hover:bg-slate-50 cursor-pointer">
-            <ArrowLeft className="h-4 w-4" />
+      <PageHeader
+        title="Detail Data Kendaraan"
+        subtitle="Informasi lengkap data kendaraan dan kepemilikannya."
+        onBack={() => router.back()}
+        actions={
+          <Button onClick={() => router.push(`/dashboard/${slug}/data-kendaraan/${data.id}/edit`)} className="bg-[#17365d] hover:bg-[#122b49]">
+            <Pencil className="mr-2 h-4 w-4" />
+            Edit Data
           </Button>
-          <div>
-            <h1 className="text-2xl font-semibold text-slate-900">Detail Data Kendaraan</h1>
-            <p className="text-sm text-slate-500">Informasi lengkap data kendaraan dan kepemilikannya.</p>
-          </div>
-        </div>
-        <Button onClick={() => router.push(`/dashboard/${slug}/data-kendaraan/${data.id}/edit`)} className="bg-[#17365d] hover:bg-[#122b49]">
-          <Pencil className="mr-2 h-4 w-4" />
-          Edit Data
-        </Button>
-      </div>
+        }
+      />
 
       <Section title="Dealer & Faktur">
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">

@@ -7,6 +7,7 @@ import { SupplierFormModal } from '@/components/features/supplier/SupplierFormMo
 import { SupplierTable } from '@/components/features/supplier/SupplierTable';
 import { DeleteSupplierModal } from '@/components/features/supplier/DeleteSupplierModal';
 import { Card } from '@/components/ui/card';
+import { PageHeader } from '@/components/ui/page-header';
 import { useCompany } from '@/contexts/CompanyContext';
 import { useQueryParamsTable } from '@/hooks/useQueryParamsTable';
 import { useCreateSupplier, useSuppliers, useDeleteSupplier, useExportSupplier, useImportSupplier, useUpdateSupplier } from '@/hooks/useSupplier';
@@ -225,12 +226,10 @@ export function SupplierManagementPage() {
   return (
     <>
       <div className="space-y-6">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-semibold">Supplier</h1>
-            <p className="text-sm text-muted-foreground">Kelola data supplier dengan mudah</p>
-          </div>
-        </div>
+        <PageHeader
+          title="Supplier"
+          subtitle="Kelola data supplier dengan mudah"
+        />
 
         <SupplierTable
           suppliers={suppliers}

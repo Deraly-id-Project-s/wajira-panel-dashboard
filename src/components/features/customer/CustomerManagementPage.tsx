@@ -7,6 +7,7 @@ import { CustomerFormModal } from '@/components/features/customer/CustomerFormMo
 import { CustomerTable } from '@/components/features/customer/CustomerTable';
 import { DeleteCustomerModal } from '@/components/features/customer/DeleteCustomerModal';
 import { Card } from '@/components/ui/card';
+import { PageHeader } from '@/components/ui/page-header';
 import { useCompany } from '@/contexts/CompanyContext';
 import { useQueryParamsTable } from '@/hooks/useQueryParamsTable';
 import { useCreateCustomer, useCustomers, useDeleteCustomer, useExportCustomer, useImportCustomer, useUpdateCustomer } from '@/hooks/useCustomer';
@@ -217,12 +218,10 @@ export function CustomerManagementPage() {
   return (
     <>
       <div className="space-y-6">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-semibold">Customer</h1>
-            <p className="text-sm text-muted-foreground">Kelola data customer dengan mudah</p>
-          </div>
-        </div>
+        <PageHeader
+          title="Customer"
+          subtitle="Kelola data customer dengan mudah"
+        />
 
         <CustomerTable
           customers={customers}

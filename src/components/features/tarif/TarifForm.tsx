@@ -1,7 +1,8 @@
 import React, { useEffect } from 'react';
 import { useRouter } from 'next/router';
 import { useForm, Controller } from 'react-hook-form';
-import { ArrowLeft, Save } from 'lucide-react';
+import { Save } from 'lucide-react';
+import { PageHeader } from '@/components/ui/page-header';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -82,13 +83,10 @@ export function TarifForm({ initialData, onSubmit, isSubmitting, title }: TarifF
 
     return (
         <div className="space-y-6 pb-8">
-            {/* Page Title */}
-            <div className="flex flex-col sm:flex-row items-center gap-2 w-full sm:w-auto">
-                <Button onClick={() => router.back()} variant="ghost" size="icon" className="h-10 w-10 rounded-md border border-slate-200 hover:bg-slate-50 cursor-pointer">
-                    <ArrowLeft className="h-5 w-5" />
-                </Button>
-                <h1 className="text-2xl font-semibold text-gray-900">{title}</h1>
-            </div>
+            <PageHeader
+                title={title}
+                onBack={() => router.back()}
+            />
 
             <form onSubmit={handleSubmit(handleFormSubmit)}>
                 <Card className="p-6">
