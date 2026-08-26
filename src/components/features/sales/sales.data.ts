@@ -53,6 +53,8 @@ export interface SalesItem {
   units: UnitItem[];
   price_usd?: number;
   price_per_unit_usd?: number;
+  unit_transaction_price_usd_total?: number;
+  unit_transaction_price_usd_total_actual?: number;
   documentTemplateId?: string | null;
 }
 

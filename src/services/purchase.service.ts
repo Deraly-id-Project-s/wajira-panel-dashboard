@@ -457,6 +457,8 @@ export const purchaseService = {
     if (payload.bbn_price !== undefined) form.append('bbn_price', String(payload.bbn_price));
     if (payload.expedition_fee !== undefined) form.append('expedition_fee', String(payload.expedition_fee));
     if (payload.other_fee !== undefined) form.append('other_fee', String(payload.other_fee));
+    if (payload.price_usd !== undefined) form.append('price_usd', String(payload.price_usd));
+    if (payload.price_per_unit_usd !== undefined) form.append('price_per_unit_usd', String(payload.price_per_unit_usd));
     form.append('document_template_id', payload.document_template_id == null ? '' : String(payload.document_template_id));
 
     if (process.env.NODE_ENV !== 'production') {
@@ -517,6 +519,8 @@ export const purchaseService = {
     form.append('bbn_price', String(payload.biayaBBN ?? 0));
     form.append('expedition_fee', String(payload.biayaEkspedisi ?? 0));
     form.append('other_fee', String(payload.biayaLain ?? 0));
+    if (payload.priceUsd !== undefined) form.append('price_usd', String(payload.priceUsd));
+    if (payload.pricePerUnitUsd !== undefined) form.append('price_per_unit_usd', String(payload.pricePerUnitUsd));
 
     await apiClient.post<LaravelApiResponse<any>>(`${basePath}-item`, form);
 

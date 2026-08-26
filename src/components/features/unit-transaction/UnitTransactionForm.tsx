@@ -17,7 +17,7 @@ import { useUnitFormula } from '@/hooks/useUnitFormula';
 import { useTaxDefault } from '@/hooks/useTax';
 import RequiredMark from '@/components/ui/required-mark';
 import { TypeUnitFormModal } from '@/components/features/type-unit/TypeUnitFormModal';
-import { unitTransactionSchema, type UnitTransactionFormValues } from './unit-transaction.schema';
+import { unitTransactionSchema, type UnitTransactionFormValues } from '@/scheme/unit-transaction.schema';
 
 export interface UnitTransactionFormProps {
   type: 'purchase' | 'sales';
@@ -307,29 +307,6 @@ export function UnitTransactionForm({
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6 p-4 rounded-md border border-amber-200 bg-amber-50/30 animate-in fade-in slide-in-from-top-2 duration-200">
                   <FormField
                     control={form.control}
-                    name="priceUsd"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="text-sm font-medium text-amber-900">Total Harga (USD)</FormLabel>
-                        <FormControl>
-                          <MoneyInput
-                            currency="USD"
-                            placeholder="$ 0.00"
-                            name={field.name}
-                            value={field.value ?? 0}
-                            onChangeValue={(val) => field.onChange(val === 0 ? undefined : val)}
-                            disabled={true}
-                            onBlur={field.onBlur}
-                            className="border-amber-200 focus:border-amber-300 focus:ring-amber-200 bg-white"
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={form.control}
                     name="pricePerUnitUsd"
                     render={({ field }) => (
                       <FormItem>
@@ -342,6 +319,29 @@ export function UnitTransactionForm({
                             value={field.value ?? 0}
                             onChangeValue={(val) => field.onChange(val === 0 ? undefined : val)}
                             disabled={readOnly}
+                            onBlur={field.onBlur}
+                            className="border-amber-200 focus:border-amber-300 focus:ring-amber-200 bg-white"
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="priceUsd"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-sm font-medium text-amber-900">Total Harga (USD)</FormLabel>
+                        <FormControl>
+                          <MoneyInput
+                            currency="USD"
+                            placeholder="$ 0.00"
+                            name={field.name}
+                            value={field.value ?? 0}
+                            onChangeValue={(val) => field.onChange(val === 0 ? undefined : val)}
+                            disabled={true}
                             onBlur={field.onBlur}
                             className="border-amber-200 focus:border-amber-300 focus:ring-amber-200 bg-white"
                           />

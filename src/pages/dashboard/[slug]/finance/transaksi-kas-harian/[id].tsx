@@ -137,14 +137,30 @@ export default function KasHarianDetailPage() {
   const transactionAmount = isUsdTransaction
     ? (debetUsd || creditUsd)
     : (debetIdr || creditIdr || Number(cashFlowDetail?.grand_total ?? 0));
+  const expectedIdr = debetIdr > 0 ? debetIdr : creditIdr;
+  const expectedUsd = debetUsd > 0 ? debetUsd : creditUsd;
+
+  const totalPaidIdr = useMemo(
+    () => financeBillings.filter(fb => !fb.cash?.code?.toLowerCase().includes('usd')).reduce((sum, fb) => sum + Number(fb.amount || 0), 0),
+    [financeBillings]
+  );
+  const remainingPaymentIdr = Math.max(0, expectedIdr - totalPaidIdr);
+
+  const totalPaidUsd = useMemo(
+    () => financeBillings.filter(fb => fb.cash?.code?.toLowerCase().includes('usd')).reduce((sum, fb) => sum + Number(fb.amount || 0), 0),
+    [financeBillings]
+  );
+  const remainingPaymentUsd = Math.max(0, expectedUsd - totalPaidUsd);
+
+  const hasIdr = expectedIdr > 0;
+  const hasUsd = expectedUsd > 0;
+  const isFullyPaid = (hasIdr ? remainingPaymentIdr <= 0 : true) && (hasUsd ? remainingPaymentUsd <= 0 : true);
+
   const totalPaid = useMemo(
     () => financeBillings.reduce((sum, billing) => sum + Number(billing.amount || 0), 0),
     [financeBillings],
   );
-  const remainingPayment = Number(
-    cashFlowDetail?.remaining_payment
-      ?? Math.max(0, transactionAmount - totalPaid),
-  );
+  const remainingPayment = isFullyPaid ? 0 : (hasIdr && hasUsd) ? (remainingPaymentIdr + remainingPaymentUsd) : (hasUsd ? remainingPaymentUsd : remainingPaymentIdr);
   const proofUrl = buildProofUrl(cashFlowDetail?.payment_proof);
   const isLoading = cashFlowQuery.isLoading || router.isFallback || !router.isReady;
   const errorMessage = cashFlowQuery.error instanceof Error ? cashFlowQuery.error.message : null;
@@ -245,13 +261,13 @@ export default function KasHarianDetailPage() {
               <Badge
                 variant="outline"
                 className={cn(
-                  cashFlowDetail.is_paid
+                  isFullyPaid
                     ? 'border-emerald-200 bg-emerald-50 text-emerald-700'
                     : 'border-amber-200 bg-amber-50 text-amber-700',
                 )}
               >
-                {cashFlowDetail.is_paid ? <CheckCircle2 /> : null}
-                {cashFlowDetail.is_paid ? 'Lunas' : 'Belum Lunas'}
+                {isFullyPaid ? <CheckCircle2 /> : null}
+                {isFullyPaid ? 'Lunas' : 'Belum Lunas'}
               </Badge>
             </>
           }
@@ -265,12 +281,12 @@ export default function KasHarianDetailPage() {
                 type="button"
                 className="bg-[#1e3a5f] text-white hover:bg-[#152e4d]"
                 onClick={() => {
-                  setTargetStatus(!cashFlowDetail.is_paid);
+                  setTargetStatus(!isFullyPaid);
                   setIsToggleOpen(true);
                 }}
                 disabled={remainingPayment !== 0 && !cashFlowDetail.is_valid}
               >
-                {cashFlowDetail.is_paid ? 'Tandai Belum Lunas' : 'Tandai Lunas'}
+                {isFullyPaid ? 'Tandai Belum Lunas' : 'Tandai Lunas'}
               </Button>
             </>
           }
@@ -323,15 +339,47 @@ export default function KasHarianDetailPage() {
             <CardDescription>Progres pembayaran berdasarkan mata uang transaksi</CardDescription>
           </CardHeader>
           <CardContent className="grid gap-6 p-6 md:grid-cols-3">
-            <DetailItem label="Nilai Transaksi" icon={<WalletCards className="h-4 w-4" />}>{currenciesFormat(displayCurrency, transactionAmount)}</DetailItem>
-            <DetailItem label="Total Terbayar" icon={<CheckCircle2 className="h-4 w-4" />}>{currenciesFormat(displayCurrency, totalPaid)}</DetailItem>
-            <DetailItem label="Sisa Pembayaran" icon={<ReceiptText className="h-4 w-4" />}>
-              <span className={remainingPayment > 0 ? 'text-amber-700' : 'text-emerald-700'}>{currenciesFormat(displayCurrency, remainingPayment)}</span>
-            </DetailItem>
+            {!(expectedIdr > 0 && expectedUsd > 0) ? (
+              <>
+                <DetailItem label="Nilai Transaksi" icon={<WalletCards className="h-4 w-4" />}>{currenciesFormat(displayCurrency, transactionAmount)}</DetailItem>
+                <DetailItem label="Total Terbayar" icon={<CheckCircle2 className="h-4 w-4" />}>{currenciesFormat(displayCurrency, totalPaid)}</DetailItem>
+                <DetailItem label="Sisa Pembayaran" icon={<ReceiptText className="h-4 w-4" />}>
+                  <span className={remainingPayment > 0 ? 'text-amber-700 font-semibold' : 'text-emerald-700 font-semibold'}>{currenciesFormat(displayCurrency, remainingPayment)}</span>
+                </DetailItem>
+              </>
+            ) : (
+              <div className="col-span-3 grid gap-6 md:grid-cols-2">
+                <div className="space-y-4 p-4 rounded-lg bg-slate-50/50 border border-slate-100">
+                  <h4 className="font-semibold text-slate-800 text-sm border-b border-slate-100 pb-2">Rincian Rupiah (IDR)</h4>
+                  <div className="grid gap-4 sm:grid-cols-3">
+                    <DetailItem label="Nilai Transaksi" icon={<WalletCards className="h-4 w-4" />}>{currenciesFormat('idr', expectedIdr)}</DetailItem>
+                    <DetailItem label="Total Terbayar" icon={<CheckCircle2 className="h-4 w-4" />}>{currenciesFormat('idr', totalPaidIdr)}</DetailItem>
+                    <DetailItem label="Sisa Pembayaran" icon={<ReceiptText className="h-4 w-4" />}>
+                      <span className={remainingPaymentIdr > 0 ? 'text-amber-700 font-semibold' : 'text-emerald-700 font-semibold'}>
+                        {currenciesFormat('idr', remainingPaymentIdr)}
+                      </span>
+                    </DetailItem>
+                  </div>
+                </div>
+
+                <div className="space-y-4 p-4 rounded-lg bg-amber-50/10 border border-amber-100/50">
+                  <h4 className="font-semibold text-slate-800 text-sm border-b border-slate-100 pb-2 text-amber-900">Rincian Dollar (USD)</h4>
+                  <div className="grid gap-4 sm:grid-cols-3">
+                    <DetailItem label="Nilai Transaksi" icon={<WalletCards className="h-4 w-4" />}>{currenciesFormat('usd', expectedUsd)}</DetailItem>
+                    <DetailItem label="Total Terbayar" icon={<CheckCircle2 className="h-4 w-4" />}>{currenciesFormat('usd', totalPaidUsd)}</DetailItem>
+                    <DetailItem label="Sisa Pembayaran" icon={<ReceiptText className="h-4 w-4" />}>
+                      <span className={remainingPaymentUsd > 0 ? 'text-amber-700 font-semibold' : 'text-emerald-700 font-semibold'}>
+                        {currenciesFormat('usd', remainingPaymentUsd)}
+                      </span>
+                    </DetailItem>
+                  </div>
+                </div>
+              </div>
+            )}
           </CardContent>
         </Card>
 
-        {remainingPayment === 0 && hasBillings ? (
+        {isFullyPaid && hasBillings ? (
           <Card className="rounded-md border-emerald-200 bg-emerald-50/60 shadow-none">
             <CardContent className="flex items-start gap-3 p-5 text-emerald-800">
               <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0" />

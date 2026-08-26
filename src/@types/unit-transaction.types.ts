@@ -171,6 +171,8 @@ export interface UnitTransactionDetail {
   unit_transaction_items?: any[];
   isUnitTypeDetailValid?: boolean;
   documentTemplateId?: string | null;
+  unit_transaction_price_usd_total?: number;
+  unit_transaction_price_usd_total_actual?: number;
   pivot: {
     unit_transaction_item_detail_id: number;
   };
