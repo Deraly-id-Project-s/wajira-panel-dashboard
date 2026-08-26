@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/router';
 import { ArrowLeft, ChevronRight, Hash, Tag, Scale, Coins, ShieldCheck, Search, Filter } from 'lucide-react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
+import { PageHeader } from '@/components/ui/page-header';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -250,25 +251,15 @@ export default function TypeUnitDetailPage() {
   return (
     <DashboardLayout>
       <div className="space-y-6">
-        {/* BREADCRUMB HEADER */}
-        <div className="flex items-center gap-2 text-sm text-slate-500">
-          <span className="hover:text-slate-800 cursor-pointer" onClick={handleBack}>
-            Tipe Unit
-          </span>
-          <ChevronRight className="h-4 w-4 shrink-0 text-slate-400" />
-          <span className="font-medium text-slate-800">Detail Tipe Unit</span>
-        </div>
-
-        {/* PAGE HEADER */}
-        <div className="flex items-center gap-4">
-          <Button onClick={handleBack} variant="ghost" size="icon" className="h-10 w-10 rounded-md border border-slate-200 hover:bg-slate-50 cursor-pointer">
-            <ArrowLeft className="h-5 w-5 text-slate-700" />
-          </Button>
-          <div>
-            <h1 className="text-2xl font-bold text-slate-900">Detail Tipe Unit: {typeUnit.name}</h1>
-            <p className="text-sm text-slate-500">Informasi spesifikasi lengkap beserta stok barang unit tipe</p>
-          </div>
-        </div>
+        <PageHeader
+          breadcrumbs={[
+            { label: 'Tipe Unit', onClick: handleBack },
+            { label: 'Detail Tipe Unit' }
+          ]}
+          title={`Detail Tipe Unit: ${typeUnit.name}`}
+          subtitle="Informasi spesifikasi lengkap beserta stok barang unit tipe"
+          onBack={handleBack}
+        />
 
         {/* SINGLE WIDE DETAILED CARD */}
         <Card className="rounded-md border-slate-200 bg-white shadow-sm overflow-hidden">
