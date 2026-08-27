@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { Plus, MoreVertical, Upload } from 'lucide-react';
+import { Plus, MoreVertical, Upload, Download } from 'lucide-react';
 import BaseTable, { ColumnDef } from '@/components/ui/base-table';
 import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
@@ -156,16 +156,16 @@ export function BBNTable({
       headerActions={
         canCreate && (
           <div className="flex flex-wrap items-center gap-2">
+            {onExport && (
+              <Button onClick={onExport} disabled={isExporting} variant="outline" className="w-full sm:w-auto">
+                <Download className="h-4 w-4 mr-2" />
+                {isExporting ? 'Exporting...' : 'Export'}
+              </Button>
+            )}
             {onImport && (
               <Button onClick={onImport} variant="outline" className="w-full sm:w-auto">
                 <Upload className="h-4 w-4 mr-2" />
                 Import
-              </Button>
-            )}
-            {onExport && (
-              <Button onClick={onExport} disabled={isExporting} variant="outline" className="w-full sm:w-auto">
-                <Upload className="h-4 w-4 mr-2" />
-                {isExporting ? 'Exporting...' : 'Export'}
               </Button>
             )}
             <Button onClick={onAdd} className="button-theme-1!">

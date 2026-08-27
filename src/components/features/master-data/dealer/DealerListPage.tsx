@@ -5,23 +5,18 @@ import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { PageHeader } from '@/components/ui/page-header';
 import { Button } from '@/components/ui/button';
 import { useCompany } from '@/contexts/CompanyContext';
-import { DataImportModal } from '../../master-data/DataImportModal';
-import { useImportDealer } from '@/hooks/useDealer';
+import { DealerImportModal } from '@/components/features/dealer/DealerImportModal';
 import { usePermissionGuard } from '@/hooks/usePermissionGuard';
 
 export const DealerListPage = () => {
     const { companyId } = useCompany();
     const [openImport, setOpenImport] = useState(false);
-    const importMutation = useImportDealer();
+
 
     const { hasPermission } = usePermissionGuard();
     const canCreate = hasPermission('master-data:create');
 
-    const handleImport = async (file: File) => {
-        if (canCreate) {
-            await importMutation.mutateAsync({ companyId: companyId ?? '', file });
-        }
-    };
+
 
     return (
         <DashboardLayout>
@@ -49,14 +44,9 @@ export const DealerListPage = () => {
             </div>
 
             {canCreate && (
-                <DataImportModal
+                <DealerImportModal
                     open={openImport}
                     onOpenChange={setOpenImport}
-                    title="Import Data Dealer"
-                    description="Unggah file .xlsx untuk mengimport data dealer."
-                    onImport={handleImport}
-                    isPending={importMutation.isPending}
-                    templateUrl="https://docs.google.com/spreadsheets/d/1wQmTkJSGyt7vb6DA21TdHyYiDD3tLqlXxUwQA88Qb1M/edit?usp=sharing"
                 />
             )}
         </DashboardLayout>

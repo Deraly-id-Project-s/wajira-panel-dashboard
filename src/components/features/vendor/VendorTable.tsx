@@ -1,8 +1,9 @@
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import BaseTable, { ColumnDef } from '@/components/ui/base-table';
+import { VendorImportModal } from '@/components/features/vendor/VendorImportModal';
 import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { Upload } from 'lucide-react';
+import { Upload, Download } from 'lucide-react';
 import type { Vendor } from '@/@types/vendor.types';
 import { ReferenceLink } from '@/components/ui/reference-link';
 import { CopyBox } from '@/components/ui/copy-box';
@@ -17,7 +18,7 @@ interface VendorTableProps {
     onPageChange: (page: number) => void;
     onPerPageChange: (perPage: number) => void;
     onAdd: () => void;
-    onImport?: () => void;
+
     onExport?: () => void;
     onEdit: (vendor: Vendor) => void;
     onDelete: (vendor: Vendor) => void;
@@ -37,7 +38,7 @@ export function VendorTable({
     onPageChange,
     onPerPageChange,
     onAdd,
-    onImport,
+
     onExport,
     onEdit,
     onDelete,
@@ -46,6 +47,8 @@ export function VendorTable({
     canEdit,
     canDelete,
 }: VendorTableProps) {
+    const [isImportOpen, setIsImportOpen] = useState(false);
+
     const columns = useMemo<ColumnDef<Vendor>[]>(
         () => [
             {
@@ -100,6 +103,7 @@ export function VendorTable({
     );
 
     return (
+        <>
         <BaseTable
             data={vendors}
             columns={columns}
@@ -120,14 +124,14 @@ export function VendorTable({
                 <div className="flex flex-wrap items-center gap-2">
                     {onExport && (
                         <Button onClick={onExport} disabled={isExporting} variant="outline" className="w-full sm:w-auto">
-                            <Upload className="h-4 w-4 mr-2" />
+                            <Download className="h-4 w-4 mr-2" />
                             {isExporting ? 'Exporting...' : 'Export'}
                         </Button>
                     )}
                     {canCreate && (
                         <>
-                            {onImport && (
-                                <Button onClick={onImport} variant="outline" className="w-full sm:w-auto">
+                            {canCreate && (
+                                <Button onClick={() => setIsImportOpen(true)} variant="outline" className="w-full sm:w-auto">
                                     <Upload className="h-4 w-4 mr-2" />
                                     Import
                                 </Button>
@@ -141,5 +145,10 @@ export function VendorTable({
                 </div>
             }
         />
+        <VendorImportModal
+            open={isImportOpen}
+            onOpenChange={setIsImportOpen}
+        />
+        </>
     );
 }

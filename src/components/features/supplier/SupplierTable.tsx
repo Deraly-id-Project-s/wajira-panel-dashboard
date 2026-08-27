@@ -1,9 +1,9 @@
 import { useMemo, useState } from 'react';
 import BaseTable, { ColumnDef } from '@/components/ui/base-table';
-import { DataImportModal } from '@/components/features/master-data/DataImportModal';
+import { SupplierImportModal } from '@/components/features/supplier/SupplierImportModal';
 import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { Upload } from 'lucide-react';
+import { Upload, Download } from 'lucide-react';
 import type { Supplier } from '@/@types/supplier.types';
 import { CopyBox } from '@/components/ui/copy-box';
 import { ReferenceLink } from '@/components/ui/reference-link';
@@ -22,8 +22,7 @@ interface SupplierTableProps {
   onAdd: () => void;
   onEdit: (supplier: Supplier) => void;
   onDelete: (supplier: Supplier) => void;
-  onImport: (file: File) => Promise<void>;
-  isImporting?: boolean;
+
   onExport: () => void;
   isExporting?: boolean;
   canCreate: boolean;
@@ -45,8 +44,7 @@ export function SupplierTable({
   onAdd,
   onEdit,
   onDelete,
-  onImport,
-  isImporting = false,
+
   onExport,
   isExporting = false,
   canCreate,
@@ -159,16 +157,16 @@ export function SupplierTable({
       onPageChange={onPageChange}
       headerActions={
         <div className="flex flex-wrap items-center gap-2">
+          <Button onClick={onExport} disabled={isExporting} variant="outline" className="w-full sm:w-auto">
+            <Download className="h-4 w-4 mr-2" />
+            {isExporting ? 'Exporting...' : 'Export'}
+          </Button>
           {canCreate && (
             <Button onClick={() => setIsImportOpen(true)} variant="outline" className="w-full sm:w-auto">
               <Upload className="h-4 w-4 mr-2" />
               Import
             </Button>
           )}
-          <Button onClick={onExport} disabled={isExporting} variant="outline" className="w-full sm:w-auto">
-            <Upload className="h-4 w-4 mr-2" />
-            {isExporting ? 'Exporting...' : 'Export'}
-          </Button>
           {canCreate && (
             <Button onClick={onAdd} className="button-theme-1!">
               <svg className="h-4 w-4 mr-2" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14" /><path d="M12 5v14" /></svg>
@@ -178,13 +176,9 @@ export function SupplierTable({
         </div>
       }
     />
-      <DataImportModal
+      <SupplierImportModal
         open={isImportOpen}
         onOpenChange={setIsImportOpen}
-        entityName="Supplier"
-        onImport={onImport}
-        isPending={isImporting}
-        accept=".xlsx,.xls,.csv,text/csv"
       />
     </>
   );

@@ -340,13 +340,13 @@ export const AccountListPage = () => {
 
             <div className="flex flex-col sm:flex-row items-center gap-2 w-full sm:w-auto">
               <Button onClick={handleExport} variant="outline" className="w-full sm:w-auto">
-                <Upload className="h-4 w-4 mr-2" />
+                <Download className="h-4 w-4 mr-2" />
                 Export
               </Button>
               {canCreate && (
                 <>
                   <Button onClick={() => setOpenImport(true)} variant="outline" className="w-full sm:w-auto">
-                    <Download className="h-4 w-4 mr-2" />
+                    <Upload className="h-4 w-4 mr-2" />
                     Import
                   </Button>
                   <Button onClick={handleAdd} className="button-theme-1!">

@@ -8,7 +8,7 @@ import { DeleteCustomerModal } from '@/components/features/customer/DeleteCustom
 import { Card } from '@/components/ui/card';
 import { useCompany } from '@/contexts/CompanyContext';
 import { useQueryParamsTable } from '@/hooks/useQueryParamsTable';
-import { useCreateCustomer, useCustomers, useDeleteCustomer, useExportCustomer, useImportCustomer, useUpdateCustomer } from '@/hooks/useCustomer';
+import { useCreateCustomer, useCustomers, useDeleteCustomer, useExportCustomer, useUpdateCustomer } from '@/hooks/useCustomer';
 import { ApiResponseError, ApiValidationError } from '@/lib/api/response';
 import { customerSchema, type CustomerFormValues } from '@/scheme/customer.schema';
 import { getCustomerById } from '@/services/customer.service';
@@ -75,7 +75,7 @@ export function CustomerManagementPage() {
   const createCustomer = useCreateCustomer();
   const updateCustomer = useUpdateCustomer();
   const deleteCustomer = useDeleteCustomer();
-  const importCustomer = useImportCustomer();
+
   const exportCustomer = useExportCustomer();
 
   const [isFormOpen, setIsFormOpen] = useState(false);
@@ -181,14 +181,7 @@ export function CustomerManagementPage() {
     }
   };
 
-  const handleImport = async (file: File) => {
-    if (!canCreate) return;
-    if (!companyId) {
-      throw new Error('Company ID tidak ditemukan');
-    }
 
-    await importCustomer.mutateAsync({ companyId, file });
-  };
 
   const handleExport = async () => {
     try {
@@ -236,8 +229,7 @@ export function CustomerManagementPage() {
           onAdd={handleAdd}
           onEdit={handleEdit}
           onDelete={setDeleteTarget}
-          onImport={handleImport}
-          isImporting={importCustomer.isPending}
+
           onExport={handleExport}
           isExporting={exportCustomer.isPending}
           canCreate={canCreate}

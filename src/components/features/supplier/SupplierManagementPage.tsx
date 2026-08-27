@@ -8,7 +8,7 @@ import { DeleteSupplierModal } from '@/components/features/supplier/DeleteSuppli
 import { Card } from '@/components/ui/card';
 import { useCompany } from '@/contexts/CompanyContext';
 import { useQueryParamsTable } from '@/hooks/useQueryParamsTable';
-import { useCreateSupplier, useSuppliers, useDeleteSupplier, useExportSupplier, useImportSupplier, useUpdateSupplier } from '@/hooks/useSupplier';
+import { useCreateSupplier, useSuppliers, useDeleteSupplier, useExportSupplier, useUpdateSupplier } from '@/hooks/useSupplier';
 import { ApiResponseError, ApiValidationError } from '@/lib/api/response';
 import { createSupplierSchema, type CreateSupplierFormValues } from '@/scheme/supplier.schema';
 import { getSupplierById } from '@/services/supplier.service';
@@ -76,7 +76,7 @@ export function SupplierManagementPage() {
   const createSupplier = useCreateSupplier();
   const updateSupplier = useUpdateSupplier();
   const deleteSupplier = useDeleteSupplier();
-  const importSupplier = useImportSupplier();
+
   const exportSupplier = useExportSupplier();
 
   const [isFormOpen, setIsFormOpen] = useState(false);
@@ -189,14 +189,7 @@ export function SupplierManagementPage() {
     }
   };
 
-  const handleImport = async (file: File) => {
-    if (!canCreate) return;
-    if (!companyId) {
-      throw new Error('Company ID tidak ditemukan');
-    }
 
-    await importSupplier.mutateAsync({ companyId, file });
-  };
 
   const handleExport = async () => {
     try {
@@ -244,8 +237,7 @@ export function SupplierManagementPage() {
           onAdd={handleAdd}
           onEdit={handleEdit}
           onDelete={setDeleteTarget}
-          onImport={handleImport}
-          isImporting={importSupplier.isPending}
+
           onExport={handleExport}
           isExporting={exportSupplier.isPending}
           canCreate={canCreate}

@@ -2,7 +2,7 @@ import { useMemo } from 'react';
 import BaseTable, { ColumnDef } from '@/components/ui/base-table';
 import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { Upload } from 'lucide-react';
+import { Upload, Download } from 'lucide-react';
 import type { Asset } from '@/@types/asset.types';
 import { CopyBox } from '@/components/ui/copy-box';
 
@@ -119,7 +119,7 @@ export function AssetTable({
                 <div className="flex flex-wrap items-center gap-2">
                     {onExport && (
                         <Button onClick={onExport} disabled={isExporting} variant="outline" className="w-full sm:w-auto">
-                            <Upload className="h-4 w-4 mr-2" />
+                            <Download className="h-4 w-4 mr-2" />
                             {isExporting ? 'Exporting...' : 'Export'}
                         </Button>
                     )}

@@ -1,8 +1,10 @@
 import { useMemo } from 'react';
 import BaseTable, { ColumnDef } from '@/components/ui/base-table';
+import { DealerImportModal } from '@/components/features/dealer/DealerImportModal';
+import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { Upload } from 'lucide-react';
+import { Upload, Download } from 'lucide-react';
 import type { Dealer } from '@/@types/dealer.types';
 
 interface DealerTableProps {
@@ -15,7 +17,7 @@ interface DealerTableProps {
     onPageChange: (page: number) => void;
     onPerPageChange: (perPage: number) => void;
     onAdd: () => void;
-    onImport?: () => void;
+
     onExport?: () => void;
     onEdit: (dealer: Dealer) => void;
     onDelete: (dealer: Dealer) => void;
@@ -35,7 +37,7 @@ export function DealerTable({
     onPageChange,
     onPerPageChange,
     onAdd,
-    onImport,
+
     onExport,
     onEdit,
     onDelete,
@@ -44,6 +46,8 @@ export function DealerTable({
     canEdit,
     canDelete,
 }: DealerTableProps) {
+    const [isImportOpen, setIsImportOpen] = useState(false);
+
     const columns = useMemo<ColumnDef<Dealer>[]>(
         () => [
             {
@@ -98,6 +102,7 @@ export function DealerTable({
     );
 
     return (
+        <>
         <BaseTable
             data={dealers}
             columns={columns}
@@ -118,14 +123,14 @@ export function DealerTable({
                 <div className="flex flex-wrap items-center gap-2">
                     {onExport && (
                         <Button onClick={onExport} disabled={isExporting} variant="outline" className="w-full sm:w-auto">
-                            <Upload className="h-4 w-4 mr-2" />
+                            <Download className="h-4 w-4 mr-2" />
                             {isExporting ? 'Exporting...' : 'Export'}
                         </Button>
                     )}
                     {canCreate && (
                         <>
-                            {onImport && (
-                                <Button onClick={onImport} variant="outline" className="w-full sm:w-auto">
+                            {canCreate && (
+                                <Button onClick={() => setIsImportOpen(true)} variant="outline" className="w-full sm:w-auto">
                                     <Upload className="h-4 w-4 mr-2" />
                                     Import
                                 </Button>
@@ -139,5 +144,10 @@ export function DealerTable({
                 </div>
             }
         />
+        <DealerImportModal
+            open={isImportOpen}
+            onOpenChange={setIsImportOpen}
+        />
+        </>
     );
 }
