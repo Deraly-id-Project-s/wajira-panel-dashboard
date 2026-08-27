@@ -88,7 +88,7 @@ export default function AddKasHarianDialog({ open, onOpenChange }: Props) {
         e.preventDefault();
         void form.handleSubmit(onSubmit)();
       }}
-      maxWidthClassName="max-w-[520px]"
+      maxWidthClassName="max-w-2xl"
       isSubmitting={isPending}
     >
       <KasHarianForm

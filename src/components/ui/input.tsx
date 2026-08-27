@@ -1,10 +1,15 @@
 import * as React from "react"
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "./tooltip"
 
 import { cn } from "@/lib/utils"
 
-const Input = React.forwardRef<HTMLInputElement, React.ComponentProps<"input">>(
-  ({ className, type, ...props }, ref) => {
-    return (
+export interface InputProps extends React.ComponentProps<"input"> {
+  tooltip?: React.ReactNode;
+}
+
+const Input = React.forwardRef<HTMLInputElement, InputProps>(
+  ({ className, type, tooltip, ...props }, ref) => {
+    const inputElement = (
       <input autoComplete="off"
         type={type}
         data-slot="input"
@@ -18,6 +23,23 @@ const Input = React.forwardRef<HTMLInputElement, React.ComponentProps<"input">>(
         {...props}
       />
     )
+
+    if (tooltip) {
+      return (
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              {inputElement}
+            </TooltipTrigger>
+            <TooltipContent>
+              {tooltip}
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
+      )
+    }
+
+    return inputElement
   }
 )
 Input.displayName = "Input"
