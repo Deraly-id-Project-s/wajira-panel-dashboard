@@ -16,7 +16,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { doEkspedisiEditSchema, type DoEkspedisiEditSchema } from '@/schemas/do-ekspedisi.schema';
+import { doEkspedisiEditSchema, type DoEkspedisiEditSchema } from '@/schema/do-ekspedisi.schema';
 
 export interface DOEkspedisiEditValues extends DoEkspedisiEditSchema {}
 

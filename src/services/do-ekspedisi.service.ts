@@ -308,6 +308,9 @@ const mapDoEkspedisi = (item: any): DoEkspedisi => {
     claimDeductionNominal: toNumber(item?.claim_deduction_nominal),
     startDate: item?.start_date ?? null,
     endDate: item?.end_date ?? null,
+    doOrderListTarifId: Number(item?.do_order_list_tarif_id ?? item?.doOrderListTarifId ?? 0),
+    targetStartDate: item?.target_start_date ?? item?.targetStartDate ?? null,
+    targetEndDate: item?.target_end_date ?? item?.targetEndDate ?? null,
     driverNotes: (item?.driver_notes ?? []).map(mapDriverNote),
     expeditionExpenses: (item?.expedition_expenses ?? []).map(mapExpense),
     expeditionClaims: (item?.expedition_claims ?? []).map(mapClaim),
@@ -361,9 +364,9 @@ const enrichVehiclesWithType = async (items: DoEkspedisi[]): Promise<DoEkspedisi
 const buildMainPayload = (payload: DoEkspedisiPayload, asUpdate = false) => {
   if (!asUpdate) {
     const formData = new FormData();
-    formData.append('date', payload.date);
-    formData.append('vehicle_id', String(payload.vehicle_id));
-    formData.append('driver_id', String(payload.driver_id));
+    if (payload.date != null) formData.append('date', payload.date);
+    if (payload.vehicle_id != null) formData.append('vehicle_id', String(payload.vehicle_id));
+    if (payload.driver_id != null) formData.append('driver_id', String(payload.driver_id));
     if (payload.driver_note != null) {
       formData.append('driver_note', payload.driver_note);
       formData.append('note', payload.driver_note);
@@ -371,13 +374,25 @@ const buildMainPayload = (payload: DoEkspedisiPayload, asUpdate = false) => {
     if (payload.status != null) {
       formData.append('status', payload.status);
     }
+    if (payload.do_order_list_tarif_id != null) {
+      formData.append('do_order_list_tarif_id', String(payload.do_order_list_tarif_id));
+    }
+    if (payload.uj_nominal != null) {
+      formData.append('uj_nominal', String(payload.uj_nominal));
+    }
+    if (payload.target_start_date !== undefined) {
+      formData.append('target_start_date', payload.target_start_date ?? '');
+    }
+    if (payload.target_end_date !== undefined) {
+      formData.append('target_end_date', payload.target_end_date ?? '');
+    }
     return formData;
   }
 
   const params = new URLSearchParams();
-  params.append('date', payload.date);
-  params.append('vehicle_id', String(payload.vehicle_id));
-  params.append('driver_id', String(payload.driver_id));
+  if (payload.date != null) params.append('date', payload.date);
+  if (payload.vehicle_id != null) params.append('vehicle_id', String(payload.vehicle_id));
+  if (payload.driver_id != null) params.append('driver_id', String(payload.driver_id));
   if (payload.driver_note != null) {
     params.append('driver_note', payload.driver_note);
     params.append('note', payload.driver_note);
@@ -390,6 +405,18 @@ const buildMainPayload = (payload: DoEkspedisiPayload, asUpdate = false) => {
   }
   if (payload.end_date !== undefined) {
     params.append('end_date', payload.end_date ?? '');
+  }
+  if (payload.do_order_list_tarif_id != null) {
+    params.append('do_order_list_tarif_id', String(payload.do_order_list_tarif_id));
+  }
+  if (payload.uj_nominal != null) {
+    params.append('uj_nominal', String(payload.uj_nominal));
+  }
+  if (payload.target_start_date !== undefined) {
+    params.append('target_start_date', payload.target_start_date ?? '');
+  }
+  if (payload.target_end_date !== undefined) {
+    params.append('target_end_date', payload.target_end_date ?? '');
   }
   return params;
 };
@@ -752,4 +779,12 @@ export const getAvailableExpeditionClaims = async (driverId: number): Promise<Do
 export const applyExpeditionClaim = async (payload: ApplyExpeditionClaimPayload): Promise<DoEkspedisiClaimApplication> => {
   const response = await apiClient.post<LaravelApiResponse<any>>(`${expeditionClaimPath}/apply`, payload);
   return mapClaimApplication(ensureSuccess(response.data));
+};
+
+export const updateDoExpeditionStatus = async (id: string | number, status: string): Promise<DoEkspedisi> => {
+  const response = await apiClient.put<LaravelApiResponse<any>>(
+    `${expeditionBasePath}/${id}/update-status`,
+    { status },
+  );
+  return mapDoEkspedisi(ensureSuccess(response.data));
 };
