@@ -5,9 +5,9 @@ import { VendorTable } from '@/components/features/vendor/VendorTable';
 import { VendorFormModal, VendorFormData } from '@/components/features/vendor/VendorFormModal';
 import { EditVendorModal } from '@/components/features/vendor/EditVendorModal';
 import { DeleteVendorModal } from '@/components/features/vendor/DeleteVendorModal';
-import { ImportVendorModal } from '@/components/features/vendor/ImportVendorModal';
+
 import { toast } from 'sonner';
-import { useVendors, useCreateVendor, useUpdateVendor, useDeleteVendor, useImportVendor, useExportVendor } from '@/hooks/useVendor';
+import { useVendors, useCreateVendor, useUpdateVendor, useDeleteVendor, useExportVendor } from '@/hooks/useVendor';
 import { useCompany } from '@/contexts/CompanyContext';
 import { usePermissionGuard } from '@/hooks/usePermissionGuard';
 import type { Vendor } from '@/@types/vendor.types';
@@ -29,13 +29,13 @@ export default function VendorPage() {
   const createMutation = useCreateVendor();
   const updateMutation = useUpdateVendor();
   const deleteMutation = useDeleteVendor();
-  const importMutation = useImportVendor();
+
   const exportMutation = useExportVendor();
 
   // Modals state
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
-  const [isImportOpen, setIsImportOpen] = useState(false);
+
   const [selectedVendor, setSelectedVendor] = useState<Vendor | null>(null);
 
   // Handlers
@@ -95,21 +95,7 @@ export default function VendorPage() {
     }
   };
 
-  const handleImport = async (file: File) => {
-    if (!canCreate) return;
-    try {
-      if (!localCompanyId) {
-        toast.error('Company belum dipilih');
-        return;
-      }
-      const companyId = localCompanyId;
-      await importMutation.mutateAsync({ companyId, file });
-      toast.success('Import data vendor berhasil');
-      setIsImportOpen(false);
-    } catch (error: any) {
-      toast.error(error.message || 'Import data vendor gagal');
-    }
-  };
+
 
   const handleExport = async () => {
     try {
@@ -152,7 +138,7 @@ export default function VendorPage() {
             setPerPage(v);
           }}
           onAdd={handleAddClick}
-          onImport={canCreate ? () => setIsImportOpen(true) : undefined}
+
           onExport={handleExport}
           isExporting={exportMutation.isPending}
           onEdit={handleEditClick}
@@ -190,12 +176,7 @@ export default function VendorPage() {
         isDeleting={deleteMutation.isPending}
       />
 
-      <ImportVendorModal
-        isOpen={isImportOpen}
-        onClose={() => setIsImportOpen(false)}
-        onImport={handleImport}
-        isUploading={importMutation.isPending}
-      />
+
     </DashboardLayout>
   );
 }
