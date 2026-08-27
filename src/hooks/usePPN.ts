@@ -15,11 +15,11 @@ export function usePPN(params: PPNFilterParams) {
     queryFn: () => getPPNList(params),
     placeholderData: keepPreviousData,
     retry: 2,
-    staleTime: 5 * 60 * 1000,
+    staleTime: 0,
     gcTime: 30 * 60 * 1000,
-    refetchOnWindowFocus: false,
-    refetchOnReconnect: false,
-    refetchOnMount: false,
+    refetchOnWindowFocus: true,
+    refetchOnReconnect: true,
+    refetchOnMount: 'always',
   });
 }
 

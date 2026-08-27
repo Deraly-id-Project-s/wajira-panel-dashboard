@@ -155,6 +155,9 @@ export default function KasHarianDetailPage() {
   const hasIdr = expectedIdr > 0;
   const hasUsd = expectedUsd > 0;
   const isFullyPaid = (hasIdr ? remainingPaymentIdr <= 0 : true) && (hasUsd ? remainingPaymentUsd <= 0 : true);
+  const isMarkedPaid = cashFlowDetail?.is_paid === true
+    || cashFlowDetail?.is_paid === '1'
+    || cashFlowDetail?.is_paid === 'true';
 
   const totalPaid = useMemo(
     () => financeBillings.reduce((sum, billing) => sum + Number(billing.amount || 0), 0),
@@ -261,13 +264,13 @@ export default function KasHarianDetailPage() {
               <Badge
                 variant="outline"
                 className={cn(
-                  isFullyPaid
+                  isMarkedPaid
                     ? 'border-emerald-200 bg-emerald-50 text-emerald-700'
                     : 'border-amber-200 bg-amber-50 text-amber-700',
                 )}
               >
-                {isFullyPaid ? <CheckCircle2 /> : null}
-                {isFullyPaid ? 'Lunas' : 'Belum Lunas'}
+                {isMarkedPaid ? <CheckCircle2 /> : null}
+                {isMarkedPaid ? 'Lunas' : 'Belum Lunas'}
               </Badge>
             </>
           }
@@ -281,12 +284,12 @@ export default function KasHarianDetailPage() {
                 type="button"
                 className="bg-[#1e3a5f] text-white hover:bg-[#152e4d]"
                 onClick={() => {
-                  setTargetStatus(!isFullyPaid);
+                  setTargetStatus(!isMarkedPaid);
                   setIsToggleOpen(true);
                 }}
                 disabled={remainingPayment !== 0 && !cashFlowDetail.is_valid}
               >
-                {isFullyPaid ? 'Tandai Belum Lunas' : 'Tandai Lunas'}
+                {isMarkedPaid ? 'Tandai Belum Lunas' : 'Tandai Lunas'}
               </Button>
             </>
           }

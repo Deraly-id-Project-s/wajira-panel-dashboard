@@ -213,11 +213,15 @@ export async function deleteCashFlow(id: number | string) {
 }
 
 export async function toggleCashFlowPaymentStatus(id: number | string, isPaid: boolean) {
-  const formData = new FormData();
-  formData.append('_method', 'PUT');
-  formData.append('is_paid', isPaid ? 'true' : 'false');
-
-  const response = await apiClient.post<CashFlowItemResponse>(`${BASE_PATH}/${id}`, formData);
+  const response = await apiClient.put<CashFlowItemResponse>(`${BASE_PATH}/${id}/paid-status`, {
+    is_paid: isPaid ? 'true' : 'false',
+  });
   const item = ensureSuccess(toSuccessPayload(response.data));
   return normalizeCashFlow(item);
+}
+
+export async function syncCashFlowPpnData(id: number | string) {
+  await apiClient.post(`${BASE_PATH}/sync-ppn-data`, {
+    cash_flow_id: id,
+  });
 }

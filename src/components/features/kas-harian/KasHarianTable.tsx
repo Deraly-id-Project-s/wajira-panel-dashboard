@@ -25,6 +25,7 @@ interface Props {
   onPay: (item: KasHarianListItem) => void;
   onEdit: (item: KasHarianListItem) => void;
   onDelete: (item: KasHarianListItem) => void;
+  onSyncPpnData?: (item: KasHarianListItem) => void;
   onToggleStatus?: (item: KasHarianListItem) => void;
   onPageChange: (page: number) => void;
   canEdit?: boolean;
@@ -35,6 +36,11 @@ const formatDate = (value: string) => {
   const parsed = new Date(value);
   return Number.isNaN(parsed.getTime()) ? value : format(parsed, 'dd MMM yyyy');
 };
+
+const hasUnitTransactionBilling = (item: KasHarianListItem) =>
+  item.unitTransactionBillingId !== undefined && item.unitTransactionBillingId !== null;
+
+const canSyncPpnData = (item: KasHarianListItem) => item.is_paid === true && item.isValid === true;
 
 export default function KasHarianTable({
   data,
@@ -48,6 +54,7 @@ export default function KasHarianTable({
   onPay,
   onEdit,
   onDelete,
+  onSyncPpnData,
   onToggleStatus,
   onPageChange,
   canEdit = true,
@@ -99,6 +106,22 @@ export default function KasHarianTable({
             ) : null}
             <CopyBox text={`${item.code || '-'}`} />
           </div>
+        ),
+      },
+      {
+        header: 'STATUS',
+        accessorKey: 'is_paid',
+        sortable: true,
+        alignment: 'center',
+        cell: (item) => (
+          <span className={cn(
+            "px-2.5 py-0.5 rounded-full text-xs font-semibold uppercase tracking-wider",
+            item.is_paid
+              ? "bg-green-50 text-green-700 border border-green-200"
+              : "bg-amber-50 text-amber-700 border border-amber-200"
+          )}>
+            {item.is_paid ? 'Lunas' : 'Belum Lunas'}
+          </span>
         ),
       },
       {
@@ -191,22 +214,6 @@ export default function KasHarianTable({
         ),
       },
       {
-        header: 'STATUS',
-        accessorKey: 'is_paid',
-        sortable: true,
-        alignment: 'center',
-        cell: (item) => (
-          <span className={cn(
-            "px-2.5 py-0.5 rounded-full text-xs font-semibold uppercase tracking-wider",
-            item.is_paid
-              ? "bg-green-50 text-green-700 border border-green-200"
-              : "bg-amber-50 text-amber-700 border border-amber-200"
-          )}>
-            {item.is_paid ? 'Lunas' : 'Belum Lunas'}
-          </span>
-        ),
-      },
-      {
         header: 'Aksi',
         alignment: 'center',
         sticky: 'right',
@@ -245,8 +252,25 @@ export default function KasHarianTable({
                   )}
                 </>
               ) : null}
+              {item.cashFlowId && onSyncPpnData ? (
+                <DropdownMenuItem
+                  onClick={() => {
+                    if (canSyncPpnData(item)) onSyncPpnData(item);
+                  }}
+                  className="rounded-lg px-3 py-2 text-sm text-slate-900 focus:bg-slate-50 cursor-pointer font-medium"
+                  disabled={!canSyncPpnData(item)}
+                >
+                  Sinkronasi PPN
+                </DropdownMenuItem>
+              ) : null}
               {item.source === 'manual' && canDelete ? (
-                <DropdownMenuItem onClick={() => onDelete(item)} className="rounded-lg px-3 py-2 text-sm text-red-600 focus:bg-red-50 focus:text-red-600 cursor-pointer">
+                <DropdownMenuItem
+                  onClick={() => {
+                    if (!hasUnitTransactionBilling(item)) onDelete(item);
+                  }}
+                  className="rounded-lg px-3 py-2 text-sm text-red-600 focus:bg-red-50 focus:text-red-600 cursor-pointer"
+                  disabled={hasUnitTransactionBilling(item)}
+                >
                   Hapus
                 </DropdownMenuItem>
               ) : null}
@@ -255,7 +279,7 @@ export default function KasHarianTable({
         ),
       },
     ],
-    [canDelete, canEdit, onPay, onView, onEdit, onToggleStatus, onDelete]
+    [canDelete, canEdit, onPay, onView, onEdit, onToggleStatus, onSyncPpnData, onDelete]
   );
 
   return (
