@@ -19,6 +19,12 @@ const eslintConfig = [
     },
   },
   {
+    files: ["**/*.js", "**/*.mjs", "**/*.cjs"],
+    rules: {
+      "@typescript-eslint/no-require-imports": "off",
+    },
+  },
+  {
     ignores: [
       "node_modules/**",
       ".next/**",
@@ -26,9 +32,6 @@ const eslintConfig = [
       "build/**",
       "next-env.d.ts",
       "scripts/**",
-      "fix-pagination.js",
-      "patch.js",
-      "resolve_conflicts.js",
     ],
   },
 ];

@@ -1,5 +1,5 @@
 import fs from 'fs';
-import cp from child_process;
+import cp from 'child_process';
 
 const statusOutput = cp.execSync('git status --porcelain').toString();
 const unmergedFiles = statusOutput.split('\n')
