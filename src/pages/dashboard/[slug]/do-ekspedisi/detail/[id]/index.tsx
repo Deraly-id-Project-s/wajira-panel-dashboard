@@ -7,7 +7,7 @@ import { DOEkspedisiDetailCard } from '@/components/features/do-ekspedisi/DOEksp
 // import { DOEkspedisiDetailTable } from '@/components/features/do-ekspedisi/DOEkspedisiDetailTable';
 import { DeleteDOEkspedisiModal } from '@/components/features/do-ekspedisi/DeleteDOEkspedisiModal';
 import type { DoEkspedisiItem } from '@/@types/do-ekspedisi.types';
-import { useDeleteDoEkspedisiItem, useDoEkspedisiDetail, useUpdateDoEkspedisi } from '@/hooks/useDoEkspedisi';
+import { useDeleteDoEkspedisiItem, useDoEkspedisiDetail, useUpdateDoEkspedisi, useUpdateDoExpeditionStatus } from '@/hooks/useDoEkspedisi';
 import { useProcessDoExpedition } from '@/hooks/useDoInvoice';
 import { getApiErrorMessage } from '@/utils/apiErrorHandler';
 import { LoadingState } from '@/components/ui/loading-state';
@@ -17,6 +17,16 @@ import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import { formatDate } from '@/lib/utils/format';
 import { DOEkspedisiRelatedData } from '@/components/features/do-ekspedisi/DOEkspedisiRelatedData';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 
 // pagination helper removed (unused in print/detail view)
 
@@ -60,10 +70,12 @@ export default function DetailDOEkspedisiPage() {
 
   const [selectedItem, setSelectedItem] = React.useState<DoEkspedisiItem | null>(null);
   const [deleteOpen, setDeleteOpen] = React.useState(false);
+  const [statusConfirmOpen, setStatusConfirmOpen] = React.useState(false);
 
   const detailQuery = useDoEkspedisiDetail(id ? String(id) : null);
   const processExpeditionMutation = useProcessDoExpedition();
   const updateMutation = useUpdateDoEkspedisi();
+  const updateStatusMutation = useUpdateDoExpeditionStatus();
   const deleteItemMutation = useDeleteDoEkspedisiItem();
 
   const updateStatus = async (status: 'draft' | 'process' | 'done') => {
@@ -217,12 +229,12 @@ export default function DetailDOEkspedisiPage() {
             {detailQuery.data?.status === 'draft' ? (
               <Button
                 type="button"
-                disabled={updateMutation.isPending || !detailQuery.data.driverId || !detailQuery.data.vehicleId}
-                onClick={() => void updateStatus('process')}
+                disabled={updateStatusMutation.isPending || !detailQuery.data.driverId || !detailQuery.data.vehicleId}
+                onClick={() => setStatusConfirmOpen(true)}
                 className="bg-orange-600 hover:bg-orange-700 text-white min-w-[120px] cursor-pointer font-medium"
               >
                 <Play className="h-4 w-4" />
-                {updateMutation.isPending ? 'Memproses...' : 'Serahkan ke Driver'}
+                {updateStatusMutation.isPending ? 'Memproses...' : 'Serahkan ke Driver'}
               </Button>
             ) : detailQuery.data?.status === 'process' ? (
               <>
@@ -246,7 +258,7 @@ export default function DetailDOEkspedisiPage() {
             {detailQuery.data?.status === 'draft' && (
               <Button
                 variant="outline"
-                onClick={() => slug && id && void router.push(`/dashboard/${slug}/do-ekspedisi/${id}/edit`)}
+                onClick={() => slug && id && void router.push(`/dashboard/${slug}/do-ekspedisi/form/${id}`)}
                 className="border-slate-200 text-slate-700 hover:bg-slate-50 font-medium"
               >
                 <Pencil className="h-4 w-4" />
@@ -372,6 +384,36 @@ export default function DetailDOEkspedisiPage() {
         isDeleting={deleteItemMutation.isPending}
         itemName={selectedItem?.customerName}
       />
+
+      <AlertDialog open={statusConfirmOpen} onOpenChange={setStatusConfirmOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Serahkan ke Driver?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Anda akan menyerahkan DO Ekspedisi ini ke driver. Status akan berubah menjadi <span className="font-semibold text-amber-600">Tertunda</span>. Pastikan driver dan kendaraan sudah benar sebelum melanjutkan.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={updateStatusMutation.isPending}>Batal</AlertDialogCancel>
+            <AlertDialogAction
+              disabled={updateStatusMutation.isPending}
+              className="bg-orange-600 hover:bg-orange-700 text-white"
+              onClick={async () => {
+                if (!id) return;
+                try {
+                  await updateStatusMutation.mutateAsync({ id: String(id), status: 'pending' });
+                  toast.success('DO Ekspedisi berhasil diserahkan ke driver');
+                  setStatusConfirmOpen(false);
+                } catch (error) {
+                  toast.error(getApiErrorMessage(error));
+                }
+              }}
+            >
+              {updateStatusMutation.isPending ? 'Memproses...' : 'Ya, Serahkan'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </DashboardLayout>
   );
 }

@@ -34,6 +34,11 @@ export function SalesDetailCards({ data, billingHistories = [], unitType }: Prop
   const debetBankIdr = billingHistories.reduce((sum, item) => sum + getHistoryBcaIdrAmount(item), 0);
   const debetCashIdr = billingHistories.reduce((sum, item) => sum + getHistoryCashIdrAmount(item), 0);
 
+  const totalUsd = Number(data.unit_transaction_price_usd_total_actual && Number(data.unit_transaction_price_usd_total_actual) > 0
+    ? data.unit_transaction_price_usd_total_actual
+    : (data.unit_transaction_price_usd_total ?? data.price_usd ?? 0));
+  const kurangBayarUsd = Math.max(0, totalUsd - debetBankUsd);
+
   return (
     <div className="grid gap-4 md:grid-cols-3">
       {/* Card 1: Informasi Penjualan */}
@@ -108,12 +113,19 @@ export function SalesDetailCards({ data, billingHistories = [], unitType }: Prop
               <span className="font-bold uppercase text-sm">TOTAL PENJUALAN</span>
               <span className="text-sm font-bold">{currenciesFormat('idr', totalJual)}</span>
             </div>
-            {data.price_usd ? (
-              <div className="flex items-center justify-between text-xs text-amber-800 bg-amber-50/50 px-2 py-1 rounded border border-amber-100 mt-2">
-                <span className="font-medium">Total Harga (USD)</span>
-                <span className="font-bold">{currenciesFormat('usd', data.price_usd)}</span>
-              </div>
-            ) : null}
+            {totalUsd > 0 && (
+              <>
+                <div className="border-t border-slate-100 my-1"></div>
+                <div className="flex items-center justify-between text-slate-900">
+                  <span className="font-bold uppercase text-sm">TOTAL USD</span>
+                  <span className="text-sm font-bold text-amber-600">{currenciesFormat('usd', totalUsd)}</span>
+                </div>
+                <div className="flex items-center justify-between text-xs text-amber-800 bg-amber-50/50 px-2 py-1 rounded border border-amber-100 mt-2">
+                  <span className="font-medium">Total Harga (USD)</span>
+                  <span className="font-bold">{currenciesFormat('usd', totalUsd)}</span>
+                </div>
+              </>
+            )}
             {data.price_per_unit_usd ? (
               <div className="flex items-center justify-between text-xs text-amber-800 bg-amber-50/50 px-2 py-1 rounded border border-amber-100">
                 <span className="font-medium">Harga Satuan (USD)</span>
@@ -139,6 +151,12 @@ export function SalesDetailCards({ data, billingHistories = [], unitType }: Prop
               <span>Debet Bank USD</span>
               <span className="text-sm font-semibold text-slate-900">{currenciesFormat('usd', debetBankUsd)}</span>
             </div>
+            {totalUsd > 0 && (
+              <div className="flex items-center justify-between text-amber-800 bg-amber-50/30 px-2 py-0.5 rounded border border-amber-100/50">
+                <span>Kurang Bayar USD</span>
+                <span className="font-semibold">{currenciesFormat('usd', kurangBayarUsd)}</span>
+              </div>
+            )}
             <div className="flex items-center justify-between">
               <span>Debet Bank IDR</span>
               <span className="text-sm font-semibold text-slate-900">{currenciesFormat('idr', debetBankIdr)}</span>

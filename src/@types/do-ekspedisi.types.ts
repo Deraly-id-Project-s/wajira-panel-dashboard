@@ -134,6 +134,9 @@ export interface DoEkspedisi {
   claimDeductionNominal: number;
   startDate?: string | null;
   endDate?: string | null;
+  doOrderListTarifId: number;
+  targetStartDate?: string | null;
+  targetEndDate?: string | null;
   driverNotes: DoEkspedisiDriverNote[];
   expeditionExpenses: DoEkspedisiExpense[];
   expeditionClaims: DoEkspedisiClaim[];
@@ -230,13 +233,17 @@ export interface DoEkspedisiItemDestinationListParams {
 }
 
 export interface DoEkspedisiPayload {
-  date: string;
-  vehicle_id: string | number;
-  driver_id: string | number;
+  date?: string;
+  vehicle_id?: string | number;
+  driver_id?: string | number;
   driver_note?: string;
   status?: string;
   start_date?: string | null;
   end_date?: string | null;
+  do_order_list_tarif_id?: number;
+  uj_nominal?: number;
+  target_start_date?: string | null;
+  target_end_date?: string | null;
 }
 
 export interface DoEkspedisiItemPayload {

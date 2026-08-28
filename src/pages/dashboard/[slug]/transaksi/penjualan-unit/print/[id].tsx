@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { ChevronLeft, Printer } from 'lucide-react';
+import { ChevronLeft, Edit, Printer } from 'lucide-react';
 import { useRouter } from 'next/router';
 import { useReactToPrint } from 'react-to-print';
 import { fetchUserCompanies } from '@/services/company.service';
@@ -12,10 +12,13 @@ import SalesPrintDocument from '@/components/features/sales/SalesPrintDocument';
 import { Button } from '@/components/ui/button';
 import { LoadingState } from '@/components/ui/loading-state';
 import { useDocumentTemplate } from '@/hooks/useDocumentTemplate';
+import { usePermissionGuard } from '@/hooks/usePermissionGuard';
 
 export default function SalesPrintPage() {
   const router = useRouter();
   const { companyId } = useCompany();
+  const { hasPermission } = usePermissionGuard();
+  const canEdit = hasPermission('transaction:edit');
   const id = router.isReady && typeof router.query.id === 'string' ? router.query.id : '';
   const slug = typeof router.query.slug === 'string' ? router.query.slug : '';
   const [companyName, setCompanyName] = React.useState('WAJIRA JAGRATARA TRANSINDO');
@@ -132,6 +135,16 @@ export default function SalesPrintPage() {
             </div>
           </div>
           <div className="flex gap-2">
+            <Button
+              type="button"
+              variant="outline"
+              className="w-full sm:w-auto"
+              disabled={!canEdit}
+              onClick={() => router.push(`/dashboard/${slug}/transaksi/penjualan-unit/edit/${id}`)}
+            >
+              <Edit className="h-4 w-4" />
+              Edit Data
+            </Button>
             <Button type="button" onClick={() => handlePrint()} variant="outline" className="w-full sm:w-auto">
               <Printer className="h-4 w-4" />
               Print
