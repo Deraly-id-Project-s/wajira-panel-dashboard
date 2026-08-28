@@ -124,6 +124,8 @@ export interface CreatePurchaseUnitRequest {
   dppTaxVersionId: string;
   ppnTaxVersionId: string;
   biayaLain: number;
+  priceUsd?: number;
+  pricePerUnitUsd?: number;
 }
 
 export interface PurchaseListResponse {

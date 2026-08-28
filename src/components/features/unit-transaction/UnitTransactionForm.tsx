@@ -17,7 +17,7 @@ import { useUnitFormula } from '@/hooks/useUnitFormula';
 import { useTaxDefault } from '@/hooks/useTax';
 import RequiredMark from '@/components/ui/required-mark';
 import { TypeUnitFormModal } from '@/components/features/type-unit/TypeUnitFormModal';
-import { unitTransactionSchema, type UnitTransactionFormValues } from './unit-transaction.schema';
+import { unitTransactionSchema, type UnitTransactionFormValues } from '@/scheme/unit-transaction.schema';
 
 export interface UnitTransactionFormProps {
   type: 'purchase' | 'sales';
@@ -99,6 +99,14 @@ export function UnitTransactionForm({
   const bbnPrice = Number(form.watch('bbnPrice') ?? 0);
   const expeditionFee = Number(form.watch('expeditionFee') ?? 0);
   const otherFee = Number(form.watch('otherFee') ?? 0);
+  const pricePerUnitUsd = form.watch('pricePerUnitUsd');
+
+  useEffect(() => {
+    if (isUsd) {
+      const calculated = Number(pricePerUnitUsd ?? 0) * Number(qty ?? 0);
+      form.setValue('priceUsd', calculated, { shouldDirty: true, shouldValidate: true });
+    }
+  }, [pricePerUnitUsd, qty, isUsd, form]);
 
   const { formula } = useUnitFormula({
     qty_total: qty,
@@ -299,10 +307,10 @@ export function UnitTransactionForm({
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6 p-4 rounded-md border border-amber-200 bg-amber-50/30 animate-in fade-in slide-in-from-top-2 duration-200">
                   <FormField
                     control={form.control}
-                    name="priceUsd"
+                    name="pricePerUnitUsd"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-sm font-medium text-amber-900">Total Harga (USD)</FormLabel>
+                        <FormLabel className="text-sm font-medium text-amber-900">Harga Satuan (USD)</FormLabel>
                         <FormControl>
                           <MoneyInput
                             currency="USD"
@@ -322,10 +330,10 @@ export function UnitTransactionForm({
 
                   <FormField
                     control={form.control}
-                    name="pricePerUnitUsd"
+                    name="priceUsd"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-sm font-medium text-amber-900">Harga Satuan (USD)</FormLabel>
+                        <FormLabel className="text-sm font-medium text-amber-900">Total Harga (USD)</FormLabel>
                         <FormControl>
                           <MoneyInput
                             currency="USD"
@@ -333,7 +341,7 @@ export function UnitTransactionForm({
                             name={field.name}
                             value={field.value ?? 0}
                             onChangeValue={(val) => field.onChange(val === 0 ? undefined : val)}
-                            disabled={readOnly}
+                            disabled={true}
                             onBlur={field.onBlur}
                             className="border-amber-200 focus:border-amber-300 focus:ring-amber-200 bg-white"
                           />

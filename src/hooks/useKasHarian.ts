@@ -1,6 +1,6 @@
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type { CashFlowFilterParams, CashFlowPayload } from '@/@types/kas-harian.types';
-import { createCashFlow, deleteCashFlow, fetchCashFlow, fetchCashFlowDetail, updateCashFlow, toggleCashFlowPaymentStatus } from '@/services/cashFlowService';
+import { createCashFlow, deleteCashFlow, fetchCashFlow, fetchCashFlowDetail, updateCashFlow, toggleCashFlowPaymentStatus, syncCashFlowPpnData } from '@/services/cashFlowService';
 
 const CASH_FLOW_KEY = 'cash-flow';
 
@@ -22,13 +22,13 @@ export function useKasHarian(params: CashFlowFilterParams, options?: CashFlowQue
     enabled: options?.enabled ?? true,
     placeholderData: keepPreviousData,
     retry: 2,
-    staleTime: 5 * 60 * 1000,
+    staleTime: 0,
     gcTime: 30 * 60 * 1000,
     refetchInterval: options?.refetchInterval ?? false,
     refetchIntervalInBackground: true,
     refetchOnWindowFocus: true,
     refetchOnReconnect: true,
-    refetchOnMount: true,
+    refetchOnMount: 'always',
   });
 }
 
@@ -38,12 +38,12 @@ export function useKasHarianDetail(id?: number, options?: CashFlowQueryOptions) 
     queryFn: () => fetchCashFlowDetail(id as number),
     enabled: (options?.enabled ?? true) && typeof id === 'number' && Number.isFinite(id),
     retry: 1,
-    staleTime: 5 * 60 * 1000,
+    staleTime: 0,
     refetchInterval: options?.refetchInterval ?? false,
     refetchIntervalInBackground: true,
     refetchOnWindowFocus: true,
     refetchOnReconnect: true,
-    refetchOnMount: true,
+    refetchOnMount: 'always',
   });
 }
 
@@ -89,6 +89,18 @@ export function useToggleKasHarianPaymentStatus() {
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: cashFlowKeys.all });
       queryClient.invalidateQueries({ queryKey: cashFlowKeys.detail(variables.id) });
+    },
+  });
+}
+
+export function useSyncKasHarianPpnData() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (id: number | string) => syncCashFlowPpnData(id),
+    onSuccess: (_, id) => {
+      queryClient.invalidateQueries({ queryKey: cashFlowKeys.all });
+      queryClient.invalidateQueries({ queryKey: cashFlowKeys.detail(id) });
     },
   });
 }

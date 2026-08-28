@@ -1,7 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
-import { format } from 'date-fns';
-import { id as idLocale } from 'date-fns/locale/id';
-import { Wallet, Trash, Search, Upload, CheckCircle2 } from 'lucide-react';
+import { Wallet, Trash, Upload, CheckCircle2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -10,7 +8,6 @@ import { UnitBilling, UnitBillingHistory } from '@/@types/unit-billing.types';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { MoneyInput } from '@/components/ui/money-input';
-import { Separator } from '@/components/ui/separator';
 import { currenciesFormat } from '@/components/ui/currenciesFormat';
 import { TextTruncate } from '@/components/ui/text-truncate';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
@@ -49,10 +46,13 @@ const paymentSchema = z.object({
 export type PaymentFormData = z.input<typeof paymentSchema>;
 
 interface Props {
-    salesCode: string;
+    type: 'purchase' | 'sales';
+    code: string;
     totalTagihan: number;
     totalPpn: number;
-    totalDpp: number;
+    totalDpp?: number;
+    totalTagihanUsd?: number;
+    totalTagihanUsdActual?: number;
     billing: UnitBilling | null;
     histories: UnitBillingHistory[];
     onSubmitPayment: (data: PaymentFormData) => Promise<void>;
@@ -63,11 +63,14 @@ interface Props {
     validationMessage?: string;
 }
 
-export function SalesPaymentForm({
-    salesCode,
+export function UnitTransactionPaymentForm({
+    type,
+    code,
     totalTagihan,
     totalPpn,
     totalDpp,
+    totalTagihanUsd,
+    totalTagihanUsdActual,
     billing,
     histories,
     onSubmitPayment,
@@ -78,6 +81,7 @@ export function SalesPaymentForm({
     validationMessage,
 }: Props) {
     const [deleteId, setDeleteId] = useState<string | number | null>(null);
+    const isPurchase = type === 'purchase';
 
     const form = useForm<PaymentFormData>({
         resolver: zodResolver(paymentSchema),
@@ -114,7 +118,14 @@ export function SalesPaymentForm({
 
     const totalPaidUsdFromHistory = useMemo(() => (histories ?? []).reduce((acc, item) => acc + getHistoryUsdAmount(item), 0), [histories]);
     const projectedTotalPaidUsd = useMemo(() => totalPaidUsdFromHistory + paymentBca, [totalPaidUsdFromHistory, paymentBca]);
-    const projectedRemainingUsd = useMemo(() => Math.max(0, Number(billing?.remaining_payment_usd || 0) - paymentBca), [billing?.remaining_payment_usd, paymentBca]);
+
+    const totalTagihanUsdVal = totalTagihanUsdActual && totalTagihanUsdActual > 0 ? totalTagihanUsdActual : (totalTagihanUsd ?? 0);
+    const billingRemainingUsd = Number(billing?.remaining_payment_usd ?? 0);
+    const remainingPaymentUsd = billing?.is_paid ? 0 : billingRemainingUsd > 0 ? billingRemainingUsd : Math.max(0, totalTagihanUsdVal - totalPaidUsdFromHistory);
+
+    const projectedRemainingUsd = useMemo(() => Math.max(0, remainingPaymentUsd - paymentBca), [remainingPaymentUsd, paymentBca]);
+
+    const displayDpp = totalDpp !== undefined ? totalDpp : Math.max(0, totalTagihan - totalPpn);
 
     useEffect(() => {
         const autoIsPaid = projectedTotalPaid >= totalTagihan && totalTagihan > 0;
@@ -140,8 +151,6 @@ export function SalesPaymentForm({
             toast.error('Minimal salah satu nominal pembayaran harus lebih dari 0.');
             return;
         }
-
-        const remainingPaymentUsd = Number(billing?.remaining_payment_usd || 0);
 
         if (remainingPaymentUsd > 0 && bcaPaymentUsd > remainingPaymentUsd) {
             form.setError('bcaPayment', { type: 'manual', message: 'Nominal USD tidak boleh melebihi sisa tagihan USD' });
@@ -177,7 +186,7 @@ export function SalesPaymentForm({
                 header: 'Tanggal',
                 accessorKey: 'payment_at',
                 sortable: true,
-                cell: (item) => item.payment_at ? formatDate(item.payment_at) : '-'
+                cell: (item) => item.payment_at ? formatDate(item.payment_at) : '-',
             },
             {
                 header: 'BCA USD',
@@ -262,8 +271,8 @@ export function SalesPaymentForm({
                     </div>
                     <div className="grid grid-cols-1 gap-4 p-4 md:grid-cols-3">
                         <div className="space-y-2">
-                            <p className="text-sm font-medium">Total Beli</p>
-                            <Input value={currenciesFormat('idr', totalDpp)} disabled />
+                            <p className="text-sm font-medium">{isPurchase ? 'Total Beli' : 'Total Jual'}</p>
+                            <Input value={currenciesFormat('idr', displayDpp)} disabled />
                         </div>
                         <div className="space-y-2">
                             <p className="text-sm font-medium">Total PPN</p>
@@ -326,7 +335,6 @@ export function SalesPaymentForm({
                 {/* ── Section: Pembayaran ── */}
                 <Form {...form}>
                     <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
-
                         <div className="rounded-lg border">
                             <div className="border-b px-4 py-3">
                                 <h3 className="text-sm font-semibold text-muted-foreground">Riwayat Pembayaran</h3>
@@ -354,9 +362,7 @@ export function SalesPaymentForm({
                                                     value={Number(field.value) || 0}
                                                     disabled={billing && billingRemaining === 0 || isPaidAndValid}
                                                     onChangeValue={(val) => {
-                                                        const maxBca = billing?.remaining_payment_usd !== undefined && billing?.remaining_payment_usd !== null
-                                                            ? Math.max(0, Number(billing.remaining_payment_usd))
-                                                            : undefined;
+                                                        const maxBca = remainingPaymentUsd;
                                                         const capped = parseAndClampMoneyInput(val, maxBca, 'USD');
                                                         field.onChange(capped);
                                                     }}
@@ -452,7 +458,7 @@ export function SalesPaymentForm({
                                                         isDisabled && "opacity-60 cursor-not-allowed pointer-events-none",
                                                         file
                                                             ? "border-emerald-300 bg-emerald-50/50 text-emerald-700 hover:border-emerald-400 hover:bg-emerald-50"
-                                                            : "border-slate-300 bg-slate-50 text-slate-600 hover:border-slate-400 hover:bg-slate-100"
+                                                             : "border-slate-300 bg-slate-50 text-slate-600 hover:border-slate-400 hover:bg-slate-100"
                                                     )}>
                                                         {file ? (
                                                             <>
@@ -546,7 +552,7 @@ export function SalesPaymentForm({
                                     onDeleteHistory(deleteId);
                                     setDeleteId(null);
                                 }
-                            }}
+                             }}
                             disabled={!!billing?.is_paid}
                             className="rounded-md bg-red-600 hover:bg-red-700"
                         >

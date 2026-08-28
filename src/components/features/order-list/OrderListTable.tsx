@@ -79,7 +79,7 @@ export const OrderListTable = React.memo(function OrderListTable({
         header: 'KODE ORDER',
         accessorKey: 'code',
         sortable: true,
-        cell: (item) => <CopyBox text={item.code || '-'} />
+        cell: (item) => <CopyBox text={item.code || '-'} href={`/dashboard/${slugStr}/administrasi/order-list/detail/${item.id}`} />
       },
       {
         header: 'STATUS',
@@ -126,6 +126,28 @@ export const OrderListTable = React.memo(function OrderListTable({
         accessorKey: 'customer.name',
         sortable: true,
         cell: (item) => item?.customer?.name ? <ReferenceLink href={`/dashboard/${slugStr}/master/customer?search=${item?.customer}`}>{item.customer?.name}</ReferenceLink> : '-',
+      },
+      {
+        header: 'DRIVER',
+        accessorKey: 'tarifs',
+        cell: (item) => {
+          const primaryTarif = getPrimaryTarifItem(item);
+          return (
+            <span className="text-sm text-gray-700">
+              {item.tarifs.length > 1 ? (
+                <span className="flex flex-col gap-0.5">
+                  {item.tarifs.map((t, idx) => (
+                    <span key={t.id || idx} className="block whitespace-nowrap text-xs text-left">
+                      {idx + 1}. {t.driver?.name || '-'}
+                    </span>
+                  ))}
+                </span>
+              ) : (
+                primaryTarif?.driver?.name || '-'
+              )}
+            </span>
+          );
+        },
       },
       {
         header: 'LOADING IN',

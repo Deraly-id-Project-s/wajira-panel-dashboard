@@ -98,6 +98,8 @@ type UnitTransactionApiModel = {
     state?: string;
   };
   is_unit_type_detail_valid?: boolean | string | number;
+  unit_transaction_price_usd_total?: string | number;
+  unit_transaction_price_usd_total_actual?: string | number;
 };
 
 type UnitTransactionItemListApiModel = {
@@ -618,6 +620,8 @@ const mapUnitTransactionDetail = (item: UnitTransactionApiModel): UnitTransactio
     unit_transaction_items: item.unit_transaction_items,
     isUnitTypeDetailValid: item.is_unit_type_detail_valid === true || item.is_unit_type_detail_valid === 1 || String(item.is_unit_type_detail_valid) === 'true',
     documentTemplateId: item.document_template_id != null ? String(item.document_template_id) : item.document_template?.id != null ? String(item.document_template.id) : item.document_template?.uuid ?? null,
+    unit_transaction_price_usd_total: item.unit_transaction_price_usd_total !== undefined ? toNumber(item.unit_transaction_price_usd_total) : undefined,
+    unit_transaction_price_usd_total_actual: item.unit_transaction_price_usd_total_actual !== undefined ? toNumber(item.unit_transaction_price_usd_total_actual) : undefined,
   };
 };
 

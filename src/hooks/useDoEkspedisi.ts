@@ -31,6 +31,7 @@ import {
   lookupDoEkspedisiDrivers,
   lookupDoEkspedisiVehicles,
   updateDoEkspedisi,
+  updateDoExpeditionStatus,
   updateDoEkspedisiItem,
   updateDoEkspedisiItemDestination,
   updateDoDetailResource,
@@ -270,6 +271,18 @@ export function useApplyExpeditionClaim(expeditionId: string | number) {
       queryClient.invalidateQueries({ queryKey: ['do-ekspedisi'] });
       queryClient.invalidateQueries({ queryKey: ['do-ekspedisi', 'detail', String(expeditionId)] });
       queryClient.invalidateQueries({ queryKey: ['expedition-claim', 'available', payload.driver_id] });
+    },
+  });
+}
+
+export function useUpdateDoExpeditionStatus() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ id, status }: { id: string | number; status: string }) => updateDoExpeditionStatus(id, status),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['do-ekspedisi'] });
+      queryClient.invalidateQueries({ queryKey: ['do-ekspedisi', 'detail', String(variables.id)] });
     },
   });
 }

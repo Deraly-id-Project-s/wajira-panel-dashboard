@@ -14,8 +14,9 @@ import DeleteKasHarianDialog from '@/components/features/kas-harian/DeleteKasHar
 import TogglePaymentStatusDialog from '@/components/features/kas-harian/TogglePaymentStatusDialog';
 import KasHarianTable from '@/components/features/kas-harian/KasHarianTable';
 import { useCompany } from '@/contexts/CompanyContext';
-import { useKasHarian } from '@/hooks/useKasHarian';
+import { useKasHarian, useSyncKasHarianPpnData } from '@/hooks/useKasHarian';
 import { usePermissionGuard } from '@/hooks/usePermissionGuard';
+import { getApiErrorMessage } from '@/utils/apiErrorHandler';
 
 const LIVE_UPDATE_INTERVAL = 5000;
 
@@ -58,6 +59,7 @@ export default function KasHarianPage() {
   const [isToggleOpen, setIsToggleOpen] = useState(false);
   const [targetStatus, setTargetStatus] = useState(false);
   const [selectedItem, setSelectedItem] = useState<KasHarian | null>(null);
+  const syncPpnMutation = useSyncKasHarianPpnData();
 
   useEffect(() => {
     const timeout = window.setTimeout(() => {
@@ -156,6 +158,17 @@ export default function KasHarianPage() {
     setIsToggleOpen(true);
   };
 
+  const handleSyncPpnData = async (item: KasHarianListItem) => {
+    if (!item.cashFlowId || syncPpnMutation.isPending) return;
+
+    try {
+      await syncPpnMutation.mutateAsync(item.cashFlowId);
+      toast.success('Data PPN berhasil disinkronkan');
+    } catch (error) {
+      toast.error(getApiErrorMessage(error) || 'Gagal menyinkronkan data PPN');
+    }
+  };
+
   const pushTo = (item: KasHarianListItem) => {
     const targetId = item.cashFlowId || item.id;
     if (!targetId) return;
@@ -230,6 +243,7 @@ export default function KasHarianPage() {
             onPay={pushTo}
             onEdit={handleEdit}
             onDelete={handleDelete}
+            onSyncPpnData={(item) => void handleSyncPpnData(item)}
             onToggleStatus={handleToggleStatus}
             onPageChange={setPage}
             canEdit={canEdit}

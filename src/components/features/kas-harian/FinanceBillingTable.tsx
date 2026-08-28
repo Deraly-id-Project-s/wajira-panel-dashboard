@@ -213,13 +213,29 @@ export default function FinanceBillingTable({ financeBillings, cashFlowDetail, c
   const cashFlowAmount = cashFlowCurrency === 'usd'
     ? Number(cashFlowDetail.debet_usd || cashFlowDetail.credit_usd || 0)
     : Number(cashFlowDetail.amount || cashFlowDetail.debet || cashFlowDetail.credit || grandTotal || 0);
-  const editingAmount = useMemo(() => {
-    if (!editingId) return 0;
-    return Number(financeBillings.find((fb) => fb.id === editingId)?.amount || 0);
-  }, [editingId, financeBillings]);
-  const maxPaymentAmount = Math.max(0, cashFlowAmount - totalPaid + editingAmount);
-  const hasPaymentLimit = cashFlowAmount > 0;
-  const remainingPayment = Number(cashFlowDetail.remaining_payment ?? Math.max(0, grandTotal - totalPaid));
+
+  const expectedIdr = Number(cashFlowDetail.debet) > 0 ? Number(cashFlowDetail.debet) : Number(cashFlowDetail.credit ?? 0);
+  const totalPaidIdr = useMemo(
+    () => financeBillings.filter(fb => !fb.cash?.code?.toLowerCase().includes('usd')).reduce((sum, fb) => sum + Number(fb.amount || 0), 0),
+    [financeBillings]
+  );
+  const remainingPaymentIdr = Math.max(0, expectedIdr - totalPaidIdr);
+
+  const expectedUsd = Number(cashFlowDetail.debet_usd) > 0 ? Number(cashFlowDetail.debet_usd) : Number(cashFlowDetail.credit_usd ?? 0);
+  const totalPaidUsd = useMemo(
+    () => financeBillings.filter(fb => fb.cash?.code?.toLowerCase().includes('usd')).reduce((sum, fb) => sum + Number(fb.amount || 0), 0),
+    [financeBillings]
+  );
+  const remainingPaymentUsd = Math.max(0, expectedUsd - totalPaidUsd);
+
+  const hasIdr = expectedIdr > 0;
+  const hasUsd = expectedUsd > 0;
+  const isFullyPaid = (hasIdr ? remainingPaymentIdr <= 0 : true) && (hasUsd ? remainingPaymentUsd <= 0 : true);
+
+  const editingItem = useMemo(() => financeBillings.find((fb) => fb.id === editingId) || null, [editingId, financeBillings]);
+  const editingAmount = Number(editingItem?.amount || 0);
+  const editingIsUsd = editingItem?.cash?.code?.toLowerCase().includes('usd');
+
   const selectedKas = useMemo(
     () => kasOptions.find((kas) => Number(kas.id) === Number(form.cash_id)) ?? null,
     [form.cash_id, kasOptions],
@@ -227,6 +243,22 @@ export default function FinanceBillingTable({ financeBillings, cashFlowDetail, c
   const selectedCurrency = selectedKas?.code?.toLowerCase().endsWith('_usd') ? 'usd' : 'idr';
   const selectedCurrencySymbol = selectedCurrency === 'usd' ? '$' : 'Rp';
   const formatSelectedCurrency = (value: number) => currenciesFormat(selectedCurrency, value);
+
+  const maxPaymentAmount = useMemo(() => {
+    if (selectedCurrency === 'usd') {
+      const editOffset = (editingId && editingIsUsd) ? editingAmount : 0;
+      return Math.max(0, expectedUsd - totalPaidUsd + editOffset);
+    } else {
+      const editOffset = (editingId && !editingIsUsd) ? editingAmount : 0;
+      return Math.max(0, expectedIdr - totalPaidIdr + editOffset);
+    }
+  }, [selectedCurrency, expectedUsd, totalPaidUsd, expectedIdr, totalPaidIdr, editingId, editingIsUsd, editingAmount]);
+
+  const currentLimitCurrencyAmount = selectedCurrency === 'usd' ? expectedUsd : expectedIdr;
+  const currentLimitCurrencyPaid = selectedCurrency === 'usd' ? totalPaidUsd : totalPaidIdr;
+  const hasPaymentLimit = currentLimitCurrencyAmount > 0;
+
+  const remainingPayment = Number(cashFlowDetail.remaining_payment ?? Math.max(0, grandTotal - totalPaid));
 
   const isLoading = createMutation.isPending || updateMutation.isPending;
 
@@ -378,7 +410,7 @@ export default function FinanceBillingTable({ financeBillings, cashFlowDetail, c
           !disabled ? (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon" className="h-8 w-8 cursor-pointer" disabled={Boolean(cashFlowDetail?.is_paid)}>
+                <Button variant="ghost" size="icon" className="h-8 w-8 cursor-pointer" disabled={isFullyPaid}>
                   <MoreVertical className="h-4 w-4" />
                 </Button>
               </DropdownMenuTrigger>
@@ -396,7 +428,7 @@ export default function FinanceBillingTable({ financeBillings, cashFlowDetail, c
           ) : null,
       },
     ],
-    [disabled, cashFlowDetail?.is_paid, slugStr, getAccountLabel, getKasLabel]
+    [disabled, isFullyPaid, slugStr, getAccountLabel, getKasLabel]
   );
 
   return (
@@ -426,7 +458,7 @@ export default function FinanceBillingTable({ financeBillings, cashFlowDetail, c
           <p className="text-sm text-slate-500 mt-1">Daftar finance billing yang terkait dengan transaksi ini</p>
         </div>
         {!disabled && (
-          <Button type="button" onClick={openAddForm} className="button-theme-1!" disabled={Boolean(cashFlowDetail?.is_paid) || (remainingPayment <= 0)}>
+          <Button type="button" onClick={openAddForm} className="button-theme-1! w-full sm:w-auto" disabled={isFullyPaid}>
             <Plus className="mr-1.5 h-4 w-4" />
             Tambah Pembayaran
           </Button>
@@ -441,16 +473,37 @@ export default function FinanceBillingTable({ financeBillings, cashFlowDetail, c
 
       {/* Summary */}
       <div className="flex flex-col items-end gap-2 border-t border-slate-100 pt-4 text-sm">
-        <div className="flex items-center gap-3">
-          <span className="text-slate-500">Total Pembayaran:</span>
-          <span className="font-bold text-slate-900">{currenciesFormat(cashFlowCurrency, totalPaid)}</span>
-        </div>
-        <div className="flex items-center gap-3">
-          <span className="text-slate-500">Sisa Tagihan:</span>
-          <span className={`font-bold ${remainingPayment > 0 ? 'text-amber-600' : 'text-emerald-600'}`}>
-            {currenciesFormat(cashFlowCurrency, remainingPayment)}
-          </span>
-        </div>
+        {!(hasIdr && hasUsd) ? (
+          <>
+            <div className="flex items-center gap-3">
+              <span className="text-slate-500">Total Pembayaran:</span>
+              <span className="font-bold text-slate-900">{currenciesFormat(cashFlowCurrency, totalPaid)}</span>
+            </div>
+            <div className="flex items-center gap-3">
+              <span className="text-slate-500">Sisa Tagihan:</span>
+              <span className={`font-bold ${remainingPayment > 0 ? 'text-amber-600' : 'text-emerald-600'}`}>
+                {currenciesFormat(cashFlowCurrency, remainingPayment)}
+              </span>
+            </div>
+          </>
+        ) : (
+          <div className="w-full flex flex-col sm:flex-row justify-between gap-4 text-xs mt-2 border-t border-slate-50 pt-3">
+            <div className="space-y-1">
+              <div className="font-semibold text-slate-700">Rincian Rupiah (IDR):</div>
+              <div className="flex items-center gap-4 text-slate-500">
+                <span>Terbayar: <strong className="text-slate-800">{currenciesFormat('idr', totalPaidIdr)}</strong></span>
+                <span>Sisa: <strong className={remainingPaymentIdr > 0 ? 'text-amber-600 font-semibold' : 'text-emerald-600 font-semibold'}>{currenciesFormat('idr', remainingPaymentIdr)}</strong></span>
+              </div>
+            </div>
+            <div className="space-y-1 sm:text-right">
+              <div className="font-semibold text-slate-700">Rincian Dollar (USD):</div>
+              <div className="flex items-center gap-4 sm:justify-end text-slate-500">
+                <span>Terbayar: <strong className="text-slate-800">{currenciesFormat('usd', totalPaidUsd)}</strong></span>
+                <span>Sisa: <strong className={remainingPaymentUsd > 0 ? 'text-amber-600 font-semibold' : 'text-emerald-600 font-semibold'}>{currenciesFormat('usd', remainingPaymentUsd)}</strong></span>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Add / Edit Dialog */}
@@ -501,7 +554,7 @@ export default function FinanceBillingTable({ financeBillings, cashFlowDetail, c
               <div className="rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800">
                 <div className="font-semibold">Maksimal nominal: {formatSelectedCurrency(maxPaymentAmount)}</div>
                 <div className="mt-0.5 text-amber-700">
-                  Total transaksi {formatSelectedCurrency(cashFlowAmount)} - total terbayar {formatSelectedCurrency(totalPaid)}
+                  Total transaksi {formatSelectedCurrency(currentLimitCurrencyAmount)} - total terbayar {formatSelectedCurrency(currentLimitCurrencyPaid)}
                   {editingId ? ` + nominal pembayaran ini ${formatSelectedCurrency(editingAmount)}` : ''}.
                 </div>
               </div>
