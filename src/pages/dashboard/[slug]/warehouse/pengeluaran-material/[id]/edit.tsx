@@ -270,7 +270,7 @@ export default function GoodsIssueEditPage() {
               <Button
                 type="submit"
                 disabled={updateIssueMutation.isPending}
-                className="h-10 rounded-[10px] px-5 text-[16px] button-theme-1!"
+                className="h-10 rounded-[10px] px-5 text-[16px] btn-primary-orange!"
               >
                 {updateIssueMutation.isPending ? 'Menyimpan...' : 'Simpan'}
               </Button>
@@ -376,7 +376,7 @@ export default function GoodsIssueEditPage() {
                   Hapus ({selectedIds.length})
                 </Button>
               )}
-              <Button onClick={() => { setEditingItem(null); setItemOpen(true); }} className="button-theme-1!">
+              <Button onClick={() => { setEditingItem(null); setItemOpen(true); }} className="btn-primary-orange!">
                 <Plus className="mr-2 h-4 w-4" />
                 Tambah Data
               </Button>

@@ -105,7 +105,7 @@ export default function TransactionListPage() {
           </div>
 
           {canCreate && (
-            <Button onClick={() => router.push(`${basePath}/create`)} className="button-theme-1!">
+            <Button onClick={() => router.push(`${basePath}/create`)} className="btn-primary-orange!">
               <Plus className="mr-2 h-4 w-4" />
               Tambah
             </Button>

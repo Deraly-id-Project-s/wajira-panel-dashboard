@@ -128,7 +128,7 @@ export function GoodsIssueEquipmentDetailFormModal({
               <Button
                 type="submit"
                 disabled={isSubmitting}
-                className="h-10 rounded-[8px] text-[16px] button-theme-1!"
+                className="h-10 rounded-[8px] text-[16px] btn-primary!"
               >
                 {isSubmitting ? 'Menyimpan...' : 'Simpan'}
               </Button>

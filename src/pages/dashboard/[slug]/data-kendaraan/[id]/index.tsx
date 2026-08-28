@@ -184,7 +184,7 @@ export default function VehicleFleetDetailPage() {
         </Card>
 
         <div className="flex items-center justify-center pt-2 pb-8">
-          <Button onClick={handleBack} className="w-[150px] button-theme-1!">
+          <Button onClick={handleBack} className="w-[150px] btn-primary-orange!">
             Kembali
           </Button>
         </div>

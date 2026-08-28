@@ -138,7 +138,7 @@ export function LPJForm({ defaultValues, onSubmit, onCancel, submitLabel = 'Simp
         <Button type="button" variant="ghost" onClick={onCancel}>
           Batal
         </Button>
-        <Button type="submit" className="button-theme-1!">
+        <Button type="submit" className="btn-primary!">
           <Save className="h-4 w-4" />
           {submitLabel}
         </Button>

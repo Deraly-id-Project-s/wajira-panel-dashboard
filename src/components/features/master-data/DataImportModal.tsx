@@ -7,6 +7,8 @@ import { CheckCircle2, Upload, FileSpreadsheet, Download, Info } from 'lucide-re
 import { cn } from '@/lib/utils';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 
+import { CsvGuide } from '@/components/ui/csv-guide';
+
 interface Props {
     open: boolean;
     onOpenChange: (open: boolean) => void;
@@ -19,7 +21,8 @@ interface Props {
     accept?: string;
     exampleData?: {
         headers: string[];
-        row: React.ReactNode[];
+        row?: React.ReactNode[];
+        rows?: React.ReactNode[][];
     };
     guideNotes?: React.ReactNode;
 }
@@ -51,6 +54,8 @@ export function DataImportModal({ open, onOpenChange, entityName = 'Data', title
         }
     };
 
+    const displayRows = exampleData?.rows || (exampleData?.row ? [exampleData.row] : []);
+
     return (
         <FormDialog
             open={open}
@@ -64,35 +69,11 @@ export function DataImportModal({ open, onOpenChange, entityName = 'Data', title
         >
             <div className="space-y-6">
                 {exampleData && (
-                    <div className="rounded-md bg-blue-50 p-4">
-                        <h4 className="text-sm font-medium text-blue-800 mb-2">Panduan Struktur File CSV</h4>
-                        <p className="text-xs text-blue-700 mb-3">
-                            File excel/CSV anda wajib memiliki header (baris pertama) seperti di bawah ini:
-                        </p>
-                        <div className="rounded-md border bg-white overflow-x-auto">
-                            <Table className="text-xs">
-                                <TableHeader className="bg-gray-50">
-                                    <TableRow>
-                                        {exampleData.headers.map((header, idx) => (
-                                            <TableHead key={idx} className="h-8 py-1 whitespace-nowrap">{header}</TableHead>
-                                        ))}
-                                    </TableRow>
-                                </TableHeader>
-                                <TableBody>
-                                    <TableRow>
-                                        {exampleData.row.map((cell, idx) => (
-                                            <TableCell key={idx} className="py-1 whitespace-nowrap">{cell}</TableCell>
-                                        ))}
-                                    </TableRow>
-                                </TableBody>
-                            </Table>
-                        </div>
-                        {guideNotes && (
-                            <p className="text-[10px] text-blue-600 mt-2 font-medium">
-                                {guideNotes}
-                            </p>
-                        )}
-                    </div>
+                    <CsvGuide 
+                        headers={exampleData.headers} 
+                        rows={displayRows} 
+                        guideNotes={guideNotes} 
+                    />
                 )}
 
                 <label className={cn(

@@ -50,7 +50,7 @@ export default function GoodsReceiptDetailPage() {
           <div className="space-y-6">
             <div className="flex items-center justify-between border-b border-slate-200 pb-6">
               <h2 className="text-[18px] font-semibold text-slate-900">Informasi Penerimaan</h2>
-              <Button onClick={() => setOpenInvoice(true)} className="h-10 rounded-[10px] px-5 text-[16px] button-theme-1!">
+              <Button onClick={() => setOpenInvoice(true)} className="h-10 rounded-[10px] px-5 text-[16px] btn-primary-orange!">
                 Lihat Nota
               </Button>
             </div>

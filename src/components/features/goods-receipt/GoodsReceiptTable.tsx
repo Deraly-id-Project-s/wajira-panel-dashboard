@@ -138,7 +138,7 @@ export function GoodsReceiptTable({
         }}
         onPageChange={onPageChange}
         headerActions={
-          <Button onClick={() => onAdd?.()} disabled={!canAdd} className="button-theme-1!">
+          <Button onClick={() => onAdd?.()} disabled={!canAdd} className="btn-primary!">
             <Plus className="mr-2 h-4 w-4" />
             Tambah Data
           </Button>

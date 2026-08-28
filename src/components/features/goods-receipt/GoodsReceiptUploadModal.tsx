@@ -58,7 +58,7 @@ export function GoodsReceiptUploadModal({ open, onOpenChange, onSubmit, isSubmit
             />
 
             <div className="space-y-3">
-              <Button type="submit" disabled={isSubmitting} className="h-10 rounded-[8px] text-[16px] button-theme-1!">
+              <Button type="submit" disabled={isSubmitting} className="h-10 rounded-[8px] text-[16px] btn-primary!">
                 {isSubmitting ? 'Menyimpan...' : 'Simpan'}
               </Button>
               <Button type="button" variant="outline" onClick={() => onOpenChange(false)} className="h-10 w-full rounded-[8px] border-slate-300 text-[16px] font-medium">

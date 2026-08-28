@@ -118,7 +118,7 @@ export const BrandListPage = () => {
                     subtitle="Kelola semua merk unit tipe"
                     actions={
                         canCreate && (
-                            <Button onClick={handleAdd} className="button-theme-1!">
+                            <Button onClick={handleAdd} className="btn-primary!">
                                 <Plus className="h-4 w-4" />
                                 Tambah Merk
                             </Button>

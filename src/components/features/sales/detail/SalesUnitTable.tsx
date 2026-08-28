@@ -239,7 +239,7 @@ export function SalesUnitTable({ lineItems, salesId, onAddUnit, canCreate, canEd
                 {onAddUnit && canCreate && (
                   <Button
                     onClick={!isPaid ? onAddUnit : undefined}
-                    className="button-theme-1!"
+                    className="btn-primary!"
                     disabled={isPaid}>
                     <Plus className="h-4 w-4 mr-2" />
                     Tambah Data Unit

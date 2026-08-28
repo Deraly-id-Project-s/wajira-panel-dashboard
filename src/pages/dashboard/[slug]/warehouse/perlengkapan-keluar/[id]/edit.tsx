@@ -363,7 +363,7 @@ export default function MaterialReleaseEditPage() {
                   />
                 </div>
                 <div className="flex gap-3">
-                  <Button type="button" onClick={() => setOpenInvoiceModal(true)} className="h-11 rounded-md px-5 text-[16px] button-theme-1!">
+                  <Button type="button" onClick={() => setOpenInvoiceModal(true)} className="h-11 rounded-md px-5 text-[16px] btn-primary-orange!">
                     Upload Invoice
                   </Button>
                   <Button type="submit" disabled={updateTransactionMutation.isPending} className="h-11 rounded-md bg-emerald-500 px-5 text-[16px] hover:bg-emerald-600">
@@ -412,7 +412,7 @@ export default function MaterialReleaseEditPage() {
                   Hapus ({selectedIds.length})
                 </Button>
               )}
-              <Button onClick={() => { setEditingItem(null); setEditingItemId(undefined); setOpenItemModal(true); }} className="button-theme-1!">
+              <Button onClick={() => { setEditingItem(null); setEditingItemId(undefined); setOpenItemModal(true); }} className="btn-primary-orange!">
                 <Plus className="mr-2 h-4 w-4" />
                 Tambah
               </Button>

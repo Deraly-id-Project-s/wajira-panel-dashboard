@@ -143,7 +143,7 @@ export function GoodsReceiptPaymentModal({
               <Textarea {...form.register('description')} rows={4} placeholder="Type your message here." className="rounded-[10px] border-slate-200 px-3 py-2 text-[15px]" />
             </div>
             <div className="space-y-3 pt-2">
-              <Button type="submit" disabled={isSubmitting} className="h-10 rounded-[8px] text-[16px] button-theme-1!">
+              <Button type="submit" disabled={isSubmitting} className="h-10 rounded-[8px] text-[16px] btn-primary!">
                 {isSubmitting ? 'Menyimpan...' : 'Simpan'}
               </Button>
               <Button type="button" variant="outline" onClick={() => onOpenChange(false)} className="h-10 w-full rounded-[8px] border-slate-300 text-[16px] font-medium">

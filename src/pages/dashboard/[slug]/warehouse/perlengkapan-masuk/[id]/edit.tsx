@@ -248,7 +248,7 @@ export default function PerlengkapanMasukEditPage() {
                   Hapus Terpilih ({selectedIds.length})
                 </Button>
               )}
-              <Button onClick={() => { setEditingItem(null); setItemOpen(true); }} className="button-theme-1!">
+              <Button onClick={() => { setEditingItem(null); setItemOpen(true); }} className="btn-primary-orange!">
                 <Plus className="h-4 w-4" />
                 Tambah Barang
               </Button>

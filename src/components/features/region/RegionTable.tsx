@@ -118,7 +118,7 @@ export function RegionTable({
                                 Import
                             </Button>
                         )}
-                        <Button onClick={onAdd} className="button-theme-1!">
+                        <Button onClick={onAdd} className="btn-primary!">
                             <Plus className="h-4 w-4 mr-2" />
                             Tambah Data
                         </Button>

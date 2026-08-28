@@ -157,7 +157,7 @@ export function GoodsIssueEquipmentUploadInvoiceModal({
               <Button
                 type="submit"
                 disabled={!file || isSubmitting}
-                className="h-10 rounded-[8px] text-[16px] button-theme-1!"
+                className="h-10 rounded-[8px] text-[16px] btn-primary!"
               >
                 {isSubmitting ? 'Mengupload...' : 'Upload'}
               </Button>

@@ -179,7 +179,7 @@ export default function PerlengkapanMasukListPage() {
           subtitle="Kelola dan lacak semua transaksi perlengkapan masuk"
           actions={
             canCreate && (
-              <Button onClick={() => setOpenForm(true)} className="button-theme-1!">
+              <Button onClick={() => setOpenForm(true)} className="btn-primary-orange!">
                 <Plus className="mr-2 h-4 w-4" />
                 Tambah
               </Button>

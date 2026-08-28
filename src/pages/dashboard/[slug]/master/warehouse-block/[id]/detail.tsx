@@ -341,7 +341,7 @@ export default function WarehouseBlockDetailPage() {
                   }
                 }}
                 disabled={makeDefaultMutation.isPending}
-                className="button-theme-1!"
+                className="btn-primary-orange!"
               >
                 {makeDefaultMutation.isPending ? 'Menyimpan...' : 'Jadikan Default'}
               </AlertDialogAction>

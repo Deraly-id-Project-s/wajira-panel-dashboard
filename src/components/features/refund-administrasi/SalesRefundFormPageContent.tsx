@@ -341,7 +341,7 @@ export default function SalesRefundFormPageContent({ transactionId, mode, refund
               <Button
                 onClick={form.handleSubmit(onSubmit)}
                 disabled={createMutation.isPending || updateMutation.isPending}
-                className="gap-2 py-6 rounded-md button-theme-1!"
+                className="gap-2 py-6 rounded-md btn-primary!"
               >
                 {createMutation.isPending || updateMutation.isPending ? (
                   <LoadingState variant="inline" text={null} />

@@ -161,7 +161,7 @@ export default function PiutangDetailPage() {
                             }
                             onBack={() => router.push(slug ? `/dashboard/${slug}/finance/data-piutang` : '/dashboard')}
                             actions={
-                                <Button onClick={() => setPaymentDialogOpen(true)} disabled={detail.billing_summary.is_paid || detail.billing_summary.remaining_payment <= 0 || detail.unit_transaction_billing.id <= 0} className="button-theme-1!">
+                                <Button onClick={() => setPaymentDialogOpen(true)} disabled={detail.billing_summary.is_paid || detail.billing_summary.remaining_payment <= 0 || detail.unit_transaction_billing.id <= 0} className="btn-primary-orange!">
                                     Tambah Penerimaan
                                 </Button>
                             }

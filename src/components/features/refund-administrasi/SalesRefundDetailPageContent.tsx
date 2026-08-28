@@ -301,7 +301,7 @@ export default function SalesRefundDetailPageContent({ transactionId, refundId }
                   <p className="text-xs text-slate-500">Daftar transaksi pembayaran refund yang telah dicatat</p>
                 </div>
                 <div className="flex flex-col sm:flex-row items-center gap-2 w-full sm:w-auto">
-                  <Button onClick={() => setIsAddDetailOpen(true)} disabled={lessPayment === 0} className="button-theme-1!">
+                  <Button onClick={() => setIsAddDetailOpen(true)} disabled={lessPayment === 0} className="btn-primary!">
                     <Plus className="h-4 w-4 mr-2" />
                     Tambah Data Pembayaran Refund
                   </Button>

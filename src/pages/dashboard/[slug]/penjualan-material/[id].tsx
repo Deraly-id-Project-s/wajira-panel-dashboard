@@ -330,7 +330,7 @@ export default function SalesMaterialDetailPage() {
           }}
           onPageChange={setPage}
           headerActions={
-            <Button onClick={() => { setEditingItem(null); setOpenItemModal(true); }} className="button-theme-1!">
+            <Button onClick={() => { setEditingItem(null); setOpenItemModal(true); }} className="btn-primary-orange!">
               <Plus className="mr-2 h-4 w-4" />
               Tambah Data
             </Button>

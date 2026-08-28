@@ -241,7 +241,7 @@ export default function TransaksiRefundBeliPage() {
                 {canCreate && (
                   <Button
                     onClick={() => router.push(`/dashboard/${slug}/transaksi/refund-beli/create?unit_transaction_id=${unitTransactionId || ''}`)}
-                    className="button-theme-1!"
+                    className="btn-primary-orange!"
                   >
                     <Plus className="h-4 w-4 mr-2" />
                     Tambah Data Data Refund Pembelian

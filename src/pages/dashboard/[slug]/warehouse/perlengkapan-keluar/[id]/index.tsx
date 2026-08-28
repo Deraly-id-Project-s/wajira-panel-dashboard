@@ -113,7 +113,7 @@ export default function MaterialReleaseDetailPage() {
           <div className="space-y-6">
             <div className="flex flex-col gap-4 border-b border-slate-200 pb-6 lg:flex-row lg:items-center lg:justify-between">
               <h2 className="text-[20px] font-semibold text-slate-950">Informasi Pengeluaran</h2>
-              <Button onClick={() => setOpenInvoiceModal(true)} className="h-11 rounded-md px-6 text-[18px] button-theme-1!">
+              <Button onClick={() => setOpenInvoiceModal(true)} className="h-11 rounded-md px-6 text-[18px] btn-primary-orange!">
                 Lihat Invoice
               </Button>
             </div>

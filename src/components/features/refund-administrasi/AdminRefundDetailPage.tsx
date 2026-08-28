@@ -100,7 +100,7 @@ export function AdminRefundDetailPage({ title, refundId, transactionId, backHref
                 <span className="font-semibold text-amber-700">{formatCurrency(remainingAmount)}</span>
               </div>
             </div>
-            <Button onClick={() => setIsPaymentModalOpen(true)} disabled={remainingAmount <= 0} className="button-theme-1!">
+            <Button onClick={() => setIsPaymentModalOpen(true)} disabled={remainingAmount <= 0} className="btn-primary!">
               <Plus className="h-4 w-4" />
               Tambah Pembayaran
             </Button>

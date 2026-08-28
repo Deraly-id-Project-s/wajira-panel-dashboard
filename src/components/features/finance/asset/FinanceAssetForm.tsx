@@ -433,7 +433,7 @@ export function FinanceAssetForm({
                 </Button>
                 <Button
                     type="submit"
-                    className="px-8 flex items-center gap-2 button-theme-1!"
+                    className="px-8 flex items-center gap-2 btn-primary!"
                     disabled={isSaving}
                 >
                     {isSaving ? (

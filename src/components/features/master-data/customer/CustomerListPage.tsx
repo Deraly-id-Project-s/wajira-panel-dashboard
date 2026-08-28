@@ -32,7 +32,7 @@ export const CustomerListPage = () => {
                                     <Upload className="h-4 w-4" />
                                     Import
                                 </Button>
-                                <Button className="button-theme-1!">
+                                <Button className="btn-primary!">
                                     <Plus className="h-4 w-4" />
                                     Tambah
                                 </Button>

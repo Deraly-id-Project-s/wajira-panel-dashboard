@@ -73,7 +73,7 @@ export function FormDialog({
             <Button
               type="submit"
               disabled={isSubmitting}
-              className="button-theme-1!"
+              className="btn-primary!"
             >
               {isSubmitting ? (
                 "Menyimpan..."

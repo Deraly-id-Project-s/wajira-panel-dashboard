@@ -169,7 +169,7 @@ export default function DriverPage() {
                                         <Upload className="h-4 w-4 mr-2" />
                                         {exportMutation.isPending ? 'Exporting...' : 'Export'}
                                     </Button>
-                                    <Button onClick={handleAddClick} className="button-theme-1!">
+                                    <Button onClick={handleAddClick} className="btn-primary-orange!">
                                         <Plus className="h-4 w-4 mr-2" />
                                         Tambah Data
                                     </Button>

@@ -214,7 +214,7 @@ export default function BuktiPotongPage() {
                 Export
               </Button>
               {canCreate && (
-                <Button onClick={handleCreate} className="button-theme-1!">
+                <Button onClick={handleCreate} className="btn-primary-orange!">
                   <Plus className="h-4 w-4" />
                   Tambah Data
                 </Button>

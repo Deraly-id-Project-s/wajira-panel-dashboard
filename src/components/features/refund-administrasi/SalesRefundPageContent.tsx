@@ -211,7 +211,7 @@ export default function SalesRefundPageContent({ transactionId }: { transactionI
                 {canCreate && (
                   <Button
                     onClick={() => router.push(`/dashboard/${slug}/transaksi/penjualan-unit/${transactionId}/refund/create`)}
-                    className="button-theme-1!"
+                    className="btn-primary!"
                   >
                     <Plus className="h-4 w-4 mr-2" />
                     Tambah Data Data Refund Penjualan

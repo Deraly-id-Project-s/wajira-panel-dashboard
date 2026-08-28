@@ -201,7 +201,7 @@ export function BBNForm({ initialData, onSubmit, isSubmitting, title }: BBNFormP
                                                 )}
                                             />
                                         </div>
-                                        <Button type="button" title="Tambah Jenis (Not implemented)" className="button-theme-1!">
+                                        <Button type="button" title="Tambah Jenis (Not implemented)" className="btn-primary!">
                                             <Plus className="h-4 w-4" />
                                         </Button>
                                     </div>
@@ -298,7 +298,7 @@ export function BBNForm({ initialData, onSubmit, isSubmitting, title }: BBNFormP
                         <Button type="button" variant="ghost" onClick={() => router.back()} disabled={isSubmitting}>
                             Batal
                         </Button>
-                        <Button type="submit" disabled={isSubmitting} className="min-w-[120px] button-theme-1!">
+                        <Button type="submit" disabled={isSubmitting} className="min-w-[120px] btn-primary!">
                             {isSubmitting ? 'Menyimpan...' : 'Simpan'}
                         </Button>
                     </div>

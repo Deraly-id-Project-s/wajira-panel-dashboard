@@ -105,7 +105,7 @@ export function AccountFormModal({
                           className="h-10 rounded-lg border-slate-200 px-3 text-sm shadow-none focus-visible:ring-slate-300 bg-white"
                         />
                       </div>
-                      <Button type="button" onClick={() => setOpenCreateGroup(true)} className="button-theme-1!">
+                      <Button type="button" onClick={() => setOpenCreateGroup(true)} className="btn-primary!">
                         <Plus className="h-4 w-4" />
                       </Button>
                     </div>

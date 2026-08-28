@@ -113,7 +113,7 @@ export function AdminRefundPage({ title, description, basePath, backHref, transa
             </div>
           </div>
 
-          <Button onClick={() => setIsCreateModalOpen(true)} className="button-theme-1!">
+          <Button onClick={() => setIsCreateModalOpen(true)} className="btn-primary!">
             <Plus className="h-4 w-4" />
             Tambah Refund
           </Button>

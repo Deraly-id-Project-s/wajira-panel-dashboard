@@ -240,7 +240,7 @@ export default function RoleDetailPage() {
                         </SelectContent>
                       </Select>
                     </div>
-                    <Button onClick={handleDispatchRole} disabled={assignRoleMutation.isPending || !selectedUserId} className="button-theme-1!">
+                    <Button onClick={handleDispatchRole} disabled={assignRoleMutation.isPending || !selectedUserId} className="btn-primary-orange!">
                       <UserPlus size={16} />
                       Tambah
                     </Button>

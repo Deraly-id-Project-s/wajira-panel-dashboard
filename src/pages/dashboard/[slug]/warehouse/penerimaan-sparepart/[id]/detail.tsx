@@ -345,7 +345,7 @@ export default function PenerimaanSparepartDetailPage() {
             <Button
               onClick={handleUpdateState}
               disabled={updateStateMutation.isPending}
-              className="rounded-lg px-5 button-theme-1!"
+              className="rounded-lg px-5 btn-primary-orange!"
             >
               {updateStateMutation.isPending ? 'Menyimpan...' : 'Simpan'}
             </Button>

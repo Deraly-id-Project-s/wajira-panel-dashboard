@@ -213,7 +213,7 @@ export default function PengeluaranPerlengkapanEditPage() {
               <h2 className="text-[18px] font-semibold text-slate-900">Informasi Pengeluaran</h2>
               <Button
                 onClick={() => setHeaderOpen(true)}
-                className="h-10 rounded-[10px] px-5 text-[15px] button-theme-1!"
+                className="h-10 rounded-[10px] px-5 text-[15px] btn-primary-orange!"
               >
                 Edit Header
               </Button>
@@ -278,7 +278,7 @@ export default function PengeluaranPerlengkapanEditPage() {
               <span>Page</span>
             </div>
           </div>
-          <Button onClick={() => { setEditingItem(null); setItemOpen(true); }} className="button-theme-1!">
+          <Button onClick={() => { setEditingItem(null); setItemOpen(true); }} className="btn-primary-orange!">
             <Plus className="mr-2 h-4 w-4" /> Tambah Item
           </Button>
         </div>

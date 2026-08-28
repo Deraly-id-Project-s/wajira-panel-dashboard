@@ -192,7 +192,7 @@ export default function PengeluaranPerlengkapanIndex() {
           subtitle="Kelola dan lacak semua transaksi pengeluaran perlengkapan kendaraan"
           actions={
             canCreate && (
-              <Button onClick={() => setFormOpen(true)} className="button-theme-1!">
+              <Button onClick={() => setFormOpen(true)} className="btn-primary-orange!">
                 <Plus className="mr-2 h-4 w-4" /> Tambah
               </Button>
             )

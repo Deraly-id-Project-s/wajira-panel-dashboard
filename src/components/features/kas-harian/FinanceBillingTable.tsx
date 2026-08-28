@@ -458,7 +458,7 @@ export default function FinanceBillingTable({ financeBillings, cashFlowDetail, c
           <p className="text-sm text-slate-500 mt-1">Daftar finance billing yang terkait dengan transaksi ini</p>
         </div>
         {!disabled && (
-          <Button type="button" onClick={openAddForm} className="button-theme-1! w-full sm:w-auto" disabled={isFullyPaid}>
+          <Button type="button" onClick={openAddForm} className="btn-primary! w-full sm:w-auto" disabled={isFullyPaid}>
             <Plus className="mr-1.5 h-4 w-4" />
             Tambah Pembayaran
           </Button>

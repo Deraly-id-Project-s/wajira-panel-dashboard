@@ -267,7 +267,7 @@ export function ArmadaForm({ initialData, title, onSubmit, isSubmitting = false 
         <Button type="button" variant="outline" className="w-[120px]" onClick={() => router.back()} disabled={isSubmitting}>
           Batal
         </Button>
-        <Button type="submit" className="w-[120px] button-theme-1!" disabled={isSubmitting}>
+        <Button type="submit" className="w-[120px] btn-primary!" disabled={isSubmitting}>
           {isSubmitting ? 'Menyimpan...' : 'Simpan'}
         </Button>
       </div>

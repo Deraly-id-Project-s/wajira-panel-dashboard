@@ -187,7 +187,7 @@ export function CreateInvoiceModal({ open, onOpenChange, onSubmit, isSubmitting 
               />
 
               <div className="space-y-3 pt-2">
-                <Button type="submit" disabled={isSubmitting} className="h-11 rounded-md text-sm font-semibold button-theme-1!">
+                <Button type="submit" disabled={isSubmitting} className="h-11 rounded-md text-sm font-semibold btn-primary!">
                   {isSubmitting ? (
                     <>
                       <LoadingState variant="inline" text={null} />

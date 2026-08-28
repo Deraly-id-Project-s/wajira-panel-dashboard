@@ -581,7 +581,7 @@ export default function UnitPurchaseDetailPage() {
                           <Upload className="h-4 w-4 mr-2" />
                           Import
                         </Button>
-                        <Button onClick={openCreateForm} disabled={qty === details.length || !qty} className="button-theme-1!">
+                        <Button onClick={openCreateForm} disabled={qty === details.length || !qty} className="btn-primary-orange!">
                           <Plus className="h-4 w-4 mr-2" />
                           Tambah Detail Unit
                         </Button>

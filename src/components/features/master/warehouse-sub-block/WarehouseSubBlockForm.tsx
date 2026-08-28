@@ -152,7 +152,7 @@ export function WarehouseSubBlockForm({
               <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={isSubmitting}>
                 Batal
               </Button>
-              <Button type="submit" disabled={isSubmitting} className="button-theme-1!">
+              <Button type="submit" disabled={isSubmitting} className="btn-primary!">
                 {isSubmitting && <LoadingState variant="inline" text={null} />}
                 Simpan
               </Button>

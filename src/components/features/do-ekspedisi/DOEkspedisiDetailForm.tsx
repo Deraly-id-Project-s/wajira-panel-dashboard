@@ -276,7 +276,7 @@ export function DOEkspedisiDetailForm({
                 <p className="text-xs text-slate-500">Tambahkan tujuan lanjutan untuk item DO ini bila ada lebih dari satu tujuan.</p>
               </div>
               {!readOnly ? (
-                <Button type="button" onClick={() => append({ destination: '', driverNote: '', mapsUrl: '' })} className="button-theme-1!">
+                <Button type="button" onClick={() => append({ destination: '', driverNote: '', mapsUrl: '' })} className="btn-primary!">
                   <Plus className="mr-2 h-4 w-4" />
                   Tambah Tujuan
                 </Button>

@@ -261,7 +261,7 @@ export default function MaterialReleaseListPage() {
           subtitle="Kelola dan lacak semua data pengeluaran stock perlengkapan"
           actions={
             canCreate && (
-              <Button onClick={() => { setEditingTransaction(null); setOpenForm(true); }} className="button-theme-1!">
+              <Button onClick={() => { setEditingTransaction(null); setOpenForm(true); }} className="btn-primary-orange!">
                 <Plus className="mr-2 h-4 w-4" />
                 Tambah
               </Button>

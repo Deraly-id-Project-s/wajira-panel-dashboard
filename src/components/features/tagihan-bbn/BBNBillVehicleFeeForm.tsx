@@ -125,7 +125,7 @@ export function BBNBillVehicleFeeForm({ vehicle, onSubmit, onCancel, isSubmittin
           <Button type="button" variant="ghost" onClick={onCancel} className="text-sm font-medium text-slate-600 hover:text-slate-950">
             Batal
           </Button>
-          <Button type="submit" disabled={isSubmitting} className="h-10 rounded-md px-6 text-sm button-theme-1!">
+          <Button type="submit" disabled={isSubmitting} className="h-10 rounded-md px-6 text-sm btn-primary!">
             <Save className="mr-2 h-4 w-4" />
             {isSubmitting ? 'Menyimpan...' : 'Simpan'}
           </Button>

@@ -349,7 +349,7 @@ export const AccountListPage = () => {
                     <Upload className="h-4 w-4 mr-2" />
                     Import
                   </Button>
-                  <Button onClick={handleAdd} className="button-theme-1!">
+                  <Button onClick={handleAdd} className="btn-primary!">
                     <Plus className="h-4 w-4 mr-2" />
                     Tambah Data
                   </Button>

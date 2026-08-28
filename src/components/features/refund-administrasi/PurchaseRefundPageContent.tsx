@@ -437,7 +437,7 @@ export default function PurchaseRefundPageContent({ transactionId }: { transacti
           defaultSort={{ key: 'payment_date', direction: 'desc' }}
           headerActions={
             <div className='w-full flex items-end justify-end'>
-              <Button onClick={() => setIsCreateOpen(true)} className="button-theme-1!">
+              <Button onClick={() => setIsCreateOpen(true)} className="btn-primary!">
                 <Plus className="mr-2 h-4 w-4" />
                 Tambah Data
               </Button>
