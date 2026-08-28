@@ -22,6 +22,9 @@ import type {
   DoEkspedisiOrderTarifLoadItem,
   DoEkspedisiVehicle,
   LookupOption,
+  DoEkspedisiDocumentation,
+  DoEkspedisiDocumentationListParams,
+  DoEkspedisiDocumentationListResponse,
 } from '@/@types/do-ekspedisi.types';
 import type { PaginationParams } from '@/@types/pagination.types';
 import { apiClient } from '@/lib/api/client';
@@ -37,6 +40,7 @@ export const driverNotePath = '/wapi/transaction/driver-note';
 export const expeditionExpensePath = '/wapi/transaction/expedition-expense';
 export const expeditionClaimPath = '/wapi/transaction/expedition-claim';
 export const claimDocumentationPath = '/wapi/transaction/expedition-claim-documentation';
+export const expeditionDocumentationBasePath = '/wapi/transaction/do-expedition-documentation';
 
 const toNumber = (value: unknown) => {
   if (value == null || value === '') return 0;
@@ -114,6 +118,18 @@ const mapClaimDocumentation = (item: any): DoEkspedisiClaimDocumentation => ({
   id: Number(item?.id ?? 0), uuid: item?.uuid,
   doExpeditionClaimId: Number(item?.do_expedition_claim_id ?? item?.expedition_claim_id ?? 0),
   image: item?.image ?? null, caption: item?.caption ?? '',
+});
+
+const mapDoEkspedisiDocumentation = (item: any): DoEkspedisiDocumentation => ({
+  id: Number(item?.id ?? 0),
+  uuid: item?.uuid,
+  doExpeditionId: Number(item?.do_expedition_id ?? item?.do_expeditions_id ?? 0),
+  documentationPosition: item?.documentation_position ?? '',
+  subject: item?.subject ?? '',
+  description: item?.description ?? null,
+  image: item?.image ?? null,
+  createdAt: item?.created_at,
+  updatedAt: item?.updated_at,
 });
 
 const mapDriverNote = (item: any): DoEkspedisiDriverNote => ({
@@ -787,4 +803,28 @@ export const updateDoExpeditionStatus = async (id: string | number, status: stri
     { status },
   );
   return mapDoEkspedisi(ensureSuccess(response.data));
+};
+
+export const getDoEkspedisiDocumentations = async (
+  params: PaginationParams & DoEkspedisiDocumentationListParams,
+): Promise<DoEkspedisiDocumentationListResponse> => {
+  const response = await apiClient.get<LaravelApiResponse<any>>(expeditionDocumentationBasePath, {
+    params: {
+      do_expedition_id: params.do_expedition_id,
+      documentation_position: params.documentation_position,
+      subject: params.subject,
+      description: params.description,
+      uuid: params.uuid,
+      search: params.search?.trim() || undefined,
+      page: params.page ?? 1,
+      per_page: params.perPage ?? 10,
+      order_by: params.order_by ?? 'created_at',
+      order_sort: params.order_sort ?? 'desc',
+    },
+  });
+
+  const payload = ensureSuccess(response.data);
+  const normalized = normalizePagination(payload);
+
+  return toPaginatedResult(normalized, mapDoEkspedisiDocumentation);
 };
