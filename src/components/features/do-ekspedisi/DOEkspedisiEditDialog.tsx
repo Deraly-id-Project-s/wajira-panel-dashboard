@@ -16,9 +16,9 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { doEkspedisiEditSchema, type DoEkspedisiEditSchema } from '@/schema/do-ekspedisi.schema';
+import { doEkspedisiDialogSchema, type DoEkspedisiDialogSchema } from '@/schema/do-ekspedisi.schema';
 
-export interface DOEkspedisiEditValues extends DoEkspedisiEditSchema {}
+export interface DOEkspedisiEditValues extends DoEkspedisiDialogSchema {}
 
 interface DOEkspedisiEditDialogProps {
   open: boolean;
@@ -57,7 +57,7 @@ export function DOEkspedisiEditDialog({
     watch,
     formState: { errors },
   } = useForm<DOEkspedisiEditValues>({
-    resolver: zodResolver(doEkspedisiEditSchema),
+    resolver: zodResolver(doEkspedisiDialogSchema),
     defaultValues: {
       date: item?.date ? new Date(item.date) : undefined,
       vehicleId: item?.vehicleId ? String(item.vehicleId) : '',
@@ -194,7 +194,7 @@ export function DOEkspedisiEditDialog({
             <Textarea rows={4} placeholder="Type your message here." className="rounded-lg border-slate-200" {...register('driverNote')} />
           </div>
 
-          <Button type="submit" disabled={isSubmitting} className="h-9 w-full rounded-lg bg-[#1f4163] hover:bg-[#183552]">
+          <Button type="submit" disabled={isSubmitting} className="h-9 rounded-lg button-theme-1!">
             {isSubmitting ? 'Menyimpan...' : 'Simpan'}
           </Button>
           <Button type="button" variant="outline" disabled={isSubmitting} onClick={() => onOpenChange(false)} className="h-9 w-full rounded-lg">

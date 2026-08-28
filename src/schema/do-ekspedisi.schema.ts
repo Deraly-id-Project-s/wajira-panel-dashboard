@@ -7,4 +7,12 @@ export const doEkspedisiEditSchema = z.object({
   target_end_date: z.date().nullable().optional(),
 });
 
+export const doEkspedisiDialogSchema = z.object({
+  date: z.date().optional(),
+  vehicleId: z.string().optional(),
+  driverId: z.string().optional(),
+  driverNote: z.string().optional(),
+});
+
 export type DoEkspedisiEditSchema = z.input<typeof doEkspedisiEditSchema>;
+export type DoEkspedisiDialogSchema = z.input<typeof doEkspedisiDialogSchema>;
