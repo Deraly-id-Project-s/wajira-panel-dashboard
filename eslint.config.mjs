@@ -26,6 +26,9 @@ const eslintConfig = [
       "build/**",
       "next-env.d.ts",
       "scripts/**",
+      "fix-pagination.js",
+      "patch.js",
+      "resolve_conflicts.js",
     ],
   },
 ];
