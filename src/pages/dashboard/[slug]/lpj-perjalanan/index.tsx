@@ -84,7 +84,6 @@ export default function LPJPerjalananPage() {
           onPageChange={setPage}
           onPerPageChange={(value) => {
             setPerPage(value);
-            setPage(1);
           }}
           onAdd={handleAdd}
           onEdit={handleEdit}

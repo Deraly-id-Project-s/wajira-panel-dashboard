@@ -145,7 +145,7 @@ export default function DriverPage() {
                             </div>
                             <div className="flex items-center gap-2 text-sm text-slate-500 whitespace-nowrap">
                                 <span>Show</span>
-                                <Select value={perPage.toString()} onValueChange={(val) => { setPerPage(Number(val)); setPage(1); }}>
+                                <Select value={perPage.toString()} onValueChange={(val) => { setPerPage(Number(val)); }}>
                                     <SelectTrigger className="w-[70px] bg-white">
                                         <SelectValue placeholder="25" />
                                     </SelectTrigger>
@@ -169,7 +169,7 @@ export default function DriverPage() {
                                         <Upload className="h-4 w-4 mr-2" />
                                         {exportMutation.isPending ? 'Exporting...' : 'Export'}
                                     </Button>
-                                    <Button onClick={handleAddClick} className="w-full sm:w-auto bg-[#1e3a5f] hover:bg-[#152e4d]">
+                                    <Button onClick={handleAddClick} className="btn-primary-orange!">
                                         <Plus className="h-4 w-4 mr-2" />
                                         Tambah Data
                                     </Button>

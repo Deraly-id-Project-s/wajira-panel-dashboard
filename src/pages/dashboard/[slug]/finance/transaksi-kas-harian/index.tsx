@@ -206,7 +206,6 @@ export default function KasHarianPage() {
                   value={String(perPage)}
                   onValueChange={(value) => {
                     setPerPage(Number(value));
-                    setPage(1);
                   }}
                 >
                   <SelectTrigger className="w-[70px] bg-white cursor-pointer">

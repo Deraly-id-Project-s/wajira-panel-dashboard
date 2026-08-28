@@ -134,7 +134,7 @@ export const WarehouseBlockTable = ({
       onPageChange={onPageChange}
       headerActions={
         <Button onClick={canCreate ? onAdd : undefined}
-          className="button-theme-1!" disabled={!canCreate}>
+          className="btn-primary!" disabled={!canCreate}>
           <Plus className="mr-2 h-4 w-4" />
           Tambah Data
         </Button>

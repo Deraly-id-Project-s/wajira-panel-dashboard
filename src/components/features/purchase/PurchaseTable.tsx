@@ -414,7 +414,7 @@ export default function PurchaseTable({
 
       {/* RIGHT CONTROLS */}
       {onAdd && canCreate && (
-        <Button onClick={onAdd} className="button-theme-1!">
+        <Button onClick={onAdd} className="btn-primary!">
           <Plus className="mr-2 h-4 w-4" />
           Tambah Data
         </Button>

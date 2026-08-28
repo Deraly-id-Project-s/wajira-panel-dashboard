@@ -110,7 +110,6 @@ export default function FinanceAssetPage() {
                     onPageChange={setPage}
                     onPerPageChange={(v) => {
                         setPerPage(v);
-                        setPage(1);
                     }}
                     onExport={handleExport}
                     isExporting={exportMutation.isPending}

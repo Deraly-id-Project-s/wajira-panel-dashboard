@@ -1,8 +1,9 @@
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import BaseTable, { ColumnDef } from '@/components/ui/base-table';
+import { SupplierImportModal } from '@/components/features/supplier/SupplierImportModal';
 import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { Upload } from 'lucide-react';
+import { Upload, Download } from 'lucide-react';
 import type { Supplier } from '@/@types/supplier.types';
 import { CopyBox } from '@/components/ui/copy-box';
 import { ReferenceLink } from '@/components/ui/reference-link';
@@ -21,7 +22,7 @@ interface SupplierTableProps {
   onAdd: () => void;
   onEdit: (supplier: Supplier) => void;
   onDelete: (supplier: Supplier) => void;
-  onImport: () => void;
+
   onExport: () => void;
   isExporting?: boolean;
   canCreate: boolean;
@@ -43,13 +44,15 @@ export function SupplierTable({
   onAdd,
   onEdit,
   onDelete,
-  onImport,
+
   onExport,
   isExporting = false,
   canCreate,
   canEdit,
   canDelete,
 }: SupplierTableProps) {
+  const [isImportOpen, setIsImportOpen] = useState(false);
+
   const columns = useMemo<ColumnDef<Supplier>[]>(
     () => [
       {
@@ -65,10 +68,10 @@ export function SupplierTable({
         className: 'font-medium text-gray-900 truncate max-w-[220px]',
       },
       {
-        header: 'PIC',
-        accessorKey: 'pic',
+        header: 'Alamat',
+        accessorKey: 'address',
         sortable: true,
-        cell: (item) => item.pic || '-',
+        cell: (item) => <span className="line-clamp-2">{item.address || '-'}</span>,
       },
       {
         header: 'Phone',
@@ -87,10 +90,10 @@ export function SupplierTable({
         cell: (item) => item.npwp || '-',
       },
       {
-        header: 'Alamat',
-        accessorKey: 'address',
+        header: 'PIC',
+        accessorKey: 'pic',
         sortable: true,
-        cell: (item) => <span className="line-clamp-2">{item.address || '-'}</span>,
+        cell: (item) => item.pic || '-',
       },
       {
         header: 'Aksi',
@@ -133,7 +136,8 @@ export function SupplierTable({
   );
 
   return (
-    <BaseTable
+    <>
+      <BaseTable
       data={suppliers}
       columns={columns}
       loading={isLoading}
@@ -153,18 +157,18 @@ export function SupplierTable({
       onPageChange={onPageChange}
       headerActions={
         <div className="flex flex-wrap items-center gap-2">
+          <Button onClick={onExport} disabled={isExporting} variant="outline" className="w-full sm:w-auto">
+            <Download className="h-4 w-4 mr-2" />
+            {isExporting ? 'Exporting...' : 'Export'}
+          </Button>
           {canCreate && (
-            <Button onClick={onImport} variant="outline" className="w-full sm:w-auto">
+            <Button onClick={() => setIsImportOpen(true)} variant="outline" className="w-full sm:w-auto">
               <Upload className="h-4 w-4 mr-2" />
               Import
             </Button>
           )}
-          <Button onClick={onExport} disabled={isExporting} variant="outline" className="w-full sm:w-auto">
-            <Upload className="h-4 w-4 mr-2" />
-            {isExporting ? 'Exporting...' : 'Export'}
-          </Button>
           {canCreate && (
-            <Button onClick={onAdd} className="w-full sm:w-auto bg-[#1e3a5f] hover:bg-[#152e4d]">
+            <Button onClick={onAdd} className="btn-primary!">
               <svg className="h-4 w-4 mr-2" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14" /><path d="M12 5v14" /></svg>
               Tambah
             </Button>
@@ -172,5 +176,10 @@ export function SupplierTable({
         </div>
       }
     />
+      <SupplierImportModal
+        open={isImportOpen}
+        onOpenChange={setIsImportOpen}
+      />
+    </>
   );
 }

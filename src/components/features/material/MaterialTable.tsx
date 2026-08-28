@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { Plus, MoreVertical, Upload } from 'lucide-react';
+import { Plus, MoreVertical, Upload, Download } from 'lucide-react';
 import BaseTable, { ColumnDef } from '@/components/ui/base-table';
 import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
@@ -131,7 +131,7 @@ export function MaterialTable({
         <div className="flex flex-wrap items-center gap-2">
           {onExport && (
             <Button onClick={onExport} disabled={isExporting} variant="outline" className="w-full sm:w-auto">
-              <Upload className="h-4 w-4 mr-2" />
+              <Download className="h-4 w-4 mr-2" />
               {isExporting ? 'Exporting...' : 'Export'}
             </Button>
           )}
@@ -143,7 +143,7 @@ export function MaterialTable({
                   Import
                 </Button>
               )}
-              <Button onClick={onAdd} className="w-full sm:w-auto bg-[#1e3a5f] hover:bg-[#152e4d]">
+              <Button onClick={onAdd} className="btn-primary!">
                 <Plus className="h-4 w-4 mr-2" />
                 Tambah
               </Button>

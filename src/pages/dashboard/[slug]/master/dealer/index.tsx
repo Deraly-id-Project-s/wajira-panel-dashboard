@@ -6,8 +6,7 @@ import { DealerFormModal, DealerFormData } from '@/components/features/dealer/De
 import { EditDealerModal } from '@/components/features/dealer/EditDealerModal';
 import { DeleteDealerModal } from '@/components/features/dealer/DeleteDealerModal';
 import { toast } from 'sonner';
-import { useDealers, useCreateDealer, useUpdateDealer, useDeleteDealer, useImportDealer, useExportDealer } from '@/hooks/useDealer';
-import { DataImportModal } from '@/components/features/master-data/DataImportModal';
+import { useDealers, useCreateDealer, useUpdateDealer, useDeleteDealer, useExportDealer } from '@/hooks/useDealer';
 import { useCompany } from '@/contexts/CompanyContext';
 import { usePermissionGuard } from '@/hooks/usePermissionGuard';
 import type { Dealer } from '@/@types/dealer.types';
@@ -29,13 +28,13 @@ export default function DealerPage() {
   const createMutation = useCreateDealer();
   const updateMutation = useUpdateDealer();
   const deleteMutation = useDeleteDealer();
-  const importMutation = useImportDealer();
+
   const exportMutation = useExportDealer();
 
   // Modals state
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
-  const [openImport, setOpenImport] = useState(false);
+
   const [selectedDealer, setSelectedDealer] = useState<Dealer | null>(null);
 
   // Handlers
@@ -87,17 +86,7 @@ export default function DealerPage() {
     }
   };
 
-  const handleImport = async (file: File) => {
-    if (!canCreate) return;
-    if (!companyId) return;
-    try {
-      await importMutation.mutateAsync({ companyId, file });
-      toast.success('Import berhasil');
-      setOpenImport(false);
-    } catch (error: any) {
-      toast.error(error.message || 'Import gagal');
-    }
-  };
+
 
   const handleExport = async () => {
     try {
@@ -134,10 +123,9 @@ export default function DealerPage() {
           onPageChange={setPage}
           onPerPageChange={(v) => {
             setPerPage(v);
-            setPage(1);
           }}
           onAdd={handleAddClick}
-          onImport={canCreate ? () => setOpenImport(true) : undefined}
+
           onExport={handleExport}
           isExporting={exportMutation.isPending}
           onEdit={handleEditClick}
@@ -170,15 +158,7 @@ export default function DealerPage() {
 
       <DeleteDealerModal isOpen={isDeleteOpen} onClose={() => setIsDeleteOpen(false)} onConfirm={handleConfirmDelete} />
 
-      <DataImportModal
-        open={openImport}
-        onOpenChange={setOpenImport}
-        title="Import Data Dealer"
-        description="Unggah file .xlsx untuk mengimport data dealer."
-        onImport={handleImport}
-        isPending={importMutation.isPending}
-        templateUrl="https://docs.google.com/spreadsheets/d/1wQmTkJSGyt7vb6DA21TdHyYiDD3tLqlXxUwQA88Qb1M/edit?usp=sharing"
-      />
+
     </DashboardLayout>
 
   );

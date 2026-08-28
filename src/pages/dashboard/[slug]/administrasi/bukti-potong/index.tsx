@@ -83,7 +83,6 @@ export default function BuktiPotongPage() {
 
   const handlePerPageChange = (value: string) => {
     setPerPage(Number(value));
-    setPage(1);
   };
 
   const handleSortChange = (key: string) => {
@@ -215,7 +214,7 @@ export default function BuktiPotongPage() {
                 Export
               </Button>
               {canCreate && (
-                <Button onClick={handleCreate} className="button-theme-1!">
+                <Button onClick={handleCreate} className="btn-primary-orange!">
                   <Plus className="h-4 w-4" />
                   Tambah Data
                 </Button>

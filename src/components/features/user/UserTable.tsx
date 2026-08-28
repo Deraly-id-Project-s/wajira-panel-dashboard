@@ -246,7 +246,7 @@ export function UserTable({ data, onEdit, onDelete, onAdd, isLoading, canCreate,
     () =>
       onAdd ? (
         <div className="flex flex-wrap items-center gap-2">
-          <Button onClick={canCreate ? onAdd : () => { }} disabled={!canCreate} className="button-theme-1!">
+          <Button onClick={canCreate ? onAdd : () => { }} disabled={!canCreate} className="btn-primary!">
             <Plus className="h-4 w-4 mr-2" />
             Tambah Data
           </Button>

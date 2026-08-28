@@ -39,6 +39,16 @@ export const AccountListPage = () => {
   const canEdit = hasPermission('master-data:edit');
   const canDelete = hasPermission('master-data:delete');
   const { page, perPage, search, setPage, setPerPage, setSearch } = useQueryParamsTable({ defaultPerPage: 25 });
+  const [searchInput, setSearchInput] = useState(search);
+
+  useEffect(() => {
+    const timeout = window.setTimeout(() => {
+      if (search !== searchInput.trim()) {
+        setSearch(searchInput.trim());
+      }
+    }, 400);
+    return () => window.clearTimeout(timeout);
+  }, [searchInput, search, setSearch]);
 
   const { data, isLoading, isError, isFetching } = useAccounts({
     page,
@@ -302,8 +312,8 @@ export const AccountListPage = () => {
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
                 <Input
                   placeholder="Search here"
-                  value={search}
-                  onChange={(event) => setSearch(event.target.value)}
+                  value={searchInput}
+                  onChange={(event) => setSearchInput(event.target.value)}
                   className="pl-9 bg-white"
                 />
               </div>
@@ -312,7 +322,6 @@ export const AccountListPage = () => {
                 <span>Show</span>
                 <Select value={String(perPage)} onValueChange={(value) => {
                   setPerPage(Number(value));
-                  setPage(1);
                 }}>
                   <SelectTrigger className="w-[70px] bg-white">
                     <SelectValue placeholder="25" />
@@ -331,16 +340,16 @@ export const AccountListPage = () => {
 
             <div className="flex flex-col sm:flex-row items-center gap-2 w-full sm:w-auto">
               <Button onClick={handleExport} variant="outline" className="w-full sm:w-auto">
-                <Upload className="h-4 w-4 mr-2" />
+                <Download className="h-4 w-4 mr-2" />
                 Export
               </Button>
               {canCreate && (
                 <>
                   <Button onClick={() => setOpenImport(true)} variant="outline" className="w-full sm:w-auto">
-                    <Download className="h-4 w-4 mr-2" />
+                    <Upload className="h-4 w-4 mr-2" />
                     Import
                   </Button>
-                  <Button onClick={handleAdd} className="w-full sm:w-auto bg-[#1e3a5f] hover:bg-[#152e4d]">
+                  <Button onClick={handleAdd} className="btn-primary!">
                     <Plus className="h-4 w-4 mr-2" />
                     Tambah Data
                   </Button>

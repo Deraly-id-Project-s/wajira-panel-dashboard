@@ -91,7 +91,6 @@ export default function DOEkspedisiPage() {
 
   const handlePerPageChange = useCallback((value: number) => {
     setPerPage(value);
-    setPage(1);
   }, []);
 
   return (

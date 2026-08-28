@@ -127,7 +127,7 @@ export default function RolesPage() {
 
   const headerActions = useMemo(
     () => (
-      <Button onClick={handleAdd} disabled={isLoading} className="w-full sm:w-auto bg-[#1e3a5f] hover:bg-[#152e4d]">
+      <Button onClick={handleAdd} disabled={isLoading} className="btn-primary-orange!">
         <Plus size={16} className="mr-2" />
         Tambah Role
       </Button>

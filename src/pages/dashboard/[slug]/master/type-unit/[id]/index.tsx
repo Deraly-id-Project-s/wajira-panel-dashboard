@@ -61,6 +61,9 @@ export default function TypeUnitDetailPage() {
   const canDelete = hasPermission('master-data:delete');
 
   // Search & Filter States
+  const [inputColor, setInputColor] = useState('');
+  const [inputMachineNumber, setInputMachineNumber] = useState('');
+  const [inputChassisNumber, setInputChassisNumber] = useState('');
   const [filterColor, setFilterColor] = useState('');
   const [filterMachineNumber, setFilterMachineNumber] = useState('');
   const [filterChassisNumber, setFilterChassisNumber] = useState('');
@@ -71,6 +74,16 @@ export default function TypeUnitDetailPage() {
   const [perPage, setPerPage] = useState(5);
   const [sortBy, setSortBy] = useState('created_at');
   const [sortDir, setSortDir] = useState('asc');
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setFilterColor(inputColor);
+      setFilterMachineNumber(inputMachineNumber);
+      setFilterChassisNumber(inputChassisNumber);
+      setPage(1);
+    }, 400);
+    return () => clearTimeout(timer);
+  }, [inputColor, inputMachineNumber, inputChassisNumber]);
 
   // Fetch detail unit type info
   const queryParams = useMemo(() => ({
@@ -365,8 +378,8 @@ export default function TypeUnitDetailPage() {
               <div className="relative">
                 <Search className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-slate-400" />
                 <Input
-                  value={filterColor}
-                  onChange={(e) => { setFilterColor(e.target.value); setPage(1); }}
+                  value={inputColor}
+                  onChange={(e) => setInputColor(e.target.value)}
                   placeholder="Cari warna..."
                   className="pl-8 h-9 text-xs"
                 />
@@ -378,8 +391,8 @@ export default function TypeUnitDetailPage() {
               <div className="relative">
                 <Search className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-slate-400" />
                 <Input
-                  value={filterMachineNumber}
-                  onChange={(e) => { setFilterMachineNumber(e.target.value); setPage(1); }}
+                  value={inputMachineNumber}
+                  onChange={(e) => setInputMachineNumber(e.target.value)}
                   placeholder="Cari nomor mesin..."
                   className="pl-8 h-9 text-xs"
                 />
@@ -391,8 +404,8 @@ export default function TypeUnitDetailPage() {
               <div className="relative">
                 <Search className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-slate-400" />
                 <Input
-                  value={filterChassisNumber}
-                  onChange={(e) => { setFilterChassisNumber(e.target.value); setPage(1); }}
+                  value={inputChassisNumber}
+                  onChange={(e) => setInputChassisNumber(e.target.value)}
                   placeholder="Cari nomor rangka..."
                   className="pl-8 h-9 text-xs"
                 />
@@ -423,7 +436,7 @@ export default function TypeUnitDetailPage() {
             loading={isLoading}
             showLimitChange
             perPage={perPage}
-            onPerPageChange={(val) => { setPerPage(val); setPage(1); }}
+            onPerPageChange={(val) => { setPerPage(val); }}
             meta={{
               currentPage: page,
               perPage: perPage,

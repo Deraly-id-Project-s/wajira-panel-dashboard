@@ -94,7 +94,6 @@ export default function CreateInvoiceListPage() {
         onPageChange={setPage}
         onPerPageChange={(value) => {
           setPerPage(value);
-          setPage(1);
         }}
         onSortOrderChange={(value) => {
           setSortOrder(value);
@@ -115,7 +114,6 @@ export default function CreateInvoiceListPage() {
           setPrintFilter('');
           setSortOrder('desc');
           setPerPage(10);
-          setPage(1);
         }}
         onAdd={() => setCreateOpen(true)}
         onDetail={(row) => router.push(`/dashboard/${slug}/administrasi/create-invoice/detail/${row.id}`)}

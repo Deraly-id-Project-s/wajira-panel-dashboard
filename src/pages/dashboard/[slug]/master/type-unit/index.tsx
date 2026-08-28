@@ -156,7 +156,6 @@ export default function TypeUnitPage() {
             onPageChange={setPage}
             onPerPageChange={(value) => {
               setPerPage(value);
-              setPage(1);
             }}
             isLoading={isLoading}
             onEdit={handleEditClick}

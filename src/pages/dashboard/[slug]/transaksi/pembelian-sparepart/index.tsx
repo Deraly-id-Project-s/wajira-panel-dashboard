@@ -73,7 +73,6 @@ export default function PurchaseSparepartPage() {
           onPageChange={setPage}
           onPerPageChange={(value) => {
             setPerPage(value);
-            setPage(1);
           }}
           canEdit={canEdit}
           canCreate={canCreate}

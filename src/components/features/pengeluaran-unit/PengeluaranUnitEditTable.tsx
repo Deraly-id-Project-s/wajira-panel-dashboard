@@ -19,6 +19,7 @@ interface Props {
 }
 
 export default function PengeluaranUnitEditTable({ data, onDelete, onCancel }: Props) {
+    const [searchInput, setSearchInput] = useState('');
     const [search, setSearch] = useState('');
     const [itemsPerPage, setItemsPerPage] = useState('25');
     const [currentPage, setCurrentPage] = useState(1);
@@ -29,6 +30,13 @@ export default function PengeluaranUnitEditTable({ data, onDelete, onCancel }: P
     useEffect(() => {
         setSelected([]);
     }, [data]);
+
+    useEffect(() => {
+        const timeout = window.setTimeout(() => {
+            setSearch(searchInput.trim());
+        }, 400);
+        return () => window.clearTimeout(timeout);
+    }, [searchInput]);
 
     const filtered = useMemo(() => {
         const q = search.toLowerCase();
@@ -117,7 +125,7 @@ export default function PengeluaranUnitEditTable({ data, onDelete, onCancel }: P
                 <div className="flex items-center gap-4 w-full sm:w-auto">
                     <div className="relative w-full sm:w-[300px]">
                         <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-                        <Input placeholder="Search here" value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9 bg-white" />
+                        <Input placeholder="Search here" value={searchInput} onChange={(e) => setSearchInput(e.target.value)} className="pl-9 bg-white" />
                     </div>
 
                     <div className="flex items-center gap-2 text-sm text-slate-500 whitespace-nowrap">

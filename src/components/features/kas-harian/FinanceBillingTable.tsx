@@ -150,8 +150,8 @@ function SearchableSelect<T extends { id: number | string }>({
                       setSearch('');
                     }}
                   >
-                    <Check className={cn('h-4 w-4 shrink-0', isSelected ? 'opacity-100 text-slate-800' : 'opacity-0')} />
-                    <span className="truncate font-medium text-slate-700">{getLabel(opt)}</span>
+                    <Check className={cn('h-4 w-4 shrink-0 mt-0.5', isSelected ? 'opacity-100 text-slate-800' : 'opacity-0')} />
+                    <span className="break-words whitespace-normal font-medium text-slate-700 leading-snug">{getLabel(opt)}</span>
                   </button>
                 );
               })
@@ -458,7 +458,7 @@ export default function FinanceBillingTable({ financeBillings, cashFlowDetail, c
           <p className="text-sm text-slate-500 mt-1">Daftar finance billing yang terkait dengan transaksi ini</p>
         </div>
         {!disabled && (
-          <Button type="button" onClick={openAddForm} className="w-full sm:w-auto bg-[#1e3a5f] hover:bg-[#152e4d]" disabled={isFullyPaid}>
+          <Button type="button" onClick={openAddForm} className="btn-primary! w-full sm:w-auto" disabled={isFullyPaid}>
             <Plus className="mr-1.5 h-4 w-4" />
             Tambah Pembayaran
           </Button>
@@ -512,7 +512,7 @@ export default function FinanceBillingTable({ financeBillings, cashFlowDetail, c
         onOpenChange={(open: boolean) => { if (!open) closeForm(); }}
         title={editingId ? 'Edit Pembayaran' : 'Tambah Pembayaran Baru'}
         onSubmit={(e: React.FormEvent) => { e.preventDefault(); void handleSubmitForm(); }}
-        maxWidthClassName="max-w-2xl"
+        maxWidthClassName="max-w-4xl"
         isSubmitting={isLoading}
       >
         <div className="space-y-4">

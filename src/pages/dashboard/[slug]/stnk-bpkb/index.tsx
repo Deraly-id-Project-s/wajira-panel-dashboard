@@ -102,7 +102,6 @@ export default function VehicleDocumentPage() {
           onPageChange={setPage}
           onPerPageChange={(value) => {
             setPerPage(value);
-            setPage(1);
           }}
           onAdd={() => setCreateOpen(true)}
           onImport={() => setImportOpen(true)}

@@ -274,7 +274,7 @@ export default function ProfilePage() {
                             <Button
                                 type="submit"
                                 disabled={isSubmitting}
-                                className="bg-[#1e3a5f] hover:bg-[#152e4d] text-white min-w-[140px] h-11 shadow-sm px-6 rounded-md cursor-pointer font-medium"
+                                className="min-w-[140px] h-11 px-6 rounded-md cursor-pointer btn-primary-orange!"
                             >
                                 {isSubmitting ? (
                                     <>

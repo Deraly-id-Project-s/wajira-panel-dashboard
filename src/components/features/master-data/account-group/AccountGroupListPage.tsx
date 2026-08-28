@@ -6,7 +6,7 @@ import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { PageHeader } from '@/components/ui/page-header';
 import { AccountGroupTable } from './AccountGroupTable';
 import { AccountGroupFormModal } from './AccountGroupFormModal';
-import { useAccountGroups, useDeleteAccountGroup, useCreateAccountGroup, useUpdateAccountGroup, useImportAccountGroup } from '@/hooks/useAccountGroup';
+import { useAccountGroups, useDeleteAccountGroup, useCreateAccountGroup, useUpdateAccountGroup } from '@/hooks/useAccountGroup';
 import { useQueryParamsTable } from '@/hooks/useQueryParamsTable';
 import type { AccountGroup } from '@/@types/account-group.types';
 import { accountGroupSchema, type AccountGroupFormValues } from '@/scheme/account-group.schema';
@@ -18,7 +18,7 @@ import { Button } from '@/components/ui/button';
 import { usePermissionGuard } from '@/hooks/usePermissionGuard';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Download, Plus, Search, Upload } from 'lucide-react';
-import { DataImportModal } from '@/components/features/master-data/DataImportModal';
+import { AccountGroupImportModal } from '@/components/features/master-data/account-group/AccountGroupImportModal';
 
 export const AccountGroupListPage = () => {
   const { companyId } = useCompany();
@@ -44,7 +44,7 @@ export const AccountGroupListPage = () => {
   const createMutation = useCreateAccountGroup();
   const updateMutation = useUpdateAccountGroup();
   const deleteMutation = useDeleteAccountGroup(companyId ?? undefined);
-  const importMutation = useImportAccountGroup();
+
 
   const { hasPermission } = usePermissionGuard();
   const canCreate = hasPermission('master-data:create');
@@ -64,10 +64,7 @@ export const AccountGroupListPage = () => {
     },
   });
 
-  const handleImport = async (file: File) => {
-    if (!companyId) return;
-    await importMutation.mutateAsync({ companyId, file });
-  };
+
 
   const handleDelete = async () => {
     if (!selectedToDelete) return;
@@ -160,7 +157,7 @@ export const AccountGroupListPage = () => {
               </div>
               <div className="flex items-center gap-2 text-sm text-slate-500 whitespace-nowrap">
                 <span>Show</span>
-                <Select value={String(perPage)} onValueChange={(val) => { setPerPage(Number(val)); setPage(1); }}>
+                <Select value={String(perPage)} onValueChange={(val) => { setPerPage(Number(val)); }}>
                   <SelectTrigger className="w-[70px] bg-white">
                     <SelectValue placeholder="25" />
                   </SelectTrigger>
@@ -177,10 +174,10 @@ export const AccountGroupListPage = () => {
               {canCreate && (
                 <>
                   <Button onClick={() => setOpenImport(true)} variant="outline" className="w-full sm:w-auto">
-                    <Download className="h-4 w-4 mr-2" />
+                    <Upload className="h-4 w-4 mr-2" />
                     Import
                   </Button>
-                  <Button onClick={handleAdd} className="w-full sm:w-auto bg-[#1e3a5f] hover:bg-[#152e4d]">
+                  <Button onClick={handleAdd} className="btn-primary!">
                     <Plus className="h-4 w-4 mr-2" />
                     Tambah Data
                   </Button>
@@ -220,13 +217,9 @@ export const AccountGroupListPage = () => {
         submitLabel={editing ? 'Perbarui' : 'Simpan'}
       />
 
-      <DataImportModal
+      <AccountGroupImportModal
         open={openImport}
         onOpenChange={setOpenImport}
-        title="Import Grup Akun"
-        description="Pilih file excel (.xlsx, .xls) untuk mengimport data grup akun."
-        onImport={handleImport}
-        isPending={importMutation.isPending}
       />
 
       <AlertDialog open={!!selectedToDelete} onOpenChange={(open) => !open && setSelectedToDelete(null)}>

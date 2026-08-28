@@ -435,7 +435,7 @@ export function SalesTable({
       </div>
 
       {onAdd && (
-        <Button onClick={onAdd} disabled={!canCreate} className="button-theme-1!">
+        <Button onClick={onAdd} disabled={!canCreate} className="btn-primary!">
           <Plus className="mr-2 h-4 w-4" />
           Tambah Data
         </Button>
