@@ -16,9 +16,9 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { doEkspedisiEditSchema, type DoEkspedisiEditSchema } from '@/schema/do-ekspedisi.schema';
+import { doEkspedisiDialogSchema, type DoEkspedisiDialogSchema } from '@/schema/do-ekspedisi.schema';
 
-export interface DOEkspedisiEditValues extends DoEkspedisiEditSchema {}
+export interface DOEkspedisiEditValues extends DoEkspedisiDialogSchema {}
 
 interface DOEkspedisiEditDialogProps {
   open: boolean;
@@ -57,7 +57,7 @@ export function DOEkspedisiEditDialog({
     watch,
     formState: { errors },
   } = useForm<DOEkspedisiEditValues>({
-    resolver: zodResolver(doEkspedisiEditSchema),
+    resolver: zodResolver(doEkspedisiDialogSchema),
     defaultValues: {
       date: item?.date ? new Date(item.date) : undefined,
       vehicleId: item?.vehicleId ? String(item.vehicleId) : '',

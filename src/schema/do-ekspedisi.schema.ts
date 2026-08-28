@@ -8,3 +8,12 @@ export const doEkspedisiEditSchema = z.object({
 });
 
 export type DoEkspedisiEditSchema = z.input<typeof doEkspedisiEditSchema>;
+
+export const doEkspedisiDialogSchema = z.object({
+  date: z.date({ required_error: 'Tanggal wajib diisi' }),
+  vehicleId: z.string().min(1, 'Armada wajib dipilih'),
+  driverId: z.string().min(1, 'Driver wajib dipilih'),
+  driverNote: z.string().optional(),
+});
+
+export type DoEkspedisiDialogSchema = z.input<typeof doEkspedisiDialogSchema>;
