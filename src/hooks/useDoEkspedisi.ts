@@ -7,6 +7,7 @@ import type {
   DoEkspedisiItemPayload,
   DoEkspedisiListParams,
   DoEkspedisiPayload,
+  DoEkspedisiDocumentationListParams,
 } from '@/@types/do-ekspedisi.types';
 import type { PaginationParams } from '@/@types/pagination.types';
 import {
@@ -35,6 +36,7 @@ import {
   updateDoEkspedisiItem,
   updateDoEkspedisiItemDestination,
   updateDoDetailResource,
+  getDoEkspedisiDocumentations,
   type DetailResource,
 } from '@/services/do-ekspedisi.service';
 
@@ -95,6 +97,17 @@ export function useDoEkspedisiItemDestinations(params: PaginationParams & DoEksp
   return useQuery({
     queryKey: ['do-ekspedisi-item-destination', rest],
     queryFn: () => getDoEkspedisiItemDestinations(rest),
+    enabled,
+    placeholderData: (previous) => previous,
+  });
+}
+
+export function useDoEkspedisiDocumentations(params: PaginationParams & DoEkspedisiDocumentationListParams & { enabled?: boolean }) {
+  const { enabled = true, ...rest } = params;
+
+  return useQuery({
+    queryKey: ['do-ekspedisi-documentation', rest],
+    queryFn: () => getDoEkspedisiDocumentations(rest),
     enabled,
     placeholderData: (previous) => previous,
   });

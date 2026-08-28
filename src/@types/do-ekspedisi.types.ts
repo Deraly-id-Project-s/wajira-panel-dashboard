@@ -277,3 +277,29 @@ export interface LookupOption {
 export type DoEkspedisiListResponse = PaginatedResult<DoEkspedisi>;
 export type DoEkspedisiItemListResponse = PaginatedResult<DoEkspedisiItem>;
 export type DoEkspedisiItemDestinationListResponse = PaginatedResult<DoEkspedisiItemDestination>;
+
+export interface DoEkspedisiDocumentation {
+  id: number;
+  uuid?: string;
+  doExpeditionId: number;
+  documentationPosition: string;
+  subject: string;
+  description: string | null;
+  image: string | null;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface DoEkspedisiDocumentationListParams {
+  do_expedition_id?: number | string;
+  documentation_position?: string;
+  subject?: string;
+  description?: string;
+  uuid?: string;
+  search?: string;
+  order_by?: string;
+  order_sort?: 'asc' | 'desc';
+}
+
+export type DoEkspedisiDocumentationListResponse = PaginatedResult<DoEkspedisiDocumentation>;
+
