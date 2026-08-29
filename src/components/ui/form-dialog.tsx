@@ -66,7 +66,7 @@ export function FormDialog({
               variant="ghost"
               onClick={handleCancel}
               disabled={isSubmitting}
-              className="text-muted-foreground font-medium hover:text-foreground hover:bg-transparent"
+              className="text-muted-foreground font-medium hover:text-foreground hover:bg-transparent disabled:text-slate-400 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {cancelLabel}
             </Button>
