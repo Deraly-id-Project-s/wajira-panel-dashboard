@@ -2,10 +2,11 @@
 
 import { useMemo, useState, useEffect, useRef, useCallback } from 'react';
 import { useRouter } from 'next/router';
-import { Plus, Pencil, Trash2, MoreHorizontal, Check, ChevronsUpDown, Info, MoreVertical } from 'lucide-react';
+import { Plus, Pencil, Trash2, Info, MoreVertical } from 'lucide-react';
 import { toast } from 'sonner';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { FormDialog } from '@/components/ui/form-dialog';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -53,115 +54,6 @@ interface FormState {
   note: string;
 }
 
-interface SearchableSelectProps<T> {
-  value: number;
-  onValueChange: (val: number) => void;
-  options: T[];
-  placeholder: string;
-  searchPlaceholder: string;
-  getLabel: (option: T) => string;
-  getSearchText: (option: T) => string;
-  disabled?: boolean;
-}
-
-function SearchableSelect<T extends { id: number | string }>({
-  value,
-  onValueChange,
-  options,
-  placeholder,
-  searchPlaceholder,
-  getLabel,
-  getSearchText,
-  disabled,
-}: SearchableSelectProps<T>) {
-  const [open, setOpen] = useState(false);
-  const [search, setSearch] = useState('');
-  const dropdownRef = useRef<HTMLDivElement | null>(null);
-
-  const selectedOption = useMemo(() => {
-    return options.find((opt) => Number(opt.id) === value) || null;
-  }, [options, value]);
-
-  const filteredOptions = useMemo(() => {
-    const q = search.trim().toLowerCase();
-    if (!q) return options;
-    return options.filter((opt) => getSearchText(opt).toLowerCase().includes(q));
-  }, [options, search, getSearchText]);
-
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
-        setOpen(false);
-        setSearch('');
-      }
-    };
-    if (open) {
-      document.addEventListener('mousedown', handleClickOutside);
-    }
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, [open]);
-
-  return (
-    <div ref={dropdownRef} className="relative w-full">
-      <Button
-        type="button"
-        variant="outline"
-        role="combobox"
-        className={cn(
-          'h-11 w-full justify-between rounded-md border-slate-200 bg-white px-3 text-left font-normal hover:bg-white text-sm',
-          !value && 'text-slate-400',
-        )}
-        disabled={disabled}
-        onClick={() => setOpen((prev) => !prev)}
-      >
-        <span className="truncate">
-          {selectedOption ? getLabel(selectedOption) : placeholder}
-        </span>
-        <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 text-slate-400" />
-      </Button>
-
-      {open && (
-        <div className="absolute left-0 right-0 top-[calc(100%+0.25rem)] z-[130] overflow-hidden rounded-md border border-slate-200 bg-white shadow-xl">
-          <div className="border-b border-slate-100 p-2">
-            <Input
-              placeholder={searchPlaceholder}
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="h-9 text-sm"
-              autoFocus
-            />
-          </div>
-          <div className="max-h-60 overflow-y-auto p-1">
-            {filteredOptions.length === 0 ? (
-              <div className="px-3 py-4 text-center text-xs text-slate-500">Data tidak ditemukan.</div>
-            ) : (
-              filteredOptions.map((opt) => {
-                const isSelected = Number(opt.id) === value;
-                return (
-                  <button
-                    key={opt.id}
-                    type="button"
-                    className="flex w-full items-center gap-2 rounded-lg px-2.5 py-2 text-left text-sm hover:bg-slate-50 transition-colors"
-                    onClick={() => {
-                      onValueChange(Number(opt.id));
-                      setOpen(false);
-                      setSearch('');
-                    }}
-                  >
-                    <Check className={cn('h-4 w-4 shrink-0 mt-0.5', isSelected ? 'opacity-100 text-slate-800' : 'opacity-0')} />
-                    <span className="break-words whitespace-normal font-medium text-slate-700 leading-snug">{getLabel(opt)}</span>
-                  </button>
-                );
-              })
-            )}
-          </div>
-        </div>
-      )}
-    </div>
-  );
-}
 
 const EMPTY_FORM: FormState = {
   cash_id: 0,
@@ -239,6 +131,10 @@ export default function FinanceBillingTable({ financeBillings, cashFlowDetail, c
   const selectedKas = useMemo(
     () => kasOptions.find((kas) => Number(kas.id) === Number(form.cash_id)) ?? null,
     [form.cash_id, kasOptions],
+  );
+  const selectedAkun = useMemo(
+    () => akunOptions.find((a) => Number(a.id) === Number(form.account_id)) ?? null,
+    [form.account_id, akunOptions],
   );
   const selectedCurrency = selectedKas?.code?.toLowerCase().endsWith('_usd') ? 'usd' : 'idr';
   const selectedCurrencySymbol = selectedCurrency === 'usd' ? '$' : 'Rp';
@@ -512,52 +408,86 @@ export default function FinanceBillingTable({ financeBillings, cashFlowDetail, c
         onOpenChange={(open: boolean) => { if (!open) closeForm(); }}
         title={editingId ? 'Edit Pembayaran' : 'Tambah Pembayaran Baru'}
         onSubmit={(e: React.FormEvent) => { e.preventDefault(); void handleSubmitForm(); }}
-        maxWidthClassName="max-w-4xl"
+        maxWidthClassName="sm:max-w-5xl"
         isSubmitting={isLoading}
       >
         <div className="space-y-4">
+          <div className="rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800">
+            <div className="font-semibold">Maksimal nominal: {formatSelectedCurrency(maxPaymentAmount)}</div>
+            <div className="mt-0.5 text-amber-700">
+              Total transaksi {formatSelectedCurrency(currentLimitCurrencyAmount)} - total terbayar {formatSelectedCurrency(currentLimitCurrencyPaid)}
+              {editingId ? ` + nominal pembayaran ini ${formatSelectedCurrency(editingAmount)}` : ''}.
+            </div>
+          </div>
           <div className="grid gap-4 md:grid-cols-2">
             {/* Kas */}
             <div className="space-y-2">
               <label className="text-sm font-medium text-slate-800">Kas</label>
-              <SearchableSelect
-                value={form.cash_id}
-                onValueChange={(v) => setForm((prev) => ({ ...prev, cash_id: v }))}
-                options={kasOptions}
-                placeholder="Pilih kas"
-                searchPlaceholder="Cari kas..."
-                getLabel={(k) => k.cash_name || `${k.code} - ${k.description}`}
-                getSearchText={(k) => `${k.cash_name || ''} ${k.code} ${k.description}`}
-                disabled={isLoading}
-              />
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <div className="w-full">
+                      <Select
+                        value={form.cash_id ? String(form.cash_id) : undefined}
+                        onValueChange={(v) => setForm((prev) => ({ ...prev, cash_id: Number(v) }))}
+                        disabled={isLoading}
+                      >
+                        <SelectTrigger className="h-11 w-full bg-white text-sm border-slate-200 text-slate-700">
+                          <SelectValue placeholder="Pilih kas" />
+                        </SelectTrigger>
+                        <SelectContent className="max-h-60" showSearch searchPlaceholder="Cari kas...">
+                          {kasOptions.map((k) => (
+                            <SelectItem key={k.id} value={String(k.id)}>
+                              {k.cash_name || `${k.code} - ${k.description}`}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </TooltipTrigger>
+                  <TooltipContent side="top" align="start">
+                    {selectedKas ? (selectedKas.cash_name || `${selectedKas.code} - ${selectedKas.description}`) : 'Pilih kas'}
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
             </div>
 
             {/* Akun */}
             <div className="space-y-2">
               <label className="text-sm font-medium text-slate-800">Akun</label>
-              <SearchableSelect
-                value={form.account_id}
-                onValueChange={(v) => setForm((prev) => ({ ...prev, account_id: v }))}
-                options={akunOptions}
-                placeholder="Pilih akun"
-                searchPlaceholder="Cari akun..."
-                getLabel={(a) => `${a.code} - ${a.name}`}
-                getSearchText={(a) => `${a.code} ${a.name}`}
-                disabled={isLoading}
-              />
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <div className="w-full">
+                      <Select
+                        value={form.account_id ? String(form.account_id) : undefined}
+                        onValueChange={(v) => setForm((prev) => ({ ...prev, account_id: Number(v) }))}
+                        disabled={isLoading}
+                      >
+                        <SelectTrigger className="h-11 w-full bg-white text-sm border-slate-200 text-slate-700">
+                          <SelectValue placeholder="Pilih akun" />
+                        </SelectTrigger>
+                        <SelectContent className="max-h-60" showSearch searchPlaceholder="Cari akun...">
+                          {akunOptions.map((a) => (
+                            <SelectItem key={a.id} value={String(a.id)}>
+                              {a.code} - {a.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </TooltipTrigger>
+                  <TooltipContent side="top" align="start">
+                    {selectedAkun ? `${selectedAkun.code} - ${selectedAkun.name}` : 'Pilih akun'}
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
             </div>
           </div>
 
           <div className="grid gap-4 md:grid-cols-2">
             {/* Nominal */}
             <div className="space-y-2">
-              <div className="rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800">
-                <div className="font-semibold">Maksimal nominal: {formatSelectedCurrency(maxPaymentAmount)}</div>
-                <div className="mt-0.5 text-amber-700">
-                  Total transaksi {formatSelectedCurrency(currentLimitCurrencyAmount)} - total terbayar {formatSelectedCurrency(currentLimitCurrencyPaid)}
-                  {editingId ? ` + nominal pembayaran ini ${formatSelectedCurrency(editingAmount)}` : ''}.
-                </div>
-              </div>
               <label className="text-sm font-medium text-slate-800">Nominal</label>
               <Input
                 value={form.amount}
