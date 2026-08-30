@@ -218,7 +218,6 @@ export default function LaporanBuktiPotongPage() {
                   value={String(perPage)}
                   onValueChange={(val) => {
                     setPerPage(Number(val));
-                    setPage(1);
                   }}
                 >
                   <SelectTrigger className="w-[70px] bg-white">

@@ -246,7 +246,7 @@ export default function PurchaseUnitTable({ purchaseId, slug, isPaid, canEdit, c
                 </Button>
                 <Button
                   onClick={() => !isPaid && router.push(`/dashboard/${slug}/transaksi/pembelian-unit/${purchaseId}/create-unit`)}
-                  className="w-full sm:w-auto bg-[#1e3a5f] hover:bg-[#152e4d]"
+                  className="btn-primary!"
                   disabled={isPaid || !canEdit}>
                   <Plus className="h-4 w-4 mr-2" />
                   Tambah Data Unit

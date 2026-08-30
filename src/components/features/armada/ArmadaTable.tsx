@@ -257,7 +257,7 @@ export function ArmadaTable({
                 Import
               </Button>
             )}
-            <Button onClick={onAdd} className="w-full sm:w-auto bg-[#1e3a5f] hover:bg-[#152e4d]">
+            <Button onClick={onAdd} className="btn-primary!">
               <Plus className="h-4 w-4 mr-2" />
               Tambah
             </Button>

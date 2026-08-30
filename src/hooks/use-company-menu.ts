@@ -88,6 +88,10 @@ const FEATURE_MAP: Record<string, { path: string; label?: string; group?: string
 
   // Laporan / Report
   'cash-transaction-reports': { path: '/laporan/laporan-transaksi-kas', label: 'Laporan Transaksi Kas' },
+  'journal-reports': { path: '/laporan/laporan-jurnal', label: 'Laporan Jurnal' },
+  'journal-report': { path: '/laporan/laporan-jurnal', label: 'Laporan Jurnal' },
+  'ledger-reports': { path: '/laporan/laporan-buku-besar', label: 'Laporan Buku Besar' },
+  'ledger-report': { path: '/laporan/laporan-buku-besar', label: 'Laporan Buku Besar' },
   'accounting-reports': { path: '/laporan/laporan-akuntansi', label: 'Laporan Akuntansi' },
   'purchase-reports': { path: '/laporan/laporan-pembelian', label: 'Laporan Pembelian' },
   'sales-reports': { path: '/laporan/laporan-penjualan', label: 'Laporan Penjualan' },
@@ -122,6 +126,52 @@ const resolvePath = (path: string, slug: string) => {
     return slug ? `/dashboard/${slug}/settings${sub}` : `/settings${sub}`;
   }
   return slug ? `/dashboard/${slug}${path}` : path;
+};
+
+const REPORT_MENU_ORDER = [
+  'Laporan Transaksi Kas',
+  'Laporan Jurnal',
+  'Laporan Buku Besar',
+  'Laporan Akuntansi',
+  'Laporan Pembelian',
+];
+
+const sortReportMenuItems = (items: MenuItem[]) => {
+  items.sort((a, b) => {
+    const aIndex = REPORT_MENU_ORDER.indexOf(a.label);
+    const bIndex = REPORT_MENU_ORDER.indexOf(b.label);
+
+    if (aIndex === -1 && bIndex === -1) return 0;
+    if (aIndex === -1) return 1;
+    if (bIndex === -1) return -1;
+    return aIndex - bIndex;
+  });
+};
+
+const ensureJournalReportMenu = (items: MenuItem[], slug: string) => {
+  const hasJournalReport = items.some((item) => item.href === resolvePath('/laporan/laporan-jurnal', slug));
+  if (hasJournalReport) return;
+
+  const cashReportIndex = items.findIndex((item) => item.href === resolvePath('/laporan/laporan-transaksi-kas', slug));
+  const insertIndex = cashReportIndex >= 0 ? cashReportIndex + 1 : 0;
+  items.splice(insertIndex, 0, {
+    label: 'Laporan Jurnal',
+    href: resolvePath('/laporan/laporan-jurnal', slug),
+  });
+};
+
+const ensureLedgerReportMenu = (items: MenuItem[], slug: string) => {
+  const ledgerHref = resolvePath('/laporan/laporan-buku-besar', slug);
+  const hasLedgerReport = items.some((item) => item.href === ledgerHref);
+  if (hasLedgerReport) return;
+
+  const journalReportIndex = items.findIndex((item) => item.href === resolvePath('/laporan/laporan-jurnal', slug));
+  const purchaseReportIndex = items.findIndex((item) => item.href === resolvePath('/laporan/laporan-pembelian', slug));
+  const insertIndex = journalReportIndex >= 0 ? journalReportIndex + 1 : purchaseReportIndex >= 0 ? purchaseReportIndex : items.length;
+  items.splice(insertIndex, 0, {
+    label: 'Laporan Buku Besar',
+    href: ledgerHref,
+  });
 };
 
 export function buildDynamicMenus(sidebarData: SidebarModuleItem[], permissions: string[], slug: string): MenuItem[] {
@@ -190,6 +240,12 @@ export function buildDynamicMenus(sidebarData: SidebarModuleItem[], permissions:
     }
 
     if (children.length > 0) {
+      if (moduleSlug === 'report') {
+        ensureJournalReportMenu(children, slug);
+        ensureLedgerReportMenu(children, slug);
+        sortReportMenuItems(children);
+      }
+
       menus.push({
         label,
         icon,

@@ -153,15 +153,15 @@ export function VehicleDocumentTable({
       onPageChange={onPageChange}
       headerActions={
         <div className="flex flex-wrap gap-2">
-          <Button onClick={onImport} variant="outline" className="w-full sm:w-auto">
-            <Upload className="mr-2 h-4 w-4" />
-            Import
-          </Button>
           <Button onClick={onExport} disabled={isExporting} variant="outline" className="w-full sm:w-auto">
             <Download className="mr-2 h-4 w-4" />
             {isExporting ? 'Exporting...' : 'Export'}
           </Button>
-          <Button onClick={onAdd} className="w-full sm:w-auto bg-[#1e3a5f] hover:bg-[#152e4d]">
+          <Button onClick={onImport} variant="outline" className="w-full sm:w-auto">
+            <Upload className="mr-2 h-4 w-4" />
+            Import
+          </Button>
+          <Button onClick={onAdd} className="btn-primary!">
             <Plus className="mr-2 h-4 w-4" />
             Tambah Data
           </Button>

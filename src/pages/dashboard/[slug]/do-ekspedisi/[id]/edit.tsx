@@ -9,7 +9,7 @@ export default function DeprecatedEditDOEkspedisiPage() {
     if (router.isReady && slug && id) {
       router.replace(`/dashboard/${slug}/do-ekspedisi/form/${id}`);
     }
-  }, [router.isReady, slug, id]);
+  }, [router, slug, id]);
 
   return null;
 }

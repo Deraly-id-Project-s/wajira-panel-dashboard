@@ -228,6 +228,14 @@ export const getGeneralMenus = (slug: string): MenuItem[] => {
           href: base('/laporan/laporan-transaksi-kas'),
         },
         {
+          label: 'Laporan Jurnal',
+          href: base('/laporan/laporan-jurnal'),
+        },
+        {
+          label: 'Laporan Buku Besar',
+          href: base('/laporan/laporan-buku-besar'),
+        },
+        {
           label: 'Laporan Pembelian',
           href: base('/laporan/laporan-pembelian'),
         },

@@ -341,7 +341,7 @@ export default function WarehouseBlockDetailPage() {
                   }
                 }}
                 disabled={makeDefaultMutation.isPending}
-                className="bg-[#1e3a5f] hover:bg-[#152e4d] text-white"
+                className="btn-primary-orange!"
               >
                 {makeDefaultMutation.isPending ? 'Menyimpan...' : 'Jadikan Default'}
               </AlertDialogAction>

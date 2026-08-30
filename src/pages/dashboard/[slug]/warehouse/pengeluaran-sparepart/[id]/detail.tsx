@@ -355,7 +355,7 @@ export default function PengeluaranSparepartDetailPage() {
             <Button
               onClick={handleUpdateState}
               disabled={updateStateMutation.isPending}
-              className="bg-[#1e3a5f] text-white hover:bg-[#152e4d] rounded-lg px-5"
+              className="rounded-lg px-5 btn-primary-orange!"
             >
               {updateStateMutation.isPending ? 'Menyimpan...' : 'Simpan'}
             </Button>

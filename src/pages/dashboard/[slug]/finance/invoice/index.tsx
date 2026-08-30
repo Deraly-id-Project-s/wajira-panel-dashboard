@@ -54,7 +54,6 @@ export default function FinanceInvoicePage() {
 
   const handlePerPageChange = (value: string) => {
     setPerPage(Number(value));
-    setPage(1);
   };
 
   const handleSortChange = (key: string) => {

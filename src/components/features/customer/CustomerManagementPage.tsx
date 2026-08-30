@@ -2,14 +2,13 @@ import { useDeferredValue, useMemo, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import type { Customer as ApiCustomer } from '@/@types/customer.types';
-import { DataImportModal } from '@/components/features/master-data/DataImportModal';
 import { CustomerFormModal } from '@/components/features/customer/CustomerFormModal';
 import { CustomerTable } from '@/components/features/customer/CustomerTable';
 import { DeleteCustomerModal } from '@/components/features/customer/DeleteCustomerModal';
 import { Card } from '@/components/ui/card';
 import { useCompany } from '@/contexts/CompanyContext';
 import { useQueryParamsTable } from '@/hooks/useQueryParamsTable';
-import { useCreateCustomer, useCustomers, useDeleteCustomer, useExportCustomer, useImportCustomer, useUpdateCustomer } from '@/hooks/useCustomer';
+import { useCreateCustomer, useCustomers, useDeleteCustomer, useExportCustomer, useUpdateCustomer } from '@/hooks/useCustomer';
 import { ApiResponseError, ApiValidationError } from '@/lib/api/response';
 import { customerSchema, type CustomerFormValues } from '@/scheme/customer.schema';
 import { getCustomerById } from '@/services/customer.service';
@@ -76,11 +75,10 @@ export function CustomerManagementPage() {
   const createCustomer = useCreateCustomer();
   const updateCustomer = useUpdateCustomer();
   const deleteCustomer = useDeleteCustomer();
-  const importCustomer = useImportCustomer();
+
   const exportCustomer = useExportCustomer();
 
   const [isFormOpen, setIsFormOpen] = useState(false);
-  const [isImportOpen, setIsImportOpen] = useState(false);
   const [editingCustomer, setEditingCustomer] = useState<ApiCustomer | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<ApiCustomer | null>(null);
   const [loadingDetailId, setLoadingDetailId] = useState<string | number | null>(null);
@@ -183,14 +181,7 @@ export function CustomerManagementPage() {
     }
   };
 
-  const handleImport = async (file: File) => {
-    if (!canCreate) return;
-    if (!companyId) {
-      throw new Error('Company ID tidak ditemukan');
-    }
 
-    await importCustomer.mutateAsync({ companyId, file });
-  };
 
   const handleExport = async () => {
     try {
@@ -238,7 +229,7 @@ export function CustomerManagementPage() {
           onAdd={handleAdd}
           onEdit={handleEdit}
           onDelete={setDeleteTarget}
-          onImport={() => setIsImportOpen(true)}
+
           onExport={handleExport}
           isExporting={exportCustomer.isPending}
           canCreate={canCreate}
@@ -275,16 +266,6 @@ export function CustomerManagementPage() {
         customerName={deleteTarget?.name ?? null}
         onConfirm={handleConfirmDelete}
         isDeleting={deleteCustomer.isPending}
-      />
-
-      <DataImportModal
-        open={isImportOpen}
-        onOpenChange={setIsImportOpen}
-        title="Import Data Customer"
-        description="Unggah file .xlsx, .xls, atau .csv untuk mengimport data customer."
-        onImport={handleImport}
-        isPending={importCustomer.isPending}
-        accept=".xlsx,.xls,.csv,text/csv"
       />
     </>
   );

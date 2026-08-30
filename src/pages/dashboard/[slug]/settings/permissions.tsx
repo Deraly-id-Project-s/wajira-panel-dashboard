@@ -52,7 +52,6 @@ export default function PermissionsPage() {
 
   const handlePerPageChange = (value: number) => {
     setPerPage(value);
-    setPage(1);
   };
 
   const columns = useMemo<ColumnDef<Permission>[]>(

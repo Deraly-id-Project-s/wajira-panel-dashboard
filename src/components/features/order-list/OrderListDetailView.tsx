@@ -299,7 +299,6 @@ export function OrderListDetailView({
     page: 1,
     perPage: 100,
     search: debouncedTarifSearch,
-    enabled: isDraft,
   });
 
   const fusoQuery = useVehicleFleetLookups({ page: 1, perPage: 100, search: debouncedVehicleSearch, company_id: companyId ?? '', type: 'fuso', enabled: isDraft });
@@ -311,7 +310,6 @@ export function OrderListDetailView({
     perPage: 100,
     search: debouncedDriverSearch,
     company_id: companyId ?? undefined,
-    enabled: isDraft,
   });
 
   const tarifOptions = React.useMemo(() => {

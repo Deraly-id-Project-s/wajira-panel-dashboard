@@ -7,7 +7,7 @@ import { EditRegionModal } from '@/components/features/region/EditRegionModal';
 import { DeleteRegionModal } from '@/components/features/region/DeleteRegionModal';
 import { ImportRegionModal } from '@/components/features/region/ImportRegionModal';
 import { toast } from 'sonner';
-import { useRegions, useCreateRegion, useUpdateRegion, useDeleteRegion, useImportRegion, useExportRegion } from '@/hooks/useRegion';
+import { useRegions, useCreateRegion, useUpdateRegion, useDeleteRegion, useExportRegion } from '@/hooks/useRegion';
 import type { Region } from '@/@types/region.types';
 import { usePermissionGuard } from '@/hooks/usePermissionGuard';
 
@@ -27,7 +27,6 @@ export default function RegionPage() {
   const createMutation = useCreateRegion();
   const updateMutation = useUpdateRegion();
   const deleteMutation = useDeleteRegion();
-  const importMutation = useImportRegion();
   const exportMutation = useExportRegion();
 
   // Modals state
@@ -88,16 +87,7 @@ export default function RegionPage() {
     }
   };
 
-  const handleImport = async (file: File) => {
-    if (!canCreate) return;
-    try {
-      await importMutation.mutateAsync({ file });
-      toast.success('Import data wilayah berhasil');
-      setIsImportOpen(false);
-    } catch (error: any) {
-      toast.error(error.message || 'Import data wilayah gagal');
-    }
-  };
+
 
   const handleExport = async () => {
     try {
@@ -134,7 +124,6 @@ export default function RegionPage() {
           onPageChange={setPage}
           onPerPageChange={(v) => {
             setPerPage(v);
-            setPage(1);
           }}
           onAdd={handleAddClick}
           onImport={canCreate ? () => setIsImportOpen(true) : undefined}
@@ -176,10 +165,8 @@ export default function RegionPage() {
       />
 
       <ImportRegionModal
-        isOpen={isImportOpen}
-        onClose={() => setIsImportOpen(false)}
-        onImport={handleImport}
-        isUploading={importMutation.isPending}
+        open={isImportOpen}
+        onOpenChange={setIsImportOpen}
       />
     </DashboardLayout>
   );

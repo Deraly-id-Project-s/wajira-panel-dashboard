@@ -335,7 +335,7 @@ export default function TransactionDetailInlineTable({ items, financeBillingId, 
             <Trash2 className="mr-2 h-4 w-4" />
             Delete ({selectedIds.length})
           </Button>
-          <Button type="button" disabled={disabled || isBusy || editingId === 'new'} onClick={handleAddRow} className="w-full sm:w-auto bg-[#1e3a5f] hover:bg-[#152e4d]">
+          <Button type="button" disabled={disabled || isBusy || editingId === 'new'} onClick={handleAddRow} className="btn-primary!">
             <Plus className="mr-2 h-4 w-4" />
             Tambah Data Transaksi
           </Button>

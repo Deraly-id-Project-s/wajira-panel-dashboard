@@ -321,7 +321,6 @@ export default function SalesMaterialDetailPage() {
           perPage={perPage}
           onPerPageChange={(value) => {
             setPerPage(value);
-            setPage(1);
           }}
           meta={{
             currentPage: safePage,
@@ -331,7 +330,7 @@ export default function SalesMaterialDetailPage() {
           }}
           onPageChange={setPage}
           headerActions={
-            <Button onClick={() => { setEditingItem(null); setOpenItemModal(true); }} className="w-full sm:w-auto bg-[#1e3a5f] hover:bg-[#152e4d]">
+            <Button onClick={() => { setEditingItem(null); setOpenItemModal(true); }} className="btn-primary-orange!">
               <Plus className="mr-2 h-4 w-4" />
               Tambah Data
             </Button>

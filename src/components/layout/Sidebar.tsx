@@ -1,5 +1,5 @@
 import { ChevronDown, Check, Menu, X, PanelLeftClose, PanelLeftOpen } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { useCompany } from '@/contexts/CompanyContext';
 import { Company } from '@/services/company.service';
@@ -12,6 +12,45 @@ import { MenuItem } from '@/types/menu.types';
 import { clearCompanyScopedQueries } from '@/lib/session/query-cache';
 import Image from 'next/image';
 import { AuthService } from '@/features/auth/services/auth.service';
+
+const ensureReportFallbackSidebarMenus = (menus: MenuItem[], slug: string): MenuItem[] => {
+  return menus.map((menu) => {
+    if (menu.label !== 'Laporan' || !menu.children) return menu;
+
+    const journalHref = slug ? `/dashboard/${slug}/laporan/laporan-jurnal` : '/laporan/laporan-jurnal';
+    const ledgerHref = slug ? `/dashboard/${slug}/laporan/laporan-buku-besar` : '/laporan/laporan-buku-besar';
+    const children = [...menu.children];
+    const hasJournal = menu.children.some((child) => child.href === journalHref || child.label === 'Laporan Jurnal');
+    const hasLedger = menu.children.some((child) => child.href === ledgerHref || child.label === 'Laporan Buku Besar');
+
+    if (!hasJournal) {
+      const purchaseIndex = children.findIndex((child) => child.label === 'Laporan Pembelian');
+      const cashIndex = children.findIndex((child) => child.label === 'Laporan Transaksi Kas');
+      const insertIndex = purchaseIndex >= 0 ? purchaseIndex : cashIndex >= 0 ? cashIndex + 1 : children.length;
+
+      children.splice(insertIndex, 0, {
+        label: 'Laporan Jurnal',
+        href: journalHref,
+      });
+    }
+
+    if (!hasLedger) {
+      const journalIndex = children.findIndex((child) => child.label === 'Laporan Jurnal');
+      const purchaseIndex = children.findIndex((child) => child.label === 'Laporan Pembelian');
+      const insertIndex = journalIndex >= 0 ? journalIndex + 1 : purchaseIndex >= 0 ? purchaseIndex : children.length;
+
+      children.splice(insertIndex, 0, {
+        label: 'Laporan Buku Besar',
+        href: ledgerHref,
+      });
+    }
+
+    return {
+      ...menu,
+      children,
+    };
+  });
+};
 
 function CompanySelector({ companies, companyId }: { companies: Company[], companyId: string | null }) {
   const [isOpen, setIsOpen] = useState(false);
@@ -134,6 +173,9 @@ export function Sidebar({
   };
 
   const { menus, isLoading: isMenuLoading } = useCompanyMenu(companies);
+  const slugQuery = router.query.slug;
+  const slug = Array.isArray(slugQuery) ? slugQuery[0] : slugQuery || '';
+  const visibleMenus = useMemo(() => ensureReportFallbackSidebarMenus(menus, slug), [menus, slug]);
 
   // Close mobile sidebar on route change
   useEffect(() => {
@@ -195,7 +237,7 @@ export function Sidebar({
               ))}
             </div>
           ) : (
-            menus.map((item, index) => (
+            visibleMenus.map((item, index) => (
               <SidebarNavItem key={index} item={item} isCollapsed={isDesktopCollapsed} />
             ))
           )}

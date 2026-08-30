@@ -14,15 +14,20 @@ import { formatCurrency } from '@/lib/utils/currency';
 import { useDoDetailResourceMutation } from '@/hooks/useDoEkspedisi';
 import type { DoEkspedisi, DoEkspedisiClaim, DoEkspedisiClaimDocumentation } from '@/@types/do-ekspedisi.types';
 
+const CLAIM_DOCUMENT_MAX_SIZE = 10 * 1024 * 1024;
+const CLAIM_DOCUMENT_ACCEPT = '.pdf,.img,.png,.jpg,.jpeg,application/pdf,image/png,image/jpeg';
+const CLAIM_DOCUMENT_ALLOWED_TYPES = new Set(['application/pdf', 'image/png', 'image/jpeg']);
+const CLAIM_DOCUMENT_ALLOWED_EXTENSIONS = new Set(['pdf', 'img', 'png', 'jpg', 'jpeg']);
+
 interface DOEkspedisiClaimsProps {
   data: DoEkspedisi;
   onRefresh?: () => void;
 }
 
 const field = (label: string, value: string, placeholder: string, onChange: (value: string) => void, type = 'text', required = true) => (
-  <div className="space-y-1">
+  <div className="space-y-2">
     <Label>{label}{required && <span className="text-red-500"> *</span>}</Label>
-    <Input required={required} type={type} value={value} onChange={(e) => onChange(e.target.value)} placeholder={placeholder} className="mt-2" />
+    <Input required={required} type={type} value={value} onChange={(e) => onChange(e.target.value)} placeholder={placeholder} />
   </div>
 );
 
@@ -54,6 +59,7 @@ export function DOEkspedisiClaims({ data, onRefresh }: DOEkspedisiClaimsProps) {
     subject: '',
     description: '',
     claim_nominal: '' as string | number,
+    image: null as File | null,
   });
 
   const [docClaim, setDocClaim] = React.useState<DoEkspedisiClaim | null>(null);
@@ -76,6 +82,7 @@ export function DOEkspedisiClaims({ data, onRefresh }: DOEkspedisiClaimsProps) {
       subject: '',
       description: '',
       claim_nominal: '',
+      image: null,
     });
     setIsClaimOpen(true);
   };
@@ -86,19 +93,56 @@ export function DOEkspedisiClaims({ data, onRefresh }: DOEkspedisiClaimsProps) {
       subject: item.subject ?? '',
       description: item.description ?? '',
       claim_nominal: String(item.claimNominal ?? ''),
+      image: null,
     });
     setIsClaimOpen(true);
   };
 
+  const isAllowedClaimDocument = (file: File) => {
+    const extension = file.name.split('.').pop()?.toLowerCase() ?? '';
+    return CLAIM_DOCUMENT_ALLOWED_TYPES.has(file.type) || CLAIM_DOCUMENT_ALLOWED_EXTENSIONS.has(extension);
+  };
+
+  const validateClaimDocument = (file: File) => {
+    if (file.size > CLAIM_DOCUMENT_MAX_SIZE) {
+      toast.error('Ukuran file maksimal 10MB');
+      return false;
+    }
+
+    if (!isAllowedClaimDocument(file)) {
+      toast.error('Format file harus PDF, IMG, PNG, JPG, atau JPEG');
+      return false;
+    }
+
+    return true;
+  };
+
+  const handleClaimFileChange = (file: File | null) => {
+    if (!file) {
+      setClaimForm((old) => ({ ...old, image: null }));
+      return;
+    }
+
+    if (!validateClaimDocument(file)) {
+      setClaimForm((old) => ({ ...old, image: null }));
+      return;
+    }
+
+    setClaimForm((old) => ({ ...old, image: file }));
+  };
+
   const saveClaim = async (event: React.FormEvent) => {
     event.preventDefault();
+    if (claimForm.image && !validateClaimDocument(claimForm.image)) return;
+
     try {
-      const payload = {
-        ...claimForm,
-        do_expeditions_id: data.id,
-        driver_id: Number(data.driverId),
-        claim_nominal: Number(claimForm.claim_nominal),
-      };
+      const payload = new FormData();
+      payload.append('subject', claimForm.subject);
+      payload.append('description', claimForm.description);
+      payload.append('claim_nominal', String(Number(claimForm.claim_nominal)));
+      payload.append('do_expeditions_id', String(data.id));
+      payload.append('driver_id', String(Number(data.driverId)));
+      if (claimForm.image) payload.append('image', claimForm.image);
 
       if (editingClaim) {
         await claimMutations.update.mutateAsync({ id: editingClaim.id, payload });
@@ -136,9 +180,24 @@ export function DOEkspedisiClaims({ data, onRefresh }: DOEkspedisiClaimsProps) {
     setIsDocOpen(true);
   };
 
+  const handleDocFileChange = (file: File | null) => {
+    if (!file) {
+      setDocForm((old) => ({ ...old, image: null }));
+      return;
+    }
+
+    if (!validateClaimDocument(file)) {
+      setDocForm((old) => ({ ...old, image: null }));
+      return;
+    }
+
+    setDocForm((old) => ({ ...old, image: file }));
+  };
+
   const saveDoc = async (event: React.FormEvent) => {
     event.preventDefault();
     if (!docClaim) return;
+    if (docForm.image && !validateClaimDocument(docForm.image)) return;
     try {
       const fd = new FormData();
       Object.entries(docForm).forEach(([key, value]) => {
@@ -288,23 +347,32 @@ export function DOEkspedisiClaims({ data, onRefresh }: DOEkspedisiClaimsProps) {
         isSubmitting={busy}
         maxWidthClassName="max-w-lg"
       >
-        <div className="space-y-1">
+        <div className="space-y-2">
           <Label>Driver</Label>
           <Input value={data.driver?.name || `Driver #${data.driverId ?? '-'}`} disabled />
         </div>
         {field('Subject', claimForm.subject, 'Subjek klaim', (v) => setClaimForm((old) => ({ ...old, subject: v })))}
-        <div className="space-y-3">
+        <div className="space-y-2">
           <Label>Deskripsi *</Label>
           <Textarea required value={claimForm.description} onChange={(e) => setClaimForm((old) => ({ ...old, description: e.target.value }))} placeholder="Deskripsi perihal klaim supir" />
         </div>
-        <div className="space-y-3">
+        <div className="space-y-2">
           <Label>Nominal Claim *</Label>
           <MoneyInput
             value={claimForm.claim_nominal === '' ? null : Number(claimForm.claim_nominal)}
             onChangeValue={(val) => setClaimForm((old) => ({ ...old, claim_nominal: val }))}
             placeholder="Nominal klaim supir"
-            className="mt-2"
             required
+          />
+        </div>
+        <div className="space-y-2">
+          <Label>File Claim</Label>
+          <FileInput
+            name="image"
+            accept={CLAIM_DOCUMENT_ACCEPT}
+            value={claimForm.image}
+            onFileChange={handleClaimFileChange}
+            helperText="Format PDF, IMG, PNG, JPG, atau JPEG maksimal 10MB"
           />
         </div>
       </FormDialog>
@@ -346,9 +414,16 @@ export function DOEkspedisiClaims({ data, onRefresh }: DOEkspedisiClaimsProps) {
         isSubmitting={busy}
         maxWidthClassName="max-w-lg"
       >
-        <div className="space-y-1">
+        <div className="space-y-2">
           <Label>Gambar {!editingDoc && <span className="text-red-500">*</span>}</Label>
-          <FileInput required={!editingDoc} accept="image/*" value={docForm.image} onFileChange={(file) => setDocForm((old) => ({ ...old, image: file }))} />
+          <FileInput
+            name="image"
+            required={!editingDoc}
+            accept={CLAIM_DOCUMENT_ACCEPT}
+            value={docForm.image}
+            onFileChange={handleDocFileChange}
+            helperText="Format PDF, IMG, PNG, JPG, atau JPEG maksimal 10MB"
+          />
         </div>
         {field('Caption', docForm.caption, 'Keterangan dokumentasi gambar', (v) => setDocForm((old) => ({ ...old, caption: v })))}
       </FormDialog>

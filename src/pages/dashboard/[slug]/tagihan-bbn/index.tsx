@@ -154,7 +154,6 @@ export default function BBNBillListPage() {
           onPageChange={setPage}
           onPerPageChange={(value) => {
             setPerPage(value);
-            setPage(1);
           }}
           onAdd={() => setCreateOpen(true)}
           onDetail={(item) => router.push(`/dashboard/${slug}/tagihan-bbn/${item.id}`)}

@@ -176,7 +176,6 @@ export default function EditVehicleDocumentPage() {
             onPageChange={setPage}
             onPerPageChange={(value) => {
               setPerPage(value);
-              setPage(1);
             }}
             onEdit={(item) => {
               const registrationId = item.registrationId || item.id;

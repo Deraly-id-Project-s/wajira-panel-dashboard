@@ -153,7 +153,7 @@ import { Button } from '@/components/ui/button';
     {/* Show per Page */}
     <div className="flex items-center gap-2 text-sm text-slate-500 whitespace-nowrap">
       <span>Show</span>
-      <Select value={String(perPage)} onValueChange={(val) => { setPerPage(Number(val)); setPage(1); }}>
+      <Select value={String(perPage)} onValueChange={(val) => setPerPage(Number(val))}>
         <SelectTrigger className="w-[70px] bg-white">
           <SelectValue placeholder="25" />
         </SelectTrigger>
@@ -174,7 +174,7 @@ import { Button } from '@/components/ui/button';
       <Upload className="h-4 w-4 mr-2" />
       Export
     </Button>
-    <Button className="w-full sm:w-auto bg-[#1e3a5f] hover:bg-[#152e4d]">
+    <Button className="button-theme-1!">
       <Plus className="h-4 w-4 mr-2" />
       Tambah
     </Button>
@@ -362,13 +362,13 @@ Untuk memastikan tombol aksi selalu terlihat di berbagai ukuran layar (terutama 
 
 ---
 
-## 10. Action Buttons (Tambah, Export, Import)
+## 10. Action Buttons (Tambah, Simpan, Export, Import)
 
-**Aturan**: Tidak perlu `rounded-md` eksplisit karena button komponen sudah handle sendiri. Cukup set `w-full sm:w-auto` untuk responsivitas.
+**Aturan**: Seluruh tombol aksi utama (Primary Action) wajib menggunakan class terpadu `button-theme-1!` untuk standardisasi tema warna. Class ini secara bawaan sudah mencakup responsivitas `w-full sm:w-auto`, teks putih, font-medium, dan shadow, sehingga atribut-atribut redundant tersebut tidak perlu ditulis manual lagi.
 
 ```tsx
-{/* Tambah */}
-<Button className="w-full sm:w-auto bg-[#1e3a5f] hover:bg-[#152e4d]">
+{/* Aksi Utama (Tambah, Simpan, dsb) */}
+<Button className="button-theme-1!">
   <Plus className="h-4 w-4 mr-2" />
   Tambah
 </Button>
@@ -388,6 +388,63 @@ Untuk memastikan tombol aksi selalu terlihat di berbagai ukuran layar (terutama 
   <Printer className="h-4 w-4 mr-2" />
   Print
 </Button>
+```
+
+---
+
+## 10.1 Standarisasi Komponen Modal Import
+
+**Aturan**:
+Penggunaan modal import **TIDAK BOLEH** diletakkan dan dikelola *state*-nya di dalam komponen Page (misalnya `CustomerManagementPage.tsx`), melainkan harus diletakkan di dalam komponen Table masing-masing (misalnya `CustomerTable.tsx`). Hal ini bertujuan agar file Page tetap bersih dari *boilerplate* UI Modal.
+
+Wajib menggunakan komponen `<DataImportModal>` (`src/components/features/master-data/DataImportModal.tsx`) yang sudah bersifat *reusable*, dan manfaatkan properti `entityName` agar judul dan deskripsi ter-*generate* secara otomatis dan konsisten.
+
+**Contoh Implementasi di dalam `*Table.tsx`:**
+
+```tsx
+import { useState } from 'react';
+import { DataImportModal } from '@/components/features/master-data/DataImportModal';
+
+export function CustomerTable({ onImport, isImporting, ...props }) {
+  const [isImportOpen, setIsImportOpen] = useState(false);
+
+  return (
+    <>
+      <BaseTable
+        {...props}
+        headerActions={
+          <Button onClick={() => setIsImportOpen(true)} variant="outline">
+            <Upload className="h-4 w-4 mr-2" />
+            Import
+          </Button>
+        }
+      />
+      <DataImportModal
+        open={isImportOpen}
+        onOpenChange={setIsImportOpen}
+        entityName="Customer" // Otomatis generate title & description
+        onImport={onImport}
+        isPending={isImporting}
+        accept=".xlsx,.xls,.csv,text/csv"
+      />
+    </>
+  );
+}
+```
+
+**Di dalam komponen Page (misal `CustomerManagementPage.tsx`)**:
+Cukup teruskan fungsi *handler* dan *state loading* ke tabel tanpa perlu mendefinisikan Modal.
+```tsx
+  const handleImport = async (file: File) => {
+    await importCustomer.mutateAsync({ companyId, file });
+  };
+
+  // Render Table
+  <CustomerTable
+    onImport={handleImport}
+    isImporting={importCustomer.isPending}
+    {...otherProps}
+  />
 ```
 
 ---
@@ -471,7 +528,7 @@ Untuk memastikan tombol aksi selalu terlihat di berbagai ukuran layar (terutama 
 | DropdownMenuContent | `rounded-md border-slate-200 p-1.5 shadow-lg` |
 | DropdownMenuItem | `rounded-lg px-3 py-2` |
 ---
-| Tambah button | `bg-[#1e3a5f] hover:bg-[#152e4d]` |
+| Tambah button | `button-theme-1!` |
 
 ---
 
@@ -643,7 +700,7 @@ Ketentuan:
 | DropdownMenuContent | `rounded-md border-slate-200 p-1.5 shadow-lg` |
 | DropdownMenuItem | `rounded-lg px-3 py-2` |
 | Back button | `h-10 w-10 rounded-md border border-slate-200 hover:bg-slate-50` |
-| Tambah button | `bg-[#1e3a5f] hover:bg-[#152e4d]` |
+| Tambah button | `button-theme-1!` |
 | Container Cetak A4 | `print-letter-page` |
 | Background Kop Surat | `print-letterhead` |
 
@@ -839,6 +896,24 @@ const handleExport = () => {
   link.click();
   window.URL.revokeObjectURL(url); // Hapus memori buffer
 };
+```
+
+### D. Paginasi & Show Per Page (Race Condition Prevention)
+Ketika mengubah *limit* data (*Show Per Page*) menggunakan `setPerPage` dari custom hook (misal: `useQueryParamsTable`), **JANGAN** memanggil `setPage(1)` secara berurutan.
+
+Hook `useQueryParamsTable` sudah mengatur ulang parameter `page: 1` secara otomatis saat `setPerPage` dipanggil. Karena router Next.js beroperasi secara asinkron, memanggil `setPage(1)` tepat setelah `setPerPage(val)` akan menghasilkan **race condition** di mana limit per halaman batal berubah (karena ditimpa).
+
+**❌ SALAH:**
+```tsx
+<Select onValueChange={(val) => { 
+  setPerPage(Number(val)); 
+  setPage(1); // Memicu race condition!
+}}>
+```
+
+**✅ BENAR:**
+```tsx
+<Select onValueChange={(val) => setPerPage(Number(val))}>
 ```
 
 ---

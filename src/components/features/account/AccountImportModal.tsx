@@ -25,6 +25,18 @@ export function AccountImportModal({ open, onOpenChange, companyId }: Props) {
             onImport={handleImport}
             isPending={mutation.isPending}
             templateUrl="https://docs.google.com/spreadsheets/d/1WdGMJEme7eGxp6GDJ-px2PmVurSdYHoKkv6za0VN8AI/edit?usp=sharing"
+            exampleData={{
+                headers: [
+                    'Nama Customer', 'Muat', 'Bongkar', 'Jarak',
+                    'UJ Towing', 'UJ CDD', 'UJ Fuso',
+                    'INV CDD', 'INV Fuso', 'Status'
+                ],
+                row: [
+                    'PT Contoh', 'Jakarta', 'Bandung', '150',
+                    '500000', '300000', '700000',
+                    '200000', '400000', 'Aktif'
+                ]
+            }}
         />
     );
 }

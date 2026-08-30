@@ -133,7 +133,6 @@ export default function AssetPage() {
           onPageChange={setPage}
           onPerPageChange={(v) => {
             setPerPage(v);
-            setPage(1);
           }}
           onAdd={handleAddClick}
           onImport={canCreate ? () => setIsImportOpen(true) : undefined}

@@ -2,7 +2,7 @@ import { useMemo } from 'react';
 import BaseTable, { ColumnDef } from '@/components/ui/base-table';
 import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { Upload } from 'lucide-react';
+import { Upload, Download } from 'lucide-react';
 import type { Asset } from '@/@types/asset.types';
 import { CopyBox } from '@/components/ui/copy-box';
 
@@ -119,7 +119,7 @@ export function AssetTable({
                 <div className="flex flex-wrap items-center gap-2">
                     {onExport && (
                         <Button onClick={onExport} disabled={isExporting} variant="outline" className="w-full sm:w-auto">
-                            <Upload className="h-4 w-4 mr-2" />
+                            <Download className="h-4 w-4 mr-2" />
                             {isExporting ? 'Exporting...' : 'Export'}
                         </Button>
                     )}
@@ -131,7 +131,7 @@ export function AssetTable({
                                     Import
                                 </Button>
                             )}
-                            <Button onClick={onAdd} className="w-full sm:w-auto bg-[#1e3a5f] hover:bg-[#152e4d]">
+                            <Button onClick={onAdd} className="btn-primary!">
                                 <svg className="h-4 w-4 mr-2" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14" /><path d="M12 5v14" /></svg>
                                 Tambah
                             </Button>

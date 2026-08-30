@@ -195,7 +195,7 @@ export function FinanceAssetDetailForm({ asset, onBack }: FinanceAssetDetailForm
                 <Button
                     type="button"
                     onClick={onBack}
-                    className="px-8 bg-[#1e3a5f] hover:bg-[#152e4d] text-white flex items-center gap-2"
+                    className="px-8 flex items-center gap-2 btn-primary!"
                 >
                     <ArrowLeft className="h-4 w-4" />
                     Kembali
