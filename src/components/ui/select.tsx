@@ -35,12 +35,12 @@ SelectTrigger.displayName = SelectPrimitive.Trigger.displayName;
 
 /* ================= Content ================= */
 
-const getTextContent = (node: React.ReactNode): string => {
+const getTextContent = (node: React.ReactNode | unknown): string => {
   if (!node) return '';
   if (typeof node === 'string' || typeof node === 'number') return String(node);
   if (Array.isArray(node)) return node.map(getTextContent).join(' ');
   if (React.isValidElement(node)) {
-    return getTextContent(node.props.children);
+    return getTextContent((node as React.ReactElement<any>).props.children);
   }
   return '';
 };
@@ -52,8 +52,10 @@ const filterChildren = (children: React.ReactNode, term: string): React.ReactNod
   return React.Children.map(children, (child) => {
     if (!React.isValidElement(child)) return child;
 
-    if (child.type === SelectItem || (child.type as any).displayName === 'SelectItem') {
-      const itemText = child.props.children;
+    const element = child as React.ReactElement<any>;
+
+    if (element.type === SelectItem || (element.type as any).displayName === 'SelectItem') {
+      const itemText = element.props.children;
       const textContent = getTextContent(itemText).toLowerCase();
       if (textContent.includes(lowerTerm)) {
         return child;
@@ -61,12 +63,12 @@ const filterChildren = (children: React.ReactNode, term: string): React.ReactNod
       return null;
     }
 
-    if (child.props && child.props.children) {
-      const filtered = filterChildren(child.props.children, term);
+    if (element.props && element.props.children) {
+      const filtered = filterChildren(element.props.children, term);
       if (React.Children.count(filtered) === 0) {
         return null;
       }
-      return React.cloneElement(child, { children: filtered } as any);
+      return React.cloneElement(element, { children: filtered } as any);
     }
 
     return child;

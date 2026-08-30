@@ -192,6 +192,10 @@ export const getNavItems = (slug: string): NavItemConfig[] => {
           href: base('/laporan/laporan-buku-besar'),
         },
         {
+          label: 'Laporan Laba Rugi',
+          href: base('/laporan/laporan-laba-rugi'),
+        },
+        {
           label: 'Laporan Pembelian',
           href: base('/laporan/laporan-pembelian'),
         },

@@ -19,9 +19,11 @@ const ensureReportFallbackSidebarMenus = (menus: MenuItem[], slug: string): Menu
 
     const journalHref = slug ? `/dashboard/${slug}/laporan/laporan-jurnal` : '/laporan/laporan-jurnal';
     const ledgerHref = slug ? `/dashboard/${slug}/laporan/laporan-buku-besar` : '/laporan/laporan-buku-besar';
+    const profitLossHref = slug ? `/dashboard/${slug}/laporan/laporan-laba-rugi` : '/laporan/laporan-laba-rugi';
     const children = [...menu.children];
     const hasJournal = menu.children.some((child) => child.href === journalHref || child.label === 'Laporan Jurnal');
     const hasLedger = menu.children.some((child) => child.href === ledgerHref || child.label === 'Laporan Buku Besar');
+    const hasProfitLoss = menu.children.some((child) => child.href === profitLossHref || child.label === 'Laporan Laba Rugi');
 
     if (!hasJournal) {
       const purchaseIndex = children.findIndex((child) => child.label === 'Laporan Pembelian');
@@ -42,6 +44,24 @@ const ensureReportFallbackSidebarMenus = (menus: MenuItem[], slug: string): Menu
       children.splice(insertIndex, 0, {
         label: 'Laporan Buku Besar',
         href: ledgerHref,
+      });
+    }
+
+    if (!hasProfitLoss) {
+      const ledgerIndex = children.findIndex((child) => child.label === 'Laporan Buku Besar');
+      const accountingIndex = children.findIndex((child) => child.label === 'Laporan Akuntansi');
+      const purchaseIndex = children.findIndex((child) => child.label === 'Laporan Pembelian');
+      const insertIndex = ledgerIndex >= 0
+        ? ledgerIndex + 1
+        : accountingIndex >= 0
+          ? accountingIndex
+          : purchaseIndex >= 0
+            ? purchaseIndex
+            : children.length;
+
+      children.splice(insertIndex, 0, {
+        label: 'Laporan Laba Rugi',
+        href: profitLossHref,
       });
     }
 
