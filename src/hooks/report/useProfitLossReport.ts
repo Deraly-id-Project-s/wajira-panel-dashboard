@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import type { ProfitLossTemplatePayload } from '@/@types/profit-loss-report.types';
+import type { ProfitLossReportFilters, ProfitLossTemplatePayload } from '@/@types/profit-loss-report.types';
 import {
   getProfitLossReport,
   updateProfitLossTemplate,
@@ -7,17 +7,20 @@ import {
 
 export const profitLossReportKeys = {
   all: ['profit-loss-report'] as const,
-  detail: (companyId: string | number | null | undefined) =>
-    [...profitLossReportKeys.all, companyId] as const,
+  detail: (
+    companyId: string | number | null | undefined,
+    filters: ProfitLossReportFilters = {},
+  ) => [...profitLossReportKeys.all, companyId, filters] as const,
 };
 
 export const useProfitLossReport = (
   companyId: string | number | null | undefined,
+  filters: ProfitLossReportFilters = {},
   enabled = true,
 ) =>
   useQuery({
-    queryKey: profitLossReportKeys.detail(companyId),
-    queryFn: () => getProfitLossReport(companyId!),
+    queryKey: profitLossReportKeys.detail(companyId, filters),
+    queryFn: () => getProfitLossReport(companyId!, filters),
     enabled: Boolean(companyId) && enabled,
     staleTime: 10_000,
   });
@@ -30,7 +33,7 @@ export const useUpdateProfitLossTemplate = (companyId: string | number | null | 
       updateProfitLossTemplate(companyId!, payload),
     onSuccess: () => {
       void queryClient.invalidateQueries({
-        queryKey: profitLossReportKeys.detail(companyId),
+        queryKey: [...profitLossReportKeys.all, companyId],
       });
     },
   });

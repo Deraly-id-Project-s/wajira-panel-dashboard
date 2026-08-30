@@ -13,6 +13,11 @@ export interface ProfitLossTemplatePayload {
   noix_account_ids: number[];
 }
 
+export interface ProfitLossReportFilters {
+  start_date?: string | null;
+  end_date?: string | null;
+}
+
 export interface ProfitLossReportLine {
   id?: string | number | null;
   account_id?: string | number | null;

@@ -2,14 +2,14 @@ import { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/router';
 import { format } from 'date-fns';
 import { DateRange } from 'react-day-picker';
-import { Printer, RotateCcw, Search } from 'lucide-react';
+import { Printer, RotateCcw } from 'lucide-react';
 
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { PrintLetterPage } from '@/components/common/PrintLetterPage';
 import { PageHeader } from '@/components/ui/page-header';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { DatePickerWithRange, type DateRangePickerMode } from '@/components/ui/date-range-picker';
+import { SearchInput } from '@/components/ui/search-input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { LedgerAccountSelect } from '@/components/features/laporan-buku-besar/LedgerAccountSelect';
 import { LaporanBukuBesarTable } from '@/components/features/laporan-buku-besar/LaporanBukuBesarTable';
@@ -145,15 +145,13 @@ export default function LaporanBukuBesarPage() {
 
             <div className="space-y-1.5">
               <label className="text-[13px] font-medium text-slate-700">Search</label>
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
-                <Input
-                  value={searchInput}
-                  onChange={(event) => setSearchInput(event.target.value)}
-                  placeholder="Cari kode transaksi atau keterangan"
-                  className="h-9 bg-white pl-9"
-                />
-              </div>
+              <SearchInput
+                searchValue={searchInput}
+                onSearchChange={setSearchInput}
+                placeholder="Cari kode transaksi atau keterangan"
+                aria-label="Cari transaksi buku besar"
+                className="h-9"
+              />
             </div>
 
             <div className="space-y-1.5">

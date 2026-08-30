@@ -1,4 +1,5 @@
 import type {
+  ProfitLossReportFilters,
   ProfitLossReportResponse,
   ProfitLossTemplatePayload,
 } from '@/@types/profit-loss-report.types';
@@ -9,8 +10,14 @@ const basePath = '/wapi/report/profit-loss-report';
 
 export const getProfitLossReport = async (
   companyId: string | number,
+  filters: ProfitLossReportFilters = {},
 ): Promise<ProfitLossReportResponse> => {
-  const response = await apiClient.get<ProfitLossReportResponse>(`${basePath}/${companyId}`);
+  const response = await apiClient.get<ProfitLossReportResponse>(`${basePath}/${companyId}`, {
+    params: {
+      start_date: filters.start_date || undefined,
+      end_date: filters.end_date || undefined,
+    },
+  });
   return response.data;
 };
 
@@ -26,8 +33,15 @@ export const updateProfitLossTemplate = async (
   return response.data;
 };
 
-export const exportProfitLossReport = async (companyId: string | number): Promise<void> => {
+export const exportProfitLossReport = async (
+  companyId: string | number,
+  filters: ProfitLossReportFilters = {},
+): Promise<void> => {
   const response = await apiClient.get(`${basePath}/${companyId}/export`, {
+    params: {
+      start_date: filters.start_date || undefined,
+      end_date: filters.end_date || undefined,
+    },
     responseType: 'blob',
   });
 
