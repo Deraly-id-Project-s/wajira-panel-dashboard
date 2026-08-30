@@ -13,7 +13,7 @@ interface SearchPaginationProps {
     onSearchChange: (value: string) => void
     searchPlaceholder?: string
     searchAriaLabel?: string
-    searchInputProps?: Omit<SearchInputProps, "value" | "onValueChange" | "placeholder">
+    searchInputProps?: Omit<SearchInputProps, "value" | "searchValue" | "onSearchChange" | "onValueChange" | "placeholder">
     page: number
     perPage: number
     total?: number
@@ -69,8 +69,8 @@ export function SearchPagination({
                 <div className="flex w-full flex-col gap-3 sm:w-auto sm:flex-row sm:items-center">
                     <SearchInput
                         {...searchInputProps}
-                        value={searchValue}
-                        onValueChange={onSearchChange}
+                        searchValue={searchValue}
+                        onSearchChange={onSearchChange}
                         placeholder={searchPlaceholder}
                         aria-label={searchAriaLabel}
                         wrapperClassName={cn("sm:w-[300px]", searchInputProps?.wrapperClassName)}

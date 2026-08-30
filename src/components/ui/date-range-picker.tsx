@@ -48,6 +48,24 @@ const MODE_OPTIONS: Array<{ value: DateRangePickerMode; label: string }> = [
     { value: "year", label: "Tahun" },
 ]
 
+const MONTH_OPTIONS = [
+    "Januari",
+    "Februari",
+    "Maret",
+    "April",
+    "Mei",
+    "Juni",
+    "Juli",
+    "Agustus",
+    "September",
+    "Oktober",
+    "November",
+    "Desember",
+]
+
+const MIN_YEAR = 2000
+const MAX_YEAR = 3000
+
 const formatRangeValue = (date: Date, mode: DateRangePickerMode) => {
     if (mode === "week") {
         return `Minggu ${getISOWeek(date)}, ${getISOWeekYear(date)}`
@@ -75,12 +93,27 @@ export function DatePickerWithRange({
     const activeMode = mode ?? internalMode
     const showPeriodFilter = enablePeriodFilter || enableMonthRange
     const inputId = React.useId()
+    const currentDate = React.useMemo(() => new Date(), [])
+    const currentYear = format(currentDate, "yyyy")
+    const currentMonth = format(currentDate, "MM")
 
     const handleModeChange = (nextMode: DateRangePickerMode) => {
+        if (nextMode === activeMode) return
+
         if (mode === undefined) {
             setInternalMode(nextMode)
         }
         onModeChange?.(nextMode)
+
+        if (nextMode === "week") {
+            onChange?.({ from: startOfISOWeek(currentDate), to: endOfISOWeek(currentDate) })
+        } else if (nextMode === "month") {
+            onChange?.({ from: startOfMonth(currentDate), to: endOfMonth(currentDate) })
+        } else if (nextMode === "year") {
+            onChange?.({ from: startOfYear(currentDate), to: endOfYear(currentDate) })
+        } else {
+            onChange?.(undefined)
+        }
     }
 
     const periodValues = React.useMemo(() => {
@@ -92,22 +125,27 @@ export function DatePickerWithRange({
         }
         if (activeMode === "month") {
             return {
-                from: date?.from ? format(date.from, "yyyy-MM") : "",
-                to: date?.to ? format(date.to, "yyyy-MM") : "",
+                from: date?.from ? format(date.from, "yyyy-MM") : `${currentYear}-${currentMonth}`,
+                to: date?.to ? format(date.to, "yyyy-MM") : `${currentYear}-${currentMonth}`,
             }
         }
         if (activeMode === "year") {
             return {
-                from: date?.from ? format(date.from, "yyyy") : "",
-                to: date?.to ? format(date.to, "yyyy") : "",
+                from: date?.from ? format(date.from, "yyyy") : currentYear,
+                to: date?.to ? format(date.to, "yyyy") : currentYear,
             }
         }
         return { from: "", to: "" }
-    }, [activeMode, date?.from, date?.to])
-    const [yearDraft, setYearDraft] = React.useState({ from: "", to: "" })
+    }, [activeMode, currentMonth, currentYear, date?.from, date?.to])
+    const [yearDraft, setYearDraft] = React.useState({ from: currentYear, to: currentYear })
 
     React.useEffect(() => {
-        if (activeMode === "year") {
+        if (activeMode === "month") {
+            setYearDraft({
+                from: periodValues.from.slice(0, 4),
+                to: periodValues.to.slice(0, 4),
+            })
+        } else if (activeMode === "year") {
             setYearDraft(periodValues)
         }
     }, [activeMode, periodValues])
@@ -120,10 +158,14 @@ export function DatePickerWithRange({
             return boundary === "start" ? startOfISOWeek(week) : endOfISOWeek(week)
         }
         if (activeMode === "month") {
+            const yearValue = Number(value.slice(0, 4))
+            if (yearValue < MIN_YEAR || yearValue > MAX_YEAR) return undefined
             const month = parse(value, "yyyy-MM", new Date())
             return boundary === "start" ? startOfMonth(month) : endOfMonth(month)
         }
 
+        const yearValue = Number(value)
+        if (yearValue < MIN_YEAR || yearValue > MAX_YEAR) return undefined
         const year = parse(value, "yyyy", new Date())
         return boundary === "start" ? startOfYear(year) : endOfYear(year)
     }
@@ -158,13 +200,23 @@ export function DatePickerWithRange({
         }
 
         const numericYear = Number(value)
-        if (/^\d{4}$/.test(value) && numericYear >= 1900 && numericYear <= 9999) {
-            handlePeriodChange(field, value)
+        if (/^\d{4}$/.test(value) && numericYear >= MIN_YEAR && numericYear <= MAX_YEAR) {
+            const periodValue = activeMode === "month"
+                ? `${value}-${periodValues[field].slice(5, 7)}`
+                : value
+            handlePeriodChange(field, periodValue)
         }
     }
 
-    const periodInputType = activeMode === "week" ? "week" : activeMode === "month" ? "month" : "number"
-    const periodLabel = activeMode === "week" ? "Minggu" : activeMode === "month" ? "Bulan" : "Tahun"
+    const handleMonthChange = (field: "from" | "to", month: string) => {
+        if (!isValidYear(yearDraft[field])) return
+        handlePeriodChange(field, `${yearDraft[field]}-${month}`)
+    }
+
+    const isValidYear = (value: string) => {
+        const year = Number(value)
+        return /^\d{4}$/.test(value) && year >= MIN_YEAR && year <= MAX_YEAR
+    }
 
     return (
         <div className={cn("grid gap-2", className)}>
@@ -217,54 +269,93 @@ export function DatePickerWithRange({
                         </div>
                     )}
 
-                    {activeMode !== "date" ? (
+                    {activeMode === "month" ? (
                         <div className="grid gap-3 p-3 sm:grid-cols-2">
-                            <div className="space-y-1.5">
-                                <label htmlFor={`${inputId}-from`} className="text-xs font-medium text-slate-600">
-                                    {periodLabel} Awal
-                                </label>
-                                <input
-                                    id={`${inputId}-from`}
-                                    type={periodInputType}
-                                    min={activeMode === "year" ? 1900 : undefined}
-                                    max={activeMode === "year" ? 9999 : undefined}
-                                    step={activeMode === "year" ? 1 : undefined}
-                                    inputMode={activeMode === "year" ? "numeric" : undefined}
-                                    value={activeMode === "year" ? yearDraft.from : periodValues.from}
-                                    onChange={(event) => activeMode === "year"
-                                        ? handleYearChange("from", event.target.value)
-                                        : handlePeriodChange("from", event.target.value)}
-                                    onBlur={() => {
-                                        if (activeMode === "year" && !/^\d{4}$/.test(yearDraft.from)) {
-                                            setYearDraft(periodValues)
-                                        }
-                                    }}
-                                    className="h-9 w-full rounded-md border border-slate-200 bg-white px-3 text-sm outline-none focus-visible:ring-2 focus-visible:ring-slate-950"
-                                />
-                            </div>
-                            <div className="space-y-1.5">
-                                <label htmlFor={`${inputId}-to`} className="text-xs font-medium text-slate-600">
-                                    {periodLabel} Akhir
-                                </label>
-                                <input
-                                    id={`${inputId}-to`}
-                                    type={periodInputType}
-                                    min={activeMode === "year" ? 1900 : undefined}
-                                    max={activeMode === "year" ? 9999 : undefined}
-                                    step={activeMode === "year" ? 1 : undefined}
-                                    inputMode={activeMode === "year" ? "numeric" : undefined}
-                                    value={activeMode === "year" ? yearDraft.to : periodValues.to}
-                                    onChange={(event) => activeMode === "year"
-                                        ? handleYearChange("to", event.target.value)
-                                        : handlePeriodChange("to", event.target.value)}
-                                    onBlur={() => {
-                                        if (activeMode === "year" && !/^\d{4}$/.test(yearDraft.to)) {
-                                            setYearDraft(periodValues)
-                                        }
-                                    }}
-                                    className="h-9 w-full rounded-md border border-slate-200 bg-white px-3 text-sm outline-none focus-visible:ring-2 focus-visible:ring-slate-950"
-                                />
-                            </div>
+                            {(["from", "to"] as const).map((field) => (
+                                <fieldset key={field} className="space-y-1.5">
+                                    <legend className="text-xs font-medium text-slate-600">
+                                        Periode {field === "from" ? "Awal" : "Akhir"}
+                                    </legend>
+                                    <div className="grid grid-cols-[minmax(120px,1fr)_90px] gap-2">
+                                        <select
+                                            id={`${inputId}-${field}-month`}
+                                            aria-label={`Bulan ${field === "from" ? "awal" : "akhir"}`}
+                                            value={periodValues[field].slice(5, 7)}
+                                            onChange={(event) => handleMonthChange(field, event.target.value)}
+                                            className="h-9 w-full rounded-md border border-slate-200 bg-white px-3 text-sm outline-none focus-visible:ring-2 focus-visible:ring-slate-950"
+                                        >
+                                            {MONTH_OPTIONS.map((month, index) => (
+                                                <option key={month} value={String(index + 1).padStart(2, "0")}>
+                                                    {month}
+                                                </option>
+                                            ))}
+                                        </select>
+                                        <input
+                                            id={`${inputId}-${field}-year`}
+                                            type="number"
+                                            aria-label={`Tahun ${field === "from" ? "awal" : "akhir"}`}
+                                            min={MIN_YEAR}
+                                            max={MAX_YEAR}
+                                            step={1}
+                                            inputMode="numeric"
+                                            value={yearDraft[field]}
+                                            onChange={(event) => handleYearChange(field, event.target.value)}
+                                            onBlur={() => {
+                                                if (!isValidYear(yearDraft[field])) {
+                                                    setYearDraft((current) => ({
+                                                        ...current,
+                                                        [field]: periodValues[field].slice(0, 4),
+                                                    }))
+                                                }
+                                            }}
+                                            className="h-9 w-full rounded-md border border-slate-200 bg-white px-2 text-sm outline-none focus-visible:ring-2 focus-visible:ring-slate-950"
+                                        />
+                                    </div>
+                                </fieldset>
+                            ))}
+                        </div>
+                    ) : activeMode === "week" ? (
+                        <div className="grid gap-3 p-3 sm:grid-cols-2">
+                            {(["from", "to"] as const).map((field) => (
+                                <div key={field} className="space-y-1.5">
+                                    <label htmlFor={`${inputId}-${field}`} className="text-xs font-medium text-slate-600">
+                                        Minggu {field === "from" ? "Awal" : "Akhir"}
+                                    </label>
+                                    <input
+                                        id={`${inputId}-${field}`}
+                                        type="week"
+                                        value={periodValues[field]}
+                                        onChange={(event) => handlePeriodChange(field, event.target.value)}
+                                        className="h-9 w-full rounded-md border border-slate-200 bg-white px-3 text-sm outline-none focus-visible:ring-2 focus-visible:ring-slate-950"
+                                    />
+                                </div>
+                            ))}
+                        </div>
+                    ) : activeMode === "year" ? (
+                        <div className="grid gap-3 p-3 sm:grid-cols-2">
+                            {(["from", "to"] as const).map((field) => (
+                                <div key={field} className="space-y-1.5">
+                                    <label htmlFor={`${inputId}-${field}`} className="text-xs font-medium text-slate-600">
+                                        Tahun {field === "from" ? "Awal" : "Akhir"}
+                                    </label>
+                                    <input
+                                        id={`${inputId}-${field}`}
+                                        type="number"
+                                        min={MIN_YEAR}
+                                        max={MAX_YEAR}
+                                        step={1}
+                                        inputMode="numeric"
+                                        value={yearDraft[field]}
+                                        onChange={(event) => handleYearChange(field, event.target.value)}
+                                        onBlur={() => {
+                                            if (!isValidYear(yearDraft[field])) {
+                                                setYearDraft(periodValues)
+                                            }
+                                        }}
+                                        className="h-9 w-full rounded-md border border-slate-200 bg-white px-3 text-sm outline-none focus-visible:ring-2 focus-visible:ring-slate-950"
+                                    />
+                                </div>
+                            ))}
                         </div>
                     ) : (
                         <Calendar

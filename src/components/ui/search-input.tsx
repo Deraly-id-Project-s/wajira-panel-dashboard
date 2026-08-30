@@ -8,6 +8,9 @@ import { Input, type InputProps } from "@/components/ui/input"
 
 export interface SearchInputProps extends Omit<InputProps, "type"> {
     wrapperClassName?: string
+    searchValue?: string
+    onSearchChange?: (value: string) => void
+    /** @deprecated Gunakan onSearchChange agar konsisten dengan SearchPagination. */
     onValueChange?: (value: string) => void
     enableShortcut?: boolean
 }
@@ -18,6 +21,8 @@ const SearchInput = React.forwardRef<HTMLInputElement, SearchInputProps>(
             className,
             wrapperClassName,
             onChange,
+            searchValue,
+            onSearchChange,
             onValueChange,
             placeholder = "Cari...",
             enableShortcut = true,
@@ -74,11 +79,13 @@ const SearchInput = React.forwardRef<HTMLInputElement, SearchInputProps>(
                     type="search"
                     disabled={disabled}
                     readOnly={readOnly}
+                    value={searchValue ?? props.value}
                     placeholder={placeholder}
                     aria-keyshortcuts={enableShortcut ? "Control+H" : undefined}
                     className={cn("bg-white pl-9", enableShortcut && "pr-16", className)}
                     onChange={(event) => {
                         onChange?.(event)
+                        onSearchChange?.(event.target.value)
                         onValueChange?.(event.target.value)
                     }}
                 />
