@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import { format } from 'date-fns';
-import { MoreVertical, Plus } from 'lucide-react';
+import { MoreVertical } from 'lucide-react';
 import BaseTable, { ColumnDef } from '@/components/ui/base-table';
 import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
@@ -8,14 +8,6 @@ import type { LPJRecord } from './lpj-perjalanan.data';
 
 interface LPJTableProps {
   data: LPJRecord[];
-  search: string;
-  onSearchChange: (value: string) => void;
-  page: number;
-  perPage: number;
-  totalData: number;
-  onPageChange: (page: number) => void;
-  onPerPageChange: (value: number) => void;
-  onAdd: () => void;
   onEdit: (item: LPJRecord) => void;
   onDetail: (item: LPJRecord) => void;
   onDelete: (item: LPJRecord) => void;
@@ -23,14 +15,6 @@ interface LPJTableProps {
 
 export function LPJTable({
   data,
-  search,
-  onSearchChange,
-  page,
-  perPage,
-  totalData,
-  onPageChange,
-  onPerPageChange,
-  onAdd,
   onEdit,
   onDetail,
   onDelete,
@@ -130,25 +114,6 @@ export function LPJTable({
     <BaseTable
       data={data}
       columns={columns}
-      searchPlaceholder="Search here"
-      search={search}
-      onSearchChange={onSearchChange}
-      showLimitChange
-      perPage={perPage}
-      onPerPageChange={onPerPageChange}
-      meta={{
-        currentPage: page,
-        perPage,
-        lastPage: Math.ceil(totalData / perPage) || 1,
-        total: totalData,
-      }}
-      onPageChange={onPageChange}
-      headerActions={
-        <Button onClick={onAdd} className="btn-primary!">
-          <Plus className="mr-2 h-4 w-4" />
-          Tambah
-        </Button>
-      }
     />
   );
 }

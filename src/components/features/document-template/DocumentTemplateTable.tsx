@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { MoreHorizontal, Plus, Pencil, Trash2, MoreVertical } from 'lucide-react';
+import { MoreVertical, Pencil, Trash2 } from 'lucide-react';
 import BaseTable, { type ColumnDef } from '@/components/ui/base-table';
 import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
@@ -8,22 +8,13 @@ import type { DocumentTemplate } from '@/@types/document-template.types';
 interface Props {
   data: DocumentTemplate[];
   loading?: boolean;
-  search: string;
-  page: number;
-  perPage: number;
-  total: number;
-  canCreate: boolean;
   canEdit: boolean;
   canDelete: boolean;
-  onSearchChange: (value: string) => void;
-  onPageChange: (page: number) => void;
-  onPerPageChange: (value: number) => void;
-  onCreate: () => void;
   onEdit: (item: DocumentTemplate) => void;
   onDelete: (item: DocumentTemplate) => void;
 }
 
-export function DocumentTemplateTable({ data, loading, search, page, perPage, total, canCreate, canEdit, canDelete, onSearchChange, onPageChange, onPerPageChange, onCreate, onEdit, onDelete }: Props) {
+export function DocumentTemplateTable({ data, loading, canEdit, canDelete, onEdit, onDelete }: Props) {
   const columns = useMemo<ColumnDef<DocumentTemplate>[]>(() => [
     { header: 'NAMA TEMPLATE', accessorKey: 'name', sortable: true, className: 'font-medium text-slate-900' },
     { header: 'BAHASA', accessorKey: 'language', sortable: true, cell: (item) => item.language.toUpperCase() },
@@ -48,5 +39,5 @@ export function DocumentTemplateTable({ data, loading, search, page, perPage, to
     },
   ], [canEdit, canDelete, onEdit, onDelete]);
 
-  return <BaseTable data={data} columns={columns} loading={loading} searchPlaceholder="Cari dokumen template" search={search} onSearchChange={onSearchChange} showLimitChange perPage={perPage} onPerPageChange={onPerPageChange} meta={{ currentPage: page, perPage, total, lastPage: Math.max(1, Math.ceil(total / perPage)) }} onPageChange={onPageChange} headerActions={canCreate ? <Button onClick={onCreate} className="bg-[#1e3a5f] hover:bg-[#152e4d]"><Plus className="mr-2 h-4 w-4" />Tambah</Button> : undefined} />;
+  return <BaseTable data={data} columns={columns} loading={loading} />;
 }

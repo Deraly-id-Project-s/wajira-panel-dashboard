@@ -6,6 +6,7 @@ import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
+import { SearchPagination } from '@/components/ui/search-pagination';
 import { VehicleDocumentDetailTable } from '@/components/features/vehicle-document/VehicleDocumentDetailTable';
 import { useVehicleDocumentDetail } from '@/hooks/useVehicleDocument';
 import type { VehicleDocumentItem } from '@/@types/vehicle-document.types';
@@ -32,11 +33,13 @@ export default function EditVehicleDocumentPage() {
 
   React.useEffect(() => {
     const timeout = window.setTimeout(() => {
-      setSearch(searchInput.trim().toLowerCase());
-      setPage(1);
+      if (search !== searchInput.trim().toLowerCase()) {
+        setSearch(searchInput.trim().toLowerCase());
+        setPage(1);
+      }
     }, 300);
     return () => window.clearTimeout(timeout);
-  }, [searchInput]);
+  }, [searchInput, search, setPage]);
 
   const registrationItems = React.useMemo<VehicleDocumentItem[]>(() => {
     const registrations = detailQuery.data?.vehicleRegistrations || [];
@@ -165,23 +168,27 @@ export default function EditVehicleDocumentPage() {
             </div>
           </Card>
 
-          <VehicleDocumentDetailTable
-            items={pagedItems}
-            search={searchInput}
-            isLoading={detailQuery.isFetching}
+          <SearchPagination
+            searchValue={searchInput}
+            onSearchChange={setSearchInput}
+            searchPlaceholder="Search here"
+            searchAriaLabel="Cari kendaraan"
             page={page}
             perPage={perPage}
-            totalData={filteredItems.length}
-            onSearchChange={setSearchInput}
+            total={filteredItems.length}
+            lastPage={Math.max(1, Math.ceil(filteredItems.length / perPage))}
             onPageChange={setPage}
-            onPerPageChange={(value) => {
-              setPerPage(value);
-            }}
-            onEdit={(item) => {
-              const registrationId = item.registrationId || item.id;
-              router.push(`/dashboard/${slug}/stnk-bpkb/${detailQuery.data?.id}/registration/${registrationId}/edit`);
-            }}
-          />
+            onPerPageChange={setPerPage}
+          >
+            <VehicleDocumentDetailTable
+              items={pagedItems}
+              isLoading={detailQuery.isFetching}
+              onEdit={(item) => {
+                const registrationId = item.registrationId || item.id;
+                router.push(`/dashboard/${slug}/stnk-bpkb/${detailQuery.data?.id}/registration/${registrationId}/edit`);
+              }}
+            />
+          </SearchPagination>
         </div>
       )}
     </DashboardLayout>

@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/router';
-import { Download, Plus, RefreshCw, Trash2 } from 'lucide-react';
+import { format } from 'date-fns';
+import { Download, Plus, RefreshCw, RotateCcw, Trash2 } from 'lucide-react';
+import type { DateRange } from 'react-day-picker';
 import { toast } from 'sonner';
 
 import type {
@@ -13,6 +15,8 @@ import type {
 import type { Account } from '@/@types/account.types';
 import { PageHeader } from '@/components/ui/page-header';
 import { Button } from '@/components/ui/button';
+import { DatePickerWithRange, type DateRangePickerMode } from '@/components/ui/date-range-picker';
+import { SearchInput } from '@/components/ui/search-input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Skeleton } from '@/components/ui/skeleton';
 import { currenciesFormat } from '@/components/ui/currenciesFormat';
@@ -339,6 +343,18 @@ export default function LaporanLabaRugiPage() {
     buildTemplateState,
   );
   const [isExporting, setIsExporting] = useState(false);
+  const [searchInput, setSearchInput] = useState('');
+  const [dateRange, setDateRange] = useState<DateRange | undefined>();
+  const [dateMode, setDateMode] = useState<DateRangePickerMode>('date');
+
+  const reportFilters = useMemo(() => ({
+    start_date: dateRange?.from ? format(dateRange.from, 'yyyy-MM-dd') : null,
+    end_date: dateRange?.to
+      ? format(dateRange.to, 'yyyy-MM-dd')
+      : dateRange?.from
+        ? format(dateRange.from, 'yyyy-MM-dd')
+        : null,
+  }), [dateRange]);
 
   const accountQuery = useAccounts({
     page: 1,
@@ -349,7 +365,11 @@ export default function LaporanLabaRugiPage() {
   });
   const accounts = useMemo(() => accountQuery.data?.data ?? [], [accountQuery.data?.data]);
 
-  const reportQuery = useProfitLossReport(resolvedCompanyId, Boolean(resolvedCompanyId));
+  const reportQuery = useProfitLossReport(
+    resolvedCompanyId,
+    reportFilters,
+    Boolean(resolvedCompanyId),
+  );
   const updateTemplateMutation = useUpdateProfitLossTemplate(resolvedCompanyId);
 
   const reportData = reportQuery.data?.data ?? EMPTY_REPORT_DATA;
@@ -364,6 +384,20 @@ export default function LaporanLabaRugiPage() {
       return acc;
     }, {} as Record<SectionKey, NormalizedSection>);
   }, [reportData]);
+
+  const filteredSections = useMemo(() => {
+    const keyword = searchInput.trim().toLowerCase();
+    if (!keyword) return normalizedSections;
+
+    return REPORT_SECTIONS.reduce<Record<SectionKey, NormalizedSection>>((acc, section) => {
+      const currentSection = normalizedSections[section.key];
+      acc[section.key] = {
+        ...currentSection,
+        rows: currentSection.rows.filter((line) => getLineLabel(line).toLowerCase().includes(keyword)),
+      };
+      return acc;
+    }, {} as Record<SectionKey, NormalizedSection>);
+  }, [normalizedSections, searchInput]);
 
   const explicitNetIncome = reportData.profit_loss_before_tax ?? reportData.net_income ?? reportData.net_profit ?? reportData.profit_loss;
   const calculatedNetIncome = explicitNetIncome !== undefined && explicitNetIncome !== null ? toNumber(explicitNetIncome) : (
@@ -413,7 +447,7 @@ export default function LaporanLabaRugiPage() {
 
     setIsExporting(true);
     try {
-      await exportProfitLossReport(resolvedCompanyId);
+      await exportProfitLossReport(resolvedCompanyId, reportFilters);
       toast.success('Export laporan laba rugi berhasil diproses.');
     } catch (error) {
       toast.error((error as Error)?.message || 'Gagal export laporan laba rugi.');
@@ -459,6 +493,47 @@ export default function LaporanLabaRugiPage() {
             </>
           }
         />
+
+        <div className="grid gap-3 rounded-md border border-slate-200 bg-white p-4 no-print lg:grid-cols-[minmax(240px,1fr)_minmax(290px,360px)_auto] lg:items-end">
+          <div className="space-y-1.5">
+            <label className="text-[13px] font-medium text-slate-700">Search</label>
+            <SearchInput
+              searchValue={searchInput}
+              onSearchChange={setSearchInput}
+              placeholder="Cari kode atau nama akun"
+              aria-label="Cari akun laporan laba rugi"
+              className="h-9"
+            />
+          </div>
+
+          <div className="space-y-1.5">
+            <label className="text-[13px] font-medium text-slate-700">Periode Laporan</label>
+            <DatePickerWithRange
+              date={dateRange}
+              onChange={setDateRange}
+              enablePeriodFilter
+              mode={dateMode}
+              onModeChange={(nextMode) => {
+                setDateMode(nextMode);
+                setDateRange(undefined);
+              }}
+            />
+          </div>
+
+          <Button
+            type="button"
+            variant="outline"
+            className="h-9"
+            onClick={() => {
+              setSearchInput('');
+              setDateRange(undefined);
+              setDateMode('date');
+            }}
+          >
+            <RotateCcw className="mr-2 h-4 w-4" />
+            Reset
+          </Button>
+        </div>
 
         <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
           <div className="rounded-md border border-slate-200 bg-white p-4">
@@ -513,7 +588,7 @@ export default function LaporanLabaRugiPage() {
                 config={section}
                 accounts={accounts}
                 accountIds={templateState[section.templateKey]}
-                reportSection={normalizedSections[section.key]}
+                reportSection={filteredSections[section.key]}
                 onChange={(nextIds) => {
                   setTemplateState((current) => ({
                     ...current,

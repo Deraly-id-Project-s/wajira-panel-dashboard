@@ -4,8 +4,9 @@ import { toast } from 'sonner';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { DOEkspedisiTable } from '@/components/features/do-ekspedisi/DOEkspedisiTable';
 import { DeleteDOEkspedisiModal } from '@/components/features/do-ekspedisi/DeleteDOEkspedisiModal';
+import { Button } from '@/components/ui/button';
+import { SearchPagination } from '@/components/ui/search-pagination';
 import type { DoEkspedisi } from '@/@types/do-ekspedisi.types';
-import { useDebouncedValue } from '@/hooks/useDebouncedValue';
 import {
   useDeleteDoEkspedisi,
   useDoEkspedisis,
@@ -13,23 +14,27 @@ import {
 import { useProcessDoExpedition } from '@/hooks/useDoInvoice';
 import { PageHeader } from '@/components/ui/page-header';
 import { getApiErrorMessage } from '@/utils/apiErrorHandler';
+import { useQueryParamsTable } from '@/hooks/useQueryParamsTable';
 
 export default function DOEkspedisiPage() {
   const router = useRouter();
   const { slug } = router.query;
 
-  const [searchInput, setSearchInput] = useState('');
-  const [search, setSearch] = useState('');
-  const [page, setPage] = useState(1);
-  const [perPage, setPerPage] = useState(25);
+  const { page, perPage, search, setPage, setPerPage, setSearch, updateQuery } = useQueryParamsTable({
+    defaultPerPage: 25,
+  });
+  const [searchInput, setSearchInput] = useState(search);
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
   const [selectedItem, setSelectedItem] = useState<DoEkspedisi | null>(null);
-  const debouncedSearch = useDebouncedValue(searchInput, 400);
 
   useEffect(() => {
-    setSearch(debouncedSearch);
-    setPage(1);
-  }, [debouncedSearch]);
+    const timeout = window.setTimeout(() => {
+      if (search !== searchInput.trim()) {
+        setSearch(searchInput.trim());
+      }
+    }, 400);
+    return () => window.clearTimeout(timeout);
+  }, [searchInput, search, setSearch]);
 
   const listQuery = useDoEkspedisis({
     page,
@@ -89,10 +94,6 @@ export default function DOEkspedisiPage() {
     [processExpeditionMutation, slug, router],
   );
 
-  const handlePerPageChange = useCallback((value: number) => {
-    setPerPage(value);
-  }, []);
-
   return (
     <DashboardLayout>
       <div className="space-y-6">
@@ -101,24 +102,44 @@ export default function DOEkspedisiPage() {
           subtitle="Buat faktur dengan informasi penagihan yang diperlukan."
         />
 
-        <DOEkspedisiTable
-          data={listQuery.data?.data ?? []}
-          search={searchInput}
+        <SearchPagination
+          searchValue={searchInput}
+          onSearchChange={setSearchInput}
+          searchPlaceholder="Search here"
+          searchAriaLabel="Cari DO ekspedisi"
           page={page}
           perPage={perPage}
-          totalData={listQuery.data?.meta.total ?? 0}
-          totalPages={listQuery.data?.meta.lastPage ?? 1}
-          isLoading={listQuery.isLoading}
-          onSearchChange={setSearchInput}
+          total={listQuery.data?.meta.total}
+          lastPage={listQuery.data?.meta.lastPage}
           onPageChange={setPage}
-          onPerPageChange={handlePerPageChange}
-          onEdit={handleEditClick}
-          onDetail={handleDetailClick}
-          onDelete={handleDelete}
-          onPrint={(item) => {
-            void handlePrintClick(item);
-          }}
-        />
+          onPerPageChange={setPerPage}
+          actions={
+            search ? (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  setSearchInput('');
+                  updateQuery({ search: undefined, page: 1 });
+                }}
+                className="rounded-md border-slate-200 text-slate-700 bg-white hover:bg-slate-50 cursor-pointer h-9 text-xs px-3"
+              >
+                Reset
+              </Button>
+            ) : null
+          }
+        >
+          <DOEkspedisiTable
+            data={listQuery.data?.data ?? []}
+            isLoading={listQuery.isLoading}
+            onEdit={handleEditClick}
+            onDetail={handleDetailClick}
+            onDelete={handleDelete}
+            onPrint={(item) => {
+              void handlePrintClick(item);
+            }}
+          />
+        </SearchPagination>
       </div>
 
       <DeleteDOEkspedisiModal

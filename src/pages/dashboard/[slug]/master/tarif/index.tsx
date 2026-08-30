@@ -1,15 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
-import { Search, Plus } from 'lucide-react';
+import { Plus } from 'lucide-react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { PageHeader } from '@/components/ui/page-header';
+import { SearchPagination } from '@/components/ui/search-pagination';
 import { TarifTable } from '@/components/features/tarif/TarifTable';
 import { DeleteTarifModal } from '@/components/features/tarif/DeleteTarifModal';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'sonner';
 import { useTarifs, useDeleteTarif, useCreateTarif } from '@/hooks/useTarif';
+import { useQueryParamsTable } from '@/hooks/useQueryParamsTable';
 import type { Tarif, TarifPayload } from '@/@types/tarif.types';
 import { usePermissionGuard } from '@/hooks/usePermissionGuard';
 import { TarifFormModal } from '@/components/features/tarif/TarifFormModal';
@@ -24,19 +24,18 @@ export default function TarifPage() {
     const canDelete = hasPermission('master-data:delete');
 
     // Table state
-    const [searchInput, setSearchInput] = useState('');   // immediate input
-    const [search, setSearch] = useState('');              // debounced
-    const [page, setPage] = useState(1);
-    const [perPage, setPerPage] = useState(25);
+    const { page, perPage, search, setPage, setPerPage, setSearch, updateQuery } = useQueryParamsTable({ defaultPerPage: 25 });
+    const [searchInput, setSearchInput] = useState(search);
 
     // Live search debounce — 400ms
     useEffect(() => {
         const timer = setTimeout(() => {
-            setSearch(searchInput);
-            setPage(1);
+            if (search !== searchInput.trim()) {
+                setSearch(searchInput.trim());
+            }
         }, 400);
         return () => clearTimeout(timer);
-    }, [searchInput]);
+    }, [searchInput, search, setSearch]);
 
     const { data: tarifData, isLoading } = useTarifs({ page, perPage, search });
     const deleteMutation = useDeleteTarif();
@@ -106,56 +105,51 @@ export default function TarifPage() {
 
                 {/* Content */}
                 <div className="space-y-4">
-                    <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-                        <div className="flex items-center gap-4 w-full sm:w-auto">
-                            <div className="relative w-full sm:w-[300px]">
-                                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-                                <Input
-                                    placeholder="Search here"
-                                    className="pl-9 bg-white"
-                                    value={searchInput}
-                                    onChange={(e) => setSearchInput(e.target.value)}
-                                />
-                            </div>
-                            <div className="flex items-center gap-2 text-sm text-slate-500 whitespace-nowrap">
-                                <span>Show</span>
-                                <Select value={perPage.toString()} onValueChange={(val) => { setPerPage(Number(val)); }}>
-                                    <SelectTrigger className="w-[70px] bg-white">
-                                        <SelectValue placeholder="25" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        <SelectItem value="25">25</SelectItem>
-                                        <SelectItem value="50">50</SelectItem>
-                                        <SelectItem value="100">100</SelectItem>
-                                    </SelectContent>
-                                </Select>
-                                <span>Page</span>
-                            </div>
-                        </div>
-                        <div className="flex flex-col sm:flex-row items-center gap-2 w-full sm:w-auto">
-                            {canCreate && (
-                                <Button onClick={handleAddClick} className="btn-primary-orange!">
-                                    <Plus className="h-4 w-4 mr-2" />
-                                    Tambah Data
-                                </Button>
-                            )}
-                        </div>
-                    </div>
-
-                    <TarifTable
-                        data={tarifList}
-                        meta={tarifData?.meta}
+                    <SearchPagination
+                        searchValue={searchInput}
+                        onSearchChange={setSearchInput}
+                        searchPlaceholder="Search here"
+                        searchAriaLabel="Cari tarif"
                         page={page}
                         perPage={perPage}
-                        isLoading={isLoading}
+                        total={tarifData?.meta?.total ?? 0}
+                        lastPage={tarifData?.meta?.lastPage ?? 1}
                         onPageChange={setPage}
                         onPerPageChange={setPerPage}
-                        onEdit={handleEditClick}
-                        onVersioning={handleVersioningClick}
-                        onDelete={handleDeleteClick}
-                        canEdit={canEdit}
-                        canDelete={canDelete}
-                    />
+                        actions={
+                            <>
+                                {search && (
+                                    <Button
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={() => {
+                                            setSearchInput('');
+                                            updateQuery({ search: undefined, page: 1 });
+                                        }}
+                                        className="rounded-md border-slate-200 text-slate-700 bg-white hover:bg-slate-50 cursor-pointer h-9 text-xs px-3"
+                                    >
+                                        Reset
+                                    </Button>
+                                )}
+                                {canCreate && (
+                                    <Button onClick={handleAddClick} className="btn-primary-orange!">
+                                        <Plus className="h-4 w-4 mr-2" />
+                                        Tambah Data
+                                    </Button>
+                                )}
+                            </>
+                        }
+                    >
+                        <TarifTable
+                            data={tarifList}
+                            isLoading={isLoading}
+                            onEdit={handleEditClick}
+                            onVersioning={handleVersioningClick}
+                            onDelete={handleDeleteClick}
+                            canEdit={canEdit}
+                            canDelete={canDelete}
+                        />
+                    </SearchPagination>
                 </div>
             </div>
 

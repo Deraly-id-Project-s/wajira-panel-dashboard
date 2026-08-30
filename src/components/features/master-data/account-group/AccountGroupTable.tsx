@@ -4,25 +4,19 @@ import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuIte
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { MoreVertical, Pencil, Trash, Lock } from 'lucide-react';
 import type { AccountGroup } from '@/@types/account-group.types';
-import type { PaginationMeta } from '@/@types/pagination.types';
 import { Badge } from '@/components/ui/badge';
 import { CopyBox } from '@/components/ui/copy-box';
 
 interface AccountGroupTableProps {
   data: AccountGroup[];
-  meta?: PaginationMeta;
   isLoading?: boolean;
   onEdit: (accountGroup: AccountGroup) => void;
   onDelete: (accountGroup: AccountGroup) => void;
-  page: number;
-  perPage: number;
   canEdit: boolean;
   canDelete: boolean;
-  onPageChange: (page: number) => void;
-  onPerPageChange: (perPage: number) => void;
 }
 
-export const AccountGroupTable = ({ data, meta, isLoading = false, onEdit, onDelete, page, perPage, onPageChange, onPerPageChange, canEdit, canDelete }: AccountGroupTableProps) => {
+export const AccountGroupTable = ({ data, isLoading = false, onEdit, onDelete, canEdit, canDelete }: AccountGroupTableProps) => {
   const columns = useMemo<ColumnDef<AccountGroup>[]>(
     () => [
       {
@@ -127,13 +121,6 @@ export const AccountGroupTable = ({ data, meta, isLoading = false, onEdit, onDel
       columns={columns}
       loading={isLoading}
       defaultSort={{ key: 'code', direction: 'asc' }}
-      meta={{
-        currentPage: page,
-        perPage,
-        lastPage: meta?.lastPage ?? 1,
-        total: meta?.total ?? data.length,
-      }}
-      onPageChange={onPageChange}
     />
   );
 };

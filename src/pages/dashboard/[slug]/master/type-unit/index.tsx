@@ -1,13 +1,17 @@
 import { useEffect, useMemo, useState } from 'react';
+import { Plus, Upload } from 'lucide-react';
 import { useRouter } from 'next/router';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { PageHeader } from '@/components/ui/page-header';
+import { Button } from '@/components/ui/button';
+import { SearchPagination } from '@/components/ui/search-pagination';
 import { Card } from '@/components/ui/card';
 import { toast } from 'sonner';
 import { useTypeUnits, useDeleteTypeUnit, useImportTypeUnit } from '@/hooks/useTypeUnit';
 import { TypeUnitTable } from '@/components/features/type-unit/TypeUnitTable';
 import { DeleteTypeUnitDialog } from '@/components/features/type-unit/DeleteTypeUnitDialog';
 import { DataImportModal } from '@/components/features/master-data/DataImportModal';
+import { useQueryParamsTable } from '@/hooks/useQueryParamsTable';
 import type { TypeUnit } from '@/@types/type-unit.types';
 import { useCompany } from '@/contexts/CompanyContext';
 import { usePermissionGuard } from '@/hooks/usePermissionGuard';
@@ -15,9 +19,17 @@ import { LoadingState } from '@/components/ui/loading-state';
 
 export default function TypeUnitPage() {
   const router = useRouter();
-  const [search, setSearch] = useState('');
-  const [page, setPage] = useState(1);
-  const [perPage, setPerPage] = useState(25);
+  const { page, perPage, search, setPage, setPerPage, setSearch, updateQuery } = useQueryParamsTable({ defaultPerPage: 25 });
+  const [searchInput, setSearchInput] = useState(search);
+
+  useEffect(() => {
+    const timeout = window.setTimeout(() => {
+      if (search !== searchInput.trim()) {
+        setSearch(searchInput.trim());
+      }
+    }, 400);
+    return () => window.clearTimeout(timeout);
+  }, [searchInput, search, setSearch]);
 
   const { hasPermission } = usePermissionGuard();
   const canCreate = hasPermission('master-data:create');
@@ -141,31 +153,57 @@ export default function TypeUnitPage() {
           subtitle="Kelola semua tipe unit"
         />
 
-        {/* TABLE CARD */}
-        <div className="">
+        {/* SEARCH & TABLE */}
+        <SearchPagination
+          searchValue={searchInput}
+          onSearchChange={setSearchInput}
+          searchPlaceholder="Search here"
+          searchAriaLabel="Cari tipe unit"
+          page={page}
+          perPage={perPage}
+          total={manualMeta.total}
+          lastPage={manualMeta.lastPage}
+          onPageChange={setPage}
+          onPerPageChange={setPerPage}
+          actions={
+            <>
+              {search && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    setSearchInput('');
+                    updateQuery({ search: undefined, page: 1 });
+                  }}
+                  className="rounded-md border-slate-200 text-slate-700 bg-white hover:bg-slate-50 cursor-pointer h-9 text-xs px-3"
+                >
+                  Reset
+                </Button>
+              )}
+              {canCreate && (
+                <>
+                  <Button onClick={() => setOpenImport(true)} variant="outline" className="h-9 text-xs px-3 rounded-md border-slate-200 text-slate-700 bg-white hover:bg-slate-50 cursor-pointer">
+                    <Upload className="h-4 w-4 mr-2" />
+                    Import
+                  </Button>
+                  <Button onClick={handleCreateClick} className="btn-primary!">
+                    <Plus className="h-4 w-4 mr-2" />
+                    Tambah
+                  </Button>
+                </>
+              )}
+            </>
+          }
+        >
           <TypeUnitTable
             typeUnits={paginatedData}
-            meta={manualMeta}
-            search={search}
-            page={page}
-            perPage={perPage}
-            onSearchChange={(value) => {
-              setSearch(value);
-              setPage(1);
-            }}
-            onPageChange={setPage}
-            onPerPageChange={(value) => {
-              setPerPage(value);
-            }}
             isLoading={isLoading}
             onEdit={handleEditClick}
             onDelete={handleDeleteClick}
-            onAdd={canCreate ? handleCreateClick : undefined}
-            onImport={canCreate ? () => setOpenImport(true) : undefined}
             canEdit={canEdit}
             canDelete={canDelete}
           />
-        </div>
+        </SearchPagination>
       </div>
 
       <DeleteTypeUnitDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen} onConfirm={handleConfirmDelete} isDeleting={deleteTypeUnit.isPending} />

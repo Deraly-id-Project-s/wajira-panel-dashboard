@@ -1,12 +1,13 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/router';
-import { ArrowLeft, ChevronRight, Hash, Tag, Scale, Coins, ShieldCheck, Search, Filter } from 'lucide-react';
+import { ArrowLeft, ChevronRight, Hash, Tag, Scale, Coins, ShieldCheck, Search, Filter, Plus } from 'lucide-react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { SearchPagination } from '@/components/ui/search-pagination';
 import { useTypeUnitDetail } from '@/hooks/useTypeUnit';
 import { useCompany } from '@/contexts/CompanyContext';
 import { LoadingState } from '@/components/ui/loading-state';
@@ -454,28 +455,35 @@ export default function TypeUnitDetailPage() {
             <p className="text-sm text-slate-500 text-muted-foreground">Kelola riwayat harga beli & harga jual untuk tipe unit ini</p>
           </div>
 
-          <UnitTypePriceVersionTable
-            data={priceVersionsData?.data || []}
-            meta={priceVersionsData ? {
-              currentPage: priceVersionsData.current_page,
-              lastPage: priceVersionsData.last_page,
-              perPage: priceVersionsData.per_page,
-              total: priceVersionsData.total,
-            } : undefined}
-            isLoading={isPriceLoading}
-            search={priceSearch}
+          <SearchPagination
+            searchValue={priceSearch}
+            onSearchChange={setPriceSearch}
+            searchPlaceholder="Cari versi harga..."
+            searchAriaLabel="Cari versi harga"
             page={pricePage}
             perPage={pricePerPage}
-            onSearchChange={setPriceSearch}
+            total={priceVersionsData?.total ?? 0}
+            lastPage={priceVersionsData?.last_page ?? 1}
             onPageChange={setPricePage}
             onPerPageChange={setPricePerPage}
-            onAdd={handleAddPrice}
-            onEdit={handleEditPrice}
-            onDelete={handleDeletePrice}
-            canCreate={canCreate}
-            canEdit={canEdit}
-            canDelete={canDelete}
-          />
+            actions={
+              canCreate && (
+                <Button onClick={handleAddPrice} className="btn-primary!">
+                  <Plus className="mr-2 h-4 w-4" />
+                  Tambah Versi
+                </Button>
+              )
+            }
+          >
+            <UnitTypePriceVersionTable
+              data={priceVersionsData?.data || []}
+              isLoading={isPriceLoading}
+              onEdit={handleEditPrice}
+              onDelete={handleDeletePrice}
+              canEdit={canEdit}
+              canDelete={canDelete}
+            />
+          </SearchPagination>
         </div>
       </div>
 

@@ -1,46 +1,26 @@
 import { useMemo } from 'react';
 import BaseTable, { ColumnDef } from '@/components/ui/base-table';
-import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { MoreVertical, Pencil, Plus, Trash, Eye } from 'lucide-react';
+import { MoreVertical, Pencil, Trash, Eye } from 'lucide-react';
 import { CopyBox } from '@/components/ui/copy-box';
 import type { WarehouseBlock } from '@/services/warehouseBlock.service';
-import type { PaginationMeta } from '@/@types/pagination.types';
 
 interface WarehouseBlockTableProps {
   data: WarehouseBlock[];
-  meta?: PaginationMeta;
-  search: string;
-  page: number;
-  perPage: number;
   isLoading?: boolean;
-  onSearchChange: (value: string) => void;
-  onAdd: () => void;
   onEdit: (block: WarehouseBlock) => void;
   onDelete: (block: WarehouseBlock) => void;
   onViewDetail: (block: WarehouseBlock) => void;
-  onPageChange: (page: number) => void;
-  onPerPageChange: (perPage: number) => void;
-  canCreate: boolean
-  canEdit: boolean
-  canDelete: boolean
+  canEdit: boolean;
+  canDelete: boolean;
 }
 
 export const WarehouseBlockTable = ({
   data,
-  meta,
-  search,
-  page,
-  perPage,
   isLoading = false,
-  onSearchChange,
-  onAdd,
   onEdit,
   onDelete,
   onViewDetail,
-  onPageChange,
-  onPerPageChange,
-  canCreate,
   canEdit,
   canDelete,
 }: WarehouseBlockTableProps) => {
@@ -118,27 +98,7 @@ export const WarehouseBlockTable = ({
       data={data}
       columns={columns}
       loading={isLoading}
-      searchPlaceholder="Cari blok gudang..."
-      search={search}
-      onSearchChange={onSearchChange}
-      showLimitChange
-      perPage={perPage}
-      onPerPageChange={onPerPageChange}
       defaultSort={{ key: 'id', direction: 'desc' }}
-      meta={{
-        currentPage: page,
-        perPage,
-        lastPage: meta?.lastPage ?? 1,
-        total: meta?.total ?? data.length,
-      }}
-      onPageChange={onPageChange}
-      headerActions={
-        <Button onClick={canCreate ? onAdd : undefined}
-          className="btn-primary!" disabled={!canCreate}>
-          <Plus className="mr-2 h-4 w-4" />
-          Tambah Data
-        </Button>
-      }
     />
   );
 };

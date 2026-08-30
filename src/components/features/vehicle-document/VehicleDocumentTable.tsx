@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { Download, MoreVertical, Plus, Upload } from 'lucide-react';
+import { MoreVertical } from 'lucide-react';
 import { format } from 'date-fns';
 import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
@@ -8,20 +8,9 @@ import type { VehicleDocumentSummary } from '@/@types/vehicle-document.types';
 
 interface Props {
   items: VehicleDocumentSummary[];
-  search: string;
   isLoading?: boolean;
-  page: number;
-  perPage: number;
-  totalData: number;
-  onSearchChange: (value: string) => void;
-  onPageChange: (page: number) => void;
-  onPerPageChange: (value: number) => void;
-  onAdd: () => void;
-  onImport: () => void;
-  onExport: () => void;
   onEdit: (item: VehicleDocumentSummary) => void;
   onDelete: (item: VehicleDocumentSummary) => void;
-  isExporting?: boolean;
 }
 
 const formatDate = (value?: string) => {
@@ -33,23 +22,10 @@ const formatDate = (value?: string) => {
 
 export function VehicleDocumentTable({
   items,
-  search,
   isLoading = false,
-  page,
-  perPage,
-  totalData,
-  onSearchChange,
-  onPageChange,
-  onPerPageChange,
-  onAdd,
-  onImport,
-  onExport,
   onEdit,
   onDelete,
-  isExporting = false,
 }: Props) {
-  const totalPages = Math.max(1, Math.ceil(totalData / perPage));
-
   const columns = useMemo<ColumnDef<VehicleDocumentSummary>[]>(
     () => [
       {
@@ -138,35 +114,6 @@ export function VehicleDocumentTable({
       data={items}
       columns={columns}
       loading={isLoading}
-      searchPlaceholder="Search here"
-      search={search}
-      onSearchChange={onSearchChange}
-      showLimitChange
-      perPage={perPage}
-      onPerPageChange={onPerPageChange}
-      meta={{
-        currentPage: page,
-        perPage,
-        lastPage: totalPages,
-        total: totalData,
-      }}
-      onPageChange={onPageChange}
-      headerActions={
-        <div className="flex flex-wrap gap-2">
-          <Button onClick={onExport} disabled={isExporting} variant="outline" className="w-full sm:w-auto">
-            <Download className="mr-2 h-4 w-4" />
-            {isExporting ? 'Exporting...' : 'Export'}
-          </Button>
-          <Button onClick={onImport} variant="outline" className="w-full sm:w-auto">
-            <Upload className="mr-2 h-4 w-4" />
-            Import
-          </Button>
-          <Button onClick={onAdd} className="btn-primary!">
-            <Plus className="mr-2 h-4 w-4" />
-            Tambah Data
-          </Button>
-        </div>
-      }
     />
   );
 }

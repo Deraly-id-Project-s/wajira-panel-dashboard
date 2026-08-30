@@ -1,13 +1,17 @@
 import React, { useEffect, useState } from 'react';
+import { Download, Plus, Upload } from 'lucide-react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { ArmadaTable } from '@/components/features/armada/ArmadaTable';
 import { DeleteArmadaModal } from '@/components/features/armada/DeleteArmadaModal';
 import { DataImportModal } from '@/components/features/master-data/DataImportModal';
+import { Button } from '@/components/ui/button';
+import { SearchPagination } from '@/components/ui/search-pagination';
 import { toast } from 'sonner';
 import { useRouter } from 'next/router';
 import { useArmadas, useDeleteArmada, useImportArmada } from '@/hooks/useArmada';
 import type { Armada } from '@/@types/armada.types';
 import { useCompany } from '@/contexts/CompanyContext';
+import { useQueryParamsTable } from '@/hooks/useQueryParamsTable';
 import { VehicleDataTable } from '@/components/features/vehicle-data/VehicleDataTable';
 import { DeleteVehicleDataDialog } from '@/components/features/vehicle-data/DeleteVehicleDataDialog';
 import {
@@ -25,10 +29,8 @@ export default function VehicleFleetPage() {
   const { slug } = router.query;
   const { companyId } = useCompany();
 
-  const [searchInput, setSearchInput] = useState('');
-  const [search, setSearch] = useState('');
-  const [page, setPage] = useState(1);
-  const [perPage, setPerPage] = useState(25);
+  const { page, perPage, search, setPage, setPerPage, setSearch, updateQuery } = useQueryParamsTable({ defaultPerPage: 25 });
+  const [searchInput, setSearchInput] = useState(search);
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
   const [isImportOpen, setIsImportOpen] = useState(false);
   const [selectedArmadaId, setSelectedArmadaId] = useState<string | number | null>(null);
@@ -52,11 +54,12 @@ export default function VehicleFleetPage() {
 
   useEffect(() => {
     const timer = setTimeout(() => {
-      setSearch(searchInput);
-      setPage(1);
+      if (search !== searchInput.trim()) {
+        setSearch(searchInput.trim());
+      }
     }, 400);
     return () => clearTimeout(timer);
-  }, [searchInput]);
+  }, [searchInput, search, setSearch]);
 
   // Standard Armada Hooks
   const { data: armadaData, isLoading: isArmadaLoading } = useArmadas({ page, perPage, search, enabled: companyId !== '3' });
@@ -233,62 +236,82 @@ export default function VehicleFleetPage() {
           <p className="mt-1 text-sm text-gray-500">Kelola data kendaraan dengan mudah</p>
         </div>
 
-        {companyId === '3' ? (
-          <VehicleDataTable
-            items={vehicleDataResponse?.data ?? []}
-            isLoading={isVehicleLoading}
-            search={searchInput}
-            onSearchChange={setSearchInput}
-            page={page}
-            perPage={perPage}
-            totalData={totalData}
-            onPageChange={setPage}
-            onPerPageChange={(value) => {
-              setPerPage(value);
-            }}
-            selectedIds={selectedIds}
-            assignedIds={assignedIds}
-            onSelectedIdsChange={setSelectedIds}
-            onAdd={handleAddClick}
-            onImport={() => setIsImportOpen(true)}
-            onExport={handleExportVehicle}
-            onDetail={handleDetailVehicleClick}
-            onEdit={handleEditVehicleClick}
-            onDelete={handleDeleteVehicleClick}
-            isExporting={exportVehicleMutation.isPending}
-            vendorId={assignVendorId}
-            onVendorIdChange={setAssignVendorId}
-            vendorOptions={vendorOptions}
-            onVendorSearchChange={setVendorSearch}
-            processDate={assignProcessDate}
-            onProcessDateChange={setAssignProcessDate}
-            onSubmitAssign={handleAssignSubmit}
-            isAssigning={assignMutation.isPending}
-          />
-        ) : (
-          <ArmadaTable
-            armadas={armadas}
-            search={searchInput}
-            onSearchChange={setSearchInput}
-            page={page}
-            perPage={perPage}
-            totalData={totalData}
-            totalPages={totalPages}
-            isLoading={isArmadaLoading}
-            onPageChange={setPage}
-            onPerPageChange={(value) => {
-              setPerPage(value);
-            }}
-            onAdd={handleAddClick}
-            onImport={() => setIsImportOpen(true)}
-            onEdit={handleEditClick}
-            onDelete={handleDeleteClick}
-            onDetail={handleDetailClick}
-            canCreate={false}
-            canEdit={false}
-            canDelete={false}
-          />
-        )}
+        <SearchPagination
+          searchValue={searchInput}
+          onSearchChange={setSearchInput}
+          searchPlaceholder="Search here"
+          searchAriaLabel="Cari data kendaraan"
+          page={page}
+          perPage={perPage}
+          total={totalData}
+          lastPage={totalPages}
+          onPageChange={setPage}
+          onPerPageChange={setPerPage}
+          actions={
+            <>
+              {search && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    setSearchInput('');
+                    updateQuery({ search: undefined, page: 1 });
+                  }}
+                  className="rounded-md border-slate-200 text-slate-700 bg-white hover:bg-slate-50 cursor-pointer h-9 text-xs px-3"
+                >
+                  Reset
+                </Button>
+              )}
+              {companyId === '3' && (
+                <>
+                  <Button onClick={handleExportVehicle} disabled={exportVehicleMutation.isPending} variant="outline" className="h-9 text-xs px-3 rounded-md border-slate-200 text-slate-700 bg-white hover:bg-slate-50 cursor-pointer">
+                    <Download className="h-4 w-4 mr-2" />
+                    {exportVehicleMutation.isPending ? 'Exporting...' : 'Export'}
+                  </Button>
+                  <Button onClick={() => setIsImportOpen(true)} variant="outline" className="h-9 text-xs px-3 rounded-md border-slate-200 text-slate-700 bg-white hover:bg-slate-50 cursor-pointer">
+                    <Upload className="h-4 w-4 mr-2" />
+                    Import
+                  </Button>
+                  <Button onClick={handleAddClick} className="btn-primary!">
+                    <Plus className="h-4 w-4 mr-2" />
+                    Tambah Data
+                  </Button>
+                </>
+              )}
+            </>
+          }
+        >
+          {companyId === '3' ? (
+            <VehicleDataTable
+              items={vehicleDataResponse?.data ?? []}
+              isLoading={isVehicleLoading}
+              selectedIds={selectedIds}
+              assignedIds={assignedIds}
+              onSelectedIdsChange={setSelectedIds}
+              onDetail={handleDetailVehicleClick}
+              onEdit={handleEditVehicleClick}
+              onDelete={handleDeleteVehicleClick}
+              vendorId={assignVendorId}
+              onVendorIdChange={setAssignVendorId}
+              vendorOptions={vendorOptions}
+              onVendorSearchChange={setVendorSearch}
+              processDate={assignProcessDate}
+              onProcessDateChange={setAssignProcessDate}
+              onSubmitAssign={handleAssignSubmit}
+              isAssigning={assignMutation.isPending}
+            />
+          ) : (
+            <ArmadaTable
+              armadas={armadas}
+              isLoading={isArmadaLoading}
+              onEdit={handleEditClick}
+              onDelete={handleDeleteClick}
+              onDetail={handleDetailClick}
+              canEdit={false}
+              canDelete={false}
+            />
+          )}
+        </SearchPagination>
       </div>
 
       <DeleteArmadaModal

@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { Plus, MoreVertical, Upload, CircleAlert } from 'lucide-react';
+import { MoreVertical, CircleAlert } from 'lucide-react';
 import BaseTable, { ColumnDef } from '@/components/ui/base-table';
 import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
@@ -9,21 +9,10 @@ import { Badge } from '@/components/ui/badge';
 
 interface ArmadaTableProps {
   armadas: Armada[];
-  search: string;
-  onSearchChange: (value: string) => void;
-  page: number;
-  perPage: number;
-  totalData: number;
-  totalPages: number;
   isLoading?: boolean;
-  onPageChange: (page: number) => void;
-  onPerPageChange: (perPage: number) => void;
-  onAdd: () => void;
-  onImport: () => void;
   onEdit: (armada: Armada) => void;
   onDelete: (armada: Armada) => void;
   onDetail?: (armada: Armada) => void;
-  canCreate: boolean;
   canEdit: boolean;
   canDelete: boolean;
 }
@@ -112,21 +101,10 @@ const getArmadaRowMark = (armada: Armada) => {
 
 export function ArmadaTable({
   armadas,
-  search,
-  onSearchChange,
-  page,
-  perPage,
-  totalData,
-  totalPages,
   isLoading = false,
-  onPageChange,
-  onPerPageChange,
-  onAdd,
-  onImport,
   onEdit,
   onDelete,
   onDetail,
-  canCreate,
   canEdit,
   canDelete,
 }: ArmadaTableProps) {
@@ -234,36 +212,7 @@ export function ArmadaTable({
       data={armadas}
       columns={columns}
       loading={isLoading}
-      searchPlaceholder="Search here"
-      search={search}
-      onSearchChange={onSearchChange}
-      showLimitChange
-      perPage={perPage}
-      onPerPageChange={onPerPageChange}
-      meta={{
-        currentPage: page,
-        perPage,
-        lastPage: totalPages,
-        total: totalData,
-      }}
-      onPageChange={onPageChange}
       getRowMark={getArmadaRowMark}
-      headerActions={
-        canCreate && (
-          <div className="flex flex-wrap items-center gap-2">
-            {onImport && (
-              <Button onClick={onImport} variant="outline" className="w-full sm:w-auto">
-                <Upload className="h-4 w-4 mr-2" />
-                Import
-              </Button>
-            )}
-            <Button onClick={onAdd} className="btn-primary!">
-              <Plus className="h-4 w-4 mr-2" />
-              Tambah
-            </Button>
-          </div>
-        )
-      }
     />
   );
 }

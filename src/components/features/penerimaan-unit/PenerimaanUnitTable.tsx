@@ -40,41 +40,14 @@ import { toast } from 'sonner';
 
 interface Props {
   data: PenerimaanUnit[];
-  meta?: {
-    currentPage: number;
-    perPage: number;
-    lastPage: number;
-    total: number;
-  };
   isLoading?: boolean;
-  search?: string;
-  onSearchChange?: (value: string) => void;
-  perPage?: number;
-  onPerPageChange?: (value: number) => void;
-  onPageChange?: (page: number) => void;
-  headerActions?: React.ReactNode;
-  startDate?: string | null;
-  endDate?: string | null;
-  onDateRangeChange?: (start: string | null, end: string | null) => void;
-  canCreate?: boolean;
   canEdit?: boolean;
 }
 
 export default function PenerimaanUnitTable({
   data,
-  meta,
   isLoading,
-  search,
-  onSearchChange,
-  perPage = 25,
-  onPerPageChange,
-  onPageChange,
-  headerActions,
-  startDate,
-  endDate,
-  canCreate,
   canEdit,
-  onDateRangeChange,
 }: Props) {
   console.log(data)
   const router = useRouter();
@@ -242,19 +215,6 @@ export default function PenerimaanUnitTable({
         data={data}
         columns={columns}
         loading={isLoading}
-        searchPlaceholder="Search here"
-        search={search}
-        onSearchChange={onSearchChange}
-        showLimitChange
-        perPage={perPage}
-        onPerPageChange={onPerPageChange}
-        meta={meta}
-        onPageChange={onPageChange}
-        headerActions={headerActions}
-        addDateRangePicker={true}
-        startDate={startDate}
-        endDate={endDate}
-        onDateRangeChange={onDateRangeChange}
       />
 
       {/* DIALOG UPDATE STATUS */}

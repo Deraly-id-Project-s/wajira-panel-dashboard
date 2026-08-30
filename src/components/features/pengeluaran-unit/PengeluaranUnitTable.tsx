@@ -4,7 +4,6 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import BaseTable, { ColumnDef } from '@/components/ui/base-table';
 import { WarehouseActivity } from '@/@types/warehouse.types';
-import { PaginationMeta } from '@/@types/pagination.types';
 import { MoreVertical, Pencil } from 'lucide-react';
 import {
   DropdownMenu,
@@ -40,22 +39,9 @@ import { toast } from 'sonner';
 
 interface Props {
   data: WarehouseActivity[];
-  meta: PaginationMeta;
-  search: string;
-  perPage: number;
-  page: number;
   isLoading: boolean;
-  isError: boolean;
-  errorMessage?: string;
-  onSearchChange: (value: string) => void;
-  onPerPageChange: (value: number) => void;
-  onPageChange: (value: number) => void;
-  onRetry: () => void;
-  startDate?: string | null;
-  endDate?: string | null;
   canEdit: boolean;
   canDelete: boolean;
-  onDateRangeChange?: (start: string | null, end: string | null) => void;
 }
 
 const formatDate = (value: string): string => {
@@ -67,19 +53,9 @@ const formatDate = (value: string): string => {
 
 export default function PengeluaranUnitTable({
   data,
-  meta,
-  search,
-  perPage,
-  page,
   isLoading,
-  onSearchChange,
-  onPerPageChange,
-  onPageChange,
-  startDate,
-  endDate,
   canEdit,
   canDelete,
-  onDateRangeChange,
 }: Props) {
   const router = useRouter();
   const slugValue = Array.isArray(router.query.slug) ? router.query.slug[0] : router.query.slug;
@@ -251,17 +227,6 @@ export default function PengeluaranUnitTable({
         data={data}
         columns={columns}
         loading={isLoading}
-        search={search}
-        onSearchChange={onSearchChange}
-        showLimitChange
-        perPage={perPage}
-        onPerPageChange={onPerPageChange}
-        meta={meta}
-        onPageChange={onPageChange}
-        addDateRangePicker={true}
-        startDate={startDate}
-        endDate={endDate}
-        onDateRangeChange={onDateRangeChange}
       />
 
       {/* DIALOG UPDATE STATUS */}

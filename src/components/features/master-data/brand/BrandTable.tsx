@@ -3,38 +3,23 @@ import BaseTable, { ColumnDef } from '@/components/ui/base-table';
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from '@/components/ui/dropdown-menu';
 import { ImageIcon, MoreVertical, Pencil, Trash } from 'lucide-react';
 import type { Brand } from '@/@types/brand.types';
-import type { PaginationMeta } from '@/@types/pagination.types';
 import { format } from 'date-fns';
 import { id as localeId } from 'date-fns/locale';
 
 interface BrandTableProps {
     data: Brand[];
-    meta?: PaginationMeta;
-    search: string;
-    onSearchChange: (value: string) => void;
-    page: number;
-    perPage: number;
     isLoading?: boolean;
     canEdit: boolean;
     canDelete: boolean;
     onEdit: (brand: Brand) => void;
     onDelete: (brand: Brand) => void;
-    onPageChange: (page: number) => void;
-    onPerPageChange: (perPage: number) => void;
 }
 
 export const BrandTable = ({
     data,
-    meta,
-    search,
-    onSearchChange,
-    page,
-    perPage,
     isLoading = false,
     onEdit,
     onDelete,
-    onPageChange,
-    onPerPageChange,
     canEdit,
     canDelete,
 }: BrandTableProps) => {
@@ -102,20 +87,7 @@ export const BrandTable = ({
             data={data}
             columns={columns}
             loading={isLoading}
-            searchPlaceholder="Search here"
-            search={search}
-            onSearchChange={onSearchChange}
-            showLimitChange
-            perPage={perPage}
-            onPerPageChange={onPerPageChange}
             defaultSort={{ key: 'createdAt', direction: 'desc' }}
-            meta={{
-                currentPage: page,
-                perPage,
-                lastPage: meta?.lastPage ?? 1,
-                total: meta?.total ?? data.length,
-            }}
-            onPageChange={onPageChange}
         />
     );
 };

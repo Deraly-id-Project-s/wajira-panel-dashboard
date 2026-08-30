@@ -13,10 +13,7 @@ import { Badge } from '@/components/ui/badge';
 
 interface AccountTableProps {
   data: Account[];
-  total: number;
   isLoading: boolean;
-  page: number;
-  perPage: number;
   selectedIds: Set<string>;
   canEdit: boolean;
   canDelete: boolean;
@@ -24,21 +21,16 @@ interface AccountTableProps {
   onToggleRow: (id: string, checked: boolean) => void;
   onEdit: (account: Account) => void;
   onDelete: (account: Account) => void;
-  onPageChange: (page: number) => void;
 }
 
 export function AccountTable({
   data,
-  total,
   isLoading,
-  page,
-  perPage,
   selectedIds,
   onToggleAll,
   onToggleRow,
   onEdit,
   onDelete,
-  onPageChange,
   canEdit,
   canDelete,
 }: AccountTableProps) {
@@ -202,13 +194,6 @@ export function AccountTable({
       selectedIds={selectedIds}
       onSelectedIdsChange={handleSelectedIdsChange}
       getRowId={(item) => String(item.id)}
-      meta={{
-        currentPage: page,
-        perPage: perPage,
-        lastPage: Math.max(1, Math.ceil(total / perPage)),
-        total: total,
-      }}
-      onPageChange={onPageChange}
     />
   );
 }

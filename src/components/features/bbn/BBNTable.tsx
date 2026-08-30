@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { Plus, MoreVertical, Upload, Download } from 'lucide-react';
+import { MoreVertical } from 'lucide-react';
 import BaseTable, { ColumnDef } from '@/components/ui/base-table';
 import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
@@ -7,21 +7,9 @@ import type { BBN } from '@/@types/bbn.types';
 
 interface BBNTableProps {
   bbns: BBN[];
-  search: string;
-  onSearchChange: (value: string) => void;
   isLoading?: boolean;
-  page: number;
-  perPage: number;
-  totalData: number;
-  onPageChange: (page: number) => void;
-  onPerPageChange: (perPage: number) => void;
-  onAdd: () => void;
-  onImport?: () => void;
-  onExport?: () => void;
   onEdit: (bbn: BBN) => void;
   onDelete: (bbn: BBN) => void;
-  isExporting?: boolean;
-  canCreate: boolean;
   canEdit: boolean;
   canDelete: boolean;
 }
@@ -37,21 +25,9 @@ const formatCurrency = (amount: number) => {
 
 export function BBNTable({
   bbns,
-  search,
-  onSearchChange,
   isLoading = false,
-  page,
-  perPage,
-  totalData,
-  onPageChange,
-  onPerPageChange,
-  onAdd,
-  onImport,
-  onExport,
   onEdit,
   onDelete,
-  isExporting = false,
-  canCreate,
   canEdit,
   canDelete,
 }: BBNTableProps) {
@@ -140,41 +116,6 @@ export function BBNTable({
       columns={columns}
       loading={isLoading}
       getRowId={(item) => item.uuid || String(item.id || '')}
-      searchPlaceholder="Search here"
-      search={search}
-      onSearchChange={onSearchChange}
-      showLimitChange
-      perPage={perPage}
-      onPerPageChange={onPerPageChange}
-      meta={{
-        currentPage: page,
-        perPage,
-        lastPage: Math.ceil(totalData / perPage) || 1,
-        total: totalData,
-      }}
-      onPageChange={onPageChange}
-      headerActions={
-        canCreate && (
-          <div className="flex flex-wrap items-center gap-2">
-            {onExport && (
-              <Button onClick={onExport} disabled={isExporting} variant="outline" className="w-full sm:w-auto">
-                <Download className="h-4 w-4 mr-2" />
-                {isExporting ? 'Exporting...' : 'Export'}
-              </Button>
-            )}
-            {onImport && (
-              <Button onClick={onImport} variant="outline" className="w-full sm:w-auto">
-                <Upload className="h-4 w-4 mr-2" />
-                Import
-              </Button>
-            )}
-            <Button onClick={onAdd} className="btn-primary!">
-              <Plus className="h-4 w-4 mr-2" />
-              Tambah
-            </Button>
-          </div>
-        )
-      }
     />
   );
 }

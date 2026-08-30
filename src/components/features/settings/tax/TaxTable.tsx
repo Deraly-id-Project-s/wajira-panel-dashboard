@@ -1,30 +1,20 @@
 import { useMemo } from 'react';
 import BaseTable, { ColumnDef } from '@/components/ui/base-table';
-import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
-import { MoreVertical, Pencil, Plus, Trash, Lock, Play, Eye } from 'lucide-react';
+import { MoreVertical, Pencil, Trash, Lock, Eye } from 'lucide-react';
 import type { Tax } from '@/services/tax.service';
-import type { PaginationMeta } from '@/@types/pagination.types';
 import { CopyBox } from '@/components/ui/copy-box';
 
 interface TaxTableProps {
   data: Tax[];
-  meta?: PaginationMeta;
-  search: string;
-  page: number;
-  perPage: number;
   isLoading?: boolean;
-  onSearchChange: (value: string) => void;
-  onAdd: () => void;
   onEdit: (tax: Tax) => void;
   onDelete: (tax: Tax) => void;
   onViewDetail: (tax: Tax) => void;
-  onPageChange: (page: number) => void;
-  onPerPageChange: (perPage: number) => void;
 }
 
-export const TaxTable = ({ data, meta, search, page, perPage, isLoading = false, onSearchChange, onAdd, onEdit, onDelete, onViewDetail, onPageChange, onPerPageChange }: TaxTableProps) => {
+export const TaxTable = ({ data, isLoading = false, onEdit, onDelete, onViewDetail }: TaxTableProps) => {
   const columns = useMemo<ColumnDef<Tax>[]>(
     () => [
       {
@@ -109,26 +99,7 @@ export const TaxTable = ({ data, meta, search, page, perPage, isLoading = false,
       data={data}
       columns={columns}
       loading={isLoading}
-      searchPlaceholder="Cari pajak"
-      search={search}
-      onSearchChange={onSearchChange}
-      showLimitChange
-      perPage={perPage}
-      onPerPageChange={onPerPageChange}
       defaultSort={{ key: 'id', direction: 'desc' }}
-      meta={{
-        currentPage: page,
-        perPage,
-        lastPage: meta?.lastPage ?? 1,
-        total: meta?.total ?? data.length,
-      }}
-      onPageChange={onPageChange}
-      headerActions={
-        <Button onClick={onAdd} className="btn-primary!">
-          <Plus className="mr-2 h-4 w-4" />
-          Tambah Data
-        </Button>
-      }
     />
   );
 };

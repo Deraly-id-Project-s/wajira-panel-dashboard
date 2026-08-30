@@ -15,6 +15,10 @@ import {
 import { useDitlantasProcessOptions } from '@/hooks/useVehicleDocument';
 import { BBNBillFormDialog, BBNBillPaymentDialog, DeleteBBNBillDialog } from '@/components/features/tagihan-bbn/BBNBillDialogs';
 import { BBNBillTable } from '@/components/features/tagihan-bbn/BBNBillTable';
+import { Button } from '@/components/ui/button';
+import { SearchPagination } from '@/components/ui/search-pagination';
+import { Plus } from 'lucide-react';
+import { useQueryParamsTable } from '@/hooks/useQueryParamsTable';
 import type { BBNBill, BBNBillPayload } from '@/@types/bbn-bill.types';
 import { getCashLabel } from '@/components/features/tagihan-bbn/utils';
 
@@ -24,10 +28,10 @@ export default function BBNBillListPage() {
   const { companyId } = useCompany();
   const safeCompanyId = companyId || '1';
 
-  const [searchInput, setSearchInput] = React.useState('');
-  const [search, setSearch] = React.useState('');
-  const [page, setPage] = React.useState(1);
-  const [perPage, setPerPage] = React.useState(25);
+  const { page, perPage, search, setPage, setPerPage, setSearch } = useQueryParamsTable({
+    defaultPerPage: 25,
+  });
+  const [searchInput, setSearchInput] = React.useState(search);
   const [ditlantasSearch, setDitlantasSearch] = React.useState('');
   const [createOpen, setCreateOpen] = React.useState(false);
   const [paymentOpen, setPaymentOpen] = React.useState(false);
@@ -36,12 +40,13 @@ export default function BBNBillListPage() {
 
   React.useEffect(() => {
     const timeout = window.setTimeout(() => {
-      setSearch(searchInput.trim());
-      setPage(1);
+      if (search !== searchInput.trim()) {
+        setSearch(searchInput.trim());
+      }
     }, 350);
 
     return () => window.clearTimeout(timeout);
-  }, [searchInput]);
+  }, [searchInput, search, setSearch]);
 
   const listQuery = useBBNBillList({ page, perPage, search });
   const ditlantasQuery = useDitlantasProcessOptions(ditlantasSearch, false);
@@ -143,31 +148,39 @@ export default function BBNBillListPage() {
           </div>
         </div>
 
-        <BBNBillTable
-          items={listQuery.data?.data ?? []}
-          search={searchInput}
-          isLoading={listQuery.isLoading}
+        <SearchPagination
+          searchValue={searchInput}
+          onSearchChange={setSearchInput}
+          searchPlaceholder="Search here"
+          searchAriaLabel="Cari tagihan BBN"
           page={page}
           perPage={perPage}
-          totalData={listQuery.data?.meta.total ?? 0}
-          onSearchChange={setSearchInput}
+          total={listQuery.data?.meta.total}
+          lastPage={listQuery.data?.meta.lastPage}
           onPageChange={setPage}
-          onPerPageChange={(value) => {
-            setPerPage(value);
-          }}
-          onAdd={() => setCreateOpen(true)}
-          onDetail={(item) => router.push(`/dashboard/${slug}/tagihan-bbn/${item.id}`)}
-          onEdit={(item) => router.push(`/dashboard/${slug}/tagihan-bbn/${item.id}/edit`)}
-          onPay={(item) => {
-            setSelectedBill(item);
-            setPaymentOpen(true);
-          }}
-          onPrint={(item) => router.push(`/dashboard/${slug}/tagihan-bbn/print/${item.id}`)}
-          onDelete={(item) => {
-            setSelectedBill(item);
-            setDeleteOpen(true);
-          }}
-        />
+          onPerPageChange={setPerPage}
+          actions={
+            <Button onClick={() => setCreateOpen(true)} className="btn-primary!">
+              <Plus className="h-4 w-4 mr-2" />
+              Tambah Data
+            </Button>
+          }
+        >
+          <BBNBillTable
+            items={listQuery.data?.data ?? []}
+            isLoading={listQuery.isLoading}
+            onDetail={(item) => router.push(`/dashboard/${slug}/tagihan-bbn/${item.id}`)}
+            onPay={(item) => {
+              setSelectedBill(item);
+              setPaymentOpen(true);
+            }}
+            onPrint={(item) => router.push(`/dashboard/${slug}/tagihan-bbn/print/${item.id}`)}
+            onDelete={(item) => {
+              setSelectedBill(item);
+              setDeleteOpen(true);
+            }}
+          />
+        </SearchPagination>
       </div>
 
       <BBNBillFormDialog

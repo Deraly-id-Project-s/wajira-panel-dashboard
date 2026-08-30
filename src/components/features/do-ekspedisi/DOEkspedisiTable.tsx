@@ -15,15 +15,7 @@ import { currenciesFormat } from '@/components/ui/currenciesFormat';
 
 interface DOEkspedisiTableProps {
   data: DoEkspedisi[];
-  search: string;
-  page: number;
-  perPage: number;
-  totalData: number;
-  totalPages: number;
   isLoading?: boolean;
-  onSearchChange: (value: string) => void;
-  onPageChange: (page: number) => void;
-  onPerPageChange: (perPage: number) => void;
   onEdit: (item: DoEkspedisi) => void;
   onDetail: (item: DoEkspedisi) => void;
   onDelete: (item: DoEkspedisi) => void;
@@ -92,15 +84,7 @@ const getVehicleTypeLabel = (type: string) => {
 
 export const DOEkspedisiTable = React.memo(function DOEkspedisiTable({
   data,
-  search,
-  page,
-  perPage,
-  totalData,
-  totalPages,
   isLoading = false,
-  onSearchChange,
-  onPageChange,
-  onPerPageChange,
   onEdit,
   onDetail,
   onDelete,
@@ -271,19 +255,6 @@ export const DOEkspedisiTable = React.memo(function DOEkspedisiTable({
       data={data}
       columns={columns}
       loading={isLoading}
-      searchPlaceholder="Search here"
-      search={search}
-      onSearchChange={onSearchChange}
-      showLimitChange
-      perPage={perPage}
-      onPerPageChange={onPerPageChange}
-      meta={{
-        currentPage: page,
-        perPage,
-        lastPage: totalPages,
-        total: totalData,
-      }}
-      onPageChange={onPageChange}
     />
   );
 });

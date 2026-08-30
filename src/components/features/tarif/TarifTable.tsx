@@ -4,19 +4,13 @@ import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuIte
 import { Button } from '@/components/ui/button';
 import { MoreVertical } from 'lucide-react';
 import type { Tarif } from '@/@types/tarif.types';
-import type { PaginationMeta } from '@/@types/pagination.types';
 import { currenciesFormat } from '@/components/ui/currenciesFormat';
 
 interface TarifTableProps {
     data: Tarif[];
-    meta?: PaginationMeta;
     isLoading?: boolean;
-    page: number;
-    perPage: number;
     canEdit: boolean;
     canDelete: boolean;
-    onPageChange: (page: number) => void;
-    onPerPageChange: (perPage: number) => void;
     onEdit: (tarif: Tarif) => void;
     onVersioning: (tarif: Tarif) => void;
     onDelete: (tarif: Tarif) => void;
@@ -24,14 +18,9 @@ interface TarifTableProps {
 
 export function TarifTable({
     data,
-    meta,
     isLoading = false,
-    page,
-    perPage,
     canEdit,
     canDelete,
-    onPageChange,
-    onPerPageChange,
     onEdit,
     onVersioning,
     onDelete,
@@ -147,13 +136,6 @@ export function TarifTable({
             columns={columns}
             loading={isLoading}
             defaultSort={{ key: 'loadingIn', direction: 'asc' }}
-            meta={{
-                currentPage: page,
-                perPage,
-                lastPage: meta?.lastPage ?? 1,
-                total: meta?.total ?? data.length,
-            }}
-            onPageChange={onPageChange}
         />
     );
 }

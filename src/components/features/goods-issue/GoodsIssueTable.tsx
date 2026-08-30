@@ -1,7 +1,6 @@
 import Link from 'next/link';
 import { useMemo } from 'react';
-import { MoreVertical, Plus } from 'lucide-react';
-import { PageHeader } from '@/components/ui/page-header';
+import { MoreVertical } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import BaseTable, { ColumnDef } from '@/components/ui/base-table';
@@ -11,15 +10,7 @@ import { formatCurrency, formatDate, getIssueStatusLabel } from './goods-issue.u
 interface GoodsIssueTableProps {
   slug: string;
   data: GoodsIssue[];
-  totalData: number;
-  page: number;
-  perPage: number;
-  search: string;
   isLoading?: boolean;
-  onPageChange: (value: number) => void;
-  onPerPageChange: (value: number) => void;
-  onSearchChange: (value: string) => void;
-  onAdd?: () => void;
   onPay: (item: GoodsIssue) => void;
   onUpload: (item: GoodsIssue) => void;
   onDelete: (item: GoodsIssue) => void;
@@ -28,15 +19,7 @@ interface GoodsIssueTableProps {
 export function GoodsIssueTable({
   slug,
   data,
-  totalData,
-  page,
-  perPage,
-  search,
   isLoading = false,
-  onPageChange,
-  onPerPageChange,
-  onSearchChange,
-  onAdd,
   onPay,
   onUpload,
   onDelete,
@@ -110,36 +93,10 @@ export function GoodsIssueTable({
   );
 
   return (
-    <div className="space-y-6">
-      <PageHeader
-        title="Data Pengeluaran Material"
-        subtitle="Kelola dan lacak semua data pengeluaran stock material"
-      />
-
-      <BaseTable
-        data={data}
-        columns={columns}
-        loading={isLoading}
-        searchPlaceholder="Search here"
-        search={search}
-        onSearchChange={onSearchChange}
-        showLimitChange
-        perPage={perPage}
-        onPerPageChange={onPerPageChange}
-        meta={{
-          currentPage: page,
-          perPage,
-          lastPage: Math.max(1, Math.ceil((totalData || 0) / perPage)),
-          total: totalData,
-        }}
-        onPageChange={onPageChange}
-        headerActions={
-          <Button onClick={() => onAdd?.()} className="btn-primary!">
-            <Plus className="mr-2 h-4 w-4" />
-            Tambah Data
-          </Button>
-        }
-      />
-    </div>
+    <BaseTable
+      data={data}
+      columns={columns}
+      loading={isLoading}
+    />
   );
 }

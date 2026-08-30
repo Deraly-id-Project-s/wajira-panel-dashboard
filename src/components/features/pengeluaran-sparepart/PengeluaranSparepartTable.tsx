@@ -4,7 +4,6 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import BaseTable, { ColumnDef } from '@/components/ui/base-table';
 import { WarehouseActivity } from '@/@types/warehouse.types';
-import { PaginationMeta } from '@/@types/pagination.types';
 import { MoreVertical, Pencil, Eye } from 'lucide-react';
 import {
   DropdownMenu,
@@ -40,35 +39,14 @@ import { toast } from 'sonner';
 
 interface Props {
   data: WarehouseActivity[];
-  meta?: PaginationMeta;
   isLoading?: boolean;
-  search?: string;
-  onSearchChange?: (value: string) => void;
-  perPage?: number;
-  onPerPageChange?: (value: number) => void;
-  onPageChange?: (page: number) => void;
-  headerActions?: React.ReactNode;
-  startDate?: string | null;
-  endDate?: string | null;
-  onDateRangeChange?: (start: string | null, end: string | null) => void;
-  canCreate?: boolean;
   canEdit?: boolean;
 }
 
 export default function PengeluaranSparepartTable({
   data,
-  meta,
   isLoading,
-  search,
-  onSearchChange,
-  perPage = 25,
-  onPerPageChange,
-  onPageChange,
-  headerActions,
-  startDate,
-  endDate,
   canEdit,
-  onDateRangeChange,
 }: Props) {
   const router = useRouter();
   const slug = typeof router.query.slug === 'string' ? router.query.slug : '';
@@ -235,19 +213,6 @@ export default function PengeluaranSparepartTable({
         data={data}
         columns={columns}
         loading={isLoading}
-        searchPlaceholder="Cari pengeluaran..."
-        search={search}
-        onSearchChange={onSearchChange}
-        showLimitChange
-        perPage={perPage}
-        onPerPageChange={onPerPageChange}
-        meta={meta}
-        onPageChange={onPageChange}
-        headerActions={headerActions}
-        addDateRangePicker={true}
-        startDate={startDate}
-        endDate={endDate}
-        onDateRangeChange={onDateRangeChange}
       />
 
       {/* DIALOG UPDATE STATUS */}

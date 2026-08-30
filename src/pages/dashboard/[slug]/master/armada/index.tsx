@@ -1,12 +1,16 @@
 import React, { useEffect, useState } from 'react';
+import { Plus, Upload } from 'lucide-react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { PageHeader } from '@/components/ui/page-header';
+import { Button } from '@/components/ui/button';
+import { SearchPagination } from '@/components/ui/search-pagination';
 import { ArmadaTable } from '@/components/features/armada/ArmadaTable';
 import { DeleteArmadaModal } from '@/components/features/armada/DeleteArmadaModal';
 import { DataImportModal } from '@/components/features/master-data/DataImportModal';
 import { toast } from 'sonner';
 import { useRouter } from 'next/router';
 import { useArmadas, useDeleteArmada, useImportArmada } from '@/hooks/useArmada';
+import { useQueryParamsTable } from '@/hooks/useQueryParamsTable';
 import { usePermissionGuard } from '@/hooks/usePermissionGuard';
 
 export default function ArmadaPage() {
@@ -18,21 +22,20 @@ export default function ArmadaPage() {
   const canEdit = hasPermission('master-data:edit');
   const canDelete = hasPermission('master-data:delete');
 
-  const [searchInput, setSearchInput] = useState('');
-  const [search, setSearch] = useState('');
-  const [page, setPage] = useState(1);
-  const [perPage, setPerPage] = useState(25);
+  const { page, perPage, search, setPage, setPerPage, setSearch, updateQuery } = useQueryParamsTable({ defaultPerPage: 25 });
+  const [searchInput, setSearchInput] = useState(search);
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
   const [isImportOpen, setIsImportOpen] = useState(false);
   const [selectedArmadaId, setSelectedArmadaId] = useState<string | number | null>(null);
 
   useEffect(() => {
     const timer = setTimeout(() => {
-      setSearch(searchInput);
-      setPage(1);
+      if (search !== searchInput.trim()) {
+        setSearch(searchInput.trim());
+      }
     }, 400);
     return () => clearTimeout(timer);
-  }, [searchInput]);
+  }, [searchInput, search, setSearch]);
 
   const { data, isLoading } = useArmadas({ page, perPage, search });
   const deleteMutation = useDeleteArmada();
@@ -89,27 +92,56 @@ export default function ArmadaPage() {
           subtitle="Kelola data armada dengan mudah"
         />
 
-        <ArmadaTable
-          armadas={armadas}
-          search={searchInput}
+        <SearchPagination
+          searchValue={searchInput}
           onSearchChange={setSearchInput}
+          searchPlaceholder="Search here"
+          searchAriaLabel="Cari armada"
           page={page}
           perPage={perPage}
-          totalData={totalData}
-          totalPages={totalPages}
-          isLoading={isLoading}
+          total={totalData}
+          lastPage={totalPages}
           onPageChange={setPage}
-          onPerPageChange={(value) => {
-            setPerPage(value);
-          }}
-          onAdd={handleAddClick}
-          onImport={() => setIsImportOpen(true)}
-          onEdit={handleEditClick}
-          onDelete={handleDeleteClick}
-          canCreate={canCreate}
-          canEdit={canEdit}
-          canDelete={canDelete}
-        />
+          onPerPageChange={setPerPage}
+          actions={
+            <>
+              {search && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    setSearchInput('');
+                    updateQuery({ search: undefined, page: 1 });
+                  }}
+                  className="rounded-md border-slate-200 text-slate-700 bg-white hover:bg-slate-50 cursor-pointer h-9 text-xs px-3"
+                >
+                  Reset
+                </Button>
+              )}
+              {canCreate && (
+                <>
+                  <Button onClick={() => setIsImportOpen(true)} variant="outline" className="h-9 text-xs px-3 rounded-md border-slate-200 text-slate-700 bg-white hover:bg-slate-50 cursor-pointer">
+                    <Upload className="h-4 w-4 mr-2" />
+                    Import
+                  </Button>
+                  <Button onClick={handleAddClick} className="btn-primary!">
+                    <Plus className="h-4 w-4 mr-2" />
+                    Tambah
+                  </Button>
+                </>
+              )}
+            </>
+          }
+        >
+          <ArmadaTable
+            armadas={armadas}
+            isLoading={isLoading}
+            onEdit={handleEditClick}
+            onDelete={handleDeleteClick}
+            canEdit={canEdit}
+            canDelete={canDelete}
+          />
+        </SearchPagination>
       </div>
 
       <DeleteArmadaModal

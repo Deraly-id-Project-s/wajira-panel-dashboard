@@ -7,7 +7,7 @@ import { useCompany } from '@/contexts/CompanyContext';
 import { usePermissionGuard } from '@/hooks/usePermissionGuard';
 import { useRouter } from 'next/router';
 import { toast } from 'sonner';
-import { DeleteAssetModal } from '@/components/features/master/asset/DeleteAssetModal';
+import { DeleteAssetModal } from '@/components/features/master-data/asset/DeleteAssetModal';
 import type { FinanceAsset } from '@/@types/finance-asset.types';
 
 export default function FinanceAssetPage() {

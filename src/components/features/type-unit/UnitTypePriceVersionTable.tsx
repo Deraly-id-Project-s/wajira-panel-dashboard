@@ -1,46 +1,26 @@
 import { useMemo } from 'react';
 import BaseTable, { ColumnDef } from '@/components/ui/base-table';
-import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
-import { MoreVertical, Pencil, Plus, Trash, CheckCircle2, Lock } from 'lucide-react';
+import { MoreVertical, Pencil, Trash, CheckCircle2, Lock } from 'lucide-react';
 import type { UnitTypePriceVersion } from '@/@types/unit-type-price-version.types';
-import type { PaginationMeta } from '@/@types/pagination.types';
 import { Badge } from '@/components/ui/badge';
 import { currenciesFormat } from '@/components/ui/currenciesFormat';
 
 interface UnitTypePriceVersionTableProps {
   data: UnitTypePriceVersion[];
-  meta?: PaginationMeta;
-  search: string;
-  page: number;
-  perPage: number;
   isLoading?: boolean;
-  onSearchChange: (value: string) => void;
-  onAdd: () => void;
   onEdit: (version: UnitTypePriceVersion) => void;
   onDelete: (version: UnitTypePriceVersion) => void;
-  onPageChange: (page: number) => void;
-  onPerPageChange: (perPage: number) => void;
-  canCreate: boolean;
   canEdit: boolean;
   canDelete: boolean;
 }
 
 export const UnitTypePriceVersionTable = ({
   data,
-  meta,
-  search,
-  page,
-  perPage,
   isLoading = false,
-  onSearchChange,
-  onAdd,
   onEdit,
   onDelete,
-  onPageChange,
-  onPerPageChange,
-  canCreate,
   canEdit,
   canDelete,
 }: UnitTypePriceVersionTableProps) => {
@@ -158,26 +138,7 @@ export const UnitTypePriceVersionTable = ({
       data={data}
       columns={columns}
       loading={isLoading}
-      searchPlaceholder="Cari versi harga..."
-      search={search}
-      onSearchChange={onSearchChange}
-      showLimitChange
-      perPage={perPage}
-      onPerPageChange={onPerPageChange}
       defaultSort={{ key: 'id', direction: 'desc' }}
-      meta={{
-        currentPage: page,
-        perPage,
-        lastPage: meta?.lastPage ?? 1,
-        total: meta?.total ?? data.length,
-      }}
-      onPageChange={onPageChange}
-      headerActions={
-        <Button onClick={onAdd} disabled={!canCreate} className="btn-primary!">
-          <Plus className="mr-2 h-4 w-4" />
-          Tambah Versi
-        </Button>
-      }
     />
   );
 };
