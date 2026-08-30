@@ -63,10 +63,9 @@ export function FormDialog({
           <div className="shrink-0 flex justify-center items-center gap-6 px-6 py-4 border-t bg-gray-50/50">
             <Button
               type="button"
-              variant="ghost"
+              variant={"outline"}
               onClick={handleCancel}
               disabled={isSubmitting}
-              className="text-muted-foreground font-medium hover:text-foreground hover:bg-transparent disabled:text-slate-400 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {cancelLabel}
             </Button>
@@ -79,7 +78,6 @@ export function FormDialog({
                 "Menyimpan..."
               ) : (
                 <>
-                  <Save className="mr-2 h-4 w-4" />
                   {submitLabel}
                 </>
               )}
