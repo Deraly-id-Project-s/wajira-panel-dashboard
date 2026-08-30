@@ -278,13 +278,13 @@ function SectionEditor({
               />
               <Button
                 type="button"
-                variant="outline"
                 size="icon"
                 aria-label="Hapus akun"
                 onClick={() => {
                   const nextIds = accountIds.filter((_, itemIndex) => itemIndex !== index);
                   onChange(uniqueNumbers(nextIds));
                 }}
+                className="btn-outline! px-2"
                 disabled={accountIds.length === 0}
               >
                 <Trash2 className="h-4 w-4" />

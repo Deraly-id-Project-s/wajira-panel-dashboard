@@ -9,7 +9,7 @@ import { PrintLetterPage } from '@/components/common/PrintLetterPage';
 import { PageHeader } from '@/components/ui/page-header';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { DatePickerWithRange } from '@/components/ui/date-range-picker';
+import { DatePickerWithRange, type DateRangePickerMode } from '@/components/ui/date-range-picker';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { LedgerAccountSelect } from '@/components/features/laporan-buku-besar/LedgerAccountSelect';
 import { LaporanBukuBesarTable } from '@/components/features/laporan-buku-besar/LaporanBukuBesarTable';
@@ -40,7 +40,7 @@ export default function LaporanBukuBesarPage() {
   const [searchInput, setSearchInput] = useState('');
   const [search, setSearch] = useState('');
   const [dateRange, setDateRange] = useState<DateRange | undefined>();
-  const [dateMode, setDateMode] = useState<'date' | 'month'>('date');
+  const [dateMode, setDateMode] = useState<DateRangePickerMode>('date');
   const [sortBy, setSortBy] = useState('payment_at');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
 
@@ -161,7 +161,7 @@ export default function LaporanBukuBesarPage() {
               <DatePickerWithRange
                 date={dateRange}
                 onChange={handleDateRangeChange}
-                enableMonthRange
+                enablePeriodFilter
                 mode={dateMode}
                 onModeChange={(mode) => {
                   setDateMode(mode);

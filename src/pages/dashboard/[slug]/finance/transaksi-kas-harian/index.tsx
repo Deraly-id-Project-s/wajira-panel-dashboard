@@ -221,7 +221,7 @@ export default function KasHarianPage() {
               </div>
             </div>
             {canCreate && (
-              <Button type="button" onClick={() => void router.push(`/dashboard/${slug}/finance/transaksi-kas-harian/create`)} className="w-full sm:w-auto bg-[#1e3a5f] hover:bg-[#152e4d]">
+              <Button type="button" onClick={() => void router.push(`/dashboard/${slug}/finance/transaksi-kas-harian/create`)} className="w-full sm:w-auto btn-primary">
                 <Plus className="mr-2 h-4 w-4" />
                 Tambah Data
               </Button>

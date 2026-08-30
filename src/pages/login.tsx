@@ -147,7 +147,7 @@ export default function LoginPage() {
 
               {/* Login Button */}
               <div className="flex flex-col gap-3 w-full mt-2">
-                <Button type="submit" disabled={isLoading} className="w-full h-[36px] bg-[#B0160D] hover:bg-[#991B1B] text-[#FAFAFA] text-[14px] font-medium rounded-lg disabled:opacity-50 disabled:cursor-not-allowed">
+                <Button type="submit" disabled={isLoading} className="btn-primary">
                   {isLoading ? 'Memuat...' : 'Masuk'}
                 </Button>
               </div>

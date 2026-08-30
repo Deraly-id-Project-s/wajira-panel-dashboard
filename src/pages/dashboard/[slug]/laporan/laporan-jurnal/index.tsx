@@ -10,7 +10,7 @@ import { PrintLetterPage } from '@/components/common/PrintLetterPage';
 import { PageHeader } from '@/components/ui/page-header';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { DatePickerWithRange } from '@/components/ui/date-range-picker';
+import { DatePickerWithRange, type DateRangePickerMode } from '@/components/ui/date-range-picker';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { LaporanJurnalTable } from '@/components/features/laporan-jurnal/LaporanJurnalTable';
 import { useJournalReport } from '@/hooks/report/useJournalReport';
@@ -42,7 +42,7 @@ export default function LaporanJurnalPage() {
   const [debouncedAccountCode, setDebouncedAccountCode] = useState('');
   const [debouncedAccountName, setDebouncedAccountName] = useState('');
   const [dateRange, setDateRange] = useState<DateRange | undefined>();
-  const [dateMode, setDateMode] = useState<'date' | 'month'>('date');
+  const [dateMode, setDateMode] = useState<DateRangePickerMode>('date');
   const [sortBy, setSortBy] = useState('payment_at');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
   const [isExporting, setIsExporting] = useState(false);
@@ -183,7 +183,7 @@ export default function LaporanJurnalPage() {
               <DatePickerWithRange
                 date={dateRange}
                 onChange={handleDateRangeChange}
-                enableMonthRange
+                enablePeriodFilter
                 mode={dateMode}
                 onModeChange={(mode) => {
                   setDateMode(mode);

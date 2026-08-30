@@ -36,7 +36,7 @@ const emptyValues: TransactionFormValues = {
 
 type AmountField = 'debitUSD' | 'creditUSD' | 'debitIDR' | 'creditIDR' | 'debitCash' | 'creditCash';
 
-export default function TransactionForm({ defaultValues, onSubmit, onCancel, isBusy = false, submitLabel = 'Simpan Transaksi' }: Props) {
+export default function TransactionForm({ defaultValues, onSubmit, onCancel, isBusy = false, submitLabel = 'Simpan' }: Props) {
   const form = useForm<TransactionFormValues>({
     resolver: zodResolver(transactionSchema),
     defaultValues: { ...emptyValues, ...defaultValues },
@@ -149,8 +149,8 @@ export default function TransactionForm({ defaultValues, onSubmit, onCancel, isB
 
         <div className="flex flex-col-reverse gap-3 border-t border-slate-200 pt-6 sm:flex-row sm:justify-end">
           <Button type="button" variant="outline" onClick={onCancel} disabled={isBusy}>Batal</Button>
-          <Button type="submit" className="bg-[#1e3a5f] text-white hover:bg-[#152e4d]" disabled={isBusy}>
-            {isBusy ? <LoadingState variant="inline" text="Menyimpan..." iconClassName="text-white" /> : <><Save className="mr-2 h-4 w-4" />{submitLabel}</>}
+          <Button type="submit" className="btn-primary" disabled={isBusy}>
+            {isBusy ? <LoadingState variant="inline" text="Menyimpan..." iconClassName="text-white" /> : <>{submitLabel}</>}
           </Button>
         </div>
       </form>

@@ -53,6 +53,33 @@ const renderStatusBadge = (hasValue: boolean, readyLabel: string, emptyLabel: st
   </Badge>
 );
 
+const getPPNRowMark = (item: PPNPenjualan) => {
+  const hasFp = Boolean(item.fp_date);
+  const hasNsfpAge = Boolean(item.nsfp_age);
+  const hasNsfpNumber = Boolean(item.nsfp_number && item.nsfp_number.trim() !== '');
+
+  if (hasFp && hasNsfpAge && hasNsfpNumber) {
+    return 'success';
+  }
+
+  if (item.nsfp_age) {
+    const date = new Date(item.nsfp_age);
+    if (!Number.isNaN(date.getTime())) {
+      const diffInMs = date.getTime() - Date.now();
+      const diffInDays = Math.ceil(diffInMs / (1000 * 60 * 60 * 24));
+
+      if (diffInDays < 0 || diffInDays <= 30) {
+        return 'alert';
+      }
+      if (diffInDays <= 90) {
+        return 'base';
+      }
+    }
+  }
+
+  return undefined;
+};
+
 export default function PPNPenjualanTable({
   data,
   meta,
@@ -325,13 +352,14 @@ export default function PPNPenjualanTable({
           total: isTotalExact ? meta.total : (hasNextPage ? (meta.currentPage * meta.perPage) + 1 : meta.currentPage * meta.perPage),
         }}
         onPageChange={onPageChange}
+        getRowMark={getPPNRowMark}
         headerActions={
           <div className="flex flex-col sm:flex-row items-center gap-2 w-full sm:w-auto">
             <Button
               type="button"
               onClick={() => setIsOpenBulkModal(true)}
               disabled={selectedIds.size === 0}
-              className="bg-primary text-primary-foreground hover:bg-primary/90 h-9 px-3 text-xs gap-1.5 font-medium rounded-lg shadow-sm"
+              variant="default"
             >
               <Settings size={14} /> Update Data ({selectedIds.size})
             </Button>

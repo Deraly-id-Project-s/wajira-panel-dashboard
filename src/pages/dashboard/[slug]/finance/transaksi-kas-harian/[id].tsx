@@ -123,9 +123,9 @@ export default function KasHarianDetailPage() {
   const hasBillings = financeBillings.length > 0;
   const isLinkedTransaction = Boolean(
     cashFlowDetail?.unit_transaction_billing_id
-      || cashFlowDetail?.goods_transaction_billing_id
-      || cashFlowDetail?.unit_transaction_billing
-      || cashFlowDetail?.goods_transaction_billing,
+    || cashFlowDetail?.goods_transaction_billing_id
+    || cashFlowDetail?.unit_transaction_billing
+    || cashFlowDetail?.goods_transaction_billing,
   );
 
   const debetIdr = Number(cashFlowDetail?.debet ?? 0);
@@ -282,7 +282,7 @@ export default function KasHarianDetailPage() {
               </Button>
               <Button
                 type="button"
-                className="bg-[#1e3a5f] text-white hover:bg-[#152e4d]"
+                variant="default"
                 onClick={() => {
                   setTargetStatus(!isMarkedPaid);
                   setIsToggleOpen(true);
@@ -402,8 +402,8 @@ export default function KasHarianDetailPage() {
             <CardContent className="space-y-4 p-6">
               <Textarea value={transactionNote} onChange={(event) => setTransactionNote(event.target.value)} placeholder="Masukkan catatan transaksi..." className="min-h-32 resize-none" disabled={updateMutation.isPending} />
               <div className="flex justify-end">
-                <Button type="button" className="bg-[#1e3a5f] text-white hover:bg-[#152e4d]" disabled={updateMutation.isPending || transactionNote.trim() === cashFlowDetail.note?.trim()} onClick={() => void handleSaveNote()}>
-                  {updateMutation.isPending ? <LoadingState variant="inline" text="Menyimpan..." iconClassName="text-white" /> : <><Save className="mr-2 h-4 w-4" />Simpan Catatan</>}
+                <Button type="button" className="btn-primary" disabled={updateMutation.isPending || transactionNote.trim() === cashFlowDetail.note?.trim()} onClick={() => void handleSaveNote()}>
+                  {updateMutation.isPending ? <LoadingState variant="inline" text="Menyimpan..." iconClassName="text-white" /> : <>Simpan Catatan</>}
                 </Button>
               </div>
             </CardContent>
@@ -426,17 +426,13 @@ export default function KasHarianDetailPage() {
               {selectedFile ? (
                 <div className="flex justify-end gap-3">
                   <Button type="button" variant="outline" onClick={() => setSelectedFile(null)} disabled={isUploading}>Batal</Button>
-                  <Button type="button" className="bg-[#1e3a5f] text-white hover:bg-[#152e4d]" onClick={() => void handleUploadProof()} disabled={isUploading}>
+                  <Button type="button" variant="default" onClick={() => void handleUploadProof()} disabled={isUploading}>
                     {isUploading ? <LoadingState variant="inline" text="Mengunggah..." iconClassName="text-white" /> : 'Simpan Bukti'}
                   </Button>
                 </div>
               ) : null}
             </CardContent>
           </Card>
-        </div>
-
-        <div className="flex justify-end">
-          <Button type="button" variant="outline" onClick={() => void router.push(basePath)}>Kembali ke Daftar Kas Harian</Button>
         </div>
 
         <TogglePaymentStatusDialog open={isToggleOpen} onOpenChange={setIsToggleOpen} data={cashFlowDetail} targetStatus={targetStatus} />

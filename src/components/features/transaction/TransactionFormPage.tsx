@@ -130,7 +130,7 @@ export default function TransactionFormPage({ mode }: Props) {
               onSubmit={handleSubmit}
               onCancel={() => void router.push(basePath)}
               isBusy={isBusy}
-              submitLabel={isEdit ? 'Simpan Perubahan' : 'Simpan Transaksi'}
+              submitLabel={isEdit ? 'Perbahrui' : 'Simpan'}
             />
           </CardContent>
         </Card>
