@@ -171,11 +171,11 @@ export function DOEkspedisiDriverNotes({ data, onRefresh }: DOEkspedisiDriverNot
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
-            <DropdownMenuItem onClick={() => openEdit(x)}>
+            <DropdownMenuItem onClick={() => openEdit(x)} disabled={data?.status !== 'draft'}>
               <Pencil className="mr-2 h-4 w-4" />
               Edit
             </DropdownMenuItem>
-            <DropdownMenuItem className="text-red-600" onClick={() => void handleDelete(x)}>
+            <DropdownMenuItem className="text-red-600" onClick={() => void handleDelete(x)} disabled={data?.status !== 'draft'}>
               <Trash2 className="mr-2 h-4 w-4" />
               Hapus
             </DropdownMenuItem>
@@ -192,6 +192,7 @@ export function DOEkspedisiDriverNotes({ data, onRefresh }: DOEkspedisiDriverNot
         description="Catatan tambahan untuk Driver"
         icon={<FileText />}
         onAdd={openCreate}
+        addDisabled={data?.status !== 'draft'}
       >
         <BaseTable
           data={data.driverNotes ?? []}

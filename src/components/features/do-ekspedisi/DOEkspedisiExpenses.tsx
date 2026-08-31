@@ -138,11 +138,11 @@ export function DOEkspedisiExpenses({ data, onRefresh }: DOEkspedisiExpensesProp
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
-            <DropdownMenuItem onClick={() => openEdit(x)}>
+            <DropdownMenuItem onClick={() => openEdit(x)} disabled={data?.status !== 'draft'}>
               <Pencil className="mr-2 h-4 w-4" />
               Edit
             </DropdownMenuItem>
-            <DropdownMenuItem className="text-red-600" onClick={() => void handleDelete(x)}>
+            <DropdownMenuItem className="text-red-600" onClick={() => void handleDelete(x)} disabled={data?.status !== 'draft'}>
               <Trash2 className="mr-2 h-4 w-4" />
               Hapus
             </DropdownMenuItem>
@@ -159,6 +159,7 @@ export function DOEkspedisiExpenses({ data, onRefresh }: DOEkspedisiExpensesProp
         description="Data biaya tambahan pada DO Ekspedisi"
         icon={<Receipt />}
         onAdd={openCreate}
+        addDisabled={data?.status !== 'draft'}
       >
         <BaseTable
           data={data.expeditionExpenses ?? []}

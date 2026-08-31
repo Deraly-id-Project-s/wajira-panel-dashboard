@@ -17,6 +17,7 @@ import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import { formatDate } from '@/lib/utils/format';
 import { DOEkspedisiRelatedData } from '@/components/features/do-ekspedisi/DOEkspedisiRelatedData';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -236,7 +237,7 @@ export default function DetailDOEkspedisiPage() {
                 <Play className="h-4 w-4" />
                 {updateStatusMutation.isPending ? 'Memproses...' : 'Serahkan ke Driver'}
               </Button>
-            ) : detailQuery.data?.status === 'process' ? (
+            ) : detailQuery.data?.status === 'pending' ? (
               <>
                 <Button
                   type="button"
@@ -285,13 +286,13 @@ export default function DetailDOEkspedisiPage() {
         )}
 
         {(!detailQuery.data.driver || !detailQuery.data.vehicle) && (
-          <div role="alert" className="flex items-start gap-3 rounded-lg border border-amber-200 bg-amber-50 p-4 text-amber-900">
-            <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0 text-amber-600" />
-            <div>
-              <p className="font-semibold">Driver atau kendaraan belum dipilih</p>
-              <p className="mt-1 text-sm text-amber-800">Silakan klik Edit untuk melengkapi driver dan kendaraan sebelum memulai pengiriman.</p>
-            </div>
-          </div>
+          <Alert variant="warning">
+            <AlertTriangle />
+            <AlertTitle>Driver atau kendaraan belum dipilih</AlertTitle>
+            <AlertDescription>
+              Silakan klik Edit untuk melengkapi driver dan kendaraan sebelum memulai pengiriman.
+            </AlertDescription>
+          </Alert>
         )}
 
         <DOEkspedisiDetailCard data={detailQuery.data} />

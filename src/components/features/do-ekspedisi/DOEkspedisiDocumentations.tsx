@@ -56,7 +56,7 @@ export function DOEkspedisiDocumentations({ data }: DOEkspedisiDocumentationsPro
       header: 'Posisi',
       cell: (x) => (
         <Badge variant="outline" className="capitalize">
-          {x.documentationPosition === 'start' ? 'Mulai (Start)' : x.documentationPosition === 'end' ? 'Selesai (End)' : x.documentationPosition}
+          {x.documentationPosition === 'start' ? 'Dokumentasi Ekspedisi' : x.documentationPosition === 'end' ? 'Dokumentasi Penyerahan' : x.documentationPosition}
         </Badge>
       ),
     },

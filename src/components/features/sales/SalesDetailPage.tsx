@@ -31,6 +31,7 @@ import { CreditCard, AlertTriangle, CheckCircle2, Info } from 'lucide-react';
 import { TextTruncate } from '@/components/ui/text-truncate';
 import { UnitTypeDetailTable } from '@/components/features/unit-transaction/UnitTypeDetailTable';
 import { useDocumentTemplate } from '@/hooks/useDocumentTemplate';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
 export default function SalesDetailPage() {
   const router = useRouter();
@@ -362,15 +363,13 @@ export default function SalesDetailPage() {
         />
 
         {isRefunded ? (
-          <div className="flex items-start gap-2.5 rounded-lg border border-amber-200 bg-amber-50/50 px-4 py-3 text-sm text-amber-800">
-            <AlertTriangle className="h-5 w-5 text-amber-655 shrink-0 mt-0.5" />
-            <div>
-              <p className="font-semibold text-amber-900">Transaksi Sudah Direfund</p>
-              <p className="text-xs mt-0.5 text-amber-700/95">
-                Status stok saat ini adalah <span className="font-mono font-medium bg-amber-100 px-1.5 py-0.5 rounded text-amber-900">outbound_return</span>. Proses Proses Barang dinonaktifkan.
-              </p>
-            </div>
-          </div>
+          <Alert variant="warning">
+            <AlertTriangle />
+            <AlertTitle>Transaksi Sudah Direfund</AlertTitle>
+            <AlertDescription>
+              Status stok saat ini adalah <span className="font-mono font-medium bg-amber-100 px-1.5 py-0.5 rounded text-amber-900">outbound_return</span>. Proses Proses Barang dinonaktifkan.
+            </AlertDescription>
+          </Alert>
         ) : null}
 
         <SalesDetailCards data={salesData} billingHistories={resolvedBillingHistories} />

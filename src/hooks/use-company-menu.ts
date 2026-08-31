@@ -5,14 +5,14 @@ import { useCompany } from '@/contexts/CompanyContext';
 import { MenuItem } from '@/types/menu.types';
 import { Company } from '@/services/company.service';
 import { AuthService, SidebarModuleItem } from '@/features/auth/services/auth.service';
-import { 
-  LayoutDashboard, 
-  ClipboardList, 
-  Archive, 
-  Warehouse, 
-  Landmark, 
-  ListChecks, 
-  Shield 
+import {
+  LayoutDashboard,
+  ClipboardList,
+  Archive,
+  Warehouse,
+  Landmark,
+  ListChecks,
+  Shield
 } from 'lucide-react';
 
 const FEATURE_MAP: Record<string, { path: string; label?: string; group?: string }> = {
@@ -51,6 +51,7 @@ const FEATURE_MAP: Record<string, { path: string; label?: string; group?: string
   'sparepart-refunds': { path: '/transaksi/refund-sparepart', label: 'Refund Sparepart', group: 'Transaksi Sparepart' },
   'invoices': { path: '/transaksi/faktur', label: 'Faktur' },
   'expedition-delivery-orders': { path: '/do-ekspedisi', label: 'DO Ekspedisi' },
+  'do-expedition': { path: '/do-ekspedisi', label: 'DO Ekspedisi' },
   'witholding-tax': { path: '/administrasi/bukti-potong', label: 'Bukti Potong' },
   'order-list': { path: '/administrasi/order-list', label: 'Order List' },
   'create-invoice': { path: '/administrasi/create-invoice', label: 'Create Invoice' },
@@ -64,7 +65,7 @@ const FEATURE_MAP: Record<string, { path: string; label?: string; group?: string
   'unit-dispatches': { path: '/warehouse/pengeluaran-unit', label: 'Pengeluaran Unit', group: 'Unit Tipe' },
   'sparepart-receipts': { path: '/warehouse/penerimaan-sparepart', label: 'Penerimaan Sparepart', group: 'Sparepart' },
   'sparepart-dispatches': { path: '/warehouse/pengeluaran-sparepart', label: 'Pengeluaran Sparepart', group: 'Sparepart' },
-  
+
   'perlengkapan-inventory': { path: '/warehouse/stock-perlengkapan', label: 'Stok Perlengkapan', group: 'Perlengkapan' },
   'perlengkapan-receipts': { path: '/warehouse/perlengkapan-masuk', label: 'Perlengkapan Masuk', group: 'Perlengkapan' },
   'perlengkapan-dispatches': { path: '/warehouse/pengeluaran-perlengkapan', label: 'Pengeluaran Perlengkapan', group: 'Perlengkapan' },
@@ -102,6 +103,7 @@ const FEATURE_MAP: Record<string, { path: string; label?: string; group?: string
   'expedition-reports': { path: '/laporan/laporan-surat-jalan', label: 'Laporan Surat Jalan' },
   'invoice-reports': { path: '/laporan/laporan-invoice', label: 'Laporan Invoice' },
   'maintenance-reports': { path: '/laporan/laporan-ritase-armada', label: 'Laporan Ritase Armada/Maintenance' },
+  'vehicle-usage-reports': { path: '/laporan/laporan-ritase-armada', label: 'Laporan Pemakaian Kendaraan' },
   'perlengkapan-reports': { path: '/laporan/laporan-stock-perlengkapan', label: 'Laporan Persediaan Barang' },
   'asset-reports': { path: '/laporan/laporan-aset', label: 'Laporan Aset' },
   'witholding-tax-reports': { path: '/laporan/laporan-bukti-potong', label: 'Laporan Bukti Potong' },

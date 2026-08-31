@@ -17,6 +17,7 @@ import { unitItemDetailService } from '@/services/unitItemDetail.service';
 import { warehouseActivityService } from '@/services/warehouseActivity.service';
 import { CreditCard, AlertTriangle, CheckCircle2, Info, Edit } from 'lucide-react';
 import { toast } from 'sonner';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { usePermissionGuard } from '@/hooks/usePermissionGuard';
 import { TextTruncate } from '@/components/ui/text-truncate';
 import {
@@ -356,15 +357,13 @@ export default function PurchaseDetailPage() {
         />
 
         {isRefunded ? (
-          <div className="flex items-start gap-2.5 rounded-lg border border-amber-200 bg-amber-50/50 px-4 py-3 text-sm text-amber-800">
-            <AlertTriangle className="h-5 w-5 text-amber-655 shrink-0 mt-0.5" />
-            <div>
-              <p className="font-semibold text-amber-900">Transaksi Sudah Direfund</p>
-              <p className="text-xs mt-0.5 text-amber-700/95">
-                Status stok saat ini adalah <span className="font-mono font-medium bg-amber-100 px-1.5 py-0.5 rounded text-amber-900">inbound_return</span>. Proses Proses Barang dinonaktifkan.
-              </p>
-            </div>
-          </div>
+          <Alert variant="warning">
+            <AlertTriangle />
+            <AlertTitle>Transaksi Sudah Direfund</AlertTitle>
+            <AlertDescription>
+              Status stok saat ini adalah <span className="font-mono font-medium bg-amber-100 px-1.5 py-0.5 rounded text-amber-900">inbound_return</span>. Proses Proses Barang dinonaktifkan.
+            </AlertDescription>
+          </Alert>
         ) : null}
 
         <PurchaseDetailCards data={purchase} billingHistories={resolvedBillingHistories} />

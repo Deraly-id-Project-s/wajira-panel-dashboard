@@ -226,19 +226,15 @@ export const DOEkspedisiTable = React.memo(function DOEkspedisiTable({
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="min-w-[150px] rounded-md border-slate-200 p-1.5 shadow-lg">
                 <DropdownMenuItem onClick={() => onEdit(item)} className="rounded-lg px-3 py-2 text-sm text-slate-900 focus:bg-slate-50 cursor-pointer">
-                  <Edit className="mr-2 h-4 w-4" />
                   Edit
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => onDetail(item)} className="rounded-lg px-3 py-2 text-sm text-slate-900 focus:bg-slate-50 cursor-pointer">
-                  <FileText className="mr-2 h-4 w-4" />
                   Detail
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => onPrint(item)} className="rounded-lg px-3 py-2 text-sm text-slate-900 focus:bg-slate-50 cursor-pointer">
-                  <Printer className="mr-2 h-4 w-4" />
                   Print
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => onDelete(item)} className="rounded-lg px-3 py-2 text-sm text-red-600 focus:bg-red-50 focus:text-red-600 cursor-pointer">
-                  <Trash2 className="mr-2 h-4 w-4" />
                   Hapus
                 </DropdownMenuItem>
               </DropdownMenuContent>
