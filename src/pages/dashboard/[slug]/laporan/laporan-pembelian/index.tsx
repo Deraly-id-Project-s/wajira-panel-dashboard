@@ -17,9 +17,11 @@ import { useCompany } from '@/contexts/CompanyContext';
 import { resolveCompanyId, getLetterheadByCompanyId } from '@/lib/print-letterhead';
 import { PrintLetterPage } from '@/components/common/PrintLetterPage';
 import { DocumentTemplatePrintFooter } from '@/components/common/DocumentTemplatePrintFooter';
-import { JournalPrintTemplateDialog } from '@/components/features/laporan-jurnal/JournalPrintTemplateDialog';
+import { DocumentTemplateSelect } from '@/components/features/document-template/DocumentTemplateSelect';
 import { getObjectStorageUrl } from '@/components/ui/storage-image';
 import { useReportTemplatePrint } from '@/hooks/useReportTemplatePrint';
+import { Button } from '@/components/ui/button';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 
 export default function LaporanPembelianPage() {
   const [activeTab, setActiveTab] = useState('per-nota');
@@ -271,18 +273,23 @@ export default function LaporanPembelianPage() {
           </Tabs>
         </div>
 
-        <JournalPrintTemplateDialog
-          open={templatePrint.isDialogOpen}
-          onOpenChange={templatePrint.setIsDialogOpen}
-          templates={templatePrint.templates}
-          selectedTemplateId={templatePrint.selectedTemplateId}
-          onSelectTemplate={templatePrint.setSelectedTemplateId}
-          onPrint={() => void templatePrint.printWithSelectedTemplate()}
-          isLoading={templatePrint.templatesQuery.isLoading}
-          isError={templatePrint.templatesQuery.isError}
-          isPrinting={templatePrint.isPreparingPrint}
-          reportName="Laporan Pembelian"
-        />
+        <Dialog open={templatePrint.isDialogOpen} onOpenChange={templatePrint.setIsDialogOpen}>
+          <DialogContent closeOnInteractOutside={false} className="max-h-[88vh] overflow-hidden p-0 sm:max-w-2xl">
+            <DialogHeader className="border-b border-slate-200 px-6 py-5 pr-12">
+              <DialogTitle>Pilih Template Print</DialogTitle>
+              <DialogDescription>Pilih desain dokumen untuk mencetak laporan pembelian.</DialogDescription>
+            </DialogHeader>
+            <div className="max-h-[56vh] overflow-y-auto px-6 py-5">
+              <DocumentTemplateSelect value={templatePrint.selectedTemplateId} onValueChange={templatePrint.setSelectedTemplateId} disabled={templatePrint.isPreparingPrint} allowEmpty={false} placeholder="Pilih template laporan pembelian" variant="cards" />
+            </div>
+            <DialogFooter className="border-t border-slate-200 bg-slate-50/70 px-6 py-4">
+              <Button type="button" variant="outline" onClick={() => templatePrint.setIsDialogOpen(false)} disabled={templatePrint.isPreparingPrint}>Batal</Button>
+              <Button type="button" onClick={() => void templatePrint.printWithSelectedTemplate()} disabled={!templatePrint.selectedTemplateId || templatePrint.isPreparingPrint}>
+                {templatePrint.isPreparingPrint ? 'Menyiapkan...' : 'Print Sekarang'}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
     </DashboardLayout>
   );

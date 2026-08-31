@@ -160,6 +160,7 @@ export default function OrderListPage() {
           total={listQuery.data?.meta.total}
           lastPage={listQuery.data?.meta.lastPage}
           onPageChange={setPage}
+          onPerPageChange={setPerPage}
           filters={
             <DatePickerWithRange
               date={dateRange}

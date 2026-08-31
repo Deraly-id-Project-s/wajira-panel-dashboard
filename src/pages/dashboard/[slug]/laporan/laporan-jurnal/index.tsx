@@ -12,8 +12,16 @@ import { DatePickerWithRange, type DateRangePickerMode } from '@/components/ui/d
 import { SearchPagination } from '@/components/ui/search-pagination';
 import { LedgerAccountSelect } from '@/components/features/laporan-buku-besar/LedgerAccountSelect';
 import { LaporanJurnalTable } from '@/components/features/laporan-jurnal/LaporanJurnalTable';
-import { JournalPrintTemplateDialog } from '@/components/features/laporan-jurnal/JournalPrintTemplateDialog';
 import { LaporanJurnalPrintDocument } from '@/components/features/laporan-jurnal/LaporanJurnalPrintDocument';
+import { DocumentTemplateSelect } from '@/components/features/document-template/DocumentTemplateSelect';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import { useJournalReport } from '@/hooks/report/useJournalReport';
 import { useAccounts } from '@/hooks/useAccount';
 import { useDocumentTemplates } from '@/hooks/useDocumentTemplate';
@@ -289,17 +297,32 @@ export default function LaporanJurnalPage() {
           printedAt={printedAt}
         />
 
-        <JournalPrintTemplateDialog
-          open={isPrintDialogOpen}
-          onOpenChange={setIsPrintDialogOpen}
-          templates={documentTemplates}
-          selectedTemplateId={selectedTemplateId}
-          onSelectTemplate={setSelectedTemplateId}
-          onPrint={handlePrint}
-          isLoading={documentTemplatesQuery.isLoading}
-          isError={documentTemplatesQuery.isError}
-          isPrinting={isPreparingPrint}
-        />
+        <Dialog open={isPrintDialogOpen} onOpenChange={setIsPrintDialogOpen}>
+          <DialogContent closeOnInteractOutside={false} className="max-h-[88vh] overflow-hidden p-0 sm:max-w-2xl">
+            <DialogHeader className="border-b border-slate-200 px-6 py-5 pr-12">
+              <DialogTitle>Pilih Template Print</DialogTitle>
+              <DialogDescription>Pilih desain dokumen yang akan digunakan untuk mencetak laporan jurnal.</DialogDescription>
+            </DialogHeader>
+            <div className="max-h-[56vh] overflow-y-auto px-6 py-5">
+              <DocumentTemplateSelect
+                value={selectedTemplateId}
+                onValueChange={setSelectedTemplateId}
+                disabled={isPreparingPrint}
+                allowEmpty={false}
+                placeholder="Pilih template laporan jurnal"
+                variant="cards"
+              />
+            </div>
+            <DialogFooter className="border-t border-slate-200 bg-slate-50/70 px-6 py-4">
+              <Button type="button" variant="outline" onClick={() => setIsPrintDialogOpen(false)} disabled={isPreparingPrint}>
+                Batal
+              </Button>
+              <Button type="button" onClick={() => void handlePrint()} disabled={!selectedTemplateId || isPreparingPrint}>
+                {isPreparingPrint ? 'Menyiapkan...' : 'Print Sekarang'}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
     </DashboardLayout>
   );

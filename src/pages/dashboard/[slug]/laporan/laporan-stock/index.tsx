@@ -19,9 +19,10 @@ import StockDetailTab from '@/components/features/laporan-warehouse/StockDetailT
 import PurchaseOrderTab from '@/components/features/laporan-warehouse/PurchaseOrderTab';
 import SalesOrderTab from '@/components/features/laporan-warehouse/SalesOrderTab';
 import { DocumentTemplatePrintFooter } from '@/components/common/DocumentTemplatePrintFooter';
-import { JournalPrintTemplateDialog } from '@/components/features/laporan-jurnal/JournalPrintTemplateDialog';
+import { DocumentTemplateSelect } from '@/components/features/document-template/DocumentTemplateSelect';
 import { getObjectStorageUrl } from '@/components/ui/storage-image';
 import { useReportTemplatePrint } from '@/hooks/useReportTemplatePrint';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 
 const reportMeta = {
     stock: { title: 'Stock Unit', subtitle: 'Pantau semua stock unit' },
@@ -281,18 +282,23 @@ export default function LaporanStockPage() {
                     </PrintLetterPage>
                 </Tabs>
 
-                <JournalPrintTemplateDialog
-                    open={templatePrint.isDialogOpen}
-                    onOpenChange={templatePrint.setIsDialogOpen}
-                    templates={templatePrint.templates}
-                    selectedTemplateId={templatePrint.selectedTemplateId}
-                    onSelectTemplate={templatePrint.setSelectedTemplateId}
-                    onPrint={() => void templatePrint.printWithSelectedTemplate()}
-                    isLoading={templatePrint.templatesQuery.isLoading}
-                    isError={templatePrint.templatesQuery.isError}
-                    isPrinting={templatePrint.isPreparingPrint}
-                    reportName={activeMeta.title}
-                />
+                <Dialog open={templatePrint.isDialogOpen} onOpenChange={templatePrint.setIsDialogOpen}>
+                    <DialogContent closeOnInteractOutside={false} className="max-h-[88vh] overflow-hidden p-0 sm:max-w-2xl">
+                        <DialogHeader className="border-b border-slate-200 px-6 py-5 pr-12">
+                            <DialogTitle>Pilih Template Print</DialogTitle>
+                            <DialogDescription>Pilih desain dokumen untuk mencetak {activeMeta.title.toLocaleLowerCase('id-ID')}.</DialogDescription>
+                        </DialogHeader>
+                        <div className="max-h-[56vh] overflow-y-auto px-6 py-5">
+                            <DocumentTemplateSelect value={templatePrint.selectedTemplateId} onValueChange={templatePrint.setSelectedTemplateId} disabled={templatePrint.isPreparingPrint} allowEmpty={false} placeholder={`Pilih template ${activeMeta.title.toLocaleLowerCase('id-ID')}`} variant="cards" />
+                        </div>
+                        <DialogFooter className="border-t border-slate-200 bg-slate-50/70 px-6 py-4">
+                            <Button type="button" variant="outline" onClick={() => templatePrint.setIsDialogOpen(false)} disabled={templatePrint.isPreparingPrint}>Batal</Button>
+                            <Button type="button" onClick={() => void templatePrint.printWithSelectedTemplate()} disabled={!templatePrint.selectedTemplateId || templatePrint.isPreparingPrint}>
+                                {templatePrint.isPreparingPrint ? 'Menyiapkan...' : 'Print Sekarang'}
+                            </Button>
+                        </DialogFooter>
+                    </DialogContent>
+                </Dialog>
             </div>
         </DashboardLayout>
     );
