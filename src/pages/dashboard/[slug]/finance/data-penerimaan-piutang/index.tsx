@@ -1,7 +1,10 @@
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
+import type { DateRange } from 'react-day-picker';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { PageHeader } from '@/components/ui/page-header';
+import { SearchPagination } from '@/components/ui/search-pagination';
+import { DatePickerWithRange } from '@/components/ui/date-range-picker';
 import PenerimaanPiutangTable from '@/components/features/penerimaan-piutang/PenerimaanPiutangTable';
 import { useDeletePenerimaanPiutang, usePenerimaanPiutang } from '@/hooks/usePenerimaanPiutang';
 import { usePermissionGuard } from '@/hooks/usePermissionGuard';
@@ -18,6 +21,7 @@ export default function DataPenerimaanPiutangPage() {
     const [debouncedSearch, setDebouncedSearch] = useState('');
     const [currentPage, setCurrentPage] = useState(1);
     const [perPage, setPerPage] = useState(25);
+    const [date, setDate] = useState<DateRange | undefined>();
     const [selectedItem, setSelectedItem] = useState<PenerimaanPiutang | null>(null);
 
     useEffect(() => {
@@ -29,10 +33,17 @@ export default function DataPenerimaanPiutangPage() {
         return () => clearTimeout(timeout);
     }, [search]);
 
+    const handleDateChange = (next?: DateRange) => {
+        setDate(next);
+        setCurrentPage(1);
+    };
+
     const query = usePenerimaanPiutang({
         page: currentPage,
         perPage,
         search: debouncedSearch || undefined,
+        start_date: date?.from ? date.from.toISOString().split('T')[0] : undefined,
+        end_date: date?.to ? date.to.toISOString().split('T')[0] : undefined,
     });
 
     const deleteMutation = useDeletePenerimaanPiutang();
@@ -67,23 +78,34 @@ export default function DataPenerimaanPiutangPage() {
                     }
                 />
 
-                <PenerimaanPiutangTable
-                    data={query.data?.data ?? []}
-                    meta={query.data?.meta ?? null}
-                    loading={query.isLoading || query.isFetching}
-                    error={errorMessage}
-                    search={search}
-                    perPage={perPage}
-                    currentPage={currentPage}
+                <div className="no-print">
+                    <DatePickerWithRange date={date} onChange={handleDateChange} placeholder="Pilih rentang tanggal penerimaan piutang" />
+                </div>
+
+                <SearchPagination
+                    searchValue={search}
                     onSearchChange={setSearch}
+                    searchPlaceholder="Search here"
+                    searchAriaLabel="Cari data penerimaan piutang"
+                    page={currentPage}
+                    perPage={perPage}
+                    total={query.data?.meta.total ?? 0}
+                    lastPage={query.data?.meta.lastPage ?? 1}
+                    onPageChange={setCurrentPage}
                     onPerPageChange={(value) => {
                         setPerPage(value);
                         setCurrentPage(1);
                     }}
-                    onPageChange={setCurrentPage}
-                    onDelete={(item) => setSelectedItem(item)}
-                    onRetry={() => query.refetch()}
-                />
+                >
+                    <PenerimaanPiutangTable
+                        data={query.data?.data ?? []}
+                        meta={query.data?.meta ?? null}
+                        loading={query.isLoading || query.isFetching}
+                        error={errorMessage}
+                        onDelete={(item) => setSelectedItem(item)}
+                        onRetry={() => query.refetch()}
+                    />
+                </SearchPagination>
             </div>
 
             <AlertDialog open={!!selectedItem} onOpenChange={(open) => !open && setSelectedItem(null)}>

@@ -18,13 +18,10 @@ interface Props {
   onView: (item: WithholdingTaxItem) => void;
   onEdit: (item: WithholdingTaxItem) => void;
   onDelete: (item: WithholdingTaxItem) => void;
-  onPageChange: (page: number) => void;
+  onPageChange?: (page: number) => void;
   onSortChange: (key: string) => void;
   currentSortBy?: string;
   currentSortDirection?: 'asc' | 'desc';
-  startDate?: string | null;
-  endDate?: string | null;
-  onDateRangeChange?: (start: string | null, end: string | null) => void;
 }
 
 const formatDate = (value: string | null | undefined) => {
@@ -47,9 +44,6 @@ export default function WithholdingTaxTable({
   onSortChange,
   currentSortBy,
   currentSortDirection,
-  startDate,
-  endDate,
-  onDateRangeChange,
 }: Props) {
   const page = meta?.currentPage ?? 1;
   const perPage = meta?.perPage ?? 10;
@@ -186,10 +180,6 @@ export default function WithholdingTaxTable({
           total: meta?.total ?? data.length,
         }}
         onPageChange={onPageChange}
-        addDateRangePicker={true}
-        startDate={startDate}
-        endDate={endDate}
-        onDateRangeChange={onDateRangeChange}
       />
     </div>
   );

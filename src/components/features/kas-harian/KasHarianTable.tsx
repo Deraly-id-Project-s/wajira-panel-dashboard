@@ -27,7 +27,7 @@ interface Props {
   onDelete: (item: KasHarianListItem) => void;
   onSyncPpnData?: (item: KasHarianListItem) => void;
   onToggleStatus?: (item: KasHarianListItem) => void;
-  onPageChange: (page: number) => void;
+  onPageChange?: (page: number) => void;
   canEdit?: boolean;
   canDelete?: boolean;
 }

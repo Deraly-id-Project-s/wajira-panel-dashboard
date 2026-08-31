@@ -2,6 +2,7 @@ import { useMemo } from 'react';
 import BaseTable, { ColumnDef } from '@/components/ui/base-table';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import type { Dealer } from '@/@types/dealer.types';
+import { TextTruncate } from '@/components/ui/text-truncate';
 
 interface DealerTableProps {
     dealers: Dealer[];
@@ -35,7 +36,7 @@ export function DealerTable({
             {
                 header: 'ALAMAT',
                 accessorKey: 'alamat',
-                cell: (item) => <span className="line-clamp-2">{item.alamat || '-'}</span>,
+                cell: (item) => <TextTruncate text={item.alamat || '-'} maxLength={48} className="block max-w-[260px] truncate" />,
             },
             {
                 header: 'PIC',

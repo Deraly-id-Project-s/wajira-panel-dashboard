@@ -180,10 +180,6 @@ export const getNavItems = (slug: string): NavItemConfig[] => {
           href: base('/laporan/laporan-transaksi-kas'),
         },
         {
-          label: 'Laporan Akuntansi',
-          href: base('/laporan/laporan-akuntansi'),
-        },
-        {
           label: 'Laporan Jurnal',
           href: base('/laporan/laporan-jurnal'),
         },

@@ -1,9 +1,11 @@
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import BaseTable, { ColumnDef } from '@/components/ui/base-table';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { MoreVertical } from 'lucide-react';
 import type { Customer } from '@/@types/customer.types';
 import { CopyBox } from '@/components/ui/copy-box';
 import { ReferenceLink } from '@/components/ui/reference-link';
+import { TextTruncate } from '@/components/ui/text-truncate';
 
 interface CustomerTableProps {
   customers: Customer[];
@@ -22,6 +24,8 @@ export function CustomerTable({
   canEdit,
   canDelete,
 }: CustomerTableProps) {
+  const [openActionId, setOpenActionId] = useState<string | number | null>(null);
+
   const columns = useMemo<ColumnDef<Customer>[]>(
     () => [
       {
@@ -40,7 +44,8 @@ export function CustomerTable({
         header: 'Alamat',
         accessorKey: 'address',
         sortable: true,
-        cell: (item) => <span className="line-clamp-2">{item.address || '-'}</span>,
+        className: 'max-w-[260px]',
+        cell: (item) => <TextTruncate text={item.address || '-'} maxLength={48} className="block max-w-[260px] truncate" />,
       },
       {
         header: 'Phone',
@@ -87,18 +92,21 @@ export function CustomerTable({
         alignment: 'center',
         sticky: 'right',
         cell: (item) => (
-          <DropdownMenu>
+          <DropdownMenu
+            open={openActionId === item.id}
+            onOpenChange={(open) => setOpenActionId(open ? item.id : null)}
+          >
             <DropdownMenuTrigger asChild>
               <button className="inline-flex items-center justify-center h-8 w-8 p-0 rounded-full text-slate-600 hover:bg-slate-100 hover:text-slate-900">
-                <svg className="h-4 w-4" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="1" /><circle cx="12" cy="5" r="1" /><circle cx="12" cy="19" r="1" /></svg>
+                <MoreVertical className="h-4 w-4" />
               </button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="min-w-[150px] rounded-md border-slate-200 p-1.5 shadow-lg">
               <DropdownMenuItem
                 className="rounded-lg px-3 py-2 text-sm text-slate-900 focus:bg-slate-50 cursor-pointer"
                 disabled={!canEdit}
-                onSelect={(e) => {
-                  e.preventDefault();
+                onSelect={() => {
+                  setOpenActionId(null);
                   onEdit(item);
                 }}
               >
@@ -107,8 +115,8 @@ export function CustomerTable({
               <DropdownMenuItem
                 className="rounded-lg px-3 py-2 text-sm text-red-600 focus:bg-red-50 focus:text-red-600 cursor-pointer"
                 disabled={!canDelete}
-                onSelect={(e) => {
-                  e.preventDefault();
+                onSelect={() => {
+                  setOpenActionId(null);
                   onDelete(item);
                 }}
               >
@@ -119,7 +127,7 @@ export function CustomerTable({
         ),
       },
     ],
-    [onEdit, onDelete, canEdit, canDelete],
+    [onEdit, onDelete, openActionId, canEdit, canDelete],
   );
 
   return (

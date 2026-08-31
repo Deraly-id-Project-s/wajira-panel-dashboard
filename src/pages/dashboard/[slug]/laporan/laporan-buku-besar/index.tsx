@@ -9,8 +9,7 @@ import { PrintLetterPage } from '@/components/common/PrintLetterPage';
 import { PageHeader } from '@/components/ui/page-header';
 import { Button } from '@/components/ui/button';
 import { DatePickerWithRange, type DateRangePickerMode } from '@/components/ui/date-range-picker';
-import { SearchInput } from '@/components/ui/search-input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { SearchPagination } from '@/components/ui/search-pagination';
 import { LedgerAccountSelect } from '@/components/features/laporan-buku-besar/LedgerAccountSelect';
 import { LaporanBukuBesarTable } from '@/components/features/laporan-buku-besar/LaporanBukuBesarTable';
 import { useLedgerReport } from '@/hooks/report/useLedgerReport';
@@ -129,7 +128,7 @@ export default function LaporanBukuBesarPage() {
         </div>
 
         <div className="flex flex-col gap-4 rounded-md border border-slate-200 bg-white p-4 no-print">
-          <div className="grid gap-3 lg:grid-cols-[minmax(260px,1fr)_minmax(220px,1fr)_290px_auto] lg:items-end">
+          <div className="grid gap-3 lg:grid-cols-[minmax(260px,1fr)_290px_auto] lg:items-end">
             <div className="space-y-1.5">
               <label className="text-[13px] font-medium text-slate-700">Akun</label>
               <LedgerAccountSelect
@@ -140,17 +139,6 @@ export default function LaporanBukuBesarPage() {
                 }}
                 options={accountOptions}
                 disabled={accountQuery.isLoading}
-              />
-            </div>
-
-            <div className="space-y-1.5">
-              <label className="text-[13px] font-medium text-slate-700">Search</label>
-              <SearchInput
-                searchValue={searchInput}
-                onSearchChange={setSearchInput}
-                placeholder="Cari kode transaksi atau keterangan"
-                aria-label="Cari transaksi buku besar"
-                className="h-9"
               />
             </div>
 
@@ -174,30 +162,25 @@ export default function LaporanBukuBesarPage() {
               Reset
             </Button>
           </div>
-
-          <div className="flex items-center gap-2 text-sm text-slate-500">
-            <span>Show</span>
-            <Select
-              value={String(perPage)}
-              onValueChange={(value) => {
-                setPerPage(Number(value));
-                setPage(1);
-              }}
-            >
-              <SelectTrigger className="h-9 w-[72px] bg-white">
-                <SelectValue placeholder="25" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="25">25</SelectItem>
-                <SelectItem value="50">50</SelectItem>
-                <SelectItem value="100">100</SelectItem>
-              </SelectContent>
-            </Select>
-            <span>Page</span>
-          </div>
         </div>
 
-        <PrintLetterPage
+        <SearchPagination
+          searchValue={searchInput}
+          onSearchChange={setSearchInput}
+          searchPlaceholder="Search here"
+          searchAriaLabel="Cari data"
+          page={page}
+          perPage={perPage}
+          total={pagination.total}
+          lastPage={pagination.lastPage}
+          perPageOptions={[25, 50, 100]}
+          onPageChange={setPage}
+          onPerPageChange={(value) => {
+            setPerPage(value);
+            setPage(1);
+          }}
+        >
+          <PrintLetterPage
           id="laporan-buku-besar-print"
           className="laporan-buku-besar-print-area"
           letterheadSrc={selectedPrintBackground}
@@ -234,16 +217,10 @@ export default function LaporanBukuBesarPage() {
               sortBy={sortBy}
               sortOrder={sortOrder}
               onSortChange={handleSortChange}
-              meta={{
-                currentPage: pagination.currentPage,
-                perPage: pagination.perPage,
-                lastPage: pagination.lastPage,
-                total: pagination.total,
-              }}
-              onPageChange={setPage}
             />
           </div>
         </PrintLetterPage>
+        </SearchPagination>
       </div>
     </DashboardLayout>
   );

@@ -4,6 +4,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import type { Supplier } from '@/@types/supplier.types';
 import { CopyBox } from '@/components/ui/copy-box';
 import { ReferenceLink } from '@/components/ui/reference-link';
+import { TextTruncate } from '@/components/ui/text-truncate';
 
 interface SupplierTableProps {
   suppliers: Supplier[];
@@ -40,7 +41,7 @@ export function SupplierTable({
         header: 'Alamat',
         accessorKey: 'address',
         sortable: true,
-        cell: (item) => <span className="line-clamp-2">{item.address || '-'}</span>,
+        cell: (item) => <TextTruncate text={item.address || '-'} maxLength={48} className="block max-w-[260px] truncate" />,
       },
       {
         header: 'Phone',

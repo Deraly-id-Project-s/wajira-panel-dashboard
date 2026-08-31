@@ -94,7 +94,6 @@ const FEATURE_MAP: Record<string, { path: string; label?: string; group?: string
   'ledger-report': { path: '/laporan/laporan-buku-besar', label: 'Laporan Buku Besar' },
   'profit-loss-reports': { path: '/laporan/laporan-laba-rugi', label: 'Laporan Laba Rugi' },
   'profit-loss-report': { path: '/laporan/laporan-laba-rugi', label: 'Laporan Laba Rugi' },
-  'accounting-reports': { path: '/laporan/laporan-akuntansi', label: 'Laporan Akuntansi' },
   'purchase-reports': { path: '/laporan/laporan-pembelian', label: 'Laporan Pembelian' },
   'sales-reports': { path: '/laporan/laporan-penjualan', label: 'Laporan Penjualan' },
   'receipt-reports': { path: '/laporan/laporan-penerimaan', label: 'Laporan Penerimaan' },
@@ -135,7 +134,6 @@ const REPORT_MENU_ORDER = [
   'Laporan Jurnal',
   'Laporan Buku Besar',
   'Laporan Laba Rugi',
-  'Laporan Akuntansi',
   'Laporan Pembelian',
 ];
 

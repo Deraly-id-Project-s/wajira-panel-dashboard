@@ -10,6 +10,8 @@ import { useActivateDriver, useDeactivateDriver } from '@/hooks/useDriver';
 import { getDriverPassword } from '@/services/driver.service';
 import type { Driver } from '@/@types/driver.types';
 import type { PaginationMeta } from '@/@types/pagination.types';
+import { ReferenceLink } from '@/components/ui/reference-link';
+import { CopyBox } from '@/components/ui/copy-box';
 
 interface DriverTableProps {
     data: Driver[];
@@ -109,19 +111,26 @@ export function DriverTable({
                 header: 'KTP',
                 accessorKey: 'identityNumber',
                 sortable: true,
-                cell: (item) => item.identityNumber || '-',
+                cell: (item) => item.identityNumber ? <CopyBox text={item.identityNumber} /> : '-',
             },
             {
                 header: 'PHONE',
                 accessorKey: 'phone',
                 sortable: true,
-                cell: (item) => item.phone || '-',
+                cell: (item) =>
+                    item.phone ? (
+                        <ReferenceLink target="_blank" href={`https://wa.me/${item.phone.replace(/^0/, '62')}`}>
+                            {item.phone}
+                        </ReferenceLink>
+                    ) : (
+                        '-'
+                    ),
             },
             {
                 header: 'SIM',
                 accessorKey: 'driveLicenseNumber',
                 sortable: true,
-                cell: (item) => item.driveLicenseNumber || '-',
+                cell: (item) => item.driveLicenseNumber ? <CopyBox text={item.driveLicenseNumber} /> : '-',
             },
             {
                 header: 'TGL GABUNG',

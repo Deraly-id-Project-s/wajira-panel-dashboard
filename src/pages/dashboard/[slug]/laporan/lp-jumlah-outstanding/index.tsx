@@ -3,15 +3,14 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/router';
 import Head from 'next/head';
-import { Search, Printer } from 'lucide-react';
+import { Printer } from 'lucide-react';
 
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { PageHeader } from '@/components/ui/page-header';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Input } from '@/components/ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
 import BaseTable, { ColumnDef } from '@/components/ui/base-table';
+import { SearchPagination } from '@/components/ui/search-pagination';
 
 import { useJumlahOutstandingReport } from '@/hooks/report/useJumlahOutstandingReport';
 import { useCompany } from '@/contexts/CompanyContext';
@@ -283,36 +282,22 @@ export default function LPJumlahOutstandingPage() {
           </div>
 
           <div className="space-y-4">
-            {/* Search + Print row */}
-            <div className="flex flex-col sm:flex-row items-center justify-between gap-4 no-print">
-              <div className="flex items-center gap-4 w-full sm:w-auto">
-                <div className="relative w-full sm:w-[300px]">
-                  <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
-                  <Input
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    placeholder="Search here"
-                    className="pl-9 bg-white"
-                  />
-                </div>
-                <div className="flex items-center gap-2 text-sm text-slate-500 whitespace-nowrap">
-                  <span>Show</span>
-                  <Select value={String(perPage)} onValueChange={(value) => { setPerPage(Number(value)); }}>
-                    <SelectTrigger className="w-[70px] bg-white">
-                      <SelectValue placeholder="25" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="10">10</SelectItem>
-                      <SelectItem value="25">25</SelectItem>
-                      <SelectItem value="50">50</SelectItem>
-                      <SelectItem value="100">100</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <span>Page</span>
-                </div>
-              </div>
-            </div>
-
+            <SearchPagination
+              searchValue={searchTerm}
+              onSearchChange={setSearchTerm}
+              searchPlaceholder="Search here"
+              searchAriaLabel="Cari data"
+              page={page}
+              perPage={perPage}
+              total={pagination.total}
+              lastPage={pagination.lastPage}
+              perPageOptions={[10, 25, 50, 100]}
+              onPageChange={setPage}
+              onPerPageChange={(value) => {
+                setPerPage(value);
+                setPage(1);
+              }}
+            >
             {/* Print Letter Wrapping Container */}
             <PrintLetterPage
               id="laporan-jumlah-outstanding-print"
@@ -338,13 +323,6 @@ export default function LPJumlahOutstandingPage() {
                     data={data}
                     columns={columns}
                     loading={isLoading}
-                    meta={{
-                      currentPage: page,
-                      perPage: perPage,
-                      lastPage: pagination.lastPage,
-                      total: pagination.total,
-                    }}
-                    onPageChange={setPage}
                     sortBy={sortBy}
                     sortDirection={sortOrder}
                     onSortChange={(key, dir) => {
@@ -356,6 +334,7 @@ export default function LPJumlahOutstandingPage() {
                 </div>
               </div>
             </PrintLetterPage>
+            </SearchPagination>
           </div>
         </Tabs>
       </div>

@@ -49,15 +49,12 @@ const ensureReportFallbackSidebarMenus = (menus: MenuItem[], slug: string): Menu
 
     if (!hasProfitLoss) {
       const ledgerIndex = children.findIndex((child) => child.label === 'Laporan Buku Besar');
-      const accountingIndex = children.findIndex((child) => child.label === 'Laporan Akuntansi');
       const purchaseIndex = children.findIndex((child) => child.label === 'Laporan Pembelian');
       const insertIndex = ledgerIndex >= 0
         ? ledgerIndex + 1
-        : accountingIndex >= 0
-          ? accountingIndex
-          : purchaseIndex >= 0
-            ? purchaseIndex
-            : children.length;
+        : purchaseIndex >= 0
+          ? purchaseIndex
+          : children.length;
 
       children.splice(insertIndex, 0, {
         label: 'Laporan Laba Rugi',

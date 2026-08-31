@@ -58,6 +58,7 @@ export interface JournalReportParams {
   payment_at?: string | null;
   start_date?: string | null;
   end_date?: string | null;
+  account_id?: string | number | null;
   account_name?: string | null;
   account_code?: string | null;
   search?: string | null;

@@ -1,11 +1,13 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/router';
 import { toast } from 'sonner';
+import type { DateRange } from 'react-day-picker';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { DOEkspedisiTable } from '@/components/features/do-ekspedisi/DOEkspedisiTable';
 import { DeleteDOEkspedisiModal } from '@/components/features/do-ekspedisi/DeleteDOEkspedisiModal';
 import { Button } from '@/components/ui/button';
 import { SearchPagination } from '@/components/ui/search-pagination';
+import { DatePickerWithRange } from '@/components/ui/date-range-picker';
 import type { DoEkspedisi } from '@/@types/do-ekspedisi.types';
 import {
   useDeleteDoEkspedisi,
@@ -24,6 +26,7 @@ export default function DOEkspedisiPage() {
     defaultPerPage: 25,
   });
   const [searchInput, setSearchInput] = useState(search);
+  const [date, setDate] = useState<DateRange | undefined>();
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
   const [selectedItem, setSelectedItem] = useState<DoEkspedisi | null>(null);
 
@@ -36,12 +39,19 @@ export default function DOEkspedisiPage() {
     return () => window.clearTimeout(timeout);
   }, [searchInput, search, setSearch]);
 
+  const handleDateChange = (next?: DateRange) => {
+    setDate(next);
+    setPage(1);
+  };
+
   const listQuery = useDoEkspedisis({
     page,
     perPage,
     search,
     order_by: 'created_at',
     order_sort: 'desc',
+    start_date: date?.from ? date.from.toISOString().split('T')[0] : undefined,
+    end_date: date?.to ? date.to.toISOString().split('T')[0] : undefined,
   });
   const deleteMutation = useDeleteDoEkspedisi();
   const processExpeditionMutation = useProcessDoExpedition();
@@ -101,6 +111,10 @@ export default function DOEkspedisiPage() {
           title="Data DO Ekspedisi"
           subtitle="Buat faktur dengan informasi penagihan yang diperlukan."
         />
+
+        <div className="no-print">
+          <DatePickerWithRange date={date} onChange={handleDateChange} placeholder="Pilih rentang tanggal DO" />
+        </div>
 
         <SearchPagination
           searchValue={searchInput}

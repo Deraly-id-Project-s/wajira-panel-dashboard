@@ -2,24 +2,21 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
-import { Search, Printer, Loader2, ArrowUpDown, MoreVertical, FileText, CheckCircle2, XCircle } from 'lucide-react';
+import { Printer, Loader2, ArrowUpDown, MoreVertical, FileText, CheckCircle2, XCircle } from 'lucide-react';
 import { format } from 'date-fns';
 import { id } from 'date-fns/locale';
 
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { PageHeader } from '@/components/ui/page-header';
 import BaseTable, { ColumnDef } from '@/components/ui/base-table';
-import { Input } from '@/components/ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { SearchPagination } from '@/components/ui/search-pagination';
 
 import { useExpeditionReport } from '@/hooks/report/useExpeditionReport';
 import { useCompany } from '@/contexts/CompanyContext';
 import { resolveCompanyId, getLetterheadByCompanyId } from '@/lib/print-letterhead';
 import { PrintLetterPage } from '@/components/common/PrintLetterPage';
-import { getVisiblePageNumbers } from '@/lib/api/pagination';
-import { cn } from '@/lib/utils';
 import { formatDate } from '@/lib/utils/format';
 
 export default function LaporanSuratJalanPage() {
@@ -56,8 +53,6 @@ export default function LaporanSuratJalanPage() {
     orderBy,
     orderSort,
   });
-
-  const visiblePages = getVisiblePageNumbers(pagination.lastPage, page, 5);
 
   // Formatting helpers
   const formatDateString = (value?: string | null) => {
@@ -204,37 +199,23 @@ export default function LaporanSuratJalanPage() {
         </div>
 
         <div className="space-y-4">
-
-          {/* Filtering Block (Search and Show Page dropdown) */}
-          <div className="flex flex-col gap-4 sm:flex-row sm:items-center justify-between no-print">
-            <div className="flex items-center gap-4 w-full sm:w-auto">
-              <div className="relative w-full sm:w-[300px]">
-                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
-                <Input
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  placeholder="Search here"
-                  className="pl-9 bg-white"
-                />
-              </div>
-              <div className="flex items-center gap-2 text-sm text-slate-500 whitespace-nowrap">
-                <span>Show</span>
-                <Select value={String(perPage)} onValueChange={(value) => { setPerPage(Number(value)); }}>
-                  <SelectTrigger className="w-[70px] bg-white">
-                    <SelectValue placeholder="25" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="25">25</SelectItem>
-                    <SelectItem value="50">50</SelectItem>
-                    <SelectItem value="100">100</SelectItem>
-                  </SelectContent>
-                </Select>
-                <span>Page</span>
-              </div>
-            </div>
-          </div>
-
           {/* Print Letter Wrapping Container */}
+          <SearchPagination
+            searchValue={searchTerm}
+            onSearchChange={setSearchTerm}
+            searchPlaceholder="Search here"
+            searchAriaLabel="Cari data"
+            page={page}
+            perPage={perPage}
+            total={pagination.total}
+            lastPage={pagination.lastPage}
+            perPageOptions={[25, 50, 100]}
+            onPageChange={setPage}
+            onPerPageChange={(value) => {
+              setPerPage(value);
+              setPage(1);
+            }}
+          >
           <PrintLetterPage
             id="laporan-surat-jalan-print"
             className="laporan-penerimaan-print-area"
@@ -265,13 +246,6 @@ export default function LaporanSuratJalanPage() {
                   data={data}
                   columns={columns}
                   loading={isLoading}
-                  meta={{
-                    currentPage: page,
-                    perPage: perPage,
-                    lastPage: pagination.lastPage,
-                    total: pagination.total
-                  }}
-                  onPageChange={setPage}
                   sortBy={orderBy}
                   sortDirection={orderSort}
                   onSortChange={(key, dir) => {
@@ -283,6 +257,7 @@ export default function LaporanSuratJalanPage() {
               )}
             </div>
           </PrintLetterPage>
+          </SearchPagination>
         </div>
       </div>
     </DashboardLayout>

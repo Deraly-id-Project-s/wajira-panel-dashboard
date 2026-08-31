@@ -18,9 +18,9 @@ export default function EditDocumentTemplatePage() {
   const submit = async (values: DocumentTemplateFormValues) => {
     if (!id || !hasPermission('master-data:edit')) return;
     try {
-      await mutation.mutateAsync({ id, payload: values });
+      const updatedTemplate = await mutation.mutateAsync({ id, payload: values });
       toast.success('Dokumen template berhasil diubah');
-      await router.push(`/dashboard/${slug}/master/document-template`);
+      await router.push(`/dashboard/${slug}/master/document-template/${updatedTemplate.id}/edit`);
     } catch (error: any) {
       toast.error(error?.message ?? 'Gagal mengubah dokumen template');
     }

@@ -2,19 +2,19 @@
 
 import { useEffect, useState, useMemo } from 'react';
 import { useRouter } from 'next/router';
-import { Search, Printer, MoreHorizontal } from 'lucide-react';
+import { Printer, MoreHorizontal } from 'lucide-react';
 import { format } from 'date-fns';
 
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { PageHeader } from '@/components/ui/page-header';
 import { TableRow, TableHead } from '@/components/ui/table';
-import { Input } from '@/components/ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import BaseTable, { ColumnDef } from '@/components/ui/base-table';
+import { SearchPagination } from '@/components/ui/search-pagination';
 
 import { useCompany } from '@/contexts/CompanyContext';
 import { resolveCompanyId, getLetterheadByCompanyId } from '@/lib/print-letterhead';
@@ -299,40 +299,28 @@ export default function LaporanRitaseArmadaPage() {
           />
         </div>
 
-        {/* Search + Print row */}
-        <div className="flex flex-col sm:flex-row items-center justify-between gap-4 no-print">
-          <div className="flex items-center gap-4 w-full sm:w-auto">
-            <div className="relative w-full sm:w-[300px]">
-              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
-              <Input
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                placeholder="Search here"
-                className="pl-9 bg-white"
-              />
-            </div>
-            <div className="flex items-center gap-2 text-sm text-slate-500 whitespace-nowrap">
-              <span>Show</span>
-              <Select value={perPage} onValueChange={setPerPage}>
-                <SelectTrigger className="w-[70px] bg-white">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="5">5</SelectItem>
-                  <SelectItem value="25">25</SelectItem>
-                  <SelectItem value="50">50</SelectItem>
-                  <SelectItem value="100">100</SelectItem>
-                </SelectContent>
-              </Select>
-              <span>Page</span>
-            </div>
-          </div>
-          <Button onClick={handlePrint} variant="outline" className="w-full sm:w-auto">
-            <Printer className="mr-2 h-4 w-4" /> Print
-          </Button>
-        </div>
-
-        <Tabs value={activeTab} onValueChange={(val) => setActiveTab(val as 'ritase' | 'maintenance')} className="w-full">
+        <SearchPagination
+          searchValue={searchTerm}
+          onSearchChange={setSearchTerm}
+          searchPlaceholder="Search here"
+          searchAriaLabel="Cari data"
+          page={page}
+          perPage={limit}
+          total={activeTab === 'ritase' ? filteredRitase.length : filteredMaintenance.length}
+          lastPage={Math.max(1, Math.ceil((activeTab === 'ritase' ? filteredRitase.length : filteredMaintenance.length) / limit))}
+          perPageOptions={[5, 25, 50, 100]}
+          onPageChange={setPage}
+          onPerPageChange={(value) => {
+            setPerPage(String(value));
+            setPage(1);
+          }}
+          actions={
+            <Button onClick={handlePrint} variant="outline" className="w-full sm:w-auto">
+              <Printer className="mr-2 h-4 w-4" /> Print
+            </Button>
+          }
+        >
+          <Tabs value={activeTab} onValueChange={(val) => setActiveTab(val as 'ritase' | 'maintenance')} className="w-full">
           {/* Tabs Navigation */}
           <div className="flex mb-4 no-print">
             <TabsList className="flex h-auto p-1 bg-gray-50 border border-gray-100 rounded-md">
@@ -377,18 +365,12 @@ export default function LaporanRitaseArmadaPage() {
                   loading={false}
                   headerGroups={activeTab === 'ritase' ? ritaseHeaderGroups : undefined}
                   headerRowClassName="bg-slate-50"
-                  meta={{
-                    currentPage: page,
-                    perPage: limit,
-                    lastPage: Math.ceil((activeTab === 'ritase' ? filteredRitase.length : filteredMaintenance.length) / limit) || 1,
-                    total: activeTab === 'ritase' ? filteredRitase.length : filteredMaintenance.length,
-                  }}
-                  onPageChange={setPage}
                 />
               </div>
             </div>
           </PrintLetterPage>
-        </Tabs>
+          </Tabs>
+        </SearchPagination>
       </div>
 
       {/* Edit Ritase Modal */}

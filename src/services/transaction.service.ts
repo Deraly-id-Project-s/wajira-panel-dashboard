@@ -49,13 +49,15 @@ const mapTransaction = (item: TransactionFlowApiModel): Transaction => ({
   updatedAt: item.updated_at,
 });
 
-export const getTransactions = async (companyId: string, page = 1, limit = 25, search = '') => {
+export const getTransactions = async (companyId: string, page = 1, limit = 25, search = '', startDate?: string, endDate?: string) => {
   const response = await apiClient.get<PaginatedResponse>(basePath, {
     params: {
       company_id: companyId,
       page,
       perPage: limit,
       description: search || undefined,
+      start_date: startDate || undefined,
+      end_date: endDate || undefined,
     },
   });
 

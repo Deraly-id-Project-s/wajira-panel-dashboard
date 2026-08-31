@@ -15,9 +15,9 @@ export default function CreateDocumentTemplatePage() {
   const submit = async (values: DocumentTemplateFormValues) => {
     if (!hasPermission('master-data:create')) return;
     try {
-      await mutation.mutateAsync(values);
+      const createdTemplate = await mutation.mutateAsync(values);
       toast.success('Dokumen template berhasil ditambahkan');
-      await router.push(`/dashboard/${slug}/master/document-template`);
+      await router.push(`/dashboard/${slug}/master/document-template/${createdTemplate.id}/edit`);
     } catch (error: any) {
       toast.error(error?.message ?? 'Gagal menambahkan dokumen template');
     }

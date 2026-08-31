@@ -1,6 +1,9 @@
 import { useEffect, useState } from 'react';
+import type { DateRange } from 'react-day-picker';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { PageHeader } from '@/components/ui/page-header';
+import { SearchPagination } from '@/components/ui/search-pagination';
+import { DatePickerWithRange } from '@/components/ui/date-range-picker';
 import PembayaranHutangTable from '@/components/features/pembayaran-hutang/PembayaranHutangTable';
 import { useDeletePembayaranHutang, usePembayaranHutang } from '@/hooks/usePembayaranHutang';
 import { usePermissionGuard } from '@/hooks/usePermissionGuard';
@@ -18,6 +21,7 @@ export default function DataPembayaranHutangPage() {
   const [debouncedSearch, setDebouncedSearch] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [perPage, setPerPage] = useState(25);
+  const [date, setDate] = useState<DateRange | undefined>();
   const [selectedItem, setSelectedItem] = useState<LiabilityListItem | null>(null);
 
   useEffect(() => {
@@ -29,10 +33,17 @@ export default function DataPembayaranHutangPage() {
     return () => clearTimeout(timeout);
   }, [search]);
 
+  const handleDateChange = (next?: DateRange) => {
+    setDate(next);
+    setCurrentPage(1);
+  };
+
   const query = usePembayaranHutang({
     page: currentPage,
     perPage,
     search: debouncedSearch || undefined,
+    start_date: date?.from ? date.from.toISOString().split('T')[0] : undefined,
+    end_date: date?.to ? date.to.toISOString().split('T')[0] : undefined,
   });
 
   const deleteMutation = useDeletePembayaranHutang();
@@ -67,23 +78,34 @@ export default function DataPembayaranHutangPage() {
           }
         />
 
-        <PembayaranHutangTable
-          data={query.data?.data ?? []}
-          meta={query.data?.meta ?? null}
-          loading={query.isLoading || query.isFetching}
-          error={errorMessage}
-          search={search}
-          perPage={perPage}
-          currentPage={currentPage}
+        <div className="no-print">
+          <DatePickerWithRange date={date} onChange={handleDateChange} placeholder="Pilih rentang tanggal pembayaran hutang" />
+        </div>
+
+        <SearchPagination
+          searchValue={search}
           onSearchChange={setSearch}
+          searchPlaceholder="Search here"
+          searchAriaLabel="Cari data pembayaran hutang"
+          page={currentPage}
+          perPage={perPage}
+          total={query.data?.meta.total ?? 0}
+          lastPage={query.data?.meta.lastPage ?? 1}
+          onPageChange={setCurrentPage}
           onPerPageChange={(value) => {
             setPerPage(value);
             setCurrentPage(1);
           }}
-          onPageChange={setCurrentPage}
-          onDelete={(item) => setSelectedItem(item)}
-          onRetry={() => query.refetch()}
-        />
+        >
+          <PembayaranHutangTable
+            data={query.data?.data ?? []}
+            meta={query.data?.meta ?? null}
+            loading={query.isLoading || query.isFetching}
+            error={errorMessage}
+            onDelete={(item) => setSelectedItem(item)}
+            onRetry={() => query.refetch()}
+          />
+        </SearchPagination>
       </div>
 
       <AlertDialog open={!!selectedItem} onOpenChange={(open) => !open && setSelectedItem(null)}>

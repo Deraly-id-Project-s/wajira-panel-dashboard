@@ -6,11 +6,13 @@ import { ApiResponseError, LaravelApiResponse, ensureSuccess, toPaginatedResult,
 
 const basePath = '/wapi/finance/finance-asset';
 
-export const getFinanceAssets = async (params: PaginationParams & { search?: string; company_id?: string | number }): Promise<FinanceAssetListResponse> => {
+export const getFinanceAssets = async (params: PaginationParams & { search?: string; company_id?: string | number; start_date?: string; end_date?: string }): Promise<FinanceAssetListResponse> => {
     const response = await apiClient.get<LaravelApiResponse<any>>(basePath, {
         params: {
             ...buildLaravelPaginationQuery(params),
             company_id: params.company_id,
+            start_date: params.start_date || undefined,
+            end_date: params.end_date || undefined,
         },
     });
 

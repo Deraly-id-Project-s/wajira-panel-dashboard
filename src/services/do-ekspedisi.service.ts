@@ -500,6 +500,8 @@ export const getDoEkspedisis = async (
       page: params.page ?? 1,
       per_page: params.perPage ?? 10,
       do_order_list_id: params.do_order_list_id,
+      start_date: params.start_date || undefined,
+      end_date: params.end_date || undefined,
     },
   });
 
