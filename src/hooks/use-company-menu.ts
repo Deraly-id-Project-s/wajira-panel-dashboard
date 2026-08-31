@@ -12,7 +12,8 @@ import {
   Warehouse,
   Landmark,
   ListChecks,
-  Shield
+  Shield,
+  Settings
 } from 'lucide-react';
 
 const FEATURE_MAP: Record<string, { path: string; label?: string; group?: string }> = {
@@ -117,7 +118,36 @@ const FEATURE_MAP: Record<string, { path: string; label?: string; group?: string
   'users': { path: '/master/user', label: 'Pengguna' },
   'roles': { path: '/settings/roles', label: 'Hak Akses' },
   'permissions': { path: '/settings/permissions', label: 'Izin Akses' },
+  'preference': { path: '/settings/preference', label: 'Preferensi' },
+  'preferences': { path: '/settings/preference', label: 'Preferensi' },
+  'settings-preference': { path: '/settings/preference', label: 'Preferensi' },
 };
+
+const SETTING_FEATURE_SLUGS = new Set([
+  'roles',
+  'permissions',
+  'preference',
+  'preferences',
+  'settings-preference',
+]);
+
+const SETTING_MENU_ITEMS = [
+  {
+    label: 'Hak Akses',
+    path: '/settings/roles',
+    permissions: ['settings:list', 'roles:list', 'role:list'],
+  },
+  {
+    label: 'Izin Akses',
+    path: '/settings/permissions',
+    permissions: ['settings:list', 'permissions:list', 'permission:list'],
+  },
+  {
+    label: 'Preferensi',
+    path: '/settings/preference',
+    permissions: ['settings:list', 'preference:list', 'preferences:list', 'settings-preference:list'],
+  },
+];
 
 const resolvePath = (path: string, slug: string) => {
   if (path.startsWith('/master/')) {
@@ -177,13 +207,69 @@ const ensureLedgerReportMenu = (items: MenuItem[], slug: string) => {
   });
 };
 
+const hasModuleAccess = (item: SidebarModuleItem, permissionSet: Set<string>) => {
+  if (item.module.slug === 'dashboard') return true;
+  if (permissionSet.has(`${item.module.slug}:list`)) return true;
+
+  return item.features.some((feature) => permissionSet.has(`${feature.slug}:list`));
+};
+
+const sortSettingMenuItems = (items: MenuItem[]) => {
+  items.sort((a, b) => {
+    const aIndex = SETTING_MENU_ITEMS.findIndex((item) => item.label === a.label);
+    const bIndex = SETTING_MENU_ITEMS.findIndex((item) => item.label === b.label);
+
+    if (aIndex === -1 && bIndex === -1) return 0;
+    if (aIndex === -1) return 1;
+    if (bIndex === -1) return -1;
+    return aIndex - bIndex;
+  });
+};
+
+const ensureSettingMenu = (menus: MenuItem[], settingChildren: MenuItem[], permissionSet: Set<string>, slug: string) => {
+  const existingSettingMenu = menus.find((menu) => menu.label === 'Setting');
+  const children = [...(existingSettingMenu?.children ?? []), ...settingChildren];
+
+  for (const item of SETTING_MENU_ITEMS) {
+    const isAllowed = item.permissions.some((permission) => permissionSet.has(permission));
+    const href = resolvePath(item.path, slug);
+    const alreadyExists = children.some((child) => child.href === href);
+
+    if (isAllowed && !alreadyExists) {
+      children.push({
+        label: item.label,
+        href,
+      });
+    }
+  }
+
+  if (children.length === 0) return;
+
+  const uniqueChildren = children.filter((child, index, source) => (
+    source.findIndex((item) => item.href === child.href) === index
+  ));
+  sortSettingMenuItems(uniqueChildren);
+
+  if (existingSettingMenu) {
+    existingSettingMenu.children = uniqueChildren;
+    return;
+  }
+
+  menus.push({
+    label: 'Pengaturan',
+    icon: Settings,
+    children: uniqueChildren,
+  });
+};
+
 export function buildDynamicMenus(sidebarData: SidebarModuleItem[], permissions: string[], slug: string): MenuItem[] {
   const menus: MenuItem[] = [];
+  const settingChildren: MenuItem[] = [];
   const permissionSet = new Set(permissions);
 
   for (const item of sidebarData) {
     const moduleSlug = item.module.slug;
-    if (moduleSlug !== 'dashboard' && !permissionSet.has(`${moduleSlug}:list`)) continue;
+    if (!hasModuleAccess(item, permissionSet)) continue;
     let label = item.module.name;
     let icon = ClipboardList;
 
@@ -206,8 +292,11 @@ export function buildDynamicMenus(sidebarData: SidebarModuleItem[], permissions:
       label = 'Laporan';
       icon = ListChecks;
     } else if (moduleSlug === 'user') {
-      label = 'Manajemen Pengguna';
+      label = 'Manajemen Admin';
       icon = Shield;
+    } else if (moduleSlug === 'settings' || moduleSlug === 'setting') {
+      label = 'Setting';
+      icon = Settings;
     }
 
     const children: MenuItem[] = [];
@@ -227,6 +316,14 @@ export function buildDynamicMenus(sidebarData: SidebarModuleItem[], permissions:
         href: resolvePath(mapping.path, slug),
         exact: feature.slug === 'dashboard-stat' ? true : undefined,
       };
+
+      if (moduleSlug === 'settings' || moduleSlug === 'setting' || SETTING_FEATURE_SLUGS.has(feature.slug)) {
+        const alreadyExists = settingChildren.some((child) => child.href === menuItem.href);
+        if (!alreadyExists) {
+          settingChildren.push(menuItem);
+        }
+        continue;
+      }
 
       if (mapping.group) {
         if (!groupMap[mapping.group]) {
@@ -256,6 +353,8 @@ export function buildDynamicMenus(sidebarData: SidebarModuleItem[], permissions:
       });
     }
   }
+
+  ensureSettingMenu(menus, settingChildren, permissionSet, slug);
 
   return menus;
 }

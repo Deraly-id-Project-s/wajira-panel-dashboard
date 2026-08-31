@@ -2,6 +2,8 @@ import { apiClient } from '@/lib/api/client';
 import { AuthResponse, LoginRequest, ProfileResponse } from '../types/auth.types';
 import type { Module } from '@/services/module.service';
 
+const COMPANY_ACCESS_CACHE_VERSION = 2;
+
 export class AuthService {
   /**
    * Logs in a user using email and password against the backend API.
@@ -72,6 +74,7 @@ export class AuthService {
           const parsed = JSON.parse(cached);
           if (
             parsed &&
+            parsed.version === COMPANY_ACCESS_CACHE_VERSION &&
             String(parsed.companyId) === normalizedCompanyId &&
             Array.isArray(parsed.data)
           ) {
@@ -107,6 +110,7 @@ export class AuthService {
     if (typeof window !== 'undefined') {
       try {
         localStorage.setItem(CACHE_KEY, JSON.stringify({
+          version: COMPANY_ACCESS_CACHE_VERSION,
           companyId: normalizedCompanyId,
           data: normalizedPermissions,
         }));
@@ -167,6 +171,7 @@ export class AuthService {
           const parsed = JSON.parse(cached);
           if (
             parsed &&
+            parsed.version === COMPANY_ACCESS_CACHE_VERSION &&
             String(parsed.companyId) === normalizedCompanyId &&
             Array.isArray(parsed.data)
           ) {
@@ -216,6 +221,7 @@ export class AuthService {
     if (typeof window !== 'undefined') {
       try {
         localStorage.setItem(CACHE_KEY, JSON.stringify({
+          version: COMPANY_ACCESS_CACHE_VERSION,
           companyId: normalizedCompanyId,
           data,
         }));

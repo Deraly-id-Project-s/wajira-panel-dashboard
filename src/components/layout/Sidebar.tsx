@@ -1,8 +1,9 @@
 import { ChevronDown, Check, Menu, X, PanelLeftClose, PanelLeftOpen } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
-import { useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useCompany } from '@/contexts/CompanyContext';
 import { Company } from '@/services/company.service';
+import { getPreferences, getPreferenceValue, PreferenceItem, updatePreference } from '@/services/preference.service';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { cn } from '@/lib/utils';
 import { useRouter } from 'next/router';
@@ -12,6 +13,69 @@ import { MenuItem } from '@/types/menu.types';
 import { clearCompanyScopedQueries } from '@/lib/session/query-cache';
 import Image from 'next/image';
 import { AuthService } from '@/features/auth/services/auth.service';
+
+const SIDEBAR_COLLAPSED_PREFERENCE_KEY = 'sidebar_collapsed';
+
+const parseBooleanPreference = (value: unknown, fallback = false) => {
+  if (typeof value === 'boolean') return value;
+  if (typeof value === 'number') return value === 1;
+  if (typeof value === 'string') {
+    return ['1', 'true', 'yes', 'on'].includes(value.toLowerCase());
+  }
+  return fallback;
+};
+
+const readStoredSidebarCollapsed = () => {
+  if (typeof window === 'undefined') return false;
+
+  const config = localStorage.getItem('site_config');
+  if (!config) return false;
+
+  try {
+    const parsed = JSON.parse(config);
+    if (Array.isArray(parsed)) {
+      const item = parsed.find((i: any) => i && i.key === SIDEBAR_COLLAPSED_PREFERENCE_KEY);
+      return item ? parseBooleanPreference(item.value) : false;
+    }
+    if (typeof parsed === 'object' && parsed !== null) {
+      return parseBooleanPreference(parsed[SIDEBAR_COLLAPSED_PREFERENCE_KEY]);
+    }
+  } catch (e) {
+    console.warn(e);
+  }
+
+  return false;
+};
+
+const writeStoredSidebarCollapsed = (collapsed: boolean) => {
+  if (typeof window === 'undefined') return;
+
+  try {
+    const existing = localStorage.getItem('site_config');
+    let configList: Array<{ key: string; value: any }> = [];
+    if (existing) {
+      try {
+        const parsed = JSON.parse(existing);
+        if (Array.isArray(parsed)) {
+          configList = parsed;
+        } else if (typeof parsed === 'object' && parsed !== null) {
+          configList = Object.entries(parsed).map(([key, value]) => ({ key, value }));
+        }
+      } catch (e) {
+        configList = [];
+      }
+    }
+    const existingIndex = configList.findIndex((item) => item && item.key === SIDEBAR_COLLAPSED_PREFERENCE_KEY);
+    if (existingIndex > -1) {
+      configList[existingIndex].value = collapsed;
+    } else {
+      configList.push({ key: SIDEBAR_COLLAPSED_PREFERENCE_KEY, value: collapsed });
+    }
+    localStorage.setItem('site_config', JSON.stringify(configList));
+  } catch (err) {
+    console.warn(err);
+  }
+};
 
 const ensureReportFallbackSidebarMenus = (menus: MenuItem[], slug: string): MenuItem[] => {
   return menus.map((menu) => {
@@ -132,59 +196,50 @@ export function Sidebar({
   onDesktopCollapsedChange,
 }: SidebarProps = {}) {
   const router = useRouter();
+  const queryClient = useQueryClient();
   const { companyId, companies } = useCompany();
   const [isMobileOpen, setIsMobileOpen] = useState(false);
   const [internalDesktopCollapsed, setInternalDesktopCollapsed] = useState(() => {
-    if (typeof window !== 'undefined') {
-      const config = localStorage.getItem('site_config');
-      if (config) {
-        try {
-          const parsed = JSON.parse(config);
-          if (Array.isArray(parsed)) {
-            const item = parsed.find((i: any) => i && i.key === 'sidebar_collapsed');
-            return item ? !!item.value : false;
-          } else if (typeof parsed === 'object' && parsed !== null) {
-            return !!parsed.sidebar_collapsed;
-          }
-        } catch (e) {
-          console.warn(e);
-        }
-      }
-    }
-    return false;
+    return readStoredSidebarCollapsed();
   });
   const isDesktopCollapsed = controlledDesktopCollapsed ?? internalDesktopCollapsed;
+  const { data: preferences } = useQuery({
+    queryKey: ['settings', 'preference', companyId],
+    queryFn: () => getPreferences(companyId as string),
+    enabled: Boolean(companyId),
+    staleTime: 5 * 60 * 1000,
+    retry: 1,
+    refetchOnWindowFocus: false,
+  });
+  const updatePreferenceMutation = useMutation({
+    mutationFn: (collapsed: boolean) => updatePreference(companyId as string, SIDEBAR_COLLAPSED_PREFERENCE_KEY, collapsed),
+    onSuccess: (updatedPreferences, collapsed) => {
+      queryClient.setQueryData<PreferenceItem[]>(['settings', 'preference', companyId], (current) => {
+        if (updatedPreferences.length > 0) return updatedPreferences;
+
+        const preference = { key: SIDEBAR_COLLAPSED_PREFERENCE_KEY, value: collapsed };
+        if (!current) return [preference];
+
+        const existingIndex = current.findIndex((item) => item.key === SIDEBAR_COLLAPSED_PREFERENCE_KEY);
+        if (existingIndex < 0) return [...current, preference];
+
+        return current.map((item, index) => (
+          index === existingIndex ? preference : item
+        ));
+      });
+    },
+    onError: (error) => {
+      console.warn(error);
+    },
+  });
 
   const setIsDesktopCollapsed = (collapsed: boolean) => {
     if (controlledDesktopCollapsed === undefined) {
       setInternalDesktopCollapsed(collapsed);
-      if (typeof window !== 'undefined') {
-        try {
-          const existing = localStorage.getItem('site_config');
-          let configList: Array<{ key: string; value: any }> = [];
-          if (existing) {
-            try {
-              const parsed = JSON.parse(existing);
-              if (Array.isArray(parsed)) {
-                configList = parsed;
-              } else if (typeof parsed === 'object' && parsed !== null) {
-                configList = Object.entries(parsed).map(([key, value]) => ({ key, value }));
-              }
-            } catch (e) {
-              configList = [];
-            }
-          }
-          const existingIndex = configList.findIndex((item) => item && item.key === 'sidebar_collapsed');
-          if (existingIndex > -1) {
-            configList[existingIndex].value = collapsed;
-          } else {
-            configList.push({ key: 'sidebar_collapsed', value: collapsed });
-          }
-          localStorage.setItem('site_config', JSON.stringify(configList));
-        } catch (err) {
-          console.warn(err);
-        }
-      }
+    }
+    writeStoredSidebarCollapsed(collapsed);
+    if (companyId) {
+      updatePreferenceMutation.mutate(collapsed);
     }
     onDesktopCollapsedChange?.(collapsed);
   };
@@ -199,6 +254,28 @@ export function Sidebar({
     setIsMobileOpen(false);
   }, [router.asPath]);
 
+  useEffect(() => {
+    if (!preferences) return;
+
+    const collapsedPreference = getPreferenceValue(preferences, SIDEBAR_COLLAPSED_PREFERENCE_KEY, undefined);
+    if (collapsedPreference === undefined) return;
+
+    const collapsed = parseBooleanPreference(collapsedPreference);
+    if (collapsed === isDesktopCollapsed) return;
+
+    if (controlledDesktopCollapsed === undefined) {
+      setInternalDesktopCollapsed(collapsed);
+      writeStoredSidebarCollapsed(collapsed);
+      return;
+    }
+
+    onDesktopCollapsedChange?.(collapsed);
+  }, [
+    controlledDesktopCollapsed,
+    isDesktopCollapsed,
+    onDesktopCollapsedChange,
+    preferences,
+  ]);
 
   const sidebarContent = (
     <aside className="flex h-full w-full flex-col border-r border-gray-200 bg-[#F9FAFB]">
