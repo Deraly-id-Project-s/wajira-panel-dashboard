@@ -123,28 +123,28 @@ export default function DOEkspedisiPage() {
           lastPage={listQuery.data?.meta.lastPage}
           onPageChange={setPage}
           onPerPageChange={setPerPage}
+          filters={
+            <DatePickerWithRange
+              date={date}
+              onChange={handleDateChange}
+              placeholder="Pilih rentang tanggal DO"
+              className="w-full sm:w-[260px]"
+            />
+          }
           actions={
-            <div className="flex flex-wrap items-center gap-2">
-              <DatePickerWithRange
-                date={date}
-                onChange={handleDateChange}
-                placeholder="Pilih rentang tanggal DO"
-                className="min-w-[240px]"
-              />
-              {search ? (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => {
-                    setSearchInput('');
-                    updateQuery({ search: undefined, page: 1 });
-                  }}
-                  className="rounded-md border-slate-200 text-slate-700 bg-white hover:bg-slate-50 cursor-pointer h-10 text-xs px-3"
-                >
-                  Reset
-                </Button>
-              ) : null}
-            </div>
+            search ? (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  setSearchInput('');
+                  updateQuery({ search: undefined, page: 1 });
+                }}
+                className="rounded-md border-slate-200 text-slate-700 bg-white hover:bg-slate-50 cursor-pointer h-9 text-xs px-3"
+              >
+                Reset
+              </Button>
+            ) : null
           }
         >
           <DOEkspedisiTable

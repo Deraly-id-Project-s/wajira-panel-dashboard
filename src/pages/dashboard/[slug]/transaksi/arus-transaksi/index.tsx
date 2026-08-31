@@ -91,17 +91,20 @@ export default function TransactionListPage() {
           isLoading={isSummaryLoading}
         />
 
-        {/* DATE RANGE */}
-        <div className="no-print">
-          <DatePickerWithRange date={date} onChange={handleDateChange} placeholder="Pilih rentang tanggal transaksi" />
-        </div>
-
         {/* TABLE */}
         <SearchPagination
           searchValue={searchInput}
           onSearchChange={setSearchInput}
           searchPlaceholder="Search here"
           searchAriaLabel="Cari arus transaksi"
+          filters={
+            <DatePickerWithRange
+              date={date}
+              onChange={handleDateChange}
+              placeholder="Pilih rentang tanggal transaksi"
+              className="w-full sm:w-[260px]"
+            />
+          }
           page={page}
           perPage={perPage}
           total={total}

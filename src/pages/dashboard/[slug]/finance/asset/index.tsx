@@ -113,10 +113,6 @@ export default function FinanceAssetPage() {
                     subtitle="Kelola seluruh aset dengan mudah"
                 />
 
-                <div className="no-print">
-                    <DatePickerWithRange date={date} onChange={handleDateChange} placeholder="Pilih rentang tanggal perolehan aset" />
-                </div>
-
                 <SearchPagination
                     searchValue={search}
                     onSearchChange={(value) => {
@@ -125,6 +121,14 @@ export default function FinanceAssetPage() {
                     }}
                     searchPlaceholder="Search here"
                     searchAriaLabel="Cari data aset"
+                    filters={
+                        <DatePickerWithRange
+                            date={date}
+                            onChange={handleDateChange}
+                            placeholder="Pilih rentang tanggal perolehan aset"
+                            className="w-full sm:w-[260px]"
+                        />
+                    }
                     page={page}
                     perPage={perPage}
                     total={totalAssets}

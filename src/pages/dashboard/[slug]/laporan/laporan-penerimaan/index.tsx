@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from 'react';
+import { useState, type CSSProperties } from 'react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { PageHeader } from '@/components/ui/page-header';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -14,6 +14,12 @@ import { useRouter } from 'next/router';
 import { useCompany } from '@/contexts/CompanyContext';
 import { resolveCompanyId, getLetterheadByCompanyId } from '@/lib/print-letterhead';
 import { PrintLetterPage } from '@/components/common/PrintLetterPage';
+import { DocumentTemplatePrintFooter } from '@/components/common/DocumentTemplatePrintFooter';
+import { DocumentTemplateSelect } from '@/components/features/document-template/DocumentTemplateSelect';
+import { getObjectStorageUrl } from '@/components/ui/storage-image';
+import { useReportTemplatePrint } from '@/hooks/useReportTemplatePrint';
+import { Button } from '@/components/ui/button';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 
 type TabType = 'per-nota' | 'per-tipe' | 'per-supplier';
 
@@ -37,6 +43,13 @@ export default function LaporanPenerimaanPage() {
   const slugParam = router.query.slug;
   const resolvedCompanyId = resolveCompanyId(slugParam, companyId);
   const selectedPrintBackground = getLetterheadByCompanyId(resolvedCompanyId);
+  const templatePrint = useReportTemplatePrint(selectedPrintBackground);
+  const templateBackground = templatePrint.selectedTemplate?.documentTemplate
+    ? getObjectStorageUrl(templatePrint.selectedTemplate.documentTemplate)
+    : selectedPrintBackground;
+  const templateColor = templatePrint.selectedTemplate && /^#[0-9a-f]{6}$/i.test(templatePrint.selectedTemplate.tableColor)
+    ? templatePrint.selectedTemplate.tableColor
+    : '#1f4163';
 
   const handleTabChange = (tab: string) => {
     setActiveTab(tab as TabType);
@@ -55,7 +68,7 @@ export default function LaporanPenerimaanPage() {
   };
 
   const handlePrint = () => {
-    window.print();
+    templatePrint.openPrintDialog();
   };
 
   const exportToCSV = () => {
@@ -138,9 +151,12 @@ export default function LaporanPenerimaanPage() {
             <PrintLetterPage
               id="laporan-penerimaan-print"
               className="laporan-penerimaan-print-area"
-              letterheadSrc={selectedPrintBackground}
+              letterheadSrc={templateBackground}
             >
-              <div className="laporan-penerimaan-print-content">
+              <div
+                className="laporan-penerimaan-print-content templated-report-print-content"
+                style={{ '--report-template-color': templateColor } as CSSProperties}
+              >
                 <div className="flex flex-col items-center justify-center text-center space-y-1 mb-8">
                   <h2 className="text-[13px] font-bold uppercase text-gray-900 tracking-wide">
                     REKAP PENERIMAAN {activeTab.replace('-', ' ')}
@@ -181,10 +197,30 @@ export default function LaporanPenerimaanPage() {
                     onPageChange={setPage}
                   />
                 </TabsContent>
+
+                <DocumentTemplatePrintFooter template={templatePrint.selectedTemplate} />
               </div>
             </PrintLetterPage>
           </Tabs>
         </div>
+
+        <Dialog open={templatePrint.isDialogOpen} onOpenChange={templatePrint.setIsDialogOpen}>
+          <DialogContent closeOnInteractOutside={false} className="max-h-[88vh] overflow-hidden p-0 sm:max-w-2xl">
+            <DialogHeader className="border-b border-slate-200 px-6 py-5 pr-12">
+              <DialogTitle>Pilih Template Print</DialogTitle>
+              <DialogDescription>Pilih desain dokumen untuk mencetak laporan penerimaan.</DialogDescription>
+            </DialogHeader>
+            <div className="max-h-[56vh] overflow-y-auto px-6 py-5">
+              <DocumentTemplateSelect value={templatePrint.selectedTemplateId} onValueChange={templatePrint.setSelectedTemplateId} disabled={templatePrint.isPreparingPrint} allowEmpty={false} placeholder="Pilih template laporan penerimaan" variant="cards" />
+            </div>
+            <DialogFooter className="border-t border-slate-200 bg-slate-50/70 px-6 py-4">
+              <Button type="button" variant="outline" onClick={() => templatePrint.setIsDialogOpen(false)} disabled={templatePrint.isPreparingPrint}>Batal</Button>
+              <Button type="button" onClick={() => void templatePrint.printWithSelectedTemplate()} disabled={!templatePrint.selectedTemplateId || templatePrint.isPreparingPrint}>
+                {templatePrint.isPreparingPrint ? 'Menyiapkan...' : 'Print Sekarang'}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
     </DashboardLayout>
   );

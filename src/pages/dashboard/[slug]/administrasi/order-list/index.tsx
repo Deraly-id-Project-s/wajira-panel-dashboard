@@ -161,6 +161,16 @@ export default function OrderListPage() {
           lastPage={listQuery.data?.meta.lastPage}
           onPageChange={setPage}
           onPerPageChange={setPerPage}
+          filters={
+            <DatePickerWithRange
+              date={dateRange}
+              onChange={(range) => {
+                setDateRange(range);
+                setPage(1);
+              }}
+              className="w-full sm:w-[260px]"
+            />
+          }
           actions={
             <div className="flex flex-wrap items-center gap-2">
               {search && (
@@ -182,13 +192,6 @@ export default function OrderListPage() {
                   Memperbarui data...
                 </span>
               )}
-              <DatePickerWithRange
-                date={dateRange}
-                onChange={(range) => {
-                  setDateRange(range);
-                  setPage(1);
-                }}
-              />
               <Button
                 type="button"
                 onClick={handleAdd}

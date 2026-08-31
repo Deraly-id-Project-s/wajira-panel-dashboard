@@ -177,20 +177,20 @@ export default function LaporanBuktiPotongPage() {
           />
         </div>
 
-        {/* Periode Bukti Potong */}
-        <div className="flex flex-col space-y-2 no-print">
-          <label className="text-[13px] font-medium text-slate-700">Periode Bukti Potong</label>
-          <div className="w-full sm:w-[280px]">
-            <DatePickerWithRange date={dateRange} onChange={setDateRangeState} />
-          </div>
-        </div>
-
         {/* Main Table Content */}
         <SearchPagination
           searchValue={searchInput}
           onSearchChange={setSearchInput}
           searchPlaceholder="Search here"
           searchAriaLabel="Cari data"
+          filters={
+            <DatePickerWithRange
+              date={dateRange}
+              onChange={setDateRangeState}
+              placeholder="Pilih rentang tanggal bukti potong"
+              className="w-full sm:w-[260px]"
+            />
+          }
           page={page}
           perPage={perPage}
           total={pagination.total}

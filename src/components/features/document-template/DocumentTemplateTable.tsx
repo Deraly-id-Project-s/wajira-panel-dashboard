@@ -31,8 +31,8 @@ export function DocumentTemplateTable({ data, loading, canEdit, canDelete, onEdi
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
-            <DropdownMenuItem disabled={!canEdit} onClick={() => onEdit(item)}><Pencil className="mr-2 h-4 w-4" />Edit</DropdownMenuItem>
-            <DropdownMenuItem disabled={!canDelete} onClick={() => onDelete(item)} className="text-red-600 focus:text-red-600"><Trash2 className="mr-2 h-4 w-4" />Hapus</DropdownMenuItem>
+            <DropdownMenuItem disabled={!canEdit} onClick={() => onEdit(item)}>Edit</DropdownMenuItem>
+            <DropdownMenuItem disabled={!canDelete} onClick={() => onDelete(item)} className="text-red-600 focus:text-red-600">Hapus</DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       ),

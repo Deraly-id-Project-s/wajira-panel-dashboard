@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState, useEffect } from 'react';
+import { useMemo, useState, useEffect, type CSSProperties } from 'react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { PageHeader } from '@/components/ui/page-header';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -18,6 +18,11 @@ import StockTab from '@/components/features/laporan-warehouse/StockTab';
 import StockDetailTab from '@/components/features/laporan-warehouse/StockDetailTab';
 import PurchaseOrderTab from '@/components/features/laporan-warehouse/PurchaseOrderTab';
 import SalesOrderTab from '@/components/features/laporan-warehouse/SalesOrderTab';
+import { DocumentTemplatePrintFooter } from '@/components/common/DocumentTemplatePrintFooter';
+import { DocumentTemplateSelect } from '@/components/features/document-template/DocumentTemplateSelect';
+import { getObjectStorageUrl } from '@/components/ui/storage-image';
+import { useReportTemplatePrint } from '@/hooks/useReportTemplatePrint';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 
 const reportMeta = {
     stock: { title: 'Stock Unit', subtitle: 'Pantau semua stock unit' },
@@ -65,6 +70,13 @@ export default function LaporanStockPage() {
     const slugParam = router.query.slug;
     const resolvedCompanyId = resolveCompanyId(slugParam, companyId);
     const selectedPrintBackground = getLetterheadByCompanyId(resolvedCompanyId);
+    const templatePrint = useReportTemplatePrint(selectedPrintBackground);
+    const templateBackground = templatePrint.selectedTemplate?.documentTemplate
+        ? getObjectStorageUrl(templatePrint.selectedTemplate.documentTemplate)
+        : selectedPrintBackground;
+    const templateColor = templatePrint.selectedTemplate && /^#[0-9a-f]{6}$/i.test(templatePrint.selectedTemplate.tableColor)
+        ? templatePrint.selectedTemplate.tableColor
+        : '#1f4163';
 
     const activeMeta = reportMeta[activeTab as keyof typeof reportMeta] ?? reportMeta.stock;
 
@@ -215,7 +227,7 @@ export default function LaporanStockPage() {
                             {pageFilter}
                         </div>
                         <div className="flex flex-col sm:flex-row items-center gap-2 w-full sm:w-auto">
-                            <Button onClick={() => currentActions?.print()} variant="outline" className="w-full sm:w-auto h-9">
+                            <Button onClick={templatePrint.openPrintDialog} variant="outline" className="w-full sm:w-auto h-9">
                                 <Printer className="h-4 w-4 mr-2" /> Print
                             </Button>
                             <Button onClick={() => currentActions?.download()} variant="outline" className="w-full sm:w-auto h-9">
@@ -227,9 +239,12 @@ export default function LaporanStockPage() {
                     <PrintLetterPage
                         id="laporan-stock-print"
                         className="laporan-stock-print-area laporan-penerimaan-print-area"
-                        letterheadSrc={selectedPrintBackground}
+                        letterheadSrc={templateBackground}
                     >
-                        <div className="laporan-penerimaan-print-content laporan-stock-print-content">
+                        <div
+                            className="laporan-penerimaan-print-content laporan-stock-print-content templated-report-print-content"
+                            style={{ '--report-template-color': templateColor } as CSSProperties}
+                        >
                             <div className="flex flex-col items-center justify-center text-center space-y-0 mb-2">
                                 <h2 className="text-[13px] font-bold uppercase text-gray-900 tracking-wide">
                                     {activeMeta.title}
@@ -261,9 +276,29 @@ export default function LaporanStockPage() {
                             <TabsContent value="sales-order">
                                 <SalesOrderTab perPage={soPerPage} dateRange={appliedSoDateRange} onActionsChange={setCurrentActions} />
                             </TabsContent>
+
+                            <DocumentTemplatePrintFooter template={templatePrint.selectedTemplate} />
                         </div>
                     </PrintLetterPage>
                 </Tabs>
+
+                <Dialog open={templatePrint.isDialogOpen} onOpenChange={templatePrint.setIsDialogOpen}>
+                    <DialogContent closeOnInteractOutside={false} className="max-h-[88vh] overflow-hidden p-0 sm:max-w-2xl">
+                        <DialogHeader className="border-b border-slate-200 px-6 py-5 pr-12">
+                            <DialogTitle>Pilih Template Print</DialogTitle>
+                            <DialogDescription>Pilih desain dokumen untuk mencetak {activeMeta.title.toLocaleLowerCase('id-ID')}.</DialogDescription>
+                        </DialogHeader>
+                        <div className="max-h-[56vh] overflow-y-auto px-6 py-5">
+                            <DocumentTemplateSelect value={templatePrint.selectedTemplateId} onValueChange={templatePrint.setSelectedTemplateId} disabled={templatePrint.isPreparingPrint} allowEmpty={false} placeholder={`Pilih template ${activeMeta.title.toLocaleLowerCase('id-ID')}`} variant="cards" />
+                        </div>
+                        <DialogFooter className="border-t border-slate-200 bg-slate-50/70 px-6 py-4">
+                            <Button type="button" variant="outline" onClick={() => templatePrint.setIsDialogOpen(false)} disabled={templatePrint.isPreparingPrint}>Batal</Button>
+                            <Button type="button" onClick={() => void templatePrint.printWithSelectedTemplate()} disabled={!templatePrint.selectedTemplateId || templatePrint.isPreparingPrint}>
+                                {templatePrint.isPreparingPrint ? 'Menyiapkan...' : 'Print Sekarang'}
+                            </Button>
+                        </DialogFooter>
+                    </DialogContent>
+                </Dialog>
             </div>
         </DashboardLayout>
     );

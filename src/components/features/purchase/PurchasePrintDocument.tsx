@@ -439,7 +439,7 @@ export default function PurchasePrintDocument({
             style={{ width: '210mm', height: '297mm' }}
           />
 
-          <div className="relative h-[297mm] px-[20mm] pt-[42mm] pb-[20mm] flex flex-col justify-between text-slate-900">
+          <div className="relative h-[297mm] px-[20mm] pt-[42mm] pb-[38mm] flex flex-col justify-between text-slate-900">
             <div>
               <div className="flex justify-between text-[10pt]">
                 <div className="space-y-1">
@@ -541,10 +541,10 @@ export default function PurchasePrintDocument({
             </div>
 
             {items.length <= 5 ? (
-              <div className="text-end text-sm mt-4">
+              <div className="text-end text-sm mb-1">
                 <p className='mr-12'>{t.closing}</p>
                 <div className="flex mr-[12.3px] items-center justify-end">
-                  <StorageImage src={signatureUrl} alt="Tanda tangan" width={160} height={85} className="max-h-20 max-w-36 object-contain" />
+                  <StorageImage src={signatureUrl} alt="Tanda tangan" width={160} height={70} className="max-h-16 max-w-36 object-contain" />
                 </div>
                 <p className="mr-12 font-semibold underline">{documentTemplate.personSigner || '-'}</p>
               </div>
@@ -570,7 +570,7 @@ export default function PurchasePrintDocument({
               style={{ width: '210mm', height: '297mm' }}
             />
 
-            <div className="relative h-[297mm] px-[20mm] pt-[42mm] pb-[20mm] flex flex-col text-slate-900">
+            <div className="relative h-[297mm] px-[20mm] pt-[42mm] pb-[38mm] flex flex-col justify-between text-slate-900">
               <div>
                 <div className="flex justify-between text-[10pt]">
                   <div className="space-y-1">
@@ -662,10 +662,10 @@ export default function PurchasePrintDocument({
                 )}
               </div>
 
-              <div className="text-end text-sm">
+              <div className="text-end text-sm mb-1">
                 <p className='mr-12'>{t.closing}</p>
                 <div className="flex mr-[12.3px] items-center justify-end">
-                  <StorageImage src={signatureUrl} alt="Tanda tangan" width={160} height={85} className="max-h-20 max-w-36 object-contain" />
+                  <StorageImage src={signatureUrl} alt="Tanda tangan" width={160} height={70} className="max-h-16 max-w-36 object-contain" />
                 </div>
                 <p className="mr-12 font-semibold underline">{documentTemplate.personSigner || '-'}</p>
               </div>

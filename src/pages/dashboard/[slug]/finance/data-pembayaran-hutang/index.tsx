@@ -78,15 +78,19 @@ export default function DataPembayaranHutangPage() {
           }
         />
 
-        <div className="no-print">
-          <DatePickerWithRange date={date} onChange={handleDateChange} placeholder="Pilih rentang tanggal pembayaran hutang" />
-        </div>
-
         <SearchPagination
           searchValue={search}
           onSearchChange={setSearch}
           searchPlaceholder="Search here"
           searchAriaLabel="Cari data pembayaran hutang"
+          filters={
+            <DatePickerWithRange
+              date={date}
+              onChange={handleDateChange}
+              placeholder="Pilih rentang tanggal pembayaran hutang"
+              className="w-full sm:w-[260px]"
+            />
+          }
           page={currentPage}
           perPage={perPage}
           total={query.data?.meta.total ?? 0}

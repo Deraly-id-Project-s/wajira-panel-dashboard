@@ -6,20 +6,30 @@ import { Download, Printer, RotateCcw } from 'lucide-react';
 import { toast } from 'sonner';
 
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
-import { PrintLetterPage } from '@/components/common/PrintLetterPage';
 import { PageHeader } from '@/components/ui/page-header';
 import { Button } from '@/components/ui/button';
 import { DatePickerWithRange, type DateRangePickerMode } from '@/components/ui/date-range-picker';
 import { SearchPagination } from '@/components/ui/search-pagination';
 import { LedgerAccountSelect } from '@/components/features/laporan-buku-besar/LedgerAccountSelect';
 import { LaporanJurnalTable } from '@/components/features/laporan-jurnal/LaporanJurnalTable';
+import { LaporanJurnalPrintDocument } from '@/components/features/laporan-jurnal/LaporanJurnalPrintDocument';
+import { DocumentTemplateSelect } from '@/components/features/document-template/DocumentTemplateSelect';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import { useJournalReport } from '@/hooks/report/useJournalReport';
 import { useAccounts } from '@/hooks/useAccount';
+import { useDocumentTemplates } from '@/hooks/useDocumentTemplate';
 import { JournalReportParams } from '@/@types/journal-report.types';
 import { useCompany } from '@/contexts/CompanyContext';
 import { getLetterheadByCompanyId, resolveCompanyId } from '@/lib/print-letterhead';
-import { formatDate } from '@/lib/utils/format';
 import { exportJournalReport } from '@/services/report/journalReport.service';
+import { getObjectStorageUrl } from '@/components/ui/storage-image';
 
 const getCompanyName = (companyId: number) => {
   if (companyId === 1) return 'PT WAJIRA JAGRATARA MORINDO';
@@ -44,6 +54,20 @@ export default function LaporanJurnalPage() {
   const [sortBy, setSortBy] = useState('payment_at');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
   const [isExporting, setIsExporting] = useState(false);
+  const [isPrintDialogOpen, setIsPrintDialogOpen] = useState(false);
+  const [selectedTemplateId, setSelectedTemplateId] = useState<string | null>(null);
+  const [isPreparingPrint, setIsPreparingPrint] = useState(false);
+  const [printedAt, setPrintedAt] = useState(() => new Date());
+
+  const documentTemplatesQuery = useDocumentTemplates({ page: 1, perPage: 100 });
+  const documentTemplates = useMemo(
+    () => documentTemplatesQuery.data?.data ?? [],
+    [documentTemplatesQuery.data?.data],
+  );
+  const selectedDocumentTemplate = useMemo(
+    () => documentTemplates.find((template) => String(template.id) === selectedTemplateId) ?? null,
+    [documentTemplates, selectedTemplateId],
+  );
 
   const accountQuery = useAccounts({
     page: 1,
@@ -129,6 +153,59 @@ export default function LaporanJurnalPage() {
     }
   };
 
+  const handleOpenPrintDialog = () => {
+    setSelectedTemplateId(null);
+    setIsPrintDialogOpen(true);
+  };
+
+  const waitForImage = (url?: string | null) => {
+    if (!url) return Promise.resolve();
+
+    return new Promise<void>((resolve) => {
+      const image = new window.Image();
+      const timeout = window.setTimeout(resolve, 2500);
+      const finish = () => {
+        window.clearTimeout(timeout);
+        resolve();
+      };
+
+      image.onload = finish;
+      image.onerror = finish;
+      image.src = url;
+      if (image.complete) finish();
+    });
+  };
+
+  const handlePrint = async () => {
+    if (!selectedDocumentTemplate) {
+      toast.error('Pilih template print terlebih dahulu');
+      return;
+    }
+
+    setIsPreparingPrint(true);
+    setPrintedAt(new Date());
+
+    const backgroundUrl = selectedDocumentTemplate.documentTemplate
+      ? getObjectStorageUrl(selectedDocumentTemplate.documentTemplate)
+      : selectedPrintBackground;
+    const signatureUrl = getObjectStorageUrl(selectedDocumentTemplate.personSignature);
+
+    await Promise.all([waitForImage(backgroundUrl), waitForImage(signatureUrl)]);
+    setIsPrintDialogOpen(false);
+    setIsPreparingPrint(false);
+
+    window.requestAnimationFrame(() => {
+      window.requestAnimationFrame(() => window.print());
+    });
+  };
+
+  const periodLabel = startDate
+    ? `${dateRange?.from ? format(dateRange.from, 'dd MMM yyyy') : '-'}${endDate && endDate !== startDate && dateRange?.to ? ` – ${format(dateRange.to, 'dd MMM yyyy')}` : ''}`
+    : 'Semua periode';
+  const accountLabel = selectedAccount
+    ? `${selectedAccount.code || '-'} · ${selectedAccount.name || '-'}`
+    : 'Semua akun';
+
   return (
     <DashboardLayout>
       <div className="space-y-6">
@@ -142,7 +219,7 @@ export default function LaporanJurnalPage() {
                   <Download className="mr-2 h-4 w-4" />
                   {isExporting ? 'Exporting...' : 'Export'}
                 </Button>
-                <Button onClick={() => window.print()} variant="outline">
+                <Button onClick={handleOpenPrintDialog} variant="outline">
                   <Printer className="mr-2 h-4 w-4" />
                   Print
                 </Button>
@@ -151,48 +228,43 @@ export default function LaporanJurnalPage() {
           />
         </div>
 
-        <div className="flex flex-col gap-4 rounded-md border border-slate-200 bg-white p-4 no-print">
-          <div className="grid gap-3 lg:grid-cols-[minmax(260px,1fr)_290px_auto] lg:items-end">
-            <div className="space-y-1.5">
-              <label className="text-[13px] font-medium text-slate-700">Akun</label>
-              <LedgerAccountSelect
-                value={selectedAccountId}
-                onValueChange={(value) => {
-                  setSelectedAccountId(value);
-                  setPage(1);
-                }}
-                options={accountOptions}
-                disabled={accountQuery.isLoading}
-              />
-            </div>
-
-            <div className="space-y-1.5">
-              <label className="text-[13px] font-medium text-slate-700">Periode Pembayaran</label>
-              <DatePickerWithRange
-                date={dateRange}
-                onChange={handleDateRangeChange}
-                enablePeriodFilter
-                mode={dateMode}
-                onModeChange={(mode) => {
-                  setDateMode(mode);
-                  setDateRange(undefined);
-                  setPage(1);
-                }}
-              />
-            </div>
-
-            <Button type="button" variant="outline" onClick={handleReset} className="h-9">
-              <RotateCcw className="mr-2 h-4 w-4" />
-              Reset
-            </Button>
-          </div>
-        </div>
-
         <SearchPagination
           searchValue={searchInput}
           onSearchChange={setSearchInput}
           searchPlaceholder="Search here"
           searchAriaLabel="Cari data"
+          filters={
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full sm:w-auto">
+              <div className="w-full sm:w-[220px]">
+                <LedgerAccountSelect
+                  value={selectedAccountId}
+                  onValueChange={(value) => {
+                    setSelectedAccountId(value);
+                    setPage(1);
+                  }}
+                  options={accountOptions}
+                  disabled={accountQuery.isLoading}
+                />
+              </div>
+              <div className="w-full sm:w-[260px]">
+                <DatePickerWithRange
+                  date={dateRange}
+                  onChange={handleDateRangeChange}
+                  enablePeriodFilter
+                  mode={dateMode}
+                  onModeChange={(mode) => {
+                    setDateMode(mode);
+                    setDateRange(undefined);
+                    setPage(1);
+                  }}
+                />
+              </div>
+              <Button type="button" variant="outline" onClick={handleReset} className="h-9">
+                <RotateCcw className="mr-2 h-4 w-4" />
+                Reset
+              </Button>
+            </div>
+          }
           page={page}
           perPage={perPage}
           total={pagination.total}
@@ -204,30 +276,53 @@ export default function LaporanJurnalPage() {
             setPage(1);
           }}
         >
-          <PrintLetterPage
-          id="laporan-jurnal-print"
-          className="laporan-jurnal-print-area"
-          letterheadSrc={selectedPrintBackground}
-        >
-          <div className="print-letter-content">
-            <div className="mb-8 hidden flex-col items-center justify-center space-y-1 text-center print:flex">
-              <h2 className="text-[13px] font-bold uppercase tracking-wide text-gray-900">Laporan Jurnal</h2>
-              <p className="text-[13px] font-bold tracking-wide text-gray-900">
-                {getCompanyName(resolvedCompanyId)}
-              </p>
-              <p className="text-[11px] text-gray-600">Tanggal Cetak: {formatDate(new Date())}</p>
-            </div>
-
-            <LaporanJurnalTable
-              data={data}
-              loading={isLoading}
-              sortBy={sortBy}
-              sortOrder={sortOrder}
-              onSortChange={handleSortChange}
-            />
-          </div>
-        </PrintLetterPage>
+          <LaporanJurnalTable
+            data={data}
+            loading={isLoading}
+            sortBy={sortBy}
+            sortOrder={sortOrder}
+            onSortChange={handleSortChange}
+          />
         </SearchPagination>
+
+        <LaporanJurnalPrintDocument
+          data={data}
+          template={selectedDocumentTemplate}
+          fallbackBackground={selectedPrintBackground}
+          companyName={getCompanyName(resolvedCompanyId)}
+          accountLabel={accountLabel}
+          periodLabel={periodLabel}
+          reportPage={page}
+          reportTotal={pagination.total}
+          printedAt={printedAt}
+        />
+
+        <Dialog open={isPrintDialogOpen} onOpenChange={setIsPrintDialogOpen}>
+          <DialogContent closeOnInteractOutside={false} className="max-h-[88vh] overflow-hidden p-0 sm:max-w-2xl">
+            <DialogHeader className="border-b border-slate-200 px-6 py-5 pr-12">
+              <DialogTitle>Pilih Template Print</DialogTitle>
+              <DialogDescription>Pilih desain dokumen yang akan digunakan untuk mencetak laporan jurnal.</DialogDescription>
+            </DialogHeader>
+            <div className="max-h-[56vh] overflow-y-auto px-6 py-5">
+              <DocumentTemplateSelect
+                value={selectedTemplateId}
+                onValueChange={setSelectedTemplateId}
+                disabled={isPreparingPrint}
+                allowEmpty={false}
+                placeholder="Pilih template laporan jurnal"
+                variant="cards"
+              />
+            </div>
+            <DialogFooter className="border-t border-slate-200 bg-slate-50/70 px-6 py-4">
+              <Button type="button" variant="outline" onClick={() => setIsPrintDialogOpen(false)} disabled={isPreparingPrint}>
+                Batal
+              </Button>
+              <Button type="button" onClick={() => void handlePrint()} disabled={!selectedTemplateId || isPreparingPrint}>
+                {isPreparingPrint ? 'Menyiapkan...' : 'Print Sekarang'}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
     </DashboardLayout>
   );
