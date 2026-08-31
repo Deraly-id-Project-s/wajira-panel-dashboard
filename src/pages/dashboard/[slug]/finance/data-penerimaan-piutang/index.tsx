@@ -78,15 +78,19 @@ export default function DataPenerimaanPiutangPage() {
                     }
                 />
 
-                <div className="no-print">
-                    <DatePickerWithRange date={date} onChange={handleDateChange} placeholder="Pilih rentang tanggal penerimaan piutang" />
-                </div>
-
                 <SearchPagination
                     searchValue={search}
                     onSearchChange={setSearch}
                     searchPlaceholder="Search here"
                     searchAriaLabel="Cari data penerimaan piutang"
+                    filters={
+                        <DatePickerWithRange
+                            date={date}
+                            onChange={handleDateChange}
+                            placeholder="Pilih rentang tanggal penerimaan piutang"
+                            className="w-full sm:w-[260px]"
+                        />
+                    }
                     page={currentPage}
                     perPage={perPage}
                     total={query.data?.meta.total ?? 0}

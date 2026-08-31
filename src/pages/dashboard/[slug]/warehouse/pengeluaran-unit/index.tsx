@@ -98,11 +98,11 @@ export default function PengeluaranUnitPage() {
           lastPage={data?.meta?.lastPage}
           onPageChange={setPage}
           onPerPageChange={setPerPage}
-          actions={(
+          filters={(
             <DatePickerWithRange
               date={dateRange}
               onChange={handleDateRangeChange}
-              className="w-auto"
+              className="w-full sm:w-[260px]"
             />
           )}
         >

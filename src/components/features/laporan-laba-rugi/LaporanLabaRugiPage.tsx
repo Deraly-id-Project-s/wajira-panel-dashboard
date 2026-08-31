@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/router';
 import { format } from 'date-fns';
-import { Download, Plus, RefreshCw, RotateCcw, Trash2 } from 'lucide-react';
+import { Download, Plus, Printer, RefreshCw, RotateCcw, Trash2 } from 'lucide-react';
 import type { DateRange } from 'react-day-picker';
 import { toast } from 'sonner';
 
@@ -24,9 +24,15 @@ import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { useCompany } from '@/contexts/CompanyContext';
 import { useAccounts } from '@/hooks/useAccount';
 import { useProfitLossReport, useUpdateProfitLossTemplate } from '@/hooks/report/useProfitLossReport';
+import { useReportTemplatePrint } from '@/hooks/useReportTemplatePrint';
 import { exportProfitLossReport } from '@/services/report/profitLossReport.service';
-import { resolveCompanyId } from '@/lib/print-letterhead';
+import { getLetterheadByCompanyId, resolveCompanyId } from '@/lib/print-letterhead';
 import { cn } from '@/lib/utils';
+import { JournalPrintTemplateDialog } from '@/components/features/laporan-jurnal/JournalPrintTemplateDialog';
+import {
+  LaporanLabaRugiPrintDocument,
+  type ProfitLossPrintSection,
+} from '@/components/features/laporan-laba-rugi/LaporanLabaRugiPrintDocument';
 
 type SectionKey = 'revenue' | 'cogs' | 'grossProfit' | 'opex' | 'noix';
 
@@ -56,6 +62,13 @@ const DEFAULT_TEMPLATE: ProfitLossTemplatePayload = {
 };
 
 const EMPTY_REPORT_DATA: ProfitLossReportData = {};
+
+const getCompanyName = (companyId?: number | null) => {
+  if (companyId === 1) return 'PT WAJIRA JAGRATARA MORINDO';
+  if (companyId === 3) return 'PT WAJIRA YANOTAMA';
+  if (companyId === 4) return 'PT WAJIRA TRANSINDO';
+  return 'PT WAJIRA';
+};
 
 const REPORT_SECTIONS: ReportSectionConfig[] = [
   {
@@ -338,6 +351,8 @@ export default function LaporanLabaRugiPage() {
   const router = useRouter();
   const { companyId } = useCompany();
   const resolvedCompanyId = resolveCompanyId(router.query.slug, companyId);
+  const selectedPrintBackground = getLetterheadByCompanyId(resolvedCompanyId);
+  const templatePrint = useReportTemplatePrint(selectedPrintBackground);
 
   const [templateState, setTemplateState] = useState<Record<ProfitLossTemplateKey, number[]>>(
     buildTemplateState,
@@ -417,6 +432,43 @@ export default function LaporanLabaRugiPage() {
     - normalizedSections.opex.totalUsd
     + normalizedSections.noix.totalUsd;
 
+  const printSections = useMemo<ProfitLossPrintSection[]>(() => [
+    {
+      key: 'revenue',
+      title: 'Pendapatan',
+      rows: normalizedSections.revenue.rows,
+      total: normalizedSections.revenue.total,
+      totalUsd: normalizedSections.revenue.totalUsd,
+    },
+    {
+      key: 'cogs',
+      title: 'Harga Pokok Penjualan',
+      rows: normalizedSections.cogs.rows,
+      total: normalizedSections.cogs.total,
+      totalUsd: normalizedSections.cogs.totalUsd,
+      deduction: true,
+    },
+    {
+      key: 'opex',
+      title: 'Biaya Operasional',
+      rows: normalizedSections.opex.rows,
+      total: normalizedSections.opex.total,
+      totalUsd: normalizedSections.opex.totalUsd,
+      deduction: true,
+    },
+    {
+      key: 'noix',
+      title: 'Pendapatan/Beban Non Operasional',
+      rows: normalizedSections.noix.rows,
+      total: normalizedSections.noix.total,
+      totalUsd: normalizedSections.noix.totalUsd,
+    },
+  ], [normalizedSections]);
+
+  const periodLabel = reportFilters.start_date
+    ? `${dateRange?.from ? format(dateRange.from, 'dd MMM yyyy') : '-'}${reportFilters.end_date !== reportFilters.start_date && dateRange?.to ? ` – ${format(dateRange.to, 'dd MMM yyyy')}` : ''}`
+    : 'Semua periode';
+
   const handleSync = async () => {
     if (!resolvedCompanyId) {
       toast.error('Company belum dipilih.');
@@ -484,6 +536,15 @@ export default function LaporanLabaRugiPage() {
               </Button>
               <Button
                 type="button"
+                variant="outline"
+                onClick={templatePrint.openPrintDialog}
+                disabled={reportQuery.isLoading}
+              >
+                <Printer className="h-4 w-4" />
+                Print
+              </Button>
+              <Button
+                type="button"
                 onClick={handleSync}
                 disabled={updateTemplateMutation.isPending || !resolvedCompanyId}
               >
@@ -494,20 +555,16 @@ export default function LaporanLabaRugiPage() {
           }
         />
 
-        <div className="grid gap-3 rounded-md border border-slate-200 bg-white p-4 no-print lg:grid-cols-[minmax(240px,1fr)_minmax(290px,360px)_auto] lg:items-end">
-          <div className="space-y-1.5">
-            <label className="text-[13px] font-medium text-slate-700">Search</label>
-            <SearchInput
-              searchValue={searchInput}
-              onSearchChange={setSearchInput}
-              placeholder="Cari kode atau nama akun"
-              aria-label="Cari akun laporan laba rugi"
-              className="h-9"
-            />
-          </div>
+        <div className="flex flex-col sm:flex-row sm:items-center gap-3 no-print">
+          <SearchInput
+            searchValue={searchInput}
+            onSearchChange={setSearchInput}
+            placeholder="Cari kode atau nama akun"
+            aria-label="Cari akun laporan laba rugi"
+            wrapperClassName="w-full sm:w-[280px]"
+          />
 
-          <div className="space-y-1.5">
-            <label className="text-[13px] font-medium text-slate-700">Periode Laporan</label>
+          <div className="w-full sm:w-[320px]">
             <DatePickerWithRange
               date={dateRange}
               onChange={setDateRange}
@@ -523,7 +580,7 @@ export default function LaporanLabaRugiPage() {
           <Button
             type="button"
             variant="outline"
-            className="h-9"
+            className="h-9 w-full sm:w-auto"
             onClick={() => {
               setSearchInput('');
               setDateRange(undefined);
@@ -599,6 +656,32 @@ export default function LaporanLabaRugiPage() {
             ))}
           </div>
         )}
+
+        <LaporanLabaRugiPrintDocument
+          template={templatePrint.selectedTemplate}
+          fallbackBackground={selectedPrintBackground}
+          companyName={getCompanyName(resolvedCompanyId)}
+          periodLabel={periodLabel}
+          sections={printSections}
+          grossProfit={grossProfitTotal}
+          grossProfitUsd={grossProfitUsdTotal}
+          netIncome={calculatedNetIncome}
+          netIncomeUsd={calculatedNetIncomeUsd}
+          printedAt={templatePrint.printedAt}
+        />
+
+        <JournalPrintTemplateDialog
+          open={templatePrint.isDialogOpen}
+          onOpenChange={templatePrint.setIsDialogOpen}
+          templates={templatePrint.templates}
+          selectedTemplateId={templatePrint.selectedTemplateId}
+          onSelectTemplate={templatePrint.setSelectedTemplateId}
+          onPrint={() => void templatePrint.printWithSelectedTemplate()}
+          isLoading={templatePrint.templatesQuery.isLoading}
+          isError={templatePrint.templatesQuery.isError}
+          isPrinting={templatePrint.isPreparingPrint}
+          reportName="Laporan Laba Rugi"
+        />
       </div>
     </DashboardLayout>
   );

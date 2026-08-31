@@ -78,11 +78,11 @@ export default function PenerimaanSparepartPage() {
               lastPage={activities?.meta?.lastPage}
               onPageChange={setPage}
               onPerPageChange={setPerPage}
-              actions={(
+              filters={(
                 <DatePickerWithRange
                   date={dateRange}
                   onChange={handleDateRangeChange}
-                  className="w-auto"
+                  className="w-full sm:w-[260px]"
                 />
               )}
             >

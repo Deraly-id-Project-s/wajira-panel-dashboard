@@ -199,15 +199,19 @@ export default function KasHarianPage() {
           subtitle="Kelola arus transaksi kas harian"
         />
 
-        <div className="no-print">
-          <DatePickerWithRange date={date} onChange={handleDateChange} placeholder="Pilih rentang tanggal transaksi kas" />
-        </div>
-
         <SearchPagination
           searchValue={searchInput}
           onSearchChange={setSearchInput}
           searchPlaceholder="Search here"
           searchAriaLabel="Cari transaksi kas harian"
+          filters={
+            <DatePickerWithRange
+              date={date}
+              onChange={handleDateChange}
+              placeholder="Pilih rentang tanggal transaksi kas"
+              className="w-full sm:w-[260px]"
+            />
+          }
           page={page}
           perPage={perPage}
           total={meta.total}

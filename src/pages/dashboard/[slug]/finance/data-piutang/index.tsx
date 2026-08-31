@@ -61,15 +61,19 @@ export default function DataPiutangPage() {
                     }
                 />
 
-                <div className="no-print">
-                    <DatePickerWithRange date={date} onChange={handleDateChange} placeholder="Pilih rentang tanggal piutang" />
-                </div>
-
                 <SearchPagination
                     searchValue={search}
                     onSearchChange={setSearch}
                     searchPlaceholder="Search here"
                     searchAriaLabel="Cari data piutang"
+                    filters={
+                        <DatePickerWithRange
+                            date={date}
+                            onChange={handleDateChange}
+                            placeholder="Pilih rentang tanggal piutang"
+                            className="w-full sm:w-[260px]"
+                        />
+                    }
                     page={currentPage}
                     perPage={perPage}
                     total={query.data?.meta.total ?? 0}

@@ -178,15 +178,19 @@ export default function BuktiPotongPage() {
           </button>
         </div>
 
-        <div className="no-print">
-          <DatePickerWithRange date={date} onChange={handleDateChange} placeholder="Pilih rentang tanggal bukti potong" />
-        </div>
-
         <SearchPagination
           searchValue={searchInput}
           onSearchChange={setSearchInput}
           searchPlaceholder="Search here"
           searchAriaLabel="Cari bukti potong"
+          filters={
+            <DatePickerWithRange
+              date={date}
+              onChange={handleDateChange}
+              placeholder="Pilih rentang tanggal bukti potong"
+              className="w-full sm:w-[260px]"
+            />
+          }
           page={page}
           perPage={perPage}
           total={data?.meta.total ?? 0}

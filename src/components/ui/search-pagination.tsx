@@ -24,6 +24,7 @@ interface SearchPaginationProps {
     onPageChange: (page: number) => void
     onPerPageChange: (perPage: number) => void
     actions?: React.ReactNode
+    filters?: React.ReactNode
     className?: string
 }
 
@@ -55,6 +56,7 @@ export function SearchPagination({
     onPageChange,
     onPerPageChange,
     actions,
+    filters,
     className,
 }: SearchPaginationProps) {
     const safeLastPage = Math.max(1, lastPage)
@@ -65,16 +67,18 @@ export function SearchPagination({
 
     return (
         <div className={cn("space-y-4", className)}>
-            <div className="flex flex-col items-stretch justify-between gap-4 py-1 sm:flex-row sm:items-center">
-                <div className="flex w-full flex-col gap-3 sm:w-auto sm:flex-row sm:items-center">
+            <div className="flex flex-col items-stretch justify-between gap-4 py-1 sm:flex-row sm:items-center no-print">
+                <div className="flex w-full flex-col gap-3 sm:w-auto sm:flex-row sm:items-center sm:flex-wrap">
                     <SearchInput
                         {...searchInputProps}
                         searchValue={searchValue}
                         onSearchChange={onSearchChange}
                         placeholder={searchPlaceholder}
                         aria-label={searchAriaLabel}
-                        wrapperClassName={cn("sm:w-[300px]", searchInputProps?.wrapperClassName)}
+                        wrapperClassName={cn("sm:w-[260px]", searchInputProps?.wrapperClassName)}
                     />
+
+                    {filters ? <div className="w-full sm:w-auto">{filters}</div> : null}
 
                     <div className="flex items-center gap-2 whitespace-nowrap text-sm text-slate-500">
                         <span>Show</span>
@@ -94,7 +98,7 @@ export function SearchPagination({
                     </div>
                 </div>
 
-                {actions ? <div className="flex items-center justify-end">{actions}</div> : null}
+                {actions ? <div className="flex items-center justify-end gap-2">{actions}</div> : null}
             </div>
 
             {children}

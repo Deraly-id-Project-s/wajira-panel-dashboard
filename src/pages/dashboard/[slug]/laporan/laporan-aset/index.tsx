@@ -239,21 +239,20 @@ export default function LaporanAssetPage() {
           />
         </div>
 
-        {/* Periode Filter */}
-        <div className="no-print">
-          <DatePickerWithRange
-            date={dateRange}
-            onChange={setDateRange}
-            className="w-full sm:w-auto min-w-[260px]"
-          />
-        </div>
-
         {/* Print Letter Wrapping Container */}
         <SearchPagination
           searchValue={searchTerm}
           onSearchChange={setSearchTerm}
           searchPlaceholder="Search here"
           searchAriaLabel="Cari data"
+          filters={
+            <DatePickerWithRange
+              date={dateRange}
+              onChange={setDateRange}
+              placeholder="Pilih rentang tanggal perolehan aset"
+              className="w-full sm:w-[260px]"
+            />
+          }
           page={page}
           perPage={perPage}
           total={pagination.total}

@@ -86,31 +86,28 @@ const isLoadingDisplay = isLoading;
           />
         </div>
 
-        {/* Periode Transaksi */}
-        <div className="no-print">
-          <div className="flex flex-col space-y-1.5">
-            <label className="text-[13px] font-medium text-slate-700">Periode Transaksi</label>
-            <div className="w-full sm:w-[280px]">
-              <DatePickerWithRange date={dateRange} onChange={setDateRangeState} />
-            </div>
-          </div>
-        </div>
-
         {/* Main Table Content */}
-        <div className="pt-4">
-          <SearchPagination
-            searchValue={searchInput}
-            onSearchChange={setSearchInput}
-            searchPlaceholder="Search here"
-            searchAriaLabel="Cari data"
-            page={pagination.currentPage}
-            perPage={pagination.perPage}
-            total={pagination.total}
-            lastPage={pagination.lastPage}
-            perPageOptions={[25, 50, 100]}
-            onPageChange={setPage}
-            onPerPageChange={setPerPage}
-          >
+        <SearchPagination
+          searchValue={searchInput}
+          onSearchChange={setSearchInput}
+          searchPlaceholder="Search here"
+          searchAriaLabel="Cari data"
+          filters={
+            <DatePickerWithRange
+              date={dateRange}
+              onChange={setDateRangeState}
+              placeholder="Pilih rentang tanggal transaksi kas"
+              className="w-full sm:w-[260px]"
+            />
+          }
+          page={pagination.currentPage}
+          perPage={pagination.perPage}
+          total={pagination.total}
+          lastPage={pagination.lastPage}
+          perPageOptions={[25, 50, 100]}
+          onPageChange={setPage}
+          onPerPageChange={setPerPage}
+        >
           {isLoadingDisplay ? (
             <div className="flex justify-center items-center py-20 bg-white rounded-md border border-gray-200 shadow-sm">
               <LoadingState variant="page" />
@@ -149,8 +146,7 @@ const isLoadingDisplay = isLoading;
               </PrintLetterPage>
             </>
           )}
-          </SearchPagination>
-        </div>
+        </SearchPagination>
       </div>
     </DashboardLayout>
   );
