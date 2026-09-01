@@ -83,10 +83,12 @@ const ensureReportFallbackSidebarMenus = (menus: MenuItem[], slug: string): Menu
 
     const journalHref = slug ? `/dashboard/${slug}/laporan/laporan-jurnal` : '/laporan/laporan-jurnal';
     const ledgerHref = slug ? `/dashboard/${slug}/laporan/laporan-buku-besar` : '/laporan/laporan-buku-besar';
+    const balanceColumnHref = slug ? `/dashboard/${slug}/laporan/laporan-neraca-lajur` : '/laporan/laporan-neraca-lajur';
     const profitLossHref = slug ? `/dashboard/${slug}/laporan/laporan-laba-rugi` : '/laporan/laporan-laba-rugi';
     const children = [...menu.children];
     const hasJournal = menu.children.some((child) => child.href === journalHref || child.label === 'Laporan Jurnal');
     const hasLedger = menu.children.some((child) => child.href === ledgerHref || child.label === 'Laporan Buku Besar');
+    const hasBalanceColumn = menu.children.some((child) => child.href === balanceColumnHref || child.label === 'Laporan Neraca Lajur');
     const hasProfitLoss = menu.children.some((child) => child.href === profitLossHref || child.label === 'Laporan Laba Rugi');
 
     if (!hasJournal) {
@@ -111,11 +113,24 @@ const ensureReportFallbackSidebarMenus = (menus: MenuItem[], slug: string): Menu
       });
     }
 
+    if (!hasBalanceColumn) {
+      const ledgerIndex = children.findIndex((child) => child.label === 'Laporan Buku Besar');
+      const insertIndex = ledgerIndex >= 0 ? ledgerIndex + 1 : children.length;
+
+      children.splice(insertIndex, 0, {
+        label: 'Laporan Neraca Lajur',
+        href: balanceColumnHref,
+      });
+    }
+
     if (!hasProfitLoss) {
+      const balanceColumnIndex = children.findIndex((child) => child.label === 'Laporan Neraca Lajur');
       const ledgerIndex = children.findIndex((child) => child.label === 'Laporan Buku Besar');
       const purchaseIndex = children.findIndex((child) => child.label === 'Laporan Pembelian');
-      const insertIndex = ledgerIndex >= 0
-        ? ledgerIndex + 1
+      const insertIndex = balanceColumnIndex >= 0
+        ? balanceColumnIndex + 1
+        : ledgerIndex >= 0
+          ? ledgerIndex + 1
         : purchaseIndex >= 0
           ? purchaseIndex
           : children.length;

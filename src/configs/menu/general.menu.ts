@@ -236,6 +236,10 @@ export const getGeneralMenus = (slug: string): MenuItem[] => {
           href: base('/laporan/laporan-buku-besar'),
         },
         {
+          label: 'Laporan Neraca Lajur',
+          href: base('/laporan/laporan-neraca-lajur'),
+        },
+        {
           label: 'Laporan Laba Rugi',
           href: base('/laporan/laporan-laba-rugi'),
         },

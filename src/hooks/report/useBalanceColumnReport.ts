@@ -1,29 +1,25 @@
 import { useQuery } from '@tanstack/react-query';
-import { LedgerReportParams } from '@/@types/ledger-report.types';
-import { getLedgerReport } from '@/services/report/ledgerReport.service';
 
-export function useLedgerReport(params: LedgerReportParams & { enabled?: boolean }) {
+import type { BalanceColumnReportParams } from '@/@types/balance-column-report.types';
+import { getBalanceColumnReport } from '@/services/report/balanceColumnReport.service';
+
+export function useBalanceColumnReport(
+  params: BalanceColumnReportParams & { enabled?: boolean },
+) {
   const { enabled = true, ...queryParams } = params;
 
   const queryResult = useQuery({
-    queryKey: ['ledger-report', queryParams],
-    queryFn: () => getLedgerReport(queryParams),
+    queryKey: ['balance-column-report', queryParams],
+    queryFn: () => getBalanceColumnReport(queryParams),
     enabled,
     placeholderData: (previous) => previous,
     staleTime: 10_000,
   });
 
-  const records = queryResult.data?.data?.records;
-  const summary = queryResult.data?.data?.summary;
+  const records = queryResult.data?.data;
 
   return {
     data: records?.data ?? [],
-    summary: {
-      openingBalance: summary?.opening_balance ?? 0,
-      endingBalance: summary?.ending_balance ?? 0,
-      openingBalanceUsd: summary?.opening_balance_usd ?? 0,
-      endingBalanceUsd: summary?.ending_balance_usd ?? 0,
-    },
     pagination: {
       currentPage: records?.current_page ?? queryParams.page ?? 1,
       lastPage: records?.last_page ?? 1,

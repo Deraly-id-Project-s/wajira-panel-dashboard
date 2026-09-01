@@ -11,7 +11,10 @@ export interface JournalReportCashFlow {
   note: string | null;
   debet: number | null;
   debit?: number | null;
+  debet_usd?: number | null;
+  debit_usd?: number | null;
   credit: number | null;
+  credit_usd?: number | null;
   remaining_payment: number | null;
 }
 
@@ -29,6 +32,8 @@ export interface JournalReportItem {
   created_at: string | null;
   debit: number | null;
   credit: number | null;
+  debit_usd: number | null;
+  credit_usd: number | null;
   account: JournalReportAccount | null;
   cash_flow: JournalReportCashFlow | null;
 }

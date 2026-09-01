@@ -37,11 +37,23 @@ const toNumber = (value: unknown): number => {
   return 0;
 };
 
-const getLineAmount = (line: ProfitLossReportLine) =>
+const getLineBaseAmount = (line: ProfitLossReportLine) =>
   toNumber(line.amount ?? line.total ?? line.value ?? line.balance);
 
 const getLineCurrency = (line: ProfitLossReportLine) =>
   String(line.type ?? 'IDR').toUpperCase() === 'USD' ? 'usd' : 'idr';
+
+const getLineUsdAmount = (line: ProfitLossReportLine) => {
+  const explicitUsd = line.amount_usd ?? line.total_usd ?? line.value_usd ?? line.balance_usd;
+  if (explicitUsd !== undefined && explicitUsd !== null) return toNumber(explicitUsd);
+  return getLineCurrency(line) === 'usd' ? getLineBaseAmount(line) : 0;
+};
+
+const getLineIdrAmount = (line: ProfitLossReportLine) => {
+  const hasExplicitUsd = [line.amount_usd, line.total_usd, line.value_usd, line.balance_usd]
+    .some((value) => value !== undefined && value !== null);
+  return !hasExplicitUsd && getLineCurrency(line) === 'usd' ? 0 : getLineBaseAmount(line);
+};
 
 const getLineIdentity = (line: ProfitLossReportLine) => ({
   code: line.account_code ?? line.code ?? '-',
@@ -215,18 +227,18 @@ function SectionRows({
       ) : (
         section.rows.map((line, index) => {
           const identity = getLineIdentity(line);
-          const currency = getLineCurrency(line);
-          const amount = getLineAmount(line);
+          const idrAmount = getLineIdrAmount(line);
+          const usdAmount = getLineUsdAmount(line);
 
           return (
             <tr key={`${line.id ?? line.account_id ?? identity.code}-${index}`} className={index % 2 === 1 ? 'bg-slate-50/60' : 'bg-white'}>
               <td className="border border-slate-300 px-2 py-1.5 font-mono">{identity.code}</td>
               <td className="border border-slate-300 px-2 py-1.5">{identity.name}</td>
               <td className="border border-slate-300 px-2 py-1.5 text-right tabular-nums">
-                {currency === 'idr' ? formatAccountingAmount(amount, 'idr', section.deduction) : '-'}
+                {formatAccountingAmount(idrAmount, 'idr', section.deduction)}
               </td>
               <td className="border border-slate-300 px-2 py-1.5 text-right tabular-nums">
-                {currency === 'usd' ? formatAccountingAmount(amount, 'usd', section.deduction) : '-'}
+                {formatAccountingAmount(usdAmount, 'usd', section.deduction)}
               </td>
             </tr>
           );

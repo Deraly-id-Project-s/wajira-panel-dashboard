@@ -196,10 +196,12 @@ export default function LaporanBukuBesarPage() {
             <div className="border-b border-slate-200 px-4 py-3 md:border-b-0 md:border-r md:text-right">
               <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">Saldo Awal Periode</p>
               <p className="mt-1 text-sm font-bold tabular-nums text-slate-900">{currenciesFormat('idr', summary.openingBalance)}</p>
+              <p className="mt-1 text-xs font-semibold tabular-nums text-sky-700">{currenciesFormat('usd', summary.openingBalanceUsd)}</p>
             </div>
             <div className="bg-slate-50/70 px-4 py-3 md:text-right">
               <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">Saldo Akhir Periode</p>
               <p className="mt-1 text-sm font-bold tabular-nums text-slate-950">{currenciesFormat('idr', summary.endingBalance)}</p>
+              <p className="mt-1 text-xs font-semibold tabular-nums text-sky-700">{currenciesFormat('usd', summary.endingBalanceUsd)}</p>
             </div>
           </div>
 
@@ -220,6 +222,8 @@ export default function LaporanBukuBesarPage() {
           periodLabel={periodLabel}
           openingBalance={summary.openingBalance}
           endingBalance={summary.endingBalance}
+          openingBalanceUsd={summary.openingBalanceUsd}
+          endingBalanceUsd={summary.endingBalanceUsd}
           reportPage={page}
           reportTotal={pagination.total}
           printedAt={printedAt}

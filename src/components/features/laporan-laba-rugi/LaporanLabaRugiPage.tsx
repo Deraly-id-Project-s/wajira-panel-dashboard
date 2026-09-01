@@ -130,21 +130,33 @@ const toNumber = (value: unknown): number => {
   return 0;
 };
 
-const getLineAmount = (line: ProfitLossReportLine): number =>
+const getLineBaseAmount = (line: ProfitLossReportLine): number =>
   toNumber(line.amount ?? line.total ?? line.value ?? line.balance);
 
 const getLineCurrency = (line: ProfitLossReportLine) =>
   String(line.type ?? 'IDR').toUpperCase() === 'USD' ? 'usd' : 'idr';
 
+const getLineUsdAmount = (line: ProfitLossReportLine): number => {
+  const explicitUsd = line.amount_usd ?? line.total_usd ?? line.value_usd ?? line.balance_usd;
+  if (explicitUsd !== undefined && explicitUsd !== null) return toNumber(explicitUsd);
+  return getLineCurrency(line) === 'usd' ? getLineBaseAmount(line) : 0;
+};
+
+const getLineIdrAmount = (line: ProfitLossReportLine): number => {
+  const hasExplicitUsd = [line.amount_usd, line.total_usd, line.value_usd, line.balance_usd]
+    .some((value) => value !== undefined && value !== null);
+  return !hasExplicitUsd && getLineCurrency(line) === 'usd' ? 0 : getLineBaseAmount(line);
+};
+
 const getUsdTotal = (rows: ProfitLossReportLine[]) =>
-  rows.reduce((sum, line) => (getLineCurrency(line) === 'usd' ? sum + getLineAmount(line) : sum), 0);
+  rows.reduce((sum, line) => sum + getLineUsdAmount(line), 0);
 
 const normalizeSection = (value: unknown): NormalizedSection => {
   if (Array.isArray(value)) {
     const rows = value as ProfitLossReportLine[];
     return {
       rows,
-      total: rows.reduce((sum, line) => sum + getLineAmount(line), 0),
+      total: rows.reduce((sum, line) => sum + getLineIdrAmount(line), 0),
       totalUsd: getUsdTotal(rows),
     };
   }
@@ -157,13 +169,14 @@ const normalizeSection = (value: unknown): NormalizedSection => {
     const section = value as ProfitLossReportSection;
     const rows = section.accounts ?? section.rows ?? section.items ?? section.data ?? [];
     const total = section.total ?? section.amount ?? section.value;
+    const totalUsd = section.total_usd ?? section.amount_usd ?? section.value_usd;
 
     return {
       rows,
       total: total === undefined || total === null
-        ? rows.reduce((sum, line) => sum + getLineAmount(line), 0)
+        ? rows.reduce((sum, line) => sum + getLineIdrAmount(line), 0)
         : toNumber(total),
-      totalUsd: getUsdTotal(rows),
+      totalUsd: totalUsd === undefined || totalUsd === null ? getUsdTotal(rows) : toNumber(totalUsd),
     };
   }
 
@@ -196,10 +209,6 @@ const buildTemplateStateFromReport = (reportData: ProfitLossReportData): Record<
   opex_account_ids: uniqueNumbers(reportData.opex_account_ids ?? DEFAULT_TEMPLATE.opex_account_ids),
   noix_account_ids: uniqueNumbers(reportData.noix_account_ids ?? DEFAULT_TEMPLATE.noix_account_ids),
 });
-
-const formatLineAmount = (line: ProfitLossReportLine) => {
-  return currenciesFormat(getLineCurrency(line), getLineAmount(line));
-};
 
 function AmountSummary({
   idrValue,
@@ -330,9 +339,10 @@ function SectionEditor({
         </div>
 
         <div className="overflow-hidden rounded-md border border-slate-200">
-          <div className="grid grid-cols-[1fr_180px] bg-slate-50 px-3 py-2 text-xs font-semibold uppercase text-slate-500">
+          <div className="grid grid-cols-[1fr_150px_130px] bg-slate-50 px-3 py-2 text-xs font-semibold uppercase text-slate-500">
             <span>Akun</span>
-            <span className="text-right">Nominal</span>
+            <span className="text-right">IDR</span>
+            <span className="text-right">USD</span>
           </div>
           {reportSection.rows.length === 0 ? (
             <div className="px-3 py-6 text-center text-sm text-slate-500">Belum ada rincian dari laporan.</div>
@@ -340,11 +350,14 @@ function SectionEditor({
             reportSection.rows.map((line, index) => (
               <div
                 key={`${line.id ?? line.account_id ?? index}`}
-                className="grid grid-cols-[1fr_180px] gap-3 border-t border-slate-100 px-3 py-2 text-sm"
+                className="grid grid-cols-[1fr_150px_130px] gap-3 border-t border-slate-100 px-3 py-2 text-sm"
               >
                 <span className="min-w-0 truncate text-slate-700">{getLineLabel(line)}</span>
                 <span className="text-right font-medium text-slate-900">
-                  {formatLineAmount(line)}
+                  {currenciesFormat('idr', getLineIdrAmount(line))}
+                </span>
+                <span className="text-right font-medium text-sky-700">
+                  {currenciesFormat('usd', getLineUsdAmount(line))}
                 </span>
               </div>
             ))
@@ -423,6 +436,10 @@ export default function LaporanLabaRugiPage() {
   }, [normalizedSections, searchInput]);
 
   const explicitNetIncome = reportData.profit_loss_before_tax ?? reportData.net_income ?? reportData.net_profit ?? reportData.profit_loss;
+  const explicitNetIncomeUsd = reportData.profit_loss_before_tax_usd
+    ?? reportData.net_income_usd
+    ?? reportData.net_profit_usd
+    ?? reportData.profit_loss_usd;
   const calculatedNetIncome = explicitNetIncome !== undefined && explicitNetIncome !== null ? toNumber(explicitNetIncome) : (
     normalizedSections.revenue.total
     - normalizedSections.cogs.total
@@ -435,10 +452,12 @@ export default function LaporanLabaRugiPage() {
   const grossProfitUsdTotal = reportData.gross_calc !== undefined && reportData.gross_calc !== null
     ? normalizedSections.grossProfit.totalUsd
     : normalizedSections.revenue.totalUsd - normalizedSections.cogs.totalUsd;
-  const calculatedNetIncomeUsd = normalizedSections.revenue.totalUsd
-    - normalizedSections.cogs.totalUsd
-    - normalizedSections.opex.totalUsd
-    + normalizedSections.noix.totalUsd;
+  const calculatedNetIncomeUsd = explicitNetIncomeUsd !== undefined && explicitNetIncomeUsd !== null
+    ? toNumber(explicitNetIncomeUsd)
+    : normalizedSections.revenue.totalUsd
+      - normalizedSections.cogs.totalUsd
+      - normalizedSections.opex.totalUsd
+      + normalizedSections.noix.totalUsd;
 
   const printSections = useMemo<ProfitLossPrintSection[]>(() => [
     {

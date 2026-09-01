@@ -16,6 +16,8 @@ export interface LedgerReportItem {
   created_at: string | null;
   debit: number | null;
   credit: number | null;
+  debit_usd: number | null;
+  credit_usd: number | null;
   account: JournalReportAccount | null;
   cash_flow: (JournalReportCashFlow & {
     is_paid?: boolean | null;
@@ -36,6 +38,8 @@ export interface LedgerReportRecords {
 export interface LedgerReportSummary {
   opening_balance: number | null;
   ending_balance: number | null;
+  opening_balance_usd: number | null;
+  ending_balance_usd: number | null;
 }
 
 export interface LedgerReportPayload {

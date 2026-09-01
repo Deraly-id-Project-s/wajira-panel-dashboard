@@ -14,6 +14,8 @@ interface LaporanBukuBesarPrintDocumentProps {
   periodLabel: string;
   openingBalance: number;
   endingBalance: number;
+  openingBalanceUsd: number;
+  endingBalanceUsd: number;
   reportPage: number;
   reportTotal: number;
   printedAt: Date;
@@ -36,6 +38,8 @@ export function LaporanBukuBesarPrintDocument({
   periodLabel,
   openingBalance,
   endingBalance,
+  openingBalanceUsd,
+  endingBalanceUsd,
   reportPage,
   reportTotal,
   printedAt,
@@ -52,8 +56,10 @@ export function LaporanBukuBesarPrintDocument({
       (result, item) => ({
         debit: result.debit + (Number(item.debit) || 0),
         credit: result.credit + (Number(item.credit) || 0),
+        debitUsd: result.debitUsd + (Number(item.debit_usd) || 0),
+        creditUsd: result.creditUsd + (Number(item.credit_usd) || 0),
       }),
-      { debit: 0, credit: 0 },
+      { debit: 0, credit: 0, debitUsd: 0, creditUsd: 0 },
     ),
     [data],
   );
@@ -92,20 +98,22 @@ export function LaporanBukuBesarPrintDocument({
               <div className="mt-3 overflow-hidden border border-slate-400">
                 <table className="w-full table-fixed border-collapse text-[6pt] leading-tight text-slate-900">
                   <colgroup>
+                    <col className="w-[6%]" />
+                    <col className="w-[7%]" />
+                    <col className="w-[10%]" />
+                    <col className="w-[9%]" />
+                    <col className="w-[12%]" />
+                    <col className="w-[10%]" />
+                    <col className="w-[8%]" />
+                    <col className="w-[8%]" />
+                    <col className="w-[8%]" />
+                    <col className="w-[7%]" />
                     <col className="w-[7%]" />
                     <col className="w-[8%]" />
-                    <col className="w-[12%]" />
-                    <col className="w-[11%]" />
-                    <col className="w-[15%]" />
-                    <col className="w-[13%]" />
-                    <col className="w-[9%]" />
-                    <col className="w-[8%]" />
-                    <col className="w-[8%]" />
-                    <col className="w-[9%]" />
                   </colgroup>
                   <thead>
                     <tr className="text-white" style={{ backgroundColor: REPORT_COLOR }}>
-                      {['Tanggal', 'Kode Akun', 'Nama Akun', 'Kode Transaksi', 'Keterangan', 'Jenis Transaksi', 'Saldo Awal', 'Debit', 'Kredit', 'Saldo Akhir'].map((label, index) => (
+                      {['Tanggal', 'Kode Akun', 'Nama Akun', 'Kode Transaksi', 'Keterangan', 'Jenis Transaksi', 'Saldo Awal IDR', 'Debit IDR', 'Kredit IDR', 'Debit USD', 'Kredit USD', 'Saldo Akhir IDR'].map((label, index) => (
                         <th key={label} className={`border border-white/30 px-1 py-1.5 font-semibold uppercase tracking-wide ${index >= 6 ? 'text-right' : 'text-left'}`}>
                           {label}
                         </th>
@@ -115,7 +123,7 @@ export function LaporanBukuBesarPrintDocument({
                   <tbody>
                     {rows.length === 0 ? (
                       <tr>
-                        <td colSpan={10} className="border border-slate-300 px-2 py-8 text-center text-slate-500">
+                        <td colSpan={12} className="border border-slate-300 px-2 py-8 text-center text-slate-500">
                           Tidak ada mutasi akun pada filter yang dipilih.
                         </td>
                       </tr>
@@ -130,6 +138,8 @@ export function LaporanBukuBesarPrintDocument({
                         <td className="border border-slate-300 px-1 py-1.5 text-right tabular-nums">{money(item.cash_position_before)}</td>
                         <td className="border border-slate-300 px-1 py-1.5 text-right tabular-nums">{Number(item.debit) > 0 ? money(item.debit) : '-'}</td>
                         <td className="border border-slate-300 px-1 py-1.5 text-right tabular-nums">{Number(item.credit) > 0 ? money(item.credit) : '-'}</td>
+                        <td className="border border-slate-300 px-1 py-1.5 text-right tabular-nums">{Number(item.debit_usd) > 0 ? currenciesFormat('usd', item.debit_usd) : '-'}</td>
+                        <td className="border border-slate-300 px-1 py-1.5 text-right tabular-nums">{Number(item.credit_usd) > 0 ? currenciesFormat('usd', item.credit_usd) : '-'}</td>
                         <td className="border border-slate-300 px-1 py-1.5 text-right font-medium tabular-nums">{money(item.cash_position_after)}</td>
                       </tr>
                     ))}
@@ -149,10 +159,18 @@ export function LaporanBukuBesarPrintDocument({
                     <dd className="text-right tabular-nums">{money(movement.debit)}</dd>
                     <dt className="text-slate-500">Mutasi kredit — halaman aktif</dt>
                     <dd className="text-right tabular-nums">({money(movement.credit)})</dd>
+                    <dt className="text-sky-700">Saldo awal USD</dt>
+                    <dd className="text-right font-medium tabular-nums text-sky-700">{currenciesFormat('usd', openingBalanceUsd)}</dd>
+                    <dt className="text-sky-700">Mutasi debit USD — halaman aktif</dt>
+                    <dd className="text-right tabular-nums text-sky-700">{currenciesFormat('usd', movement.debitUsd)}</dd>
+                    <dt className="text-sky-700">Mutasi kredit USD — halaman aktif</dt>
+                    <dd className="text-right tabular-nums text-sky-700">({currenciesFormat('usd', movement.creditUsd)})</dd>
                   </dl>
                   <dl className="grid grid-cols-[1fr_38mm] border-b-4 border-double px-2 py-2 text-[8pt] font-bold" style={{ borderColor: REPORT_COLOR }}>
                     <dt>Saldo akhir periode</dt>
                     <dd className="text-right tabular-nums">{money(endingBalance)}</dd>
+                    <dt className="text-sky-700">Saldo akhir USD</dt>
+                    <dd className="text-right tabular-nums text-sky-700">{currenciesFormat('usd', endingBalanceUsd)}</dd>
                   </dl>
                 </section>
               )}

@@ -94,6 +94,8 @@ const FEATURE_MAP: Record<string, { path: string; label?: string; group?: string
   'journal-report': { path: '/laporan/laporan-jurnal', label: 'Laporan Jurnal' },
   'ledger-reports': { path: '/laporan/laporan-buku-besar', label: 'Laporan Buku Besar' },
   'ledger-report': { path: '/laporan/laporan-buku-besar', label: 'Laporan Buku Besar' },
+  'balance-column-reports': { path: '/laporan/laporan-neraca-lajur', label: 'Laporan Neraca Lajur' },
+  'balance-column-report': { path: '/laporan/laporan-neraca-lajur', label: 'Laporan Neraca Lajur' },
   'profit-loss-reports': { path: '/laporan/laporan-laba-rugi', label: 'Laporan Laba Rugi' },
   'profit-loss-report': { path: '/laporan/laporan-laba-rugi', label: 'Laporan Laba Rugi' },
   'purchase-reports': { path: '/laporan/laporan-pembelian', label: 'Laporan Pembelian' },
@@ -165,6 +167,7 @@ const REPORT_MENU_ORDER = [
   'Laporan Transaksi Kas',
   'Laporan Jurnal',
   'Laporan Buku Besar',
+  'Laporan Neraca Lajur',
   'Laporan Laba Rugi',
   'Laporan Pembelian',
 ];
@@ -204,6 +207,21 @@ const ensureLedgerReportMenu = (items: MenuItem[], slug: string) => {
   items.splice(insertIndex, 0, {
     label: 'Laporan Buku Besar',
     href: ledgerHref,
+  });
+};
+
+const ensureBalanceColumnReportMenu = (items: MenuItem[], slug: string) => {
+  const reportHref = resolvePath('/laporan/laporan-neraca-lajur', slug);
+  const hasReport = items.some((item) => item.href === reportHref);
+  if (hasReport) return;
+
+  const ledgerIndex = items.findIndex(
+    (item) => item.href === resolvePath('/laporan/laporan-buku-besar', slug),
+  );
+  const insertIndex = ledgerIndex >= 0 ? ledgerIndex + 1 : items.length;
+  items.splice(insertIndex, 0, {
+    label: 'Laporan Neraca Lajur',
+    href: reportHref,
   });
 };
 
@@ -343,6 +361,7 @@ export function buildDynamicMenus(sidebarData: SidebarModuleItem[], permissions:
       if (moduleSlug === 'report') {
         ensureJournalReportMenu(children, slug);
         ensureLedgerReportMenu(children, slug);
+        ensureBalanceColumnReportMenu(children, slug);
         sortReportMenuItems(children);
       }
 

@@ -71,8 +71,10 @@ export function LaporanJurnalPrintDocument({
         (result, item) => ({
           debit: result.debit + (Number(item.debit) || 0),
           credit: result.credit + (Number(item.credit) || 0),
+          debitUsd: result.debitUsd + (Number(item.debit_usd) || 0),
+          creditUsd: result.creditUsd + (Number(item.credit_usd) || 0),
         }),
-        { debit: 0, credit: 0 },
+        { debit: 0, credit: 0, debitUsd: 0, creditUsd: 0 },
       ),
     [data],
   );
@@ -128,20 +130,22 @@ export function LaporanJurnalPrintDocument({
               </header>
 
               <div className="mt-3 overflow-hidden border border-slate-400">
-                <table className="w-full table-fixed border-collapse text-[7pt] leading-tight text-slate-900">
+                <table className="w-full table-fixed border-collapse text-[6pt] leading-tight text-slate-900">
                   <colgroup>
                     <col className="w-[7%]" />
+                    <col className="w-[11%]" />
+                    <col className="w-[11%]" />
                     <col className="w-[12%]" />
                     <col className="w-[15%]" />
                     <col className="w-[12%]" />
-                    <col className="w-[20%]" />
-                    <col className="w-[14%]" />
-                    <col className="w-[10%]" />
-                    <col className="w-[10%]" />
+                    <col className="w-[8%]" />
+                    <col className="w-[8%]" />
+                    <col className="w-[8%]" />
+                    <col className="w-[8%]" />
                   </colgroup>
                   <thead>
                     <tr className="text-white" style={{ backgroundColor: tableColor }}>
-                      {['Tanggal', 'Kode Transaksi', 'Kode Akun', 'Nama Akun', 'Keterangan', 'Jenis Transaksi', 'Debit', 'Kredit'].map((label) => (
+                      {['Tanggal', 'Kode Transaksi', 'Kode Akun', 'Nama Akun', 'Keterangan', 'Jenis Transaksi', 'Debit IDR', 'Kredit IDR', 'Debit USD', 'Kredit USD'].map((label) => (
                         <th key={label} className="border border-white/30 px-1.5 py-1.5 text-left font-semibold uppercase tracking-wide last:text-right">
                           {label}
                         </th>
@@ -151,7 +155,7 @@ export function LaporanJurnalPrintDocument({
                   <tbody>
                     {rows.length === 0 ? (
                       <tr>
-                        <td colSpan={8} className="border border-slate-300 px-2 py-8 text-center text-slate-500">
+                        <td colSpan={10} className="border border-slate-300 px-2 py-8 text-center text-slate-500">
                           Tidak ada data jurnal pada filter yang dipilih.
                         </td>
                       </tr>
@@ -170,6 +174,12 @@ export function LaporanJurnalPrintDocument({
                           <td className="border border-slate-300 px-1.5 py-1.5 text-right font-medium tabular-nums">
                             {Number(item.credit) > 0 ? currenciesFormat('idr', item.credit) : '-'}
                           </td>
+                          <td className="border border-slate-300 px-1.5 py-1.5 text-right font-medium tabular-nums">
+                            {Number(item.debit_usd) > 0 ? currenciesFormat('usd', item.debit_usd) : '-'}
+                          </td>
+                          <td className="border border-slate-300 px-1.5 py-1.5 text-right font-medium tabular-nums">
+                            {Number(item.credit_usd) > 0 ? currenciesFormat('usd', item.credit_usd) : '-'}
+                          </td>
                         </tr>
                       ))
                     )}
@@ -178,6 +188,8 @@ export function LaporanJurnalPrintDocument({
                         <td colSpan={6} className="border border-slate-400 px-1.5 py-2 text-right uppercase tracking-wide">Grand Total</td>
                         <td className="border border-slate-400 px-1.5 py-2 text-right tabular-nums">{currenciesFormat('idr', totals.debit)}</td>
                         <td className="border border-slate-400 px-1.5 py-2 text-right tabular-nums">{currenciesFormat('idr', totals.credit)}</td>
+                        <td className="border border-slate-400 px-1.5 py-2 text-right tabular-nums">{currenciesFormat('usd', totals.debitUsd)}</td>
+                        <td className="border border-slate-400 px-1.5 py-2 text-right tabular-nums">{currenciesFormat('usd', totals.creditUsd)}</td>
                       </tr>
                     )}
                   </tbody>
