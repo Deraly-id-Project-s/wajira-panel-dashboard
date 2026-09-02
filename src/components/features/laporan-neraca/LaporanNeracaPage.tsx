@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import type { ReactNode } from 'react';
 import { useRouter } from 'next/router';
-import { Plus, RefreshCw, RotateCcw, Save, Trash2 } from 'lucide-react';
+import { Plus, Printer, RefreshCw, RotateCcw, Save, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
 
 import type { Account } from '@/@types/account.types';
@@ -12,16 +12,22 @@ import type {
   BalanceReportTemplatePayload,
 } from '@/@types/balance-report.types';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
+import {
+  LaporanNeracaPrintDocument,
+  type BalancePrintSection,
+} from '@/components/features/laporan-neraca/LaporanNeracaPrintDocument';
 import { PageHeader } from '@/components/ui/page-header';
 import { Button } from '@/components/ui/button';
 import { MoneyInput } from '@/components/ui/money-input';
 import { SearchInput } from '@/components/ui/search-input';
+import { ReportTemplatePrintDialog } from '@/components/ui/report-template-print-dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { currenciesFormat } from '@/components/ui/currenciesFormat';
 import { useCompany } from '@/contexts/CompanyContext';
 import { useAccounts } from '@/hooks/useAccount';
+import { useReportTemplatePrint } from '@/hooks/useReportTemplatePrint';
 import {
   useBalanceReport,
   useBalanceReportCashOptions,
@@ -29,7 +35,7 @@ import {
   useUpdateBalanceReportCash,
   useUpdateBalanceReportTemplate,
 } from '@/hooks/report/useBalanceReport';
-import { resolveCompanyId } from '@/lib/print-letterhead';
+import { getLetterheadByCompanyId, resolveCompanyId } from '@/lib/print-letterhead';
 import { cn } from '@/lib/utils';
 
 type BalanceSide = 'assets' | 'liabilities';
@@ -44,7 +50,8 @@ interface BalanceSectionConfig {
 
 interface NormalizedSection {
   rows: BalanceReportAccountLine[];
-  total: number;
+  totalIdr: number;
+  totalUsd: number;
 }
 
 interface CashFormState {
@@ -54,6 +61,15 @@ interface CashFormState {
 }
 
 const EMPTY_VALUE = '__empty__';
+
+const getCompanyName = (companyId?: number | null) => {
+  if (companyId === 1) return 'PT WAJIRA JAGRATARA MORINDO';
+  if (companyId === 2) return 'PT WAJIRA INTERNASIONAL';
+  if (companyId === 3) return 'PT WAJIRA YANOTAMA';
+  if (companyId === 4) return 'PT WAJIRA TRANSINDO';
+  if (companyId === 5) return 'PT ADHIYASA GRADASTA';
+  return 'PT WAJIRA';
+};
 
 const ASSET_TEMPLATE_KEYS: BalanceReportTemplateKey[] = [
   'receivable_ids',
@@ -147,6 +163,14 @@ const uniqueNumbers = (values: Array<number | string | null | undefined>) =>
 const getLineAmount = (line: BalanceReportAccountLine) =>
   toNumber(line.amount ?? line.total ?? line.value);
 
+const getLineCurrency = (line: BalanceReportAccountLine): 'idr' | 'usd' =>
+  String(line.type ?? 'IDR').toUpperCase() === 'USD' ? 'usd' : 'idr';
+
+const getLineAmountByCurrency = (
+  line: BalanceReportAccountLine,
+  currency: 'idr' | 'usd',
+) => getLineCurrency(line) === currency ? getLineAmount(line) : 0;
+
 const getLineLabel = (line: BalanceReportAccountLine) => {
   const code = line.account_code ?? line.code;
   const name = line.account_name ?? line.name ?? 'Akun';
@@ -154,18 +178,40 @@ const getLineLabel = (line: BalanceReportAccountLine) => {
 };
 
 const normalizeSection = (value: unknown): NormalizedSection => {
-  if (value && typeof value === 'object') {
-    const section = value as { total?: unknown; accounts?: BalanceReportAccountLine[] };
-    const rows = Array.isArray(section.accounts) ? section.accounts : [];
+  if (Array.isArray(value)) {
+    const rows = value as BalanceReportAccountLine[];
     return {
       rows,
-      total: section.total === undefined || section.total === null
-        ? rows.reduce((sum, row) => sum + getLineAmount(row), 0)
-        : toNumber(section.total),
+      totalIdr: rows.reduce((sum, row) => sum + getLineAmountByCurrency(row, 'idr'), 0),
+      totalUsd: rows.reduce((sum, row) => sum + getLineAmountByCurrency(row, 'usd'), 0),
     };
   }
 
-  return { rows: [], total: 0 };
+  if (value && typeof value === 'object') {
+    const section = value as {
+      total?: unknown;
+      total_idr?: unknown;
+      total_usd?: unknown;
+      accounts?: BalanceReportAccountLine[];
+    };
+    const rows = Array.isArray(section.accounts) ? section.accounts : [];
+    const calculatedIdr = rows.reduce((sum, row) => sum + getLineAmountByCurrency(row, 'idr'), 0);
+    const calculatedUsd = rows.reduce((sum, row) => sum + getLineAmountByCurrency(row, 'usd'), 0);
+
+    return {
+      rows,
+      totalIdr: section.total_idr !== undefined && section.total_idr !== null
+        ? toNumber(section.total_idr)
+        : rows.length > 0
+          ? calculatedIdr
+          : toNumber(section.total),
+      totalUsd: section.total_usd !== undefined && section.total_usd !== null
+        ? toNumber(section.total_usd)
+        : calculatedUsd,
+    };
+  }
+
+  return { rows: [], totalIdr: 0, totalUsd: 0 };
 };
 
 function AccountSelect({
@@ -212,7 +258,6 @@ function TemplateAccountEditor({
   searchKeyword: string;
   onChange: (nextIds: number[]) => void;
 }) {
-  const rows = accountIds.length > 0 ? accountIds : [0];
   const filteredRows = searchKeyword
     ? section.rows.filter((line) => getLineLabel(line).toLowerCase().includes(searchKeyword))
     : section.rows;
@@ -222,17 +267,18 @@ function TemplateAccountEditor({
       <div className="mb-3 flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
         <div>
           <h3 className="text-sm font-semibold text-slate-900">{config.title}</h3>
-          <p className="mt-1 text-xs text-slate-500">{accountIds.length} akun template</p>
+          <p className="mt-1 text-xs text-slate-500">{uniqueNumbers(accountIds).length} akun template</p>
         </div>
         <div className="text-left sm:text-right">
           <p className="text-xs font-semibold uppercase text-slate-500">Total</p>
-          <p className="mt-1 text-sm font-bold text-slate-900">{currenciesFormat('idr', section.total)}</p>
+          <p className="mt-1 text-sm font-bold text-slate-900">{currenciesFormat('idr', section.totalIdr)}</p>
+          <p className="mt-1 text-sm font-semibold text-sky-700">{currenciesFormat('usd', section.totalUsd)}</p>
         </div>
       </div>
 
       <div className="grid gap-3 xl:grid-cols-[minmax(220px,320px)_1fr]">
         <div className="space-y-2">
-          {rows.map((accountId, index) => (
+          {accountIds.map((accountId, index) => (
             <div key={`${config.templateKey}-${index}`} className="grid grid-cols-[1fr_auto] gap-2">
               <AccountSelect
                 value={accountId || null}
@@ -244,7 +290,7 @@ function TemplateAccountEditor({
                   } else {
                     nextIds.splice(index, 1);
                   }
-                  onChange(uniqueNumbers(nextIds));
+                  onChange(nextIds);
                 }}
               />
               <Button
@@ -276,13 +322,14 @@ function TemplateAccountEditor({
           <TableHeader>
             <TableRow className="hover:bg-transparent">
               <TableHead>Akun</TableHead>
-              <TableHead className="text-right">Nominal</TableHead>
+              <TableHead className="text-right">IDR</TableHead>
+              <TableHead className="text-right">USD</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {filteredRows.length === 0 ? (
               <TableRow className="hover:bg-transparent">
-                <TableCell colSpan={2} className="py-5 text-center text-sm text-slate-500">
+                <TableCell colSpan={3} className="py-5 text-center text-sm text-slate-500">
                   Belum ada rincian.
                 </TableCell>
               </TableRow>
@@ -293,7 +340,10 @@ function TemplateAccountEditor({
                     {getLineLabel(line)}
                   </TableCell>
                   <TableCell className="text-right font-medium text-slate-900">
-                    {currenciesFormat('idr', getLineAmount(line))}
+                    {currenciesFormat('idr', getLineAmountByCurrency(line, 'idr'))}
+                  </TableCell>
+                  <TableCell className="text-right font-medium text-sky-700">
+                    {currenciesFormat('usd', getLineAmountByCurrency(line, 'usd'))}
                   </TableCell>
                 </TableRow>
               ))
@@ -414,11 +464,13 @@ function BalanceColumn({
   title,
   totalLabel,
   total,
+  totalUsd,
   children,
 }: {
   title: string;
   totalLabel: string;
   total: number;
+  totalUsd: number;
   children: ReactNode;
 }) {
   return (
@@ -428,6 +480,7 @@ function BalanceColumn({
         <div className="text-right">
           <p className="text-xs font-semibold uppercase text-slate-500">{totalLabel}</p>
           <p className="mt-1 text-base font-bold text-slate-900">{currenciesFormat('idr', total)}</p>
+          <p className="mt-1 text-sm font-semibold text-sky-700">{currenciesFormat('usd', totalUsd)}</p>
         </div>
       </div>
       {children}
@@ -435,10 +488,12 @@ function BalanceColumn({
   );
 }
 
-export default function BallanceReportPage() {
+export default function LaporanNeracaPage() {
   const router = useRouter();
   const { companyId } = useCompany();
   const resolvedCompanyId = resolveCompanyId(router.query.slug, companyId);
+  const selectedPrintBackground = getLetterheadByCompanyId(resolvedCompanyId);
+  const templatePrint = useReportTemplatePrint(selectedPrintBackground);
 
   const [templateState, setTemplateState] = useState<Record<BalanceReportTemplateKey, number[]>>(
     buildEmptyTemplateState,
@@ -493,13 +548,81 @@ export default function BallanceReportPage() {
     }, {});
   }, [reportData]);
 
-  const cashRows = reportData?.cashes_calc?.items ?? [];
-  const totalCash = toNumber(reportData?.cashes_calc?.total);
-  const totalAssets = toNumber(reportData?.total_assets);
-  const totalLiabilities = toNumber(reportData?.total_liabilities);
-  const totalEquity = toNumber(reportData?.total_equity);
-  const totalPassiva = toNumber(reportData?.total_passiva);
+  const cashRows = useMemo(
+    () => reportData?.cashes_calc?.items ?? [],
+    [reportData?.cashes_calc?.items],
+  );
+  const cashTotals = useMemo(() => {
+    if (cashRows.length === 0) {
+      return {
+        idr: toNumber(reportData?.cashes_calc?.total_idr ?? reportData?.cashes_calc?.total),
+        usd: toNumber(reportData?.cashes_calc?.total_usd),
+      };
+    }
+
+    return cashRows.reduce((totals, row) => {
+      const currency = String(row.type ?? 'IDR').toUpperCase() === 'USD' ? 'usd' : 'idr';
+      totals[currency] += toNumber(row.value);
+      return totals;
+    }, { idr: 0, usd: 0 });
+  }, [cashRows, reportData?.cashes_calc?.total, reportData?.cashes_calc?.total_idr, reportData?.cashes_calc?.total_usd]);
+
+  const calculatedTotals = useMemo(() => {
+    const sumSections = (keys: BalanceReportTemplateKey[], currency: 'totalIdr' | 'totalUsd') =>
+      REPORT_SECTIONS
+        .filter((section) => keys.includes(section.templateKey))
+        .reduce((sum, section) => sum + (normalizedSections[section.key]?.[currency] ?? 0), 0);
+
+    const assetIdr = cashTotals.idr + sumSections(ASSET_TEMPLATE_KEYS, 'totalIdr');
+    const assetUsd = cashTotals.usd + sumSections(ASSET_TEMPLATE_KEYS, 'totalUsd');
+    const liabilityKeys = LIABILITY_TEMPLATE_KEYS.filter((key) => key !== 'equity_ids');
+    const liabilitiesIdr = sumSections(liabilityKeys, 'totalIdr');
+    const liabilitiesUsd = sumSections(liabilityKeys, 'totalUsd');
+    const equityIdr = sumSections(['equity_ids'], 'totalIdr');
+    const equityUsd = sumSections(['equity_ids'], 'totalUsd');
+
+    return {
+      assetIdr,
+      assetUsd,
+      liabilitiesIdr,
+      liabilitiesUsd,
+      equityIdr,
+      equityUsd,
+      passivaIdr: liabilitiesIdr + equityIdr,
+      passivaUsd: liabilitiesUsd + equityUsd,
+    };
+  }, [cashTotals, normalizedSections]);
+
+  const hasReportRows = cashRows.length > 0
+    || Object.values(normalizedSections).some((section) => section.rows.length > 0);
+  const totalCash = cashTotals.idr;
+  const totalCashUsd = cashTotals.usd;
+  const totalAssets = hasReportRows ? calculatedTotals.assetIdr : toNumber(reportData?.total_assets);
+  const totalAssetsUsd = toNumber(reportData?.total_assets_usd) || calculatedTotals.assetUsd;
+  const totalLiabilities = hasReportRows ? calculatedTotals.liabilitiesIdr : toNumber(reportData?.total_liabilities);
+  const totalLiabilitiesUsd = toNumber(reportData?.total_liabilities_usd) || calculatedTotals.liabilitiesUsd;
+  const totalEquity = hasReportRows ? calculatedTotals.equityIdr : toNumber(reportData?.total_equity);
+  const totalEquityUsd = toNumber(reportData?.total_equity_usd) || calculatedTotals.equityUsd;
+  const totalPassiva = hasReportRows ? calculatedTotals.passivaIdr : toNumber(reportData?.total_passiva);
+  const totalPassivaUsd = toNumber(reportData?.total_passiva_usd) || calculatedTotals.passivaUsd;
   const difference = totalAssets - totalPassiva;
+  const differenceUsd = totalAssetsUsd - totalPassivaUsd;
+  const printSections = useMemo(() => REPORT_SECTIONS.reduce<{
+    assets: BalancePrintSection[];
+    liabilities: BalancePrintSection[];
+  }>((result, section) => {
+    const normalizedSection = normalizedSections[section.key] ?? {
+      rows: [],
+      totalIdr: 0,
+      totalUsd: 0,
+    };
+    result[section.side].push({
+      key: section.key,
+      title: section.title,
+      ...normalizedSection,
+    });
+    return result;
+  }, { assets: [], liabilities: [] }), [normalizedSections]);
   const usedCashIds = useMemo(
     () => new Set(cashForms.map((form) => form.cash_id).filter((id): id is number => Boolean(id))),
     [cashForms],
@@ -528,9 +651,9 @@ export default function BallanceReportPage() {
     try {
       await updateTemplateMutation.mutateAsync(assetsPayload);
       await updateTemplateMutation.mutateAsync(liabilitiesPayload);
-      toast.success('Template Ballance Report berhasil disinkronkan.');
+      toast.success('Template Laporan Neraca berhasil disinkronkan.');
     } catch (error) {
-      toast.error((error as Error)?.message || 'Gagal sinkron template Ballance Report.');
+      toast.error((error as Error)?.message || 'Gagal sinkron template Laporan Neraca.');
     }
   };
 
@@ -551,7 +674,7 @@ export default function BallanceReportPage() {
       } else {
         await createCashMutation.mutateAsync(payload);
       }
-      toast.success('Data kas Ballance Report berhasil disimpan.');
+      toast.success('Data kas Laporan Neraca berhasil disimpan.');
     } catch (error) {
       toast.error((error as Error)?.message || 'Gagal menyimpan data kas.');
     }
@@ -563,10 +686,14 @@ export default function BallanceReportPage() {
     <DashboardLayout>
       <div className="space-y-5">
         <PageHeader
-          title="Ballance Report"
+          title="Laporan Neraca"
           subtitle="Laporan neraca dengan pengaturan kas manual, aktiva, dan passiva."
           actions={
             <>
+              <Button type="button" variant="outline" onClick={templatePrint.openPrintDialog} disabled={isLoading || reportQuery.isError}>
+                <Printer className="h-4 w-4" />
+                Print
+              </Button>
               <Button
                 type="button"
                 variant="outline"
@@ -593,7 +720,7 @@ export default function BallanceReportPage() {
             searchValue={searchInput}
             onSearchChange={setSearchInput}
             placeholder="Cari akun pada laporan"
-            aria-label="Cari akun pada Ballance Report"
+            aria-label="Cari akun pada Laporan Neraca"
             wrapperClassName="w-full sm:w-[320px]"
           />
           <Button
@@ -611,19 +738,25 @@ export default function BallanceReportPage() {
           <div className="rounded-md border border-slate-200 bg-white p-4">
             <p className="text-xs font-semibold uppercase text-slate-500">Total Aktiva</p>
             <p className="mt-2 text-xl font-bold text-slate-900">{currenciesFormat('idr', totalAssets)}</p>
+            <p className="mt-1 text-sm font-semibold text-sky-700">{currenciesFormat('usd', totalAssetsUsd)}</p>
           </div>
           <div className="rounded-md border border-slate-200 bg-white p-4">
             <p className="text-xs font-semibold uppercase text-slate-500">Total Liabilitas</p>
             <p className="mt-2 text-xl font-bold text-slate-900">{currenciesFormat('idr', totalLiabilities)}</p>
+            <p className="mt-1 text-sm font-semibold text-sky-700">{currenciesFormat('usd', totalLiabilitiesUsd)}</p>
           </div>
           <div className="rounded-md border border-slate-200 bg-white p-4">
             <p className="text-xs font-semibold uppercase text-slate-500">Total Ekuitas</p>
             <p className="mt-2 text-xl font-bold text-slate-900">{currenciesFormat('idr', totalEquity)}</p>
+            <p className="mt-1 text-sm font-semibold text-sky-700">{currenciesFormat('usd', totalEquityUsd)}</p>
           </div>
           <div className="rounded-md border border-slate-200 bg-white p-4">
             <p className="text-xs font-semibold uppercase text-slate-500">Selisih Neraca</p>
             <p className={cn('mt-2 text-xl font-bold', difference === 0 ? 'text-emerald-700' : 'text-rose-700')}>
               {currenciesFormat('idr', difference)}
+            </p>
+            <p className={cn('mt-1 text-sm font-semibold', differenceUsd === 0 ? 'text-emerald-700' : 'text-rose-700')}>
+              {currenciesFormat('usd', differenceUsd)}
             </p>
           </div>
         </div>
@@ -635,11 +768,11 @@ export default function BallanceReportPage() {
           </div>
         ) : reportQuery.isError ? (
           <div className="rounded-md border border-rose-200 bg-rose-50 p-5 text-sm text-rose-700">
-            Gagal memuat Ballance Report.
+            Gagal memuat Laporan Neraca.
           </div>
         ) : (
           <div className="grid gap-4 xl:grid-cols-2">
-            <BalanceColumn title="Aktiva" totalLabel="Total Aktiva" total={totalAssets}>
+            <BalanceColumn title="Aktiva" totalLabel="Total Aktiva" total={totalAssets} totalUsd={totalAssetsUsd}>
               <CashManagement
                 cashForms={cashForms}
                 cashOptions={cashOptionsQuery.data ?? []}
@@ -659,7 +792,10 @@ export default function BallanceReportPage() {
               <section className="border-t border-slate-200 px-4 py-4">
                 <div className="mb-3 flex items-center justify-between">
                   <h3 className="text-sm font-semibold text-slate-900">Rincian Kas</h3>
-                  <p className="text-sm font-bold text-slate-900">{currenciesFormat('idr', totalCash)}</p>
+                  <div className="text-right">
+                    <p className="text-sm font-bold text-slate-900">{currenciesFormat('idr', totalCash)}</p>
+                    <p className="mt-1 text-sm font-semibold text-sky-700">{currenciesFormat('usd', totalCashUsd)}</p>
+                  </div>
                 </div>
                 <Table>
                   <TableBody>
@@ -673,7 +809,15 @@ export default function BallanceReportPage() {
                         .map((row) => (
                           <TableRow key={row.id} className="hover:bg-slate-50">
                             <TableCell className="text-slate-700">{row.cash_code ? `${row.cash_code} - ${row.cash_name}` : row.cash_name}</TableCell>
-                            <TableCell className="text-right font-medium text-slate-900">{currenciesFormat('idr', toNumber(row.value))}</TableCell>
+                            <TableCell className={cn(
+                              'text-right font-medium',
+                              String(row.type ?? 'IDR').toUpperCase() === 'USD' ? 'text-sky-700' : 'text-slate-900',
+                            )}>
+                              {currenciesFormat(
+                                String(row.type ?? 'IDR').toUpperCase() === 'USD' ? 'usd' : 'idr',
+                                toNumber(row.value),
+                              )}
+                            </TableCell>
                           </TableRow>
                         ))
                     )}
@@ -687,34 +831,60 @@ export default function BallanceReportPage() {
                   config={section}
                   accountIds={templateState[section.templateKey]}
                   accounts={accounts}
-                  section={normalizedSections[section.key] ?? { rows: [], total: 0 }}
+                  section={normalizedSections[section.key] ?? { rows: [], totalIdr: 0, totalUsd: 0 }}
                   searchKeyword={searchKeyword}
                   onChange={(nextIds) => setTemplateState((current) => ({
                     ...current,
-                    [section.templateKey]: uniqueNumbers(nextIds),
+                    [section.templateKey]: nextIds,
                   }))}
                 />
               ))}
             </BalanceColumn>
 
-            <BalanceColumn title="Passiva" totalLabel="Total Passiva" total={totalPassiva}>
+            <BalanceColumn title="Passiva" totalLabel="Total Passiva" total={totalPassiva} totalUsd={totalPassivaUsd}>
               {REPORT_SECTIONS.filter((section) => section.side === 'liabilities').map((section) => (
                 <TemplateAccountEditor
                   key={section.key}
                   config={section}
                   accountIds={templateState[section.templateKey]}
                   accounts={accounts}
-                  section={normalizedSections[section.key] ?? { rows: [], total: 0 }}
+                  section={normalizedSections[section.key] ?? { rows: [], totalIdr: 0, totalUsd: 0 }}
                   searchKeyword={searchKeyword}
                   onChange={(nextIds) => setTemplateState((current) => ({
                     ...current,
-                    [section.templateKey]: uniqueNumbers(nextIds),
+                    [section.templateKey]: nextIds,
                   }))}
                 />
               ))}
             </BalanceColumn>
           </div>
         )}
+
+        <LaporanNeracaPrintDocument
+          template={templatePrint.selectedTemplate}
+          fallbackBackground={selectedPrintBackground}
+          companyName={getCompanyName(resolvedCompanyId)}
+          printedAt={templatePrint.printedAt}
+          cashRows={cashRows}
+          cashTotalIdr={totalCash}
+          cashTotalUsd={totalCashUsd}
+          assetSections={printSections.assets}
+          liabilitySections={printSections.liabilities}
+          totalAssets={totalAssets}
+          totalAssetsUsd={totalAssetsUsd}
+          totalPassiva={totalPassiva}
+          totalPassivaUsd={totalPassivaUsd}
+        />
+
+        <ReportTemplatePrintDialog
+          open={templatePrint.isDialogOpen}
+          onOpenChange={templatePrint.setIsDialogOpen}
+          selectedTemplateId={templatePrint.selectedTemplateId}
+          onTemplateChange={templatePrint.setSelectedTemplateId}
+          onPrint={templatePrint.printWithSelectedTemplate}
+          isPreparingPrint={templatePrint.isPreparingPrint}
+          reportName="laporan neraca"
+        />
       </div>
     </DashboardLayout>
   );

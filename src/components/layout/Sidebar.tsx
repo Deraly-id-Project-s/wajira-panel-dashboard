@@ -91,7 +91,7 @@ const ensureReportFallbackSidebarMenus = (menus: MenuItem[], slug: string): Menu
     const hasLedger = menu.children.some((child) => child.href === ledgerHref || child.label === 'Laporan Buku Besar');
     const hasBalanceColumn = menu.children.some((child) => child.href === balanceColumnHref || child.label === 'Laporan Neraca Lajur');
     const hasProfitLoss = menu.children.some((child) => child.href === profitLossHref || child.label === 'Laporan Laba Rugi');
-    const hasBalanceReport = menu.children.some((child) => child.href === balanceReportHref || child.label === 'Ballance Report');
+    const hasBalanceReport = menu.children.some((child) => child.href === balanceReportHref || child.label === 'Laporan Neraca');
 
     if (!hasJournal) {
       const purchaseIndex = children.findIndex((child) => child.label === 'Laporan Pembelian');
@@ -133,9 +133,9 @@ const ensureReportFallbackSidebarMenus = (menus: MenuItem[], slug: string): Menu
         ? balanceColumnIndex + 1
         : ledgerIndex >= 0
           ? ledgerIndex + 1
-        : purchaseIndex >= 0
-          ? purchaseIndex
-          : children.length;
+          : purchaseIndex >= 0
+            ? purchaseIndex
+            : children.length;
 
       children.splice(insertIndex, 0, {
         label: 'Laporan Laba Rugi',
@@ -153,7 +153,7 @@ const ensureReportFallbackSidebarMenus = (menus: MenuItem[], slug: string): Menu
           : children.length;
 
       children.splice(insertIndex, 0, {
-        label: 'Ballance Report',
+        label: 'Laporan Neraca',
         href: balanceReportHref,
       });
     }

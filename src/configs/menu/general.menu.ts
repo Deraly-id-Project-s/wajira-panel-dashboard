@@ -244,7 +244,7 @@ export const getGeneralMenus = (slug: string): MenuItem[] => {
           href: base('/laporan/laporan-laba-rugi'),
         },
         {
-          label: 'Ballance Report',
+          label: 'Laporan Neraca',
           href: base('/laporan/ballance-report'),
         },
         {

@@ -59,6 +59,7 @@ export interface BalanceReportCashCalcItem {
   cash_name: string;
   cash_code?: string | null;
   value: number | string;
+  type?: 'IDR' | 'USD' | string | null;
 }
 
 export interface BalanceReportAccountLine {
@@ -76,6 +77,8 @@ export interface BalanceReportAccountLine {
 
 export interface BalanceReportCalcSection {
   total: number | string;
+  total_idr?: number | string | null;
+  total_usd?: number | string | null;
   accounts?: BalanceReportAccountLine[];
   items?: BalanceReportCashCalcItem[];
 }
@@ -93,9 +96,13 @@ export interface BalanceReportData {
   miscellaneous_debts_calc?: BalanceReportCalcSection;
   equity_calc?: BalanceReportCalcSection;
   total_assets?: number | string;
+  total_assets_usd?: number | string;
   total_liabilities?: number | string;
+  total_liabilities_usd?: number | string;
   total_equity?: number | string;
+  total_equity_usd?: number | string;
   total_passiva?: number | string;
+  total_passiva_usd?: number | string;
   [key: string]: unknown;
 }
 

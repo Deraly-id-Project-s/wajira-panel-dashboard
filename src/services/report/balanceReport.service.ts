@@ -21,7 +21,7 @@ export const updateBalanceReportTemplate = async (
   companyId: string | number,
   payload: BalanceReportTemplatePayload,
 ): Promise<BalanceReportResponse> => {
-  const response = await apiClient.post<BalanceReportResponse>(
+  const response = await apiClient.put<BalanceReportResponse>(
     `${basePath}/${companyId}/template`,
     payload,
   );
