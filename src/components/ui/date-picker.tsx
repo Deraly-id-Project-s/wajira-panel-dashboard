@@ -42,12 +42,13 @@ export function DatePicker({
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
-        <Button type="button" id={id} variant={'outline'} className={cn('w-full justify-start text-left font-normal', !dateValue && 'text-muted-foreground', className)} disabled={disabled}>
-          <CalendarIcon className="mr-2 h-4 w-4" />
-          {dateValue ? formatDateUI(dateValue) : <span>{placeholder}</span>}
+        <Button type="button" id={id} variant={'outline'} className={cn('w-full justify-start overflow-hidden text-left font-normal', !dateValue && 'text-muted-foreground', className)} disabled={disabled}>
+          <CalendarIcon className="mr-2 h-4 w-4 shrink-0" />
+          <span className="min-w-0 truncate">{dateValue ? formatDateUI(dateValue) : placeholder}</span>
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-auto p-0 shadow-lg rounded-md" align="start" sideOffset={8}>
+      <PopoverContent className="w-[calc(100vw-2rem)] max-w-max overflow-x-auto rounded-md p-0 shadow-lg sm:w-auto" align="start" sideOffset={8} collisionPadding={16}>
+        <div className="min-w-max">
         <Calendar
           mode="single"
           selected={dateValue || undefined}
@@ -60,6 +61,7 @@ export function DatePicker({
           fromYear={fromYear}
           toYear={toYear}
         />
+        </div>
       </PopoverContent>
     </Popover>
   );

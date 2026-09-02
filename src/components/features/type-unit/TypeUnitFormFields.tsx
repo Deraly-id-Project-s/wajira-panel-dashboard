@@ -45,7 +45,7 @@ export function TypeUnitFormFields({ form, disabled = false }: TypeUnitFormField
         <FormField control={form.control} name="brandId" render={({ field }) => (
           <FormItem>
             <FormLabel className="text-sm font-medium">Merk<RequiredMark /></FormLabel>
-            <div className="flex flex-col sm:flex-row items-center gap-2 w-full sm:w-auto">
+            <div className="flex w-full flex-col items-stretch gap-2 sm:flex-row sm:items-center">
               <Popover open={brandOpen} onOpenChange={(open) => { setBrandOpen(open); if (!open) setSearch(''); }}>
                 <PopoverTrigger asChild>
                   <Button type="button" variant="outline" role="combobox" disabled={disabled || isLoading} className="w-full justify-between bg-transparent font-normal">
@@ -72,8 +72,9 @@ export function TypeUnitFormFields({ form, disabled = false }: TypeUnitFormField
                   </Command>
                 </PopoverContent>
               </Popover>
-              <Button type="button" variant="outline" size="icon" className="h-10 w-10 shrink-0" disabled={disabled} aria-label="Tambah merk" onClick={() => setCreateBrandOpen(true)}>
+              <Button type="button" variant="outline" className="h-10 w-full shrink-0 sm:w-10 sm:px-0" disabled={disabled} aria-label="Tambah merk" onClick={() => setCreateBrandOpen(true)}>
                 <Plus className="h-4 w-4" />
+                <span className="sm:sr-only">Tambah merk</span>
               </Button>
             </div>
             <FormMessage />
@@ -143,4 +144,3 @@ export function TypeUnitFormFields({ form, disabled = false }: TypeUnitFormField
     </>
   );
 }
-

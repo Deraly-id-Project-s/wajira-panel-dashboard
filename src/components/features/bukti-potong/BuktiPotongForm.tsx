@@ -271,7 +271,7 @@ export default function BuktiPotongForm({ item, companyId, onSuccess: onFinish, 
 
           <div className="space-y-2">
             <Label>Nominal PPH</Label>
-            <MoneyInput name="pph_amount" value={Number(pphAmountStr) || 0} onChangeValue={(val) => setPphAmountStr(val.toString())} onBlur={() => { }} disabled={isPending} />
+            <MoneyInput name="pph_amount" value={Number(pphAmountStr) || 0} onChangeValue={(val) => setPphAmountStr(val.toString())} onBlur={() => { }} disabled={isPending} currency='USD' />
           </div>
           <div className="space-y-2">
             <Label>Uang Muka PPH / Keterangan</Label>

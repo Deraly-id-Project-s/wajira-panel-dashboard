@@ -140,7 +140,7 @@ export default function PenerimaanUnitDetailPage() {
                 <h3 className="text-sm font-semibold text-slate-700">Informasi Penerimaan</h3>
               </div>
               <div className="text-sm text-slate-600 mt-3 space-y-2">
-                <div className="grid grid-cols-2 gap-2">
+                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-2">
                   <div>
                     <p className="text-xs text-slate-400">No. Penerimaan</p>
                     <p className="font-semibold text-slate-900">
@@ -255,19 +255,19 @@ export default function PenerimaanUnitDetailPage() {
                   <SelectItem value="draft">
                     <div className="flex flex-col text-left py-1">
                       <span className="font-medium text-slate-800 text-sm">Draft (Draf)</span>
-                      <span className="text-[11px] text-slate-500 font-normal">Dokumen baru dibuat dan belum diproses</span>
+                      <span className="hidden text-[11px] font-normal text-slate-500 sm:block">Dokumen baru dibuat dan belum diproses</span>
                     </div>
                   </SelectItem>
                   <SelectItem value="process">
                     <div className="flex flex-col text-left py-1">
                       <span className="font-medium text-slate-800 text-sm">Process (Proses)</span>
-                      <span className="text-[11px] text-slate-500 font-normal">Sedang dalam proses pengerjaan/penerimaan barang</span>
+                      <span className="hidden text-[11px] font-normal text-slate-500 sm:block">Sedang dalam proses pengerjaan/penerimaan barang</span>
                     </div>
                   </SelectItem>
                   <SelectItem value="done">
                     <div className="flex flex-col text-left py-1">
                       <span className="font-medium text-slate-800 text-sm">Done (Selesai)</span>
-                      <span className="text-[11px] text-slate-500 font-normal">Aktivitas penerimaan unit telah selesai dilakukan</span>
+                      <span className="hidden text-[11px] font-normal text-slate-500 sm:block">Aktivitas penerimaan unit telah selesai dilakukan</span>
                     </div>
                   </SelectItem>
                 </SelectContent>

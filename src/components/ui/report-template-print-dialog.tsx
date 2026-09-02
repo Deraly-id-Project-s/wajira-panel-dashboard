@@ -36,7 +36,7 @@ export function ReportTemplatePrintDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent closeOnInteractOutside={false} className="max-h-[88vh] overflow-hidden p-0 sm:max-w-2xl">
+      <DialogContent closeOnInteractOutside={false} className="no-print max-h-[88vh] overflow-hidden p-0 sm:max-w-2xl">
         <DialogHeader className="border-b border-slate-200 px-6 py-5 pr-12">
           <DialogTitle>Pilih Template Print</DialogTitle>
           <DialogDescription>
@@ -68,8 +68,9 @@ export function ReportTemplatePrintDialog({
             type="button"
             onClick={() => void onPrint()}
             disabled={!selectedTemplateId || isPreparingPrint}
+            loading={isPreparingPrint}
           >
-            {isPreparingPrint ? 'Menyiapkan...' : 'Print Sekarang'}
+            Print Sekarang
           </Button>
         </DialogFooter>
       </DialogContent>

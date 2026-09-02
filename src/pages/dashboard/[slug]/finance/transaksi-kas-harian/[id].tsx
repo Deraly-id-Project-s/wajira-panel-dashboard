@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import Head from 'next/head';
 import { useRouter } from 'next/router';
+import { useIsMutating } from '@tanstack/react-query';
 import {
   ArrowDownLeft,
   ArrowUpRight,
@@ -71,7 +72,7 @@ function SummaryCard({ label, value, description, tone, icon }: SummaryCardProps
       <CardContent className="flex items-start justify-between gap-4 p-5">
         <div className="min-w-0">
           <p className="text-xs font-semibold uppercase tracking-wider opacity-75">{label}</p>
-          <p className="mt-2 truncate text-xl font-semibold text-slate-900">{value}</p>
+          <p className="mt-2 break-words text-lg font-semibold text-slate-900 sm:text-xl">{value}</p>
           <p className="mt-1 text-xs opacity-75">{description}</p>
         </div>
         <div className="rounded-md border border-current/10 bg-white/70 p-2.5">{icon}</div>
@@ -116,6 +117,8 @@ export default function KasHarianDetailPage() {
     enabled: typeof cashFlowId === 'number' && Number.isFinite(cashFlowId),
     refetchInterval: false,
   });
+  const isTogglingStatus = useIsMutating({ mutationKey: ['toggle-cash-flow-payment-status'] }) > 0;
+  const isStatusUpdating = isTogglingStatus || (cashFlowQuery.isFetching && !cashFlowQuery.isLoading);
   const updateMutation = useUpdateKasHarian();
   const cashFlowDetail = cashFlowQuery.data;
   const companyId = cashFlowDetail?.company_id ?? 0;
@@ -287,7 +290,8 @@ export default function KasHarianDetailPage() {
                   setTargetStatus(!isMarkedPaid);
                   setIsToggleOpen(true);
                 }}
-                disabled={remainingPayment !== 0 && !cashFlowDetail.is_valid}
+                disabled={(remainingPayment !== 0 && !cashFlowDetail.is_valid) || isStatusUpdating}
+                loading={isStatusUpdating}
               >
                 {isMarkedPaid ? 'Tandai Belum Lunas' : 'Tandai Lunas'}
               </Button>
@@ -316,14 +320,14 @@ export default function KasHarianDetailPage() {
               )}
             </div>
           </CardHeader>
-          <CardContent className="grid gap-6 p-6 sm:grid-cols-2 xl:grid-cols-4">
+          <CardContent className="grid gap-6 p-4 sm:grid-cols-2 sm:p-6 xl:grid-cols-4">
             <DetailItem label="Kode Transaksi" icon={<ReceiptText className="h-4 w-4" />}><CopyBox text={cashFlowDetail.code || '-'} /></DetailItem>
             <DetailItem label="Tanggal Transaksi" icon={<CalendarDays className="h-4 w-4" />}>{formatDate(cashFlowDetail.date)}</DetailItem>
             <DetailItem label="Perusahaan" icon={<Building2 className="h-4 w-4" />}>{cashFlowDetail.company?.name || '-'}</DetailItem>
             <DetailItem label="Nomor Invoice" icon={<FileCheck2 className="h-4 w-4" />}>{cashFlowDetail.invoice_number || '-'}</DetailItem>
           </CardContent>
           <Separator />
-          <CardContent className="grid gap-4 px-6 py-4 text-xs text-slate-500 sm:grid-cols-2">
+          <CardContent className="grid gap-4 px-4 py-4 text-xs text-slate-500 sm:grid-cols-2 sm:px-6">
             <span>Dibuat: {formatDate(cashFlowDetail.created_at)}</span>
             <span>Terakhir diperbarui: {formatDate(cashFlowDetail.updated_at)}</span>
           </CardContent>
@@ -341,7 +345,7 @@ export default function KasHarianDetailPage() {
             <CardTitle>Ringkasan Pembayaran</CardTitle>
             <CardDescription>Progres pembayaran berdasarkan mata uang transaksi</CardDescription>
           </CardHeader>
-          <CardContent className="grid gap-6 p-6 md:grid-cols-3">
+          <CardContent className="grid gap-6 p-4 sm:p-6 md:grid-cols-3">
             {!(expectedIdr > 0 && expectedUsd > 0) ? (
               <>
                 <DetailItem label="Nilai Transaksi" icon={<WalletCards className="h-4 w-4" />}>{currenciesFormat(displayCurrency, transactionAmount)}</DetailItem>
@@ -399,11 +403,17 @@ export default function KasHarianDetailPage() {
               <CardTitle>Catatan Transaksi</CardTitle>
               <CardDescription>Perbarui keterangan transaksi kas harian</CardDescription>
             </CardHeader>
-            <CardContent className="space-y-4 p-6">
+            <CardContent className="space-y-4 p-4 sm:p-6">
               <Textarea value={transactionNote} onChange={(event) => setTransactionNote(event.target.value)} placeholder="Masukkan catatan transaksi..." className="min-h-32 resize-none" disabled={updateMutation.isPending} />
-              <div className="flex justify-end">
-                <Button type="button" className="btn-primary" disabled={updateMutation.isPending || transactionNote.trim() === cashFlowDetail.note?.trim()} onClick={() => void handleSaveNote()}>
-                  {updateMutation.isPending ? <LoadingState variant="inline" text="Menyimpan..." iconClassName="text-white" /> : <>Simpan Catatan</>}
+              <div className="flex justify-end [&>*]:w-full sm:[&>*]:w-auto">
+                <Button
+                  type="button"
+                  className="btn-primary"
+                  disabled={updateMutation.isPending || transactionNote.trim() === cashFlowDetail.note?.trim()}
+                  loading={updateMutation.isPending}
+                  onClick={() => void handleSaveNote()}
+                >
+                  Simpan Catatan
                 </Button>
               </div>
             </CardContent>
@@ -411,7 +421,7 @@ export default function KasHarianDetailPage() {
 
           <Card className="rounded-md border-slate-200 shadow-sm">
             <CardHeader className="border-b border-slate-100 py-5">
-              <div className="flex items-start justify-between gap-4">
+              <div className="flex flex-col items-stretch gap-4 sm:flex-row sm:items-start sm:justify-between [&>*]:w-full sm:[&>*]:w-auto">
                 <div><CardTitle>Bukti Pembayaran Utama</CardTitle><CardDescription className="mt-1">Unggah dokumen pendukung transaksi</CardDescription></div>
                 {proofUrl ? (
                   <Button variant="outline" size="sm" asChild>
@@ -420,14 +430,14 @@ export default function KasHarianDetailPage() {
                 ) : null}
               </div>
             </CardHeader>
-            <CardContent className="space-y-4 p-6">
+            <CardContent className="space-y-4 p-4 sm:p-6">
               <FileInput value={selectedFile} onFileChange={setSelectedFile} accept="image/jpeg,image/png,application/pdf" helperText="PNG, JPG, atau PDF maksimal 2MB" disabled={isUploading} />
               {proofUrl && !selectedFile ? <p className="text-xs text-slate-500">Bukti pembayaran sudah tersimpan. Pilih file baru untuk menggantinya.</p> : null}
               {selectedFile ? (
-                <div className="flex justify-end gap-3">
+                <div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end [&>*]:w-full sm:[&>*]:w-auto">
                   <Button type="button" variant="outline" onClick={() => setSelectedFile(null)} disabled={isUploading}>Batal</Button>
-                  <Button type="button" variant="default" onClick={() => void handleUploadProof()} disabled={isUploading}>
-                    {isUploading ? <LoadingState variant="inline" text="Mengunggah..." iconClassName="text-white" /> : 'Simpan Bukti'}
+                  <Button type="button" variant="default" onClick={() => void handleUploadProof()} disabled={isUploading} loading={isUploading}>
+                    Simpan Bukti
                   </Button>
                 </div>
               ) : null}

@@ -106,7 +106,7 @@ const SelectContent = React.forwardRef<
         ref={ref}
         position={position}
         className={cn(
-          'relative z-[9999] min-w-[8rem] overflow-hidden rounded-md border bg-popover text-popover-foreground shadow-md',
+          'relative z-[9999] max-w-[calc(100vw-1rem)] min-w-[8rem] overflow-hidden rounded-md border bg-popover text-popover-foreground shadow-md',
           'data-[state=open]:animate-in data-[state=closed]:animate-out',
           'data-[side=bottom]:slide-in-from-top-2',
           'data-[side=top]:slide-in-from-bottom-2',
@@ -124,15 +124,17 @@ const SelectContent = React.forwardRef<
               placeholder={searchPlaceholder || 'Cari...'}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="h-9 w-full rounded-md border border-slate-200 bg-white px-3 py-1.5 text-sm placeholder:text-slate-400 focus:outline-none focus:ring-1 focus:ring-slate-400 disabled:cursor-not-allowed disabled:opacity-50"
+              className="h-10 w-full min-w-0 rounded-md border border-slate-200 bg-white px-3 py-1.5 text-base placeholder:text-slate-400 focus:outline-none focus:ring-1 focus:ring-slate-400 disabled:cursor-not-allowed disabled:opacity-50 sm:h-9 sm:text-sm"
               onKeyDown={(e) => e.stopPropagation()}
               onPointerDown={(e) => e.stopPropagation()}
+              onTouchStart={(e) => e.stopPropagation()}
+              onClick={(e) => e.stopPropagation()}
               autoFocus
             />
           </div>
         )}
 
-        <SelectPrimitive.Viewport className="p-1">
+        <SelectPrimitive.Viewport className="max-w-[calc(100vw-1rem)] overflow-x-auto overscroll-contain p-1">
           {filteredChildren}
           {!hasItems && (
             <div className="px-3 py-4 text-center text-xs text-slate-500">
@@ -159,7 +161,7 @@ const SelectItem = React.forwardRef<
   <SelectPrimitive.Item
     ref={ref}
     className={cn(
-      'relative flex w-full cursor-pointer select-none items-center rounded-md py-1.5 pl-2 pr-8 text-sm outline-none',
+      'relative flex min-w-max cursor-pointer select-none items-center rounded-md py-1.5 pl-2 pr-8 text-sm outline-none',
       'focus:bg-accent focus:text-accent-foreground',
       'data-[disabled]:pointer-events-none data-[disabled]:opacity-50',
       className,

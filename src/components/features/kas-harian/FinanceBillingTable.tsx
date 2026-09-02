@@ -328,8 +328,8 @@ export default function FinanceBillingTable({ financeBillings, cashFlowDetail, c
   );
 
   return (
-    <div className="rounded-md border border-slate-200 bg-white p-6 shadow-sm space-y-4">
-      <div className="flex items-center justify-between border-b border-slate-100 pb-4">
+    <div className="space-y-4 rounded-md border border-slate-200 bg-white p-4 shadow-sm sm:p-6">
+      <div className="flex flex-col items-stretch gap-3 border-b border-slate-100 pb-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <div className="flex items-center gap-3 flex-wrap">
             <h3 className="text-lg font-semibold text-slate-900">Rincian Pembayaran</h3>
@@ -354,7 +354,7 @@ export default function FinanceBillingTable({ financeBillings, cashFlowDetail, c
           <p className="text-sm text-slate-500 mt-1">Daftar finance billing yang terkait dengan transaksi ini</p>
         </div>
         {!disabled && (
-          <Button type="button" onClick={openAddForm} variant="default" disabled={isFullyPaid}>
+          <Button type="button" onClick={openAddForm} variant="default" disabled={isFullyPaid} className="w-full sm:w-auto">
             <Plus className="mr-1.5 h-4 w-4" />
             Tambah Pembayaran
           </Button>
@@ -368,14 +368,14 @@ export default function FinanceBillingTable({ financeBillings, cashFlowDetail, c
       />
 
       {/* Summary */}
-      <div className="flex flex-col items-end gap-2 border-t border-slate-100 pt-4 text-sm">
+      <div className="flex flex-col items-stretch gap-2 border-t border-slate-100 pt-4 text-sm sm:items-end">
         {!(hasIdr && hasUsd) ? (
           <>
-            <div className="flex items-center gap-3">
+            <div className="flex flex-col items-start gap-1 sm:flex-row sm:items-center sm:gap-3">
               <span className="text-slate-500">Total Pembayaran:</span>
               <span className="font-bold text-slate-900">{currenciesFormat(cashFlowCurrency, totalPaid)}</span>
             </div>
-            <div className="flex items-center gap-3">
+            <div className="flex flex-col items-start gap-1 sm:flex-row sm:items-center sm:gap-3">
               <span className="text-slate-500">Sisa Tagihan:</span>
               <span className={`font-bold ${remainingPayment > 0 ? 'text-amber-600' : 'text-emerald-600'}`}>
                 {currenciesFormat(cashFlowCurrency, remainingPayment)}
@@ -386,14 +386,14 @@ export default function FinanceBillingTable({ financeBillings, cashFlowDetail, c
           <div className="w-full flex flex-col sm:flex-row justify-between gap-4 text-xs mt-2 border-t border-slate-50 pt-3">
             <div className="space-y-1">
               <div className="font-semibold text-slate-700">Rincian Rupiah (IDR):</div>
-              <div className="flex items-center gap-4 text-slate-500">
+              <div className="flex flex-col items-start gap-1 text-slate-500 sm:flex-row sm:items-center sm:gap-4">
                 <span>Terbayar: <strong className="text-slate-800">{currenciesFormat('idr', totalPaidIdr)}</strong></span>
                 <span>Sisa: <strong className={remainingPaymentIdr > 0 ? 'text-amber-600 font-semibold' : 'text-emerald-600 font-semibold'}>{currenciesFormat('idr', remainingPaymentIdr)}</strong></span>
               </div>
             </div>
             <div className="space-y-1 sm:text-right">
               <div className="font-semibold text-slate-700">Rincian Dollar (USD):</div>
-              <div className="flex items-center gap-4 sm:justify-end text-slate-500">
+              <div className="flex flex-col items-start gap-1 text-slate-500 sm:flex-row sm:items-center sm:justify-end sm:gap-4">
                 <span>Terbayar: <strong className="text-slate-800">{currenciesFormat('usd', totalPaidUsd)}</strong></span>
                 <span>Sisa: <strong className={remainingPaymentUsd > 0 ? 'text-amber-600 font-semibold' : 'text-emerald-600 font-semibold'}>{currenciesFormat('usd', remainingPaymentUsd)}</strong></span>
               </div>

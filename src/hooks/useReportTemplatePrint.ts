@@ -56,9 +56,9 @@ export function useReportTemplatePrint(fallbackBackground?: string) {
     setIsDialogOpen(false);
     setIsPreparingPrint(false);
 
-    window.requestAnimationFrame(() => {
-      window.requestAnimationFrame(() => window.print());
-    });
+    window.setTimeout(() => {
+      window.print();
+    }, 250);
     return true;
   };
 

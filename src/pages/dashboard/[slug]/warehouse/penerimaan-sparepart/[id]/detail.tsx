@@ -171,7 +171,7 @@ export default function PenerimaanSparepartDetailPage() {
                 <h3 className="text-sm font-semibold text-slate-700">Informasi Penerimaan</h3>
               </div>
               <div className="text-sm text-slate-600 mt-3 space-y-2.5">
-                <div className="grid grid-cols-2 gap-2">
+                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-2">
                   <div>
                     <p className="text-xs text-slate-400 font-medium">No. Penerimaan</p>
                     <p className="font-semibold text-slate-900">
@@ -242,7 +242,7 @@ export default function PenerimaanSparepartDetailPage() {
               <div className="text-sm text-slate-600 mt-3 space-y-2.5">
                 {sparepartItem ? (
                   <>
-                    <div className="grid grid-cols-2 gap-2">
+                    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-2">
                       <div>
                         <p className="text-xs text-slate-400 font-medium">Kode Sparepart</p>
                         <p className="font-semibold text-slate-900">

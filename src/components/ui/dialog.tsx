@@ -103,13 +103,16 @@ const DialogFooter = React.forwardRef<
   <div
     ref={ref}
     data-slot="dialog-footer"
-    className={cn('flex flex-col-reverse gap-2 sm:flex-row sm:justify-end', className)}
+    className={cn(
+      'flex flex-col-reverse items-stretch gap-2 [&>*]:w-full sm:flex-row sm:items-center sm:justify-end sm:[&>*]:w-auto',
+      className,
+    )}
     {...props}
   >
     {children}
     {showCloseButton && (
       <DialogPrimitive.Close asChild>
-        <Button variant="outline">Close</Button>
+        <Button variant="outline" className="w-full sm:w-auto">Close</Button>
       </DialogPrimitive.Close>
     )}
   </div>

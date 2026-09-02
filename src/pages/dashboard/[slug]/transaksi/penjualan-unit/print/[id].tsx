@@ -8,7 +8,7 @@ import { useCompany } from '@/contexts/CompanyContext';
 import { getLetterheadByCompanyId, resolveCompanyId } from '@/lib/print-letterhead';
 import { useSalesDetail } from '@/hooks/useSales';
 import { useUnitTransactionTypeDetails } from '@/hooks/useUnitTransaction';
-import SalesPrintDocument from '@/components/features/sales/SalesPrintDocument';
+import SalesPrintDocument from '@/components/features/unit-transaksi/sales/SalesPrintDocument';
 import { Button } from '@/components/ui/button';
 import { LoadingState } from '@/components/ui/loading-state';
 import { useDocumentTemplate } from '@/hooks/useDocumentTemplate';

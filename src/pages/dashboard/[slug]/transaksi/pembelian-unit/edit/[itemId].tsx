@@ -1,5 +1,5 @@
 'use client';
 
-import EditPurchasePage from '@/components/features/purchase/EditPurchasePage';
+import EditPurchasePage from '@/components/features/unit-transaksi/purchase/EditPurchasePage';
 
 export default EditPurchasePage;

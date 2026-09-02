@@ -444,7 +444,7 @@ export default function BaseTable<T>({
 
       <div
         ref={tableContainerRef}
-        className={cn('relative overflow-hidden rounded-md border border-slate-200 bg-white shadow-none', containerClassName)}
+        className={cn('relative overflow-x-auto rounded-md border border-slate-200 bg-white text-[11px] shadow-none sm:text-sm', containerClassName)}
       >
         <Table className="w-max min-w-full print:w-full print:table-fixed">
           <TableHeader className={cn('border-b border-gray-200', headerRowClassName)}>
@@ -614,7 +614,7 @@ export default function BaseTable<T>({
                         <TableCell
                           key={col.id || colIdx}
                           className={cn(
-                            'px-3 py-3 text-xs text-slate-700 transition-colors print:px-2 print:py-2 print:text-[10px] sm:px-4 sm:py-4 sm:text-sm',
+                      'px-2.5 py-2.5 text-[11px] text-slate-700 transition-colors print:px-2 print:py-2 print:text-[10px] sm:px-4 sm:py-4 sm:text-sm',
                             isStickyLeft && cn(
                               'sticky z-10 border-r border-slate-200',
                               isLastStickyLeft && 'shadow-[4px_0_6px_-4px_rgba(0,0,0,0.05)]'

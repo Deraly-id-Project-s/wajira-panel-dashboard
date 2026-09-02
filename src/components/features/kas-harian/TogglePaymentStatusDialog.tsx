@@ -54,9 +54,9 @@ export default function TogglePaymentStatusDialog({ open, onOpenChange, data, ta
             type="button"
             className="btn-primary!"
             onClick={() => void handleToggle()}
-            disabled={isPending}
+            loading={isPending}
           >
-            {isPending ? 'Memproses...' : 'Ya, Ubah'}
+            Ya, Ubah
           </Button>
         </div>
       </DialogContent>

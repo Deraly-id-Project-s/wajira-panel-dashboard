@@ -96,6 +96,16 @@ export function DatePickerWithRange({
     const currentDate = React.useMemo(() => new Date(), [])
     const currentYear = format(currentDate, "yyyy")
     const currentMonth = format(currentDate, "MM")
+    const [isMobile, setIsMobile] = React.useState(false)
+
+    React.useEffect(() => {
+        const mediaQuery = window.matchMedia("(max-width: 639px)")
+        const updateViewport = () => setIsMobile(mediaQuery.matches)
+
+        updateViewport()
+        mediaQuery.addEventListener("change", updateViewport)
+        return () => mediaQuery.removeEventListener("change", updateViewport)
+    }, [])
 
     const handleModeChange = (nextMode: DateRangePickerMode) => {
         if (nextMode === activeMode) return
@@ -226,12 +236,12 @@ export function DatePickerWithRange({
                         id={`${inputId}-trigger`}
                         variant={"outline"}
                         className={cn(
-                            "w-full justify-start text-left font-normal bg-white",
+                            "w-full justify-start overflow-hidden bg-white text-left font-normal",
                             !date && "text-muted-foreground"
                         )}
                     >
-                        <CalendarIcon className="mr-2 h-4 w-4" />
-                        {date?.from ? (() => {
+                        <CalendarIcon className="mr-2 h-4 w-4 shrink-0" />
+                        <span className="min-w-0 truncate">{date?.from ? (() => {
                             const fromLabel = formatRangeValue(date.from, activeMode)
                             const toLabel = date.to ? formatRangeValue(date.to, activeMode) : undefined
 
@@ -243,13 +253,13 @@ export function DatePickerWithRange({
                                 fromLabel
                             )
                         })() : (
-                            <span>{placeholder}</span>
-                        )}
+                            placeholder
+                        )}</span>
                     </Button>
                 </PopoverTrigger>
-                <PopoverContent className="w-auto max-w-[calc(100vw-2rem)] p-0 shadow-lg rounded-md" align="start" sideOffset={8}>
+                <PopoverContent className="w-[calc(100vw-2rem)] max-w-max overflow-x-auto rounded-md p-0 shadow-lg sm:w-auto" align="start" sideOffset={8} collisionPadding={16}>
                     {showPeriodFilter && (
-                        <div className="grid grid-cols-4 border-b border-slate-200 p-2" aria-label="Jenis periode">
+                        <div className="grid grid-cols-2 gap-1 border-b border-slate-200 p-2 sm:grid-cols-4 sm:gap-0" aria-label="Jenis periode">
                             {MODE_OPTIONS.map((option, index) => (
                                 <Button
                                     key={option.value}
@@ -257,9 +267,9 @@ export function DatePickerWithRange({
                                     variant={activeMode === option.value ? "default" : "ghost"}
                                     size="sm"
                                     className={cn(
-                                        "h-8 rounded-none px-3",
-                                        index === 0 && "rounded-l-md",
-                                        index === MODE_OPTIONS.length - 1 && "rounded-r-md",
+                                        "h-8 rounded-md px-3 sm:rounded-none",
+                                        index === 0 && "sm:rounded-l-md",
+                                        index === MODE_OPTIONS.length - 1 && "sm:rounded-r-md",
                                     )}
                                     onClick={() => handleModeChange(option.value)}
                                 >
@@ -282,7 +292,7 @@ export function DatePickerWithRange({
                                             aria-label={`Bulan ${field === "from" ? "awal" : "akhir"}`}
                                             value={periodValues[field].slice(5, 7)}
                                             onChange={(event) => handleMonthChange(field, event.target.value)}
-                                            className="h-9 w-full rounded-md border border-slate-200 bg-white px-3 text-sm outline-none focus-visible:ring-2 focus-visible:ring-slate-950"
+                                            className="h-10 w-full rounded-md border border-slate-200 bg-white px-3 text-base outline-none focus-visible:ring-2 focus-visible:ring-slate-950 sm:h-9 sm:text-sm"
                                         >
                                             {MONTH_OPTIONS.map((month, index) => (
                                                 <option key={month} value={String(index + 1).padStart(2, "0")}>
@@ -308,7 +318,7 @@ export function DatePickerWithRange({
                                                     }))
                                                 }
                                             }}
-                                            className="h-9 w-full rounded-md border border-slate-200 bg-white px-2 text-sm outline-none focus-visible:ring-2 focus-visible:ring-slate-950"
+                                            className="h-10 w-full rounded-md border border-slate-200 bg-white px-2 text-base outline-none focus-visible:ring-2 focus-visible:ring-slate-950 sm:h-9 sm:text-sm"
                                         />
                                     </div>
                                 </fieldset>
@@ -326,7 +336,7 @@ export function DatePickerWithRange({
                                         type="week"
                                         value={periodValues[field]}
                                         onChange={(event) => handlePeriodChange(field, event.target.value)}
-                                        className="h-9 w-full rounded-md border border-slate-200 bg-white px-3 text-sm outline-none focus-visible:ring-2 focus-visible:ring-slate-950"
+                                        className="h-10 w-full rounded-md border border-slate-200 bg-white px-3 text-base outline-none focus-visible:ring-2 focus-visible:ring-slate-950 sm:h-9 sm:text-sm"
                                     />
                                 </div>
                             ))}
@@ -352,7 +362,7 @@ export function DatePickerWithRange({
                                                 setYearDraft(periodValues)
                                             }
                                         }}
-                                        className="h-9 w-full rounded-md border border-slate-200 bg-white px-3 text-sm outline-none focus-visible:ring-2 focus-visible:ring-slate-950"
+                                        className="h-10 w-full rounded-md border border-slate-200 bg-white px-3 text-base outline-none focus-visible:ring-2 focus-visible:ring-slate-950 sm:h-9 sm:text-sm"
                                     />
                                 </div>
                             ))}
@@ -364,7 +374,7 @@ export function DatePickerWithRange({
                             defaultMonth={date?.from}
                             selected={date}
                             onSelect={onChange}
-                            numberOfMonths={2}
+                            numberOfMonths={isMobile ? 1 : 2}
                         />
                     )}
                 </PopoverContent>
