@@ -9,7 +9,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { Save } from 'lucide-react';
 import { SupplierCombobox } from '@/components/features/supplier/SupplierCombobox';
 import { CustomerCombobox } from '@/components/features/customer/CustomerCombobox';
-import { DocumentTemplateSelect } from '@/components/features/document-template/DocumentTemplateSelect';
+import { DocumentTemplateSelect } from '@/components/ui/document-template-select';
 
 export const unitTransactionHeaderSchema = z.object({
   date: z.string().min(1, 'Tanggal wajib diisi'),

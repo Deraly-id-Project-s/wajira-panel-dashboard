@@ -22,7 +22,7 @@ import { cn } from '@/lib/utils';
 import { useCreateUnitItem } from '@/hooks/useUnitTransactionItem';
 import { useTypeUnits } from '@/hooks/useTypeUnit';
 import { FormField, FormControl, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
-import { DocumentTemplateSelect } from '@/components/features/document-template/DocumentTemplateSelect';
+import { DocumentTemplateSelect } from '@/components/ui/document-template-select';
 
 type SalesCreateFormState = {
   customerId: string;

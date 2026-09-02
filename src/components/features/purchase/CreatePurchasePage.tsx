@@ -17,7 +17,7 @@ import type { Supplier } from '@/@types/supplier.types';
 import { apiClient } from '@/lib/api/client';
 import { purchaseService } from '@/services/purchase.service';
 import { FormField, FormControl, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
-import { DocumentTemplateSelect } from '@/components/features/document-template/DocumentTemplateSelect';
+import { DocumentTemplateSelect } from '@/components/ui/document-template-select';
 
 type WarehouseDataResponse = {
   success?: boolean;

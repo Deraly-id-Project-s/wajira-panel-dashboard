@@ -196,7 +196,7 @@ export const getNavItems = (slug: string): NavItemConfig[] => {
           href: base('/laporan/laporan-laba-rugi'),
         },
         {
-          label: 'Ballance Report',
+          label: 'Laporan Neraca',
           href: base('/laporan/ballance-report'),
         },
         {

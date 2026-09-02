@@ -13,23 +13,14 @@ import { SearchPagination } from '@/components/ui/search-pagination';
 import { LedgerAccountSelect } from '@/components/features/laporan-buku-besar/LedgerAccountSelect';
 import { LaporanJurnalTable } from '@/components/features/laporan-jurnal/LaporanJurnalTable';
 import { LaporanJurnalPrintDocument } from '@/components/features/laporan-jurnal/LaporanJurnalPrintDocument';
-import { DocumentTemplateSelect } from '@/components/features/document-template/DocumentTemplateSelect';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
+import { ReportTemplatePrintDialog } from '@/components/ui/report-template-print-dialog';
 import { useJournalReport } from '@/hooks/report/useJournalReport';
 import { useAccounts } from '@/hooks/useAccount';
-import { useDocumentTemplates } from '@/hooks/useDocumentTemplate';
+import { useReportTemplatePrint } from '@/hooks/useReportTemplatePrint';
 import { JournalReportParams } from '@/@types/journal-report.types';
 import { useCompany } from '@/contexts/CompanyContext';
 import { getLetterheadByCompanyId, resolveCompanyId } from '@/lib/print-letterhead';
 import { exportJournalReport } from '@/services/report/journalReport.service';
-import { getObjectStorageUrl } from '@/components/ui/storage-image';
 
 const getCompanyName = (companyId: number) => {
   if (companyId === 1) return 'PT WAJIRA JAGRATARA MORINDO';
@@ -43,6 +34,7 @@ export default function LaporanJurnalPage() {
   const { companyId } = useCompany();
   const resolvedCompanyId = resolveCompanyId(router.query.slug, companyId) || 1;
   const selectedPrintBackground = getLetterheadByCompanyId(resolvedCompanyId);
+  const templatePrint = useReportTemplatePrint(selectedPrintBackground);
 
   const [page, setPage] = useState(1);
   const [perPage, setPerPage] = useState(25);
@@ -54,20 +46,6 @@ export default function LaporanJurnalPage() {
   const [sortBy, setSortBy] = useState('payment_at');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
   const [isExporting, setIsExporting] = useState(false);
-  const [isPrintDialogOpen, setIsPrintDialogOpen] = useState(false);
-  const [selectedTemplateId, setSelectedTemplateId] = useState<string | null>(null);
-  const [isPreparingPrint, setIsPreparingPrint] = useState(false);
-  const [printedAt, setPrintedAt] = useState(() => new Date());
-
-  const documentTemplatesQuery = useDocumentTemplates({ page: 1, perPage: 100 });
-  const documentTemplates = useMemo(
-    () => documentTemplatesQuery.data?.data ?? [],
-    [documentTemplatesQuery.data?.data],
-  );
-  const selectedDocumentTemplate = useMemo(
-    () => documentTemplates.find((template) => String(template.id) === selectedTemplateId) ?? null,
-    [documentTemplates, selectedTemplateId],
-  );
 
   const accountQuery = useAccounts({
     page: 1,
@@ -153,52 +131,6 @@ export default function LaporanJurnalPage() {
     }
   };
 
-  const handleOpenPrintDialog = () => {
-    setSelectedTemplateId(null);
-    setIsPrintDialogOpen(true);
-  };
-
-  const waitForImage = (url?: string | null) => {
-    if (!url) return Promise.resolve();
-
-    return new Promise<void>((resolve) => {
-      const image = new window.Image();
-      const timeout = window.setTimeout(resolve, 2500);
-      const finish = () => {
-        window.clearTimeout(timeout);
-        resolve();
-      };
-
-      image.onload = finish;
-      image.onerror = finish;
-      image.src = url;
-      if (image.complete) finish();
-    });
-  };
-
-  const handlePrint = async () => {
-    if (!selectedDocumentTemplate) {
-      toast.error('Pilih template print terlebih dahulu');
-      return;
-    }
-
-    setIsPreparingPrint(true);
-    setPrintedAt(new Date());
-
-    const backgroundUrl = selectedDocumentTemplate.documentTemplate
-      ? getObjectStorageUrl(selectedDocumentTemplate.documentTemplate)
-      : selectedPrintBackground;
-    const signatureUrl = getObjectStorageUrl(selectedDocumentTemplate.personSignature);
-
-    await Promise.all([waitForImage(backgroundUrl), waitForImage(signatureUrl)]);
-    setIsPrintDialogOpen(false);
-    setIsPreparingPrint(false);
-
-    window.requestAnimationFrame(() => {
-      window.requestAnimationFrame(() => window.print());
-    });
-  };
-
   const periodLabel = startDate
     ? `${dateRange?.from ? format(dateRange.from, 'dd MMM yyyy') : '-'}${endDate && endDate !== startDate && dateRange?.to ? ` – ${format(dateRange.to, 'dd MMM yyyy')}` : ''}`
     : 'Semua periode';
@@ -219,7 +151,7 @@ export default function LaporanJurnalPage() {
                   <Download className="mr-2 h-4 w-4" />
                   {isExporting ? 'Exporting...' : 'Export'}
                 </Button>
-                <Button onClick={handleOpenPrintDialog} variant="outline">
+                <Button onClick={templatePrint.openPrintDialog} variant="outline">
                   <Printer className="mr-2 h-4 w-4" />
                   Print
                 </Button>
@@ -287,42 +219,25 @@ export default function LaporanJurnalPage() {
 
         <LaporanJurnalPrintDocument
           data={data}
-          template={selectedDocumentTemplate}
+          template={templatePrint.selectedTemplate}
           fallbackBackground={selectedPrintBackground}
           companyName={getCompanyName(resolvedCompanyId)}
           accountLabel={accountLabel}
           periodLabel={periodLabel}
           reportPage={page}
           reportTotal={pagination.total}
-          printedAt={printedAt}
+          printedAt={templatePrint.printedAt}
         />
 
-        <Dialog open={isPrintDialogOpen} onOpenChange={setIsPrintDialogOpen}>
-          <DialogContent closeOnInteractOutside={false} className="max-h-[88vh] overflow-hidden p-0 sm:max-w-2xl">
-            <DialogHeader className="border-b border-slate-200 px-6 py-5 pr-12">
-              <DialogTitle>Pilih Template Print</DialogTitle>
-              <DialogDescription>Pilih desain dokumen yang akan digunakan untuk mencetak laporan jurnal.</DialogDescription>
-            </DialogHeader>
-            <div className="max-h-[56vh] overflow-y-auto px-6 py-5">
-              <DocumentTemplateSelect
-                value={selectedTemplateId}
-                onValueChange={setSelectedTemplateId}
-                disabled={isPreparingPrint}
-                allowEmpty={false}
-                placeholder="Pilih template laporan jurnal"
-                variant="cards"
-              />
-            </div>
-            <DialogFooter className="border-t border-slate-200 bg-slate-50/70 px-6 py-4">
-              <Button type="button" variant="outline" onClick={() => setIsPrintDialogOpen(false)} disabled={isPreparingPrint}>
-                Batal
-              </Button>
-              <Button type="button" onClick={() => void handlePrint()} disabled={!selectedTemplateId || isPreparingPrint}>
-                {isPreparingPrint ? 'Menyiapkan...' : 'Print Sekarang'}
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
+        <ReportTemplatePrintDialog
+          open={templatePrint.isDialogOpen}
+          onOpenChange={templatePrint.setIsDialogOpen}
+          selectedTemplateId={templatePrint.selectedTemplateId}
+          onTemplateChange={templatePrint.setSelectedTemplateId}
+          onPrint={templatePrint.printWithSelectedTemplate}
+          isPreparingPrint={templatePrint.isPreparingPrint}
+          reportName="laporan jurnal"
+        />
       </div>
     </DashboardLayout>
   );

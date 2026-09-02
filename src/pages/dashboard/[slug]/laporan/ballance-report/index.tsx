@@ -1,3 +1,3 @@
-import BallanceReportPage from '@/components/features/ballance-report/BallanceReportPage';
+import LaporanNeracaPage from '@/components/features/laporan-neraca/LaporanNeracaPage';
 
-export default BallanceReportPage;
+export default LaporanNeracaPage;

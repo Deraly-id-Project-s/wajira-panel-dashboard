@@ -9,11 +9,13 @@ import { PageHeader } from '@/components/ui/page-header';
 import { Button } from '@/components/ui/button';
 import { DatePickerWithRange, type DateRangePickerMode } from '@/components/ui/date-range-picker';
 import { SearchPagination } from '@/components/ui/search-pagination';
+import { ReportTemplatePrintDialog } from '@/components/ui/report-template-print-dialog';
 import { LedgerAccountSelect } from '@/components/features/laporan-buku-besar/LedgerAccountSelect';
 import { LaporanBukuBesarTable } from '@/components/features/laporan-buku-besar/LaporanBukuBesarTable';
 import { LaporanBukuBesarPrintDocument } from '@/components/features/laporan-buku-besar/LaporanBukuBesarPrintDocument';
 import { useLedgerReport } from '@/hooks/report/useLedgerReport';
 import { useAccounts } from '@/hooks/useAccount';
+import { useReportTemplatePrint } from '@/hooks/useReportTemplatePrint';
 import type { LedgerReportParams } from '@/@types/ledger-report.types';
 import { useCompany } from '@/contexts/CompanyContext';
 import { getLetterheadByCompanyId, resolveCompanyId } from '@/lib/print-letterhead';
@@ -31,6 +33,7 @@ export default function LaporanBukuBesarPage() {
   const { companyId } = useCompany();
   const resolvedCompanyId = resolveCompanyId(router.query.slug, companyId) || 1;
   const selectedPrintBackground = getLetterheadByCompanyId(resolvedCompanyId);
+  const templatePrint = useReportTemplatePrint(selectedPrintBackground);
 
   const [page, setPage] = useState(1);
   const [perPage, setPerPage] = useState(25);
@@ -41,7 +44,6 @@ export default function LaporanBukuBesarPage() {
   const [dateMode, setDateMode] = useState<DateRangePickerMode>('date');
   const [sortBy, setSortBy] = useState('payment_at');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
-  const [printedAt, setPrintedAt] = useState(() => new Date());
 
   const accountQuery = useAccounts({
     page: 1,
@@ -111,11 +113,6 @@ export default function LaporanBukuBesarPage() {
     setPage(1);
   };
 
-  const handlePrint = () => {
-    setPrintedAt(new Date());
-    window.requestAnimationFrame(() => window.requestAnimationFrame(() => window.print()));
-  };
-
   const periodLabel = startDate
     ? `${dateRange?.from ? format(dateRange.from, 'dd MMM yyyy') : '-'}${endDate && endDate !== startDate && dateRange?.to ? ` – ${format(dateRange.to, 'dd MMM yyyy')}` : ''}`
     : 'Semua periode';
@@ -131,7 +128,7 @@ export default function LaporanBukuBesarPage() {
             title="Laporan Buku Besar"
             subtitle="Pantau mutasi akun dan posisi saldo berdasarkan periode pembayaran"
             actions={
-              <Button onClick={handlePrint} variant="outline">
+              <Button onClick={templatePrint.openPrintDialog} variant="outline" disabled={isLoading}>
                 <Printer className="mr-2 h-4 w-4" />
                 Print
               </Button>
@@ -216,7 +213,8 @@ export default function LaporanBukuBesarPage() {
 
         <LaporanBukuBesarPrintDocument
           data={data}
-          backgroundUrl={selectedPrintBackground}
+          template={templatePrint.selectedTemplate}
+          fallbackBackground={selectedPrintBackground}
           companyName={getCompanyName(resolvedCompanyId)}
           accountLabel={accountLabel}
           periodLabel={periodLabel}
@@ -226,7 +224,17 @@ export default function LaporanBukuBesarPage() {
           endingBalanceUsd={summary.endingBalanceUsd}
           reportPage={page}
           reportTotal={pagination.total}
-          printedAt={printedAt}
+          printedAt={templatePrint.printedAt}
+        />
+
+        <ReportTemplatePrintDialog
+          open={templatePrint.isDialogOpen}
+          onOpenChange={templatePrint.setIsDialogOpen}
+          selectedTemplateId={templatePrint.selectedTemplateId}
+          onTemplateChange={templatePrint.setSelectedTemplateId}
+          onPrint={templatePrint.printWithSelectedTemplate}
+          isPreparingPrint={templatePrint.isPreparingPrint}
+          reportName="laporan buku besar"
         />
       </div>
     </DashboardLayout>
