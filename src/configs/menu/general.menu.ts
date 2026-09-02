@@ -244,6 +244,10 @@ export const getGeneralMenus = (slug: string): MenuItem[] => {
           href: base('/laporan/laporan-laba-rugi'),
         },
         {
+          label: 'Ballance Report',
+          href: base('/laporan/ballance-report'),
+        },
+        {
           label: 'Laporan Pembelian',
           href: base('/laporan/laporan-pembelian'),
         },

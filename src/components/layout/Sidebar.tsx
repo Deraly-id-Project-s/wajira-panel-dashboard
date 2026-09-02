@@ -85,11 +85,13 @@ const ensureReportFallbackSidebarMenus = (menus: MenuItem[], slug: string): Menu
     const ledgerHref = slug ? `/dashboard/${slug}/laporan/laporan-buku-besar` : '/laporan/laporan-buku-besar';
     const balanceColumnHref = slug ? `/dashboard/${slug}/laporan/laporan-neraca-lajur` : '/laporan/laporan-neraca-lajur';
     const profitLossHref = slug ? `/dashboard/${slug}/laporan/laporan-laba-rugi` : '/laporan/laporan-laba-rugi';
+    const balanceReportHref = slug ? `/dashboard/${slug}/laporan/ballance-report` : '/laporan/ballance-report';
     const children = [...menu.children];
     const hasJournal = menu.children.some((child) => child.href === journalHref || child.label === 'Laporan Jurnal');
     const hasLedger = menu.children.some((child) => child.href === ledgerHref || child.label === 'Laporan Buku Besar');
     const hasBalanceColumn = menu.children.some((child) => child.href === balanceColumnHref || child.label === 'Laporan Neraca Lajur');
     const hasProfitLoss = menu.children.some((child) => child.href === profitLossHref || child.label === 'Laporan Laba Rugi');
+    const hasBalanceReport = menu.children.some((child) => child.href === balanceReportHref || child.label === 'Ballance Report');
 
     if (!hasJournal) {
       const purchaseIndex = children.findIndex((child) => child.label === 'Laporan Pembelian');
@@ -138,6 +140,21 @@ const ensureReportFallbackSidebarMenus = (menus: MenuItem[], slug: string): Menu
       children.splice(insertIndex, 0, {
         label: 'Laporan Laba Rugi',
         href: profitLossHref,
+      });
+    }
+
+    if (!hasBalanceReport) {
+      const profitLossIndex = children.findIndex((child) => child.label === 'Laporan Laba Rugi');
+      const purchaseIndex = children.findIndex((child) => child.label === 'Laporan Pembelian');
+      const insertIndex = profitLossIndex >= 0
+        ? profitLossIndex + 1
+        : purchaseIndex >= 0
+          ? purchaseIndex
+          : children.length;
+
+      children.splice(insertIndex, 0, {
+        label: 'Ballance Report',
+        href: balanceReportHref,
       });
     }
 
