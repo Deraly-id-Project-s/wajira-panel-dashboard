@@ -24,6 +24,7 @@ import { dashboardService } from '@/lib/api/dashboard.service';
 import { LoadingState } from '@/components/ui/loading-state';
 import { useAuthMe } from '@/features/auth/hooks/use-auth-me';
 import { AuthService } from '@/features/auth/services/auth.service';
+import Image from 'next/image';
 
 interface StatDetail {
   bpkb: number;
@@ -338,14 +339,19 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        <Card className="relative overflow-hidden rounded-md border border-slate-200 bg-gradient-to-r from-slate-50 via-white to-blue-50/70 px-6 py-7 shadow-sm sm:px-8">
-          <div className="absolute -right-12 -top-16 h-40 w-40 rounded-full border-[24px] border-red-200/60" />
-          <div className="absolute -bottom-4 right-20 h-10 w-10 rounded-full bg-red-300/50" />
-          <div className="relative">
-            <p className="text-xs font-semibold uppercase text-red-400">Selamat datang kembali</p>
-            <h2 className="text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl">
-              Hallo, {displayName} <span className="inline-block">👋</span>
-            </h2>
+        <Card className="relative overflow-hidden rounded-md border border-slate-200 bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 opacity-90 hover:opacity-100 px-6 py-5 shadow-sm sm:px-8">
+          <div className="absolute -right-12 -top-16 h-40 w-40 rounded-full border-[24px] border-yellow-200/60" />
+          <div className="absolute -bottom-4 right-20 h-10 w-10 rounded-full bg-yellow-300/50" />
+          <div className="relative flex flex-row items-center gap-5">
+            <div className='p-2 bg-white rounded-full'>
+              <Image width={60} height={60} src="/wajira-logo.png" alt="Wajira Logo" className="object-contain drop-shadow-lg" priority />
+            </div>
+            <div>
+              <p className="text-xs font-semibold uppercase text-white">Selamat datang kembali</p>
+              <h2 className="text-2xl font-bold tracking-tight text-white sm:text-3xl">
+                Hallo, {displayName} <span className="inline-block">👋</span>
+              </h2>
+            </div>
           </div>
         </Card>
 

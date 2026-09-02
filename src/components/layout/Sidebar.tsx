@@ -429,6 +429,7 @@ function SidebarNavItem({ item, isCollapsed }: { item: MenuItem; isCollapsed?: b
   };
 
   const isChildActive = item.children?.some(hasActiveChild) || false;
+  const isSelfActive = item.href ? isActiveRoute(item.href, item.exact) : false;
 
   const [open, setOpen] = useState(isChildActive || false);
 
@@ -443,29 +444,51 @@ function SidebarNavItem({ item, isCollapsed }: { item: MenuItem; isCollapsed?: b
     setOpen(!open);
   };
 
+  if (!item.children && item.href) {
+    return (
+      <div className={cn(isCollapsed && "flex justify-center mb-1")}>
+        <Link
+          href={item.href}
+          title={isCollapsed ? item.label : undefined}
+          className={cn(
+            'flex items-center justify-between rounded-md py-[9px] text-sm font-medium transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary',
+            isCollapsed ? 'w-10 h-10 justify-center p-0' : 'w-full px-3',
+            isSelfActive ? 'sidebar-menu-primary' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900',
+          )}
+          aria-current={isSelfActive ? 'page' : undefined}
+        >
+          <div className="flex items-center gap-3">
+            {item.icon && <item.icon className={cn("w-[18px] h-[18px] shrink-0", isSelfActive ? "text-white" : "text-slate-500")} />}
+            {!isCollapsed && <span>{item.label}</span>}
+          </div>
+        </Link>
+      </div>
+    );
+  }
+
   return (
     <div className={cn(isCollapsed && "flex justify-center mb-1")}>
       <button
         onClick={handleToggle}
         title={isCollapsed ? item.label : undefined}
         className={cn(
-          'flex items-center justify-between rounded-md py-[9px] text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary',
-          isCollapsed ? 'w-10 justify-center px-0' : 'w-full px-3',
-          isChildActive ? 'text-gray-600 bg-gray-100' : 'text-gray-600 hover:bg-gray-50',
+          'flex items-center justify-between rounded-md py-[9px] text-sm font-medium transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary cursor-pointer',
+          isCollapsed ? 'w-10 h-10 justify-center p-0' : 'w-full px-3',
+          isChildActive ? 'text-orange-600 bg-orange-50/80 font-semibold' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900',
         )}
       >
         <div className="flex items-center gap-3">
-          {item.icon && <item.icon className="w-[18px] h-[18px] shrink-0" />}
+          {item.icon && <item.icon className={cn("w-[18px] h-[18px] shrink-0", isChildActive ? "text-orange-600" : "text-slate-500")} />}
           {!isCollapsed && <span>{item.label}</span>}
         </div>
         {!isCollapsed && item.children && (
-          <ChevronDown className={cn('h-4 w-4 shrink-0 transition-transform duration-200', open && 'rotate-180 text-gray-900', !open && 'text-gray-400')} />
+          <ChevronDown className={cn('h-4 w-4 shrink-0 transition-transform duration-200', open && 'rotate-180', isChildActive ? 'text-orange-600' : 'text-slate-400')} />
         )}
       </button>
 
       {item.children && open && !isCollapsed && (
         <div className="relative mt-1 ml-[22px] space-y-1">
-          <div className="absolute left-0 top-0 bottom-0 w-px bg-gray-200" />
+          <div className="absolute left-0 top-0 bottom-0 w-px bg-slate-200" />
 
           {item.children.map((child, idx) => (
             <SidebarSubNavItem
@@ -506,11 +529,10 @@ function SidebarSubNavItem({
         href={item.href || '#'}
         className={cn(
           'group relative ml-1 block rounded-md pl-3 pr-2 py-2 text-sm transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary',
-          active ? 'bg-red-100 text-gray-600 font-[500]' : 'text-gray-600 hover:bg-red-100 hover:text-red-900',
+          active ? 'sidebar-menu-primary' : 'text-slate-600 hover:bg-orange-50/60 hover:text-orange-600',
         )}
         aria-current={active ? 'page' : undefined}
       >
-        {active && <div className="absolute left-0 top-0 h-full w-[4px] rounded-l-lg transform translate-x-[1px] bg-orange-300 transition-transform duration-300 animate-in slide-in-from-left-1" />}
         {item.label}
       </Link>
     );
@@ -521,17 +543,17 @@ function SidebarSubNavItem({
       <button
         onClick={() => setOpen(!open)}
         className={cn(
-          'flex w-full items-center justify-between rounded-md pl-3 pr-2 py-2 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary',
-          isSubChildActive ? 'text-gray-600' : 'text-gray-600 hover:bg-gray-100',
+          'flex w-full items-center justify-between rounded-md pl-3 pr-2 py-2 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary cursor-pointer',
+          isSubChildActive ? 'text-orange-600 font-semibold' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900',
         )}
       >
         <span>{item.label}</span>
-        <ChevronDown className={cn('h-3.5 w-3.5 transition-transform duration-200', open && 'rotate-180 text-gray-900', !open && 'text-gray-500')} />
+        <ChevronDown className={cn('h-3.5 w-3.5 transition-transform duration-200', open && 'rotate-180', isSubChildActive ? 'text-orange-600' : 'text-slate-400')} />
       </button>
 
       {open && (
         <div className="relative mt-1 ml-3 space-y-1">
-          <div className="absolute left-0 top-0 bottom-0 w-px bg-gray-200" />
+          <div className="absolute left-0 top-0 bottom-0 w-px bg-slate-200" />
           {item.children.map((subChild, idx) => {
             const active = isActiveRoute(subChild.href, subChild.exact);
             return (
@@ -540,11 +562,10 @@ function SidebarSubNavItem({
                 href={subChild.href || '#'}
                 className={cn(
                   'group relative ml-2 block rounded-md pl-3 pr-2 py-2 text-sm transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary',
-                  active ? 'bg-[#E5E7EB] text-gray-600 font-[500]' : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900',
+                  active ? 'sidebar-menu-primary' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900',
                 )}
                 aria-current={active ? 'page' : undefined}
               >
-                {active && <div className="absolute left-0 top-0 h-full w-[4px] rounded-l-lg transform translate-x-[1px] bg-orange-300 transition-transform duration-300 animate-in slide-in-from-left-1" />}
                 {subChild.label}
               </Link>
             );
