@@ -79,6 +79,10 @@ export const getTransindoMenus = (slug: string): MenuItem[] => {
           href: base('/do-ekspedisi'),
         },
         {
+          label: 'Kas Bon',
+          href: base('/kas-bon'),
+        },
+        {
           label: 'Create Invoice',
           href: base('/administrasi/create-invoice'),
         },
