@@ -588,8 +588,8 @@ export function OrderListDetailView({
               <Button
                 type="button"
                 disabled={isUpdatingStatus}
+                variant="default"
                 onClick={() => onUpdateStatus?.('deliver')}
-                className="bg-orange-600 hover:bg-orange-700 text-white min-w-[120px] cursor-pointer"
               >
                 {isUpdatingStatus ? 'Memproses...' : 'Proses Order List'}
               </Button>
@@ -599,7 +599,6 @@ export function OrderListDetailView({
                 variant="outline"
                 disabled={isUpdatingStatus}
                 onClick={() => onUpdateStatus?.('draft')}
-                className="min-w-[120px] border-slate-300 text-slate-700 hover:bg-slate-50 cursor-pointer"
               >
                 {isUpdatingStatus ? 'Memproses...' : 'Jadikan Draft'}
               </Button>

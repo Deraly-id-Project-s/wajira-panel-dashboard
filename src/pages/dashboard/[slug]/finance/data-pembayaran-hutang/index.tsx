@@ -87,7 +87,7 @@ export default function DataPembayaranHutangPage() {
             <DatePickerWithRange
               date={date}
               onChange={handleDateChange}
-              placeholder="Pilih rentang tanggal pembayaran hutang"
+              placeholder="Pilih rentang tanggal"
               className="w-full sm:w-[260px]"
             />
           }

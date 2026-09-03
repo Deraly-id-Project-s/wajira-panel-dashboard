@@ -125,7 +125,7 @@ export default function FinanceAssetPage() {
                         <DatePickerWithRange
                             date={date}
                             onChange={handleDateChange}
-                            placeholder="Pilih rentang tanggal perolehan aset"
+                            placeholder="Pilih rentang tanggal"
                             className="w-full sm:w-[260px]"
                         />
                     }

@@ -208,7 +208,7 @@ export default function KasHarianPage() {
             <DatePickerWithRange
               date={date}
               onChange={handleDateChange}
-              placeholder="Pilih rentang tanggal transaksi kas"
+              placeholder="Pilih rentang tanggal"
               className="w-full sm:w-[260px]"
             />
           }

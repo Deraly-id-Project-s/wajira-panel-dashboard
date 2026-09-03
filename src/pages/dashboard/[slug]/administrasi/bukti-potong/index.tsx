@@ -187,7 +187,7 @@ export default function BuktiPotongPage() {
             <DatePickerWithRange
               date={date}
               onChange={handleDateChange}
-              placeholder="Pilih rentang tanggal bukti potong"
+              placeholder="Pilih rentang tanggal"
               className="w-full sm:w-[260px]"
             />
           }

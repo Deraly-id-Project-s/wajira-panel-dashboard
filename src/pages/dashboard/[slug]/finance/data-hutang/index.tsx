@@ -69,7 +69,7 @@ export default function DataHutangPage() {
                         <DatePickerWithRange
                             date={date}
                             onChange={handleDateChange}
-                            placeholder="Pilih rentang tanggal hutang"
+                            placeholder="Pilih rentang tanggal"
                             className="w-full sm:w-[260px]"
                         />
                     }

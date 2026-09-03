@@ -127,7 +127,7 @@ export default function DOEkspedisiPage() {
             <DatePickerWithRange
               date={date}
               onChange={handleDateChange}
-              placeholder="Pilih rentang tanggal DO"
+              placeholder="Pilih rentang tanggal"
               className="w-full sm:w-[260px]"
             />
           }

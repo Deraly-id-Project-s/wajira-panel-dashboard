@@ -249,7 +249,7 @@ export default function LaporanAssetPage() {
             <DatePickerWithRange
               date={dateRange}
               onChange={setDateRange}
-              placeholder="Pilih rentang tanggal perolehan aset"
+              placeholder="Pilih rentang tanggal"
               className="w-full sm:w-[260px]"
             />
           }
@@ -269,37 +269,37 @@ export default function LaporanAssetPage() {
             className="laporan-penerimaan-print-area"
             letterheadSrc={selectedPrintBackground}
           >
-          <div className="laporan-penerimaan-print-content print-letter-content">
-            {/* Cover Letter Heading - Visible only in Print */}
-            <div className="hidden print:flex flex-col items-center justify-center text-center space-y-1 mb-6 w-full">
-              <h2 className="text-[18px] font-bold uppercase text-gray-900 tracking-wide">
-                Laporan Aset
-              </h2>
-              <p className="text-[15px] font-bold text-gray-900 tracking-wide">
-                {getCompanyName(resolvedCompanyId)}
-              </p>
-              <p className="text-[12px] text-gray-600">
-                Tanggal Cetak: {formatDate(new Date())}
-              </p>
-            </div>
-
-            {/* Table Rendering */}
-            {isError ? (
-              <div className="flex flex-col justify-center items-center py-20 w-full bg-white rounded-md border border-red-100 text-center p-6 no-print">
-                <p className="text-red-600 font-semibold mb-1">Gagal memuat data laporan</p>
-                <p className="text-sm text-slate-500">{(error as any)?.message || 'Terjadi kesalahan pada server backend'}</p>
+            <div className="laporan-penerimaan-print-content print-letter-content">
+              {/* Cover Letter Heading - Visible only in Print */}
+              <div className="hidden print:flex flex-col items-center justify-center text-center space-y-1 mb-6 w-full">
+                <h2 className="text-[18px] font-bold uppercase text-gray-900 tracking-wide">
+                  Laporan Aset
+                </h2>
+                <p className="text-[15px] font-bold text-gray-900 tracking-wide">
+                  {getCompanyName(resolvedCompanyId)}
+                </p>
+                <p className="text-[12px] text-gray-600">
+                  Tanggal Cetak: {formatDate(new Date())}
+                </p>
               </div>
-            ) : (
-              <BaseTable
-                data={filteredData || []}
-                columns={columns}
-                loading={isLoading}
-                sortBy={sortBy}
-                sortDirection={sortOrder}
-                onSortChange={(key) => handleSort(key)}
-              />
-            )}
-          </div>
+
+              {/* Table Rendering */}
+              {isError ? (
+                <div className="flex flex-col justify-center items-center py-20 w-full bg-white rounded-md border border-red-100 text-center p-6 no-print">
+                  <p className="text-red-600 font-semibold mb-1">Gagal memuat data laporan</p>
+                  <p className="text-sm text-slate-500">{(error as any)?.message || 'Terjadi kesalahan pada server backend'}</p>
+                </div>
+              ) : (
+                <BaseTable
+                  data={filteredData || []}
+                  columns={columns}
+                  loading={isLoading}
+                  sortBy={sortBy}
+                  sortDirection={sortOrder}
+                  onSortChange={(key) => handleSort(key)}
+                />
+              )}
+            </div>
           </PrintLetterPage>
         </SearchPagination>
       </div>

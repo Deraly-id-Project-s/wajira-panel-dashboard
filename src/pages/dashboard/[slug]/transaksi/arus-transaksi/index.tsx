@@ -101,7 +101,7 @@ export default function TransactionListPage() {
             <DatePickerWithRange
               date={date}
               onChange={handleDateChange}
-              placeholder="Pilih rentang tanggal transaksi"
+              placeholder="Pilih rentang tanggal"
               className="w-full sm:w-[260px]"
             />
           }

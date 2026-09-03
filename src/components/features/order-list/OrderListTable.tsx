@@ -226,7 +226,6 @@ export const OrderListTable = React.memo(function OrderListTable({
                 }}
                 className="cursor-pointer rounded-lg px-3 py-2 text-sm text-slate-900 focus:bg-slate-50"
               >
-                <Eye className="mr-2 h-4 w-4" />
                 Detail
               </DropdownMenuItem>
               <DropdownMenuItem
@@ -237,7 +236,6 @@ export const OrderListTable = React.memo(function OrderListTable({
                 disabled={!canEdit || item?.status !== 'draft'}
                 className="cursor-pointer rounded-lg px-3 py-2 text-sm text-slate-900 focus:bg-slate-50"
               >
-                <FilePenLine className="mr-2 h-4 w-4" />
                 Edit
               </DropdownMenuItem>
               <DropdownMenuItem
@@ -248,7 +246,6 @@ export const OrderListTable = React.memo(function OrderListTable({
                 disabled={!canDelete || item?.status !== 'draft'}
                 className="cursor-pointer rounded-lg px-3 py-2 text-sm text-red-600 focus:bg-red-50 focus:text-red-600"
               >
-                <Trash2 className="mr-2 h-4 w-4" />
                 Hapus
               </DropdownMenuItem>
             </DropdownMenuContent>

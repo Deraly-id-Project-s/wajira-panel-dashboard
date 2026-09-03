@@ -78,7 +78,7 @@ export default function LaporanTransaksiKasPage() {
     const endDate = dateRange?.to ? format(dateRange.to, 'yyyy-MM-dd') : startDate;
     setDateRange(startDate, endDate);
   }, [dateRange, setDateRange]);
-const isLoadingDisplay = isLoading;
+  const isLoadingDisplay = isLoading;
 
   return (
     <DashboardLayout>
@@ -107,7 +107,7 @@ const isLoadingDisplay = isLoading;
             <DatePickerWithRange
               date={dateRange}
               onChange={setDateRangeState}
-              placeholder="Pilih rentang tanggal transaksi kas"
+              placeholder="Pilih rentang tanggal"
               className="w-full sm:w-[260px]"
             />
           }

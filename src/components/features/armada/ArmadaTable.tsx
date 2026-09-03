@@ -15,6 +15,7 @@ interface ArmadaTableProps {
   onDetail?: (armada: Armada) => void;
   canEdit: boolean;
   canDelete: boolean;
+  getRowMark?: (armada: Armada) => 'alert' | 'success' | 'base' | null | undefined;
 }
 
 const formatDate = (value?: string | null) => {
@@ -107,6 +108,7 @@ export function ArmadaTable({
   onDetail,
   canEdit,
   canDelete,
+  getRowMark,
 }: ArmadaTableProps) {
   const columns = useMemo<ColumnDef<Armada>[]>(
     () => [
@@ -212,7 +214,7 @@ export function ArmadaTable({
       data={armadas}
       columns={columns}
       loading={isLoading}
-      getRowMark={getArmadaRowMark}
+      getRowMark={getRowMark ?? getArmadaRowMark}
     />
   );
 }

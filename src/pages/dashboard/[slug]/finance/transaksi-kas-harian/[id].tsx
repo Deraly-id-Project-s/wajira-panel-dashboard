@@ -27,6 +27,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { CopyBox } from '@/components/ui/copy-box';
 import { currenciesFormat } from '@/components/ui/currenciesFormat';
 import { FileInput } from '@/components/ui/file-input';
+import { ImagePreview } from '@/components/ui/image-preview';
 import { LoadingState } from '@/components/ui/loading-state';
 import { PageHeader } from '@/components/ui/page-header';
 import { Separator } from '@/components/ui/separator';
@@ -49,6 +50,12 @@ const buildProofUrl = (path?: string | null) => {
 
   const base = process.env.NEXT_PUBLIC_API_URL ?? 'https://wajirabackend.hawk-dev.com';
   return `${base.replace(/\/$/, '')}/storage/${path.replace(/^\/+/, '')}`;
+};
+
+const isImageProof = (value?: string | null) => {
+  if (!value) return false;
+  const cleanValue = value.split('?')[0]?.toLowerCase() ?? '';
+  return /\.(jpe?g|png|webp|gif|bmp|svg)$/i.test(cleanValue);
 };
 
 interface SummaryCardProps {
@@ -110,6 +117,8 @@ export default function KasHarianDetailPage() {
   const [isToggleOpen, setIsToggleOpen] = useState(false);
   const [targetStatus, setTargetStatus] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [selectedFilePreviewUrl, setSelectedFilePreviewUrl] = useState<string | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [isUploading, setIsUploading] = useState(false);
   const [transactionNote, setTransactionNote] = useState('');
 
@@ -175,6 +184,12 @@ export default function KasHarianDetailPage() {
     if (cashFlowDetail) setTransactionNote(cashFlowDetail.note || '');
   }, [cashFlowDetail]);
 
+  useEffect(() => {
+    return () => {
+      if (selectedFilePreviewUrl) URL.revokeObjectURL(selectedFilePreviewUrl);
+    };
+  }, [selectedFilePreviewUrl]);
+
   const buildUpdatePayload = (note: string, paymentProof?: File) => {
     if (!cashFlowDetail) return null;
     return {
@@ -218,11 +233,27 @@ export default function KasHarianDetailPage() {
       await updateMutation.mutateAsync({ id: cashFlowDetail.id, payload });
       toast.success('Bukti pembayaran utama berhasil disimpan');
       setSelectedFile(null);
+      if (selectedFilePreviewUrl) {
+        URL.revokeObjectURL(selectedFilePreviewUrl);
+        setSelectedFilePreviewUrl(null);
+      }
       void cashFlowQuery.refetch();
     } catch (error) {
       toast.error(getApiErrorMessage(error) || 'Gagal menyimpan bukti pembayaran utama');
     } finally {
       setIsUploading(false);
+    }
+  };
+
+  const handleSelectedFileChange = (file: File | null) => {
+    if (selectedFilePreviewUrl) {
+      URL.revokeObjectURL(selectedFilePreviewUrl);
+      setSelectedFilePreviewUrl(null);
+    }
+
+    setSelectedFile(file);
+    if (file?.type.startsWith('image/')) {
+      setSelectedFilePreviewUrl(URL.createObjectURL(file));
     }
   };
 
@@ -424,20 +455,32 @@ export default function KasHarianDetailPage() {
               <div className="flex flex-col items-stretch gap-4 sm:flex-row sm:items-start sm:justify-between [&>*]:w-full sm:[&>*]:w-auto">
                 <div><CardTitle>Bukti Pembayaran Utama</CardTitle><CardDescription className="mt-1">Unggah dokumen pendukung transaksi</CardDescription></div>
                 {proofUrl ? (
-                  <Button variant="outline" size="sm" asChild>
-                    <a href={proofUrl} target="_blank" rel="noreferrer"><ExternalLink className="mr-2 h-4 w-4" />Lihat Bukti</a>
-                  </Button>
+                  isImageProof(cashFlowDetail.payment_proof) || isImageProof(proofUrl) ? (
+                    <Button variant="outline" size="sm" onClick={() => setPreviewUrl(proofUrl)} type="button">
+                      <ExternalLink className="mr-2 h-4 w-4" />
+                      Preview Bukti
+                    </Button>
+                  ) : (
+                    <Button variant="outline" size="sm" asChild>
+                      <a href={proofUrl} target="_blank" rel="noreferrer"><ExternalLink className="mr-2 h-4 w-4" />Lihat Bukti</a>
+                    </Button>
+                  )
                 ) : null}
               </div>
             </CardHeader>
-            <CardContent className="space-y-4 p-4 sm:p-6">
-              <FileInput value={selectedFile} onFileChange={setSelectedFile} accept="image/jpeg,image/png,application/pdf" helperText="PNG, JPG, atau PDF maksimal 2MB" disabled={isUploading} />
+            <CardContent className="space-y-4 p-6">
+              <FileInput value={selectedFile} onFileChange={handleSelectedFileChange} accept="image/jpeg,image/png,application/pdf" helperText="PNG, JPG, atau PDF maksimal 2MB" disabled={isUploading} />
               {proofUrl && !selectedFile ? <p className="text-xs text-slate-500">Bukti pembayaran sudah tersimpan. Pilih file baru untuk menggantinya.</p> : null}
               {selectedFile ? (
-                <div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end [&>*]:w-full sm:[&>*]:w-auto">
-                  <Button type="button" variant="outline" onClick={() => setSelectedFile(null)} disabled={isUploading}>Batal</Button>
-                  <Button type="button" variant="default" onClick={() => void handleUploadProof()} disabled={isUploading} loading={isUploading}>
-                    Simpan Bukti
+                <div className="flex flex-col gap-3 sm:flex-row sm:justify-end">
+                  {selectedFilePreviewUrl ? (
+                    <Button type="button" variant="outline" onClick={() => setPreviewUrl(selectedFilePreviewUrl)} disabled={isUploading}>
+                      Preview Gambar
+                    </Button>
+                  ) : null}
+                  <Button type="button" variant="outline" onClick={() => handleSelectedFileChange(null)} disabled={isUploading}>Batal</Button>
+                  <Button type="button" variant="default" onClick={() => void handleUploadProof()} disabled={isUploading}>
+                    {isUploading ? <LoadingState variant="inline" text="Mengunggah..." iconClassName="text-white" /> : 'Simpan Bukti'}
                   </Button>
                 </div>
               ) : null}
@@ -446,6 +489,7 @@ export default function KasHarianDetailPage() {
         </div>
 
         <TogglePaymentStatusDialog open={isToggleOpen} onOpenChange={setIsToggleOpen} data={cashFlowDetail} targetStatus={targetStatus} />
+        <ImagePreview open={previewUrl !== null} onClose={() => setPreviewUrl(null)} src={previewUrl} />
       </div>
     </DashboardLayout>
   );

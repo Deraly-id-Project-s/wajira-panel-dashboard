@@ -1,6 +1,6 @@
 import React from 'react';
 import { format } from 'date-fns';
-import { CalendarDays, CircleUserRound, ClipboardList, MapPin, ReceiptText, Truck, WalletCards } from 'lucide-react';
+import { CalendarClock, CalendarDays, CheckCircle2, CircleUserRound, ClipboardList, Clock3, MapPin, ReceiptText, Truck, WalletCards } from 'lucide-react';
 import type { DoEkspedisi, DoEkspedisiOrderTarifItem } from '@/@types/do-ekspedisi.types';
 import { Card, CardContent } from '@/components/ui/card';
 import BaseTable, { type ColumnDef } from '@/components/ui/base-table';
@@ -39,6 +39,116 @@ function Section({ title, description, icon: Icon, children }: { title: string; 
         {children}
       </CardContent>
     </Card>
+  );
+}
+
+const formatDateTime = (value?: string | null) => {
+  if (!value) return '-';
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return value;
+  return format(date, 'dd/MM/yyyy HH:mm');
+};
+
+const getDurationLabel = (start?: string | null, end?: string | null) => {
+  if (!start || !end) return '-';
+
+  const startDate = new Date(start);
+  const endDate = new Date(end);
+  if (Number.isNaN(startDate.getTime()) || Number.isNaN(endDate.getTime())) return '-';
+
+  const diffInMinutes = Math.max(0, Math.round((endDate.getTime() - startDate.getTime()) / (1000 * 60)));
+  const days = Math.floor(diffInMinutes / 1440);
+  const hours = Math.floor((diffInMinutes % 1440) / 60);
+  const minutes = diffInMinutes % 60;
+  const parts = [
+    days ? `${days} hari` : '',
+    hours ? `${hours} jam` : '',
+    minutes ? `${minutes} menit` : '',
+  ].filter(Boolean);
+
+  return parts.length ? parts.join(' ') : '0 menit';
+};
+
+function TimelineDateCard({
+  title,
+  description,
+  startLabel,
+  endLabel,
+  startDate,
+  endDate,
+  tone,
+}: {
+  title: string;
+  description: string;
+  startLabel: string;
+  endLabel: string;
+  startDate?: string | null;
+  endDate?: string | null;
+  tone: 'admin' | 'process';
+}) {
+  const isAdmin = tone === 'admin';
+  const toneClassName = isAdmin
+    ? 'border-blue-100 bg-blue-50/50 text-blue-700'
+    : 'border-emerald-100 bg-emerald-50/50 text-emerald-700';
+  const iconWrapperClassName = isAdmin
+    ? 'bg-blue-100 text-blue-700'
+    : 'bg-emerald-100 text-emerald-700';
+
+  return (
+    <div className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
+      <div className="flex items-start gap-3">
+        <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-md ${iconWrapperClassName}`}>
+          {isAdmin ? <CalendarClock className="h-5 w-5" /> : <Clock3 className="h-5 w-5" />}
+        </div>
+        <div className="min-w-0">
+          <p className="font-semibold text-slate-950">{title}</p>
+          <p className="mt-0.5 text-xs leading-relaxed text-slate-500">{description}</p>
+        </div>
+      </div>
+
+      <div className="mt-5 grid gap-3 sm:grid-cols-2">
+        <div className="rounded-md border border-slate-100 bg-slate-50/70 p-3">
+          <p className="text-xs font-medium uppercase tracking-wide text-slate-500">{startLabel}</p>
+          <p className="mt-1 text-sm font-semibold text-slate-900">{formatDateTime(startDate)}</p>
+        </div>
+        <div className="rounded-md border border-slate-100 bg-slate-50/70 p-3">
+          <p className="text-xs font-medium uppercase tracking-wide text-slate-500">{endLabel}</p>
+          <p className="mt-1 text-sm font-semibold text-slate-900">{formatDateTime(endDate)}</p>
+        </div>
+      </div>
+
+      <div className={`mt-3 inline-flex items-center gap-2 rounded-full border px-3 py-1 text-xs font-semibold ${toneClassName}`}>
+        <CheckCircle2 className="h-3.5 w-3.5" />
+        Durasi: {getDurationLabel(startDate, endDate)}
+      </div>
+    </div>
+  );
+}
+
+function ExpeditionDateOverview({ data }: { data: DoEkspedisi }) {
+  return (
+    <Section title="Informasi Waktu Ekspedisi" description="Target dari admin dan waktu aktual proses pengiriman" icon={CalendarDays}>
+      <div className="grid grid-cols-1 gap-4 border-t border-slate-100 pt-5 xl:grid-cols-2">
+        <TimelineDateCard
+          title="Target Jadwal Admin"
+          description="Target waktu pengiriman yang ditentukan oleh admin sebelum DO diproses."
+          startLabel="Target Mulai"
+          endLabel="Target Selesai"
+          startDate={data.targetStartDate}
+          endDate={data.targetEndDate}
+          tone="admin"
+        />
+        <TimelineDateCard
+          title="Waktu Aktual Diproses"
+          description="Waktu real saat DO ekspedisi mulai diproses hingga diselesaikan."
+          startLabel="Mulai Diproses"
+          endLabel="Selesai Diproses"
+          startDate={data.startDate || data.date}
+          endDate={data.endDate}
+          tone="process"
+        />
+      </div>
+    </Section>
   );
 }
 
@@ -100,8 +210,6 @@ export function DOEkspedisiDetailCard({ data }: DOEkspedisiDetailCardProps) {
     <div className="space-y-6">
       <Section title="Detail Driver" description="Informasi kendaraan dan penanggung jawab pengiriman" icon={Truck}>
         <div className="grid grid-cols-1 gap-x-12 gap-y-6 border-t border-slate-100 pt-5 md:grid-cols-3">
-          <DetailField label="Mulai Pengiriman" value={(data.startDate || data.date) ? format(new Date(data.startDate || data.date), 'dd/MM/yyyy HH:mm') : '-'} icon={CalendarDays} />
-          <DetailField label="Selesai Pengiriman" value={data.endDate ? format(new Date(data.endDate), 'dd/MM/yyyy HH:mm') : '-'} icon={CalendarDays} />
           <DetailField label="Kode DO" value={data.doCode || '-'} icon={ClipboardList} />
           <DetailField label="UJ Awal" value={formatCurrency(data.ujNominalBeforeClaim)} icon={WalletCards} />
           <DetailField label="Potongan Claim" value={<span className="text-rose-700">-{formatCurrency(data.claimDeductionNominal)}</span>} icon={ReceiptText} />
@@ -143,6 +251,8 @@ export function DOEkspedisiDetailCard({ data }: DOEkspedisiDetailCardProps) {
           </div>
         </div>
       </Section>
+
+      <ExpeditionDateOverview data={data} />
 
       <Section title="Informasi Customer" description="Identitas customer dan rincian rute pengiriman" icon={ClipboardList}>
         <div className="grid grid-cols-1 gap-x-12 gap-y-6 border-t border-slate-100 pt-5 md:grid-cols-3">

@@ -64,7 +64,7 @@ export default function LaporanBuktiPotongPage() {
   const isLoading = isInitialLoading || isFetching;
 
   const rawData = React.useMemo(() => queryResult?.data || [], [queryResult?.data]);
-  
+
   // Safe Client-Side Array Filter
   const filteredData = React.useMemo(() => {
     let result = [...rawData];
@@ -100,7 +100,7 @@ export default function LaporanBuktiPotongPage() {
     perPage: 25,
     total: 0,
   };
-  
+
   const pagination = {
     ...backendPagination,
     total: (searchQuery.trim() || dateRange?.from) ? filteredData.length : backendPagination.total,
@@ -187,7 +187,7 @@ export default function LaporanBuktiPotongPage() {
             <DatePickerWithRange
               date={dateRange}
               onChange={setDateRangeState}
-              placeholder="Pilih rentang tanggal bukti potong"
+              placeholder="Pilih rentang tanggal"
               className="w-full sm:w-[260px]"
             />
           }

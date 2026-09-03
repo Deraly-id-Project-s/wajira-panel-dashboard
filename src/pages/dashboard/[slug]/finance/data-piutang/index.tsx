@@ -70,7 +70,7 @@ export default function DataPiutangPage() {
                         <DatePickerWithRange
                             date={date}
                             onChange={handleDateChange}
-                            placeholder="Pilih rentang tanggal piutang"
+                            placeholder="Pilih rentang tanggal"
                             className="w-full sm:w-[260px]"
                         />
                     }
