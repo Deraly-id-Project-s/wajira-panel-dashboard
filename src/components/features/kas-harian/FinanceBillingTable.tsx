@@ -79,22 +79,54 @@ export default function FinanceBillingTable({ financeBillings, cashFlowDetail, c
   const updateMutation = useUpdateFinanceBilling();
   const deleteMutation = useDeleteFinanceBilling();
 
+  const currentTransactionType = useMemo<'debet' | 'credit' | undefined>(() => {
+    if (
+      cashFlowDetail.cash_flow_type === 'debet' ||
+      cashFlowDetail.cash_flow_type === 'debit' ||
+      Number(cashFlowDetail.debet || 0) > 0 ||
+      Number(cashFlowDetail.debet_usd || 0) > 0
+    ) {
+      return 'debet';
+    }
+    if (
+      cashFlowDetail.cash_flow_type === 'credit' ||
+      Number(cashFlowDetail.credit || 0) > 0 ||
+      Number(cashFlowDetail.credit_usd || 0) > 0
+    ) {
+      return 'credit';
+    }
+    return undefined;
+  }, [cashFlowDetail]);
+
   const kasQuery = useKas(companyId > 0 ? companyId : undefined);
   const accountQuery = useAccounts({
     page: 1,
     perPage: 1000,
     search: '',
     company_id: companyId > 0 ? companyId : undefined,
+    type: currentTransactionType,
     enabled: companyId > 0,
   });
 
   const kasOptions = useMemo(() => kasQuery.data?.data ?? [], [kasQuery.data?.data]);
-  const akunOptions = useMemo(() => accountQuery.data?.data ?? [], [accountQuery.data?.data]);
+  const rawAkunOptions = useMemo(() => accountQuery.data?.data ?? [], [accountQuery.data?.data]);
 
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingId, setEditingId] = useState<number | null>(null);
   const [form, setForm] = useState<FormState>({ ...EMPTY_FORM });
   const [deleteTarget, setDeleteTarget] = useState<FinanceBilling | null>(null);
+
+  const akunOptions = useMemo(() => {
+    if (!currentTransactionType) return rawAkunOptions;
+    return rawAkunOptions.filter((account) => {
+      if (form.account_id && Number(account.id) === Number(form.account_id)) {
+        return true;
+      }
+      if (!account.type) return true;
+      const normalizedType = account.type === 'debit' ? 'debet' : account.type;
+      return normalizedType === currentTransactionType;
+    });
+  }, [rawAkunOptions, currentTransactionType, form.account_id]);
 
   const totalPaid = useMemo(
     () => financeBillings.reduce((sum, fb) => sum + Number(fb.amount || 0), 0),
@@ -133,8 +165,8 @@ export default function FinanceBillingTable({ financeBillings, cashFlowDetail, c
     [form.cash_id, kasOptions],
   );
   const selectedAkun = useMemo(
-    () => akunOptions.find((a) => Number(a.id) === Number(form.account_id)) ?? null,
-    [form.account_id, akunOptions],
+    () => akunOptions.find((a) => Number(a.id) === Number(form.account_id)) ?? rawAkunOptions.find((a) => Number(a.id) === Number(form.account_id)) ?? null,
+    [form.account_id, akunOptions, rawAkunOptions],
   );
   const selectedCurrency = selectedKas?.code?.toLowerCase().endsWith('_usd') ? 'usd' : 'idr';
   const selectedCurrencySymbol = selectedCurrency === 'usd' ? '$' : 'Rp';
@@ -254,10 +286,10 @@ export default function FinanceBillingTable({ financeBillings, cashFlowDetail, c
     return kas ? (kas.cash_name || `${kas.code} - ${kas.description}`) : '-';
   }, [kasOptions]);
 
-  const getAccountLabel = useCallback((cashId: number) => {
-    const akun = akunOptions.find((a) => Number(a.id) === cashId);
+  const getAccountLabel = useCallback((accountId: number) => {
+    const akun = rawAkunOptions.find((a) => Number(a.id) === accountId);
     return akun ? (akun.name || `${akun.code} - ${akun.description}`) : '-';
-  }, [akunOptions]);
+  }, [rawAkunOptions]);
 
   const columns = useMemo<ColumnDef<FinanceBilling>[]>(
     () => [

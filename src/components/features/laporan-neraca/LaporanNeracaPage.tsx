@@ -46,6 +46,7 @@ interface BalanceSectionConfig {
   templateKey: BalanceReportTemplateKey;
   calcKey: string;
   side: BalanceSide;
+  expectedType?: 'debet' | 'credit';
 }
 
 interface NormalizedSection {
@@ -91,6 +92,7 @@ const REPORT_SECTIONS: BalanceSectionConfig[] = [
     templateKey: 'receivable_ids',
     calcKey: 'receivable_calc',
     side: 'assets',
+    expectedType: 'debet',
   },
   {
     key: 'down_payment',
@@ -98,6 +100,7 @@ const REPORT_SECTIONS: BalanceSectionConfig[] = [
     templateKey: 'down_payment_ids',
     calcKey: 'down_payment_calc',
     side: 'assets',
+    expectedType: 'debet',
   },
   {
     key: 'fixed_asset',
@@ -105,6 +108,7 @@ const REPORT_SECTIONS: BalanceSectionConfig[] = [
     templateKey: 'fixed_asset_ids',
     calcKey: 'fixed_asset_calc',
     side: 'assets',
+    expectedType: 'debet',
   },
   {
     key: 'accounts_payable',
@@ -112,6 +116,7 @@ const REPORT_SECTIONS: BalanceSectionConfig[] = [
     templateKey: 'accounts_payable_ids',
     calcKey: 'accounts_payable_calc',
     side: 'liabilities',
+    expectedType: 'credit',
   },
   {
     key: 'tax_payable',
@@ -119,6 +124,7 @@ const REPORT_SECTIONS: BalanceSectionConfig[] = [
     templateKey: 'tax_payable_ids',
     calcKey: 'tax_payable_calc',
     side: 'liabilities',
+    expectedType: 'credit',
   },
   {
     key: 'miscellaneous_debts',
@@ -126,6 +132,7 @@ const REPORT_SECTIONS: BalanceSectionConfig[] = [
     templateKey: 'miscellaneous_debts_ids',
     calcKey: 'miscellaneous_debts_calc',
     side: 'liabilities',
+    expectedType: 'credit',
   },
   {
     key: 'equity',
@@ -133,6 +140,7 @@ const REPORT_SECTIONS: BalanceSectionConfig[] = [
     templateKey: 'equity_ids',
     calcKey: 'equity_calc',
     side: 'liabilities',
+    expectedType: 'credit',
   },
 ];
 
@@ -217,23 +225,43 @@ const normalizeSection = (value: unknown): NormalizedSection => {
 function AccountSelect({
   value,
   accounts,
+  expectedType,
   onChange,
 }: {
   value: number | null;
   accounts: Account[];
+  expectedType?: 'debet' | 'credit';
   onChange: (value: number | null) => void;
 }) {
+  const filteredAccounts = useMemo(() => {
+    if (!expectedType) return accounts;
+    return accounts.filter((account) => {
+      if (value && Number(account.id) === Number(value)) return true;
+      if (!account.type) return true;
+      const normalizedType = account.type === 'debit' ? 'debet' : account.type;
+      return normalizedType === expectedType;
+    });
+  }, [accounts, expectedType, value]);
+
+  const placeholderText = expectedType
+    ? `Pilih akun (${expectedType === 'debet' ? 'Debet' : 'Kredit'})`
+    : 'Pilih akun';
+
+  const searchPlaceholderText = expectedType
+    ? `Cari akun ${expectedType === 'debet' ? 'debet' : 'kredit'}...`
+    : 'Cari akun...';
+
   return (
     <Select
       value={value ? String(value) : EMPTY_VALUE}
       onValueChange={(nextValue) => onChange(nextValue === EMPTY_VALUE ? null : Number(nextValue))}
     >
       <SelectTrigger className="h-9 bg-white">
-        <SelectValue placeholder="Pilih akun" />
+        <SelectValue placeholder={placeholderText} />
       </SelectTrigger>
-      <SelectContent showSearch searchPlaceholder="Cari akun..." className="max-h-80">
-        <SelectItem value={EMPTY_VALUE}>Pilih akun</SelectItem>
-        {accounts.map((account) => (
+      <SelectContent showSearch searchPlaceholder={searchPlaceholderText} className="max-h-80">
+        <SelectItem value={EMPTY_VALUE}>{placeholderText}</SelectItem>
+        {filteredAccounts.map((account) => (
           <SelectItem key={account.id} value={String(account.id)}>
             {account.code} - {account.name}
           </SelectItem>
@@ -283,6 +311,7 @@ function TemplateAccountEditor({
               <AccountSelect
                 value={accountId || null}
                 accounts={accounts}
+                expectedType={config.expectedType}
                 onChange={(nextValue) => {
                   const nextIds = [...accountIds];
                   if (nextValue) {

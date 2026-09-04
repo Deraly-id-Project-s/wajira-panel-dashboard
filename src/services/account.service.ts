@@ -60,11 +60,12 @@ type AccountItemResponse = LaravelApiResponse<AccountApiModel>;
 
 type DeleteResponse = LaravelApiResponse<null>;
 
-export const getAccounts = async (params: PaginationParams & { search?: string; company_id?: string | number }): Promise<AccountListResponse> => {
+export const getAccounts = async (params: PaginationParams & { search?: string; company_id?: string | number; type?: string }): Promise<AccountListResponse> => {
   const response = await apiClient.get<PaginatedAccountResponse>(basePath, {
     params: {
       ...buildLaravelPaginationQuery(params),
       company_id: params.company_id,
+      type: params.type,
     },
   });
 

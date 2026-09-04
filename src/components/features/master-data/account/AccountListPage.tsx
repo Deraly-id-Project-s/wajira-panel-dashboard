@@ -58,7 +58,6 @@ export const AccountListPage = () => {
     enabled: !isLoadingCompany && !!companyId,
   });
 
-  const updateMutation = useUpdateAccount();
   const bulkUpdateMutation = useBulkUpdateAccounts();
   const deleteMutation = useDeleteAccount();
   const router = useRouter();

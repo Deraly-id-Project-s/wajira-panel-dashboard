@@ -100,6 +100,13 @@ export function AccountTable({
         ),
       },
       {
+        header: 'TIPE AKUN',
+        accessorKey: 'type',
+        sortable: true,
+        alignment: 'center',
+        cell: ({ type }) => type == 'debet' ? 'DB' : 'KR'
+      },
+      {
         header: 'KATEGORI AKUN',
         accessorKey: 'category',
         sortable: true,
