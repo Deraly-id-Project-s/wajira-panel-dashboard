@@ -59,6 +59,7 @@ const FEATURE_MAP: Record<string, { path: string; label?: string; group?: string
   'data-kendaraan': { path: '/data-kendaraan', label: 'Data Kendaraan' },
   'stnk-bpkb': { path: '/stnk-bpkb', label: 'Input STNK/BPKB' },
   'tagihan-bbn': { path: '/tagihan-bbn', label: 'Tagihan BBN' },
+  'driver-cash-advance': { path: '/kas-bon', label: 'Kas Bon' },
 
   // Warehouse
   'unit-inventory': { path: '/warehouse/stock-unit', label: 'Stok Unit', group: 'Unit Tipe' },

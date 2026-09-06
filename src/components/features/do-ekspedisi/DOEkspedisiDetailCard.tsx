@@ -1,6 +1,6 @@
 import React from 'react';
 import { format } from 'date-fns';
-import { CalendarClock, CalendarDays, CheckCircle2, CircleUserRound, ClipboardList, Clock3, MapPin, ReceiptText, Truck, WalletCards } from 'lucide-react';
+import { CalendarClock, CalendarDays, CheckCircle2, CircleUserRound, ClipboardList, Clock3, MapPin, Pencil, ReceiptText, Truck, WalletCards } from 'lucide-react';
 import type { DoEkspedisi, DoEkspedisiOrderTarifItem } from '@/@types/do-ekspedisi.types';
 import { Card, CardContent } from '@/components/ui/card';
 import BaseTable, { type ColumnDef } from '@/components/ui/base-table';
@@ -8,6 +8,11 @@ import { useRouter } from 'next/router';
 import { ReferenceLink } from '@/components/ui/reference-link';
 import { formatCurrency } from '@/lib/utils/currency';
 import { CopyBox } from '@/components/ui/copy-box';
+import { Button } from '@/components/ui/button';
+import { DateTimeRangeDialog } from '@/components/ui/date-time-range-dialog';
+import { useUpdateDoEkspedisi } from '@/hooks/useDoEkspedisi';
+import { toast } from 'sonner';
+import { getApiErrorMessage } from '@/utils/apiErrorHandler';
 
 interface DOEkspedisiDetailCardProps {
   data: DoEkspedisi;
@@ -77,6 +82,7 @@ function TimelineDateCard({
   startDate,
   endDate,
   tone,
+  onEdit,
 }: {
   title: string;
   description: string;
@@ -85,6 +91,7 @@ function TimelineDateCard({
   startDate?: string | null;
   endDate?: string | null;
   tone: 'admin' | 'process';
+  onEdit?: () => void;
 }) {
   const isAdmin = tone === 'admin';
   const toneClassName = isAdmin
@@ -108,11 +115,25 @@ function TimelineDateCard({
 
       <div className="mt-5 grid gap-3 sm:grid-cols-2">
         <div className="rounded-md border border-slate-100 bg-slate-50/70 p-3">
-          <p className="text-xs font-medium uppercase tracking-wide text-slate-500">{startLabel}</p>
+          <div className="flex items-center justify-between gap-2">
+            <p className="text-xs font-medium uppercase tracking-wide text-slate-500">{startLabel}</p>
+            {onEdit ? (
+              <Button type="button" variant="ghost" size="icon" onClick={onEdit} aria-label={`Ubah ${startLabel}`} className="h-7 w-7 text-slate-500 hover:text-blue-700">
+                <Pencil className="h-3.5 w-3.5" />
+              </Button>
+            ) : null}
+          </div>
           <p className="mt-1 text-sm font-semibold text-slate-900">{formatDateTime(startDate)}</p>
         </div>
         <div className="rounded-md border border-slate-100 bg-slate-50/70 p-3">
-          <p className="text-xs font-medium uppercase tracking-wide text-slate-500">{endLabel}</p>
+          <div className="flex items-center justify-between gap-2">
+            <p className="text-xs font-medium uppercase tracking-wide text-slate-500">{endLabel}</p>
+            {onEdit ? (
+              <Button type="button" variant="ghost" size="icon" onClick={onEdit} aria-label={`Ubah ${endLabel}`} className="h-7 w-7 text-slate-500 hover:text-blue-700">
+                <Pencil className="h-3.5 w-3.5" />
+              </Button>
+            ) : null}
+          </div>
           <p className="mt-1 text-sm font-semibold text-slate-900">{formatDateTime(endDate)}</p>
         </div>
       </div>
@@ -125,18 +146,19 @@ function TimelineDateCard({
   );
 }
 
-function ExpeditionDateOverview({ data }: { data: DoEkspedisi }) {
+function ExpeditionDateOverview({ data, onEditTarget }: { data: DoEkspedisi; onEditTarget: () => void }) {
   return (
-    <Section title="Informasi Waktu Ekspedisi" description="Target dari admin dan waktu aktual proses pengiriman" icon={CalendarDays}>
+    <Section title="Informasi Waktu Ekspedisi" description="Target waktu dan proses pengiriman ekspedisi" icon={CalendarDays}>
       <div className="grid grid-cols-1 gap-4 border-t border-slate-100 pt-5 xl:grid-cols-2">
         <TimelineDateCard
-          title="Target Jadwal Admin"
+          title="Target Jadwal Ekspedisi"
           description="Target waktu pengiriman yang ditentukan oleh admin sebelum DO diproses."
           startLabel="Target Mulai"
           endLabel="Target Selesai"
           startDate={data.targetStartDate}
           endDate={data.targetEndDate}
           tone="admin"
+          onEdit={onEditTarget}
         />
         <TimelineDateCard
           title="Waktu Aktual Diproses"
@@ -180,6 +202,24 @@ const cargoColumns: ColumnDef<CargoRow>[] = [
 export function DOEkspedisiDetailCard({ data }: DOEkspedisiDetailCardProps) {
   const router = useRouter();
   const slug = typeof router.query.slug === 'string' ? router.query.slug : '';
+  const [targetDialogOpen, setTargetDialogOpen] = React.useState(false);
+  const updateMutation = useUpdateDoEkspedisi();
+
+  const handleUpdateTarget = async ({ start, end }: { start: Date; end: Date }) => {
+    try {
+      await updateMutation.mutateAsync({
+        id: data.id,
+        payload: {
+          target_start_date: start.toISOString(),
+          target_end_date: end.toISOString(),
+        },
+      });
+      toast.success('Target jadwal ekspedisi berhasil diperbarui.');
+      setTargetDialogOpen(false);
+    } catch (error) {
+      toast.error(getApiErrorMessage(error));
+    }
+  };
 
   const firstItem = data.items?.[0];
   const order = data.orderList;
@@ -252,7 +292,20 @@ export function DOEkspedisiDetailCard({ data }: DOEkspedisiDetailCardProps) {
         </div>
       </Section>
 
-      <ExpeditionDateOverview data={data} />
+      <ExpeditionDateOverview data={data} onEditTarget={() => setTargetDialogOpen(true)} />
+
+      <DateTimeRangeDialog
+        open={targetDialogOpen}
+        onOpenChange={setTargetDialogOpen}
+        title="Ubah Target Jadwal Ekspedisi"
+        description="Atur target waktu mulai dan selesai pengiriman ekspedisi."
+        startLabel="Target Mulai"
+        endLabel="Target Selesai"
+        initialStart={data.targetStartDate}
+        initialEnd={data.targetEndDate}
+        onSubmit={handleUpdateTarget}
+        isSubmitting={updateMutation.isPending}
+      />
 
       <Section title="Informasi Customer" description="Identitas customer dan rincian rute pengiriman" icon={ClipboardList}>
         <div className="grid grid-cols-1 gap-x-12 gap-y-6 border-t border-slate-100 pt-5 md:grid-cols-3">
