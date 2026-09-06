@@ -219,7 +219,7 @@ export function DOEkspedisiDriverNotes({ data, onRefresh }: DOEkspedisiDriverNot
         </div>
         <div className="space-y-3">
           <Label>Deskripsi</Label>
-          <Textarea required value={form.description} onChange={(e) => set('description', e.target.value)} placeholder="Deskripsi Isi Pesan" />
+          <Textarea value={form.description} onChange={(e) => set('description', e.target.value)} placeholder="Deskripsi Isi Pesan" />
         </div>
       </FormDialog>
 

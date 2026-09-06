@@ -134,7 +134,7 @@ export function KasBonForm({
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>
-                    Subject <RequiredMark />
+                    Subjek <RequiredMark />
                   </FormLabel>
                   <FormControl>
                     <Input placeholder="Kas bon (pertama)" {...field} />

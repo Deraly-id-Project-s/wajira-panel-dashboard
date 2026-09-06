@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { CheckCircle2, FilePenLine, MoreVertical, Trash2 } from 'lucide-react';
+import { CheckCircle2, Eye, FilePenLine, MoreVertical, Trash2 } from 'lucide-react';
 import type { DriverCashAdvance } from '@/@types/driver-cash-advance.types';
 import BaseTable, { type ColumnDef } from '@/components/ui/base-table';
 import { Badge } from '@/components/ui/badge';
@@ -13,7 +13,9 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { cn } from '@/lib/utils';
-import { formatKasBonDate, getKasBonApprovalClassName, getKasBonApprovalLabel } from './kas-bon.utils';
+import { formatKasBonDate, getKasBonApprovalClassName, getKasBonApprovalLabel, isKasBonPaid } from './kas-bon.utils';
+import { ReferenceLink } from '@/components/ui/reference-link';
+import { useRouter } from 'next/router';
 
 interface KasBonTableProps {
   data: DriverCashAdvance[];
@@ -21,6 +23,7 @@ interface KasBonTableProps {
   onEdit: (item: DriverCashAdvance) => void;
   onDelete: (item: DriverCashAdvance) => void;
   onApprove: (item: DriverCashAdvance) => void;
+  onDetail: (item: DriverCashAdvance) => void;
   canEdit: boolean;
   canDelete: boolean;
 }
@@ -31,9 +34,13 @@ export function KasBonTable({
   onEdit,
   onDelete,
   onApprove,
+  onDetail,
   canEdit,
   canDelete,
 }: KasBonTableProps) {
+  const router = useRouter();
+  const slug = typeof router.query.slug === 'string' ? router.query.slug : '';
+
   const columns = React.useMemo<ColumnDef<DriverCashAdvance>[]>(
     () => [
       {
@@ -46,7 +53,8 @@ export function KasBonTable({
         header: 'DRIVER',
         accessorKey: 'driver.name',
         sortable: true,
-        cell: (item) => item.driver?.name ?? '-',
+        cell: (item) =>
+          item?.driver ? <ReferenceLink target='_blank' href={`/dashboard/${slug}/master/driver/${item?.driver?.id}`}>{item?.driver?.name}</ReferenceLink> : '-',
       },
       {
         header: 'SUBJECT',
@@ -97,12 +105,20 @@ export function KasBonTable({
               <DropdownMenuItem
                 onSelect={(event) => {
                   event.preventDefault();
-                  onApprove(item);
+                  onDetail(item);
                 }}
-                disabled={!canEdit || item.isApprove}
                 className="cursor-pointer rounded-lg px-3 py-2 text-sm text-slate-900 focus:bg-slate-50"
               >
-                <CheckCircle2 className="mr-2 h-4 w-4" />
+                Detail
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onSelect={(event) => {
+                  event.preventDefault();
+                  onApprove(item);
+                }}
+                disabled={!canEdit || item.isApprove || !isKasBonPaid(item)}
+                className="cursor-pointer rounded-lg px-3 py-2 text-sm text-slate-900 focus:bg-slate-50"
+              >
                 Approve
               </DropdownMenuItem>
               <DropdownMenuItem
@@ -113,7 +129,6 @@ export function KasBonTable({
                 disabled={!canEdit || item.isApprove}
                 className="cursor-pointer rounded-lg px-3 py-2 text-sm text-slate-900 focus:bg-slate-50"
               >
-                <FilePenLine className="mr-2 h-4 w-4" />
                 Edit
               </DropdownMenuItem>
               <DropdownMenuItem
@@ -124,7 +139,6 @@ export function KasBonTable({
                 disabled={!canDelete || item.isApprove}
                 className="cursor-pointer rounded-lg px-3 py-2 text-sm text-red-600 focus:bg-red-50 focus:text-red-600"
               >
-                <Trash2 className="mr-2 h-4 w-4" />
                 Hapus
               </DropdownMenuItem>
             </DropdownMenuContent>
@@ -132,7 +146,7 @@ export function KasBonTable({
         ),
       },
     ],
-    [canDelete, canEdit, onApprove, onDelete, onEdit],
+    [canDelete, canEdit, onApprove, onDelete, onDetail, onEdit],
   );
 
   return <BaseTable data={data} columns={columns} loading={isLoading} defaultSort={{ key: 'id', direction: 'desc' }} />;

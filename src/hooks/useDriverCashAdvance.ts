@@ -1,6 +1,8 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type {
   DriverCashAdvanceApprovalPayload,
+  DriverCashAdvanceBillingHistoryPayload,
+  DriverCashAdvanceBillingStatusPayload,
   DriverCashAdvanceListParams,
   DriverCashAdvancePayload,
 } from '@/@types/driver-cash-advance.types';
@@ -10,6 +12,9 @@ import {
   deleteDriverCashAdvance,
   getDriverCashAdvanceById,
   getDriverCashAdvances,
+  getDriverCashAdvanceBillingById,
+  createDriverCashAdvanceBillingHistory,
+  updateDriverCashAdvanceBillingStatus,
   updateDriverCashAdvance,
 } from '@/services/driver-cash-advance.service';
 
@@ -19,6 +24,7 @@ export const driverCashAdvanceKeys = {
   all: [DRIVER_CASH_ADVANCE_KEY] as const,
   list: (params: DriverCashAdvanceListParams) => [DRIVER_CASH_ADVANCE_KEY, 'list', params] as const,
   detail: (id: string | number | null) => [DRIVER_CASH_ADVANCE_KEY, 'detail', id] as const,
+  billing: (id: string | number | null) => [DRIVER_CASH_ADVANCE_KEY, 'billing', id] as const,
 };
 
 export function useDriverCashAdvances(params: DriverCashAdvanceListParams & { enabled?: boolean }) {
@@ -29,6 +35,40 @@ export function useDriverCashAdvances(params: DriverCashAdvanceListParams & { en
     queryFn: () => getDriverCashAdvances(rest),
     enabled,
     placeholderData: (previous) => previous,
+  });
+}
+
+export function useDriverCashAdvanceBillingDetail(id: string | number | null) {
+  return useQuery({
+    queryKey: driverCashAdvanceKeys.billing(id),
+    queryFn: () => getDriverCashAdvanceBillingById(id as string | number),
+    enabled: !!id,
+    retry: 2,
+  });
+}
+
+export function useCreateDriverCashAdvanceBillingHistory() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (payload: DriverCashAdvanceBillingHistoryPayload) => createDriverCashAdvanceBillingHistory(payload),
+    onSuccess: (_, payload) => {
+      queryClient.invalidateQueries({ queryKey: driverCashAdvanceKeys.all });
+      queryClient.invalidateQueries({ queryKey: driverCashAdvanceKeys.billing(payload.driver_cash_advance_billing_id) });
+    },
+  });
+}
+
+export function useUpdateDriverCashAdvanceBillingStatus() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ id, payload }: { id: string | number; payload: DriverCashAdvanceBillingStatusPayload }) =>
+      updateDriverCashAdvanceBillingStatus(id, payload),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: driverCashAdvanceKeys.all });
+      queryClient.invalidateQueries({ queryKey: driverCashAdvanceKeys.billing(variables.id) });
+    },
   });
 }
 

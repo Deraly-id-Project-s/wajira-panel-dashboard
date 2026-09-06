@@ -82,6 +82,14 @@ export default function KasBonPage() {
     [router, slug],
   );
 
+  const handleDetail = React.useCallback(
+    (item: DriverCashAdvance) => {
+      if (!slug) return;
+      void router.push(`/dashboard/${slug}/kas-bon/${item.id}`);
+    },
+    [router, slug],
+  );
+
   const handleDeleteClick = React.useCallback((item: DriverCashAdvance) => {
     setSelectedItem(item);
     setDeleteOpen(true);
@@ -191,6 +199,7 @@ export default function KasBonPage() {
             onEdit={handleEdit}
             onDelete={handleDeleteClick}
             onApprove={handleApproveClick}
+            onDetail={handleDetail}
             canEdit={canEdit}
             canDelete={canDelete}
           />
