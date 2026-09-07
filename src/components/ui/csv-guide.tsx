@@ -9,9 +9,9 @@ interface CsvGuideProps {
 
 export function CsvGuide({ headers, rows, guideNotes }: CsvGuideProps) {
     return (
-        <div className="rounded-md bg-blue-50 p-4">
-            <h4 className="text-sm font-medium text-blue-800 mb-2">Panduan Struktur File CSV</h4>
-            <p className="text-xs text-blue-700 mb-3">
+        <div className="rounded-md bg-orange-50/70 border border-orange-200/60 p-4">
+            <h4 className="text-sm font-medium text-orange-900 mb-2">Panduan Struktur File CSV</h4>
+            <p className="text-xs text-orange-800/90 mb-3">
                 File excel/CSV anda wajib memiliki header (baris pertama) persis seperti di bawah ini:
             </p>
             <div className="rounded-md border bg-white overflow-x-auto">
@@ -35,7 +35,7 @@ export function CsvGuide({ headers, rows, guideNotes }: CsvGuideProps) {
                 </Table>
             </div>
             {guideNotes && (
-                <p className="text-[10px] text-blue-600 mt-2 font-medium">
+                <p className="text-[10px] text-orange-700 mt-2 font-medium">
                     {guideNotes}
                 </p>
             )}

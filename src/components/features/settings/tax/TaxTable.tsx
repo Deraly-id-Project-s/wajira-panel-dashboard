@@ -2,7 +2,7 @@ import { useMemo } from 'react';
 import BaseTable, { ColumnDef } from '@/components/ui/base-table';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
-import { MoreVertical, Pencil, Trash, Lock, Eye } from 'lucide-react';
+import { MoreVertical, Lock } from 'lucide-react';
 import type { Tax } from '@/services/tax.service';
 import { CopyBox } from '@/components/ui/copy-box';
 
@@ -67,7 +67,6 @@ export const TaxTable = ({ data, isLoading = false, onEdit, onDelete, onViewDeta
                 onClick={() => onViewDetail(item)}
                 className="rounded-lg px-3 py-2 text-sm text-slate-900 focus:bg-slate-50 cursor-pointer"
               >
-                <Eye className="mr-2 h-4 w-4" />
                 Lihat Detail
               </DropdownMenuItem>
               <DropdownMenuItem
@@ -75,7 +74,6 @@ export const TaxTable = ({ data, isLoading = false, onEdit, onDelete, onViewDeta
                 disabled={item.is_lock === 1 || item.is_lock === true}
                 className="rounded-lg px-3 py-2 text-sm text-slate-900 focus:bg-slate-50 cursor-pointer"
               >
-                <Pencil className="mr-2 h-4 w-4" />
                 Edit
               </DropdownMenuItem>
               <DropdownMenuItem
@@ -83,7 +81,6 @@ export const TaxTable = ({ data, isLoading = false, onEdit, onDelete, onViewDeta
                 className="rounded-lg px-3 py-2 text-sm text-red-600 focus:bg-red-50 focus:text-red-600 cursor-pointer"
                 disabled={item.is_lock === 1 || item.is_lock === true}
               >
-                <Trash className="mr-2 h-4 w-4" />
                 Hapus
               </DropdownMenuItem>
             </DropdownMenuContent>

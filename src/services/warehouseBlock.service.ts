@@ -45,14 +45,16 @@ export const getWarehouseBlockDetail = async (id: number) => {
 };
 
 export interface CreateUpdateWarehouseBlockDTO {
-  warehouse_id: number;
+  warehouse_id?: number;
   name: string;
   description: string;
 }
 
 export const createWarehouseBlock = async (data: CreateUpdateWarehouseBlockDTO) => {
   const formData = new FormData();
-  formData.append('warehouse_id', String(data.warehouse_id));
+  if (data.warehouse_id) {
+    formData.append('warehouse_id', String(data.warehouse_id));
+  }
   formData.append('name', data.name);
   formData.append('description', data.description);
 
@@ -62,7 +64,9 @@ export const createWarehouseBlock = async (data: CreateUpdateWarehouseBlockDTO) 
 
 export const updateWarehouseBlock = async (id: number, data: CreateUpdateWarehouseBlockDTO) => {
   const formData = new FormData();
-  formData.append('warehouse_id', String(data.warehouse_id));
+  if (data.warehouse_id) {
+    formData.append('warehouse_id', String(data.warehouse_id));
+  }
   formData.append('name', data.name);
   formData.append('description', data.description);
   formData.append('_method', 'PUT');

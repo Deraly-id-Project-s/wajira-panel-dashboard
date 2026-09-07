@@ -62,15 +62,15 @@ export function SupplierFormModal({
 
         <FormField
           control={form.control}
-          name="pic"
+          name="address"
           render={({ field }) => (
             <FormItem>
-              <FormLabel className="text-sm font-medium text-foreground">PIC</FormLabel>
+              <FormLabel className="text-sm font-medium text-foreground">Alamat</FormLabel>
               <FormControl>
-                <Input
+                <Textarea
                   {...field}
-                  placeholder="Tambahkan PIC"
-                  className="bg-transparent"
+                  placeholder="Tambahkan Alamat"
+                  className="min-h-[100px] bg-transparent resize-none"
                 />
               </FormControl>
               <FormMessage />
@@ -124,15 +124,15 @@ export function SupplierFormModal({
 
         <FormField
           control={form.control}
-          name="address"
+          name="pic"
           render={({ field }) => (
             <FormItem>
-              <FormLabel className="text-sm font-medium text-foreground">Alamat</FormLabel>
+              <FormLabel className="text-sm font-medium text-foreground">PIC</FormLabel>
               <FormControl>
-                <Textarea
+                <Input
                   {...field}
-                  placeholder="Tambahkan Alamat"
-                  className="min-h-[100px] bg-transparent resize-none"
+                  placeholder="Tambahkan PIC"
+                  className="bg-transparent"
                 />
               </FormControl>
               <FormMessage />

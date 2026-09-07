@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useMemo } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -6,18 +6,12 @@ import { useQuery } from '@tanstack/react-query';
 import { FormDialog } from '@/components/ui/form-dialog';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
-import { useState, useMemo } from 'react';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
-import { Check, ChevronsUpDown } from 'lucide-react';
 import { Textarea } from '@/components/ui/textarea';
 import { getWarehouseDataList } from '@/services/warehouseBlock.service';
 import type { WarehouseBlock } from '@/services/warehouseBlock.service';
-import { cn } from '@/lib/utils';
 
 const warehouseBlockSchema = z.object({
-  warehouse_id: z.coerce.number().min(1, 'Gudang wajib dipilih'),
+  warehouse_id: z.coerce.number().optional(),
   name: z.string().min(1, 'Nama blok wajib diisi'),
   description: z.string().optional(),
 });
@@ -42,21 +36,13 @@ export function WarehouseBlockForm({ open, onOpenChange, initialData, onSubmit, 
     },
   });
 
-  const { data: warehousesResponse, isLoading: isWarehousesLoading } = useQuery({
+  const { data: warehousesResponse } = useQuery({
     queryKey: ['warehouses-data-list'],
     queryFn: () => getWarehouseDataList(),
-    enabled: open,
+    enabled: open && !initialData,
   });
 
   const warehouses = useMemo(() => warehousesResponse?.data?.data || [], [warehousesResponse]);
-  const [openWarehouseSelect, setOpenWarehouseSelect] = useState(false);
-  const [warehouseSearch, setWarehouseSearch] = useState('');
-  
-  const filteredWarehouses = warehouses.filter((wh) => {
-    if (!warehouseSearch.trim()) return true;
-    const keyword = warehouseSearch.toLowerCase();
-    return wh.name.toLowerCase().includes(keyword);
-  });
 
   useEffect(() => {
     if (open) {
@@ -68,16 +54,16 @@ export function WarehouseBlockForm({ open, onOpenChange, initialData, onSubmit, 
         });
       } else {
         form.reset({
-          warehouse_id: 0,
+          warehouse_id: warehouses[0]?.id || 0,
           name: '',
           description: '',
         });
       }
     }
-  }, [initialData, form, open]);
+  }, [initialData, form, open, warehouses]);
 
   useEffect(() => {
-    if (open && !initialData && warehouses.length > 0 && form.getValues('warehouse_id') === 0) {
+    if (open && !initialData && warehouses.length > 0 && !form.getValues('warehouse_id')) {
       form.setValue('warehouse_id', warehouses[0].id);
     }
   }, [open, initialData, warehouses, form]);
@@ -98,77 +84,6 @@ export function WarehouseBlockForm({ open, onOpenChange, initialData, onSubmit, 
         onSubmit={form.handleSubmit(handleSubmit)}
         isSubmitting={isSubmitting}
       >
-        <FormField
-          control={form.control}
-          name="warehouse_id"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Pilih Gudang</FormLabel>
-              <Popover
-                modal={true}
-                open={openWarehouseSelect}
-                onOpenChange={(open) => {
-                  setOpenWarehouseSelect(open);
-                  if (!open) setWarehouseSearch('');
-                }}
-              >
-                <PopoverTrigger asChild>
-                  <FormControl>
-                        <Button
-                          variant="outline"
-                          role="combobox"
-                          aria-expanded={openWarehouseSelect}
-                          disabled={isSubmitting || isWarehousesLoading}
-                          className={cn(
-                            "w-full justify-between bg-white font-normal",
-                            !field.value && "text-muted-foreground"
-                          )}
-                        >
-                          {field.value
-                            ? warehouses.find((wh) => wh.id === field.value)?.name
-                            : "Pilih Gudang"}
-                          <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                        </Button>
-                      </FormControl>
-                </PopoverTrigger>
-                <PopoverContent className="w-[--radix-popover-trigger-width] p-0" align="start">
-                  <Command shouldFilter={false}>
-                    <CommandInput 
-                      placeholder="Cari gudang..." 
-                      value={warehouseSearch} 
-                      onValueChange={setWarehouseSearch} 
-                    />
-                    <CommandList>
-                      <CommandEmpty>Gudang tidak ditemukan.</CommandEmpty>
-                      <CommandGroup>
-                        {filteredWarehouses.map((wh) => (
-                          <CommandItem
-                            key={wh.id}
-                            value={`${wh.name} ${wh.id}`}
-                            onSelect={() => {
-                              field.onChange(wh.id);
-                              setOpenWarehouseSelect(false);
-                              setWarehouseSearch('');
-                            }}
-                          >
-                            <Check
-                              className={cn(
-                                "mr-2 h-4 w-4",
-                                field.value === wh.id ? "opacity-100" : "opacity-0"
-                              )}
-                            />
-                            {wh.name}
-                          </CommandItem>
-                        ))}
-                      </CommandGroup>
-                    </CommandList>
-                  </Command>
-                </PopoverContent>
-              </Popover>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
         <FormField
           control={form.control}
           name="name"

@@ -8,11 +8,10 @@ import { TarifTable } from '@/components/features/tarif/TarifTable';
 import { DeleteTarifModal } from '@/components/features/tarif/DeleteTarifModal';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
-import { useTarifs, useDeleteTarif, useCreateTarif } from '@/hooks/useTarif';
+import { useTarifs, useDeleteTarif } from '@/hooks/useTarif';
 import { useQueryParamsTable } from '@/hooks/useQueryParamsTable';
-import type { Tarif, TarifPayload } from '@/@types/tarif.types';
+import type { Tarif } from '@/@types/tarif.types';
 import { usePermissionGuard } from '@/hooks/usePermissionGuard';
-import { TarifFormModal } from '@/components/features/tarif/TarifFormModal';
 
 export default function TarifPage() {
     const router = useRouter();
@@ -39,13 +38,10 @@ export default function TarifPage() {
 
     const { data: tarifData, isLoading } = useTarifs({ page, perPage, search });
     const deleteMutation = useDeleteTarif();
-    const createMutation = useCreateTarif();
 
     // Modals state
     const [isDeleteOpen, setIsDeleteOpen] = useState(false);
     const [selectedTarif, setSelectedTarif] = useState<Tarif | null>(null);
-
-    const isCreateOpen = router.asPath.endsWith('/create');
 
     // Handlers
     const handleAddClick = () => {
@@ -78,16 +74,6 @@ export default function TarifPage() {
             setSelectedTarif(null);
         } catch (error: any) {
             toast.error(error.message || 'Gagal menghapus data tarif');
-        }
-    };
-
-    const handleSaveForm = async (data: TarifPayload) => {
-        try {
-            await createMutation.mutateAsync(data);
-            toast.success('Data tarif berhasil ditambahkan');
-            router.push(`/dashboard/${slug}/master/tarif`);
-        } catch (error: any) {
-            toast.error(error.message || 'Gagal menyimpan data tarif');
         }
     };
 
@@ -158,13 +144,6 @@ export default function TarifPage() {
                 onClose={() => setIsDeleteOpen(false)}
                 onConfirm={handleConfirmDelete}
                 isDeleting={deleteMutation.isPending}
-            />
-
-            <TarifFormModal
-                isOpen={isCreateOpen}
-                onClose={() => router.push(`/dashboard/${slug}/master/tarif`)}
-                onSave={handleSaveForm}
-                isSubmitting={createMutation.isPending}
             />
         </DashboardLayout>
     );

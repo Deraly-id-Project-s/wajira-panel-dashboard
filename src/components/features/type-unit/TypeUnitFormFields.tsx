@@ -35,7 +35,7 @@ export function TypeUnitFormFields({ form, disabled = false }: TypeUnitFormField
     <>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <FormField control={form.control} name="code" render={({ field }) => (
-          <FormItem>
+          <FormItem className="flex flex-col min-w-0">
             <FormLabel className="text-sm font-medium">Kode<RequiredMark /></FormLabel>
             <FormControl><Input {...field} disabled={disabled} placeholder="Masukkan kode" className={fieldClassName} /></FormControl>
             <FormMessage />
@@ -43,17 +43,23 @@ export function TypeUnitFormFields({ form, disabled = false }: TypeUnitFormField
         )} />
 
         <FormField control={form.control} name="brandId" render={({ field }) => (
-          <FormItem>
+          <FormItem className="flex flex-col min-w-0">
             <FormLabel className="text-sm font-medium">Merk<RequiredMark /></FormLabel>
-            <div className="flex w-full flex-col items-stretch gap-2 sm:flex-row sm:items-center">
+            <div className="flex items-center gap-2 w-full min-w-0">
               <Popover open={brandOpen} onOpenChange={(open) => { setBrandOpen(open); if (!open) setSearch(''); }}>
                 <PopoverTrigger asChild>
-                  <Button type="button" variant="outline" role="combobox" disabled={disabled || isLoading} className="w-full justify-between bg-transparent font-normal">
+                  <button
+                    type="button"
+                    role="combobox"
+                    aria-expanded={brandOpen}
+                    disabled={disabled || isLoading}
+                    className="flex h-10 w-full items-center justify-between rounded-md border border-input bg-transparent px-3 py-2 text-sm ring-offset-background disabled:cursor-not-allowed disabled:opacity-50 min-w-0 font-normal text-left"
+                  >
                     <span className={cn('truncate', !field.value && 'text-muted-foreground')}>
                       {field.value ? brands.find((brand) => brand.id === Number(field.value))?.name ?? 'Pilih merk' : isLoading ? 'Memuat...' : 'Pilih merk'}
                     </span>
                     <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                  </Button>
+                  </button>
                 </PopoverTrigger>
                 <PopoverContent className="w-[--radix-popover-trigger-width] p-0" align="start">
                   <Command shouldFilter={false}>
@@ -64,7 +70,7 @@ export function TypeUnitFormFields({ form, disabled = false }: TypeUnitFormField
                         {filteredBrands.map((brand) => (
                           <CommandItem key={brand.id} value={`${brand.name} ${brand.id}`} onSelect={() => { field.onChange(brand.id); setBrandOpen(false); setSearch(''); }}>
                             <Check className={cn('mr-2 h-4 w-4', Number(field.value) === brand.id ? 'opacity-100' : 'opacity-0')} />
-                            {brand.name}
+                            <span className="truncate">{brand.name}</span>
                           </CommandItem>
                         ))}
                       </CommandGroup>
@@ -72,9 +78,17 @@ export function TypeUnitFormFields({ form, disabled = false }: TypeUnitFormField
                   </Command>
                 </PopoverContent>
               </Popover>
-              <Button type="button" variant="outline" className="h-10 w-full shrink-0 sm:w-10 sm:px-0" disabled={disabled} aria-label="Tambah merk" onClick={() => setCreateBrandOpen(true)}>
+              <Button
+                type="button"
+                variant="outline"
+                size="icon"
+                className="h-10 w-10 shrink-0"
+                disabled={disabled}
+                aria-label="Tambah merk"
+                onClick={() => setCreateBrandOpen(true)}
+              >
                 <Plus className="h-4 w-4" />
-                <span className="sm:sr-only">Tambah merk</span>
+                <span className="sr-only">Tambah merk</span>
               </Button>
             </div>
             <FormMessage />
@@ -82,7 +96,7 @@ export function TypeUnitFormFields({ form, disabled = false }: TypeUnitFormField
         )} />
 
         <FormField control={form.control} name="name" render={({ field }) => (
-          <FormItem>
+          <FormItem className="flex flex-col min-w-0">
             <FormLabel className="text-sm font-medium">Tipe Unit<RequiredMark /></FormLabel>
             <FormControl><Input {...field} value={field.value || ''} disabled={disabled} placeholder="Masukkan tipe unit" className={fieldClassName} /></FormControl>
             <FormMessage />
@@ -90,7 +104,7 @@ export function TypeUnitFormFields({ form, disabled = false }: TypeUnitFormField
         )} />
 
         <FormField control={form.control} name="unitType" render={({ field }) => (
-          <FormItem>
+          <FormItem className="flex flex-col min-w-0">
             <FormLabel className="text-sm font-medium">Jenis</FormLabel>
             <FormControl><Input {...field} value={field.value || ''} disabled={disabled} placeholder="Masukkan jenis" className={fieldClassName} /></FormControl>
             <FormMessage />
@@ -98,7 +112,7 @@ export function TypeUnitFormFields({ form, disabled = false }: TypeUnitFormField
         )} />
 
         <FormField control={form.control} name="unitModel" render={({ field }) => (
-          <FormItem>
+          <FormItem className="flex flex-col min-w-0">
             <FormLabel className="text-sm font-medium">Model</FormLabel>
             <FormControl><Input {...field} value={field.value || ''} disabled={disabled} placeholder="Masukkan model" className={fieldClassName} /></FormControl>
             <FormMessage />
@@ -108,7 +122,7 @@ export function TypeUnitFormFields({ form, disabled = false }: TypeUnitFormField
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <FormField control={form.control} name="nettoWeight" render={({ field }) => (
-          <FormItem>
+          <FormItem className="flex flex-col min-w-0">
             <FormLabel className="text-sm font-medium">Netto (Kg)</FormLabel>
             <FormControl><Input type="number" value={field.value ?? ''} disabled={disabled} onChange={(event) => field.onChange(parseNumber(event.target.value))} placeholder="Masukkan berat" className={fieldClassName} /></FormControl>
             <FormMessage />
@@ -116,7 +130,7 @@ export function TypeUnitFormFields({ form, disabled = false }: TypeUnitFormField
         )} />
 
         <FormField control={form.control} name="brutoWeight" render={({ field }) => (
-          <FormItem>
+          <FormItem className="flex flex-col min-w-0">
             <FormLabel className="text-sm font-medium">Bruto (Kg)</FormLabel>
             <FormControl><Input type="number" value={field.value ?? ''} disabled={disabled} onChange={(event) => field.onChange(parseNumber(event.target.value))} placeholder="Masukkan berat" className={fieldClassName} /></FormControl>
             <FormMessage />
@@ -124,7 +138,7 @@ export function TypeUnitFormFields({ form, disabled = false }: TypeUnitFormField
         )} />
 
         <FormField control={form.control} name="buyPrice" render={({ field: { onChange, value, ...field } }) => (
-          <FormItem>
+          <FormItem className="flex flex-col min-w-0">
             <FormLabel className="text-sm font-medium">Harga Beli</FormLabel>
             <FormControl><MoneyInput {...field} value={value ?? 0} disabled={disabled} onChangeValue={onChange} className="bg-transparent" /></FormControl>
             <FormMessage />
@@ -132,7 +146,7 @@ export function TypeUnitFormFields({ form, disabled = false }: TypeUnitFormField
         )} />
 
         <FormField control={form.control} name="sellPrice" render={({ field: { onChange, value, ...field } }) => (
-          <FormItem>
+          <FormItem className="flex flex-col min-w-0">
             <FormLabel className="text-sm font-medium">Harga Jual</FormLabel>
             <FormControl><MoneyInput {...field} value={value ?? 0} disabled={disabled} onChangeValue={onChange} className="bg-transparent" /></FormControl>
             <FormMessage />
