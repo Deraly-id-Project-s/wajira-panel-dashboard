@@ -49,7 +49,6 @@ export default function PenerimaanUnitTable({
   isLoading,
   canEdit,
 }: Props) {
-  console.log(data)
   const router = useRouter();
   const slug = typeof router.query.slug === 'string' ? router.query.slug : '';
 

@@ -14,7 +14,6 @@ interface Props {
 }
 
 export function PurchaseDetailCards({ data, billingHistories = [] }: Props) {
-  console.log(data);
   const totalDpp = Number(data.unit_transaction_item_total_dpp ?? 0);
   const totalPpn = Number(data.unit_transaction_item_total_ppn ?? 0);
   const totalHpp = totalDpp + totalPpn;

@@ -1,5 +1,6 @@
 import type {
   BalanceReportCashListResponse,
+  BalanceReportFilters,
   BalanceReportCashPayload,
   BalanceReportResponse,
   BalanceReportTemplatePayload,
@@ -12,8 +13,14 @@ const basePath = '/wapi/report/balance-report';
 
 export const getBalanceReport = async (
   companyId: string | number,
+  filters: BalanceReportFilters = {},
 ): Promise<BalanceReportResponse> => {
-  const response = await apiClient.get<BalanceReportResponse>(`${basePath}/${companyId}`);
+  const response = await apiClient.get<BalanceReportResponse>(`${basePath}/${companyId}`, {
+    params: {
+      start_date: filters.start_date || undefined,
+      end_date: filters.end_date || undefined,
+    },
+  });
   return response.data;
 };
 

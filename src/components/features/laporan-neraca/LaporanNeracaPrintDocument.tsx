@@ -21,6 +21,7 @@ interface LaporanNeracaPrintDocumentProps {
   template: DocumentTemplate | null;
   fallbackBackground?: string;
   companyName: string;
+  periodLabel: string;
   printedAt: Date;
   cashRows: BalanceReportCashCalcItem[];
   cashTotalIdr: number;
@@ -83,6 +84,7 @@ export function LaporanNeracaPrintDocument({
   template,
   fallbackBackground,
   companyName,
+  periodLabel,
   printedAt,
   cashRows,
   cashTotalIdr,
@@ -124,8 +126,8 @@ export function LaporanNeracaPrintDocument({
                 <p className="mt-0.5 text-[8pt] font-semibold uppercase text-slate-700">{companyName}</p>
               </div>
               <dl className="grid min-w-[58mm] grid-cols-[20mm_1fr] gap-x-2 gap-y-0.5 text-[7pt] leading-tight">
-                <dt className="text-slate-500">Posisi</dt>
-                <dd className="font-medium">: Saat ini</dd>
+                <dt className="text-slate-500">Periode</dt>
+                <dd className="font-medium">: {periodLabel}</dd>
                 <dt className="text-slate-500">Dicetak</dt>
                 <dd>: {formatCompactDate(printedAt)}</dd>
                 <dt className="text-slate-500">Mata Uang</dt>

@@ -17,10 +17,10 @@ import { PageHeader } from '@/components/ui/page-header';
 import { Button } from '@/components/ui/button';
 import { DatePickerWithRange, type DateRangePickerMode } from '@/components/ui/date-range-picker';
 import { SearchInput } from '@/components/ui/search-input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Skeleton } from '@/components/ui/skeleton';
 import { currenciesFormat } from '@/components/ui/currenciesFormat';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
+import { SearchableSelect } from '@/components/features/vehicle-data/SearchableSelect';
 import { useCompany } from '@/contexts/CompanyContext';
 import { useAccounts } from '@/hooks/useAccount';
 import { useProfitLossReport, useUpdateProfitLossTemplate } from '@/hooks/report/useProfitLossReport';
@@ -251,24 +251,24 @@ function AccountSelect({
   const searchPlaceholderText = expectedType
     ? `Cari akun ${expectedType === 'debet' ? 'debet' : 'kredit'}...`
     : 'Cari akun...';
+  const accountOptions = useMemo(
+    () => filteredAccounts.map((account) => ({
+      value: String(account.id),
+      label: `${account.code} - ${account.name}`,
+    })),
+    [filteredAccounts],
+  );
 
   return (
-    <Select
+    <SearchableSelect
       value={value ? String(value) : EMPTY_VALUE}
-      onValueChange={(nextValue) => onChange(nextValue === EMPTY_VALUE ? null : Number(nextValue))}
-    >
-      <SelectTrigger className="h-9 bg-white">
-        <SelectValue placeholder={placeholderText} />
-      </SelectTrigger>
-      <SelectContent showSearch searchPlaceholder={searchPlaceholderText} className="max-h-80">
-        <SelectItem value={EMPTY_VALUE}>{placeholderText}</SelectItem>
-        {filteredAccounts.map((account) => (
-          <SelectItem key={account.id} value={String(account.id)}>
-            {account.code} - {account.name}
-          </SelectItem>
-        ))}
-      </SelectContent>
-    </Select>
+      onChange={(nextValue) => onChange(nextValue === EMPTY_VALUE ? null : Number(nextValue))}
+      options={accountOptions}
+      placeholder={placeholderText}
+      searchPlaceholder={searchPlaceholderText}
+      emptyText="Akun tidak ditemukan."
+      className="h-10 rounded-lg border-slate-200 bg-white px-3 text-sm shadow-none focus-visible:ring-slate-300"
+    />
   );
 }
 
@@ -335,7 +335,7 @@ function SectionEditor({
                   const nextIds = accountIds.filter((_, itemIndex) => itemIndex !== index);
                   onChange(uniqueNumbers(nextIds));
                 }}
-                className="btn-outline! px-2"
+                className="btn-outline! h-10 px-2"
                 disabled={accountIds.length === 0}
               >
                 <Trash2 className="h-4 w-4" />

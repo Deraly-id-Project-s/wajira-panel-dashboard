@@ -170,8 +170,6 @@ export function ProductOverviewCard({ data, isLoading }: ProductOverviewCardProp
     else setSortOrder(null);
   };
 
-  console.log(data);
-
   return (
     <Card className="rounded-md border border-slate-200 bg-white p-7 shadow-sm h-full flex flex-col justify-between">
       <div>

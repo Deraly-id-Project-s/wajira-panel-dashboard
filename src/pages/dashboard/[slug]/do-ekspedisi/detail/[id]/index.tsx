@@ -239,19 +239,8 @@ export default function DetailDOEkspedisiPage() {
               </Button>
             ) : detailQuery.data?.status === 'pending' ? (
               <>
-                <Button
-                  type="button"
-                  disabled={updateMutation.isPending}
-                  onClick={() => {
-                    if (window.confirm('Tandai pengiriman ini sebagai selesai? Claim driver baru dapat dikelola setelah langkah ini.')) void updateStatus('done');
-                  }}
-                  className="min-w-[150px] bg-emerald-600 font-medium text-white hover:bg-emerald-700"
-                >
-                  <CheckCircle2 className="h-4 w-4" />
-                  {updateMutation.isPending ? 'Menyimpan...' : 'Selesaikan DO'}
-                </Button>
-                <Button type="button" variant="outline" disabled={updateMutation.isPending} onClick={() => void updateStatus('draft')} className="min-w-[120px] border-slate-300 font-medium text-slate-700 hover:bg-slate-50">
-                  Kembali ke Draft
+                <Button type="button" variant="outline" disabled={updateMutation.isPending} onClick={() => void updateStatus('draft')} className="min-w-[120px] border-slate-300 font-medium text-slate-700 hover:bg-slate-50" tooltip="Data DO belum diproses oleh Driver, data ini bisa dikembalikan ke Draft">
+                  Kembalikan ke Draft
                 </Button>
               </>
             ) : null}

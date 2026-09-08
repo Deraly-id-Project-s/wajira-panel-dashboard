@@ -4,6 +4,7 @@ import { Slot } from "radix-ui"
 import { Loader2 } from "lucide-react"
 
 import { cn } from "@/lib/utils"
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "./tooltip"
 
 const buttonVariants = cva(
   "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-all disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg:not([class*='size-'])]:size-4 shrink-0 [&_svg]:shrink-0 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive cursor-pointer",
@@ -42,29 +43,27 @@ const buttonVariants = cva(
 
 export interface ButtonProps
   extends React.ComponentProps<"button">,
-    VariantProps<typeof buttonVariants> {
+  VariantProps<typeof buttonVariants> {
   asChild?: boolean
   loading?: boolean
+  tooltip?: React.ReactNode
+  tooltipDelayDuration?: number
 }
 
 const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
-  ({ className, variant, size, asChild = false, loading = false, disabled, children, ...props }, ref) => {
-    if (asChild) {
-      return (
-        <Slot.Root
-          data-slot="button"
-          data-variant={variant}
-          data-size={size}
-          className={cn(buttonVariants({ variant, size, className }))}
-          ref={ref}
-          {...props}
-        >
-          {children}
-        </Slot.Root>
-      )
-    }
-
-    return (
+  ({ className, variant, size, asChild = false, loading = false, disabled, children, tooltip, tooltipDelayDuration = 500, ...props }, ref) => {
+    const buttonElement = asChild ? (
+      <Slot.Root
+        data-slot="button"
+        data-variant={variant}
+        data-size={size}
+        className={cn(buttonVariants({ variant, size, className }))}
+        ref={ref}
+        {...props}
+      >
+        {children}
+      </Slot.Root>
+    ) : (
       <button
         data-slot="button"
         data-variant={variant}
@@ -79,6 +78,29 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
         {children}
       </button>
     )
+
+    if (tooltip) {
+      const trigger = (disabled || loading) ? (
+        <span className="inline-flex cursor-not-allowed">{buttonElement}</span>
+      ) : (
+        buttonElement
+      )
+
+      return (
+        <TooltipProvider delayDuration={tooltipDelayDuration}>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              {trigger}
+            </TooltipTrigger>
+            <TooltipContent>
+              {tooltip}
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
+      )
+    }
+
+    return buttonElement
   }
 )
 Button.displayName = "Button"

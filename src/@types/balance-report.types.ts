@@ -53,6 +53,11 @@ export interface BalanceReportCashPayload {
   value: number;
 }
 
+export interface BalanceReportFilters {
+  start_date?: string | null;
+  end_date?: string | null;
+}
+
 export interface BalanceReportCashCalcItem {
   id: number;
   cash_id: number;

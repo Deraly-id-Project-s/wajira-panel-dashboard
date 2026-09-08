@@ -1,8 +1,10 @@
 import { useEffect, useMemo, useState } from 'react';
 import type { ReactNode } from 'react';
 import { useRouter } from 'next/router';
+import { format } from 'date-fns';
 import { Plus, Printer, RefreshCw, RotateCcw, Save, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
+import type { DateRange } from 'react-day-picker';
 
 import type { Account } from '@/@types/account.types';
 import type {
@@ -18,10 +20,11 @@ import {
 } from '@/components/features/laporan-neraca/LaporanNeracaPrintDocument';
 import { PageHeader } from '@/components/ui/page-header';
 import { Button } from '@/components/ui/button';
+import { DatePickerWithRange, type DateRangePickerMode } from '@/components/ui/date-range-picker';
 import { MoneyInput } from '@/components/ui/money-input';
 import { SearchInput } from '@/components/ui/search-input';
 import { ReportTemplatePrintDialog } from '@/components/ui/report-template-print-dialog';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { SearchableSelect } from '@/components/features/vehicle-data/SearchableSelect';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { currenciesFormat } from '@/components/ui/currenciesFormat';
@@ -60,6 +63,8 @@ interface CashFormState {
   cash_id: number | null;
   value: number;
 }
+
+type CurrencyKey = 'idr' | 'usd';
 
 const EMPTY_VALUE = '__empty__';
 
@@ -174,6 +179,12 @@ const getLineAmount = (line: BalanceReportAccountLine) =>
 const getLineCurrency = (line: BalanceReportAccountLine): 'idr' | 'usd' =>
   String(line.type ?? 'IDR').toUpperCase() === 'USD' ? 'usd' : 'idr';
 
+const getCurrencyKey = (value: unknown): CurrencyKey =>
+  String(value ?? 'idr').toLowerCase() === 'usd' ? 'usd' : 'idr';
+
+const getMoneyInputCurrency = (currency: CurrencyKey): 'IDR' | 'USD' =>
+  currency === 'usd' ? 'USD' : 'IDR';
+
 const getLineAmountByCurrency = (
   line: BalanceReportAccountLine,
   currency: 'idr' | 'usd',
@@ -250,24 +261,24 @@ function AccountSelect({
   const searchPlaceholderText = expectedType
     ? `Cari akun ${expectedType === 'debet' ? 'debet' : 'kredit'}...`
     : 'Cari akun...';
+  const accountOptions = useMemo(
+    () => filteredAccounts.map((account) => ({
+      value: String(account.id),
+      label: `${account.code} - ${account.name}`,
+    })),
+    [filteredAccounts],
+  );
 
   return (
-    <Select
+    <SearchableSelect
       value={value ? String(value) : EMPTY_VALUE}
-      onValueChange={(nextValue) => onChange(nextValue === EMPTY_VALUE ? null : Number(nextValue))}
-    >
-      <SelectTrigger className="h-9 bg-white">
-        <SelectValue placeholder={placeholderText} />
-      </SelectTrigger>
-      <SelectContent showSearch searchPlaceholder={searchPlaceholderText} className="max-h-80">
-        <SelectItem value={EMPTY_VALUE}>{placeholderText}</SelectItem>
-        {filteredAccounts.map((account) => (
-          <SelectItem key={account.id} value={String(account.id)}>
-            {account.code} - {account.name}
-          </SelectItem>
-        ))}
-      </SelectContent>
-    </Select>
+      onChange={(nextValue) => onChange(nextValue === EMPTY_VALUE ? null : Number(nextValue))}
+      options={accountOptions}
+      placeholder={placeholderText}
+      searchPlaceholder={searchPlaceholderText}
+      emptyText="Akun tidak ditemukan."
+      className="h-10 rounded-lg border-slate-200 bg-white px-3 text-sm shadow-none focus-visible:ring-slate-300"
+    />
   );
 }
 
@@ -327,7 +338,7 @@ function TemplateAccountEditor({
                 size="icon"
                 aria-label="Hapus akun"
                 onClick={() => onChange(accountIds.filter((_, itemIndex) => itemIndex !== index))}
-                className="btn-outline! px-2"
+                className="btn-outline! h-10 px-2"
                 disabled={accountIds.length === 0}
               >
                 <Trash2 className="h-4 w-4" />
@@ -396,7 +407,13 @@ function CashManagement({
   onSave,
 }: {
   cashForms: CashFormState[];
-  cashOptions: Array<{ id: string | number; cash_name?: string; code: string; amount: number | string }>;
+  cashOptions: Array<{
+    id: string | number;
+    cash_name?: string;
+    code: string;
+    amount: number | string;
+    currency_type?: 'idr' | 'usd' | string | null;
+  }>;
   usedCashIds: Set<number>;
   createPending: boolean;
   updatePending: boolean;
@@ -405,6 +422,24 @@ function CashManagement({
   onRemoveDraft: (index: number) => void;
   onSave: (form: CashFormState) => void;
 }) {
+  const cashOptionsForSelect = useMemo(
+    () => cashOptions.map((cash) => {
+      const currency = getCurrencyKey(cash.currency_type);
+
+      return {
+        value: String(cash.id),
+        label: cash.cash_name ?? cash.code,
+        subtitle: `${cash.code} - ${currenciesFormat(currency, toNumber(cash.amount))}`,
+      };
+    }),
+    [cashOptions],
+  );
+
+  const getCashFormCurrency = (cashId: number | null): CurrencyKey => {
+    const selectedCash = cashOptions.find((cash) => Number(cash.id) === Number(cashId));
+    return getCurrencyKey(selectedCash?.currency_type);
+  };
+
   return (
     <section className="px-4 py-4">
       <div className="mb-3 flex items-center justify-between gap-3">
@@ -421,36 +456,29 @@ function CashManagement({
       <div className="space-y-2">
         {cashForms.map((form, index) => (
           <div key={form.id ?? `new-${index}`} className="grid gap-2 md:grid-cols-[1fr_180px_auto_auto]">
-            <Select
+            <SearchableSelect
               value={form.cash_id ? String(form.cash_id) : EMPTY_VALUE}
-              onValueChange={(nextValue) => {
+              onChange={(nextValue) => {
                 onChange(index, {
                   ...form,
                   cash_id: nextValue === EMPTY_VALUE ? null : Number(nextValue),
                 });
               }}
+              options={cashOptionsForSelect}
+              placeholder="Pilih kas"
+              searchPlaceholder="Cari kas..."
+              emptyText="Kas tidak ditemukan."
               disabled={Boolean(form.id)}
-            >
-              <SelectTrigger className="h-9 bg-white">
-                <SelectValue placeholder="Pilih kas" />
-              </SelectTrigger>
-              <SelectContent showSearch searchPlaceholder="Cari kas..." className="max-h-80">
-                <SelectItem value={EMPTY_VALUE}>Pilih kas</SelectItem>
-                {cashOptions.map((cash) => {
-                  const cashId = Number(cash.id);
-                  const disabled = usedCashIds.has(cashId) && form.cash_id !== cashId;
-                  return (
-                    <SelectItem key={cash.id} value={String(cash.id)} disabled={disabled}>
-                      {cash.cash_name ?? cash.code} ({currenciesFormat('idr', toNumber(cash.amount))})
-                    </SelectItem>
-                  );
-                })}
-              </SelectContent>
-            </Select>
+              disabledValues={Array.from(usedCashIds)
+                .filter((cashId) => cashId !== form.cash_id)
+                .map(String)}
+              className="h-10 rounded-lg border-slate-200 bg-white px-3 text-sm shadow-none focus-visible:ring-slate-300"
+            />
 
             <MoneyInput
               value={form.value}
               onChangeValue={(nextValue) => onChange(index, { ...form, value: nextValue })}
+              currency={getMoneyInputCurrency(getCashFormCurrency(form.cash_id))}
               placeholder="Nominal"
               className="h-9 bg-white"
             />
@@ -529,8 +557,23 @@ export default function LaporanNeracaPage() {
   );
   const [cashForms, setCashForms] = useState<CashFormState[]>([]);
   const [searchInput, setSearchInput] = useState('');
+  const [dateRange, setDateRange] = useState<DateRange | undefined>();
+  const [dateMode, setDateMode] = useState<DateRangePickerMode>('date');
 
-  const reportQuery = useBalanceReport(resolvedCompanyId, Boolean(resolvedCompanyId));
+  const reportFilters = useMemo(() => ({
+    start_date: dateRange?.from ? format(dateRange.from, 'yyyy-MM-dd') : null,
+    end_date: dateRange?.to
+      ? format(dateRange.to, 'yyyy-MM-dd')
+      : dateRange?.from
+        ? format(dateRange.from, 'yyyy-MM-dd')
+        : null,
+  }), [dateRange]);
+
+  const reportQuery = useBalanceReport(
+    resolvedCompanyId,
+    reportFilters,
+    Boolean(resolvedCompanyId),
+  );
   const cashOptionsQuery = useBalanceReportCashOptions(resolvedCompanyId, Boolean(resolvedCompanyId));
   const updateTemplateMutation = useUpdateBalanceReportTemplate(resolvedCompanyId);
   const createCashMutation = useCreateBalanceReportCash(resolvedCompanyId);
@@ -652,6 +695,9 @@ export default function LaporanNeracaPage() {
     });
     return result;
   }, { assets: [], liabilities: [] }), [normalizedSections]);
+  const periodLabel = reportFilters.start_date
+    ? `${dateRange?.from ? format(dateRange.from, 'dd MMM yyyy') : '-'}${reportFilters.end_date !== reportFilters.start_date && dateRange?.to ? ` – ${format(dateRange.to, 'dd MMM yyyy')}` : ''}`
+    : 'Semua periode';
   const usedCashIds = useMemo(
     () => new Set(cashForms.map((form) => form.cash_id).filter((id): id is number => Boolean(id))),
     [cashForms],
@@ -752,11 +798,27 @@ export default function LaporanNeracaPage() {
             aria-label="Cari akun pada Laporan Neraca"
             wrapperClassName="w-full sm:w-[320px]"
           />
+          <div className="w-full sm:w-[320px]">
+            <DatePickerWithRange
+              date={dateRange}
+              onChange={setDateRange}
+              enablePeriodFilter
+              mode={dateMode}
+              onModeChange={(nextMode) => {
+                setDateMode(nextMode);
+                setDateRange(undefined);
+              }}
+            />
+          </div>
           <Button
             type="button"
             variant="outline"
             className="h-9 w-full sm:w-auto"
-            onClick={() => setSearchInput('')}
+            onClick={() => {
+              setSearchInput('');
+              setDateRange(undefined);
+              setDateMode('date');
+            }}
           >
             <RotateCcw className="h-4 w-4" />
             Reset
@@ -893,6 +955,7 @@ export default function LaporanNeracaPage() {
           template={templatePrint.selectedTemplate}
           fallbackBackground={selectedPrintBackground}
           companyName={getCompanyName(resolvedCompanyId)}
+          periodLabel={periodLabel}
           printedAt={templatePrint.printedAt}
           cashRows={cashRows}
           cashTotalIdr={totalCash}
