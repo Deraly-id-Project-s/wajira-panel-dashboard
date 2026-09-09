@@ -57,7 +57,7 @@ function CustomProductTooltip({ active, payload }: { active?: boolean; payload?:
   const item = payload[0];
 
   return (
-    <div className="rounded-lg bg-slate-900 px-3 py-2 text-white shadow-xl text-xs space-y-1">
+    <div className="rounded-md bg-slate-900 px-3 py-2 text-white shadow-xl text-xs space-y-1">
       <p className="font-semibold text-slate-200">{item.name}</p>
       <div className="flex flex-col sm:flex-row items-center gap-2 w-full sm:w-auto">
         <span className="text-slate-400">Total Terjual:</span>
@@ -169,8 +169,6 @@ export function ProductOverviewCard({ data, isLoading }: ProductOverviewCardProp
     else if (sortOrder === 'desc') setSortOrder('asc');
     else setSortOrder(null);
   };
-
-  console.log(data);
 
   return (
     <Card className="rounded-md border border-slate-200 bg-white p-7 shadow-sm h-full flex flex-col justify-between">

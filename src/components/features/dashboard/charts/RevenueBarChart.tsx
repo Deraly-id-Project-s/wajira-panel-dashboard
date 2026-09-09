@@ -75,7 +75,7 @@ export function RevenueBarChart() {
           <CardTitle className="text-base font-semibold">Tren Keuangan Bulanan</CardTitle>
         </CardHeader>
         <CardContent className="h-[400px]">
-          <div className="h-full animate-pulse rounded-lg bg-muted" />
+          <div className="h-full animate-pulse rounded-md bg-muted" />
         </CardContent>
       </Card>
     );

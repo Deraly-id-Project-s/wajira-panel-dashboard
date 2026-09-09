@@ -1,20 +1,33 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
+import { Plus } from 'lucide-react';
 import { toast } from 'sonner';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { PageHeader } from '@/components/ui/page-header';
+import { Button } from '@/components/ui/button';
+import { SearchPagination } from '@/components/ui/search-pagination';
 import { DocumentTemplateTable } from '@/components/features/document-template/DocumentTemplateTable';
 import { useDeleteDocumentTemplate, useDocumentTemplates } from '@/hooks/useDocumentTemplate';
 import { usePermissionGuard } from '@/hooks/usePermissionGuard';
+import { useQueryParamsTable } from '@/hooks/useQueryParamsTable';
 import type { DocumentTemplate } from '@/@types/document-template.types';
 
 export default function DocumentTemplateListPage() {
   const router = useRouter();
   const slug = String(router.query.slug ?? '');
   const { hasPermission } = usePermissionGuard();
-  const [search, setSearch] = useState('');
-  const [page, setPage] = useState(1);
-  const [perPage, setPerPage] = useState(25);
+  const { page, perPage, search, setPage, setPerPage, setSearch, updateQuery } = useQueryParamsTable({ defaultPerPage: 25 });
+  const [searchInput, setSearchInput] = useState(search);
+
+  useEffect(() => {
+    const timeout = window.setTimeout(() => {
+      if (search !== searchInput.trim()) {
+        setSearch(searchInput.trim());
+      }
+    }, 400);
+    return () => window.clearTimeout(timeout);
+  }, [searchInput, search, setSearch]);
+
   const { data, isLoading } = useDocumentTemplates({ page, perPage, search });
   const deleteMutation = useDeleteDocumentTemplate();
   const canCreate = hasPermission('master-data:create');
@@ -39,29 +52,50 @@ export default function DocumentTemplateListPage() {
           title="Dokumen Template"
           subtitle="Kelola template dokumen untuk kebutuhan transaksi"
         />
-        <DocumentTemplateTable
-          data={data?.data ?? []}
-          loading={isLoading || deleteMutation.isPending}
-          search={search}
+        <SearchPagination
+          searchValue={searchInput}
+          onSearchChange={setSearchInput}
+          searchPlaceholder="Cari dokumen template"
+          searchAriaLabel="Cari dokumen template"
           page={page}
           perPage={perPage}
-          total={data?.meta.total ?? 0}
-          canCreate={canCreate}
-          canEdit={canEdit}
-          canDelete={canDelete}
-          onSearchChange={(value) => {
-            setSearch(value);
-            setPage(1);
-          }}
+          total={data?.meta.total}
+          lastPage={data?.meta.lastPage}
           onPageChange={setPage}
-          onPerPageChange={(value) => {
-            setPerPage(value);
-            setPage(1);
-          }}
-          onCreate={goCreate}
-          onEdit={goEdit}
-          onDelete={remove}
-        />
+          onPerPageChange={setPerPage}
+          actions={
+            <>
+              {search && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    setSearchInput('');
+                    updateQuery({ search: undefined, page: 1 });
+                  }}
+                  className="rounded-md border-slate-200 text-slate-700 bg-white hover:bg-slate-50 cursor-pointer h-9 text-xs px-3"
+                >
+                  Reset
+                </Button>
+              )}
+              {canCreate && (
+                <Button onClick={goCreate} className="bg-[#1e3a5f] hover:bg-[#152e4d]">
+                  <Plus className="mr-2 h-4 w-4" />
+                  Tambah
+                </Button>
+              )}
+            </>
+          }
+        >
+          <DocumentTemplateTable
+            data={data?.data ?? []}
+            loading={isLoading || deleteMutation.isPending}
+            canEdit={canEdit}
+            canDelete={canDelete}
+            onEdit={goEdit}
+            onDelete={remove}
+          />
+        </SearchPagination>
       </div>
     </DashboardLayout>
   );

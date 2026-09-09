@@ -44,7 +44,7 @@ export default function TogglePaymentStatusDialog({ open, onOpenChange, data, ta
           <Button
             type="button"
             variant="outline"
-            className="rounded-md border-slate-200"
+            className="btn-outline"
             onClick={() => onOpenChange(false)}
             disabled={isPending}
           >
@@ -52,11 +52,11 @@ export default function TogglePaymentStatusDialog({ open, onOpenChange, data, ta
           </Button>
           <Button
             type="button"
-            className={`rounded-md text-white font-medium ${targetStatus ? 'bg-emerald-600 hover:bg-emerald-700' : 'bg-amber-600 hover:bg-amber-700'}`}
+            className="btn-primary!"
             onClick={() => void handleToggle()}
-            disabled={isPending}
+            loading={isPending}
           >
-            {isPending ? 'Memproses...' : 'Ya, Ubah'}
+            Ya, Ubah
           </Button>
         </div>
       </DialogContent>

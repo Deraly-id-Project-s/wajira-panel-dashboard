@@ -13,10 +13,7 @@ import { Badge } from '@/components/ui/badge';
 
 interface AccountTableProps {
   data: Account[];
-  total: number;
   isLoading: boolean;
-  page: number;
-  perPage: number;
   selectedIds: Set<string>;
   canEdit: boolean;
   canDelete: boolean;
@@ -24,21 +21,16 @@ interface AccountTableProps {
   onToggleRow: (id: string, checked: boolean) => void;
   onEdit: (account: Account) => void;
   onDelete: (account: Account) => void;
-  onPageChange: (page: number) => void;
 }
 
 export function AccountTable({
   data,
-  total,
   isLoading,
-  page,
-  perPage,
   selectedIds,
   onToggleAll,
   onToggleRow,
   onEdit,
   onDelete,
-  onPageChange,
   canEdit,
   canDelete,
 }: AccountTableProps) {
@@ -108,6 +100,13 @@ export function AccountTable({
         ),
       },
       {
+        header: 'TIPE AKUN',
+        accessorKey: 'type',
+        sortable: true,
+        alignment: 'center',
+        cell: ({ type }) => type == 'debet' ? 'DB' : 'KR'
+      },
+      {
         header: 'KATEGORI AKUN',
         accessorKey: 'category',
         sortable: true,
@@ -166,7 +165,7 @@ export function AccountTable({
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="min-w-[150px] rounded-md border-slate-200 p-1.5 shadow-lg">
               <DropdownMenuItem
-                className="rounded-lg px-3 py-2 text-sm text-slate-900 focus:bg-slate-50 cursor-pointer"
+                className="rounded-md px-3 py-2 text-sm text-slate-900 focus:bg-slate-50 cursor-pointer"
                 disabled={account.is_lock || !canEdit}
                 onSelect={(e) => {
                   e.preventDefault();
@@ -176,7 +175,7 @@ export function AccountTable({
                 Edit
               </DropdownMenuItem>
               <DropdownMenuItem
-                className="rounded-lg px-3 py-2 text-sm text-red-600 focus:bg-red-50 focus:text-red-600 cursor-pointer"
+                className="rounded-md px-3 py-2 text-sm text-red-600 focus:bg-red-50 focus:text-red-600 cursor-pointer"
                 disabled={account.is_lock || !canDelete}
                 onSelect={(e) => {
                   e.preventDefault();
@@ -202,13 +201,6 @@ export function AccountTable({
       selectedIds={selectedIds}
       onSelectedIdsChange={handleSelectedIdsChange}
       getRowId={(item) => String(item.id)}
-      meta={{
-        currentPage: page,
-        perPage: perPage,
-        lastPage: Math.max(1, Math.ceil(total / perPage)),
-        total: total,
-      }}
-      onPageChange={onPageChange}
     />
   );
 }

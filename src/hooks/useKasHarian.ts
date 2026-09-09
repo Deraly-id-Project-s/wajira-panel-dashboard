@@ -85,6 +85,7 @@ export function useToggleKasHarianPaymentStatus() {
   const queryClient = useQueryClient();
 
   return useMutation({
+    mutationKey: ['toggle-cash-flow-payment-status'],
     mutationFn: ({ id, isPaid }: { id: number | string; isPaid: boolean }) => toggleCashFlowPaymentStatus(id, isPaid),
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: cashFlowKeys.all });

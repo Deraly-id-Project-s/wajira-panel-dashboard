@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { Eye, FilePenLine, MoreVertical, Plus, Trash2 } from 'lucide-react';
+import { Eye, FilePenLine, MoreVertical, Trash2 } from 'lucide-react';
 import type { OrderList, OrderListStatus } from '@/@types/order-list.types';
 import { Button } from '@/components/ui/button';
 import {
@@ -24,50 +24,24 @@ import { currenciesFormat } from '@/components/ui/currenciesFormat';
 
 interface OrderListTableProps {
   data: OrderList[];
-  search: string;
-  page: number;
-  perPage: number;
-  totalData: number;
   isLoading?: boolean;
-  isRefetching?: boolean;
-  onSearchChange: (value: string) => void;
-  onPageChange: (value: number) => void;
-  onPerPageChange: (value: number) => void;
-  onAdd: () => void;
   onDetail: (item: OrderList) => void;
   onEdit: (item: OrderList) => void;
   onDelete: (item: OrderList) => void;
   onUpdateStatus?: (item: OrderList, newStatus: OrderListStatus) => void;
-  canCreate: boolean;
   canEdit: boolean;
   canDelete: boolean;
-  startDate?: string | null;
-  endDate?: string | null;
-  onDateRangeChange?: (start: string | null, end: string | null) => void;
 }
 
 export const OrderListTable = React.memo(function OrderListTable({
   data,
-  search,
-  page,
-  perPage,
-  totalData,
   isLoading = false,
-  isRefetching = false,
-  onSearchChange,
-  onPageChange,
-  onPerPageChange,
-  onAdd,
   onDetail,
   onEdit,
   onDelete,
   onUpdateStatus,
-  canCreate,
   canEdit,
   canDelete,
-  startDate,
-  endDate,
-  onDateRangeChange,
 }: OrderListTableProps) {
   const router = useRouter();
   const { slug } = router.query;
@@ -112,7 +86,7 @@ export const OrderListTable = React.memo(function OrderListTable({
                       onUpdateStatus(item, option.value);
                     }
                   }}
-                  className={cn('cursor-pointer rounded-lg px-2.5 py-2 text-xs font-medium', item.status === option.value && 'bg-slate-100 opacity-50')}
+                  className={cn('cursor-pointer rounded-md px-2.5 py-2 text-xs font-medium', item.status === option.value && 'bg-slate-100 opacity-50')}
                 >
                   {option.label}
                 </DropdownMenuItem>
@@ -250,9 +224,8 @@ export const OrderListTable = React.memo(function OrderListTable({
                   event.preventDefault();
                   onDetail(item);
                 }}
-                className="cursor-pointer rounded-lg px-3 py-2 text-sm text-slate-900 focus:bg-slate-50"
+                className="cursor-pointer rounded-md px-3 py-2 text-sm text-slate-900 focus:bg-slate-50"
               >
-                <Eye className="mr-2 h-4 w-4" />
                 Detail
               </DropdownMenuItem>
               <DropdownMenuItem
@@ -261,9 +234,8 @@ export const OrderListTable = React.memo(function OrderListTable({
                   onEdit(item);
                 }}
                 disabled={!canEdit || item?.status !== 'draft'}
-                className="cursor-pointer rounded-lg px-3 py-2 text-sm text-slate-900 focus:bg-slate-50"
+                className="cursor-pointer rounded-md px-3 py-2 text-sm text-slate-900 focus:bg-slate-50"
               >
-                <FilePenLine className="mr-2 h-4 w-4" />
                 Edit
               </DropdownMenuItem>
               <DropdownMenuItem
@@ -272,9 +244,8 @@ export const OrderListTable = React.memo(function OrderListTable({
                   onDelete(item);
                 }}
                 disabled={!canDelete || item?.status !== 'draft'}
-                className="cursor-pointer rounded-lg px-3 py-2 text-sm text-red-600 focus:bg-red-50 focus:text-red-600"
+                className="cursor-pointer rounded-md px-3 py-2 text-sm text-red-600 focus:bg-red-50 focus:text-red-600"
               >
-                <Trash2 className="mr-2 h-4 w-4" />
                 Hapus
               </DropdownMenuItem>
             </DropdownMenuContent>
@@ -291,42 +262,7 @@ export const OrderListTable = React.memo(function OrderListTable({
         data={data}
         columns={columns}
         loading={isLoading}
-        searchPlaceholder="Cari order list..."
-        search={search}
-        onSearchChange={onSearchChange}
-        showLimitChange
-        perPage={perPage}
-        onPerPageChange={onPerPageChange}
         defaultSort={{ key: 'id', direction: 'desc' }}
-        meta={{
-          currentPage: page,
-          perPage: perPage,
-          lastPage: Math.max(1, Math.ceil(totalData / perPage)),
-          total: totalData,
-        }}
-        onPageChange={onPageChange}
-        addDateRangePicker
-        startDate={startDate}
-        endDate={endDate}
-        onDateRangeChange={onDateRangeChange}
-        headerActions={
-          <div className="flex flex-col sm:flex-row items-center gap-2 w-full sm:w-auto">
-            {isRefetching && (
-              <span className="text-xs font-medium text-slate-400 animate-pulse mr-2">
-                Memperbarui data...
-              </span>
-            )}
-            <Button
-              type="button"
-              onClick={onAdd}
-              disabled={!canCreate}
-              className="btn-primary!"
-            >
-              <Plus className="h-4 w-4 mr-2" />
-              Tambah Data
-            </Button>
-          </div>
-        }
       />
     </div>
   );

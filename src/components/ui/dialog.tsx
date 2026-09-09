@@ -40,8 +40,9 @@ const DialogContent = React.forwardRef<
   React.ElementRef<typeof DialogPrimitive.Content>,
   React.ComponentPropsWithoutRef<typeof DialogPrimitive.Content> & {
     showCloseButton?: boolean;
+    closeOnInteractOutside?: boolean;
   }
->(({ className, children, showCloseButton = true, ...props }, ref) => {
+>(({ className, children, showCloseButton = true, closeOnInteractOutside = true, onInteractOutside, ...props }, ref) => {
   React.useEffect(() => {
     return () => {
       document.body.style.pointerEvents = 'auto';
@@ -54,8 +55,12 @@ const DialogContent = React.forwardRef<
       <DialogPrimitive.Content
         ref={ref}
         data-slot="dialog-content"
+        onInteractOutside={(event) => {
+          onInteractOutside?.(event);
+          if (!closeOnInteractOutside) event.preventDefault();
+        }}
         className={cn(
-          'bg-background data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[state=closed]:hidden fixed top-[50%] left-[50%] z-100 grid w-full max-w-[calc(100%-2rem)] translate-x-[-50%] translate-y-[-50%] gap-4 rounded-lg border p-6 shadow-lg duration-200 outline-none sm:max-w-lg',
+          'bg-background data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[state=closed]:hidden fixed top-[50%] left-[50%] z-100 grid w-full max-w-[calc(100%-2rem)] translate-x-[-50%] translate-y-[-50%] gap-4 rounded-md border p-6 shadow-lg duration-200 outline-none sm:max-w-lg',
           className,
         )}
         {...props}
@@ -98,13 +103,16 @@ const DialogFooter = React.forwardRef<
   <div
     ref={ref}
     data-slot="dialog-footer"
-    className={cn('flex flex-col-reverse gap-2 sm:flex-row sm:justify-end', className)}
+    className={cn(
+      'flex flex-col-reverse items-stretch gap-2 [&>*]:w-full sm:flex-row sm:items-center sm:justify-end sm:[&>*]:w-auto',
+      className,
+    )}
     {...props}
   >
     {children}
     {showCloseButton && (
       <DialogPrimitive.Close asChild>
-        <Button variant="outline">Close</Button>
+        <Button variant="outline" className="w-full sm:w-auto">Close</Button>
       </DialogPrimitive.Close>
     )}
   </div>

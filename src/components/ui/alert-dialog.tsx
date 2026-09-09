@@ -94,7 +94,7 @@ const AlertDialogContent = React.forwardRef<
               <TooltipTrigger asChild>
                 <AlertDialogPrimitive.Cancel
                   data-slot="alert-dialog-close"
-                  className="text-muted-foreground ring-offset-background focus-visible:ring-ring hover:bg-accent hover:text-foreground absolute top-4 right-4 inline-flex size-8 items-center justify-center rounded-lg transition-colors focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-hidden disabled:pointer-events-none cursor-pointer"
+                  className="text-muted-foreground ring-offset-background focus-visible:ring-ring hover:bg-accent hover:text-foreground absolute top-4 right-4 inline-flex size-8 items-center justify-center rounded-md transition-colors focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-hidden disabled:pointer-events-none cursor-pointer"
                   aria-label={closeTooltipText}
                 >
                   <X className="size-4" />

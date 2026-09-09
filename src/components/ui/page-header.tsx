@@ -34,49 +34,50 @@ export function PageHeader({
   hideOnPrint = true,
 }: PageHeaderProps) {
   return (
-    <div className={`space-y-6 ${hideOnPrint ? 'print:hidden' : ''} ${className}`}>
+    <div className={`space-y-3 sm:space-y-5 ${hideOnPrint ? 'print:hidden' : ''} ${className}`}>
       {/* BREADCRUMB HEADER */}
       {breadcrumbs && breadcrumbs.length > 0 && (
-        <div className="flex items-center gap-2 text-sm text-slate-500">
+        <nav aria-label="Breadcrumb" className="flex min-w-0 items-center gap-1.5 overflow-hidden text-xs text-slate-500 sm:gap-2 sm:text-sm">
           {breadcrumbs.map((item, index) => (
             <React.Fragment key={index}>
-              {index > 0 && <ChevronRight className="h-4 w-4 shrink-0 text-slate-400" />}
+              {index > 0 && <ChevronRight className={`${index < breadcrumbs.length - 1 ? 'hidden sm:block' : 'block'} h-3.5 w-3.5 shrink-0 text-slate-400 sm:h-4 sm:w-4`} />}
               {item.onClick ? (
-                <span className="hover:text-slate-800 cursor-pointer" onClick={item.onClick}>
+                <button type="button" className={`${index < breadcrumbs.length - 2 ? 'hidden sm:inline' : 'inline'} min-w-0 truncate hover:text-slate-800`} onClick={item.onClick}>
                   {item.label}
-                </span>
+                </button>
               ) : (
-                <span className="font-medium text-slate-800">{item.label}</span>
+                <span aria-current="page" className={`${index < breadcrumbs.length - 2 ? 'hidden sm:inline' : 'inline'} min-w-0 truncate font-medium text-slate-800`}>{item.label}</span>
               )}
             </React.Fragment>
           ))}
-        </div>
+        </nav>
       )}
 
       {/* HEADLINE & ACTIONS */}
-      <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-        <div className="flex items-center gap-4">
+      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+        <div className="flex min-w-0 items-start gap-3 sm:items-center sm:gap-4">
           {onBack && (
             <Button
               onClick={onBack}
               variant="ghost"
               size="icon"
-              className="h-10 w-10 shrink-0 rounded-md border border-slate-200 hover:bg-slate-50 cursor-pointer"
+              className="h-9 w-9 shrink-0 rounded-md border border-slate-200 hover:bg-slate-50 sm:h-10 sm:w-10"
+              aria-label="Kembali"
             >
               <ArrowLeft className="h-5 w-5 text-slate-700" />
             </Button>
           )}
-          <div className="space-y-1">
-            <h1 className="text-2xl font-semibold text-slate-900">{title}</h1>
+          <div className="min-w-0 space-y-1">
+            <h1 className="break-words text-xl font-semibold leading-tight text-slate-900 sm:text-2xl">{title}</h1>
             {subtitle && (
-              <div className="flex items-center gap-2 text-sm text-muted-foreground flex-wrap">
+              <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-muted-foreground sm:text-sm">
                 {subtitle}
               </div>
             )}
           </div>
         </div>
 
-        {actions && <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full md:w-auto">{actions}</div>}
+        {actions && <div className="flex w-full flex-col items-stretch gap-2 [&>*]:w-full sm:flex-row sm:items-center sm:[&>*]:w-auto md:w-auto">{actions}</div>}
       </div>
     </div>
   );

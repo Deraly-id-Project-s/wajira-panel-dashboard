@@ -28,7 +28,7 @@ export function TypeUnitForm({ form, onSubmit, onCancel, isSubmitting = false, s
           <Button type="button" variant="ghost" onClick={onCancel} disabled={isSubmitting} className="text-muted-foreground font-medium hover:text-foreground">
             Batal
           </Button>
-          <Button type="submit" disabled={isSubmitting} className="bg-[#1e293b] hover:bg-[#0f172a] text-white font-medium min-w-[120px] rounded-lg">
+          <Button type="submit" disabled={isSubmitting} className="bg-[#1e293b] hover:bg-[#0f172a] text-white font-medium min-w-[120px] rounded-md">
             {isSubmitting ? 'Menyimpan...' : <><Save className="mr-2 h-4 w-4" />{submitLabel}</>}
           </Button>
         </div>

@@ -1,31 +1,16 @@
-import { useMemo, useState } from 'react';
+import { useMemo } from 'react';
 import BaseTable, { ColumnDef } from '@/components/ui/base-table';
-import { SupplierImportModal } from '@/components/features/supplier/SupplierImportModal';
-import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { Upload, Download } from 'lucide-react';
 import type { Supplier } from '@/@types/supplier.types';
 import { CopyBox } from '@/components/ui/copy-box';
 import { ReferenceLink } from '@/components/ui/reference-link';
+import { TextTruncate } from '@/components/ui/text-truncate';
 
 interface SupplierTableProps {
   suppliers: Supplier[];
   isLoading?: boolean;
-  search: string;
-  page: number;
-  perPage: number;
-  totalData: number;
-  totalPages: number;
-  onSearchChange: (value: string) => void;
-  onPageChange: (page: number) => void;
-  onPerPageChange: (perPage: number) => void;
-  onAdd: () => void;
   onEdit: (supplier: Supplier) => void;
   onDelete: (supplier: Supplier) => void;
-
-  onExport: () => void;
-  isExporting?: boolean;
-  canCreate: boolean;
   canEdit: boolean;
   canDelete: boolean;
 }
@@ -33,26 +18,11 @@ interface SupplierTableProps {
 export function SupplierTable({
   suppliers,
   isLoading = false,
-  search,
-  page,
-  perPage,
-  totalData,
-  totalPages,
-  onSearchChange,
-  onPageChange,
-  onPerPageChange,
-  onAdd,
   onEdit,
   onDelete,
-
-  onExport,
-  isExporting = false,
-  canCreate,
   canEdit,
   canDelete,
 }: SupplierTableProps) {
-  const [isImportOpen, setIsImportOpen] = useState(false);
-
   const columns = useMemo<ColumnDef<Supplier>[]>(
     () => [
       {
@@ -71,7 +41,7 @@ export function SupplierTable({
         header: 'Alamat',
         accessorKey: 'address',
         sortable: true,
-        cell: (item) => <span className="line-clamp-2">{item.address || '-'}</span>,
+        cell: (item) => <TextTruncate text={item.address || '-'} maxLength={48} className="block max-w-[260px] truncate" />,
       },
       {
         header: 'Phone',
@@ -108,7 +78,7 @@ export function SupplierTable({
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="min-w-[150px] rounded-md border-slate-200 p-1.5 shadow-lg">
               <DropdownMenuItem
-                className="rounded-lg px-3 py-2 text-sm text-slate-900 focus:bg-slate-50 cursor-pointer"
+                className="rounded-md px-3 py-2 text-sm text-slate-900 focus:bg-slate-50 cursor-pointer"
                 disabled={!canEdit}
                 onSelect={(e) => {
                   e.preventDefault();
@@ -118,7 +88,7 @@ export function SupplierTable({
                 Edit
               </DropdownMenuItem>
               <DropdownMenuItem
-                className="rounded-lg px-3 py-2 text-sm text-red-600 focus:bg-red-50 focus:text-red-600 cursor-pointer"
+                className="rounded-md px-3 py-2 text-sm text-red-600 focus:bg-red-50 focus:text-red-600 cursor-pointer"
                 disabled={!canDelete}
                 onSelect={(e) => {
                   e.preventDefault();
@@ -136,50 +106,11 @@ export function SupplierTable({
   );
 
   return (
-    <>
-      <BaseTable
+    <BaseTable
       data={suppliers}
       columns={columns}
       loading={isLoading}
-      searchPlaceholder="Search here"
-      search={search}
-      onSearchChange={onSearchChange}
-      showLimitChange
-      perPage={perPage}
-      onPerPageChange={onPerPageChange}
       defaultSort={{ key: 'code', direction: 'asc' }}
-      meta={{
-        currentPage: page,
-        perPage,
-        lastPage: totalPages,
-        total: totalData,
-      }}
-      onPageChange={onPageChange}
-      headerActions={
-        <div className="flex flex-wrap items-center gap-2">
-          <Button onClick={onExport} disabled={isExporting} variant="outline" className="w-full sm:w-auto">
-            <Download className="h-4 w-4 mr-2" />
-            {isExporting ? 'Exporting...' : 'Export'}
-          </Button>
-          {canCreate && (
-            <Button onClick={() => setIsImportOpen(true)} variant="outline" className="w-full sm:w-auto">
-              <Upload className="h-4 w-4 mr-2" />
-              Import
-            </Button>
-          )}
-          {canCreate && (
-            <Button onClick={onAdd} className="btn-primary!">
-              <svg className="h-4 w-4 mr-2" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14" /><path d="M12 5v14" /></svg>
-              Tambah
-            </Button>
-          )}
-        </div>
-      }
     />
-      <SupplierImportModal
-        open={isImportOpen}
-        onOpenChange={setIsImportOpen}
-      />
-    </>
   );
 }

@@ -1,5 +1,5 @@
 'use client';
 
-import CreatePurchasePage from '@/components/features/purchase/CreatePurchasePage';
+import CreatePurchasePage from '@/components/features/unit-transaksi/purchase/CreatePurchasePage';
 
 export default CreatePurchasePage;

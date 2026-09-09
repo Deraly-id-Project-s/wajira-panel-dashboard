@@ -3,8 +3,8 @@
 import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
-import { SalesTable } from '@/components/features/sales/SalesTable';
-import DeleteUnitTransactionDialog from '@/components/features/unit-transaction/DeleteUnitTransactionDialog';
+import { SalesTable } from '@/components/features/unit-transaksi/sales/SalesTable';
+import DeleteUnitTransactionDialog from '@/components/features/unit-transaksi/DeleteUnitTransactionDialog';
 import { PageHeader } from '@/components/common/PageHeader';
 import { useDeleteSales, useSalesList } from '@/hooks/useSales';
 import { useQueryClient } from '@tanstack/react-query';

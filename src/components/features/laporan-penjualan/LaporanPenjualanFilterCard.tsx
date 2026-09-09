@@ -127,7 +127,7 @@ export default function LaporanPenjualanFilterCard() {
 
                 <button
                     onClick={handleSubmit}
-                    className="bg-[#132c4a] hover:bg-[#1e3256] text-white px-6 py-2.5 rounded-lg text-sm font-medium transition-colors flex items-center gap-2"
+                    className="bg-[#132c4a] hover:bg-[#1e3256] text-white px-6 py-2.5 rounded-md text-sm font-medium transition-colors flex items-center gap-2"
                 >
                     <FileText className="w-4 h-4" />
                     Simpan

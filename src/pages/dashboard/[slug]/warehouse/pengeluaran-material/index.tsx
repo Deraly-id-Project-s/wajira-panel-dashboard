@@ -1,7 +1,11 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/router';
+import { Plus } from 'lucide-react';
 import { toast } from 'sonner';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
+import { PageHeader } from '@/components/ui/page-header';
+import { Button } from '@/components/ui/button';
+import { SearchPagination } from '@/components/ui/search-pagination';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { GoodsIssueTable } from '@/components/features/goods-issue/GoodsIssueTable';
 import { GoodsIssueFormModal } from '@/components/features/goods-issue/GoodsIssueFormModal';
@@ -70,7 +74,17 @@ export default function GoodsIssueListPage() {
   const { companyId } = useCompany();
   const companyIdValue = Number(companyId ?? '3') || 3;
   const slug = typeof router.query.slug === 'string' ? router.query.slug : '';
-  const { page, perPage, search, setPage, setPerPage, setSearch } = useQueryParamsTable({ defaultPerPage: 25 });
+  const { page, perPage, search, setPage, setPerPage, setSearch, updateQuery } = useQueryParamsTable({ defaultPerPage: 25 });
+  const [searchInput, setSearchInput] = useState(search);
+
+  useEffect(() => {
+    const timeout = window.setTimeout(() => {
+      if (search !== searchInput.trim()) {
+        setSearch(searchInput.trim());
+      }
+    }, 400);
+    return () => window.clearTimeout(timeout);
+  }, [searchInput, search, setSearch]);
 
   const listQuery = useGoodsIssues({ page, perPage, customer_name: search, companyId: companyIdValue });
   const customersQuery = useCustomers({ page: 1, perPage: 100, company_id: String(companyIdValue) });
@@ -167,22 +181,57 @@ export default function GoodsIssueListPage() {
 
   return (
     <DashboardLayout>
-      <GoodsIssueTable
-        slug={slug}
-        data={listQuery.data?.data ?? []}
-        totalData={listQuery.data?.meta.total ?? 0}
-        page={page}
-        perPage={perPage}
-        search={search}
-        isLoading={listQuery.isLoading || listQuery.isFetching}
-        onPageChange={setPage}
-        onPerPageChange={setPerPage}
-        onSearchChange={setSearch}
-        onAdd={canCreate ? () => setOpenForm(true) : undefined}
-        onPay={setSelectedPay}
-        onUpload={setSelectedUpload}
-        onDelete={setDeleteTarget}
-      />
+      <div className="space-y-6">
+        <PageHeader
+          title="Data Pengeluaran Material"
+          subtitle="Kelola dan lacak semua data pengeluaran stock material"
+        />
+
+        <SearchPagination
+          searchValue={searchInput}
+          onSearchChange={setSearchInput}
+          searchPlaceholder="Search here"
+          searchAriaLabel="Cari pengeluaran material"
+          page={page}
+          perPage={perPage}
+          total={listQuery.data?.meta.total}
+          lastPage={listQuery.data?.meta.lastPage}
+          onPageChange={setPage}
+          onPerPageChange={setPerPage}
+          actions={
+            <>
+              {search && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    setSearchInput('');
+                    updateQuery({ search: undefined, page: 1 });
+                  }}
+                  className="rounded-md border-slate-200 text-slate-700 bg-white hover:bg-slate-50 cursor-pointer h-9 text-xs px-3"
+                >
+                  Reset
+                </Button>
+              )}
+              {canCreate && (
+                <Button onClick={() => setOpenForm(true)} className="btn-primary!">
+                  <Plus className="mr-2 h-4 w-4" />
+                  Tambah Data
+                </Button>
+              )}
+            </>
+          }
+        >
+          <GoodsIssueTable
+            slug={slug}
+            data={listQuery.data?.data ?? []}
+            isLoading={listQuery.isLoading || listQuery.isFetching}
+            onPay={setSelectedPay}
+            onUpload={setSelectedUpload}
+            onDelete={setDeleteTarget}
+          />
+        </SearchPagination>
+      </div>
 
       <GoodsIssueFormModal
         open={openForm}

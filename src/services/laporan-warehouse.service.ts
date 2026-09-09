@@ -193,6 +193,7 @@ export const getStockData = async (params: {
   company_id?: number;
   page?: number;
   per_page?: number;
+  search?: string;
   status?: string;
 }): Promise<PaginatedResponse<StockItem>> => {
   const companyId = params.company_id ?? 1;
@@ -204,6 +205,7 @@ export const getStockData = async (params: {
         params: {
           page: params.page ?? 1,
           per_page: params.per_page ?? 50,
+          ...(params.search ? { search: params.search } : {}),
           ...(params.status ? { status: params.status } : {}),
         },
       },

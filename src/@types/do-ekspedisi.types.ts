@@ -213,6 +213,8 @@ export interface DoEkspedisiListParams {
   order_by?: string;
   order_sort?: 'asc' | 'desc';
   do_order_list_id?: number | string;
+  start_date?: string;
+  end_date?: string;
 }
 
 export interface DoEkspedisiItemListParams {

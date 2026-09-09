@@ -50,7 +50,7 @@ function AccountCard({ account }: { account: AccountOverview }) {
         <InfoRow label="Kredit" value={account.credit} currency={account.currency} colorClass="text-red-600" />
       </div>
 
-      <div className="mt-auto flex items-center justify-between rounded-md bg-red-200 text-black px-4 py-3">
+      <div className="btn-primary! p-2 rounded-md shadow-sm">
         <span className="text-xs font-semibold uppercase tracking-wide">Saldo Akhir</span>
         <span className="text-sm font-semibold">{formatMoney(account.closingBalance, account.currency)}</span>
       </div>

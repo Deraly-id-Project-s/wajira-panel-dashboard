@@ -37,8 +37,10 @@ export function LaporanJurnalTable({
         (acc, item) => ({
           debit: acc.debit + (Number(item.debit) || 0),
           credit: acc.credit + (Number(item.credit) || 0),
+          debitUsd: acc.debitUsd + (Number(item.debit_usd) || 0),
+          creditUsd: acc.creditUsd + (Number(item.credit_usd) || 0),
         }),
-        { debit: 0, credit: 0 },
+        { debit: 0, credit: 0, debitUsd: 0, creditUsd: 0 },
       ),
     [data],
   );
@@ -88,7 +90,7 @@ export function LaporanJurnalTable({
         cell: (item) => <TextTruncate text={item.cash_flow?.note || '-'} maxLength={32} />,
       },
       {
-        header: 'Debit',
+        header: 'Debit (IDR)',
         accessorKey: 'debit',
         sortable: true,
         alignment: 'right',
@@ -99,13 +101,35 @@ export function LaporanJurnalTable({
         ),
       },
       {
-        header: 'Kredit',
+        header: 'Kredit (IDR)',
         accessorKey: 'credit',
         sortable: true,
         alignment: 'right',
         cell: (item) => (
           <span className="font-semibold text-rose-700">
             {Number(item.credit) > 0 ? currenciesFormat('idr', item.credit) : '-'}
+          </span>
+        ),
+      },
+      {
+        header: 'Debit (USD)',
+        accessorKey: 'debit_usd',
+        sortable: true,
+        alignment: 'right',
+        cell: (item) => (
+          <span className="font-semibold text-emerald-700">
+            {Number(item.debit_usd) > 0 ? currenciesFormat('usd', item.debit_usd) : '-'}
+          </span>
+        ),
+      },
+      {
+        header: 'Kredit (USD)',
+        accessorKey: 'credit_usd',
+        sortable: true,
+        alignment: 'right',
+        cell: (item) => (
+          <span className="font-semibold text-rose-700">
+            {Number(item.credit_usd) > 0 ? currenciesFormat('usd', item.credit_usd) : '-'}
           </span>
         ),
       },
@@ -123,6 +147,12 @@ export function LaporanJurnalTable({
       </TableCell>
       <TableCell className="px-4 py-4 text-right text-sm font-bold text-slate-900">
         {currenciesFormat('idr', totals.credit)}
+      </TableCell>
+      <TableCell className="px-4 py-4 text-right text-sm font-bold text-slate-900">
+        {currenciesFormat('usd', totals.debitUsd)}
+      </TableCell>
+      <TableCell className="px-4 py-4 text-right text-sm font-bold text-slate-900">
+        {currenciesFormat('usd', totals.creditUsd)}
       </TableCell>
     </TableRow>
   );

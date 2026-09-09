@@ -52,6 +52,7 @@ export default function PermissionsPage() {
 
   const handlePerPageChange = (value: number) => {
     setPerPage(value);
+    setPage(1);
   };
 
   const columns = useMemo<ColumnDef<Permission>[]>(
@@ -165,9 +166,9 @@ export default function PermissionsPage() {
           ) : detail ? (
             <div className="space-y-6 py-2">
               {/* INFO */}
-              <div className="rounded-lg border border-gray-200 divide-y divide-gray-100">
+              <div className="rounded-md border border-gray-200 divide-y divide-gray-100">
                 <div className="flex items-center gap-3 px-4 py-3">
-                  <Shield className="h-5 w-5 text-indigo-500 shrink-0" />
+                  <Shield className="h-5 w-5 text-orange-500 shrink-0" />
                   <div>
                     <p className="text-sm font-semibold text-gray-900">{detail.name}</p>
                     {detail.description && (
@@ -219,10 +220,10 @@ export default function PermissionsPage() {
                     {detail.roles.map((role) => (
                       <div
                         key={role.id}
-                        className="flex items-center justify-between rounded-lg border border-gray-200 bg-gray-50/50 px-4 py-2.5"
+                        className="flex items-center justify-between rounded-md border border-gray-200 bg-gray-50/50 px-4 py-2.5"
                       >
                         <span className="text-sm font-medium text-gray-900">{role.name}</span>
-                        <Badge variant="secondary" className="bg-indigo-50 text-indigo-700 border border-indigo-200 text-xs">
+                        <Badge variant="secondary" className="bg-orange-50 text-orange-700 border border-orange-200 text-xs">
                           Aplikasi Web
                         </Badge>
                       </div>

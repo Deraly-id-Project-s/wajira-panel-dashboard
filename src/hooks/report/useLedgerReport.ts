@@ -21,6 +21,8 @@ export function useLedgerReport(params: LedgerReportParams & { enabled?: boolean
     summary: {
       openingBalance: summary?.opening_balance ?? 0,
       endingBalance: summary?.ending_balance ?? 0,
+      openingBalanceUsd: summary?.opening_balance_usd ?? 0,
+      endingBalanceUsd: summary?.ending_balance_usd ?? 0,
     },
     pagination: {
       currentPage: records?.current_page ?? queryParams.page ?? 1,

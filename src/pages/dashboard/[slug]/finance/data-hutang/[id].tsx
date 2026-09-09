@@ -221,7 +221,7 @@ export default function HutangDetailPage() {
                             </div>
                         </div>
 
-                        <div className="rounded-lg border bg-gray-50 px-4 py-3 text-sm text-gray-600">
+                        <div className="rounded-md border bg-gray-50 px-4 py-3 text-sm text-gray-600">
                             Total unit transaksi: <span className="font-semibold text-gray-900">{detail.unit_transaction_items.length}</span> item, total qty{' '}
                             <span className="font-semibold text-gray-900">{detail.unit_transaction_items.reduce((total, item) => total + item.qty_total, 0)}</span>.
                         </div>

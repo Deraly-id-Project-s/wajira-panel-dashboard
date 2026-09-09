@@ -10,6 +10,8 @@ import { useActivateDriver, useDeactivateDriver } from '@/hooks/useDriver';
 import { getDriverPassword } from '@/services/driver.service';
 import type { Driver } from '@/@types/driver.types';
 import type { PaginationMeta } from '@/@types/pagination.types';
+import { ReferenceLink } from '@/components/ui/reference-link';
+import { CopyBox } from '@/components/ui/copy-box';
 
 interface DriverTableProps {
     data: Driver[];
@@ -109,19 +111,26 @@ export function DriverTable({
                 header: 'KTP',
                 accessorKey: 'identityNumber',
                 sortable: true,
-                cell: (item) => item.identityNumber || '-',
+                cell: (item) => item.identityNumber ? <CopyBox text={item.identityNumber} /> : '-',
             },
             {
                 header: 'PHONE',
                 accessorKey: 'phone',
                 sortable: true,
-                cell: (item) => item.phone || '-',
+                cell: (item) =>
+                    item.phone ? (
+                        <ReferenceLink target="_blank" href={`https://wa.me/${item.phone.replace(/^0/, '62')}`}>
+                            {item.phone}
+                        </ReferenceLink>
+                    ) : (
+                        '-'
+                    ),
             },
             {
                 header: 'SIM',
                 accessorKey: 'driveLicenseNumber',
                 sortable: true,
-                cell: (item) => item.driveLicenseNumber || '-',
+                cell: (item) => item.driveLicenseNumber ? <CopyBox text={item.driveLicenseNumber} /> : '-',
             },
             {
                 header: 'TGL GABUNG',
@@ -155,7 +164,7 @@ export function DriverTable({
                                     e.preventDefault();
                                     onView(item);
                                 }}
-                                className="rounded-lg px-3 py-2 text-sm text-slate-900 focus:bg-slate-50 cursor-pointer"
+                                className="rounded-md px-3 py-2 text-sm text-slate-900 focus:bg-slate-50 cursor-pointer"
                             >
                                 Detail
                             </DropdownMenuItem>
@@ -165,14 +174,14 @@ export function DriverTable({
                                     onEdit(item);
                                 }}
                                 disabled={!canEdit}
-                                className="rounded-lg px-3 py-2 text-sm text-slate-900 focus:bg-slate-50 cursor-pointer"
+                                className="rounded-md px-3 py-2 text-sm text-slate-900 focus:bg-slate-50 cursor-pointer"
                             >
                                 Edit
                             </DropdownMenuItem>
                             <DropdownMenuItem
                                 onClick={() => handleCopyPassword(item.id)}
                                 disabled={!canEdit || fetchingPasswordId !== null}
-                                className="rounded-lg px-3 py-2 text-sm cursor-pointer disabled:pointer-events-none disabled:opacity-50"
+                                className="rounded-md px-3 py-2 text-sm cursor-pointer disabled:pointer-events-none disabled:opacity-50"
                             >
                                 {fetchingPasswordId === item.id ? 'Menyalin...' : 'Salin Password'}
                             </DropdownMenuItem>
@@ -182,7 +191,7 @@ export function DriverTable({
                                     onDelete(item);
                                 }}
                                 disabled={!canDelete}
-                                className="rounded-lg px-3 py-2 text-sm text-red-600 focus:bg-red-50 focus:text-red-600 cursor-pointer"
+                                className="rounded-md px-3 py-2 text-sm text-red-600 focus:bg-red-50 focus:text-red-600 cursor-pointer"
                             >
                                 Hapus
                             </DropdownMenuItem>

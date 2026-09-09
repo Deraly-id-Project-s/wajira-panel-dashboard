@@ -41,7 +41,7 @@ export const CustomerListPage = () => {
                     }
                 />
 
-                <div className="bg-white rounded-lg border border-gray-200 p-8 text-center text-gray-500">
+                <div className="bg-white rounded-md border border-gray-200 p-8 text-center text-gray-500">
                     Table data customer akan segera hadir.
                 </div>
             </div>

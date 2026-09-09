@@ -1,20 +1,22 @@
 'use client';
 
-import { useMemo, useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select';
+import { SearchPagination } from '@/components/ui/search-pagination';
+import { DatePickerWithRange } from '@/components/ui/date-range-picker';
+import type { DateRange } from 'react-day-picker';
 import { useTransactions, useTransactionSummary } from '@/hooks/useTransaction';
 import { useCompany } from '@/contexts/CompanyContext';
 import { TransactionTable } from '@/components/features/transaction/TransactionTable';
 import { TransactionSummaryCards } from '@/components/features/transaction/TransactionSummaryCards';
 import { DeleteTransactionDialog } from '@/components/features/transaction/DeleteTransactionDialog';
-import { Plus, Search } from 'lucide-react';
+import { Plus } from 'lucide-react';
 import { Transaction } from '@/@types/transaction.types';
 import { usePermissionGuard } from '@/hooks/usePermissionGuard';
 import { LoadingState } from '@/components/ui/loading-state';
+import { useQueryParamsTable } from '@/hooks/useQueryParamsTable';
 
 // This page implements the List view
 export default function TransactionListPage() {
@@ -24,21 +26,26 @@ export default function TransactionListPage() {
   const safeCompanyId = companyId || '1'; // Fallback to "1" for PT Wajira Morindo
   const basePath = slug ? `/dashboard/${slug}/transaksi/arus-transaksi` : '/transaksi/arus-transaksi';
 
-  // Local State
-  const [page, setPage] = useState(1);
-  const [limit, setLimit] = useState(25);
-  const [localSearch, setLocalSearch] = useState('');
-  const [debouncedSearch, setDebouncedSearch] = useState('');
+  const { page, perPage, search, setPage, setPerPage, setSearch, updateQuery } = useQueryParamsTable({ defaultPerPage: 25 });
+  const [searchInput, setSearchInput] = useState(search);
+  const [date, setDate] = useState<DateRange | undefined>();
 
   useEffect(() => {
     const timer = setTimeout(() => {
-      if (localSearch !== debouncedSearch) {
-        setDebouncedSearch(localSearch);
-        setPage(1);
+      if (search !== searchInput.trim()) {
+        setSearch(searchInput.trim());
       }
-    }, 500);
+    }, 400);
     return () => clearTimeout(timer);
-  }, [localSearch, debouncedSearch]);
+  }, [searchInput, search, setSearch]);
+
+  const handleDateChange = (next?: DateRange) => {
+    setDate(next);
+    setPage(1);
+  };
+
+  const startDate = date?.from ? date.from.toISOString().split('T')[0] : undefined;
+  const endDate = date?.to ? date.to.toISOString().split('T')[0] : undefined;
 
   const { hasPermission } = usePermissionGuard();
   const canCreate = hasPermission('transaction:create');
@@ -46,8 +53,11 @@ export default function TransactionListPage() {
   const canDelete = hasPermission('transaction:delete');
 
   // Query Hooks
-  const { data, isLoading: isListLoading } = useTransactions(safeCompanyId, page, limit, debouncedSearch);
+  const { data, isLoading: isListLoading } = useTransactions(safeCompanyId, page, perPage, search, startDate, endDate);
   const { data: summary, isLoading: isSummaryLoading } = useTransactionSummary(safeCompanyId);
+
+  const total = data?.total ?? 0;
+  const lastPage = Math.max(1, Math.ceil(total / perPage));
 
   // Dialog State
   const [openDelete, setOpenDelete] = useState(false);
@@ -81,81 +91,56 @@ export default function TransactionListPage() {
           isLoading={isSummaryLoading}
         />
 
-        {/* FILTERS & ACTIONS */}
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <div className="flex items-center gap-4 flex-1">
-            <div className="relative max-w-sm w-full">
-              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-              <Input placeholder="Search here..." className="pl-9 bg-white" value={localSearch} onChange={(e) => setLocalSearch(e.target.value)} />
-            </div>
-            <div className="flex items-center gap-2 text-sm whitespace-nowrap">
-              <span>Show</span>
-              <Select value={String(limit)} onValueChange={(v) => { setLimit(Number(v)); setPage(1); }}>
-                <SelectTrigger className="h-9 w-[70px] bg-white">
-                  <SelectValue placeholder="25" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="25">25</SelectItem>
-                  <SelectItem value="50">50</SelectItem>
-                  <SelectItem value="100">100</SelectItem>
-                </SelectContent>
-              </Select>
-              <span>Page</span>
-            </div>
-          </div>
-
-          {canCreate && (
-            <Button onClick={() => router.push(`${basePath}/create`)} className="btn-primary-orange!">
-              <Plus className="mr-2 h-4 w-4" />
-              Tambah
-            </Button>
-          )}
-        </div>
-
         {/* TABLE */}
-        {isListLoading ? (
-          <LoadingState variant="page" />
-        ) : (
-          <TransactionTable data={data?.data || []} onEdit={handleEdit} onDelete={handleDelete} canEdit={canEdit} canDelete={canDelete} />
-        )}
-
-        {/* PAGINATION INFO */}
-        {!isListLoading && data && (
-          <div className="flex flex-col gap-4 text-sm text-slate-500 lg:flex-row lg:items-center lg:justify-between px-1">
-            <div>
-              Showing {(page - 1) * limit + 1}-{Math.min(page * limit, data.total)} of {data.total} data
-            </div>
-            {data.total > limit && (
-              <div className="flex flex-wrap items-center justify-end gap-1 text-slate-800">
+        <SearchPagination
+          searchValue={searchInput}
+          onSearchChange={setSearchInput}
+          searchPlaceholder="Search here"
+          searchAriaLabel="Cari arus transaksi"
+          filters={
+            <DatePickerWithRange
+              date={date}
+              onChange={handleDateChange}
+              placeholder="Pilih rentang tanggal"
+              className="w-full sm:w-[260px]"
+            />
+          }
+          page={page}
+          perPage={perPage}
+          total={total}
+          lastPage={lastPage}
+          onPageChange={setPage}
+          onPerPageChange={setPerPage}
+          actions={
+            <>
+              {search && (
                 <Button
-                  variant="ghost"
+                  variant="outline"
                   size="sm"
-                  className="h-9 rounded-md px-2 text-sm font-medium hover:bg-transparent disabled:text-slate-300"
-                  onClick={() => setPage(page - 1)}
-                  disabled={page === 1}
+                  onClick={() => {
+                    setSearchInput('');
+                    updateQuery({ search: undefined, page: 1 });
+                  }}
+                  className="rounded-md border-slate-200 text-slate-700 bg-white hover:bg-slate-50 cursor-pointer h-9 text-xs px-3"
                 >
-                  Previous
+                  Reset
                 </Button>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="h-9 min-w-9 rounded-md border px-3 text-sm font-medium border-slate-200 bg-white text-slate-950 shadow-sm"
-                >
-                  {page}
+              )}
+              {canCreate && (
+                <Button onClick={() => router.push(`${basePath}/create`)} className="btn-primary-orange!">
+                  <Plus className="mr-2 h-4 w-4" />
+                  Tambah
                 </Button>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="h-9 rounded-md px-2 text-sm font-medium hover:bg-transparent disabled:text-slate-300"
-                  onClick={() => setPage(page + 1)}
-                  disabled={page * limit >= data.total}
-                >
-                  Next
-                </Button>
-              </div>
-            )}
-          </div>
-        )}
+              )}
+            </>
+          }
+        >
+          {isListLoading ? (
+            <LoadingState variant="page" />
+          ) : (
+            <TransactionTable data={data?.data || []} onEdit={handleEdit} onDelete={handleDelete} canEdit={canEdit} canDelete={canDelete} />
+          )}
+        </SearchPagination>
 
         {/* DELETE DIALOG */}
         <DeleteTransactionDialog open={openDelete} onOpenChange={setOpenDelete} transaction={selectedTrx} companyId={safeCompanyId} />

@@ -14,14 +14,14 @@ function walkDir(dir, callback) {
 }
 
 let modifiedFiles = [];
-walkDir(path.join(__dirname, 'src'), function(filePath) {
+walkDir(path.join(__dirname, 'src'), function (filePath) {
     if (filePath.endsWith('.tsx') || filePath.endsWith('.ts')) {
         let content = fs.readFileSync(filePath, 'utf8');
-        
+
         // Match occurrences like: setPerPage(Number(val)); setPage(1);
         // Or setPerPage(value); setPage(1);
         // Replace with just setPerPage(Number(val));
-        
+
         const regex = /setPerPage\((.*?)\);\s*setPage\(1\);/g;
         if (regex.test(content)) {
             const newContent = content.replace(regex, 'setPerPage($1);');
@@ -30,5 +30,3 @@ walkDir(path.join(__dirname, 'src'), function(filePath) {
         }
     }
 });
-
-console.log('Modified files:', modifiedFiles);

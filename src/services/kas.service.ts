@@ -10,6 +10,7 @@ interface KasApiModel {
   code: string;
   description: string;
   type: KasType;
+  currency_type?: 'idr' | 'usd' | string | null;
   cash_name?: string;
   amount?: number | string;
   created_at?: string;
@@ -29,6 +30,7 @@ const mapKas = (payload: KasApiModel): Kas => ({
   cash_name: payload.cash_name,
   description: payload.description,
   type: payload.type,
+  currency_type: payload.currency_type,
   amount: payload.amount ?? 0,
   companyId: payload.company_id ?? null,
   createdAt: payload.created_at,
@@ -129,4 +131,3 @@ export const importKas = async (file: File, companyId?: string | number): Promis
     throw new ApiResponseError(payload.message ?? 'Failed to import kas');
   }
 };
-

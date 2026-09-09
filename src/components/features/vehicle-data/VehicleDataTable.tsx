@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { CheckCircle2, Download, MoreVertical, Plus, Upload } from 'lucide-react';
+import { CheckCircle2, MoreVertical } from 'lucide-react';
 import { format } from 'date-fns';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -12,23 +12,12 @@ import { SearchableSelect, type SearchableSelectOption } from './SearchableSelec
 interface VehicleDataTableProps {
   items: VehicleData[];
   isLoading?: boolean;
-  search: string;
-  onSearchChange: (value: string) => void;
-  page: number;
-  perPage: number;
-  totalData: number;
-  onPageChange: (page: number) => void;
-  onPerPageChange: (perPage: number) => void;
   selectedIds: number[];
   assignedIds: number[];
   onSelectedIdsChange: (ids: number[]) => void;
-  onAdd: () => void;
-  onImport: () => void;
-  onExport: () => void;
   onDetail: (item: VehicleData) => void;
   onEdit: (item: VehicleData) => void;
   onDelete: (item: VehicleData) => void;
-  isExporting?: boolean;
   vendorId: string;
   onVendorIdChange: (value: string) => void;
   vendorOptions: SearchableSelectOption[];
@@ -49,23 +38,12 @@ const formatDate = (value?: string | null) => {
 export function VehicleDataTable({
   items,
   isLoading = false,
-  search,
-  onSearchChange,
-  page,
-  perPage,
-  totalData,
-  onPageChange,
-  onPerPageChange,
   selectedIds,
   assignedIds,
   onSelectedIdsChange,
-  onAdd,
-  onImport,
-  onExport,
   onDetail,
   onEdit,
   onDelete,
-  isExporting = false,
   vendorId,
   onVendorIdChange,
   vendorOptions,
@@ -75,7 +53,6 @@ export function VehicleDataTable({
   onSubmitAssign,
   isAssigning = false,
 }: VehicleDataTableProps) {
-  const totalPages = Math.max(1, Math.ceil(totalData / perPage));
   const assignedCountOnPage = items.filter((item) => assignedIds.includes(item.id)).length;
   const selectedPendingCount = selectedIds.filter((id) => !assignedIds.includes(id)).length;
 
@@ -174,13 +151,13 @@ export function VehicleDataTable({
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-[170px] rounded-md border-slate-200 p-1.5 shadow-lg">
-                <DropdownMenuItem onClick={() => onDetail(item)} className="rounded-lg px-3 py-2 text-sm text-slate-900 focus:bg-slate-50 cursor-pointer">
+                <DropdownMenuItem onClick={() => onDetail(item)} className="rounded-md px-3 py-2 text-sm text-slate-900 focus:bg-slate-50 cursor-pointer">
                   Detail
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => onEdit(item)} className="rounded-lg px-3 py-2 text-sm text-slate-900 focus:bg-slate-50 cursor-pointer">
+                <DropdownMenuItem onClick={() => onEdit(item)} className="rounded-md px-3 py-2 text-sm text-slate-900 focus:bg-slate-50 cursor-pointer">
                   Edit
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => onDelete(item)} className="rounded-lg px-3 py-2 text-sm text-red-600 focus:bg-red-50 focus:text-red-600 cursor-pointer">
+                <DropdownMenuItem onClick={() => onDelete(item)} className="rounded-md px-3 py-2 text-sm text-red-600 focus:bg-red-50 focus:text-red-600 cursor-pointer">
                   Hapus
                 </DropdownMenuItem>
               </DropdownMenuContent>
@@ -248,35 +225,6 @@ export function VehicleDataTable({
         onSelectedIdsChange={(set) => onSelectedIdsChange(Array.from(set).map(Number))}
         getRowId={(item) => String(item.id)}
         isCheckboxDisabled={(item) => assignedIds.includes(item.id)}
-        searchPlaceholder="Search here"
-        search={search}
-        onSearchChange={onSearchChange}
-        showLimitChange
-        perPage={perPage}
-        onPerPageChange={onPerPageChange}
-        meta={{
-          currentPage: page,
-          perPage,
-          lastPage: totalPages,
-          total: totalData,
-        }}
-        onPageChange={onPageChange}
-        headerActions={
-          <div className="flex flex-wrap items-center gap-2">
-            <Button onClick={onExport} disabled={isExporting} variant="outline" className="w-full sm:w-auto">
-              <Download className="mr-2 h-4 w-4" />
-              {isExporting ? 'Exporting...' : 'Export'}
-            </Button>
-            <Button onClick={onImport} variant="outline" className="w-full sm:w-auto">
-              <Upload className="mr-2 h-4 w-4" />
-              Import
-            </Button>
-            <Button onClick={onAdd} className="btn-primary!">
-              <Plus className="mr-2 h-4 w-4" />
-              Tambah Data
-            </Button>
-          </div>
-        }
       />
     </div>
   );

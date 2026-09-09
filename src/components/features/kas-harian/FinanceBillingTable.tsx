@@ -79,22 +79,54 @@ export default function FinanceBillingTable({ financeBillings, cashFlowDetail, c
   const updateMutation = useUpdateFinanceBilling();
   const deleteMutation = useDeleteFinanceBilling();
 
+  const currentTransactionType = useMemo<'debet' | 'credit' | undefined>(() => {
+    if (
+      cashFlowDetail.cash_flow_type === 'debet' ||
+      cashFlowDetail.cash_flow_type === 'debit' ||
+      Number(cashFlowDetail.debet || 0) > 0 ||
+      Number(cashFlowDetail.debet_usd || 0) > 0
+    ) {
+      return 'debet';
+    }
+    if (
+      cashFlowDetail.cash_flow_type === 'credit' ||
+      Number(cashFlowDetail.credit || 0) > 0 ||
+      Number(cashFlowDetail.credit_usd || 0) > 0
+    ) {
+      return 'credit';
+    }
+    return undefined;
+  }, [cashFlowDetail]);
+
   const kasQuery = useKas(companyId > 0 ? companyId : undefined);
   const accountQuery = useAccounts({
     page: 1,
     perPage: 1000,
     search: '',
     company_id: companyId > 0 ? companyId : undefined,
+    type: currentTransactionType,
     enabled: companyId > 0,
   });
 
   const kasOptions = useMemo(() => kasQuery.data?.data ?? [], [kasQuery.data?.data]);
-  const akunOptions = useMemo(() => accountQuery.data?.data ?? [], [accountQuery.data?.data]);
+  const rawAkunOptions = useMemo(() => accountQuery.data?.data ?? [], [accountQuery.data?.data]);
 
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingId, setEditingId] = useState<number | null>(null);
   const [form, setForm] = useState<FormState>({ ...EMPTY_FORM });
   const [deleteTarget, setDeleteTarget] = useState<FinanceBilling | null>(null);
+
+  const akunOptions = useMemo(() => {
+    if (!currentTransactionType) return rawAkunOptions;
+    return rawAkunOptions.filter((account) => {
+      if (form.account_id && Number(account.id) === Number(form.account_id)) {
+        return true;
+      }
+      if (!account.type) return true;
+      const normalizedType = account.type === 'debit' ? 'debet' : account.type;
+      return normalizedType === currentTransactionType;
+    });
+  }, [rawAkunOptions, currentTransactionType, form.account_id]);
 
   const totalPaid = useMemo(
     () => financeBillings.reduce((sum, fb) => sum + Number(fb.amount || 0), 0),
@@ -133,8 +165,8 @@ export default function FinanceBillingTable({ financeBillings, cashFlowDetail, c
     [form.cash_id, kasOptions],
   );
   const selectedAkun = useMemo(
-    () => akunOptions.find((a) => Number(a.id) === Number(form.account_id)) ?? null,
-    [form.account_id, akunOptions],
+    () => akunOptions.find((a) => Number(a.id) === Number(form.account_id)) ?? rawAkunOptions.find((a) => Number(a.id) === Number(form.account_id)) ?? null,
+    [form.account_id, akunOptions, rawAkunOptions],
   );
   const selectedCurrency = selectedKas?.code?.toLowerCase().endsWith('_usd') ? 'usd' : 'idr';
   const selectedCurrencySymbol = selectedCurrency === 'usd' ? '$' : 'Rp';
@@ -254,10 +286,10 @@ export default function FinanceBillingTable({ financeBillings, cashFlowDetail, c
     return kas ? (kas.cash_name || `${kas.code} - ${kas.description}`) : '-';
   }, [kasOptions]);
 
-  const getAccountLabel = useCallback((cashId: number) => {
-    const akun = akunOptions.find((a) => Number(a.id) === cashId);
+  const getAccountLabel = useCallback((accountId: number) => {
+    const akun = rawAkunOptions.find((a) => Number(a.id) === accountId);
     return akun ? (akun.name || `${akun.code} - ${akun.description}`) : '-';
-  }, [akunOptions]);
+  }, [rawAkunOptions]);
 
   const columns = useMemo<ColumnDef<FinanceBilling>[]>(
     () => [
@@ -328,12 +360,12 @@ export default function FinanceBillingTable({ financeBillings, cashFlowDetail, c
   );
 
   return (
-    <div className="rounded-md border border-slate-200 bg-white p-6 shadow-sm space-y-4">
-      <div className="flex items-center justify-between border-b border-slate-100 pb-4">
+    <div className="space-y-4 rounded-md border border-slate-200 bg-white p-4 shadow-sm sm:p-6">
+      <div className="flex flex-col items-stretch gap-3 border-b border-slate-100 pb-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <div className="flex items-center gap-3 flex-wrap">
             <h3 className="text-lg font-semibold text-slate-900">Rincian Pembayaran</h3>
-            <div className="flex items-center gap-1.5 bg-slate-50 border border-slate-200 rounded-lg px-2 py-0.5 text-xs text-slate-600 font-medium">
+            <div className="flex items-center gap-1.5 bg-slate-50 border border-slate-200 rounded-md px-2 py-0.5 text-xs text-slate-600 font-medium">
               {(cashFlowDetail.unit_transaction_billing_id || cashFlowDetail.goods_transaction_billing_id || cashFlowDetail.unit_transaction_billing || cashFlowDetail.goods_transaction_billing) ? (
                 <TooltipProvider>
                   <Tooltip>
@@ -342,7 +374,7 @@ export default function FinanceBillingTable({ financeBillings, cashFlowDetail, c
                         <Info className="h-3.5 w-3.5 mr-0.5" />
                       </button>
                     </TooltipTrigger>
-                    <TooltipContent side="top" align="center" className="max-w-xs bg-slate-900 text-white rounded-lg p-2 text-xs shadow-md">
+                    <TooltipContent side="top" align="center" className="max-w-xs bg-slate-900 text-white rounded-md p-2 text-xs shadow-md">
                       Data Arus Transaksi Kas Harian ini terhubung dengan data Administrasi
                     </TooltipContent>
                   </Tooltip>
@@ -354,7 +386,7 @@ export default function FinanceBillingTable({ financeBillings, cashFlowDetail, c
           <p className="text-sm text-slate-500 mt-1">Daftar finance billing yang terkait dengan transaksi ini</p>
         </div>
         {!disabled && (
-          <Button type="button" onClick={openAddForm} className="btn-primary! w-full sm:w-auto" disabled={isFullyPaid}>
+          <Button type="button" onClick={openAddForm} variant="default" disabled={isFullyPaid} className="w-full sm:w-auto">
             <Plus className="mr-1.5 h-4 w-4" />
             Tambah Pembayaran
           </Button>
@@ -368,14 +400,14 @@ export default function FinanceBillingTable({ financeBillings, cashFlowDetail, c
       />
 
       {/* Summary */}
-      <div className="flex flex-col items-end gap-2 border-t border-slate-100 pt-4 text-sm">
+      <div className="flex flex-col items-stretch gap-2 border-t border-slate-100 pt-4 text-sm sm:items-end">
         {!(hasIdr && hasUsd) ? (
           <>
-            <div className="flex items-center gap-3">
+            <div className="flex flex-col items-start gap-1 sm:flex-row sm:items-center sm:gap-3">
               <span className="text-slate-500">Total Pembayaran:</span>
               <span className="font-bold text-slate-900">{currenciesFormat(cashFlowCurrency, totalPaid)}</span>
             </div>
-            <div className="flex items-center gap-3">
+            <div className="flex flex-col items-start gap-1 sm:flex-row sm:items-center sm:gap-3">
               <span className="text-slate-500">Sisa Tagihan:</span>
               <span className={`font-bold ${remainingPayment > 0 ? 'text-amber-600' : 'text-emerald-600'}`}>
                 {currenciesFormat(cashFlowCurrency, remainingPayment)}
@@ -386,14 +418,14 @@ export default function FinanceBillingTable({ financeBillings, cashFlowDetail, c
           <div className="w-full flex flex-col sm:flex-row justify-between gap-4 text-xs mt-2 border-t border-slate-50 pt-3">
             <div className="space-y-1">
               <div className="font-semibold text-slate-700">Rincian Rupiah (IDR):</div>
-              <div className="flex items-center gap-4 text-slate-500">
+              <div className="flex flex-col items-start gap-1 text-slate-500 sm:flex-row sm:items-center sm:gap-4">
                 <span>Terbayar: <strong className="text-slate-800">{currenciesFormat('idr', totalPaidIdr)}</strong></span>
                 <span>Sisa: <strong className={remainingPaymentIdr > 0 ? 'text-amber-600 font-semibold' : 'text-emerald-600 font-semibold'}>{currenciesFormat('idr', remainingPaymentIdr)}</strong></span>
               </div>
             </div>
             <div className="space-y-1 sm:text-right">
               <div className="font-semibold text-slate-700">Rincian Dollar (USD):</div>
-              <div className="flex items-center gap-4 sm:justify-end text-slate-500">
+              <div className="flex flex-col items-start gap-1 text-slate-500 sm:flex-row sm:items-center sm:justify-end sm:gap-4">
                 <span>Terbayar: <strong className="text-slate-800">{currenciesFormat('usd', totalPaidUsd)}</strong></span>
                 <span>Sisa: <strong className={remainingPaymentUsd > 0 ? 'text-amber-600 font-semibold' : 'text-emerald-600 font-semibold'}>{currenciesFormat('usd', remainingPaymentUsd)}</strong></span>
               </div>

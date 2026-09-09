@@ -6,15 +6,15 @@ const LIVE_REFETCH_INTERVAL = 10_000;
 
 const KEYS = {
   all: ['transactions'] as const,
-  list: (companyId: string, page: number, limit: number, search: string) => [...KEYS.all, 'list', companyId, page, limit, search] as const,
+  list: (companyId: string, page: number, limit: number, search: string, startDate?: string, endDate?: string) => [...KEYS.all, 'list', companyId, page, limit, search, startDate, endDate] as const,
   detail: (id: string) => [...KEYS.all, 'detail', id] as const,
   summary: (companyId: string) => [...KEYS.all, 'summary', companyId] as const,
 };
 
-export const useTransactions = (companyId: string, page: number, limit: number, search: string = '') =>
+export const useTransactions = (companyId: string, page: number, limit: number, search: string = '', startDate?: string, endDate?: string) =>
   useQuery({
-    queryKey: KEYS.list(companyId, page, limit, search),
-    queryFn: () => service.getTransactions(companyId, page, limit, search),
+    queryKey: KEYS.list(companyId, page, limit, search, startDate, endDate),
+    queryFn: () => service.getTransactions(companyId, page, limit, search, startDate, endDate),
     staleTime: LIVE_REFETCH_INTERVAL,
     retry: 1,
     refetchInterval: LIVE_REFETCH_INTERVAL,

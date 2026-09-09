@@ -1,4 +1,4 @@
-import { LayoutDashboard, Database, FileText, Warehouse, DollarSign, ScrollText, Shield } from 'lucide-react';
+import { LayoutDashboard, Database, FileText, Warehouse, DollarSign, ScrollText, Shield, Settings, SlidersHorizontal } from 'lucide-react';
 
 /**
  * Navigation Item Configuration
@@ -180,16 +180,24 @@ export const getNavItems = (slug: string): NavItemConfig[] => {
           href: base('/laporan/laporan-transaksi-kas'),
         },
         {
-          label: 'Laporan Akuntansi',
-          href: base('/laporan/laporan-akuntansi'),
-        },
-        {
           label: 'Laporan Jurnal',
           href: base('/laporan/laporan-jurnal'),
         },
         {
           label: 'Laporan Buku Besar',
           href: base('/laporan/laporan-buku-besar'),
+        },
+        {
+          label: 'Laporan Neraca Lajur',
+          href: base('/laporan/laporan-neraca-lajur'),
+        },
+        {
+          label: 'Laporan Laba Rugi',
+          href: base('/laporan/laporan-laba-rugi'),
+        },
+        {
+          label: 'Laporan Neraca',
+          href: base('/laporan/ballance-report'),
         },
         {
           label: 'Laporan Pembelian',
@@ -210,22 +218,18 @@ export const getNavItems = (slug: string): NavItemConfig[] => {
       ], // Siap untuk di-expand dengan sub-items
     },
     {
-      label: 'Manajemen Pengguna',
+      label: 'Manajemen Admin',
       icon: Shield,
       children: [
         {
-          label: 'Roles',
-          href: settings('/roles'),
-        },
-        {
-          label: 'Permissions',
-          href: settings('/permissions'),
+          label: 'User',
+          href: master('/user'),
         },
       ],
     },
     {
-      label: 'Security',
-      icon: Shield,
+      label: 'Setting',
+      icon: Settings,
       children: [
         {
           label: 'Roles',
@@ -234,6 +238,11 @@ export const getNavItems = (slug: string): NavItemConfig[] => {
         {
           label: 'Permissions',
           href: settings('/permissions'),
+        },
+        {
+          label: 'Preferensi',
+          href: settings('/preference'),
+          icon: SlidersHorizontal,
         },
       ],
     },

@@ -94,10 +94,10 @@ export function GoodsReceiptEquipmentTable({
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="min-w-[150px] rounded-md border-slate-200 p-1.5 shadow-lg">
-                  <DropdownMenuItem asChild className="rounded-lg px-3 py-2 text-sm text-slate-900 focus:bg-slate-50 cursor-pointer">
+                  <DropdownMenuItem asChild className="rounded-md px-3 py-2 text-sm text-slate-900 focus:bg-slate-50 cursor-pointer">
                     <Link href={`/dashboard/${slug}/warehouse/perlengkapan-masuk/${item.id}/edit`}>Edit</Link>
                   </DropdownMenuItem>
-                  <DropdownMenuItem asChild className="rounded-lg px-3 py-2 text-sm text-slate-900 focus:bg-slate-50 cursor-pointer">
+                  <DropdownMenuItem asChild className="rounded-md px-3 py-2 text-sm text-slate-900 focus:bg-slate-50 cursor-pointer">
                     <Link href={`/dashboard/[slug]/warehouse/perlengkapan-masuk/${item.id}`.replace('[slug]', slug)}>Detail</Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem
@@ -105,7 +105,7 @@ export function GoodsReceiptEquipmentTable({
                       e.preventDefault();
                       setTimeout(() => onUploadInvoice(item), 100);
                     }}
-                    className="rounded-lg px-3 py-2 text-sm text-slate-900 focus:bg-slate-50 cursor-pointer"
+                    className="rounded-md px-3 py-2 text-sm text-slate-900 focus:bg-slate-50 cursor-pointer"
                   >
                     Upload Invoice
                   </DropdownMenuItem>
@@ -116,7 +116,7 @@ export function GoodsReceiptEquipmentTable({
                         e.preventDefault();
                         setTimeout(() => onCreateBilling(item), 100);
                       }}
-                      className="rounded-lg px-3 py-2 text-sm text-slate-900 focus:bg-slate-50 cursor-pointer"
+                      className="rounded-md px-3 py-2 text-sm text-slate-900 focus:bg-slate-50 cursor-pointer"
                     >
                       Buat Billing
                     </DropdownMenuItem>
@@ -128,7 +128,7 @@ export function GoodsReceiptEquipmentTable({
                         e.preventDefault();
                         setTimeout(() => onPayBilling(item), 100);
                       }}
-                      className="rounded-lg px-3 py-2 text-sm text-emerald-600 focus:bg-emerald-50 focus:text-emerald-600 cursor-pointer"
+                      className="rounded-md px-3 py-2 text-sm text-emerald-600 focus:bg-emerald-50 focus:text-emerald-600 cursor-pointer"
                     >
                       Bayar Billing
                     </DropdownMenuItem>
@@ -139,7 +139,7 @@ export function GoodsReceiptEquipmentTable({
                       e.preventDefault();
                       setTimeout(() => onDelete(item), 100);
                     }}
-                    className="rounded-lg px-3 py-2 text-sm text-red-600 focus:bg-red-50 focus:text-red-600 cursor-pointer"
+                    className="rounded-md px-3 py-2 text-sm text-red-600 focus:bg-red-50 focus:text-red-600 cursor-pointer"
                   >
                     Hapus
                   </DropdownMenuItem>

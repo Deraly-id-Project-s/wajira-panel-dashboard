@@ -1,16 +1,22 @@
 import * as React from 'react';
 import { useRouter } from 'next/router';
 import { toast } from 'sonner';
+import { Plus } from 'lucide-react';
 import type { OrderList, OrderListStatus } from '@/@types/order-list.types';
 import { OrderListDeleteDialog } from '@/components/features/order-list/OrderListDeleteDialog';
 import { OrderListTable } from '@/components/features/order-list/OrderListTable';
 import { OrderStatusConfirmDialog } from '@/components/features/order-list/OrderStatusConfirmDialog';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
-import { useDebouncedValue } from '@/hooks/useDebouncedValue';
 import { useOrderLists, useDeleteOrderList, useUpdateOrderListState } from '@/hooks/useOrderList';
 import { usePermissionGuard } from '@/hooks/usePermissionGuard';
 import { PageHeader } from '@/components/ui/page-header';
+import { Button } from '@/components/ui/button';
+import { SearchPagination } from '@/components/ui/search-pagination';
+import { DatePickerWithRange } from '@/components/ui/date-range-picker';
+import type { DateRange } from 'react-day-picker';
+import { format } from 'date-fns';
 import { useCompany } from '@/contexts/CompanyContext';
+import { useQueryParamsTable } from '@/hooks/useQueryParamsTable';
 
 export default function OrderListPage() {
   const router = useRouter();
@@ -22,29 +28,27 @@ export default function OrderListPage() {
   const canEdit = hasPermission('transaction:edit');
   const canDelete = hasPermission('transaction:delete');
 
-  const initialPage = typeof router.query.page === 'string' ? Number(router.query.page) : 1;
-  const initialPerPage = typeof router.query.perPage === 'string'
-    ? Number(router.query.perPage)
-    : typeof router.query.per_page === 'string'
-      ? Number(router.query.per_page)
-      : 25;
-  const initialSearch = typeof router.query.search === 'string' ? router.query.search : '';
-  const [page, setPage] = React.useState(Number.isFinite(initialPage) && initialPage > 0 ? initialPage : 1);
-  const [perPage, setPerPage] = React.useState(25);
-  const [searchInput, setSearchInput] = React.useState(initialSearch);
-  const [search, setSearch] = React.useState(initialSearch);
-  const [startDate, setStartDate] = React.useState<string | null>(null);
-  const [endDate, setEndDate] = React.useState<string | null>(null);
-  const debouncedSearch = useDebouncedValue(searchInput, 350);
+  const { page, perPage, search, setPage, setPerPage, setSearch, updateQuery } = useQueryParamsTable({
+    defaultPerPage: 25,
+  });
+  const [searchInput, setSearchInput] = React.useState(search);
+  const [dateRange, setDateRange] = React.useState<DateRange | undefined>(undefined);
   const [deleteOpen, setDeleteOpen] = React.useState(false);
   const [selectedItem, setSelectedItem] = React.useState<OrderList | null>(null);
   const [statusConfirmOpen, setStatusConfirmOpen] = React.useState(false);
   const [statusUpdateData, setStatusUpdateData] = React.useState<{ item: OrderList; newStatus: OrderListStatus } | null>(null);
 
   React.useEffect(() => {
-    setSearch(debouncedSearch.trim());
-    setPage(1);
-  }, [debouncedSearch]);
+    const timeout = window.setTimeout(() => {
+      if (search !== searchInput.trim()) {
+        setSearch(searchInput.trim());
+      }
+    }, 350);
+    return () => window.clearTimeout(timeout);
+  }, [searchInput, search, setSearch]);
+
+  const startDate = dateRange?.from ? format(dateRange.from, 'yyyy-MM-dd') : null;
+  const endDate = dateRange?.to ? format(dateRange.to, 'yyyy-MM-dd') : null;
 
   const listQueryParams = React.useMemo(
     () => ({
@@ -146,35 +150,71 @@ export default function OrderListPage() {
           subtitle="Lihat dan kelola pesanan pelanggan dengan mudah"
         />
 
-        <OrderListTable
-          data={tableData}
-          search={searchInput}
+        <SearchPagination
+          searchValue={searchInput}
+          onSearchChange={setSearchInput}
+          searchPlaceholder="Cari order list..."
+          searchAriaLabel="Cari order list"
           page={page}
           perPage={perPage}
-          totalData={listQuery.data?.meta.total ?? 0}
-          isLoading={showTableSkeleton}
-          isRefetching={listQuery.isFetching}
-          onSearchChange={setSearchInput}
+          total={listQuery.data?.meta.total}
+          lastPage={listQuery.data?.meta.lastPage}
           onPageChange={setPage}
-          onPerPageChange={(value) => {
-            setPerPage(value);
-          }}
-          startDate={startDate}
-          endDate={endDate}
-          onDateRangeChange={(start, end) => {
-            setStartDate(start);
-            setEndDate(end);
-            setPage(1);
-          }}
-          onAdd={handleAdd}
-          onDetail={handleDetail}
-          onEdit={handleEdit}
-          onDelete={handleDeleteClick}
-          onUpdateStatus={handleUpdateStatus}
-          canCreate={canCreate}
-          canEdit={canEdit}
-          canDelete={canDelete}
-        />
+          onPerPageChange={setPerPage}
+          filters={
+            <DatePickerWithRange
+              date={dateRange}
+              onChange={(range) => {
+                setDateRange(range);
+                setPage(1);
+              }}
+              className="w-full sm:w-[260px]"
+            />
+          }
+          actions={
+            <div className="flex flex-wrap items-center gap-2">
+              {search && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    setSearchInput('');
+                    updateQuery({ search: undefined, page: 1 });
+                  }}
+                  className="rounded-md border-slate-200 text-slate-700 bg-white hover:bg-slate-50 cursor-pointer h-9 text-xs px-3"
+                >
+                  Reset
+                </Button>
+              )}
+              {listQuery.isFetching && (
+                <span className="text-xs font-medium text-slate-400 animate-pulse">
+                  Memperbarui data...
+                </span>
+              )}
+              <Button
+                type="button"
+                onClick={handleAdd}
+                disabled={!canCreate}
+                className="btn-primary!"
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                Tambah Data
+              </Button>
+            </div>
+          }
+        >
+          <OrderListTable
+            data={tableData}
+            isLoading={showTableSkeleton}
+            onDetail={handleDetail}
+            onEdit={handleEdit}
+            onDelete={handleDeleteClick}
+            onUpdateStatus={handleUpdateStatus}
+            canEdit={canEdit}
+            canDelete={canDelete}
+          />
+        </SearchPagination>
       </div>
 
       <OrderListDeleteDialog

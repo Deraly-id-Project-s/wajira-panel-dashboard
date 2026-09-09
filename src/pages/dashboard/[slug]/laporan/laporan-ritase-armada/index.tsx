@@ -2,19 +2,19 @@
 
 import { useEffect, useState, useMemo } from 'react';
 import { useRouter } from 'next/router';
-import { Search, Printer, MoreHorizontal } from 'lucide-react';
+import { Printer, MoreHorizontal } from 'lucide-react';
 import { format } from 'date-fns';
 
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { PageHeader } from '@/components/ui/page-header';
 import { TableRow, TableHead } from '@/components/ui/table';
-import { Input } from '@/components/ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import BaseTable, { ColumnDef } from '@/components/ui/base-table';
+import { SearchPagination } from '@/components/ui/search-pagination';
 
 import { useCompany } from '@/contexts/CompanyContext';
 import { resolveCompanyId, getLetterheadByCompanyId } from '@/lib/print-letterhead';
@@ -299,96 +299,78 @@ export default function LaporanRitaseArmadaPage() {
           />
         </div>
 
-        {/* Search + Print row */}
-        <div className="flex flex-col sm:flex-row items-center justify-between gap-4 no-print">
-          <div className="flex items-center gap-4 w-full sm:w-auto">
-            <div className="relative w-full sm:w-[300px]">
-              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
-              <Input
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                placeholder="Search here"
-                className="pl-9 bg-white"
-              />
+        <SearchPagination
+          searchValue={searchTerm}
+          onSearchChange={setSearchTerm}
+          searchPlaceholder="Search here"
+          searchAriaLabel="Cari data"
+          page={page}
+          perPage={limit}
+          total={activeTab === 'ritase' ? filteredRitase.length : filteredMaintenance.length}
+          lastPage={Math.max(1, Math.ceil((activeTab === 'ritase' ? filteredRitase.length : filteredMaintenance.length) / limit))}
+          perPageOptions={[5, 25, 50, 100]}
+          onPageChange={setPage}
+          onPerPageChange={(value) => {
+            setPerPage(String(value));
+            setPage(1);
+          }}
+          actions={
+            <Button onClick={handlePrint} variant="outline" className="w-full sm:w-auto">
+              <Printer className="mr-2 h-4 w-4" /> Print
+            </Button>
+          }
+        >
+          <Tabs value={activeTab} onValueChange={(val) => setActiveTab(val as 'ritase' | 'maintenance')} className="w-full">
+            {/* Tabs Navigation */}
+            <div className="flex mb-4 no-print">
+              <TabsList className="flex h-auto p-1 bg-gray-50 border border-gray-100 rounded-md">
+                <TabsTrigger
+                  value="ritase"
+                  className="rounded-md px-6 py-2.5 text-[14px] font-medium data-[state=active]:bg-white data-[state=active]:text-gray-900 data-[state=active]:shadow-sm cursor-pointer whitespace-nowrap"
+                >
+                  Laporan Ritase Armada
+                </TabsTrigger>
+                <TabsTrigger
+                  value="maintenance"
+                  className="rounded-md px-6 py-2.5 text-[14px] font-medium data-[state=active]:bg-white data-[state=active]:text-gray-900 data-[state=active]:shadow-sm cursor-pointer whitespace-nowrap"
+                >
+                  Laporan Maintenance Armada
+                </TabsTrigger>
+              </TabsList>
             </div>
-            <div className="flex items-center gap-2 text-sm text-slate-500 whitespace-nowrap">
-              <span>Show</span>
-              <Select value={perPage} onValueChange={setPerPage}>
-                <SelectTrigger className="w-[70px] bg-white">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="5">5</SelectItem>
-                  <SelectItem value="25">25</SelectItem>
-                  <SelectItem value="50">50</SelectItem>
-                  <SelectItem value="100">100</SelectItem>
-                </SelectContent>
-              </Select>
-              <span>Page</span>
-            </div>
-          </div>
-          <Button onClick={handlePrint} variant="outline" className="w-full sm:w-auto">
-            <Printer className="mr-2 h-4 w-4" /> Print
-          </Button>
-        </div>
 
-        <Tabs value={activeTab} onValueChange={(val) => setActiveTab(val as 'ritase' | 'maintenance')} className="w-full">
-          {/* Tabs Navigation */}
-          <div className="flex mb-4 no-print">
-            <TabsList className="flex h-auto p-1 bg-gray-50 border border-gray-100 rounded-md">
-              <TabsTrigger
-                value="ritase"
-                className="rounded-lg px-6 py-2.5 text-[14px] font-medium data-[state=active]:bg-white data-[state=active]:text-gray-900 data-[state=active]:shadow-sm cursor-pointer whitespace-nowrap"
-              >
-                Laporan Ritase Armada
-              </TabsTrigger>
-              <TabsTrigger
-                value="maintenance"
-                className="rounded-lg px-6 py-2.5 text-[14px] font-medium data-[state=active]:bg-white data-[state=active]:text-gray-900 data-[state=active]:shadow-sm cursor-pointer whitespace-nowrap"
-              >
-                Laporan Maintenance Armada
-              </TabsTrigger>
-            </TabsList>
-          </div>
+            <PrintLetterPage
+              id="laporan-ritase-print"
+              className="laporan-penerimaan-print-area"
+              letterheadSrc={selectedPrintBackground}
+            >
+              <div className="laporan-penerimaan-print-content print-letter-content">
+                {/* Cover Letter Heading - Visible only in Print */}
+                <div className="hidden print:flex flex-col items-center justify-center text-center space-y-1 mb-6 w-full">
+                  <h2 className="text-[18px] font-bold uppercase text-gray-900 tracking-wide">
+                    {activeTab === 'ritase' ? 'Laporan Ritase Armada' : 'Laporan Maintenance Armada'}
+                  </h2>
+                  <p className="text-[15px] font-bold text-gray-900 tracking-wide">
+                    {getCompanyName(resolvedCompanyId)}
+                  </p>
+                  <p className="text-[12px] text-gray-600">
+                    Tanggal Cetak: {formatDate(new Date())}
+                  </p>
+                </div>
 
-          <PrintLetterPage
-            id="laporan-ritase-print"
-            className="laporan-penerimaan-print-area"
-            letterheadSrc={selectedPrintBackground}
-          >
-            <div className="laporan-penerimaan-print-content print-letter-content">
-              {/* Cover Letter Heading - Visible only in Print */}
-              <div className="hidden print:flex flex-col items-center justify-center text-center space-y-1 mb-6 w-full">
-                <h2 className="text-[18px] font-bold uppercase text-gray-900 tracking-wide">
-                  {activeTab === 'ritase' ? 'Laporan Ritase Armada' : 'Laporan Maintenance Armada'}
-                </h2>
-                <p className="text-[15px] font-bold text-gray-900 tracking-wide">
-                  {getCompanyName(resolvedCompanyId)}
-                </p>
-                <p className="text-[12px] text-gray-600">
-                  Tanggal Cetak: {formatDate(new Date())}
-                </p>
+                <div className="rounded-md border border-slate-200 bg-white overflow-x-auto shadow-none w-full">
+                  <BaseTable
+                    data={activeTab === 'ritase' ? paginatedRitase : paginatedMaintenance}
+                    columns={activeTab === 'ritase' ? ritaseColumns : maintenanceColumns}
+                    loading={false}
+                    headerGroups={activeTab === 'ritase' ? ritaseHeaderGroups : undefined}
+                    headerRowClassName="bg-slate-50"
+                  />
+                </div>
               </div>
-
-              <div className="rounded-md border border-slate-200 bg-white overflow-x-auto shadow-none w-full">
-                <BaseTable
-                  data={activeTab === 'ritase' ? paginatedRitase : paginatedMaintenance}
-                  columns={activeTab === 'ritase' ? ritaseColumns : maintenanceColumns}
-                  loading={false}
-                  headerGroups={activeTab === 'ritase' ? ritaseHeaderGroups : undefined}
-                  headerRowClassName="bg-slate-50"
-                  meta={{
-                    currentPage: page,
-                    perPage: limit,
-                    lastPage: Math.ceil((activeTab === 'ritase' ? filteredRitase.length : filteredMaintenance.length) / limit) || 1,
-                    total: activeTab === 'ritase' ? filteredRitase.length : filteredMaintenance.length,
-                  }}
-                  onPageChange={setPage}
-                />
-              </div>
-            </div>
-          </PrintLetterPage>
-        </Tabs>
+            </PrintLetterPage>
+          </Tabs>
+        </SearchPagination>
       </div>
 
       {/* Edit Ritase Modal */}

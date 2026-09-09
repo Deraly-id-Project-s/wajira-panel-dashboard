@@ -80,7 +80,7 @@ export function DataImportModal({ open, onOpenChange, entityName = 'Data', title
                     "group relative flex cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed p-8 transition-all duration-300",
                     file
                         ? "border-emerald-400 bg-emerald-50 hover:bg-emerald-100/50"
-                        : "border-slate-300 bg-slate-50 hover:border-indigo-400 hover:bg-indigo-50/50"
+                        : "border-slate-300 bg-slate-50 hover:border-orange-400 hover:bg-orange-50/40"
                 )}>
                     {file ? (
                         <div className="flex flex-col items-center text-center animate-in fade-in zoom-in duration-300">
@@ -92,10 +92,10 @@ export function DataImportModal({ open, onOpenChange, entityName = 'Data', title
                         </div>
                     ) : (
                         <div className="flex flex-col items-center text-center">
-                            <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-white shadow-sm ring-1 ring-slate-200 group-hover:bg-indigo-100 group-hover:ring-indigo-200 transition-all duration-300">
-                                <Upload className="h-6 w-6 text-slate-400 group-hover:text-indigo-600 transition-colors duration-300" />
+                            <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-white shadow-sm ring-1 ring-slate-200 group-hover:bg-orange-100 group-hover:ring-orange-200 transition-all duration-300">
+                                <Upload className="h-6 w-6 text-slate-400 group-hover:text-orange-600 transition-colors duration-300" />
                             </div>
-                            <span className="text-sm font-semibold text-slate-900 group-hover:text-indigo-700 transition-colors">Klik untuk mengunggah file</span>
+                            <span className="text-sm font-semibold text-slate-900 group-hover:text-orange-600 transition-colors">Klik untuk mengunggah file</span>
                             <span className="mt-1.5 text-xs text-slate-500">Mendukung format {accept.replace(/\./g, '').toUpperCase()}</span>
                         </div>
                     )}
@@ -108,9 +108,9 @@ export function DataImportModal({ open, onOpenChange, entityName = 'Data', title
                 </label>
 
                 {templateUrl && (
-                    <div className="flex items-center justify-between rounded-xl border border-indigo-100 bg-indigo-50/50 p-4 transition-colors hover:bg-indigo-50">
+                    <div className="flex items-center justify-between rounded-xl border border-orange-200/80 bg-orange-50/40 p-4 transition-colors hover:bg-orange-50/70">
                         <div className="flex items-center gap-3">
-                            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-indigo-100 text-indigo-600">
+                            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-orange-100 text-orange-600">
                                 <FileSpreadsheet className="h-5 w-5" />
                             </div>
                             <div>
@@ -122,7 +122,7 @@ export function DataImportModal({ open, onOpenChange, entityName = 'Data', title
                             href={templateUrl} 
                             target="_blank" 
                             rel="noopener noreferrer" 
-                            className="inline-flex h-9 shrink-0 items-center justify-center rounded-md bg-white px-3 text-sm font-medium text-indigo-600 shadow-sm border border-slate-200 hover:bg-slate-50 hover:text-indigo-700 transition-colors"
+                            className="inline-flex h-9 shrink-0 items-center justify-center rounded-md bg-white px-3 text-sm font-medium text-orange-600 shadow-sm border border-orange-200 hover:bg-orange-50 hover:text-orange-700 transition-colors"
                         >
                             <Download className="mr-2 h-4 w-4" /> Download
                         </a>

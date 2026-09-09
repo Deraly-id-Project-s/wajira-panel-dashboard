@@ -3,12 +3,14 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useRouter } from 'next/router';
 import { getWarehouseBlockDetail } from '@/services/warehouseBlock.service';
 import { createWarehouseSubBlock, updateWarehouseSubBlock, deleteWarehouseSubBlock, makeDefaultWarehouseSubBlock, importWarehouseSubBlock, exportWarehouseSubBlock } from '@/services/warehouseSubBlock.service';
-import { WarehouseSubBlockTable } from '@/components/features/master/warehouse-sub-block/WarehouseSubBlockTable';
-import { WarehouseSubBlockForm, type WarehouseSubBlockFormValues } from '@/components/features/master/warehouse-sub-block/WarehouseSubBlockForm';
+import { WarehouseSubBlockTable } from '@/components/features/master-data/warehouse-sub-block/WarehouseSubBlockTable';
+import { WarehouseSubBlockForm, type WarehouseSubBlockFormValues } from '@/components/features/master-data/warehouse-sub-block/WarehouseSubBlockForm';
 import { DataImportModal } from '@/components/features/master-data/DataImportModal';
 import { toast } from 'sonner';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { PageHeader } from '@/components/ui/page-header';
+import { Button } from '@/components/ui/button';
+import { SearchPagination } from '@/components/ui/search-pagination';
 import Head from 'next/head';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -16,6 +18,7 @@ import { Badge } from '@/components/ui/badge';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import type { WarehouseSubBlock } from '@/services/warehouseBlock.service';
 import { usePermissionGuard } from '@/hooks/usePermissionGuard';
+import { Download, Plus, Upload } from 'lucide-react';
 
 export default function WarehouseBlockDetailPage() {
   const router = useRouter();
@@ -26,7 +29,7 @@ export default function WarehouseBlockDetailPage() {
   const [page, setPage] = useState(1);
   const [perPage, setPerPage] = useState(25);
   const [searchInput, setSearchInput] = useState('');
-  const [debouncedSearch, setDebouncedSearch] = useState('');
+  const [search, setSearch] = useState('');
 
   const { hasPermission } = usePermissionGuard();
   const canCreate = hasPermission('master-data:create');
@@ -35,11 +38,13 @@ export default function WarehouseBlockDetailPage() {
 
   useEffect(() => {
     const timeout = window.setTimeout(() => {
-      setDebouncedSearch(searchInput.trim());
-      setPage(1);
+      if (search !== searchInput.trim()) {
+        setSearch(searchInput.trim());
+        setPage(1);
+      }
     }, 400);
     return () => window.clearTimeout(timeout);
-  }, [searchInput]);
+  }, [searchInput, search]);
 
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [selectedSubBlock, setSelectedSubBlock] = useState<WarehouseSubBlock | undefined>();
@@ -171,8 +176,8 @@ export default function WarehouseBlockDetailPage() {
   // Client-side filtering and pagination for Sub Blocks
   const allSubBlocks = block?.warehouse_sub_blocks || [];
   const filteredSubBlocks = allSubBlocks.filter((sb) =>
-    sb.name.toLowerCase().includes(debouncedSearch.toLowerCase()) ||
-    (sb.description || '').toLowerCase().includes(debouncedSearch.toLowerCase())
+    sb.name.toLowerCase().includes(search.toLowerCase()) ||
+    (sb.description || '').toLowerCase().includes(search.toLowerCase())
   );
 
   const startIdx = (page - 1) * perPage;
@@ -241,33 +246,63 @@ export default function WarehouseBlockDetailPage() {
               </p>
             </div>
 
-            <WarehouseSubBlockTable
-              data={paginatedSubBlocks}
-              meta={{
-                currentPage: page,
-                lastPage: totalPages,
-                perPage: perPage,
-                total: filteredSubBlocks.length,
-              }}
-              isLoading={isBlockLoading}
-              search={searchInput}
+            <SearchPagination
+              searchValue={searchInput}
+              onSearchChange={setSearchInput}
+              searchPlaceholder="Cari sub blok gudang..."
+              searchAriaLabel="Cari sub blok gudang"
               page={page}
               perPage={perPage}
-              onSearchChange={setSearchInput}
+              total={filteredSubBlocks.length}
+              lastPage={totalPages}
               onPageChange={setPage}
               onPerPageChange={setPerPage}
-              onAdd={handleAdd}
-              onEdit={handleEdit}
-              onDelete={handleDelete}
-              onMakeDefault={handleMakeDefault}
-              onToggleActive={handleToggleActive}
-              onImport={() => setIsImportModalOpen(true)}
-              onExport={handleExport}
-              isExporting={isExporting}
-              canCreate={canCreate}
-              canEdit={canEdit}
-              canDelete={canDelete}
-            />
+              actions={
+                <>
+                  {search && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        setSearchInput('');
+                        setSearch('');
+                        setPage(1);
+                      }}
+                      className="rounded-md border-slate-200 text-slate-700 bg-white hover:bg-slate-50 cursor-pointer h-9 text-xs px-3"
+                    >
+                      Reset
+                    </Button>
+                  )}
+                  <Button onClick={handleExport} disabled={isExporting} variant="outline" className="h-9 text-xs px-3 rounded-md border-slate-200 text-slate-700 bg-white hover:bg-slate-50 cursor-pointer">
+                    <Download className="h-4 w-4 mr-2" />
+                    {isExporting ? 'Proses...' : 'Export'}
+                  </Button>
+                  {canCreate && (
+                    <>
+                      <Button onClick={() => setIsImportModalOpen(true)} variant="outline" className="h-9 text-xs px-3 rounded-md border-slate-200 text-slate-700 bg-white hover:bg-slate-50 cursor-pointer">
+                        <Upload className="h-4 w-4 mr-2" />
+                        Import
+                      </Button>
+                      <Button onClick={handleAdd} className="btn-primary!">
+                        <Plus className="h-4 w-4 mr-2" />
+                        Tambah Data
+                      </Button>
+                    </>
+                  )}
+                </>
+              }
+            >
+              <WarehouseSubBlockTable
+                data={paginatedSubBlocks}
+                isLoading={isBlockLoading}
+                onEdit={handleEdit}
+                onDelete={handleDelete}
+                onMakeDefault={handleMakeDefault}
+                onToggleActive={handleToggleActive}
+                canEdit={canEdit}
+                canDelete={canDelete}
+              />
+            </SearchPagination>
           </div>
         </div>
 

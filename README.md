@@ -345,7 +345,7 @@ Gunakan utility classes, hindari custom CSS kecuali memang perlu:
 
 ```tsx
 // ✅ Good
-<div className="flex items-center justify-between px-4 py-2 bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300">
+<div className="flex items-center justify-between px-4 py-2 bg-white rounded-md shadow-md hover:shadow-lg transition-shadow duration-300">
 
 // ❌ Avoid
 <div style={{ display: "flex", padding: "8px 16px" }}>

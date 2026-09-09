@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { Plus, MoreVertical, Upload, Download } from 'lucide-react';
+import { MoreVertical } from 'lucide-react';
 import BaseTable, { ColumnDef } from '@/components/ui/base-table';
 import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
@@ -7,20 +7,8 @@ import type { Material } from '@/@types/material.types';
 
 interface MaterialTableProps {
   materials: Material[];
-  search: string;
-  onSearchChange: (value: string) => void;
-  page: number;
-  perPage: number;
-  totalData: number;
-  onPageChange: (page: number) => void;
-  onPerPageChange: (perPage: number) => void;
-  onAdd: () => void;
-  onImport?: () => void;
-  onExport?: () => void;
   onEdit: (material: Material) => void;
   onDelete: (material: Material) => void;
-  isExporting?: boolean;
-  canCreate: boolean;
   canEdit: boolean;
   canDelete: boolean;
 }
@@ -36,20 +24,8 @@ const formatCurrency = (amount: number) => {
 
 export function MaterialTable({
   materials,
-  search,
-  onSearchChange,
-  page,
-  perPage,
-  totalData,
-  onPageChange,
-  onPerPageChange,
-  onAdd,
-  onImport,
-  onExport,
   onEdit,
   onDelete,
-  isExporting = false,
-  canCreate,
   canEdit,
   canDelete,
 }: MaterialTableProps) {
@@ -94,10 +70,10 @@ export function MaterialTable({
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="min-w-[150px] rounded-md border-slate-200 p-1.5 shadow-lg">
-                <DropdownMenuItem onClick={() => onEdit(item)} disabled={!canEdit} className="rounded-lg px-3 py-2 text-sm text-slate-900 focus:bg-slate-50 cursor-pointer">
+                <DropdownMenuItem onClick={() => onEdit(item)} disabled={!canEdit} className="rounded-md px-3 py-2 text-sm text-slate-900 focus:bg-slate-50 cursor-pointer">
                   Edit
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => onDelete(item)} disabled={!canDelete} className="rounded-lg px-3 py-2 text-sm text-red-600 focus:bg-red-50 focus:text-red-600 cursor-pointer">
+                <DropdownMenuItem onClick={() => onDelete(item)} disabled={!canDelete} className="rounded-md px-3 py-2 text-sm text-red-600 focus:bg-red-50 focus:text-red-600 cursor-pointer">
                   Hapus
                 </DropdownMenuItem>
               </DropdownMenuContent>
@@ -114,43 +90,6 @@ export function MaterialTable({
       data={materials}
       columns={columns}
       getRowId={(item) => item.uuid || String(item.id || '')}
-      searchPlaceholder="Search here"
-      search={search}
-      onSearchChange={onSearchChange}
-      showLimitChange
-      perPage={perPage}
-      onPerPageChange={onPerPageChange}
-      meta={{
-        currentPage: page,
-        perPage,
-        lastPage: Math.ceil(totalData / perPage) || 1,
-        total: totalData,
-      }}
-      onPageChange={onPageChange}
-      headerActions={
-        <div className="flex flex-wrap items-center gap-2">
-          {onExport && (
-            <Button onClick={onExport} disabled={isExporting} variant="outline" className="w-full sm:w-auto">
-              <Download className="h-4 w-4 mr-2" />
-              {isExporting ? 'Exporting...' : 'Export'}
-            </Button>
-          )}
-          {canCreate && (
-            <>
-              {onImport && (
-                <Button onClick={onImport} variant="outline" className="w-full sm:w-auto">
-                  <Upload className="h-4 w-4 mr-2" />
-                  Import
-                </Button>
-              )}
-              <Button onClick={onAdd} className="btn-primary!">
-                <Plus className="h-4 w-4 mr-2" />
-                Tambah
-              </Button>
-            </>
-          )}
-        </div>
-      }
     />
   );
 }

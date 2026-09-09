@@ -318,7 +318,7 @@ export default function PerlengkapanMasukDetailPage() {
                           variant="ghost"
                           size="icon"
                           onClick={() => handleDeletePayment(payment.id)}
-                          className="h-8 w-8 text-red-500 hover:text-red-700 hover:bg-red-50 rounded-lg"
+                          className="h-8 w-8 text-red-500 hover:text-red-700 hover:bg-red-50 rounded-md"
                         >
                           <Trash2 className="h-4 w-4" />
                         </Button>

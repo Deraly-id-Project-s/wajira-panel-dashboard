@@ -32,7 +32,7 @@ function RelatedSection({ title, description, icon, onAdd, children, addDisabled
       <div className="mb-4 flex items-start justify-between gap-3">
         <div>
           <div className="flex items-center gap-3">
-            <div className="rounded-lg bg-orange-100 p-2 text-orange-700">{icon}</div>
+            <div className="rounded-md bg-orange-100 p-2 text-orange-700">{icon}</div>
             <div>
               <h2 className="font-semibold text-slate-950">{title}</h2>
               {description && <p className="text-xs text-slate-500">{description}</p>}
@@ -171,11 +171,11 @@ export function DOEkspedisiDriverNotes({ data, onRefresh }: DOEkspedisiDriverNot
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
-            <DropdownMenuItem onClick={() => openEdit(x)}>
+            <DropdownMenuItem onClick={() => openEdit(x)} disabled={data?.status !== 'draft'}>
               <Pencil className="mr-2 h-4 w-4" />
               Edit
             </DropdownMenuItem>
-            <DropdownMenuItem className="text-red-600" onClick={() => void handleDelete(x)}>
+            <DropdownMenuItem className="text-red-600" onClick={() => void handleDelete(x)} disabled={data?.status !== 'draft'}>
               <Trash2 className="mr-2 h-4 w-4" />
               Hapus
             </DropdownMenuItem>
@@ -192,11 +192,12 @@ export function DOEkspedisiDriverNotes({ data, onRefresh }: DOEkspedisiDriverNot
         description="Catatan tambahan untuk Driver"
         icon={<FileText />}
         onAdd={openCreate}
+        addDisabled={data?.status !== 'draft'}
       >
         <BaseTable
           data={data.driverNotes ?? []}
           columns={columns}
-          containerClassName="rounded-lg border"
+          containerClassName="rounded-md border"
           headerRowClassName="bg-orange-50"
         />
       </RelatedSection>
@@ -218,7 +219,7 @@ export function DOEkspedisiDriverNotes({ data, onRefresh }: DOEkspedisiDriverNot
         </div>
         <div className="space-y-3">
           <Label>Deskripsi</Label>
-          <Textarea required value={form.description} onChange={(e) => set('description', e.target.value)} placeholder="Deskripsi Isi Pesan" />
+          <Textarea value={form.description} onChange={(e) => set('description', e.target.value)} placeholder="Deskripsi Isi Pesan" />
         </div>
       </FormDialog>
 

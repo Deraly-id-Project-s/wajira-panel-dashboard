@@ -1,5 +1,5 @@
 'use client';
 
-import SalesUnitDetailPage from '@/components/features/sales/SalesUnitDetailPage';
+import SalesUnitDetailPage from '@/components/features/unit-transaksi/sales/SalesUnitDetailPage';
 
 export default SalesUnitDetailPage;

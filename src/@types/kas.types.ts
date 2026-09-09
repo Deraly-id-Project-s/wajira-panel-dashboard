@@ -9,6 +9,7 @@ export interface Kas {
   cash_name?: string;
   description: string;
   type: KasType;
+  currency_type?: 'idr' | 'usd' | string | null;
   amount: number | string;
   companyId?: number | string | null;
   createdAt?: string;

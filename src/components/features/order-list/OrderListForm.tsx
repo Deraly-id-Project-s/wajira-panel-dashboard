@@ -604,7 +604,7 @@ export function OrderListForm({
                           variant="ghost"
                           size="sm"
                           onClick={() => remove(index)}
-                          className="h-8 px-2 text-xs font-semibold text-red-500 hover:text-red-600 hover:bg-red-50 rounded-lg flex items-center gap-1.5"
+                          className="h-8 px-2 text-xs font-semibold text-red-500 hover:text-red-600 hover:bg-red-50 rounded-md flex items-center gap-1.5"
                         >
                           <Trash2 className="h-3.5 w-3.5" />
                           Hapus Rute
@@ -757,7 +757,7 @@ export function OrderListForm({
                     </div>
 
                     {tarif && (
-                      <div className="rounded-lg border border-dashed border-slate-200 bg-slate-50/50 px-4 py-2.5 text-xs text-slate-500 font-medium">
+                      <div className="rounded-md border border-dashed border-slate-200 bg-slate-50/50 px-4 py-2.5 text-xs text-slate-500 font-medium">
                         Rute Terpilih: {tarif.loadingIn || '-'} ke {tarif.loadingOut || '-'}
                       </div>
                     )}
@@ -963,33 +963,32 @@ export function OrderListForm({
             <div className="rounded-xl border border-dashed border-slate-200 bg-slate-50/50 p-4 text-sm text-slate-600 font-medium">
               Ringkasan biaya: UJ Driver {formatOrderCurrency(watchedUjDriver)} • Invoice {formatOrderCurrency(invoiceBill)} • PPN {formatOrderCurrency(watchedPpn)} • PPh {formatOrderCurrency(watchedPph)}
             </div>
-          </div>
 
-          {/* ── Form Actions ── */}
-          <div className="flex items-center justify-center gap-6 pt-4">
-            <Button
-              type="button"
-              variant="ghost"
-              onClick={onCancel}
-              disabled={isSubmitting}
-              className="text-muted-foreground font-medium hover:text-foreground"
-            >
-              Batal
-            </Button>
-            <Button
-              type="submit"
-              disabled={isSubmitting}
-              className="bg-[#1e293b] hover:bg-[#0f172a] text-white font-medium min-w-[120px] rounded-lg shadow-sm"
-            >
-              {isSubmitting ? (
-                'Menyimpan...'
-              ) : (
-                <>
-                  <Save className="mr-2 h-4 w-4" />
-                  Simpan
-                </>
-              )}
-            </Button>
+            {/* ── Form Actions ── */}
+            <div className="flex items-end justify-end gap-2 pt-4">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={onCancel}
+                disabled={isSubmitting}
+              >
+                Batal
+              </Button>
+              <Button
+                type="submit"
+                disabled={isSubmitting}
+                variant="default"
+              >
+                {isSubmitting ? (
+                  'Menyimpan...'
+                ) : (
+                  <>
+                    <Save className="mr-2 h-4 w-4" />
+                    Simpan
+                  </>
+                )}
+              </Button>
+            </div>
           </div>
         </form>
       </Form>

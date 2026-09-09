@@ -5,7 +5,7 @@ import {
   getOrderOutstanding,
 } from '@/services/laporan-warehouse.service';
 
-export const useGetWarehouseStock = (params: { company_id?: number; page?: number; per_page?: number; status?: string }) => {
+export const useGetWarehouseStock = (params: { company_id?: number; page?: number; per_page?: number; search?: string; status?: string }) => {
   return useQuery({
     queryKey: ['warehouse-stock', params],
     queryFn: () => getStockData(params),

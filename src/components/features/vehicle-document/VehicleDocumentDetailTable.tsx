@@ -7,14 +7,7 @@ import type { VehicleDocumentItem } from '@/@types/vehicle-document.types';
 
 interface Props {
   items: VehicleDocumentItem[];
-  search: string;
   isLoading?: boolean;
-  page: number;
-  perPage: number;
-  totalData: number;
-  onSearchChange: (value: string) => void;
-  onPageChange: (page: number) => void;
-  onPerPageChange: (value: number) => void;
   onEdit: (item: VehicleDocumentItem) => void;
 }
 
@@ -27,14 +20,7 @@ const formatDate = (value?: string) => {
 
 export function VehicleDocumentDetailTable({
   items,
-  search,
   isLoading = false,
-  page,
-  perPage,
-  totalData,
-  onSearchChange,
-  onPageChange,
-  onPerPageChange,
   onEdit,
 }: Props) {
   const columns = useMemo<ColumnDef<VehicleDocumentItem>[]>(
@@ -160,19 +146,6 @@ export function VehicleDocumentDetailTable({
       columns={columns}
       loading={isLoading}
       getRowId={(item) => `${item.id}-${item.registrationId}`}
-      searchPlaceholder="Search here"
-      search={search}
-      onSearchChange={onSearchChange}
-      showLimitChange
-      perPage={perPage}
-      onPerPageChange={onPerPageChange}
-      meta={{
-        currentPage: page,
-        perPage,
-        lastPage: Math.max(1, Math.ceil(totalData / perPage)),
-        total: totalData,
-      }}
-      onPageChange={onPageChange}
     />
   );
 }

@@ -105,7 +105,7 @@ export default function KasHarianSummary({ data = [] }: KasHarianSummaryProps) {
       <Card className="rounded-md border shadow-sm">
         <CardContent className="p-6 space-y-4">
           <div className="flex items-start gap-4">
-            <div className="bg-blue-100 p-3 rounded-lg text-blue-600">
+            <div className="bg-blue-100 p-3 rounded-md text-blue-600">
               <CreditCard size={24} />
             </div>
             <div>
@@ -148,7 +148,7 @@ export default function KasHarianSummary({ data = [] }: KasHarianSummaryProps) {
       <Card className="rounded-md border shadow-sm">
         <CardContent className="p-6 flex flex-col justify-between h-full">
           <div className="flex items-start gap-4">
-            <div className="bg-green-100 p-3 rounded-lg text-green-600">
+            <div className="bg-green-100 p-3 rounded-md text-green-600">
               <TrendingUp size={24} />
             </div>
             <div>
@@ -173,7 +173,7 @@ export default function KasHarianSummary({ data = [] }: KasHarianSummaryProps) {
       <Card className="rounded-md border shadow-sm">
         <CardContent className="p-6 flex flex-col justify-between h-full">
           <div className="flex items-start gap-4">
-            <div className="bg-red-100 p-3 rounded-lg text-red-600">
+            <div className="bg-red-100 p-3 rounded-md text-red-600">
               <TrendingDown size={24} />
             </div>
             <div>

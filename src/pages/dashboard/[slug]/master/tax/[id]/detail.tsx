@@ -10,11 +10,13 @@ import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { PageHeader } from '@/components/ui/page-header';
 import Head from 'next/head';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Lock } from 'lucide-react';
+import { Lock, Plus } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { usePermissionGuard } from '@/hooks/usePermissionGuard';
+import { useQueryParamsTable } from '@/hooks/useQueryParamsTable';
+import { SearchPagination } from '@/components/ui/search-pagination';
 
 export default function TaxDetailPage() {
   const router = useRouter();
@@ -27,18 +29,17 @@ export default function TaxDetailPage() {
   const canEdit = hasPermission('master-data:edit');
   const canDelete = hasPermission('master-data:delete');
 
-  const [page, setPage] = useState(1);
-  const [perPage, setPerPage] = useState(25);
-  const [searchInput, setSearchInput] = useState('');
-  const [debouncedSearch, setDebouncedSearch] = useState('');
+  const { page, perPage, search, updateQuery, setPage, setPerPage, setSearch } = useQueryParamsTable({ defaultPerPage: 25 });
+  const [searchInput, setSearchInput] = useState(search);
 
   useEffect(() => {
     const timeout = window.setTimeout(() => {
-      setDebouncedSearch(searchInput.trim());
-      setPage(1);
+      if (search !== searchInput.trim()) {
+        setSearch(searchInput.trim());
+      }
     }, 400);
     return () => window.clearTimeout(timeout);
-  }, [searchInput]);
+  }, [searchInput, search, setSearch]);
 
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [selectedVersion, setSelectedVersion] = useState<TaxVersion | undefined>();
@@ -50,8 +51,8 @@ export default function TaxDetailPage() {
   });
 
   const { data: taxVersionsData, isLoading: isVersionsLoading } = useQuery({
-    queryKey: ['tax-versions', taxId, page, perPage, debouncedSearch],
-    queryFn: () => getTaxVersions(page, perPage, debouncedSearch, taxId),
+    queryKey: ['tax-versions', taxId, page, perPage, search],
+    queryFn: () => getTaxVersions(page, perPage, search, taxId),
     enabled: !!taxId,
   });
 
@@ -184,28 +185,50 @@ export default function TaxDetailPage() {
               <p className="text-sm text-muted-foreground">Kelola riwayat nilai/rate pajak untuk {tax?.name || 'pajak ini'}</p>
             </div>
 
-            <TaxVersionTable
-              data={taxVersionsData?.data?.data || []}
-              meta={taxVersionsData?.data ? {
-                currentPage: taxVersionsData.data.current_page,
-                lastPage: taxVersionsData.data.last_page,
-                perPage: taxVersionsData.data.per_page,
-                total: taxVersionsData.data.total,
-              } : undefined}
-              isLoading={isVersionsLoading}
-              search={searchInput}
+            <SearchPagination
+              searchValue={searchInput}
+              onSearchChange={setSearchInput}
+              searchPlaceholder="Cari versi pajak..."
+              searchAriaLabel="Cari versi pajak"
               page={page}
               perPage={perPage}
-              onSearchChange={setSearchInput}
+              total={taxVersionsData?.data?.total}
+              lastPage={taxVersionsData?.data?.last_page}
               onPageChange={setPage}
               onPerPageChange={setPerPage}
-              onAdd={handleAdd}
-              onEdit={handleEdit}
-              onDelete={handleDelete}
-              canCreate={canCreate}
-              canEdit={canEdit}
-              canDelete={canDelete}
-            />
+              actions={
+                <>
+                  {search && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        setSearchInput('');
+                        updateQuery({ search: undefined, page: 1 });
+                      }}
+                      className="rounded-md border-slate-200 text-slate-700 bg-white hover:bg-slate-50 cursor-pointer h-9 text-xs px-3"
+                    >
+                      Reset
+                    </Button>
+                  )}
+                  {canCreate && (
+                    <Button onClick={handleAdd} className="btn-primary!">
+                      <Plus className="h-4 w-4 mr-2" />
+                      Tambah Versi
+                    </Button>
+                  )}
+                </>
+              }
+            >
+              <TaxVersionTable
+                data={taxVersionsData?.data?.data || []}
+                isLoading={isVersionsLoading}
+                onEdit={handleEdit}
+                onDelete={handleDelete}
+                canEdit={canEdit}
+                canDelete={canDelete}
+              />
+            </SearchPagination>
           </div>
         </div>
 

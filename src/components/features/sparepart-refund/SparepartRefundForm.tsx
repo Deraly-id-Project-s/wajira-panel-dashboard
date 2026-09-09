@@ -36,7 +36,7 @@ export default function SparepartRefundForm({ existing }: { existing?: Sparepart
     } catch (error: any) { toast.error(error?.message || 'Gagal menyimpan refund'); }
   };
   const pending = createMutation.isPending || updateMutation.isPending;
-  return <form onSubmit={form.handleSubmit(submit)} className="max-w-2xl space-y-5 rounded-lg border bg-white p-6 shadow-sm">
+  return <form onSubmit={form.handleSubmit(submit)} className="max-w-2xl space-y-5 rounded-md border bg-white p-6 shadow-sm">
     <div><Label>Transaksi Sparepart</Label><Select value={form.watch('sparepart_transaction_id')} onValueChange={(value) => form.setValue('sparepart_transaction_id', value)} disabled={Boolean(existing)}><SelectTrigger className="mt-2"><SelectValue placeholder="Pilih transaksi" /></SelectTrigger><SelectContent>{available.map((item) => <SelectItem key={item.id} value={String(item.id)}>{item.code} — {item.type === 'purchase' ? 'Pembelian' : 'Penjualan'} — {item.sparepart?.name || `Sparepart #${item.sparepart_id}`}</SelectItem>)}</SelectContent></Select>{form.formState.errors.sparepart_transaction_id && <p className="mt-1 text-xs text-red-600">Transaksi wajib dipilih</p>}</div>
     <div><Label htmlFor="amount">Nominal Refund</Label><Input id="amount" type="number" min="1" className="mt-2" {...form.register('amount', { valueAsNumber: true, min: { value: 1, message: 'Nominal harus lebih dari 0' } })} />{form.formState.errors.amount && <p className="mt-1 text-xs text-red-600">{form.formState.errors.amount.message}</p>}</div>
     <div><Label htmlFor="payment_date">Tanggal Refund</Label><Input id="payment_date" type="date" className="mt-2" {...form.register('payment_date', { required: 'Tanggal wajib diisi' })} /></div>

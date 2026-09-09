@@ -1,5 +1,4 @@
-import type { ReactNode } from 'react';
-import { StockStatus, StockUnit } from '@/@types/stock-unit.types';
+import type { StockUnit } from '@/@types/stock-unit.types';
 import BaseTable, { ColumnDef } from '@/components/ui/base-table';
 import { cn } from '@/lib/utils';
 import { CopyBox } from '@/components/ui/copy-box';
@@ -10,14 +9,6 @@ import { Badge } from '@/components/ui/badge';
 interface Props {
   data: StockUnit[];
   isLoading: boolean;
-  page: number;
-  perPage: number;
-  totalData: number;
-  statusTabs?: ReactNode;
-  onPageChange: (page: number) => void;
-  onPerPageChange: (perPage: number) => void;
-  search: string;
-  onSearchChange: (search: string) => void;
 }
 
 const statusConfig: Record<string, { label: string; className: string }> = {
@@ -61,14 +52,6 @@ const renderStatus = (status: string) => {
 export default function StockUnitTable({
   data,
   isLoading,
-  page,
-  perPage,
-  totalData,
-  statusTabs,
-  onPageChange,
-  onPerPageChange,
-  search,
-  onSearchChange,
 }: Props) {
   const router = useRouter();
   const { slug } = router.query;
@@ -163,27 +146,11 @@ export default function StockUnitTable({
     },
   ];
 
-  const meta = {
-    currentPage: page,
-    perPage,
-    lastPage: Math.max(1, Math.ceil(totalData / perPage)),
-    total: totalData,
-  };
-
   return (
     <BaseTable
       data={data}
       columns={columns}
       loading={isLoading}
-      searchPlaceholder="Search here"
-      search={search}
-      onSearchChange={onSearchChange}
-      showLimitChange
-      perPage={perPage}
-      onPerPageChange={onPerPageChange}
-      meta={meta}
-      onPageChange={onPageChange}
-      headerActions={statusTabs}
     />
   );
 }

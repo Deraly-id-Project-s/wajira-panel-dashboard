@@ -1,11 +1,15 @@
 import * as React from 'react';
 import { useRouter } from 'next/router';
+import { Download, Plus, Upload } from 'lucide-react';
 import { toast } from 'sonner';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { DataImportModal } from '@/components/features/master-data/DataImportModal';
+import { Button } from '@/components/ui/button';
+import { SearchPagination } from '@/components/ui/search-pagination';
 import { DeleteVehicleDocumentDialog } from '@/components/features/vehicle-document/DeleteVehicleDocumentDialog';
 import { VehicleDocumentDialog } from '@/components/features/vehicle-document/VehicleDocumentDialog';
 import { VehicleDocumentTable } from '@/components/features/vehicle-document/VehicleDocumentTable';
+import { useQueryParamsTable } from '@/hooks/useQueryParamsTable';
 import type { VehicleDocumentPayload, VehicleDocumentSummary } from '@/@types/vehicle-document.types';
 import {
   useCreateVehicleDocument,
@@ -19,22 +23,21 @@ export default function VehicleDocumentPage() {
   const router = useRouter();
   const slug = typeof router.query.slug === 'string' ? router.query.slug : '';
 
-  const [searchInput, setSearchInput] = React.useState('');
-  const [search, setSearch] = React.useState('');
-  const [page, setPage] = React.useState(1);
-  const [perPage, setPerPage] = React.useState(25);
+  const { page, perPage, search, setPage, setPerPage, setSearch, updateQuery } = useQueryParamsTable({ defaultPerPage: 25 });
+  const [searchInput, setSearchInput] = React.useState(search);
   const [createOpen, setCreateOpen] = React.useState(false);
   const [deleteTarget, setDeleteTarget] = React.useState<VehicleDocumentSummary | null>(null);
   const [importOpen, setImportOpen] = React.useState(false);
 
   React.useEffect(() => {
     const timeout = window.setTimeout(() => {
-      setSearch(searchInput.trim());
-      setPage(1);
-    }, 350);
+      if (search !== searchInput.trim()) {
+        setSearch(searchInput.trim());
+      }
+    }, 400);
 
     return () => window.clearTimeout(timeout);
-  }, [searchInput]);
+  }, [searchInput, search, setSearch]);
 
   const listQuery = useVehicleDocuments({ page, perPage, search });
   const createMutation = useCreateVehicleDocument();
@@ -91,25 +94,54 @@ export default function VehicleDocumentPage() {
           <p className="mt-1 text-sm text-slate-500">Kelola data penerimaan BPKP/STNK dengan mudah</p>
         </div>
 
-        <VehicleDocumentTable
-          items={listQuery.data?.data ?? []}
-          search={searchInput}
-          isLoading={listQuery.isLoading}
+        <SearchPagination
+          searchValue={searchInput}
+          onSearchChange={setSearchInput}
+          searchPlaceholder="Search here"
+          searchAriaLabel="Cari penerimaan"
           page={page}
           perPage={perPage}
-          totalData={listQuery.data?.meta.total ?? 0}
-          onSearchChange={setSearchInput}
+          total={listQuery.data?.meta.total ?? 0}
+          lastPage={listQuery.data?.meta.lastPage ?? 1}
           onPageChange={setPage}
-          onPerPageChange={(value) => {
-            setPerPage(value);
-          }}
-          onAdd={() => setCreateOpen(true)}
-          onImport={() => setImportOpen(true)}
-          onExport={handleExport}
-          onEdit={(item) => router.push(`/dashboard/${slug}/stnk-bpkb/${item.id}/edit`)}
-          onDelete={setDeleteTarget}
-          isExporting={exportMutation.isPending}
-        />
+          onPerPageChange={setPerPage}
+          actions={
+            <>
+              {search && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    setSearchInput('');
+                    updateQuery({ search: undefined, page: 1 });
+                  }}
+                  className="rounded-md border-slate-200 text-slate-700 bg-white hover:bg-slate-50 cursor-pointer h-9 text-xs px-3"
+                >
+                  Reset
+                </Button>
+              )}
+              <Button onClick={handleExport} disabled={exportMutation.isPending} variant="outline" className="h-9 text-xs px-3 rounded-md border-slate-200 text-slate-700 bg-white hover:bg-slate-50 cursor-pointer">
+                <Download className="h-4 w-4 mr-2" />
+                {exportMutation.isPending ? 'Exporting...' : 'Export'}
+              </Button>
+              <Button onClick={() => setImportOpen(true)} variant="outline" className="h-9 text-xs px-3 rounded-md border-slate-200 text-slate-700 bg-white hover:bg-slate-50 cursor-pointer">
+                <Upload className="h-4 w-4 mr-2" />
+                Import
+              </Button>
+              <Button onClick={() => setCreateOpen(true)} className="btn-primary!">
+                <Plus className="h-4 w-4 mr-2" />
+                Tambah Data
+              </Button>
+            </>
+          }
+        >
+          <VehicleDocumentTable
+            items={listQuery.data?.data ?? []}
+            isLoading={listQuery.isLoading}
+            onEdit={(item) => router.push(`/dashboard/${slug}/stnk-bpkb/${item.id}/edit`)}
+            onDelete={setDeleteTarget}
+          />
+        </SearchPagination>
       </div>
 
       <VehicleDocumentDialog

@@ -131,7 +131,7 @@ function Field({ label, value, icon: Icon }: { label: string; value: React.React
 function SectionHeading({ icon: Icon, title, description }: { icon: React.ElementType; title: string; description?: string }) {
   return (
     <div className="flex items-start gap-3">
-      <div className="rounded-lg bg-orange-100 p-2 text-orange-700">
+      <div className="rounded-md bg-orange-100 p-2 text-orange-700">
         <Icon className="h-5 w-5" />
       </div>
       <div>
@@ -255,14 +255,14 @@ function CargoList({
 
   if (!items.length) {
     return (
-      <div className="rounded-lg border border-dashed border-slate-200 px-4 py-8 text-center text-sm text-slate-500">
+      <div className="rounded-md border border-dashed border-slate-200 px-4 py-8 text-center text-sm text-slate-500">
         Belum ada item muatan pada rute ini.
       </div>
     );
   }
 
   return (
-    <div className="overflow-hidden rounded-lg border border-slate-200 bg-white">
+    <div className="overflow-hidden rounded-md border border-slate-200 bg-white">
       <BaseTable
         data={items}
         columns={columns}
@@ -588,8 +588,8 @@ export function OrderListDetailView({
               <Button
                 type="button"
                 disabled={isUpdatingStatus}
+                variant="default"
                 onClick={() => onUpdateStatus?.('deliver')}
-                className="bg-orange-600 hover:bg-orange-700 text-white min-w-[120px] cursor-pointer"
               >
                 {isUpdatingStatus ? 'Memproses...' : 'Proses Order List'}
               </Button>
@@ -599,7 +599,6 @@ export function OrderListDetailView({
                 variant="outline"
                 disabled={isUpdatingStatus}
                 onClick={() => onUpdateStatus?.('draft')}
-                className="min-w-[120px] border-slate-300 text-slate-700 hover:bg-slate-50 cursor-pointer"
               >
                 {isUpdatingStatus ? 'Memproses...' : 'Jadikan Draft'}
               </Button>
@@ -672,7 +671,7 @@ export function OrderListDetailView({
               <Button
                 type="button"
                 onClick={handleOpenAddRoute}
-                className="bg-[#1f3b5b] hover:bg-[#19314b] text-white rounded-lg flex items-center gap-1.5 cursor-pointer shadow-sm text-sm"
+                className="bg-[#1f3b5b] hover:bg-[#19314b] text-white rounded-md flex items-center gap-1.5 cursor-pointer shadow-sm text-sm"
               >
                 <Plus className="h-4 w-4" />
                 Tambah Rute
@@ -707,7 +706,7 @@ export function OrderListDetailView({
                               variant="outline"
                               size="sm"
                               onClick={() => handleOpenEditRoute(route)}
-                              className="h-8 px-2.5 text-xs font-medium border-slate-300 text-slate-700 bg-white hover:bg-slate-50 rounded-lg"
+                              className="h-8 px-2.5 text-xs font-medium border-slate-300 text-slate-700 bg-white hover:bg-slate-50 rounded-md"
                             >
                               Edit
                             </Button>
@@ -716,7 +715,7 @@ export function OrderListDetailView({
                               variant="outline"
                               size="sm"
                               onClick={() => setDeleteRouteTarget(route)}
-                              className="h-8 px-2.5 text-xs font-medium border-red-200 text-red-600 bg-white hover:bg-red-50 hover:border-red-300 rounded-lg"
+                              className="h-8 px-2.5 text-xs font-medium border-red-200 text-red-600 bg-white hover:bg-red-50 hover:border-red-300 rounded-md"
                             >
                               Hapus
                             </Button>
@@ -784,7 +783,7 @@ export function OrderListDetailView({
                           onDeleteCargo={handleOpenDeleteCargo}
                         />
                       </div>
-                      <div className="space-y-3 rounded-lg bg-orange-50 p-4">
+                      <div className="space-y-3 rounded-md bg-orange-50 p-4">
                         <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Rincian Tarif</p>
                         <CurrencyRow label="UJ Driver" value={getRouteDriverFee(route)} />
                         <CurrencyRow label="Invoice" value={getRouteInvoice(route)} />

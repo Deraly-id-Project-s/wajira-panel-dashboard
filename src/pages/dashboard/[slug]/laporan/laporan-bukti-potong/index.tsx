@@ -3,20 +3,17 @@ import { useRouter } from 'next/router';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { PageHeader } from '@/components/ui/page-header';
 import { LaporanBuktiPotongTable } from '@/components/features/laporan-bukti-potong/LaporanBuktiPotongTable';
-import {  Search, Printer, Download } from 'lucide-react';
+import { Printer, Download } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { DatePickerWithRange } from '@/components/ui/date-range-picker';
 import { DateRange } from 'react-day-picker';
 import { format } from 'date-fns';
-import { Input } from '@/components/ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useWithholdingTaxes } from '@/hooks/useWithholdingTax';
-import { cn } from '@/lib/utils';
+import { SearchPagination } from '@/components/ui/search-pagination';
 import { useCompany } from '@/contexts/CompanyContext';
 import { resolveCompanyId, getLetterheadByCompanyId } from '@/lib/print-letterhead';
 import { PrintLetterPage } from '@/components/common/PrintLetterPage';
 import { formatDate } from '@/lib/utils/format';
-import { getVisiblePageNumbers } from '@/lib/api/pagination';
 import Head from 'next/head';
 import { LoadingState } from '@/components/ui/loading-state';
 import { isWithinInterval, parseISO, startOfDay, endOfDay } from 'date-fns';
@@ -67,7 +64,7 @@ export default function LaporanBuktiPotongPage() {
   const isLoading = isInitialLoading || isFetching;
 
   const rawData = React.useMemo(() => queryResult?.data || [], [queryResult?.data]);
-  
+
   // Safe Client-Side Array Filter
   const filteredData = React.useMemo(() => {
     let result = [...rawData];
@@ -103,14 +100,11 @@ export default function LaporanBuktiPotongPage() {
     perPage: 25,
     total: 0,
   };
-  
+
   const pagination = {
     ...backendPagination,
     total: (searchQuery.trim() || dateRange?.from) ? filteredData.length : backendPagination.total,
   };
-
-  const fromCount = filteredData.length > 0 ? (pagination.currentPage - 1) * pagination.perPage + 1 : 0;
-  const toCount = Math.min(pagination.currentPage * pagination.perPage, pagination.total);
 
   const getCompanyName = (coId: number) => {
     if (coId === 1) return 'PT WAJIRA JAGRATARA MORINDO';
@@ -169,8 +163,6 @@ export default function LaporanBuktiPotongPage() {
     }
   };
 
-  const visiblePages = getVisiblePageNumbers(pagination.lastPage, pagination.currentPage, 5);
-
   return (
     <DashboardLayout>
       <Head>
@@ -185,76 +177,49 @@ export default function LaporanBuktiPotongPage() {
           />
         </div>
 
-        {/* Filters */}
-        <div className="flex flex-col sm:flex-row items-center justify-between gap-4 no-print">
-          <div className="flex flex-wrap items-end gap-4 w-full">
-            {/* Cari Transaksi */}
-            <div className="flex flex-col space-y-2">
-              <label className="text-[13px] font-medium text-slate-700">Cari Bukti Potong</label>
-              <div className="relative w-full sm:w-[280px]">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 h-4 w-4" />
-                <Input
-                  placeholder="Ketik kata kunci..."
-                  className="pl-9 bg-white"
-                  value={searchInput}
-                  onChange={(e) => setSearchInput(e.target.value)}
-                />
-              </div>
-            </div>
-
-            {/* Periode Transaksi */}
-            <div className="flex flex-col space-y-2">
-              <label className="text-[13px] font-medium text-slate-700">Periode Bukti Potong</label>
-              <div className="w-[280px]">
-                <DatePickerWithRange date={dateRange} onChange={setDateRangeState} />
-              </div>
-            </div>
-
-            {/* Tampilkan per halaman */}
-            <div className="flex flex-col space-y-2 ml-auto sm:ml-0">
-              <div className="flex items-center gap-2 text-sm text-slate-500 whitespace-nowrap mb-1">
-                <span>Show</span>
-                <Select
-                  value={String(perPage)}
-                  onValueChange={(val) => {
-                    setPerPage(Number(val));
-                  }}
-                >
-                  <SelectTrigger className="w-[70px] bg-white">
-                    <SelectValue placeholder="25" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="25">25</SelectItem>
-                    <SelectItem value="50">50</SelectItem>
-                    <SelectItem value="100">100</SelectItem>
-                  </SelectContent>
-                </Select>
-                <span>Page</span>
-              </div>
-            </div>
-          </div>
-          
-          <div className="flex items-center gap-2 w-full sm:w-auto mt-4 sm:mt-0">
-            <Button onClick={handleDownload} variant="outline" className="w-full sm:w-auto">
-              <Download className="h-4 w-4 mr-2" />
-              Export
-            </Button>
-            <Button onClick={handlePrint} variant="outline" className="w-full sm:w-auto">
-              <Printer className="h-4 w-4 mr-2" />
-              Print
-            </Button>
-          </div>
-        </div>
-
         {/* Main Table Content */}
-        <div className="pt-4">
-          {isLoading ? (
-            <div className="flex justify-center items-center py-20 bg-white rounded-md border border-gray-200 shadow-sm">
-              <LoadingState variant="page" />
+        <SearchPagination
+          searchValue={searchInput}
+          onSearchChange={setSearchInput}
+          searchPlaceholder="Search here"
+          searchAriaLabel="Cari data"
+          filters={
+            <DatePickerWithRange
+              date={dateRange}
+              onChange={setDateRangeState}
+              placeholder="Pilih rentang tanggal"
+              className="w-full sm:w-[260px]"
+            />
+          }
+          page={page}
+          perPage={perPage}
+          total={pagination.total}
+          lastPage={pagination.lastPage}
+          perPageOptions={[25, 50, 100]}
+          onPageChange={setPage}
+          onPerPageChange={(value) => {
+            setPerPage(value);
+            setPage(1);
+          }}
+          actions={
+            <div className="flex items-center gap-2 w-full sm:w-auto">
+              <Button onClick={handleDownload} variant="outline" className="w-full sm:w-auto">
+                <Download className="h-4 w-4 mr-2" />
+                Export
+              </Button>
+              <Button onClick={handlePrint} variant="outline" className="w-full sm:w-auto">
+                <Printer className="h-4 w-4 mr-2" />
+                Print
+              </Button>
             </div>
-          ) : (
-            <>
-              {/* Print Letter Wrapping Container */}
+          }
+        >
+          <div className="pt-4">
+            {isLoading ? (
+              <div className="flex justify-center items-center py-20 bg-white rounded-md border border-gray-200 shadow-sm">
+                <LoadingState variant="page" />
+              </div>
+            ) : (
               <PrintLetterPage
                 id="laporan-bukti-potong-print"
                 className="laporan-bukti-potong-print-area"
@@ -282,58 +247,9 @@ export default function LaporanBuktiPotongPage() {
                   />
                 </div>
               </PrintLetterPage>
-
-              {/* Pagination */}
-              {rawData.length > 0 && (
-                <div className="flex flex-col gap-4 px-1 py-4 md:flex-row md:items-center md:justify-between no-print">
-                  <div className="text-sm text-slate-500">
-                    Showing {fromCount || 0}–{toCount || 0} of {pagination.total} data
-                  </div>
-                  <div className="flex flex-wrap items-center justify-end gap-1 text-sm text-slate-700">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => setPage(Math.max(1, pagination.currentPage - 1))}
-                      disabled={pagination.currentPage <= 1}
-                      className="rounded-md px-3 hover:bg-slate-100 font-semibold text-[13px] cursor-pointer"
-                    >
-                      Previous
-                    </Button>
-
-                    {visiblePages[0] > 1 && <span className="px-1.5 text-slate-400">...</span>}
-                    {visiblePages.map((pageNumber) => (
-                      <Button
-                        key={pageNumber}
-                        variant={pageNumber === pagination.currentPage ? 'outline' : 'ghost'}
-                        size="sm"
-                        onClick={() => setPage(pageNumber)}
-                        className={cn(
-                          "h-9 min-w-9 rounded-md border-slate-200 text-[13px] font-semibold cursor-pointer",
-                          pageNumber === pagination.currentPage
-                            ? "bg-white text-slate-900 shadow-[0_1px_3px_rgba(0,0,0,0.1)] border border-slate-200 hover:bg-slate-50"
-                            : "text-slate-600 hover:bg-slate-100"
-                        )}
-                      >
-                        {pageNumber}
-                      </Button>
-                    ))}
-                    {visiblePages[visiblePages.length - 1] < pagination.lastPage && <span className="px-1.5 text-slate-400">...</span>}
-
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => setPage(Math.min(pagination.lastPage, pagination.currentPage + 1))}
-                      disabled={pagination.currentPage >= pagination.lastPage}
-                      className="rounded-md px-3 hover:bg-slate-100 font-semibold text-[13px] cursor-pointer"
-                    >
-                      Next
-                    </Button>
-                  </div>
-                </div>
-              )}
-            </>
-          )}
-        </div>
+            )}
+          </div>
+        </SearchPagination>
       </div>
     </DashboardLayout>
   );

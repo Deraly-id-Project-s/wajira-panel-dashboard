@@ -54,6 +54,18 @@
   @apply bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 opacity-90 hover:opacity-100 w-full sm:w-auto text-white font-medium shadow-sm transition-all disabled:from-slate-200 disabled:to-slate-300 disabled:text-slate-800 disabled:opacity-50 disabled:cursor-not-allowed disabled:pointer-events-none disabled:shadow-none;
 }
 
+@utility btn-outline {
+  @apply border border-slate-200 bg-white bg-none w-full sm:w-auto text-slate-700 hover:bg-slate-50 hover:text-slate-900 hover:bg-none font-medium transition-all duration-200 shadow-sm disabled:bg-slate-50 disabled:text-slate-400 disabled:border-slate-100 disabled:cursor-not-allowed disabled:pointer-events-none disabled:shadow-none;
+}
+
+@utility btn-outline-secondary {
+  @apply border border-slate-200 bg-white w-full sm:w-auto text-slate-700 hover:bg-slate-50 hover:text-slate-900 font-medium transition-all duration-200 shadow-sm disabled:opacity-50 disabled:cursor-not-allowed disabled:pointer-events-none disabled:shadow-none;
+}
+
+@utility sidebar-menu-primary {
+  @apply bg-gradient-to-r from-orange-500 to-red-500 text-white font-medium shadow-xs shadow-orange-500/20 transition-all duration-200;
+}
+
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
@@ -167,8 +179,15 @@ body {
     margin: 0;
   }
 
+  html,
   body {
     background: #fff !important;
+    width: 210mm !important;
+    height: auto !important;
+    min-height: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    overflow: visible !important;
     -webkit-print-color-adjust: exact;
     print-color-adjust: exact;
   }
@@ -177,492 +196,583 @@ body {
     visibility: hidden;
   }
 
-  @media print {
-    @page {
-      size: A4 portrait;
-      margin: 0;
-    }
+  #laporan-pembelian-print,
+  #laporan-pembelian-print *,
+  #laporan-penjualan-print,
+  #laporan-penjualan-print *,
+  #laporan-penerimaan-print,
+  #laporan-penerimaan-print *,
+  #laporan-stock-print,
+  #laporan-stock-print *,
+  #laporan-transaksi-kas-print,
+  #laporan-transaksi-kas-print *,
+  #tagihan-bbn-print,
+  #tagihan-bbn-print *,
+  .print-letter-page,
+  .print-letter-page * {
+    visibility: visible;
+  }
 
-    body {
-      background: #fff !important;
-      -webkit-print-color-adjust: exact;
-      print-color-adjust: exact;
-    }
+  .no-print,
+  [data-slot="dialog-portal"],
+  [data-slot="dialog-overlay"],
+  [data-slot="dialog-content"],
+  [role="dialog"] {
+    display: none !important;
+  }
 
-    body * {
-      visibility: hidden;
-    }
+  .laporan-pembelian-page,
+  .laporan-penjualan-page,
+  .laporan-penerimaan-page,
+  .laporan-stock-page {
+    padding: 0 !important;
+    margin: 0 !important;
+    min-height: auto !important;
+  }
 
-    #laporan-pembelian-print,
-    #laporan-pembelian-print *,
-    #laporan-penjualan-print,
-    #laporan-penjualan-print *,
-    #laporan-penerimaan-print,
-    #laporan-penerimaan-print *,
-    #laporan-stock-print,
-    #laporan-stock-print *,
-    #tagihan-bbn-print,
-    #tagihan-bbn-print *,
-    .print-letter-page,
-    .print-letter-page * {
-      visibility: visible;
-    }
+  .laporan-pembelian-print-area,
+  .laporan-penjualan-print-area,
+  .laporan-penerimaan-print-area,
+  .laporan-stock-print-area,
+  .print-letter-page {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 210mm !important;
+    height: 296mm !important;
+    max-height: 296.5mm !important;
+    overflow: hidden !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    background: #fff;
+    display: block;
+    page-break-after: avoid !important;
+    break-after: avoid !important;
+  }
 
-    .no-print {
-      display: none !important;
-    }
+  .print-letterhead {
+    display: block !important;
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 0;
+    object-fit: contain;
+    object-position: center top;
+  }
 
-    .laporan-pembelian-page,
-    .laporan-penjualan-page,
-    .laporan-penerimaan-page,
-    .laporan-stock-page {
-      padding: 0 !important;
-      margin: 0 !important;
-      min-height: auto !important;
-    }
+  .laporan-pembelian-print-content,
+  .laporan-penjualan-print-content,
+  .laporan-penerimaan-print-content,
+  .print-letter-content {
+    padding-top: 35mm !important;
+    /* tepat di bawah kop */
+    padding-right: 5mm !important;
+    padding-bottom: 38mm !important;
+    /* berhenti sebelum footer */
+    padding-left: 5mm !important;
+    gap: 0.5mm !important;
+    align-items: center !important;
+    overflow: hidden !important;
+    /* pastikan tidak melewati batas */
+    box-sizing: border-box !important;
+    position: relative;
+    z-index: 1;
+    width: 100%;
+    height: 100%;
+    box-sizing: border-box;
+    padding: 56mm 8mm 26mm;
+    display: flex;
+    flex-direction: column;
+    gap: 4mm;
+    align-items: center;
+    justify-content: flex-start;
+  }
 
-    .laporan-pembelian-print-area,
-    .laporan-penjualan-print-area,
-    .laporan-penerimaan-print-area,
-    .laporan-stock-print-area,
-    .print-letter-page {
-      position: fixed;
-      top: 2px;
-      left: 0;
-      width: 210mm !important;
-      height: 297mm !important;
-      overflow: hidden !important;
-      margin: 0 !important;
-      padding: 0 !important;
-      background: #fff;
-      display: block;
-    }
+  .laporan-penerimaan-print-content {
+    padding-top: 0mm !important;
+    padding-right: 4mm !important;
+    padding-bottom: 0mm !important;
+    padding-left: 4mm !important;
+    gap: 0.2mm !important;
+    align-items: center !important;
+  }
 
-    .print-letterhead {
-      display: block !important;
-      position: absolute;
-      inset: 0;
-      width: 100%;
-      height: 100%;
-      z-index: 0;
-      object-fit: contain;
-      object-position: center top;
-    }
+  .laporan-pembelian-print-content {
+    padding-top: 0mm !important;
+    padding-right: 4mm !important;
+    padding-bottom: 0mm !important;
+    padding-left: 4mm !important;
+    gap: 0.2mm !important;
+    align-items: center !important;
+  }
 
-    .laporan-pembelian-print-content,
-    .laporan-penjualan-print-content,
-    .laporan-penerimaan-print-content,
-    .print-letter-content {
-      padding-top: 35mm !important;
-      /* tepat di bawah kop */
-      padding-right: 5mm !important;
-      padding-bottom: 27mm !important;
-      /* berhenti sebelum footer */
-      padding-left: 5mm !important;
-      gap: 0.5mm !important;
-      align-items: center !important;
-      overflow: hidden !important;
-      /* pastikan tidak melewati batas */
-      box-sizing: border-box !important;
-      position: relative;
-      z-index: 1;
-      width: 100%;
-      height: 100%;
-      box-sizing: border-box;
-      padding: 56mm 8mm 26mm;
-      display: flex;
-      flex-direction: column;
-      gap: 4mm;
-      align-items: center;
-      justify-content: flex-start;
-    }
+  /* laporan-stock-print-content: hanya override font tabel (lebih besar dari penerimaan 6px) */
+  /* Padding diwarisi dari laporan-penerimaan-print-content (0mm top/bottom) */
+  .laporan-stock-print-content {
+    padding-left: 1mm !important;
+    padding-right: 1mm !important;
+    gap: 1mm !important;
+  }
 
-    .laporan-penerimaan-print-content {
-      padding-top: 0mm !important;
-      padding-right: 4mm !important;
-      padding-bottom: 0mm !important;
-      padding-left: 4mm !important;
-      gap: 0.2mm !important;
-      align-items: center !important;
-    }
+  .laporan-penerimaan-print-content> :first-child {
+    text-align: center;
+    margin-bottom: 1mm !important;
 
-    .laporan-pembelian-print-content {
-      padding-top: 0mm !important;
-      padding-right: 4mm !important;
-      padding-bottom: 0mm !important;
-      padding-left: 4mm !important;
-      gap: 0.2mm !important;
-      align-items: center !important;
-    }
+  }
 
-    /* laporan-stock-print-content: hanya override font tabel (lebih besar dari penerimaan 6px) */
-    /* Padding diwarisi dari laporan-penerimaan-print-content (0mm top/bottom) */
-    .laporan-stock-print-content {
-      padding-left: 1mm !important;
-      padding-right: 1mm !important;
-      gap: 1mm !important;
-    }
+  .laporan-penerimaan-print-content [data-slot='tabs-content'] {
+    width: 100% !important;
+    margin: 0 !important;
+    max-width: 194mm !important;
+  }
 
-    .laporan-penerimaan-print-content> :first-child {
-      text-align: center;
-      margin-bottom: 1mm !important;
+  .laporan-pembelian-print-content [data-slot='tabs-content'] {
+    width: 100% !important;
+    margin: 0 !important;
+    max-width: 194mm !important;
+  }
 
-    }
+  .laporan-penerimaan-print-area .bg-white {
+    width: 100% !important;
+    max-width: 194mm !important;
+    margin: 0 auto !important;
+    border: 0 !important;
+  }
 
-    .laporan-penerimaan-print-content [data-slot='tabs-content'] {
-      width: 100% !important;
-      margin: 0 !important;
-      max-width: 194mm !important;
-    }
+  .laporan-pembelian-print-area .bg-white {
+    width: 100% !important;
+    max-width: 194mm !important;
+    margin: 0 auto !important;
+    border: 0 !important;
+  }
 
-    .laporan-pembelian-print-content [data-slot='tabs-content'] {
-      width: 100% !important;
-      margin: 0 !important;
-      max-width: 194mm !important;
-    }
+  .laporan-penerimaan-print-area table {
+    font-size: 6px !important;
+    width: 100% !important;
+    table-layout: auto !important;
+    /* ← kunci utama: biarkan kolom menyesuaikan konten */
+    border-collapse: collapse !important;
+  }
 
-    .laporan-penerimaan-print-area .bg-white {
-      width: 100% !important;
-      max-width: 194mm !important;
-      margin: 0 auto !important;
-      border: 0 !important;
-    }
+  .laporan-pembelian-print-area table {
+    font-size: 6px !important;
+    width: 100% !important;
+    table-layout: auto !important;
+    border-collapse: collapse !important;
+  }
 
-    .laporan-pembelian-print-area .bg-white {
-      width: 100% !important;
-      max-width: 194mm !important;
-      margin: 0 auto !important;
-      border: 0 !important;
-    }
+  .laporan-penerimaan-print-area th,
+  .laporan-penerimaan-print-area td {
+    padding: 0.8px 1.2px !important;
+    line-height: 1.05 !important;
+    white-space: nowrap !important;
+    overflow: visible !important;
+    text-overflow: clip !important;
+    border: 0.5px solid #9ca3af !important;
+  }
 
-    .laporan-penerimaan-print-area table {
-      font-size: 6px !important;
-      width: 100% !important;
-      table-layout: auto !important;
-      /* ← kunci utama: biarkan kolom menyesuaikan konten */
-      border-collapse: collapse !important;
-    }
+  .laporan-pembelian-print-area th,
+  .laporan-pembelian-print-area td {
+    padding: 0.8px 1.2px !important;
+    line-height: 1.05 !important;
+    white-space: nowrap !important;
+    overflow: visible !important;
+    text-overflow: clip !important;
+    border: 0.5px solid #9ca3af !important;
+  }
 
-    .laporan-pembelian-print-area table {
-      font-size: 6px !important;
-      width: 100% !important;
-      table-layout: auto !important;
-      border-collapse: collapse !important;
-    }
+  .laporan-penerimaan-print-area .print-hide-pagination {
+    display: none !important;
+  }
 
-    .laporan-penerimaan-print-area th,
-    .laporan-penerimaan-print-area td {
-      padding: 0.8px 1.2px !important;
-      line-height: 1.05 !important;
-      white-space: nowrap !important;
-      overflow: visible !important;
-      text-overflow: clip !important;
-      border: 0.5px solid #9ca3af !important;
-    }
+  .laporan-pembelian-print-content> :first-child,
+  .laporan-penjualan-print-content> :first-child,
+  .laporan-penerimaan-print-content> :first-child,
+  .print-letter-content> :first-child {
+    margin-bottom: 1mm !important;
+  }
 
-    .laporan-pembelian-print-area th,
-    .laporan-pembelian-print-area td {
-      padding: 0.8px 1.2px !important;
-      line-height: 1.05 !important;
-      white-space: nowrap !important;
-      overflow: visible !important;
-      text-overflow: clip !important;
-      border: 0.5px solid #9ca3af !important;
-    }
+  /* Specific print layout for DO Ekspedisi to reduce top padding and center content */
+  #do-ekspedisi-print.print-letter-content {
+    padding-top: 12mm !important;
+    padding-right: 10mm !important;
+    padding-bottom: 12mm !important;
+    padding-left: 10mm !important;
+    align-items: flex-start !important;
+    max-width: 194mm !important;
+    margin: 0 auto !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+  }
 
-    .laporan-penerimaan-print-area .print-hide-pagination {
-      display: none !important;
-    }
+  .laporan-pembelian-print-area .overflow-x-auto,
+  .laporan-penjualan-print-area .overflow-x-auto,
+  .laporan-penerimaan-print-area .overflow-x-auto,
+  .laporan-stock-print-area .overflow-x-auto {
+    overflow: visible !important;
+  }
 
-    .laporan-pembelian-print-content> :first-child,
-    .laporan-penjualan-print-content> :first-child,
-    .laporan-penerimaan-print-content> :first-child,
-    .print-letter-content> :first-child {
-      margin-bottom: 1mm !important;
-    }
+  .laporan-pembelian-print-area .overflow-hidden,
+  .laporan-penjualan-print-area .overflow-hidden,
+  .laporan-penerimaan-print-area .overflow-hidden,
+  .laporan-stock-print-area .overflow-hidden {
+    overflow: visible !important;
+  }
 
-    /* Specific print layout for DO Ekspedisi to reduce top padding and center content */
-    #do-ekspedisi-print.print-letter-content {
-      padding-top: 12mm !important;
-      padding-right: 10mm !important;
-      padding-bottom: 12mm !important;
-      padding-left: 10mm !important;
-      align-items: flex-start !important;
-      max-width: 194mm !important;
-      margin: 0 auto !important;
-      width: 100% !important;
-      box-sizing: border-box !important;
-    }
+  .laporan-pembelian-print-area .bg-white,
+  .laporan-penjualan-print-area .bg-white,
+  .laporan-penerimaan-print-area .bg-white,
+  .laporan-stock-print-area .bg-white {
+    background: transparent !important;
+  }
 
-    .laporan-pembelian-print-area .overflow-x-auto,
-    .laporan-penjualan-print-area .overflow-x-auto,
-    .laporan-penerimaan-print-area .overflow-x-auto,
-    .laporan-stock-print-area .overflow-x-auto {
-      overflow: visible !important;
-    }
+  .laporan-pembelian-print-area [data-slot='tabs-content'],
+  .laporan-penjualan-print-area [data-slot='tabs-content'],
+  .laporan-penerimaan-print-area [data-slot='tabs-content'],
+  .laporan-stock-print-area [data-slot='tabs-content'] {
+    width: 100% !important;
+    max-width: 200mm !important;
+    margin: 0 !important;
+  }
 
-    .laporan-pembelian-print-area .overflow-hidden,
-    .laporan-penjualan-print-area .overflow-hidden,
-    .laporan-penerimaan-print-area .overflow-hidden,
-    .laporan-stock-print-area .overflow-hidden {
-      overflow: visible !important;
-    }
+  .laporan-penjualan-print-area table,
+  .laporan-penerimaan-print-area table {
+    width: 100% !important;
+    table-layout: fixed !important;
+    font-size: 8px !important;
+    border-collapse: collapse !important;
+  }
 
-    .laporan-pembelian-print-area .bg-white,
-    .laporan-penjualan-print-area .bg-white,
-    .laporan-penerimaan-print-area .bg-white,
-    .laporan-stock-print-area .bg-white {
-      background: transparent !important;
-    }
+  .laporan-penjualan-print-area th,
+  .laporan-penjualan-print-area td,
+  .laporan-penerimaan-print-area th,
+  .laporan-penerimaan-print-area td {
+    padding: 2.5px 3px !important;
+    white-space: nowrap !important;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    line-height: 1.3;
+    border: 0.7px solid #9ca3af !important;
+    color: #111827 !important;
+  }
 
-    .laporan-pembelian-print-area [data-slot='tabs-content'],
-    .laporan-penjualan-print-area [data-slot='tabs-content'],
-    .laporan-penerimaan-print-area [data-slot='tabs-content'],
-    .laporan-stock-print-area [data-slot='tabs-content'] {
-      width: 100% !important;
-      max-width: 200mm !important;
-      margin: 0 !important;
-    }
+  .laporan-penjualan-print-area th,
+  .laporan-penerimaan-print-area th {
+    font-weight: 700 !important;
+    background: #f3f4f6 !important;
+    color: #0f172a !important;
+  }
 
-    .laporan-penjualan-print-area table,
-    .laporan-penerimaan-print-area table {
-      width: 100% !important;
-      table-layout: fixed !important;
-      font-size: 8px !important;
-      border-collapse: collapse !important;
-    }
+  .laporan-pembelian-print-area .rounded-md,
+  .laporan-pembelian-print-area .shadow-sm,
+  .laporan-pembelian-print-area .border,
+  .laporan-penjualan-print-area .rounded-md,
+  .laporan-penjualan-print-area .shadow-sm,
+  .laporan-penjualan-print-area .border,
+  .laporan-penerimaan-print-area .rounded-md,
+  .laporan-penerimaan-print-area .shadow-sm,
+  .laporan-penerimaan-print-area .border {
+    border-radius: 0 !important;
+    box-shadow: none !important;
+  }
 
-    .laporan-penjualan-print-area th,
-    .laporan-penjualan-print-area td,
-    .laporan-penerimaan-print-area th,
-    .laporan-penerimaan-print-area td {
-      padding: 2.5px 3px !important;
-      white-space: nowrap !important;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      line-height: 1.3;
-      border: 0.7px solid #9ca3af !important;
-      color: #111827 !important;
-    }
+  .laporan-pembelian-print-content h2,
+  .laporan-penjualan-print-content h2,
+  .laporan-penerimaan-print-content h2,
+  .print-letter-content h2 {
+    font-size: 20px !important;
+    line-height: 1.2 !important;
+    margin: 0 0 0.5mm !important;
+  }
 
-    .laporan-penjualan-print-area th,
-    .laporan-penerimaan-print-area th {
-      font-weight: 700 !important;
-      background: #f3f4f6 !important;
-      color: #0f172a !important;
-    }
+  .laporan-pembelian-print-content p:nth-of-type(1),
+  .laporan-penjualan-print-content p:nth-of-type(1),
+  .laporan-penerimaan-print-content p:nth-of-type(1),
+  .print-letter-content p:nth-of-type(1) {
+    font-size: 20px !important;
+    line-height: 1.2 !important;
+    margin: 0 !important;
+  }
 
-    .laporan-pembelian-print-area .rounded-md,
-    .laporan-pembelian-print-area .shadow-sm,
-    .laporan-pembelian-print-area .border,
-    .laporan-penjualan-print-area .rounded-md,
-    .laporan-penjualan-print-area .shadow-sm,
-    .laporan-penjualan-print-area .border,
-    .laporan-penerimaan-print-area .rounded-md,
-    .laporan-penerimaan-print-area .shadow-sm,
-    .laporan-penerimaan-print-area .border {
-      border-radius: 0 !important;
-      box-shadow: none !important;
-    }
+  .laporan-pembelian-print-content p:nth-of-type(2),
+  .laporan-penjualan-print-content p:nth-of-type(2),
+  .laporan-penerimaan-print-content p:nth-of-type(2),
+  .print-letter-content p:nth-of-type(2) {
+    font-size: 20px !important;
+    line-height: 1.2 !important;
+  }
 
-    .laporan-pembelian-print-content h2,
-    .laporan-penjualan-print-content h2,
-    .laporan-penerimaan-print-content h2,
-    .print-letter-content h2 {
-      font-size: 20px !important;
-      line-height: 1.2 !important;
-      margin: 0 0 0.5mm !important;
-    }
+  /* Fine tuning khusus laporan pembelian agar tabel print lebih rapi dan proporsional. */
+  .laporan-pembelian-print-area table {
+    table-layout: fixed !important;
+    font-size: 6.6px !important;
+    width: 100% !important;
+  }
 
-    .laporan-pembelian-print-content p:nth-of-type(1),
-    .laporan-penjualan-print-content p:nth-of-type(1),
-    .laporan-penerimaan-print-content p:nth-of-type(1),
-    .print-letter-content p:nth-of-type(1) {
-      font-size: 20px !important;
-      line-height: 1.2 !important;
-      margin: 0 !important;
-    }
+  .laporan-pembelian-print-area th,
+  .laporan-pembelian-print-area td {
+    padding: 1px 2px !important;
+    line-height: 1.15 !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    vertical-align: middle !important;
+  }
 
-    .laporan-pembelian-print-content p:nth-of-type(2),
-    .laporan-penjualan-print-content p:nth-of-type(2),
-    .laporan-penerimaan-print-content p:nth-of-type(2),
-    .print-letter-content p:nth-of-type(2) {
-      font-size: 20px !important;
-      line-height: 1.2 !important;
-    }
+  .laporan-pembelian-print-area th {
+    text-align: center !important;
+  }
 
-    /* Fine tuning khusus laporan pembelian agar tabel print lebih rapi dan proporsional. */
-    .laporan-pembelian-print-area table {
-      table-layout: fixed !important;
-      font-size: 6.6px !important;
-      width: 100% !important;
-    }
+  .laporan-pembelian-print-area tbody tr {
+    height: 14px !important;
+  }
 
-    .laporan-pembelian-print-area th,
-    .laporan-pembelian-print-area td {
-      padding: 1px 2px !important;
-      line-height: 1.15 !important;
-      white-space: nowrap !important;
-      overflow: hidden !important;
-      text-overflow: ellipsis !important;
-      vertical-align: middle !important;
-    }
+  .laporan-pembelian-print-area th:nth-child(1),
+  .laporan-pembelian-print-area td:nth-child(1) {
+    width: 3%;
+  }
 
-    .laporan-pembelian-print-area th {
-      text-align: center !important;
-    }
+  .laporan-pembelian-print-area th:nth-child(2),
+  .laporan-pembelian-print-area td:nth-child(2) {
+    width: 10%;
+  }
 
-    .laporan-pembelian-print-area tbody tr {
-      height: 14px !important;
-    }
+  .laporan-pembelian-print-area th:nth-child(3),
+  .laporan-pembelian-print-area td:nth-child(3) {
+    width: 6.5%;
+  }
 
-    .laporan-pembelian-print-area th:nth-child(1),
-    .laporan-pembelian-print-area td:nth-child(1) {
-      width: 3%;
-    }
+  .laporan-pembelian-print-area th:nth-child(4),
+  .laporan-pembelian-print-area td:nth-child(4) {
+    width: 9%;
+  }
 
-    .laporan-pembelian-print-area th:nth-child(2),
-    .laporan-pembelian-print-area td:nth-child(2) {
-      width: 10%;
-    }
+  .laporan-pembelian-print-area th:nth-child(5),
+  .laporan-pembelian-print-area td:nth-child(5) {
+    width: 3.5%;
+  }
 
-    .laporan-pembelian-print-area th:nth-child(3),
-    .laporan-pembelian-print-area td:nth-child(3) {
-      width: 6.5%;
-    }
+  .laporan-pembelian-print-area th:nth-child(6),
+  .laporan-pembelian-print-area td:nth-child(6) {
+    width: 8.5%;
+  }
 
-    .laporan-pembelian-print-area th:nth-child(4),
-    .laporan-pembelian-print-area td:nth-child(4) {
-      width: 9%;
-    }
+  .laporan-pembelian-print-area th:nth-child(7),
+  .laporan-pembelian-print-area td:nth-child(7) {
+    width: 8%;
+  }
 
-    .laporan-pembelian-print-area th:nth-child(5),
-    .laporan-pembelian-print-area td:nth-child(5) {
-      width: 3.5%;
-    }
+  .laporan-pembelian-print-area th:nth-child(8),
+  .laporan-pembelian-print-area td:nth-child(8) {
+    width: 8.5%;
+  }
 
-    .laporan-pembelian-print-area th:nth-child(6),
-    .laporan-pembelian-print-area td:nth-child(6) {
-      width: 8.5%;
-    }
+  .laporan-pembelian-print-area th:nth-child(9),
+  .laporan-pembelian-print-area td:nth-child(9) {
+    width: 8%;
+  }
 
-    .laporan-pembelian-print-area th:nth-child(7),
-    .laporan-pembelian-print-area td:nth-child(7) {
-      width: 8%;
-    }
+  .laporan-pembelian-print-area th:nth-child(10),
+  .laporan-pembelian-print-area td:nth-child(10) {
+    width: 8%;
+  }
 
-    .laporan-pembelian-print-area th:nth-child(8),
-    .laporan-pembelian-print-area td:nth-child(8) {
-      width: 8.5%;
-    }
+  .laporan-pembelian-print-area th:nth-child(11),
+  .laporan-pembelian-print-area td:nth-child(11) {
+    width: 8%;
+  }
 
-    .laporan-pembelian-print-area th:nth-child(9),
-    .laporan-pembelian-print-area td:nth-child(9) {
-      width: 8%;
-    }
+  .laporan-pembelian-print-area th:nth-child(12),
+  .laporan-pembelian-print-area td:nth-child(12) {
+    width: 7%;
+  }
 
-    .laporan-pembelian-print-area th:nth-child(10),
-    .laporan-pembelian-print-area td:nth-child(10) {
-      width: 8%;
-    }
+  .laporan-pembelian-print-area th:nth-child(13),
+  .laporan-pembelian-print-area td:nth-child(13) {
+    width: 12%;
+  }
 
-    .laporan-pembelian-print-area th:nth-child(11),
-    .laporan-pembelian-print-area td:nth-child(11) {
-      width: 8%;
-    }
+  /* ===== laporan-stock-print-area: standalone styles ===== */
 
-    .laporan-pembelian-print-area th:nth-child(12),
-    .laporan-pembelian-print-area td:nth-child(12) {
-      width: 7%;
-    }
+  /* Heading di area print */
+  .laporan-stock-print-content h2 {
+    font-size: 10px !important;
+    font-weight: 1000 !important;
+    line-height: 1.3 !important;
+    margin: 0 0 0mm !important;
+    text-align: center;
+  }
 
-    .laporan-pembelian-print-area th:nth-child(13),
-    .laporan-pembelian-print-area td:nth-child(13) {
-      width: 12%;
-    }
+  .laporan-stock-print-content p {
+    font-size: 9px !important;
+    line-height: 1.3 !important;
+    margin: 0 !important;
+    text-align: center;
+  }
 
-    /* ===== laporan-stock-print-area: standalone styles ===== */
+  /* Wrapper tabel */
+  .laporan-stock-print-area .bg-white {
+    width: 100% !important;
+    max-width: 208mm !important;
+    margin: 0 auto !important;
+    border: none !important;
+    box-shadow: none !important;
+    border-radius: 0 !important;
+    background: transparent !important;
+  }
 
-    /* Heading di area print */
-    .laporan-stock-print-content h2 {
-      font-size: 10px !important;
-      font-weight: 1000 !important;
-      line-height: 1.3 !important;
-      margin: 0 0 0mm !important;
-      text-align: center;
-    }
+  .laporan-stock-print-area [data-slot='tabs-content'] {
+    width: 100% !important;
+    margin: 0 !important;
+    max-width: 208mm !important;
+  }
 
-    .laporan-stock-print-content p {
-      font-size: 9px !important;
-      line-height: 1.3 !important;
-      margin: 0 !important;
-      text-align: center;
-    }
+  /* Tabel utama */
+  .laporan-stock-print-area table {
+    font-size: 8px !important;
+    table-layout: fixed !important;
+    border-collapse: collapse !important;
+    width: 100% !important;
+  }
 
-    /* Wrapper tabel */
-    .laporan-stock-print-area .bg-white {
-      width: 100% !important;
-      max-width: 208mm !important;
-      margin: 0 auto !important;
-      border: none !important;
-      box-shadow: none !important;
-      border-radius: 0 !important;
-      background: transparent !important;
-    }
+  .laporan-stock-print-area th,
+  .laporan-stock-print-area td {
+    padding: 2px 2px !important;
+    line-height: 1.3 !important;
+    white-space: nowrap !important;
+    overflow: visible !important;
+    text-overflow: clip !important;
+    border: 0.7px solid #9ca3af !important;
+    color: #111827 !important;
+    vertical-align: middle !important;
+  }
 
-    .laporan-stock-print-area [data-slot='tabs-content'] {
-      width: 100% !important;
-      margin: 0 !important;
-      max-width: 208mm !important;
-    }
+  .laporan-stock-print-area th {
+    font-size: 7px !important;
+    font-weight: 700 !important;
+    background: #f3f4f6 !important;
+    color: #0f172a !important;
+    text-align: center !important;
+  }
 
-    /* Tabel utama */
-    .laporan-stock-print-area table {
-      font-size: 8px !important;
-      table-layout: fixed !important;
-      border-collapse: collapse !important;
-      width: 100% !important;
-    }
+  /* Hapus border-radius & shadow */
+  .laporan-stock-print-area .rounded-md,
+  .laporan-stock-print-area .shadow-sm,
+  .laporan-stock-print-area .border {
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    border: none !important;
+  }
 
-    .laporan-stock-print-area th,
-    .laporan-stock-print-area td {
-      padding: 2px 2px !important;
-      line-height: 1.3 !important;
-      white-space: nowrap !important;
-      overflow: visible !important;
-      text-overflow: clip !important;
-      border: 0.7px solid #9ca3af !important;
-      color: #111827 !important;
-      vertical-align: middle !important;
-    }
+  /* Biarkan overflow terlihat saat print */
+  .laporan-stock-print-area .overflow-x-auto,
+  .laporan-stock-print-area .overflow-hidden {
+    overflow: visible !important;
+  }
 
-    .laporan-stock-print-area th {
-      font-size: 7px !important;
-      font-weight: 700 !important;
-      background: #f3f4f6 !important;
-      color: #0f172a !important;
-      text-align: center !important;
-    }
+  /* Sembunyikan pagination & action button */
+  .laporan-stock-print-area .no-print,
+  .laporan-stock-print-area .print-hide-pagination {
+    display: none !important;
+  }
+}
 
-    /* Hapus border-radius & shadow */
-    .laporan-stock-print-area .rounded-md,
-    .laporan-stock-print-area .shadow-sm,
-    .laporan-stock-print-area .border {
-      border-radius: 0 !important;
-      box-shadow: none !important;
-      border: none !important;
-    }
+.accounting-print-root {
+  display: none;
+}
 
-    /* Biarkan overflow terlihat saat print */
-    .laporan-stock-print-area .overflow-x-auto,
-    .laporan-stock-print-area .overflow-hidden {
-      overflow: visible !important;
-    }
+@media print {
 
-    /* Sembunyikan pagination & action button */
-    .laporan-stock-print-area .no-print,
-    .laporan-stock-print-area .print-hide-pagination {
-      display: none !important;
-    }
+  .accounting-print-root,
+  .accounting-print-root * {
+    visibility: visible !important;
+  }
+
+  .accounting-print-root {
+    position: absolute;
+    inset: 0;
+    display: block !important;
+    width: 210mm;
+    margin: 0;
+    padding: 0;
+  }
+
+  .accounting-print-root .accounting-print-area {
+    position: relative !important;
+    top: auto !important;
+    left: auto !important;
+    display: block !important;
+    width: 210mm !important;
+    height: 296mm !important;
+    max-height: 296.5mm !important;
+    margin: 0 !important;
+    overflow: hidden !important;
+    break-after: page;
+    page-break-after: always;
+    background: #fff;
+  }
+
+  .accounting-print-root .accounting-print-area:last-child {
+    break-after: avoid !important;
+    page-break-after: avoid !important;
+  }
+
+  .accounting-print-root .accounting-print-content {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    box-sizing: border-box;
+    width: 100%;
+    height: 100%;
+    flex-direction: column;
+    padding: 42mm 12mm 38mm !important;
+    color: #0f172a;
+  }
+
+  .accounting-print-root .print-letterhead {
+    object-fit: fill;
+  }
+
+  .accounting-print-root table {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  .accounting-print-root th,
+  .accounting-print-root td {
+    overflow-wrap: anywhere;
+    vertical-align: top;
+  }
+
+  .templated-report-print-content {
+    position: relative;
+    display: flex !important;
+    flex-direction: column;
+  }
+
+  .templated-report-print-content> :first-child {
+    width: 100%;
+    border-bottom: 2px solid var(--report-template-color, #1f4163);
+    padding-bottom: 2mm;
+  }
+
+  .templated-report-print-content table thead th {
+    background: var(--report-template-color, #1f4163) !important;
+    color: #fff !important;
+  }
+
+  .document-template-print-footer {
+    width: 100%;
+    margin-top: auto;
+    margin-bottom: 8mm;
+    padding-top: 3mm;
+  }
+
+  .laporan-pembelian-print-area .print-letterhead,
+  .laporan-penerimaan-print-area .print-letterhead,
+  .laporan-pengiriman-print-area .print-letterhead,
+  .laporan-stock-print-area .print-letterhead {
+    object-fit: fill;
   }
 }

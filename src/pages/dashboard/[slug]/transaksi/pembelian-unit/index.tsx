@@ -3,8 +3,8 @@
 import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
-import PurchaseTable from '@/components/features/purchase/PurchaseTable';
-import DeleteUnitTransactionDialog from '@/components/features/unit-transaction/DeleteUnitTransactionDialog';
+import PurchaseTable from '@/components/features/unit-transaksi/purchase/PurchaseTable';
+import DeleteUnitTransactionDialog from '@/components/features/unit-transaksi/DeleteUnitTransactionDialog';
 import { PageHeader } from '@/components/common/PageHeader';
 import { useDeletePurchase } from '@/hooks/usePurchase';
 import { useUnitTransactions } from '@/hooks/useUnitTransaction';

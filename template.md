@@ -289,13 +289,13 @@ Untuk memastikan tombol aksi selalu terlihat di berbagai ukuran layar (terutama 
     </Button>
   </DropdownMenuTrigger>
   <DropdownMenuContent align="end" className="min-w-[150px] rounded-md border-slate-200 p-1.5 shadow-lg">
-    <DropdownMenuItem className="rounded-lg px-3 py-2 text-sm text-slate-900 focus:bg-slate-50 cursor-pointer">
+    <DropdownMenuItem className="rounded-md px-3 py-2 text-sm text-slate-900 focus:bg-slate-50 cursor-pointer">
       <Eye className="mr-2 h-4 w-4" /> Detail
     </DropdownMenuItem>
-    <DropdownMenuItem className="rounded-lg px-3 py-2 text-sm text-slate-900 focus:bg-slate-50 cursor-pointer">
+    <DropdownMenuItem className="rounded-md px-3 py-2 text-sm text-slate-900 focus:bg-slate-50 cursor-pointer">
       <Pencil className="mr-2 h-4 w-4" /> Edit
     </DropdownMenuItem>
-    <DropdownMenuItem className="rounded-lg px-3 py-2 text-sm text-red-600 focus:bg-red-50 focus:text-red-600 cursor-pointer">
+    <DropdownMenuItem className="rounded-md px-3 py-2 text-sm text-red-600 focus:bg-red-50 focus:text-red-600 cursor-pointer">
       <Trash2 className="mr-2 h-4 w-4" /> Hapus
     </DropdownMenuItem>
   </DropdownMenuContent>
@@ -477,19 +477,19 @@ Cukup teruskan fungsi *handler* dan *state loading* ke tabel tanpa perlu mendefi
     <TabsList className="flex h-auto p-1 bg-gray-50 border border-gray-100 rounded-md">
       <TabsTrigger 
         value="per-nota" 
-        className="rounded-lg px-6 py-2.5 text-[14px] font-medium data-[state=active]:bg-white data-[state=active]:text-gray-900 data-[state=active]:shadow-sm"
+        className="rounded-md px-6 py-2.5 text-[14px] font-medium data-[state=active]:bg-white data-[state=active]:text-gray-900 data-[state=active]:shadow-sm"
       >
         Laporan Pembelian Per Nota
       </TabsTrigger>
       <TabsTrigger 
         value="per-tipe" 
-        className="rounded-lg px-6 py-2.5 text-[14px] font-medium data-[state=active]:bg-white data-[state=active]:text-gray-900 data-[state=active]:shadow-sm"
+        className="rounded-md px-6 py-2.5 text-[14px] font-medium data-[state=active]:bg-white data-[state=active]:text-gray-900 data-[state=active]:shadow-sm"
       >
         Laporan Pembelian Per Tipe
       </TabsTrigger>
       <TabsTrigger 
         value="per-supplier" 
-        className="rounded-lg px-6 py-2.5 text-[14px] font-medium data-[state=active]:bg-white data-[state=active]:text-gray-900 data-[state=active]:shadow-sm"
+        className="rounded-md px-6 py-2.5 text-[14px] font-medium data-[state=active]:bg-white data-[state=active]:text-gray-900 data-[state=active]:shadow-sm"
       >
         Laporan Pembelian Per Supplier
       </TabsTrigger>
@@ -513,7 +513,7 @@ Cukup teruskan fungsi *handler* dan *state loading* ke tabel tanpa perlu mendefi
 | H1 | `text-2xl font-semibold` |
 | Subheader | `text-sm text-muted-foreground` |
 | TabsList (Pills) | `flex h-auto p-1 bg-gray-50 border border-gray-100 rounded-md` |
-| TabsTrigger (Pills) | `rounded-lg px-6 py-2.5 text-[14px] font-medium data-[state=active]:bg-white data-[state=active]:text-gray-900 data-[state=active]:shadow-sm` |
+| TabsTrigger (Pills) | `rounded-md px-6 py-2.5 text-[14px] font-medium data-[state=active]:bg-white data-[state=active]:text-gray-900 data-[state=active]:shadow-sm` |
 | Search Input | `pl-9 bg-white` |
 | Select pagination | `w-[70px] bg-white` |
 | Table wrapper | `rounded-md border border-gray-200 bg-white overflow-x-auto shadow-none` |
@@ -526,7 +526,7 @@ Cukup teruskan fungsi *handler* dan *state loading* ke tabel tanpa perlu mendefi
 | Pagination active | `border-slate-200 bg-white text-slate-950 shadow-sm` |
 | Action trigger | `h-8 w-8 rounded-full` |
 | DropdownMenuContent | `rounded-md border-slate-200 p-1.5 shadow-lg` |
-| DropdownMenuItem | `rounded-lg px-3 py-2` |
+| DropdownMenuItem | `rounded-md px-3 py-2` |
 ---
 | Tambah button | `button-theme-1!` |
 
@@ -685,7 +685,7 @@ Ketentuan:
 | H1 | `text-2xl font-semibold` |
 | Subheader | `text-sm text-muted-foreground` |
 | TabsList (Pills) | `flex h-auto p-1 bg-gray-50 border border-gray-100 rounded-md` |
-| TabsTrigger (Pills) | `rounded-lg px-6 py-2.5 text-[14px] font-medium data-[state=active]:bg-white data-[state=active]:text-gray-900 data-[state=active]:shadow-sm` |
+| TabsTrigger (Pills) | `rounded-md px-6 py-2.5 text-[14px] font-medium data-[state=active]:bg-white data-[state=active]:text-gray-900 data-[state=active]:shadow-sm` |
 | Search Input | `pl-9 bg-white` |
 | Select pagination | `w-[70px] bg-white` |
 | Table wrapper | `rounded-md border border-gray-200 bg-white overflow-x-auto shadow-none` |
@@ -698,7 +698,7 @@ Ketentuan:
 | Pagination active | `border-slate-200 bg-white text-slate-950 shadow-sm` |
 | Action trigger | `h-8 w-8 rounded-full` |
 | DropdownMenuContent | `rounded-md border-slate-200 p-1.5 shadow-lg` |
-| DropdownMenuItem | `rounded-lg px-3 py-2` |
+| DropdownMenuItem | `rounded-md px-3 py-2` |
 | Back button | `h-10 w-10 rounded-md border border-slate-200 hover:bg-slate-50` |
 | Tambah button | `button-theme-1!` |
 | Container Cetak A4 | `print-letter-page` |

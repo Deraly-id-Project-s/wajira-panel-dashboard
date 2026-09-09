@@ -9,6 +9,8 @@ type LiabilityListOptions = {
   perPage?: number;
   search?: string;
   type?: 'purchase' | 'sales';
+  start_date?: string;
+  end_date?: string;
 };
 
 export const usePembayaranHutang = (options: LiabilityListOptions = {}) => {
@@ -16,7 +18,7 @@ export const usePembayaranHutang = (options: LiabilityListOptions = {}) => {
 
   return useQuery({
     queryKey: companyId ? companyQueryKeys.list(companyId, 'liability-list', options) : ['liability-list', 'unscoped', options],
-    queryFn: () => liabilityService.getList({ type: options.type, company_id: companyId ?? undefined, page: options.page, per_page: options.perPage, search: options.search }),
+    queryFn: () => liabilityService.getList({ type: options.type, company_id: companyId ?? undefined, page: options.page, per_page: options.perPage, search: options.search, start_date: options.start_date, end_date: options.end_date }),
     staleTime: 1000 * 60 * 5,
     placeholderData: (previous) => previous,
     enabled: Boolean(companyId),

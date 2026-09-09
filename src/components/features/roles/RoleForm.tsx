@@ -12,6 +12,7 @@ import { LoadingState } from '@/components/ui/loading-state';
 import { useCompany } from '@/contexts/CompanyContext';
 import { useQuery } from '@tanstack/react-query';
 import { apiClient } from '@/lib/api/client';
+import RequiredMark from '@/components/ui/required-mark';
 
 interface RoleFormProps {
   id?: string;
@@ -192,7 +193,7 @@ export function RoleForm({ id }: RoleFormProps) {
   const isPending = isMutationPending || isPageLoading;
 
   return (
-    <div className="mx-auto p-6 space-y-6">
+    <div className="mx-auto space-y-4 py-2 sm:space-y-6 sm:p-6">
       {/* Header */}
       <PageHeader
         breadcrumbs={[
@@ -205,15 +206,15 @@ export function RoleForm({ id }: RoleFormProps) {
       />
 
       {/* Form */}
-      <form onSubmit={handleSubmit} className="space-y-6">
+      <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6">
         {/* Card: Role Name */}
-        <div className="bg-white rounded-md border p-6 space-y-4 shadow-sm">
+        <div className="space-y-4 rounded-md border bg-white p-4 shadow-sm sm:p-6">
           <h2 className="text-base font-semibold text-gray-900 flex items-center gap-2">
-            <Shield className="text-indigo-600 h-4 w-4" />
+            <Shield className="text-orange-600 h-4 w-4" />
             Informasi Utama Peran
           </h2>
           <div className="space-y-2">
-            <p className="text-sm font-medium text-gray-700">Nama Peran</p>
+            <p className="text-sm font-medium text-gray-700">Nama Peran <RequiredMark /></p>
             <Input
               value={name}
               onChange={(e) => setName(e.target.value)}
@@ -227,23 +228,23 @@ export function RoleForm({ id }: RoleFormProps) {
         </div>
 
         {/* Card: Features Selection */}
-        <div className="bg-white rounded-md border p-6 space-y-6 shadow-sm">
-          <div className="flex items-center justify-between border-b pb-4">
+        <div className="space-y-6 rounded-md border bg-white p-4 shadow-sm sm:p-6">
+          <div className="flex flex-col items-stretch gap-3 border-b pb-4 sm:flex-row sm:items-center sm:justify-between">
             <div>
               <h2 className="text-base font-semibold text-gray-900 flex items-center gap-2">
-                <Shield className="text-indigo-600 h-4 w-4" />
+                <Shield className="text-orange-600 h-4 w-4" />
                 Fitur dan Modul
               </h2>
               <p className="text-xs text-gray-500 mt-0.5">Tentukan fitur mana saja yang dapat diakses oleh peran ini.</p>
             </div>
-            <div className="flex gap-2">
+            <div className="grid grid-cols-2 gap-2 sm:flex">
               <Button
                 type="button"
                 variant="outline"
                 size="sm"
                 onClick={handleSelectAll}
                 disabled={isLoadingModules || isLoadingPerms || isPending}
-                className="rounded-lg text-xs"
+                className="rounded-md text-xs"
               >
                 Pilih Semua
               </Button>
@@ -253,7 +254,7 @@ export function RoleForm({ id }: RoleFormProps) {
                 size="sm"
                 onClick={handleClearAll}
                 disabled={isLoadingModules || isLoadingPerms || isPending}
-                className="rounded-lg text-xs"
+                className="rounded-md text-xs"
               >
                 Hapus Pilihan
               </Button>
@@ -273,7 +274,7 @@ export function RoleForm({ id }: RoleFormProps) {
                 const isAllPermsInModuleChecked = matchingPerms.length > 0 && matchingPerms.every((p) => selectedPerms.includes(p.name));
 
                 return (
-                  <div key={mod.id} className="bg-gray-50/50 rounded-xl border border-gray-200 p-6 space-y-6">
+                  <div key={mod.id} className="space-y-6 rounded-xl border border-gray-200 bg-gray-50/50 p-4 sm:p-6">
                     {/* Module Header Group Box */}
                     <div className="border-b pb-3">
                       <h3 className="text-base font-bold text-gray-900 uppercase tracking-wider">
@@ -286,7 +287,7 @@ export function RoleForm({ id }: RoleFormProps) {
                     <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
                       {/* Left: Fitur */}
                       <div className="lg:col-span-7 space-y-4">
-                        <div className="flex items-center justify-between border-b pb-2">
+                        <div className="flex flex-wrap items-center justify-between gap-2 border-b pb-2">
                           <span className="text-xs font-bold text-gray-700 uppercase tracking-wider">Daftar Fitur</span>
                           <label className="flex items-center gap-1.5 text-[10px] text-gray-500 hover:text-gray-700 cursor-pointer select-none">
                             <Checkbox
@@ -308,7 +309,7 @@ export function RoleForm({ id }: RoleFormProps) {
                               <div
                                 key={feature.id}
                                 className={`flex flex-col justify-between p-4 rounded-xl border transition-all h-full ${isChecked
-                                  ? 'border-indigo-600 bg-indigo-50/10 shadow-sm'
+                                  ? 'border-orange-600 bg-orange-50/10 shadow-sm'
                                   : 'border-gray-200 bg-white hover:border-gray-300 hover:bg-gray-50/30'
                                   }`}
                               >
@@ -337,7 +338,7 @@ export function RoleForm({ id }: RoleFormProps) {
 
                       {/* Right: Izin Akses (Permissions) */}
                       <div className="lg:col-span-5 space-y-4 border-t lg:border-t-0 lg:border-l pt-6 lg:pt-0 lg:pl-6">
-                        <div className="flex items-center justify-between border-b pb-2">
+                        <div className="flex flex-wrap items-center justify-between gap-2 border-b pb-2">
                           <span className="text-xs font-bold text-gray-700 uppercase tracking-wider">Izin Akses (Permissions)</span>
                           {matchingPerms.length > 0 && (
                             <label className="flex items-center gap-1.5 text-[10px] text-gray-500 hover:text-gray-700 cursor-pointer select-none">
@@ -372,8 +373,8 @@ export function RoleForm({ id }: RoleFormProps) {
                               return (
                                 <label
                                   key={perm.id}
-                                  className={`flex items-start gap-3 p-3 rounded-lg border transition-all cursor-pointer select-none ${isPermChecked
-                                    ? 'border-indigo-600/30 bg-indigo-50/20'
+                                  className={`flex items-start gap-3 p-3 rounded-md border transition-all cursor-pointer select-none ${isPermChecked
+                                    ? 'border-orange-600/30 bg-orange-50/20'
                                     : 'border-gray-100 bg-gray-50/20 hover:bg-gray-50/60'
                                     }`}
                                 >
@@ -385,7 +386,7 @@ export function RoleForm({ id }: RoleFormProps) {
                                     />
                                   </div>
                                   <div className="space-y-0.5 min-w-0">
-                                    <span className="block text-xs font-mono font-bold text-indigo-950 truncate" title={perm.name}>
+                                    <span className="block text-xs font-mono font-bold text-orange-950 truncate" title={perm.name}>
                                       {perm.name}
                                     </span>
                                     <span className="block text-[9px] text-gray-500 leading-normal font-medium line-clamp-2">
@@ -407,20 +408,19 @@ export function RoleForm({ id }: RoleFormProps) {
         </div>
 
         {/* Action Buttons */}
-        <div className="flex justify-end gap-3">
+        <div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end [&>*]:w-full sm:[&>*]:w-auto">
           <Button
             type="button"
             variant="outline"
             onClick={handleBack}
             disabled={isPending}
-            className="h-11 px-6 rounded-md text-slate-800 border-slate-200"
           >
             Batal
           </Button>
           <Button
             type="submit"
+            variant="default"
             disabled={isPending || !name.trim()}
-            className="h-11 px-6 rounded-md bg-indigo-600 hover:bg-indigo-700 text-white font-semibold shadow-sm transition-all"
           >
             {isPending ? 'Menyimpan...' : (isEditMode ? 'Perbarui Peran' : 'Simpan Peran')}
           </Button>

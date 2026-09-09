@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
 import { useForm, Controller } from 'react-hook-form';
-import { Card } from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -12,7 +12,7 @@ import type { FinanceAsset, FinanceAssetPayload } from '@/@types/finance-asset.t
 import { useAssets } from '@/hooks/useAsset';
 import { useCompany } from '@/contexts/CompanyContext';
 import { useFinanceAssetFormula } from '@/hooks/useFinanceAsset';
-import { Save, Loader2, Calculator } from 'lucide-react';
+import { Calendar, Hash, Loader2, Save, WalletCards } from 'lucide-react';
 
 export interface FinanceAssetFormProps {
     mode?: 'create' | 'edit';
@@ -79,9 +79,6 @@ export function FinanceAssetForm({
     const watchedPurchaseDate = watch('purchase_date');
     const watchedPrice = watch('price');
     const watchedEconomicAge = watch('economic_age');
-    const watchedDescription = watch('description');
-    const watchedSerialNumber = watch('serial_number');
-
     // Fetch formula calculation from API
     const {
         data: formulaData,
@@ -152,38 +149,11 @@ export function FinanceAssetForm({
 
     return (
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-            <Card className="p-6 bg-white border border-gray-100 shadow-sm rounded-md">
-                <div className="space-y-6">
-                    <div className="flex items-center justify-between">
-                        <div>
-                            <h2 className="text-lg font-bold text-gray-900">
-                                {isEdit ? 'Detail Informasi Aset Finance' : 'Tambah Aset Finance'}
-                            </h2>
-                            <p className="text-sm text-gray-500 mt-1">
-                                {isEdit
-                                    ? 'Perbarui informasi aset finance dan formula penyusutan'
-                                    : 'Masukkan detail aset baru untuk menghitung penyusutan otomatis'}
-                            </p>
-                        </div>
-                        {isFetchingFormula && (
-                            <div className="flex items-center gap-2 text-xs text-blue-600 bg-blue-50 px-3 py-1.5 rounded-full border border-blue-200">
-                                <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                                <span>Menghitung Formula...</span>
-                            </div>
-                        )}
-                        {!isFetchingFormula && formulaData && (
-                            <div className="flex items-center gap-1.5 text-xs text-emerald-600 bg-emerald-50 px-3 py-1.5 rounded-full border border-emerald-200">
-                                <Calculator className="h-3.5 w-3.5" />
-                                <span>Formula Terhitung</span>
-                            </div>
-                        )}
-                    </div>
-                    <div className="h-px bg-gray-100" />
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        {/* Master Aset */}
+            <Card className="overflow-hidden rounded-md border-slate-200 bg-white shadow-sm">
+                <CardContent className="px-5 py-5">
+                    <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
                         <div className="space-y-2">
-                            <Label className="text-sm font-semibold text-gray-900">
+                            <Label className="text-sm font-medium text-slate-700">
                                 Master Aset <span className="text-red-500">*</span>
                             </Label>
                             <Controller
@@ -195,11 +165,12 @@ export function FinanceAssetForm({
                                         <Select
                                             value={field.value ? String(field.value) : ''}
                                             onValueChange={(val) => field.onChange(Number(val))}
+                                            disabled={isSaving || isLoadingAssets}
                                         >
-                                            <SelectTrigger className="w-full bg-white border-gray-200">
+                                            <SelectTrigger className="h-11 w-full border-slate-200 bg-white text-sm shadow-sm">
                                                 <SelectValue placeholder={isLoadingAssets ? 'Memuat master aset...' : 'Pilih Master Aset'} />
                                             </SelectTrigger>
-                                            <SelectContent>
+                                            <SelectContent className="max-h-72" showSearch searchPlaceholder="Cari master aset...">
                                                 {assetsList.map((asset) => (
                                                     <SelectItem key={asset.id} value={String(asset.id)}>
                                                         {asset.code} - {asset.name}
@@ -223,21 +194,24 @@ export function FinanceAssetForm({
                             />
                         </div>
 
-                        {/* Tanggal Beli */}
                         <div className="space-y-2">
-                            <Label className="text-sm font-semibold text-gray-900">
+                            <Label htmlFor="purchase_date" className="text-sm font-medium text-slate-700">
                                 Tanggal Beli <span className="text-red-500">*</span>
                             </Label>
-                            <Input
-                                type="date"
-                                {...register('purchase_date', { required: 'Tanggal beli wajib diisi' })}
-                                className="border-gray-200 bg-white"
-                            />
+                            <div className="relative">
+                                <Calendar className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                                <Input
+                                    id="purchase_date"
+                                    type="date"
+                                    {...register('purchase_date', { required: 'Tanggal beli wajib diisi' })}
+                                    disabled={isSaving}
+                                    className="h-11 border-slate-200 bg-white pl-10 text-sm shadow-sm"
+                                />
+                            </div>
                         </div>
 
-                        {/* Harga Beli */}
                         <div className="space-y-2">
-                            <Label className="text-sm font-semibold text-gray-900">
+                            <Label className="text-sm font-medium text-slate-700">
                                 Harga Perolehan <span className="text-red-500">*</span>
                             </Label>
                             <Controller
@@ -250,7 +224,8 @@ export function FinanceAssetForm({
                                             value={Number(field.value)}
                                             onChangeValue={field.onChange}
                                             placeholder="Masukkan Harga Perolehan"
-                                            className="bg-white border-gray-200"
+                                            disabled={isSaving}
+                                            className="h-11 border-slate-200 bg-white text-sm shadow-sm"
                                         />
                                         {fieldState.error && (
                                             <p className="text-xs text-red-500">{fieldState.error.message}</p>
@@ -260,22 +235,24 @@ export function FinanceAssetForm({
                             />
                         </div>
 
-                        {/* Serial Number */}
                         <div className="space-y-2">
-                            <Label htmlFor="serial_number" className="text-sm font-semibold text-gray-900">
+                            <Label htmlFor="serial_number" className="text-sm font-medium text-slate-700">
                                 Serial Number
                             </Label>
-                            <Input
-                                id="serial_number"
-                                placeholder="Masukkan serial number (opsional)"
-                                {...register('serial_number')}
-                                className="border-gray-200 bg-white uppercase"
-                            />
+                            <div className="relative">
+                                <Hash className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                                <Input
+                                    id="serial_number"
+                                    placeholder="Masukkan serial number"
+                                    {...register('serial_number')}
+                                    disabled={isSaving}
+                                    className="h-11 border-slate-200 bg-white pl-10 text-sm uppercase shadow-sm"
+                                />
+                            </div>
                         </div>
 
-                        {/* Umur Ekonomis (Tahun) */}
                         <div className="space-y-2">
-                            <Label htmlFor="economic_age" className="text-sm font-semibold text-gray-900">
+                            <Label htmlFor="economic_age" className="text-sm font-medium text-slate-700">
                                 Umur Ekonomis (Tahun) <span className="text-red-500">*</span>
                             </Label>
                             <div className="relative">
@@ -289,18 +266,41 @@ export function FinanceAssetForm({
                                         required: 'Umur ekonomis wajib diisi',
                                         min: { value: 1, message: 'Umur ekonomis minimal 1 tahun' },
                                     })}
-                                    className="border-gray-200 pr-16 bg-white"
+                                    disabled={isSaving}
+                                    className="h-11 border-slate-200 bg-white pr-16 text-sm shadow-sm"
                                 />
-                                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-gray-400">
+                                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-slate-400">
                                     Tahun
                                 </span>
                             </div>
                         </div>
 
-                        {/* Umur (Bulan) */}
+                        <div className="space-y-2 md:col-span-2">
+                            <Label htmlFor="description" className="text-sm font-medium text-slate-700">
+                                Keterangan / Deskripsi
+                            </Label>
+                            <Textarea
+                                id="description"
+                                placeholder="Masukkan keterangan atau deskripsi aset"
+                                {...register('description')}
+                                disabled={isSaving}
+                                className="min-h-[96px] border-slate-200 bg-white text-sm shadow-sm"
+                            />
+                        </div>
+                    </div>
+                </CardContent>
+            </Card>
+
+            <Card className="overflow-hidden rounded-md border-slate-200 bg-white shadow-sm">
+                <CardHeader className="border-b border-slate-100 bg-slate-50/60 px-5 py-4">
+                    <CardTitle className="text-base text-slate-900">Formula Penyusutan</CardTitle>
+                    <CardDescription>Nilai berikut dihitung otomatis berdasarkan data aset.</CardDescription>
+                </CardHeader>
+                <CardContent className="px-5 py-5">
+                    <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
                         <div className="space-y-2">
-                            <Label htmlFor="age" className="text-sm font-semibold text-gray-900">
-                                Umur (Bulan) <span className="ml-1 text-xs text-blue-500 font-normal">(Auto Formula)</span>
+                            <Label htmlFor="age" className="text-sm font-medium text-slate-700">
+                                Umur (Bulan) <span className="ml-1 text-xs font-normal text-[#1e3a5f]">(Auto Formula)</span>
                             </Label>
                             <div className="relative">
                                 <Input
@@ -309,34 +309,32 @@ export function FinanceAssetForm({
                                     readOnly
                                     disabled
                                     value={ageMonths || 0}
-                                    className="bg-gray-50 border-gray-200 text-gray-600 pr-16 cursor-not-allowed"
+                                    className="h-11 cursor-not-allowed border-slate-200 bg-slate-50 pr-16 text-sm text-slate-600 shadow-sm"
                                 />
-                                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-gray-400">
+                                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-slate-400">
                                     Bulan
                                 </span>
                             </div>
                         </div>
 
-                        {/* Penyusutan / Bulan */}
                         <div className="space-y-2">
-                            <Label htmlFor="monthly_depreciation" className="text-sm font-semibold text-gray-900">
-                                Penyusutan Perbulan <span className="ml-1 text-xs text-blue-500 font-normal">(Auto Formula)</span>
+                            <Label htmlFor="monthly_depreciation" className="text-sm font-medium text-slate-700">
+                                Penyusutan Perbulan <span className="ml-1 text-xs font-normal text-[#1e3a5f]">(Auto Formula)</span>
                             </Label>
                             <MoneyInput
                                 id="monthly_depreciation"
                                 value={monthlyDepreciation}
                                 readOnly
                                 disabled
-                                onChangeValue={() => {}}
+                                onChangeValue={() => { }}
                                 placeholder="Rp 0"
-                                className="bg-gray-50 border-gray-200 text-gray-600 cursor-not-allowed"
+                                className="h-11 cursor-not-allowed border-slate-200 bg-slate-50 text-sm text-slate-600 shadow-sm"
                             />
                         </div>
 
-                        {/* Bulan Terpakai */}
                         <div className="space-y-2">
-                            <Label htmlFor="months_used" className="text-sm font-semibold text-gray-900">
-                                Bulan Terpakai <span className="ml-1 text-xs text-blue-500 font-normal">(Auto Formula)</span>
+                            <Label htmlFor="months_used" className="text-sm font-medium text-slate-700">
+                                Bulan Terpakai <span className="ml-1 text-xs font-normal text-[#1e3a5f]">(Auto Formula)</span>
                             </Label>
                             <div className="relative">
                                 <Input
@@ -345,52 +343,49 @@ export function FinanceAssetForm({
                                     readOnly
                                     disabled
                                     value={monthsUsed || 0}
-                                    className="bg-gray-50 border-gray-200 text-gray-600 pr-16 cursor-not-allowed"
+                                    className="h-11 cursor-not-allowed border-slate-200 bg-slate-50 pr-16 text-sm text-slate-600 shadow-sm"
                                 />
-                                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-gray-400">
+                                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-slate-400">
                                     Bulan
                                 </span>
                             </div>
                         </div>
 
-                        {/* Akumulasi Penyusutan */}
                         <div className="space-y-2">
-                            <Label htmlFor="accumulated_depreciation" className="text-sm font-semibold text-gray-900">
-                                Akumulasi Penyusutan <span className="ml-1 text-xs text-blue-500 font-normal">(Auto Formula)</span>
+                            <Label htmlFor="accumulated_depreciation" className="text-sm font-medium text-slate-700">
+                                Akumulasi Penyusutan <span className="ml-1 text-xs font-normal text-[#1e3a5f]">(Auto Formula)</span>
                             </Label>
                             <MoneyInput
                                 id="accumulated_depreciation"
                                 value={accumulatedDepreciation}
                                 readOnly
                                 disabled
-                                onChangeValue={() => {}}
+                                onChangeValue={() => { }}
                                 placeholder="Rp 0"
-                                className="bg-gray-50 border-gray-200 text-gray-600 cursor-not-allowed"
+                                className="h-11 cursor-not-allowed border-slate-200 bg-slate-50 text-sm text-slate-600 shadow-sm"
                             />
                         </div>
 
-                        {/* Nilai Buku */}
                         <div className="space-y-2">
-                            <Label htmlFor="book_value" className="text-sm font-semibold text-gray-900">
-                                Nilai Buku <span className="ml-1 text-xs text-blue-500 font-normal">(Auto Formula)</span>
+                            <Label htmlFor="book_value" className="text-sm font-medium text-slate-700">
+                                Nilai Buku <span className="ml-1 text-xs font-normal text-[#1e3a5f]">(Auto Formula)</span>
                             </Label>
                             <MoneyInput
                                 id="book_value"
                                 value={bookValue}
                                 readOnly
                                 disabled
-                                onChangeValue={() => {}}
+                                onChangeValue={() => { }}
                                 placeholder="Rp 0"
-                                className="bg-gray-50 border-gray-200 text-gray-600 cursor-not-allowed"
+                                className="h-11 cursor-not-allowed border-slate-200 bg-slate-50 text-sm text-slate-600 shadow-sm"
                             />
                         </div>
 
-                        {/* Status */}
                         <div className="space-y-2">
-                            <Label className="text-sm font-semibold text-gray-900">
-                                Status <span className="ml-1 text-xs text-blue-500 font-normal">(Auto Formula)</span>
+                            <Label className="text-sm font-medium text-slate-700">
+                                Status <span className="ml-1 text-xs font-normal text-[#1e3a5f]">(Auto Formula)</span>
                             </Label>
-                            <div className="flex items-center h-10 px-3 bg-gray-50 border border-gray-200 rounded-md">
+                            <div className="flex h-11 items-center rounded-md border border-slate-200 bg-slate-50 px-3 shadow-sm">
                                 <Badge
                                     variant="outline"
                                     className={
@@ -403,29 +398,15 @@ export function FinanceAssetForm({
                                 </Badge>
                             </div>
                         </div>
-
-                        {/* Deskripsi */}
-                        <div className="space-y-2 md:col-span-2">
-                            <Label htmlFor="description" className="text-sm font-semibold text-gray-900">
-                                Keterangan / Deskripsi
-                            </Label>
-                            <Textarea
-                                id="description"
-                                placeholder="Masukkan keterangan atau deskripsi aset (opsional)"
-                                {...register('description')}
-                                className="border-gray-200 bg-white min-h-[90px]"
-                            />
-                        </div>
                     </div>
-                </div>
+                </CardContent>
             </Card>
 
-            {/* Actions */}
-            <div className="flex items-center justify-center gap-4 pt-4">
+            <div className="flex flex-col-reverse gap-3 pt-2 sm:flex-row sm:items-center sm:justify-end">
                 <Button
                     type="button"
-                    variant="ghost"
-                    className="px-8 text-gray-500 hover:text-gray-700"
+                    variant="outline"
+                    className="h-11 min-w-[120px] rounded-md border-slate-200 bg-white px-8 text-slate-600 hover:bg-slate-50 hover:text-slate-800"
                     onClick={onCancel}
                     disabled={isSaving}
                 >
@@ -433,7 +414,7 @@ export function FinanceAssetForm({
                 </Button>
                 <Button
                     type="submit"
-                    className="px-8 flex items-center gap-2 btn-primary!"
+                    className="flex h-11 min-w-[140px] items-center gap-2 rounded-md px-8 btn-primary!"
                     disabled={isSaving}
                 >
                     {isSaving ? (

@@ -3,14 +3,13 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/router';
 import Head from 'next/head';
-import { Search, Printer, MoreVertical, FileText } from 'lucide-react';
+import { Printer, MoreVertical, FileText } from 'lucide-react';
 import { format } from 'date-fns';
 import { id } from 'date-fns/locale';
 
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { PageHeader } from '@/components/ui/page-header';
-import { Input } from '@/components/ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { SearchPagination } from '@/components/ui/search-pagination';
 import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import BaseTable, { ColumnDef } from '@/components/ui/base-table';
@@ -140,7 +139,7 @@ export default function LaporanInvoicePage() {
                 onClick={() => {
                   router.push(`/dashboard/${slugParam}/finance/invoice/${item.id}`);
                 }}
-                className="rounded-lg px-3 py-2 text-sm text-slate-900 focus:bg-slate-50 cursor-pointer"
+                className="rounded-md px-3 py-2 text-sm text-slate-900 focus:bg-slate-50 cursor-pointer"
               >
                 <FileText className="mr-2 h-4 w-4" />
                 Detail
@@ -177,79 +176,59 @@ export default function LaporanInvoicePage() {
         </div>
 
         <div className="space-y-4">
-          {/* Filtering Block (Search and Show Page dropdown) */}
-          <div className="flex flex-col gap-4 sm:flex-row sm:items-center justify-between no-print">
-            <div className="flex items-center gap-4 w-full sm:w-auto">
-              <div className="relative w-full sm:w-[300px]">
-                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
-                <Input
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  placeholder="Search here"
-                  className="pl-9 bg-white"
-                />
-              </div>
-              <div className="flex items-center gap-2 text-sm text-slate-500 whitespace-nowrap">
-                <span>Show</span>
-                <Select value={String(perPage)} onValueChange={(value) => { setPerPage(Number(value)); }}>
-                  <SelectTrigger className="w-[70px] bg-white">
-                    <SelectValue placeholder="25" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="10">10</SelectItem>
-                    <SelectItem value="25">25</SelectItem>
-                    <SelectItem value="50">50</SelectItem>
-                    <SelectItem value="100">100</SelectItem>
-                  </SelectContent>
-                </Select>
-                <span>Page</span>
-              </div>
-            </div>
-          </div>
-
           {/* Print Letter Wrapping Container */}
-          <PrintLetterPage
-            id="laporan-invoice-print"
-            className="laporan-penerimaan-print-area"
-            letterheadSrc={selectedPrintBackground}
+          <SearchPagination
+            searchValue={searchTerm}
+            onSearchChange={setSearchTerm}
+            searchPlaceholder="Search here"
+            searchAriaLabel="Cari data"
+            page={page}
+            perPage={perPage}
+            total={pagination.total}
+            lastPage={pagination.lastPage}
+            perPageOptions={[10, 25, 50, 100]}
+            onPageChange={setPage}
+            onPerPageChange={(value) => {
+              setPerPage(value);
+              setPage(1);
+            }}
           >
-            <div className="laporan-penerimaan-print-content print-letter-content">
-              {/* Cover Letter Heading - Visible only in Print */}
-              <div className="hidden print:flex flex-col items-center justify-center text-center space-y-1 mb-6 w-full">
-                <h2 className="text-[18px] font-bold uppercase text-gray-900 tracking-wide">
-                  Laporan Invoice
-                </h2>
-                <p className="text-[15px] font-bold text-gray-900 tracking-wide">
-                  PT WAJIRA TRANSINDO
-                </p>
-                <p className="text-[12px] text-gray-600">
-                  Tanggal Cetak: {formatDate(new Date())}
-                </p>
-              </div>
+            <PrintLetterPage
+              id="laporan-invoice-print"
+              className="laporan-penerimaan-print-area"
+              letterheadSrc={selectedPrintBackground}
+            >
+              <div className="laporan-penerimaan-print-content print-letter-content">
+                {/* Cover Letter Heading - Visible only in Print */}
+                <div className="hidden print:flex flex-col items-center justify-center text-center space-y-1 mb-6 w-full">
+                  <h2 className="text-[18px] font-bold uppercase text-gray-900 tracking-wide">
+                    Laporan Invoice
+                  </h2>
+                  <p className="text-[15px] font-bold text-gray-900 tracking-wide">
+                    PT WAJIRA TRANSINDO
+                  </p>
+                  <p className="text-[12px] text-gray-600">
+                    Tanggal Cetak: {formatDate(new Date())}
+                  </p>
+                </div>
 
-              <div className="rounded-md border border-gray-200 bg-white overflow-x-auto shadow-none w-full">
-                <BaseTable
-                  data={data}
-                  columns={columns}
-                  loading={isLoading}
-                  meta={{
-                    currentPage: page,
-                    perPage: perPage,
-                    lastPage: pagination.lastPage,
-                    total: pagination.total,
-                  }}
-                  onPageChange={setPage}
-                  sortBy={orderBy}
-                  sortDirection={orderSort}
-                  onSortChange={(key, dir) => {
-                    setOrderBy(key);
-                    setOrderSort(dir);
-                    setPage(1);
-                  }}
-                />
+                <div className="rounded-md border border-gray-200 bg-white overflow-x-auto shadow-none w-full">
+                  <BaseTable
+                    data={data}
+                    columns={columns}
+                    loading={isLoading}
+                    sortBy={orderBy}
+                    sortDirection={orderSort}
+                    onSortChange={(key, dir) => {
+                      setOrderBy(key);
+                      setOrderSort(dir);
+                      setPage(1);
+                    }}
+                  />
+                </div>
               </div>
-            </div>
-          </PrintLetterPage>
+            </PrintLetterPage>
+          </SearchPagination>
         </div>
       </div>
     </DashboardLayout>

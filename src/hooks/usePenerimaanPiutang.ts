@@ -8,6 +8,8 @@ type PenerimaanPiutangListOptions = {
     page?: number;
     perPage?: number;
     search?: string;
+    start_date?: string;
+    end_date?: string;
 };
 
 export const usePenerimaanPiutang = (options: PenerimaanPiutangListOptions = {}) => {
@@ -15,7 +17,7 @@ export const usePenerimaanPiutang = (options: PenerimaanPiutangListOptions = {})
 
     return useQuery({
         queryKey: companyId ? companyQueryKeys.list(companyId, 'sales-liability-list', options) : ['sales-liability-list', 'unscoped', options],
-        queryFn: () => liabilityService.getList({ type: 'sales', company_id: companyId ?? undefined, page: options.page, per_page: options.perPage, search: options.search }),
+        queryFn: () => liabilityService.getList({ type: 'sales', company_id: companyId ?? undefined, page: options.page, per_page: options.perPage, search: options.search, start_date: options.start_date, end_date: options.end_date }),
         staleTime: 1000 * 60 * 5,
         placeholderData: (previous) => previous,
         enabled: Boolean(companyId),

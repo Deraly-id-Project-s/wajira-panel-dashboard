@@ -34,6 +34,7 @@ const PURCHASE_RECEIVED_STATE_SET = new Set(['receipt', 'inbound_receipt']);
 import BaseTable, { ColumnDef } from '@/components/ui/base-table';
 import { CopyBox } from '@/components/ui/copy-box';
 import { LoadingState } from '@/components/ui/loading-state';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
 const formatDate = (value?: string) => {
   if (!value) return '-';
@@ -414,20 +415,21 @@ export default function PurchaseRefundPageContent({ transactionId }: { transacti
           </div>
         </div>
 
-        <div className="rounded-[12px] border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
-          Pembayaran refund hanya bisa dibuat setelah refund berhasil disimpan. Jika refund sudah memiliki pembayaran, ubah atau hapus refund sebaiknya dilakukan setelah pembayaran refund disesuaikan terlebih dahulu.
-        </div>
+        <Alert variant="warning">
+          <AlertTriangle />
+          <AlertDescription>
+            Pembayaran refund hanya bisa dibuat setelah refund berhasil disimpan. Jika refund sudah memiliki pembayaran, ubah atau hapus refund sebaiknya dilakukan setelah pembayaran refund disesuaikan terlebih dahulu.
+          </AlertDescription>
+        </Alert>
 
         {isRefunded ? (
-          <div className="flex items-start gap-2.5 rounded-lg border border-amber-200 bg-amber-50/50 px-4 py-3 text-sm text-amber-800">
-            <AlertTriangle className="h-5 w-5 text-amber-655 shrink-0 mt-0.5" />
-            <div>
-              <p className="font-semibold text-amber-900">Transaksi Sudah Direfund</p>
-              <p className="text-xs mt-0.5 text-amber-700/95">
-                Status stok saat ini adalah <span className="font-mono font-medium bg-amber-100 px-1.5 py-0.5 rounded text-amber-900">inbound_return</span>. Proses terima barang dinonaktifkan.
-              </p>
-            </div>
-          </div>
+          <Alert variant="warning">
+            <AlertTriangle />
+            <AlertTitle>Transaksi Sudah Direfund</AlertTitle>
+            <AlertDescription>
+              Status stok saat ini adalah <span className="font-mono font-medium bg-amber-100 px-1.5 py-0.5 rounded text-amber-900">inbound_return</span>. Proses terima barang dinonaktifkan.
+            </AlertDescription>
+          </Alert>
         ) : null}
 
         <BaseTable

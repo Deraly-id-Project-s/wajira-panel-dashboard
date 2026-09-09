@@ -32,7 +32,7 @@ function RelatedSection({ title, description, icon, onAdd, children, addDisabled
       <div className="mb-4 flex items-start justify-between gap-3">
         <div>
           <div className="flex items-center gap-3">
-            <div className="rounded-lg bg-orange-100 p-2 text-orange-700">{icon}</div>
+            <div className="rounded-md bg-orange-100 p-2 text-orange-700">{icon}</div>
             <div>
               <h2 className="font-semibold text-slate-950">{title}</h2>
               <p className="text-xs text-slate-500">{description}</p>
@@ -138,11 +138,11 @@ export function DOEkspedisiExpenses({ data, onRefresh }: DOEkspedisiExpensesProp
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
-            <DropdownMenuItem onClick={() => openEdit(x)}>
+            <DropdownMenuItem onClick={() => openEdit(x)} disabled={data?.status !== 'draft'}>
               <Pencil className="mr-2 h-4 w-4" />
               Edit
             </DropdownMenuItem>
-            <DropdownMenuItem className="text-red-600" onClick={() => void handleDelete(x)}>
+            <DropdownMenuItem className="text-red-600" onClick={() => void handleDelete(x)} disabled={data?.status !== 'draft'}>
               <Trash2 className="mr-2 h-4 w-4" />
               Hapus
             </DropdownMenuItem>
@@ -159,11 +159,12 @@ export function DOEkspedisiExpenses({ data, onRefresh }: DOEkspedisiExpensesProp
         description="Data biaya tambahan pada DO Ekspedisi"
         icon={<Receipt />}
         onAdd={openCreate}
+        addDisabled={data?.status !== 'draft'}
       >
         <BaseTable
           data={data.expeditionExpenses ?? []}
           columns={columns}
-          containerClassName="rounded-lg border"
+          containerClassName="rounded-md border"
           headerRowClassName="bg-orange-50"
         />
       </RelatedSection>

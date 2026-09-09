@@ -371,7 +371,7 @@ export default function BaseTable<T>({
         variant="ghost"
         size="sm"
         className={cn(
-          'h-9 min-w-9 rounded-md border px-3 text-sm font-medium shadow-none',
+          'h-8 min-w-8 rounded-md border px-2 text-xs font-medium shadow-none sm:h-9 sm:min-w-9 sm:px-3 sm:text-sm',
           pageNumber === currentPage
             ? 'border-slate-200 bg-white text-slate-950 shadow-sm'
             : 'border-transparent bg-transparent text-slate-700 hover:border-slate-200 hover:bg-white',
@@ -398,7 +398,7 @@ export default function BaseTable<T>({
                   <Input
                     type="text"
                     placeholder={searchPlaceholder}
-                    className="pl-8 bg-white h-9 border-slate-300"
+                    className="h-9 bg-white pl-8 text-xs border-slate-300 sm:text-sm"
                     value={localSearch}
                     onChange={(e) => setLocalSearch(e.target.value)}
                   />
@@ -415,9 +415,9 @@ export default function BaseTable<T>({
 
               {showLimitChange && onPerPageChange && (
                 <div className="flex items-center gap-2 whitespace-nowrap">
-                  <span className="text-sm font-medium text-slate-700">Show</span>
+                  <span className="text-xs font-medium text-slate-700 sm:text-sm">Show</span>
                   <Select value={itemsPerPage.toString()} onValueChange={handleItemsPerPageChange}>
-                    <SelectTrigger className="w-[70px] bg-white h-9 border-slate-300">
+                    <SelectTrigger className="h-9 w-[70px] bg-white text-xs border-slate-300 sm:text-sm">
                       <SelectValue placeholder="25" />
                     </SelectTrigger>
                     <SelectContent>
@@ -426,7 +426,7 @@ export default function BaseTable<T>({
                       <SelectItem value="100">100</SelectItem>
                     </SelectContent>
                   </Select>
-                  <span className="text-sm font-medium text-slate-700">Page</span>
+                  <span className="text-xs font-medium text-slate-700 sm:text-sm">Page</span>
                 </div>
               )}
             </div>
@@ -444,14 +444,14 @@ export default function BaseTable<T>({
 
       <div
         ref={tableContainerRef}
-        className={cn('relative overflow-hidden rounded-md border border-slate-200 bg-white shadow-none', containerClassName)}
+        className={cn('relative overflow-x-auto rounded-md border border-slate-200 bg-white text-[11px] shadow-none sm:text-sm', containerClassName)}
       >
         <Table className="w-max min-w-full print:w-full print:table-fixed">
           <TableHeader className={cn('border-b border-gray-200', headerRowClassName)}>
             {headerGroups && headerGroups}
             <TableRow className="hover:bg-transparent border-none">
               {showCheckbox && (
-                <TableHead className={cn("w-[50px] min-w-[50px] max-w-[50px] px-4 py-4 text-center sticky left-0 z-10 border-r border-slate-200 shadow-[4px_0_6px_-4px_rgba(0,0,0,0.05)]", headerRowClassName)}>
+                <TableHead className={cn("sticky left-0 z-10 w-[44px] min-w-[44px] max-w-[44px] border-r border-slate-200 px-3 py-3 text-center shadow-[4px_0_6px_-4px_rgba(0,0,0,0.05)] sm:w-[50px] sm:min-w-[50px] sm:max-w-[50px] sm:px-4 sm:py-4", headerRowClassName)}>
                   <Checkbox
                     checked={sortedData.length > 0 && sortedData.every((item) => selectedIds?.has(getRowIdInternal(item)))}
                     onCheckedChange={handleToggleAll}
@@ -481,7 +481,7 @@ export default function BaseTable<T>({
                     key={col.id || idx}
                     onClick={() => isSortable && handleSort(sortKey)}
                     className={cn(
-                      'px-4 py-4 print:px-2 print:py-2 text-xs print:text-[10px] font-semibold uppercase text-slate-500 whitespace-nowrap print:whitespace-normal group',
+                      'px-3 py-3 text-[11px] font-semibold uppercase text-slate-500 whitespace-nowrap print:px-2 print:py-2 print:text-[10px] print:whitespace-normal sm:px-4 sm:py-4 sm:text-xs group',
                       isSortable && 'cursor-pointer select-none',
                       isStickyLeft && cn(
                         'sticky z-10 border-r border-slate-200',
@@ -563,8 +563,8 @@ export default function BaseTable<T>({
                         <div className="rounded-full bg-slate-50 p-4 mb-2">
                           <Search className="h-8 w-8 text-slate-400" />
                         </div>
-                        <p className="text-base font-semibold text-slate-900">Tidak ada data ditemukan</p>
-                        <p className="text-sm text-slate-500">Belum ada data atau coba gunakan kata kunci pencarian lain.</p>
+                        <p className="text-sm font-semibold text-slate-900 sm:text-base">Tidak ada data ditemukan</p>
+                        <p className="text-xs text-slate-500 sm:text-sm">Belum ada data atau coba gunakan kata kunci pencarian lain.</p>
                       </>
                     )}
                   </div>
@@ -587,7 +587,7 @@ export default function BaseTable<T>({
                   >
                     {showCheckbox && (
                       <TableCell className={cn(
-                        "w-[50px] min-w-[50px] max-w-[50px] px-4 py-4 text-center sticky left-0 z-10 border-r border-slate-200 shadow-[4px_0_6px_-4px_rgba(0,0,0,0.05)]",
+                        "sticky left-0 z-10 w-[44px] min-w-[44px] max-w-[44px] border-r border-slate-200 px-3 py-3 text-center shadow-[4px_0_6px_-4px_rgba(0,0,0,0.05)] sm:w-[50px] sm:min-w-[50px] sm:max-w-[50px] sm:px-4 sm:py-4",
                         markClasses.cell
                       )}>
                         <Checkbox
@@ -614,7 +614,7 @@ export default function BaseTable<T>({
                         <TableCell
                           key={col.id || colIdx}
                           className={cn(
-                            'px-4 py-4 print:px-2 print:py-2 text-sm print:text-[10px] text-slate-700 transition-colors',
+                      'px-2.5 py-2.5 text-[11px] text-slate-700 transition-colors print:px-2 print:py-2 print:text-[10px] sm:px-4 sm:py-4 sm:text-sm',
                             isStickyLeft && cn(
                               'sticky z-10 border-r border-slate-200',
                               isLastStickyLeft && 'shadow-[4px_0_6px_-4px_rgba(0,0,0,0.05)]'
@@ -645,13 +645,13 @@ export default function BaseTable<T>({
 
       {/* Pagination */}
       {onPageChange && sortedData.length > 0 && (
-        <div className="flex flex-col gap-4 text-sm text-slate-500 lg:flex-row lg:items-center lg:justify-between py-2 no-print">
+        <div className="flex flex-col gap-4 py-2 text-xs text-slate-500 sm:text-sm lg:flex-row lg:items-center lg:justify-between no-print">
           <p>Showing {startIndex}-{endIndex} of {totalEntries} data</p>
           <div className="flex flex-wrap items-center justify-end gap-1 text-slate-800">
             <Button
               variant="ghost"
               size="sm"
-              className="h-9 rounded-md px-2 text-sm font-medium hover:bg-transparent disabled:text-slate-300"
+              className="h-8 rounded-md px-2 text-xs font-medium hover:bg-transparent disabled:text-slate-300 sm:h-9 sm:text-sm"
               disabled={currentPage <= 1}
               onClick={() => handlePageChange(currentPage - 1)}
             >
@@ -662,7 +662,7 @@ export default function BaseTable<T>({
             <Button
               variant="ghost"
               size="sm"
-              className="h-9 rounded-md px-2 text-sm font-medium hover:bg-transparent disabled:text-slate-300"
+              className="h-8 rounded-md px-2 text-xs font-medium hover:bg-transparent disabled:text-slate-300 sm:h-9 sm:text-sm"
               disabled={currentPage >= totalPages}
               onClick={() => handlePageChange(currentPage + 1)}
             >

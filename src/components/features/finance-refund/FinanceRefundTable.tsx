@@ -1,6 +1,5 @@
 import { useMemo, useState } from 'react';
 import type { FinanceRefundRecord, RefundTransactionType } from '@/@types/finance-refund.types';
-import type { PaginationMeta } from '@/@types/pagination.types';
 import FinanceRefundApprovalModal from '@/components/features/finance-refund/FinanceRefundApprovalModal';
 import { RefundStatusBadge } from '@/components/features/refund/RefundStatusBadge';
 import { Button } from '@/components/ui/button';
@@ -90,11 +89,8 @@ const DeleteFinanceRefundAction = ({ item, transactionType }: { item: FinanceRef
 
 interface FinanceRefundTableProps {
   data: FinanceRefundRecord[];
-  meta?: PaginationMeta & { from?: number; to?: number };
-  page: number;
   isLoading?: boolean;
   transactionType: RefundTransactionType;
-  onPageChange: (page: number) => void;
   canEdit?: boolean;
   canDelete?: boolean;
 }
@@ -106,7 +102,7 @@ const formatDate = (value: string) => {
   return date.toLocaleDateString('id-ID');
 };
 
-export default function FinanceRefundTable({ data, meta, page, isLoading = false, transactionType, onPageChange, canEdit, canDelete }: FinanceRefundTableProps) {
+export default function FinanceRefundTable({ data, isLoading = false, transactionType, canEdit, canDelete }: FinanceRefundTableProps) {
   const [selectedRefund, setSelectedRefund] = useState<FinanceRefundRecord | null>(null);
   const router = useRouter();
   const { slug } = router.query;
@@ -230,13 +226,6 @@ export default function FinanceRefundTable({ data, meta, page, isLoading = false
         loading={isLoading}
         defaultSort={{ key: 'refundDate', direction: 'desc' }}
         onRowClick={(item) => setSelectedRefund(item)}
-        meta={meta ? {
-          currentPage: page,
-          perPage: meta.perPage || 10,
-          lastPage: meta.lastPage || 1,
-          total: meta.total || data.length,
-        } : undefined}
-        onPageChange={onPageChange}
       />
 
       {selectedRefund ? (

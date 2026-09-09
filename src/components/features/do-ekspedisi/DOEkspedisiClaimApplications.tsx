@@ -27,21 +27,44 @@ const field = (label: string, value: string, placeholder: string, onChange: (val
   </div>
 );
 
-function RelatedSection({ title, icon, onAdd, children, addDisabled = false, addLabel = 'Tambah', helper }: { title: string; icon: React.ReactNode; onAdd: () => void; children: React.ReactNode; addDisabled?: boolean; addLabel?: string; helper?: string }) {
+function RelatedSection({
+  title,
+  description,
+  icon,
+  onAdd,
+  addLabel = 'Tambah',
+  addDisabled = false,
+  helper,
+  children,
+}: {
+  title: string;
+  description?: string | null;
+  icon: React.ReactNode;
+  onAdd?: () => void;
+  addLabel?: string;
+  addDisabled?: boolean;
+  helper?: string | null;
+  children: React.ReactNode;
+}) {
   return (
     <section className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
       <div className="mb-4 flex items-start justify-between gap-3">
         <div>
           <div className="flex items-center gap-3">
-            <div className="rounded-lg bg-orange-100 p-2 text-orange-700">{icon}</div>
-            <h2 className="font-semibold text-slate-950">{title}</h2>
+            <div className="rounded-md bg-orange-100 p-2 text-orange-700">{icon}</div>
+            <div>
+              <h2 className="font-semibold text-slate-950">{title}</h2>
+              {description && <p className="text-xs text-slate-500">{description}</p>}
+            </div>
           </div>
           {helper && <p className="ml-12 mt-1 text-xs text-slate-500">{helper}</p>}
         </div>
-        <Button size="sm" onClick={onAdd} disabled={addDisabled}>
-          <Plus className="mr-2 h-4 w-4" />
-          {addLabel}
-        </Button>
+        {onAdd && (
+          <Button size="sm" onClick={onAdd} disabled={addDisabled}>
+            <Plus className="mr-2 h-4 w-4" />
+            {addLabel}
+          </Button>
+        )}
       </div>
       {children}
     </section>
@@ -117,21 +140,15 @@ export function DOEkspedisiClaimApplications({ data, onRefresh }: DOEkspedisiCla
       <RelatedSection
         title="Potongan Claim pada UJ"
         icon={<WalletCards />}
+        description={'Claim dari ekspedisi mana pun milik driver yang sama dapat digunakan sebagai potongan UJ.'}
         onAdd={() => setApplyOpen(true)}
         addLabel="Terapkan Claim"
         addDisabled={!canApplyClaims}
-        helper={
-          !canManageClaims
-            ? 'Selesaikan ekspedisi dan pastikan driver terpasang sebelum menerapkan claim.'
-            : data.ujNominal <= 0
-            ? 'UJ driver sudah habis terpotong claim.'
-            : 'Claim dari ekspedisi mana pun milik driver yang sama dapat digunakan sebagai potongan UJ.'
-        }
       >
         <BaseTable
           data={data.driverExpeditionClaims ?? []}
           columns={columns}
-          containerClassName="rounded-lg border"
+          containerClassName="rounded-md border"
           headerRowClassName="bg-rose-50"
         />
       </RelatedSection>
@@ -172,10 +189,10 @@ export function DOEkspedisiClaimApplications({ data, onRefresh }: DOEkspedisiCla
           </Select>
         </div>
         {availableClaims.isSuccess && availableClaims.data?.length === 0 && (
-          <p className="rounded-lg bg-slate-50 p-3 text-sm text-slate-600">Tidak ada claim outstanding untuk driver ini.</p>
+          <p className="rounded-md bg-slate-50 p-3 text-sm text-slate-600">Tidak ada claim outstanding untuk driver ini.</p>
         )}
         {selectedAvailableClaim && (
-          <div className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900">
+          <div className="rounded-md border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900">
             <p>Sisa claim: <strong>{formatCurrency(selectedAvailableClaim.remainingNominal)}</strong></p>
             <p>Sisa UJ tersedia: <strong>{formatCurrency(data.ujNominal)}</strong></p>
           </div>

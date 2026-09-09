@@ -1,4 +1,4 @@
-import { LayoutDashboard, ClipboardList, Archive, Warehouse, Landmark, ListChecks, Shield } from 'lucide-react';
+import { LayoutDashboard, ClipboardList, Archive, Warehouse, Landmark, ListChecks, Shield, Settings, SlidersHorizontal } from 'lucide-react';
 import { MenuItem } from '@/types/menu.types';
 
 export const getGeneralMenus = (slug: string): MenuItem[] => {
@@ -236,6 +236,18 @@ export const getGeneralMenus = (slug: string): MenuItem[] => {
           href: base('/laporan/laporan-buku-besar'),
         },
         {
+          label: 'Laporan Neraca Lajur',
+          href: base('/laporan/laporan-neraca-lajur'),
+        },
+        {
+          label: 'Laporan Laba Rugi',
+          href: base('/laporan/laporan-laba-rugi'),
+        },
+        {
+          label: 'Laporan Neraca',
+          href: base('/laporan/ballance-report'),
+        },
+        {
           label: 'Laporan Pembelian',
           href: base('/laporan/laporan-pembelian'),
         },
@@ -266,13 +278,19 @@ export const getGeneralMenus = (slug: string): MenuItem[] => {
       ],
     },
     {
-      label: 'Manajemen Pengguna',
+      label: 'Manajemen Admin',
       icon: Shield,
       children: [
         {
           label: 'Pengguna',
           href: master('/user'),
         },
+      ],
+    },
+    {
+      label: 'Pengaturan',
+      icon: Settings,
+      children: [
         {
           label: 'Hak Akses',
           href: settings('/roles'),
@@ -280,6 +298,11 @@ export const getGeneralMenus = (slug: string): MenuItem[] => {
         {
           label: 'Izin Akses',
           href: settings('/permissions'),
+        },
+        {
+          label: 'Preferensi',
+          href: settings('/preference'),
+          icon: SlidersHorizontal,
         },
       ],
     },

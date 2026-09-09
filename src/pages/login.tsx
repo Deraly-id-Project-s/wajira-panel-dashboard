@@ -82,7 +82,7 @@ export default function LoginPage() {
       <div className={`flex min-h-screen font-sans ${isCheckingAuth ? 'opacity-0' : 'opacity-100 transition-opacity duration-300'}`}>
         {/* Left Side - Login Form */}
         <div className="flex w-full lg:w-1/2 items-center justify-center bg-white">
-          <div className="flex flex-col items-start bg-white rounded-lg border border-[#E5E5E5] shadow-[0px_1px_3px_rgba(0,0,0,0.1),0px_1px_2px_-1px_rgba(0,0,0,0.1)] p-6 gap-6" style={{ width: '400px' }}>
+          <div className="flex flex-col items-start bg-white rounded-md border border-[#E5E5E5] shadow-[0px_1px_3px_rgba(0,0,0,0.1),0px_1px_2px_-1px_rgba(0,0,0,0.1)] p-6 gap-6" style={{ width: '400px' }}>
             {/* Header */}
             <div className="flex flex-col gap-2 w-full">
               <h1 className="text-[16px] font-semibold leading-6 text-[#0A0A0A]">Masuk ke akun Pengguna</h1>
@@ -109,7 +109,7 @@ export default function LoginPage() {
                   placeholder="Masukkan User ID / Email"
                   value={userId}
                   onChange={(e) => setUserId(e.target.value)}
-                  className="w-full h-[36px] px-3 py-[7.5px] border border-[#E5E5E5] rounded-lg shadow-[0px_1px_2px_rgba(0,0,0,0.05)] text-[14px]"
+                  className="w-full h-[36px] px-3 py-[7.5px] border border-[#E5E5E5] rounded-md shadow-[0px_1px_2px_rgba(0,0,0,0.05)] text-[14px]"
                   required
                 />
               </div>
@@ -131,7 +131,7 @@ export default function LoginPage() {
                     placeholder="Enter your password"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className="w-full h-[36px] px-3 py-[7.5px] pr-10 border border-[#E5E5E5] rounded-lg shadow-[0px_1px_2px_rgba(0,0,0,0.05)] text-[14px]"
+                    className="w-full h-[36px] px-3 py-[7.5px] pr-10 border border-[#E5E5E5] rounded-md shadow-[0px_1px_2px_rgba(0,0,0,0.05)] text-[14px]"
                     required
                   />
                   <button
@@ -147,7 +147,7 @@ export default function LoginPage() {
 
               {/* Login Button */}
               <div className="flex flex-col gap-3 w-full mt-2">
-                <Button type="submit" disabled={isLoading} className="w-full h-[36px] bg-[#B0160D] hover:bg-[#991B1B] text-[#FAFAFA] text-[14px] font-medium rounded-lg disabled:opacity-50 disabled:cursor-not-allowed">
+                <Button type="submit" disabled={isLoading} className="btn-primary">
                   {isLoading ? 'Memuat...' : 'Masuk'}
                 </Button>
               </div>

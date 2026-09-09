@@ -155,7 +155,7 @@ export default function PengeluaranUnitEditTable({ data, onDelete, onCancel }: P
                     <Button variant="ghost" size="sm" className="h-10 px-6 font-medium text-gray-600 hover:text-gray-900 bg-transparent" onClick={onCancel}>
                         Batal
                     </Button>
-                    <Button size="sm" className="h-10 px-5 bg-[#DC2626] hover:bg-red-700 font-medium rounded-lg gap-2 text-white" onClick={() => setConfirmDeleteIds(selected)} disabled={selected.length === 0 || isDeleting}>
+                    <Button size="sm" className="h-10 px-5 bg-[#DC2626] hover:bg-red-700 font-medium rounded-md gap-2 text-white" onClick={() => setConfirmDeleteIds(selected)} disabled={selected.length === 0 || isDeleting}>
                         <Trash size={16} /> Hapus
                     </Button>
                 </div>

@@ -163,7 +163,7 @@ export default function PengeluaranSparepartDetailPage() {
             <Button
               onClick={handleProcessStock}
               disabled={isProcessing}
-              className="bg-emerald-600 hover:bg-emerald-700 text-white font-medium px-5 h-10 rounded-lg shadow-sm flex items-center gap-2 cursor-pointer"
+              className="bg-emerald-600 hover:bg-emerald-700 text-white font-medium px-5 h-10 rounded-md shadow-sm flex items-center gap-2 cursor-pointer"
             >
               {isProcessing ? 'Memproses...' : 'Proses Pengeluaran'}
             </Button>
@@ -181,7 +181,7 @@ export default function PengeluaranSparepartDetailPage() {
                 <h3 className="text-sm font-semibold text-slate-700">Informasi Pengeluaran</h3>
               </div>
               <div className="text-sm text-slate-600 mt-3 space-y-2.5">
-                <div className="grid grid-cols-2 gap-2">
+                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-2">
                   <div>
                     <p className="text-xs text-slate-400 font-medium">No. Pengeluaran</p>
                     <p className="font-semibold text-slate-900">
@@ -252,7 +252,7 @@ export default function PengeluaranSparepartDetailPage() {
               <div className="text-sm text-slate-600 mt-3 space-y-2.5">
                 {sparepartItem ? (
                   <>
-                    <div className="grid grid-cols-2 gap-2">
+                    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-2">
                       <div>
                         <p className="text-xs text-slate-400 font-medium">Kode Sparepart</p>
                         <p className="font-semibold text-slate-900">
@@ -299,7 +299,7 @@ export default function PengeluaranSparepartDetailPage() {
 
                 <div className="flex flex-col gap-1.5 pt-2 border-t border-slate-100">
                   <span className="text-xs text-slate-400 font-medium">Keterangan / Catatan Transaksi</span>
-                  <p className="text-slate-900 p-2.5 rounded-lg bg-slate-50 w-full min-h-[60px] text-xs leading-relaxed">
+                  <p className="text-slate-900 p-2.5 rounded-md bg-slate-50 w-full min-h-[60px] text-xs leading-relaxed">
                     {detailData?.description || detailData?.keterangan || sparepartTx?.note || '-'}
                   </p>
                 </div>
@@ -326,7 +326,7 @@ export default function PengeluaranSparepartDetailPage() {
                 value={selectedState}
                 onValueChange={(val) => setSelectedState(val as 'draft' | 'process' | 'done')}
               >
-                <SelectTrigger className="w-full bg-white border-slate-200 h-10 rounded-lg">
+                <SelectTrigger className="w-full bg-white border-slate-200 h-10 rounded-md">
                   <SelectValue placeholder="Pilih status" />
                 </SelectTrigger>
                 <SelectContent>
@@ -343,19 +343,19 @@ export default function PengeluaranSparepartDetailPage() {
                 placeholder="Masukkan catatan perubahan status..."
                 value={stateNote}
                 onChange={(e) => setStateNote(e.target.value)}
-                className="w-full min-h-[80px] bg-white border-slate-200 rounded-lg p-2 text-sm focus:outline-none"
+                className="w-full min-h-[80px] bg-white border-slate-200 rounded-md p-2 text-sm focus:outline-none"
               />
             </div>
           </div>
 
           <DialogFooter className="gap-2 sm:gap-0 border-t pt-4">
-            <Button variant="outline" className="rounded-lg" onClick={() => setIsUpdateStateDialogOpen(false)}>
+            <Button variant="outline" className="rounded-md" onClick={() => setIsUpdateStateDialogOpen(false)}>
               Batal
             </Button>
             <Button
               onClick={handleUpdateState}
               disabled={updateStateMutation.isPending}
-              className="rounded-lg px-5 btn-primary-orange!"
+              className="rounded-md px-5 btn-primary-orange!"
             >
               {updateStateMutation.isPending ? 'Menyimpan...' : 'Simpan'}
             </Button>

@@ -1,4 +1,4 @@
-import { SalesItem, SalesLineItem } from '@/components/features/sales/sales.data';
+import { SalesItem, SalesLineItem } from '@/components/features/unit-transaksi/sales/sales.data';
 import type { UnitTransactionFormValues } from '@/scheme/unit-transaction.schema';
 import { UnitTransaction } from '@/@types/unit-transaction.types';
 

@@ -15,6 +15,7 @@ import {
 } from '@/components/ui/select';
 import { useDebouncedValue } from '@/hooks/useDebouncedValue';
 import BaseTable, { ColumnDef } from '@/components/ui/base-table';
+import { SearchPagination } from '@/components/ui/search-pagination';
 import { ReferenceLink } from '@/components/ui/reference-link';
 import { useRouter } from 'next/router';
 import { CopyBox } from '@/components/ui/copy-box';
@@ -106,8 +107,6 @@ export default function StockDetailTab({ perPage, machineNumber: initialMachineN
   }), [companyId, page, itemsPerPage, debouncedSearch, debouncedMachineNumber, debouncedChassisNumber, debouncedColor, stockState, inStock]);
 
   const { data: response, isLoading, isError } = useGetWarehouseStockDetail(params);
-
-  console.log(response?.data)
 
   const rows = useMemo(() => (response?.data as unknown as StockUnit[]) || [], [response?.data]);
 
@@ -336,25 +335,32 @@ export default function StockDetailTab({ perPage, machineNumber: initialMachineN
           <p className="text-sm">Gagal memuat data stock detail</p>
         </div>
       ) : (
-        <BaseTable
-          data={rows}
-          columns={columns}
-          loading={isLoading}
-          searchPlaceholder="Search here..."
-          search={search}
+        <SearchPagination
+          searchValue={search}
           onSearchChange={(val) => {
             setSearch(val);
             setPage(1);
           }}
-          showLimitChange
+          searchPlaceholder="Search here..."
+          searchAriaLabel="Cari unit"
+          page={page}
           perPage={itemsPerPage}
+          total={meta.total}
+          lastPage={meta.lastPage}
+          from={(meta.currentPage - 1) * meta.perPage + 1}
+          to={Math.min(meta.currentPage * meta.perPage, meta.total)}
+          onPageChange={setPage}
           onPerPageChange={(pp) => {
             setItemsPerPage(pp);
             setPage(1);
           }}
-          meta={meta}
-          onPageChange={setPage}
-        />
+        >
+          <BaseTable
+            data={rows}
+            columns={columns}
+            loading={isLoading}
+          />
+        </SearchPagination>
       )}
     </div>
   );

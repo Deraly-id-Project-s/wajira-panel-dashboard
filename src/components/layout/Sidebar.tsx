@@ -1,8 +1,9 @@
 import { ChevronDown, Check, Menu, X, PanelLeftClose, PanelLeftOpen } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
-import { useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useCompany } from '@/contexts/CompanyContext';
 import { Company } from '@/services/company.service';
+import { getPreferences, getPreferenceValue, PreferenceItem, updatePreference } from '@/services/preference.service';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { cn } from '@/lib/utils';
 import { useRouter } from 'next/router';
@@ -13,15 +14,84 @@ import { clearCompanyScopedQueries } from '@/lib/session/query-cache';
 import Image from 'next/image';
 import { AuthService } from '@/features/auth/services/auth.service';
 
+const SIDEBAR_COLLAPSED_PREFERENCE_KEY = 'sidebar_collapsed';
+
+const parseBooleanPreference = (value: unknown, fallback = false) => {
+  if (typeof value === 'boolean') return value;
+  if (typeof value === 'number') return value === 1;
+  if (typeof value === 'string') {
+    return ['1', 'true', 'yes', 'on'].includes(value.toLowerCase());
+  }
+  return fallback;
+};
+
+const readStoredSidebarCollapsed = () => {
+  if (typeof window === 'undefined') return false;
+
+  const config = localStorage.getItem('site_config');
+  if (!config) return false;
+
+  try {
+    const parsed = JSON.parse(config);
+    if (Array.isArray(parsed)) {
+      const item = parsed.find((i: any) => i && i.key === SIDEBAR_COLLAPSED_PREFERENCE_KEY);
+      return item ? parseBooleanPreference(item.value) : false;
+    }
+    if (typeof parsed === 'object' && parsed !== null) {
+      return parseBooleanPreference(parsed[SIDEBAR_COLLAPSED_PREFERENCE_KEY]);
+    }
+  } catch (e) {
+    console.warn(e);
+  }
+
+  return false;
+};
+
+const writeStoredSidebarCollapsed = (collapsed: boolean) => {
+  if (typeof window === 'undefined') return;
+
+  try {
+    const existing = localStorage.getItem('site_config');
+    let configList: Array<{ key: string; value: any }> = [];
+    if (existing) {
+      try {
+        const parsed = JSON.parse(existing);
+        if (Array.isArray(parsed)) {
+          configList = parsed;
+        } else if (typeof parsed === 'object' && parsed !== null) {
+          configList = Object.entries(parsed).map(([key, value]) => ({ key, value }));
+        }
+      } catch (e) {
+        configList = [];
+      }
+    }
+    const existingIndex = configList.findIndex((item) => item && item.key === SIDEBAR_COLLAPSED_PREFERENCE_KEY);
+    if (existingIndex > -1) {
+      configList[existingIndex].value = collapsed;
+    } else {
+      configList.push({ key: SIDEBAR_COLLAPSED_PREFERENCE_KEY, value: collapsed });
+    }
+    localStorage.setItem('site_config', JSON.stringify(configList));
+  } catch (err) {
+    console.warn(err);
+  }
+};
+
 const ensureReportFallbackSidebarMenus = (menus: MenuItem[], slug: string): MenuItem[] => {
   return menus.map((menu) => {
     if (menu.label !== 'Laporan' || !menu.children) return menu;
 
     const journalHref = slug ? `/dashboard/${slug}/laporan/laporan-jurnal` : '/laporan/laporan-jurnal';
     const ledgerHref = slug ? `/dashboard/${slug}/laporan/laporan-buku-besar` : '/laporan/laporan-buku-besar';
+    const balanceColumnHref = slug ? `/dashboard/${slug}/laporan/laporan-neraca-lajur` : '/laporan/laporan-neraca-lajur';
+    const profitLossHref = slug ? `/dashboard/${slug}/laporan/laporan-laba-rugi` : '/laporan/laporan-laba-rugi';
+    const balanceReportHref = slug ? `/dashboard/${slug}/laporan/ballance-report` : '/laporan/ballance-report';
     const children = [...menu.children];
     const hasJournal = menu.children.some((child) => child.href === journalHref || child.label === 'Laporan Jurnal');
     const hasLedger = menu.children.some((child) => child.href === ledgerHref || child.label === 'Laporan Buku Besar');
+    const hasBalanceColumn = menu.children.some((child) => child.href === balanceColumnHref || child.label === 'Laporan Neraca Lajur');
+    const hasProfitLoss = menu.children.some((child) => child.href === profitLossHref || child.label === 'Laporan Laba Rugi');
+    const hasBalanceReport = menu.children.some((child) => child.href === balanceReportHref || child.label === 'Laporan Neraca');
 
     if (!hasJournal) {
       const purchaseIndex = children.findIndex((child) => child.label === 'Laporan Pembelian');
@@ -42,6 +112,49 @@ const ensureReportFallbackSidebarMenus = (menus: MenuItem[], slug: string): Menu
       children.splice(insertIndex, 0, {
         label: 'Laporan Buku Besar',
         href: ledgerHref,
+      });
+    }
+
+    if (!hasBalanceColumn) {
+      const ledgerIndex = children.findIndex((child) => child.label === 'Laporan Buku Besar');
+      const insertIndex = ledgerIndex >= 0 ? ledgerIndex + 1 : children.length;
+
+      children.splice(insertIndex, 0, {
+        label: 'Laporan Neraca Lajur',
+        href: balanceColumnHref,
+      });
+    }
+
+    if (!hasProfitLoss) {
+      const balanceColumnIndex = children.findIndex((child) => child.label === 'Laporan Neraca Lajur');
+      const ledgerIndex = children.findIndex((child) => child.label === 'Laporan Buku Besar');
+      const purchaseIndex = children.findIndex((child) => child.label === 'Laporan Pembelian');
+      const insertIndex = balanceColumnIndex >= 0
+        ? balanceColumnIndex + 1
+        : ledgerIndex >= 0
+          ? ledgerIndex + 1
+          : purchaseIndex >= 0
+            ? purchaseIndex
+            : children.length;
+
+      children.splice(insertIndex, 0, {
+        label: 'Laporan Laba Rugi',
+        href: profitLossHref,
+      });
+    }
+
+    if (!hasBalanceReport) {
+      const profitLossIndex = children.findIndex((child) => child.label === 'Laporan Laba Rugi');
+      const purchaseIndex = children.findIndex((child) => child.label === 'Laporan Pembelian');
+      const insertIndex = profitLossIndex >= 0
+        ? profitLossIndex + 1
+        : purchaseIndex >= 0
+          ? purchaseIndex
+          : children.length;
+
+      children.splice(insertIndex, 0, {
+        label: 'Laporan Neraca',
+        href: balanceReportHref,
       });
     }
 
@@ -115,59 +228,50 @@ export function Sidebar({
   onDesktopCollapsedChange,
 }: SidebarProps = {}) {
   const router = useRouter();
+  const queryClient = useQueryClient();
   const { companyId, companies } = useCompany();
   const [isMobileOpen, setIsMobileOpen] = useState(false);
   const [internalDesktopCollapsed, setInternalDesktopCollapsed] = useState(() => {
-    if (typeof window !== 'undefined') {
-      const config = localStorage.getItem('site_config');
-      if (config) {
-        try {
-          const parsed = JSON.parse(config);
-          if (Array.isArray(parsed)) {
-            const item = parsed.find((i: any) => i && i.key === 'sidebar_collapsed');
-            return item ? !!item.value : false;
-          } else if (typeof parsed === 'object' && parsed !== null) {
-            return !!parsed.sidebar_collapsed;
-          }
-        } catch (e) {
-          console.warn(e);
-        }
-      }
-    }
-    return false;
+    return readStoredSidebarCollapsed();
   });
   const isDesktopCollapsed = controlledDesktopCollapsed ?? internalDesktopCollapsed;
+  const { data: preferences } = useQuery({
+    queryKey: ['settings', 'preference', companyId],
+    queryFn: () => getPreferences(companyId as string),
+    enabled: Boolean(companyId),
+    staleTime: 5 * 60 * 1000,
+    retry: 1,
+    refetchOnWindowFocus: false,
+  });
+  const updatePreferenceMutation = useMutation({
+    mutationFn: (collapsed: boolean) => updatePreference(companyId as string, SIDEBAR_COLLAPSED_PREFERENCE_KEY, collapsed),
+    onSuccess: (updatedPreferences, collapsed) => {
+      queryClient.setQueryData<PreferenceItem[]>(['settings', 'preference', companyId], (current) => {
+        if (updatedPreferences.length > 0) return updatedPreferences;
+
+        const preference = { key: SIDEBAR_COLLAPSED_PREFERENCE_KEY, value: collapsed };
+        if (!current) return [preference];
+
+        const existingIndex = current.findIndex((item) => item.key === SIDEBAR_COLLAPSED_PREFERENCE_KEY);
+        if (existingIndex < 0) return [...current, preference];
+
+        return current.map((item, index) => (
+          index === existingIndex ? preference : item
+        ));
+      });
+    },
+    onError: (error) => {
+      console.warn(error);
+    },
+  });
 
   const setIsDesktopCollapsed = (collapsed: boolean) => {
     if (controlledDesktopCollapsed === undefined) {
       setInternalDesktopCollapsed(collapsed);
-      if (typeof window !== 'undefined') {
-        try {
-          const existing = localStorage.getItem('site_config');
-          let configList: Array<{ key: string; value: any }> = [];
-          if (existing) {
-            try {
-              const parsed = JSON.parse(existing);
-              if (Array.isArray(parsed)) {
-                configList = parsed;
-              } else if (typeof parsed === 'object' && parsed !== null) {
-                configList = Object.entries(parsed).map(([key, value]) => ({ key, value }));
-              }
-            } catch (e) {
-              configList = [];
-            }
-          }
-          const existingIndex = configList.findIndex((item) => item && item.key === 'sidebar_collapsed');
-          if (existingIndex > -1) {
-            configList[existingIndex].value = collapsed;
-          } else {
-            configList.push({ key: 'sidebar_collapsed', value: collapsed });
-          }
-          localStorage.setItem('site_config', JSON.stringify(configList));
-        } catch (err) {
-          console.warn(err);
-        }
-      }
+    }
+    writeStoredSidebarCollapsed(collapsed);
+    if (companyId) {
+      updatePreferenceMutation.mutate(collapsed);
     }
     onDesktopCollapsedChange?.(collapsed);
   };
@@ -182,6 +286,28 @@ export function Sidebar({
     setIsMobileOpen(false);
   }, [router.asPath]);
 
+  useEffect(() => {
+    if (!preferences) return;
+
+    const collapsedPreference = getPreferenceValue(preferences, SIDEBAR_COLLAPSED_PREFERENCE_KEY, undefined);
+    if (collapsedPreference === undefined) return;
+
+    const collapsed = parseBooleanPreference(collapsedPreference);
+    if (collapsed === isDesktopCollapsed) return;
+
+    if (controlledDesktopCollapsed === undefined) {
+      setInternalDesktopCollapsed(collapsed);
+      writeStoredSidebarCollapsed(collapsed);
+      return;
+    }
+
+    onDesktopCollapsedChange?.(collapsed);
+  }, [
+    controlledDesktopCollapsed,
+    isDesktopCollapsed,
+    onDesktopCollapsedChange,
+    preferences,
+  ]);
 
   const sidebarContent = (
     <aside className="flex h-full w-full flex-col border-r border-gray-200 bg-[#F9FAFB]">
@@ -303,6 +429,7 @@ function SidebarNavItem({ item, isCollapsed }: { item: MenuItem; isCollapsed?: b
   };
 
   const isChildActive = item.children?.some(hasActiveChild) || false;
+  const isSelfActive = item.href ? isActiveRoute(item.href, item.exact) : false;
 
   const [open, setOpen] = useState(isChildActive || false);
 
@@ -317,29 +444,51 @@ function SidebarNavItem({ item, isCollapsed }: { item: MenuItem; isCollapsed?: b
     setOpen(!open);
   };
 
+  if (!item.children && item.href) {
+    return (
+      <div className={cn(isCollapsed && "flex justify-center mb-1")}>
+        <Link
+          href={item.href}
+          title={isCollapsed ? item.label : undefined}
+          className={cn(
+            'flex items-center justify-between rounded-md py-[9px] text-sm font-medium transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary',
+            isCollapsed ? 'w-10 h-10 justify-center p-0' : 'w-full px-3',
+            isSelfActive ? 'sidebar-menu-primary' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900',
+          )}
+          aria-current={isSelfActive ? 'page' : undefined}
+        >
+          <div className="flex items-center gap-3">
+            {item.icon && <item.icon className={cn("w-[18px] h-[18px] shrink-0", isSelfActive ? "text-white" : "text-slate-500")} />}
+            {!isCollapsed && <span>{item.label}</span>}
+          </div>
+        </Link>
+      </div>
+    );
+  }
+
   return (
     <div className={cn(isCollapsed && "flex justify-center mb-1")}>
       <button
         onClick={handleToggle}
         title={isCollapsed ? item.label : undefined}
         className={cn(
-          'flex items-center justify-between rounded-md py-[9px] text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary',
-          isCollapsed ? 'w-10 justify-center px-0' : 'w-full px-3',
-          isChildActive ? 'text-gray-600 bg-gray-100' : 'text-gray-600 hover:bg-gray-50',
+          'flex items-center justify-between rounded-md py-[9px] text-sm font-medium transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary cursor-pointer',
+          isCollapsed ? 'w-10 h-10 justify-center p-0' : 'w-full px-3',
+          isChildActive ? 'text-orange-600 bg-orange-50/80 font-semibold' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900',
         )}
       >
         <div className="flex items-center gap-3">
-          {item.icon && <item.icon className="w-[18px] h-[18px] shrink-0" />}
+          {item.icon && <item.icon className={cn("w-[18px] h-[18px] shrink-0", isChildActive ? "text-orange-600" : "text-slate-500")} />}
           {!isCollapsed && <span>{item.label}</span>}
         </div>
         {!isCollapsed && item.children && (
-          <ChevronDown className={cn('h-4 w-4 shrink-0 transition-transform duration-200', open && 'rotate-180 text-gray-900', !open && 'text-gray-400')} />
+          <ChevronDown className={cn('h-4 w-4 shrink-0 transition-transform duration-200', open && 'rotate-180', isChildActive ? 'text-orange-600' : 'text-slate-400')} />
         )}
       </button>
 
       {item.children && open && !isCollapsed && (
         <div className="relative mt-1 ml-[22px] space-y-1">
-          <div className="absolute left-0 top-0 bottom-0 w-px bg-gray-200" />
+          <div className="absolute left-0 top-0 bottom-0 w-px bg-slate-200" />
 
           {item.children.map((child, idx) => (
             <SidebarSubNavItem
@@ -380,11 +529,10 @@ function SidebarSubNavItem({
         href={item.href || '#'}
         className={cn(
           'group relative ml-1 block rounded-md pl-3 pr-2 py-2 text-sm transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary',
-          active ? 'bg-red-100 text-gray-600 font-[500]' : 'text-gray-600 hover:bg-red-100 hover:text-red-900',
+          active ? 'sidebar-menu-primary' : 'text-slate-600 hover:bg-orange-50/60 hover:text-orange-600',
         )}
         aria-current={active ? 'page' : undefined}
       >
-        {active && <div className="absolute left-0 top-0 h-full w-[4px] rounded-l-lg transform translate-x-[1px] bg-orange-300 transition-transform duration-300 animate-in slide-in-from-left-1" />}
         {item.label}
       </Link>
     );
@@ -395,17 +543,17 @@ function SidebarSubNavItem({
       <button
         onClick={() => setOpen(!open)}
         className={cn(
-          'flex w-full items-center justify-between rounded-md pl-3 pr-2 py-2 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary',
-          isSubChildActive ? 'text-gray-600' : 'text-gray-600 hover:bg-gray-100',
+          'flex w-full items-center justify-between rounded-md pl-3 pr-2 py-2 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary cursor-pointer',
+          isSubChildActive ? 'text-orange-600 font-semibold' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900',
         )}
       >
         <span>{item.label}</span>
-        <ChevronDown className={cn('h-3.5 w-3.5 transition-transform duration-200', open && 'rotate-180 text-gray-900', !open && 'text-gray-500')} />
+        <ChevronDown className={cn('h-3.5 w-3.5 transition-transform duration-200', open && 'rotate-180', isSubChildActive ? 'text-orange-600' : 'text-slate-400')} />
       </button>
 
       {open && (
         <div className="relative mt-1 ml-3 space-y-1">
-          <div className="absolute left-0 top-0 bottom-0 w-px bg-gray-200" />
+          <div className="absolute left-0 top-0 bottom-0 w-px bg-slate-200" />
           {item.children.map((subChild, idx) => {
             const active = isActiveRoute(subChild.href, subChild.exact);
             return (
@@ -414,11 +562,10 @@ function SidebarSubNavItem({
                 href={subChild.href || '#'}
                 className={cn(
                   'group relative ml-2 block rounded-md pl-3 pr-2 py-2 text-sm transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary',
-                  active ? 'bg-[#E5E7EB] text-gray-600 font-[500]' : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900',
+                  active ? 'sidebar-menu-primary' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900',
                 )}
                 aria-current={active ? 'page' : undefined}
               >
-                {active && <div className="absolute left-0 top-0 h-full w-[4px] rounded-l-lg transform translate-x-[1px] bg-orange-300 transition-transform duration-300 animate-in slide-in-from-left-1" />}
                 {subChild.label}
               </Link>
             );
