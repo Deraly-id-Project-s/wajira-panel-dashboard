@@ -35,6 +35,7 @@ import {
   useBalanceReport,
   useBalanceReportCashOptions,
   useCreateBalanceReportCash,
+  useDeleteBalanceReportCash,
   useUpdateBalanceReportCash,
   useUpdateBalanceReportTemplate,
 } from '@/hooks/report/useBalanceReport';
@@ -179,8 +180,19 @@ const getLineAmount = (line: BalanceReportAccountLine) =>
 const getLineCurrency = (line: BalanceReportAccountLine): 'idr' | 'usd' =>
   String(line.type ?? 'IDR').toUpperCase() === 'USD' ? 'usd' : 'idr';
 
-const getCurrencyKey = (value: unknown): CurrencyKey =>
-  String(value ?? 'idr').toLowerCase() === 'usd' ? 'usd' : 'idr';
+const getCurrencyKey = (value: unknown): CurrencyKey => {
+  if (!value) return 'idr';
+  if (typeof value === 'object') {
+    const obj = value as any;
+    const rawCurrency = String(obj.currency_type ?? obj.type ?? '').toLowerCase();
+    if (rawCurrency === 'usd') return 'usd';
+    const code = String(obj.code ?? '').toLowerCase();
+    const name = String(obj.cash_name ?? obj.name ?? '').toLowerCase();
+    if (code.includes('usd') || name.includes('usd')) return 'usd';
+    return 'idr';
+  }
+  return String(value).toLowerCase() === 'usd' ? 'usd' : 'idr';
+};
 
 const getMoneyInputCurrency = (currency: CurrencyKey): 'IDR' | 'USD' =>
   currency === 'usd' ? 'USD' : 'IDR';
@@ -399,12 +411,15 @@ function CashManagement({
   cashForms,
   cashOptions,
   usedCashIds,
+  companyCashes,
   createPending,
   updatePending,
+  deletePending,
   onChange,
   onAdd,
   onRemoveDraft,
   onSave,
+  onDelete,
 }: {
   cashForms: CashFormState[];
   cashOptions: Array<{
@@ -413,18 +428,22 @@ function CashManagement({
     code: string;
     amount: number | string;
     currency_type?: 'idr' | 'usd' | string | null;
+    type?: string | null;
   }>;
   usedCashIds: Set<number>;
+  companyCashes?: BalanceReportCash[];
   createPending: boolean;
   updatePending: boolean;
+  deletePending: boolean;
   onChange: (index: number, value: CashFormState) => void;
   onAdd: () => void;
   onRemoveDraft: (index: number) => void;
   onSave: (form: CashFormState) => void;
+  onDelete: (id: number) => void;
 }) {
   const cashOptionsForSelect = useMemo(
     () => cashOptions.map((cash) => {
-      const currency = getCurrencyKey(cash.currency_type);
+      const currency = getCurrencyKey(cash);
 
       return {
         value: String(cash.id),
@@ -436,8 +455,16 @@ function CashManagement({
   );
 
   const getCashFormCurrency = (cashId: number | null): CurrencyKey => {
+    if (!cashId) return 'idr';
     const selectedCash = cashOptions.find((cash) => Number(cash.id) === Number(cashId));
-    return getCurrencyKey(selectedCash?.currency_type);
+    if (selectedCash) {
+      return getCurrencyKey(selectedCash);
+    }
+    const companyCash = companyCashes?.find((c) => Number(c.cash_id) === Number(cashId));
+    if (companyCash?.cash) {
+      return getCurrencyKey(companyCash.cash);
+    }
+    return 'idr';
   };
 
   return (
@@ -454,58 +481,68 @@ function CashManagement({
       </div>
 
       <div className="space-y-2">
-        {cashForms.map((form, index) => (
-          <div key={form.id ?? `new-${index}`} className="grid gap-2 md:grid-cols-[1fr_180px_auto_auto]">
-            <SearchableSelect
-              value={form.cash_id ? String(form.cash_id) : EMPTY_VALUE}
-              onChange={(nextValue) => {
-                onChange(index, {
-                  ...form,
-                  cash_id: nextValue === EMPTY_VALUE ? null : Number(nextValue),
-                });
-              }}
-              options={cashOptionsForSelect}
-              placeholder="Pilih kas"
-              searchPlaceholder="Cari kas..."
-              emptyText="Kas tidak ditemukan."
-              disabled={Boolean(form.id)}
-              disabledValues={Array.from(usedCashIds)
-                .filter((cashId) => cashId !== form.cash_id)
-                .map(String)}
-              className="h-10 rounded-md border-slate-200 bg-white px-3 text-sm shadow-none focus-visible:ring-slate-300"
-            />
+        {cashForms.map((form, index) => {
+          const currencyKey = getCashFormCurrency(form.cash_id);
 
-            <MoneyInput
-              value={form.value}
-              onChangeValue={(nextValue) => onChange(index, { ...form, value: nextValue })}
-              currency={getMoneyInputCurrency(getCashFormCurrency(form.cash_id))}
-              placeholder="Nominal"
-              className="h-9 bg-white"
-            />
+          return (
+            <div key={form.id ?? `new-${index}`} className="grid gap-2 md:grid-cols-[1fr_180px_auto_auto]">
+              <SearchableSelect
+                value={form.cash_id ? String(form.cash_id) : EMPTY_VALUE}
+                onChange={(nextValue) => {
+                  onChange(index, {
+                    ...form,
+                    cash_id: nextValue === EMPTY_VALUE ? null : Number(nextValue),
+                  });
+                }}
+                options={cashOptionsForSelect}
+                placeholder="Pilih kas"
+                searchPlaceholder="Cari kas..."
+                emptyText="Kas tidak ditemukan."
+                disabled={Boolean(form.id)}
+                disabledValues={Array.from(usedCashIds)
+                  .filter((cashId) => cashId !== form.cash_id)
+                  .map(String)}
+                className="h-10 rounded-md border-slate-200 bg-white px-3 text-sm shadow-none focus-visible:ring-slate-300"
+              />
 
-            <Button
-              type="button"
-              size="sm"
-              onClick={() => onSave(form)}
-              disabled={!form.cash_id || createPending || updatePending}
-              className="h-9"
-            >
-              <Save className="h-4 w-4" />
-              Simpan
-            </Button>
+              <MoneyInput
+                value={form.value}
+                onChangeValue={(nextValue) => onChange(index, { ...form, value: nextValue })}
+                currency={getMoneyInputCurrency(currencyKey)}
+                placeholder="Nominal"
+                className="h-9 bg-white"
+              />
 
-            <Button
-              type="button"
-              size="icon"
-              aria-label="Hapus baris kas"
-              onClick={() => onRemoveDraft(index)}
-              className="btn-outline! h-9 px-2"
-              disabled={Boolean(form.id)}
-            >
-              <Trash2 className="h-4 w-4" />
-            </Button>
-          </div>
-        ))}
+              <Button
+                type="button"
+                size="sm"
+                onClick={() => onSave(form)}
+                disabled={!form.cash_id || createPending || updatePending || deletePending}
+                className="h-9"
+              >
+                <Save className="h-4 w-4" />
+                Simpan
+              </Button>
+
+              <Button
+                type="button"
+                size="icon"
+                aria-label="Hapus baris kas"
+                onClick={() => {
+                  if (form.id) {
+                    onDelete(form.id);
+                  } else {
+                    onRemoveDraft(index);
+                  }
+                }}
+                className="btn-outline! h-9 px-2 text-rose-600 hover:text-rose-700 hover:bg-rose-50"
+                disabled={deletePending || createPending || updatePending}
+              >
+                <Trash2 className="h-4 w-4" />
+              </Button>
+            </div>
+          );
+        })}
 
         {cashForms.length === 0 && (
           <div className="rounded-md border border-dashed border-slate-200 px-3 py-6 text-center text-sm text-slate-500">
@@ -578,6 +615,7 @@ export default function LaporanNeracaPage() {
   const updateTemplateMutation = useUpdateBalanceReportTemplate(resolvedCompanyId);
   const createCashMutation = useCreateBalanceReportCash(resolvedCompanyId);
   const updateCashMutation = useUpdateBalanceReportCash(resolvedCompanyId);
+  const deleteCashMutation = useDeleteBalanceReportCash(resolvedCompanyId);
 
   const accountQuery = useAccounts({
     page: 1,
@@ -755,6 +793,16 @@ export default function LaporanNeracaPage() {
     }
   };
 
+  const handleDeleteCash = async (id: number) => {
+    if (!resolvedCompanyId) return;
+    try {
+      await deleteCashMutation.mutateAsync(id);
+      toast.success('Data kas Laporan Neraca berhasil dihapus.');
+    } catch (error) {
+      toast.error((error as Error)?.message || 'Gagal menghapus data kas.');
+    }
+  };
+
   const isLoading = reportQuery.isLoading || accountQuery.isLoading || cashOptionsQuery.isLoading;
 
   return (
@@ -868,8 +916,10 @@ export default function LaporanNeracaPage() {
                 cashForms={cashForms}
                 cashOptions={cashOptionsQuery.data ?? []}
                 usedCashIds={usedCashIds}
+                companyCashes={reportData?.company_cashes}
                 createPending={createCashMutation.isPending}
                 updatePending={updateCashMutation.isPending}
+                deletePending={deleteCashMutation.isPending}
                 onAdd={() => setCashForms((current) => [...current, { cash_id: null, value: 0 }])}
                 onChange={(index, value) => {
                   setCashForms((current) => current.map((item, itemIndex) => (itemIndex === index ? value : item)));
@@ -878,6 +928,7 @@ export default function LaporanNeracaPage() {
                   setCashForms((current) => current.filter((item, itemIndex) => item.id || itemIndex !== index));
                 }}
                 onSave={(form) => void handleSaveCash(form)}
+                onDelete={(id) => void handleDeleteCash(id)}
               />
 
               <section className="border-t border-slate-200 px-4 py-4">
@@ -897,20 +948,23 @@ export default function LaporanNeracaPage() {
                     ) : (
                       cashRows
                         .filter((row) => !searchKeyword || `${row.cash_code ?? ''} ${row.cash_name}`.toLowerCase().includes(searchKeyword))
-                        .map((row) => (
-                          <TableRow key={row.id} className="hover:bg-slate-50">
-                            <TableCell className="text-slate-700">{row.cash_code ? `${row.cash_code} - ${row.cash_name}` : row.cash_name}</TableCell>
-                            <TableCell className={cn(
-                              'text-right font-medium',
-                              String(row.type ?? 'IDR').toUpperCase() === 'USD' ? 'text-sky-700' : 'text-slate-900',
-                            )}>
-                              {currenciesFormat(
-                                String(row.type ?? 'IDR').toUpperCase() === 'USD' ? 'usd' : 'idr',
-                                toNumber(row.value),
-                              )}
-                            </TableCell>
-                          </TableRow>
-                        ))
+                        .map((row) => {
+                          const currency = String(row.type ?? row.currency_type ?? 'IDR').toUpperCase() === 'USD' ? 'usd' : 'idr';
+                          return (
+                            <TableRow key={row.id} className="hover:bg-slate-50">
+                              <TableCell className="text-slate-700">{row.cash_code ? `${row.cash_code} - ${row.cash_name}` : row.cash_name}</TableCell>
+                              <TableCell className={cn(
+                                'text-right font-medium',
+                                currency === 'usd' ? 'text-sky-700' : 'text-slate-900',
+                              )}>
+                                {currenciesFormat(
+                                  currency,
+                                  toNumber(row.value),
+                                )}
+                              </TableCell>
+                            </TableRow>
+                          );
+                        })
                     )}
                   </TableBody>
                 </Table>

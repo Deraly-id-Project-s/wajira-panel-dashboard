@@ -6,6 +6,7 @@ import type {
 } from '@/@types/balance-report.types';
 import {
   createBalanceReportCash,
+  deleteBalanceReportCash,
   getBalanceReport,
   getBalanceReportCashOptions,
   updateBalanceReportCash,
@@ -83,6 +84,19 @@ export const useUpdateBalanceReportCash = (
   return useMutation({
     mutationFn: ({ id, payload }: { id: string | number; payload: BalanceReportCashPayload }) =>
       updateBalanceReportCash(companyId!, id, payload),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: balanceReportKeys.byCompany(companyId) });
+    },
+  });
+};
+
+export const useDeleteBalanceReportCash = (
+  companyId: string | number | null | undefined,
+) => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (id: string | number) => deleteBalanceReportCash(companyId!, id),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: balanceReportKeys.byCompany(companyId) });
     },

@@ -61,6 +61,17 @@ export const updateBalanceReportCash = async (
   return response.data;
 };
 
+export const deleteBalanceReportCash = async (
+  companyId: string | number,
+  cashId: string | number,
+): Promise<BalanceReportResponse> => {
+  const response = await apiClient.delete<BalanceReportResponse>(
+    `${basePath}/${companyId}/cash/${cashId}`,
+  );
+
+  return response.data;
+};
+
 export const getBalanceReportCashOptions = async (
   companyId: string | number,
 ): Promise<Kas[]> => {

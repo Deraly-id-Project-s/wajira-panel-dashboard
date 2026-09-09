@@ -239,7 +239,7 @@ function BalanceSide({
               {cashRows.length === 0 ? (
                 <EmptyRow />
               ) : cashRows.map((row, index) => {
-                const currency = getCurrency(row.type);
+                const currency = getCurrency(row.type ?? row.currency_type);
                 const amount = toNumber(row.value);
                 return (
                   <tr key={row.id ?? index} className={index % 2 === 1 ? 'bg-slate-50/60' : 'bg-white'}>
