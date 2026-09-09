@@ -230,7 +230,7 @@ export default function StockSparepartPage() {
                   setSearch(e.target.value);
                   setHookPage(1);
                 }}
-                className="pl-9 h-10 w-full border-gray-300 bg-white text-gray-900 rounded-lg shadow-sm"
+                className="pl-9 h-10 w-full border-gray-300 bg-white text-gray-900 rounded-md shadow-sm"
               />
             </div>
 
@@ -243,7 +243,7 @@ export default function StockSparepartPage() {
                   setHookPage(1);
                 }}
               >
-                <SelectTrigger className="h-10 w-[180px] border-gray-300 bg-white text-gray-900 rounded-lg shadow-sm">
+                <SelectTrigger className="h-10 w-[180px] border-gray-300 bg-white text-gray-900 rounded-md shadow-sm">
                   <SelectValue placeholder="Semua Ketersediaan" />
                 </SelectTrigger>
                 <SelectContent>
@@ -261,7 +261,7 @@ export default function StockSparepartPage() {
                   setHookPage(1);
                 }}
               >
-                <SelectTrigger className="h-10 w-[180px] border-gray-300 bg-white text-gray-900 rounded-lg shadow-sm">
+                <SelectTrigger className="h-10 w-[180px] border-gray-300 bg-white text-gray-900 rounded-md shadow-sm">
                   <SelectValue placeholder="Semua Status" />
                 </SelectTrigger>
                 <SelectContent>
@@ -274,7 +274,7 @@ export default function StockSparepartPage() {
 
               <Dialog open={isFilterModalOpen} onOpenChange={setIsFilterModalOpen}>
                 <DialogTrigger asChild>
-                  <Button variant="outline" className="h-10 border-gray-300 bg-white hover:bg-slate-50 gap-2 rounded-lg text-slate-700 shadow-sm cursor-pointer">
+                  <Button variant="outline" className="h-10 border-gray-300 bg-white hover:bg-slate-50 gap-2 rounded-md text-slate-700 shadow-sm cursor-pointer">
                     <SlidersHorizontal className="h-4 w-4 text-slate-500" /> Filter Lanjutan
                   </Button>
                 </DialogTrigger>
@@ -291,7 +291,7 @@ export default function StockSparepartPage() {
                       <div className="space-y-1.5">
                         <label className="text-xs font-semibold text-slate-700">Tampilkan Data</label>
                         <Select value={tempPerPage} onValueChange={setTempPerPage}>
-                          <SelectTrigger className="w-full h-10 border-gray-300 bg-white text-gray-900 rounded-lg">
+                          <SelectTrigger className="w-full h-10 border-gray-300 bg-white text-gray-900 rounded-md">
                             <SelectValue placeholder="Jumlah Baris" />
                           </SelectTrigger>
                           <SelectContent>
@@ -306,7 +306,7 @@ export default function StockSparepartPage() {
                       <div className="space-y-1.5">
                         <label className="text-xs font-semibold text-slate-700">Ketersediaan Stok</label>
                         <Select value={tempInStock} onValueChange={setTempInStock}>
-                          <SelectTrigger className="w-full h-10 border-gray-300 bg-white text-gray-900 rounded-lg">
+                          <SelectTrigger className="w-full h-10 border-gray-300 bg-white text-gray-900 rounded-md">
                             <SelectValue placeholder="Ketersediaan" />
                           </SelectTrigger>
                           <SelectContent>
@@ -322,7 +322,7 @@ export default function StockSparepartPage() {
                       <div className="space-y-1.5">
                         <label className="text-xs font-semibold text-slate-700">Kondisi Stok</label>
                         <Select value={tempStockState} onValueChange={setTempStockState}>
-                          <SelectTrigger className="w-full h-10 border-gray-300 bg-white text-gray-900 rounded-lg">
+                          <SelectTrigger className="w-full h-10 border-gray-300 bg-white text-gray-900 rounded-md">
                             <SelectValue placeholder="Kondisi Stok" />
                           </SelectTrigger>
                           <SelectContent>
@@ -337,7 +337,7 @@ export default function StockSparepartPage() {
                       <div className="space-y-1.5">
                         <label className="text-xs font-semibold text-slate-700">Tipe Aktivitas</label>
                         <Select value={tempActivityType} onValueChange={setTempActivityType}>
-                          <SelectTrigger className="w-full h-10 border-gray-300 bg-white text-gray-900 rounded-lg">
+                          <SelectTrigger className="w-full h-10 border-gray-300 bg-white text-gray-900 rounded-md">
                             <SelectValue placeholder="Tipe Aktivitas" />
                           </SelectTrigger>
                           <SelectContent>
@@ -352,7 +352,7 @@ export default function StockSparepartPage() {
                     <div className="space-y-1.5">
                       <label className="text-xs font-semibold text-slate-700">Spesifikasi Outstanding</label>
                       <Select value={tempSpecified} onValueChange={setTempSpecified}>
-                        <SelectTrigger className="w-full h-10 border-gray-300 bg-white text-gray-900 rounded-lg">
+                        <SelectTrigger className="w-full h-10 border-gray-300 bg-white text-gray-900 rounded-md">
                           <SelectValue placeholder="Pilih Spesifikasi" />
                         </SelectTrigger>
                         <SelectContent>
@@ -364,14 +364,14 @@ export default function StockSparepartPage() {
                   </div>
 
                   <DialogFooter className="gap-2 sm:gap-0 border-t pt-4">
-                    <Button variant="ghost" className="rounded-lg text-rose-600 hover:text-rose-800 hover:bg-rose-50 cursor-pointer" onClick={handleResetFilters}>
+                    <Button variant="ghost" className="rounded-md text-rose-600 hover:text-rose-800 hover:bg-rose-50 cursor-pointer" onClick={handleResetFilters}>
                       Reset Filter
                     </Button>
                     <div className="flex gap-2">
-                      <Button variant="outline" className="rounded-lg cursor-pointer" onClick={() => setIsFilterModalOpen(false)}>
+                      <Button variant="outline" className="rounded-md cursor-pointer" onClick={() => setIsFilterModalOpen(false)}>
                         Batal
                       </Button>
-                      <Button onClick={handleApplyFilters} className="rounded-lg px-5 cursor-pointer btn-primary-orange!">
+                      <Button onClick={handleApplyFilters} className="rounded-md px-5 cursor-pointer btn-primary-orange!">
                         Terapkan
                       </Button>
                     </div>

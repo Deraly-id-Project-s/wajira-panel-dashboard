@@ -277,7 +277,7 @@ function AccountSelect({
       placeholder={placeholderText}
       searchPlaceholder={searchPlaceholderText}
       emptyText="Akun tidak ditemukan."
-      className="h-10 rounded-lg border-slate-200 bg-white px-3 text-sm shadow-none focus-visible:ring-slate-300"
+      className="h-10 rounded-md border-slate-200 bg-white px-3 text-sm shadow-none focus-visible:ring-slate-300"
     />
   );
 }
@@ -472,7 +472,7 @@ function CashManagement({
               disabledValues={Array.from(usedCashIds)
                 .filter((cashId) => cashId !== form.cash_id)
                 .map(String)}
-              className="h-10 rounded-lg border-slate-200 bg-white px-3 text-sm shadow-none focus-visible:ring-slate-300"
+              className="h-10 rounded-md border-slate-200 bg-white px-3 text-sm shadow-none focus-visible:ring-slate-300"
             />
 
             <MoneyInput

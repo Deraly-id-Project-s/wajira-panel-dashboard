@@ -65,7 +65,7 @@ export function UnitTransactionTrendChart({ startDate, endDate, companyId }: Pro
   return <Card className="rounded-md border border-slate-200 bg-white p-7 shadow-sm">
     <CardHeader className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-100 p-0 pb-6">
       <div className="flex items-center gap-3"><div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-50 text-blue-600"><TrendingUp className="h-5 w-5" /></div><div><CardTitle className="text-[17px] font-bold text-slate-900">Trend Jual Beli Produk</CardTitle><p className="mt-0.5 text-xs text-slate-500">Tren transaksi unit type dan sparepart</p></div></div>
-      <div className="rounded-lg border border-slate-100 bg-slate-50 px-3 py-1.5 text-xs font-semibold text-slate-500">{periodLabel(startDate, endDate)}</div>
+      <div className="rounded-md border border-slate-100 bg-slate-50 px-3 py-1.5 text-xs font-semibold text-slate-500">{periodLabel(startDate, endDate)}</div>
     </CardHeader>
     <CardContent className="space-y-6 p-0 pt-6">
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2"><Summary icon={FileUp} label="Total Penjualan" value={Object.entries(totals).filter(([key]) => key.endsWith('_sales')).reduce((sum, [, value]) => sum + value, 0)} color="emerald" /><Summary icon={FileDown} label="Total Pembelian" value={Object.entries(totals).filter(([key]) => key.endsWith('_purchase')).reduce((sum, [, value]) => sum + value, 0)} color="blue" /></div>
@@ -77,5 +77,5 @@ export function UnitTransactionTrendChart({ startDate, endDate, companyId }: Pro
 
 function Summary({ icon: Icon, label, value, color }: { icon: typeof FileUp; label: string; value: number; color: 'emerald' | 'blue' }) {
   const colorClass = color === 'emerald' ? 'bg-emerald-100 text-emerald-700' : 'bg-blue-100 text-blue-700';
-  return <div className="flex items-center gap-3 rounded-xl border border-slate-100 bg-slate-50/70 p-3.5"><div className={`flex h-9 w-9 items-center justify-center rounded-lg ${colorClass}`}><Icon className="h-4 w-4" /></div><div><p className="text-[11px] font-medium uppercase tracking-wider text-slate-500">{label}</p><p className="text-base font-bold text-slate-900">{value.toLocaleString('id-ID')} <span className="text-xs font-normal text-slate-500">transaksi</span></p></div></div>;
+  return <div className="flex items-center gap-3 rounded-xl border border-slate-100 bg-slate-50/70 p-3.5"><div className={`flex h-9 w-9 items-center justify-center rounded-md ${colorClass}`}><Icon className="h-4 w-4" /></div><div><p className="text-[11px] font-medium uppercase tracking-wider text-slate-500">{label}</p><p className="text-base font-bold text-slate-900">{value.toLocaleString('id-ID')} <span className="text-xs font-normal text-slate-500">transaksi</span></p></div></div>;
 }

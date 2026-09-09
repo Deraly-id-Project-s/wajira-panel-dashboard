@@ -138,7 +138,7 @@ export default function OutstandingTable({ type, perPage, onActionsChange }: Out
                   setHookPage(1);
                 }}
               >
-                <SelectTrigger className="h-10 w-[160px] border-gray-300 bg-white text-gray-900 rounded-lg shadow-sm">
+                <SelectTrigger className="h-10 w-[160px] border-gray-300 bg-white text-gray-900 rounded-md shadow-sm">
                   <SelectValue placeholder="Semua Ketersediaan" />
                 </SelectTrigger>
                 <SelectContent>

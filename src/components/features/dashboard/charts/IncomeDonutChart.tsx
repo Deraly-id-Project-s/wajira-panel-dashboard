@@ -53,7 +53,7 @@ export function IncomeDonutChart() {
           <CardTitle className="text-base font-semibold">Pemasukan</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="h-[187px] animate-pulse rounded-lg bg-muted" />
+          <div className="h-[187px] animate-pulse rounded-md bg-muted" />
         </CardContent>
       </Card>
     );

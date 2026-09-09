@@ -73,7 +73,7 @@ export function MaintenanceTable({
               variant="outline"
               size="sm"
               onClick={() => onViewDetail(item)}
-              className="h-8 rounded-lg border-slate-200 text-xs font-medium text-slate-700 hover:bg-slate-50 hover:text-slate-950"
+              className="h-8 rounded-md border-slate-200 text-xs font-medium text-slate-700 hover:bg-slate-50 hover:text-slate-950"
             >
               Detail
             </Button>

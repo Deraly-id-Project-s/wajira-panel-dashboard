@@ -240,7 +240,7 @@ export default function PengeluaranUnitDetailPage() {
                 value={selectedState}
                 onValueChange={(val) => setSelectedState(val as 'draft' | 'process' | 'done')}
               >
-                <SelectTrigger className="w-full bg-white border-slate-200 h-10 rounded-lg">
+                <SelectTrigger className="w-full bg-white border-slate-200 h-10 rounded-md">
                   <SelectValue placeholder="Pilih status" />
                 </SelectTrigger>
                 <SelectContent>
@@ -272,19 +272,19 @@ export default function PengeluaranUnitDetailPage() {
                 placeholder="Masukkan catatan perubahan status..."
                 value={stateNote}
                 onChange={(e) => setStateNote(e.target.value)}
-                className="w-full min-h-[80px] bg-white border-slate-200 rounded-lg p-2 text-sm focus:outline-none"
+                className="w-full min-h-[80px] bg-white border-slate-200 rounded-md p-2 text-sm focus:outline-none"
               />
             </div>
           </div>
 
           <DialogFooter className="gap-2 sm:gap-0 border-t pt-4">
-            <Button variant="outline" className="rounded-lg" onClick={() => setIsUpdateStateDialogOpen(false)}>
+            <Button variant="outline" className="rounded-md" onClick={() => setIsUpdateStateDialogOpen(false)}>
               Batal
             </Button>
             <Button
               onClick={handleUpdateState}
               disabled={updateStateMutation.isPending}
-              className="bg-primary text-primary-foreground hover:bg-primary/90 rounded-lg px-5"
+              className="bg-primary text-primary-foreground hover:bg-primary/90 rounded-md px-5"
             >
               {updateStateMutation.isPending ? 'Menyimpan...' : 'Simpan'}
             </Button>

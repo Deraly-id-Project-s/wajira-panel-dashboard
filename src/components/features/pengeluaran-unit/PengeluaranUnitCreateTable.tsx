@@ -142,7 +142,7 @@ export default function PengeluaranUnitCreateTable({
           <div className="flex items-center gap-2 text-sm text-gray-700">
             <span>Status</span>
             <Select value={statusFilter} onValueChange={(value: 'all' | 'pending' | 'issued') => setStatusFilter(value)}>
-              <SelectTrigger className="h-10 w-[190px] border-gray-200 rounded-lg">
+              <SelectTrigger className="h-10 w-[190px] border-gray-200 rounded-md">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -175,7 +175,7 @@ export default function PengeluaranUnitCreateTable({
           ) : null}
           <Button
             size="sm"
-            className="h-10 px-5 bg-[#1FBE78] hover:bg-[#19ac6c] font-medium rounded-lg gap-2 text-white"
+            className="h-10 px-5 bg-[#1FBE78] hover:bg-[#19ac6c] font-medium rounded-md gap-2 text-white"
             onClick={() => void onKirim(selectedIds)}
             disabled={selectedIds.length === 0 || isSubmitting || isLoading || isError}
           >

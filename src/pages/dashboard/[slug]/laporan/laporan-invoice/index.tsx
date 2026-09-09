@@ -139,7 +139,7 @@ export default function LaporanInvoicePage() {
                 onClick={() => {
                   router.push(`/dashboard/${slugParam}/finance/invoice/${item.id}`);
                 }}
-                className="rounded-lg px-3 py-2 text-sm text-slate-900 focus:bg-slate-50 cursor-pointer"
+                className="rounded-md px-3 py-2 text-sm text-slate-900 focus:bg-slate-50 cursor-pointer"
               >
                 <FileText className="mr-2 h-4 w-4" />
                 Detail
@@ -193,41 +193,41 @@ export default function LaporanInvoicePage() {
               setPage(1);
             }}
           >
-          <PrintLetterPage
-            id="laporan-invoice-print"
-            className="laporan-penerimaan-print-area"
-            letterheadSrc={selectedPrintBackground}
-          >
-            <div className="laporan-penerimaan-print-content print-letter-content">
-              {/* Cover Letter Heading - Visible only in Print */}
-              <div className="hidden print:flex flex-col items-center justify-center text-center space-y-1 mb-6 w-full">
-                <h2 className="text-[18px] font-bold uppercase text-gray-900 tracking-wide">
-                  Laporan Invoice
-                </h2>
-                <p className="text-[15px] font-bold text-gray-900 tracking-wide">
-                  PT WAJIRA TRANSINDO
-                </p>
-                <p className="text-[12px] text-gray-600">
-                  Tanggal Cetak: {formatDate(new Date())}
-                </p>
-              </div>
+            <PrintLetterPage
+              id="laporan-invoice-print"
+              className="laporan-penerimaan-print-area"
+              letterheadSrc={selectedPrintBackground}
+            >
+              <div className="laporan-penerimaan-print-content print-letter-content">
+                {/* Cover Letter Heading - Visible only in Print */}
+                <div className="hidden print:flex flex-col items-center justify-center text-center space-y-1 mb-6 w-full">
+                  <h2 className="text-[18px] font-bold uppercase text-gray-900 tracking-wide">
+                    Laporan Invoice
+                  </h2>
+                  <p className="text-[15px] font-bold text-gray-900 tracking-wide">
+                    PT WAJIRA TRANSINDO
+                  </p>
+                  <p className="text-[12px] text-gray-600">
+                    Tanggal Cetak: {formatDate(new Date())}
+                  </p>
+                </div>
 
-              <div className="rounded-md border border-gray-200 bg-white overflow-x-auto shadow-none w-full">
-                <BaseTable
-                  data={data}
-                  columns={columns}
-                  loading={isLoading}
-                  sortBy={orderBy}
-                  sortDirection={orderSort}
-                  onSortChange={(key, dir) => {
-                    setOrderBy(key);
-                    setOrderSort(dir);
-                    setPage(1);
-                  }}
-                />
+                <div className="rounded-md border border-gray-200 bg-white overflow-x-auto shadow-none w-full">
+                  <BaseTable
+                    data={data}
+                    columns={columns}
+                    loading={isLoading}
+                    sortBy={orderBy}
+                    sortDirection={orderSort}
+                    onSortChange={(key, dir) => {
+                      setOrderBy(key);
+                      setOrderSort(dir);
+                      setPage(1);
+                    }}
+                  />
+                </div>
               </div>
-            </div>
-          </PrintLetterPage>
+            </PrintLetterPage>
           </SearchPagination>
         </div>
       </div>

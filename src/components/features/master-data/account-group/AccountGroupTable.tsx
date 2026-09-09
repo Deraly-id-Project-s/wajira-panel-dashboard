@@ -91,7 +91,7 @@ export const AccountGroupTable = ({ data, isLoading = false, onEdit, onDelete, c
                   onEdit(item);
                 }}
                 disabled={item.is_lock || !canEdit}
-                className="rounded-lg px-3 py-2 text-sm text-slate-900 focus:bg-slate-50 cursor-pointer"
+                className="rounded-md px-3 py-2 text-sm text-slate-900 focus:bg-slate-50 cursor-pointer"
               >
                 <Pencil className="mr-2 h-4 w-4" />
                 Edit
@@ -101,7 +101,7 @@ export const AccountGroupTable = ({ data, isLoading = false, onEdit, onDelete, c
                   e.preventDefault();
                   onDelete(item);
                 }}
-                className="rounded-lg px-3 py-2 text-sm text-red-600 focus:bg-red-50 focus:text-red-600 cursor-pointer"
+                className="rounded-md px-3 py-2 text-sm text-red-600 focus:bg-red-50 focus:text-red-600 cursor-pointer"
                 disabled={item.is_lock || !canDelete}
               >
                 <Trash className="mr-2 h-4 w-4" />

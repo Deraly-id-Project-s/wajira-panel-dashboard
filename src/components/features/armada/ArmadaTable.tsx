@@ -190,14 +190,14 @@ export function ArmadaTable({
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-[160px] rounded-md border-slate-200 p-1.5 shadow-lg">
                 {onDetail && (
-                  <DropdownMenuItem onClick={() => onDetail(armada)} className="rounded-lg px-3 py-2 text-sm text-slate-900 focus:bg-slate-50 cursor-pointer">
+                  <DropdownMenuItem onClick={() => onDetail(armada)} className="rounded-md px-3 py-2 text-sm text-slate-900 focus:bg-slate-50 cursor-pointer">
                     Detail
                   </DropdownMenuItem>
                 )}
-                <DropdownMenuItem onClick={() => onEdit(armada)} disabled={!canEdit} className="rounded-lg px-3 py-2 text-sm text-slate-900 focus:bg-slate-50 cursor-pointer">
+                <DropdownMenuItem onClick={() => onEdit(armada)} disabled={!canEdit} className="rounded-md px-3 py-2 text-sm text-slate-900 focus:bg-slate-50 cursor-pointer">
                   Edit
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => onDelete(armada)} disabled={!canDelete} className="rounded-lg px-3 py-2 text-sm text-red-600 focus:bg-red-50 focus:text-red-600 cursor-pointer">
+                <DropdownMenuItem onClick={() => onDelete(armada)} disabled={!canDelete} className="rounded-md px-3 py-2 text-sm text-red-600 focus:bg-red-50 focus:text-red-600 cursor-pointer">
                   Hapus
                 </DropdownMenuItem>
               </DropdownMenuContent>

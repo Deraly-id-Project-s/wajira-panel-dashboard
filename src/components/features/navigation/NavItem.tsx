@@ -66,7 +66,7 @@ export function NavItem({ item }: NavItemProps) {
             <Link
                 href={item.href}
                 className={cn(
-                    "flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors",
+                    "flex items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors",
                     isActive
                         ? "bg-accent text-accent-foreground font-medium"
                         : "text-muted-foreground hover:text-foreground"
@@ -85,7 +85,7 @@ export function NavItem({ item }: NavItemProps) {
             <button
                 onClick={() => setIsExpanded(!isExpanded)}
                 className={cn(
-                    "flex w-full items-center justify-between rounded-lg px-3 py-2 text-sm transition-colors",
+                    "flex w-full items-center justify-between rounded-md px-3 py-2 text-sm transition-colors",
                     isActive
                         ? "text-foreground" // Active parent
                         : "text-muted-foreground hover:text-foreground"
@@ -127,7 +127,7 @@ function NavChildItem({ item, currentPath }: { item: NavItemConfig, currentPath:
         <Link
             href={item.href}
             className={cn(
-                "flex items-center rounded-lg px-3 py-2 text-sm transition-colors",
+                "flex items-center rounded-md px-3 py-2 text-sm transition-colors",
                 isActive
                     ? "bg-accent text-accent-foreground font-medium border-l-2 border-primary pl-[10px]" // indent adjusted for border
                     : "text-muted-foreground hover:text-foreground"

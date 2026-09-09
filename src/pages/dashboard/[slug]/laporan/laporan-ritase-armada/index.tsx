@@ -321,54 +321,54 @@ export default function LaporanRitaseArmadaPage() {
           }
         >
           <Tabs value={activeTab} onValueChange={(val) => setActiveTab(val as 'ritase' | 'maintenance')} className="w-full">
-          {/* Tabs Navigation */}
-          <div className="flex mb-4 no-print">
-            <TabsList className="flex h-auto p-1 bg-gray-50 border border-gray-100 rounded-md">
-              <TabsTrigger
-                value="ritase"
-                className="rounded-lg px-6 py-2.5 text-[14px] font-medium data-[state=active]:bg-white data-[state=active]:text-gray-900 data-[state=active]:shadow-sm cursor-pointer whitespace-nowrap"
-              >
-                Laporan Ritase Armada
-              </TabsTrigger>
-              <TabsTrigger
-                value="maintenance"
-                className="rounded-lg px-6 py-2.5 text-[14px] font-medium data-[state=active]:bg-white data-[state=active]:text-gray-900 data-[state=active]:shadow-sm cursor-pointer whitespace-nowrap"
-              >
-                Laporan Maintenance Armada
-              </TabsTrigger>
-            </TabsList>
-          </div>
-
-          <PrintLetterPage
-            id="laporan-ritase-print"
-            className="laporan-penerimaan-print-area"
-            letterheadSrc={selectedPrintBackground}
-          >
-            <div className="laporan-penerimaan-print-content print-letter-content">
-              {/* Cover Letter Heading - Visible only in Print */}
-              <div className="hidden print:flex flex-col items-center justify-center text-center space-y-1 mb-6 w-full">
-                <h2 className="text-[18px] font-bold uppercase text-gray-900 tracking-wide">
-                  {activeTab === 'ritase' ? 'Laporan Ritase Armada' : 'Laporan Maintenance Armada'}
-                </h2>
-                <p className="text-[15px] font-bold text-gray-900 tracking-wide">
-                  {getCompanyName(resolvedCompanyId)}
-                </p>
-                <p className="text-[12px] text-gray-600">
-                  Tanggal Cetak: {formatDate(new Date())}
-                </p>
-              </div>
-
-              <div className="rounded-md border border-slate-200 bg-white overflow-x-auto shadow-none w-full">
-                <BaseTable
-                  data={activeTab === 'ritase' ? paginatedRitase : paginatedMaintenance}
-                  columns={activeTab === 'ritase' ? ritaseColumns : maintenanceColumns}
-                  loading={false}
-                  headerGroups={activeTab === 'ritase' ? ritaseHeaderGroups : undefined}
-                  headerRowClassName="bg-slate-50"
-                />
-              </div>
+            {/* Tabs Navigation */}
+            <div className="flex mb-4 no-print">
+              <TabsList className="flex h-auto p-1 bg-gray-50 border border-gray-100 rounded-md">
+                <TabsTrigger
+                  value="ritase"
+                  className="rounded-md px-6 py-2.5 text-[14px] font-medium data-[state=active]:bg-white data-[state=active]:text-gray-900 data-[state=active]:shadow-sm cursor-pointer whitespace-nowrap"
+                >
+                  Laporan Ritase Armada
+                </TabsTrigger>
+                <TabsTrigger
+                  value="maintenance"
+                  className="rounded-md px-6 py-2.5 text-[14px] font-medium data-[state=active]:bg-white data-[state=active]:text-gray-900 data-[state=active]:shadow-sm cursor-pointer whitespace-nowrap"
+                >
+                  Laporan Maintenance Armada
+                </TabsTrigger>
+              </TabsList>
             </div>
-          </PrintLetterPage>
+
+            <PrintLetterPage
+              id="laporan-ritase-print"
+              className="laporan-penerimaan-print-area"
+              letterheadSrc={selectedPrintBackground}
+            >
+              <div className="laporan-penerimaan-print-content print-letter-content">
+                {/* Cover Letter Heading - Visible only in Print */}
+                <div className="hidden print:flex flex-col items-center justify-center text-center space-y-1 mb-6 w-full">
+                  <h2 className="text-[18px] font-bold uppercase text-gray-900 tracking-wide">
+                    {activeTab === 'ritase' ? 'Laporan Ritase Armada' : 'Laporan Maintenance Armada'}
+                  </h2>
+                  <p className="text-[15px] font-bold text-gray-900 tracking-wide">
+                    {getCompanyName(resolvedCompanyId)}
+                  </p>
+                  <p className="text-[12px] text-gray-600">
+                    Tanggal Cetak: {formatDate(new Date())}
+                  </p>
+                </div>
+
+                <div className="rounded-md border border-slate-200 bg-white overflow-x-auto shadow-none w-full">
+                  <BaseTable
+                    data={activeTab === 'ritase' ? paginatedRitase : paginatedMaintenance}
+                    columns={activeTab === 'ritase' ? ritaseColumns : maintenanceColumns}
+                    loading={false}
+                    headerGroups={activeTab === 'ritase' ? ritaseHeaderGroups : undefined}
+                    headerRowClassName="bg-slate-50"
+                  />
+                </div>
+              </div>
+            </PrintLetterPage>
           </Tabs>
         </SearchPagination>
       </div>

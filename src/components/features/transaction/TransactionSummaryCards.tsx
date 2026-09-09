@@ -34,7 +34,7 @@ export function TransactionSummaryCards({ totalBcaUsd, totalBcaIdr, totalCashIdr
           </div>
         </div>
         <div className="pt-4 border-t">
-          <div className="flex justify-between items-center bg-primary text-white p-3 rounded-lg">
+          <div className="flex justify-between items-center bg-primary text-white p-3 rounded-md">
             <span className="text-sm font-medium">SALDO AKHIR</span>
             <span className="text-lg font-bold">{formatCurrency(totalBcaUsd, 'USD')}</span>
           </div>
@@ -53,7 +53,7 @@ export function TransactionSummaryCards({ totalBcaUsd, totalBcaIdr, totalCashIdr
           </div>
         </div>
         <div className="pt-4 border-t">
-          <div className="flex justify-between items-center bg-primary text-white p-3 rounded-lg">
+          <div className="flex justify-between items-center bg-primary text-white p-3 rounded-md">
             <span className="text-sm font-medium">SALDO AKHIR</span>
             <span className="text-lg font-bold">{formatCurrency(totalBcaIdr, 'IDR')}</span>
           </div>
@@ -72,7 +72,7 @@ export function TransactionSummaryCards({ totalBcaUsd, totalBcaIdr, totalCashIdr
           </div>
         </div>
         <div className="pt-4 border-t">
-          <div className="flex justify-between items-center bg-primary text-white p-3 rounded-lg">
+          <div className="flex justify-between items-center bg-primary text-white p-3 rounded-md">
             <span className="text-sm font-medium">SALDO AKHIR</span>
             <span className="text-lg font-bold">{formatCurrency(totalCashIdr, 'IDR')}</span>
           </div>

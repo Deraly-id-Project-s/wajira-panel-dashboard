@@ -98,7 +98,7 @@ export function SearchPagination({
                     </div>
                 </div>
 
-                {actions ? <div className="flex items-center justify-end gap-2">{actions}</div> : null}
+                {actions ? <div className="flex items-center flex-col sm:flex-row w-full sm:w-auto justify-end gap-2">{actions}</div> : null}
             </div>
 
             {children}

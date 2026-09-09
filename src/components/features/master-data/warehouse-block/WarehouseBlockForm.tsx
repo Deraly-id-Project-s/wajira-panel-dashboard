@@ -9,6 +9,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { getWarehouseDataList } from '@/services/warehouseBlock.service';
 import type { WarehouseBlock } from '@/services/warehouseBlock.service';
+import RequiredMark from '@/components/ui/required-mark';
 
 const warehouseBlockSchema = z.object({
   warehouse_id: z.coerce.number().optional(),
@@ -89,7 +90,7 @@ export function WarehouseBlockForm({ open, onOpenChange, initialData, onSubmit, 
           name="name"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Nama Blok</FormLabel>
+              <FormLabel>Nama Blok <RequiredMark /></FormLabel>
               <FormControl>
                 <Input placeholder="cth: Blok A" disabled={isSubmitting} {...field} />
               </FormControl>

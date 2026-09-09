@@ -65,20 +65,20 @@ export const TaxTable = ({ data, isLoading = false, onEdit, onDelete, onViewDeta
             <DropdownMenuContent align="end" className="min-w-[150px] rounded-xl border-slate-200 p-1.5 shadow-lg">
               <DropdownMenuItem
                 onClick={() => onViewDetail(item)}
-                className="rounded-lg px-3 py-2 text-sm text-slate-900 focus:bg-slate-50 cursor-pointer"
+                className="rounded-md px-3 py-2 text-sm text-slate-900 focus:bg-slate-50 cursor-pointer"
               >
                 Lihat Detail
               </DropdownMenuItem>
               <DropdownMenuItem
                 onClick={() => onEdit(item)}
                 disabled={item.is_lock === 1 || item.is_lock === true}
-                className="rounded-lg px-3 py-2 text-sm text-slate-900 focus:bg-slate-50 cursor-pointer"
+                className="rounded-md px-3 py-2 text-sm text-slate-900 focus:bg-slate-50 cursor-pointer"
               >
                 Edit
               </DropdownMenuItem>
               <DropdownMenuItem
                 onClick={() => onDelete(item)}
-                className="rounded-lg px-3 py-2 text-sm text-red-600 focus:bg-red-50 focus:text-red-600 cursor-pointer"
+                className="rounded-md px-3 py-2 text-sm text-red-600 focus:bg-red-50 focus:text-red-600 cursor-pointer"
                 disabled={item.is_lock === 1 || item.is_lock === true}
               >
                 Hapus

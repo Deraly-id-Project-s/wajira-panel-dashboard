@@ -183,7 +183,7 @@ export default function PurchaseUnitTable({ purchaseId, slug, isPaid, canEdit, c
   return (
     <div className="space-y-4">
       {!isPaid ? (
-        <div className="flex items-start gap-2.5 rounded-lg border border-amber-200 bg-amber-50/50 px-4 py-3 text-sm text-slate-800 animate-in fade-in duration-200">
+        <div className="flex items-start gap-2.5 rounded-md border border-amber-200 bg-amber-50/50 px-4 py-3 text-sm text-slate-800 animate-in fade-in duration-200">
           <Info className="h-5 w-5 text-amber-600 shrink-0 mt-0.5" />
           <div>
             <p className="font-semibold text-slate-900">Menunggu Pembayaran Lunas</p>
@@ -193,7 +193,7 @@ export default function PurchaseUnitTable({ purchaseId, slug, isPaid, canEdit, c
           </div>
         </div>
       ) : hasIncompleteDetails ? (
-        <div className="flex items-start gap-2.5 rounded-lg border border-amber-200 bg-amber-50/50 px-4 py-3 text-sm text-slate-800 animate-in fade-in duration-200">
+        <div className="flex items-start gap-2.5 rounded-md border border-amber-200 bg-amber-50/50 px-4 py-3 text-sm text-slate-800 animate-in fade-in duration-200">
           <Info className="h-5 w-5 text-amber-600 shrink-0 mt-0.5" />
           <div>
             <p className="font-semibold text-slate-900">Detail Unit Belum Lengkap</p>

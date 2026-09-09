@@ -98,7 +98,7 @@ export default function KasHarianTable({
                       <Info className="h-4 w-4" />
                     </button>
                   </TooltipTrigger>
-                  <TooltipContent side="top" align="center" className="max-w-xs bg-slate-900 text-white rounded-lg p-2 text-xs shadow-md">
+                  <TooltipContent side="top" align="center" className="max-w-xs bg-slate-900 text-white rounded-md p-2 text-xs shadow-md">
                     Data Arus Transaksi Kas Harian ini terhubung dengan data Administrasi
                   </TooltipContent>
                 </Tooltip>
@@ -160,7 +160,7 @@ export default function KasHarianTable({
                       <CheckCircle className="h-4 w-4" />
                     </button>
                   </TooltipTrigger>
-                  <TooltipContent side="top" align="center" className="max-w-xs bg-slate-900 text-white rounded-lg p-2 text-xs shadow-md">
+                  <TooltipContent side="top" align="center" className="max-w-xs bg-slate-900 text-white rounded-md p-2 text-xs shadow-md">
                     Nominal telah disesuaikan
                   </TooltipContent>
                 </Tooltip>
@@ -185,7 +185,7 @@ export default function KasHarianTable({
                       <CheckCircle className="h-4 w-4" />
                     </button>
                   </TooltipTrigger>
-                  <TooltipContent side="top" align="center" className="max-w-xs bg-slate-900 text-white rounded-lg p-2 text-xs shadow-md">
+                  <TooltipContent side="top" align="center" className="max-w-xs bg-slate-900 text-white rounded-md p-2 text-xs shadow-md">
                     Nominal telah disesuaikan
                   </TooltipContent>
                 </Tooltip>
@@ -226,27 +226,27 @@ export default function KasHarianTable({
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="min-w-[150px] rounded-md border-slate-200 p-1.5 shadow-lg">
               {item.source === 'billing' ? (
-                <DropdownMenuItem onClick={() => onPay(item)} className="rounded-lg px-3 py-2 text-sm text-slate-900 focus:bg-slate-50 cursor-pointer">
+                <DropdownMenuItem onClick={() => onPay(item)} className="rounded-md px-3 py-2 text-sm text-slate-900 focus:bg-slate-50 cursor-pointer">
                   Bayar
                 </DropdownMenuItem>
               ) : (
-                <DropdownMenuItem onClick={() => onView(item)} className="rounded-lg px-3 py-2 text-sm text-slate-900 focus:bg-slate-50 cursor-pointer">
+                <DropdownMenuItem onClick={() => onView(item)} className="rounded-md px-3 py-2 text-sm text-slate-900 focus:bg-slate-50 cursor-pointer">
                   Detail
                 </DropdownMenuItem>
               )}
               {item.cashFlowId && canEdit ? (
-                <DropdownMenuItem onClick={() => onEdit(item)} className="rounded-lg px-3 py-2 text-sm text-slate-900 focus:bg-slate-50 cursor-pointer">
+                <DropdownMenuItem onClick={() => onEdit(item)} className="rounded-md px-3 py-2 text-sm text-slate-900 focus:bg-slate-50 cursor-pointer">
                   Edit
                 </DropdownMenuItem>
               ) : null}
               {item.cashFlowId && onToggleStatus ? (
                 <>
                   {item.isValid && !item.is_paid ? (
-                    <DropdownMenuItem onClick={() => onToggleStatus(item)} className="rounded-lg px-3 py-2 text-sm text-slate-900 focus:bg-slate-50 cursor-pointer font-medium" disabled={!item.isValid}>
+                    <DropdownMenuItem onClick={() => onToggleStatus(item)} className="rounded-md px-3 py-2 text-sm text-slate-900 focus:bg-slate-50 cursor-pointer font-medium" disabled={!item.isValid}>
                       Tandai Lunas
                     </DropdownMenuItem>
                   ) : (
-                    <DropdownMenuItem onClick={() => onToggleStatus(item)} className="rounded-lg px-3 py-2 text-sm text-slate-900 focus:bg-slate-50 cursor-pointer font-medium" disabled={!item.is_paid}>
+                    <DropdownMenuItem onClick={() => onToggleStatus(item)} className="rounded-md px-3 py-2 text-sm text-slate-900 focus:bg-slate-50 cursor-pointer font-medium" disabled={!item.is_paid}>
                       Tandai Belum Lunas
                     </DropdownMenuItem>
                   )}
@@ -257,7 +257,7 @@ export default function KasHarianTable({
                   onClick={() => {
                     if (canSyncPpnData(item)) onSyncPpnData(item);
                   }}
-                  className="rounded-lg px-3 py-2 text-sm text-slate-900 focus:bg-slate-50 cursor-pointer font-medium"
+                  className="rounded-md px-3 py-2 text-sm text-slate-900 focus:bg-slate-50 cursor-pointer font-medium"
                   disabled={!canSyncPpnData(item)}
                 >
                   Sinkronasi PPN
@@ -268,7 +268,7 @@ export default function KasHarianTable({
                   onClick={() => {
                     if (!hasUnitTransactionBilling(item)) onDelete(item);
                   }}
-                  className="rounded-lg px-3 py-2 text-sm text-red-600 focus:bg-red-50 focus:text-red-600 cursor-pointer"
+                  className="rounded-md px-3 py-2 text-sm text-red-600 focus:bg-red-50 focus:text-red-600 cursor-pointer"
                   disabled={hasUnitTransactionBilling(item)}
                 >
                   Hapus

@@ -292,7 +292,7 @@ export default function PengeluaranPerlengkapanEditPage() {
             variant="outline"
             onClick={() => setDeleteTarget({ id: 0 } as GoodsTransactionDetailEquipment)}
             disabled={selectedIds.length === 0}
-            className="border-red-300 text-red-600 hover:text-red-700 h-9 px-3 rounded-lg"
+            className="border-red-300 text-red-600 hover:text-red-700 h-9 px-3 rounded-md"
           >
             Hapus Terpilih
           </Button>
@@ -323,18 +323,18 @@ export default function PengeluaranPerlengkapanEditPage() {
           <div className="flex flex-col sm:flex-row items-center gap-2 w-full sm:w-auto">
             <Button
               variant="ghost"
-              className="h-9 px-3 rounded-lg"
+              className="h-9 px-3 rounded-md"
               onClick={() => setPage((current) => Math.max(1, current - 1))}
               disabled={safePage <= 1}
             >
               Previous
             </Button>
-            <Button variant="outline" className="h-9 w-9 rounded-lg border-slate-200 bg-white shadow-none font-semibold">
+            <Button variant="outline" className="h-9 w-9 rounded-md border-slate-200 bg-white shadow-none font-semibold">
               {safePage}
             </Button>
             <Button
               variant="ghost"
-              className="h-9 px-3 rounded-lg"
+              className="h-9 px-3 rounded-md"
               onClick={() => setPage((current) => Math.min(totalPages, current + 1))}
               disabled={safePage >= totalPages}
             >

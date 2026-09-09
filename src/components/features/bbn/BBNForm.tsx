@@ -101,7 +101,7 @@ export function BBNForm({ initialData, onSubmit, isSubmitting, title }: BBNFormP
                     <div>
                         <h2 className="text-lg font-bold text-gray-900 mb-6 border-b pb-2">Informasi Biaya</h2>
 
-                        <div className="bg-gray-50/50 rounded-lg p-6 border border-gray-100 space-y-6">
+                        <div className="bg-gray-50/50 rounded-md p-6 border border-gray-100 space-y-6">
                             <h3 className="text-sm font-medium text-gray-500 mb-4">Detail</h3>
 
                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -212,7 +212,7 @@ export function BBNForm({ initialData, onSubmit, isSubmitting, title }: BBNFormP
                     </div>
 
                     {/* Section: Biaya */}
-                    <div className="bg-gray-50/50 rounded-lg p-6 border border-gray-100 space-y-6">
+                    <div className="bg-gray-50/50 rounded-md p-6 border border-gray-100 space-y-6">
                         <h3 className="text-sm font-medium text-gray-500 mb-4">Biaya</h3>
 
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">

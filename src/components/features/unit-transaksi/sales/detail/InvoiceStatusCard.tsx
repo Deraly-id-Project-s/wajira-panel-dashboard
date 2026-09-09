@@ -23,7 +23,7 @@ export function InvoiceStatusCard({ data }: { data: InvoiceStatus }) {
             <CardContent className="space-y-4 p-0">
                 {/* Header dengan Icon */}
                 <div className="flex flex-col sm:flex-row items-center gap-2 w-full sm:w-auto">
-                    <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-red-50">
+                    <div className="flex h-8 w-8 items-center justify-center rounded-md bg-red-50">
                         <CreditCard className="h-4 w-4 text-red-600" />
                     </div>
                     <span className="font-medium">Status Pembayaran</span>

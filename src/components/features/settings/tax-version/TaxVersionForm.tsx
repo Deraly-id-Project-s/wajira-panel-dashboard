@@ -151,7 +151,7 @@ export function TaxVersionForm({ open, onOpenChange, initialData, baseTaxId, onS
               control={form.control}
               name="is_default"
               render={({ field }) => (
-                <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3 shadow-sm">
+                <FormItem className="flex flex-row items-center justify-between rounded-md border p-3 shadow-sm">
                   <div className="space-y-0.5">
                     <FormLabel>Jadikan Default</FormLabel>
                     <FormDescription>

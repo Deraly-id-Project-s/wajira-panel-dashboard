@@ -292,7 +292,7 @@ export default function PenerimaanUnitDetailTable({ data, activityState, isRefun
               <div className="flex items-center gap-2 text-sm text-gray-700">
                 <span>Filter Status</span>
                 <Select value={receivedFilter} onValueChange={(val) => setReceivedFilter(val as 'all' | 'received' | 'pending')}>
-                  <SelectTrigger className="h-10 w-[190px] border-gray-200 rounded-lg">
+                  <SelectTrigger className="h-10 w-[190px] border-gray-200 rounded-md">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -310,7 +310,7 @@ export default function PenerimaanUnitDetailTable({ data, activityState, isRefun
                 <Button
                   onClick={() => setIsOpenProcessModal(true)}
                   disabled={selected.length === 0}
-                  className="bg-primary text-primary-foreground hover:bg-primary/90 h-8 px-3 text-xs gap-1.5 font-medium rounded-lg ml-2 shadow-sm"
+                  className="bg-primary text-primary-foreground hover:bg-primary/90 h-8 px-3 text-xs gap-1.5 font-medium rounded-md ml-2 shadow-sm"
                 >
                   <Settings size={14} className="animate-spin-hover" /> Proses Data ({selected.length})
                 </Button>
@@ -370,7 +370,7 @@ export default function PenerimaanUnitDetailTable({ data, activityState, isRefun
               <div className="space-y-2">
                 <label className="text-sm font-semibold text-slate-700">Posisi Stok</label>
                 <Select value={stockState} onValueChange={setStockState}>
-                  <SelectTrigger className="w-full bg-white border-slate-200 h-10 rounded-lg">
+                  <SelectTrigger className="w-full bg-white border-slate-200 h-10 rounded-md">
                     <SelectValue placeholder="Pilih posisi stok" />
                   </SelectTrigger>
                   <SelectContent>
@@ -384,7 +384,7 @@ export default function PenerimaanUnitDetailTable({ data, activityState, isRefun
               <div className="space-y-2">
                 <label className="text-sm font-semibold text-slate-700">Sub Blok Gudang</label>
                 <Select value={warehouseSubBlockId} onValueChange={setWarehouseSubBlockId}>
-                  <SelectTrigger className="w-full bg-white border-slate-200 h-10 rounded-lg">
+                  <SelectTrigger className="w-full bg-white border-slate-200 h-10 rounded-md">
                     <SelectValue placeholder={subBlocksLoading ? "Memuat sub blok..." : "Pilih sub blok gudang"} />
                   </SelectTrigger>
                   <SelectContent>
@@ -406,13 +406,13 @@ export default function PenerimaanUnitDetailTable({ data, activityState, isRefun
           </div>
 
           <DialogFooter className="gap-2 sm:gap-0 border-t pt-4">
-            <Button variant="outline" className="rounded-lg" onClick={() => setIsOpenProcessModal(false)}>
+            <Button variant="outline" className="rounded-md" onClick={() => setIsOpenProcessModal(false)}>
               Batal
             </Button>
             <Button
               onClick={handleSubmitProcess}
               disabled={bulkUpdateMutation.isPending}
-              className="bg-primary text-primary-foreground hover:bg-primary/90 rounded-lg px-5"
+              className="bg-primary text-primary-foreground hover:bg-primary/90 rounded-md px-5"
             >
               {bulkUpdateMutation.isPending ? 'Memproses...' : 'Proses Data'}
             </Button>

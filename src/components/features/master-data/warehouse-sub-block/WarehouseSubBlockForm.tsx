@@ -10,6 +10,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { LoadingState } from '@/components/ui/loading-state';
 import type { WarehouseSubBlock } from '@/services/warehouseBlock.service';
+import RequiredMark from '@/components/ui/required-mark';
 
 const warehouseSubBlockSchema = z.object({
   name: z.string().min(1, 'Nama sub blok wajib diisi'),
@@ -87,7 +88,7 @@ export function WarehouseSubBlockForm({
               name="name"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Nama Sub Blok</FormLabel>
+                  <FormLabel>Nama Sub Blok <RequiredMark /></FormLabel>
                   <FormControl>
                     <Input placeholder="cth: Sub Blok A-1" disabled={isSubmitting} {...field} />
                   </FormControl>
@@ -140,14 +141,14 @@ export function WarehouseSubBlockForm({
                       <Switch
                         checked={field.value}
                         onCheckedChange={field.onChange}
-                        disabled={isSubmitting || (initialData && (String(initialData.is_default) === '1' || String(initialData.is_default) === 'true' || initialData.is_default === true))} 
+                        disabled={isSubmitting || (initialData && (String(initialData.is_default) === '1' || String(initialData.is_default) === 'true' || initialData.is_default === true))}
                       />
                     </FormControl>
                   </FormItem>
                 )}
               />
             </div>
-            
+
             <DialogFooter className="mt-6">
               <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={isSubmitting}>
                 Batal

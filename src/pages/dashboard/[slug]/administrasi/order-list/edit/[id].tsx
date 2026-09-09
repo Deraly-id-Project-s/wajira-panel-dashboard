@@ -103,7 +103,7 @@ export default function EditOrderListPage() {
         expeditionInvoice: entry.expeditionInvoice || match?.expeditionInvoice || 0,
       };
     });
-    
+
     const tarifLoadItems = (tarifLoadItemQuery.data?.data ?? []).filter((item) => !id || Number(item.doOrderListId ?? 0) === Number(id));
 
     return composeOrderListWithTarifs(detailQuery.data, tarifEntries, tarifLoadItems);
@@ -161,7 +161,7 @@ export default function EditOrderListPage() {
   }), [cddQuery.data?.data, fusoQuery.data?.data, towingQuery.data?.data, toVehicleOptions]);
   const driverOptions = React.useMemo<SearchableSelectOption[]>(() =>
     (driverQuery.data?.data ?? []).map((item) => ({ value: String(item.id), label: item.name, subtitle: item.code })),
-  [driverQuery.data?.data]);
+    [driverQuery.data?.data]);
 
   // Handle error notifications
   React.useEffect(() => {
@@ -325,7 +325,7 @@ export default function EditOrderListPage() {
             </div>
           </div>
 
-          <div className="rounded-lg border border-red-200 bg-red-50 p-6 text-center">
+          <div className="rounded-md border border-red-200 bg-red-50 p-6 text-center">
             <p className="mb-4 text-red-700">
               {detailQuery.error instanceof Error
                 ? detailQuery.error.message
@@ -334,7 +334,7 @@ export default function EditOrderListPage() {
             <button
               onClick={() => detailQuery.refetch()}
               disabled={detailQuery.isFetching}
-              className="inline-flex items-center gap-2 rounded-lg bg-red-600 px-4 py-2 text-white transition-colors hover:bg-red-700 disabled:opacity-50"
+              className="inline-flex items-center gap-2 rounded-md bg-red-600 px-4 py-2 text-white transition-colors hover:bg-red-700 disabled:opacity-50"
             >
               {detailQuery.isFetching ? 'Memuat ulang...' : 'Coba Lagi'}
             </button>
@@ -360,11 +360,11 @@ export default function EditOrderListPage() {
             </div>
           </div>
 
-          <div className="rounded-lg border border-yellow-200 bg-yellow-50 p-6 text-center">
+          <div className="rounded-md border border-yellow-200 bg-yellow-50 p-6 text-center">
             <p className="mb-4 text-yellow-700">Data order list tidak ditemukan.</p>
             <button
               onClick={() => router.push(`/dashboard/${slug}/administrasi/order-list`)}
-              className="inline-flex items-center gap-2 rounded-lg bg-yellow-600 px-4 py-2 text-white transition-colors hover:bg-yellow-700"
+              className="inline-flex items-center gap-2 rounded-md bg-yellow-600 px-4 py-2 text-white transition-colors hover:bg-yellow-700"
             >
               Kembali ke Daftar
             </button>

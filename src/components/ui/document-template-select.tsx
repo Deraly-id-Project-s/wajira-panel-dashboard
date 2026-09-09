@@ -41,7 +41,7 @@ export function DocumentTemplateSelect({
 
     if (isError) {
       return (
-        <div className={cn('flex min-h-48 items-center justify-center rounded-lg border border-dashed border-rose-200 bg-rose-50 px-6 text-center text-sm text-rose-700', className)}>
+        <div className={cn('flex min-h-48 items-center justify-center rounded-md border border-dashed border-rose-200 bg-rose-50 px-6 text-center text-sm text-rose-700', className)}>
           Template dokumen gagal dimuat. Tutup modal lalu coba kembali.
         </div>
       );
@@ -49,7 +49,7 @@ export function DocumentTemplateSelect({
 
     if (templates.length === 0) {
       return (
-        <div className={cn('flex min-h-48 items-center justify-center rounded-lg border border-dashed border-slate-300 bg-slate-50 px-6 text-center text-sm text-slate-500', className)}>
+        <div className={cn('flex min-h-48 items-center justify-center rounded-md border border-dashed border-slate-300 bg-slate-50 px-6 text-center text-sm text-slate-500', className)}>
           Belum ada template dokumen yang dapat digunakan.
         </div>
       );
@@ -72,7 +72,7 @@ export function DocumentTemplateSelect({
               disabled={disabled}
               onClick={() => onValueChange(templateId)}
               className={cn(
-                'group relative overflow-hidden rounded-lg border bg-white text-left transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-500 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60',
+                'group relative overflow-hidden rounded-md border bg-white text-left transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-500 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60',
                 isSelected
                   ? 'border-slate-700 ring-1 ring-slate-700'
                   : 'border-slate-200 hover:border-slate-400 hover:shadow-sm',

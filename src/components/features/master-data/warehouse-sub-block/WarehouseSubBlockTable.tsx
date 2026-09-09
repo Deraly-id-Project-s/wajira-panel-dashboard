@@ -87,7 +87,7 @@ export const WarehouseSubBlockTable = ({
               <DropdownMenuItem
                 onClick={() => onMakeDefault(item)}
                 disabled={String(item.is_default) === '1' || String(item.is_default) === 'true' || item.is_default === true && !canEdit}
-                className="rounded-lg px-3 py-2 text-sm text-slate-900 focus:bg-slate-50 cursor-pointer"
+                className="rounded-md px-3 py-2 text-sm text-slate-900 focus:bg-slate-50 cursor-pointer"
               >
                 <CheckCircle className="mr-2 h-4 w-4" />
                 Jadikan Default
@@ -95,7 +95,7 @@ export const WarehouseSubBlockTable = ({
               <DropdownMenuItem
                 onClick={() => onToggleActive(item)}
                 disabled={!canEdit}
-                className="rounded-lg px-3 py-2 text-sm text-slate-900 focus:bg-slate-50 cursor-pointer"
+                className="rounded-md px-3 py-2 text-sm text-slate-900 focus:bg-slate-50 cursor-pointer"
               >
                 {String(item.is_active) === '1' || String(item.is_active) === 'true' || item.is_active === true ? (
                   <>
@@ -112,7 +112,7 @@ export const WarehouseSubBlockTable = ({
               <DropdownMenuItem
                 onClick={() => onEdit(item)}
                 disabled={!canEdit}
-                className="rounded-lg px-3 py-2 text-sm text-slate-900 focus:bg-slate-50 cursor-pointer"
+                className="rounded-md px-3 py-2 text-sm text-slate-900 focus:bg-slate-50 cursor-pointer"
               >
                 <Pencil className="mr-2 h-4 w-4" />
                 Edit
@@ -120,7 +120,7 @@ export const WarehouseSubBlockTable = ({
               <DropdownMenuItem
                 onClick={() => onDelete(item)}
                 disabled={!canDelete}
-                className="rounded-lg px-3 py-2 text-sm text-red-600 focus:bg-red-50 focus:text-red-600 cursor-pointer"
+                className="rounded-md px-3 py-2 text-sm text-red-600 focus:bg-red-50 focus:text-red-600 cursor-pointer"
               >
                 <Trash className="mr-2 h-4 w-4" />
                 Hapus

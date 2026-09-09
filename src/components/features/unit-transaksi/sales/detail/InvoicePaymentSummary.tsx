@@ -21,7 +21,7 @@ export function InvoicePaymentSummary({ data }: { data: InvoicePayment }) {
             <CardContent className="space-y-4 p-0">
                 {/* Header dengan Icon */}
                 <div className="flex flex-col sm:flex-row items-center gap-2 w-full sm:w-auto">
-                    <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-green-50">
+                    <div className="flex h-8 w-8 items-center justify-center rounded-md bg-green-50">
                         <DollarSign className="h-4 w-4 text-green-600" />
                     </div>
                     <span className="font-medium">Jumlah Pembayaran</span>

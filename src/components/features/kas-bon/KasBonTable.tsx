@@ -107,7 +107,7 @@ export function KasBonTable({
                   event.preventDefault();
                   onDetail(item);
                 }}
-                className="cursor-pointer rounded-lg px-3 py-2 text-sm text-slate-900 focus:bg-slate-50"
+                className="cursor-pointer rounded-md px-3 py-2 text-sm text-slate-900 focus:bg-slate-50"
               >
                 Detail
               </DropdownMenuItem>
@@ -117,7 +117,7 @@ export function KasBonTable({
                   onApprove(item);
                 }}
                 disabled={!canEdit || item.isApprove || !isKasBonPaid(item)}
-                className="cursor-pointer rounded-lg px-3 py-2 text-sm text-slate-900 focus:bg-slate-50"
+                className="cursor-pointer rounded-md px-3 py-2 text-sm text-slate-900 focus:bg-slate-50"
               >
                 Approve
               </DropdownMenuItem>
@@ -127,7 +127,7 @@ export function KasBonTable({
                   onEdit(item);
                 }}
                 disabled={!canEdit || item.isApprove}
-                className="cursor-pointer rounded-lg px-3 py-2 text-sm text-slate-900 focus:bg-slate-50"
+                className="cursor-pointer rounded-md px-3 py-2 text-sm text-slate-900 focus:bg-slate-50"
               >
                 Edit
               </DropdownMenuItem>
@@ -137,7 +137,7 @@ export function KasBonTable({
                   onDelete(item);
                 }}
                 disabled={!canDelete || item.isApprove}
-                className="cursor-pointer rounded-lg px-3 py-2 text-sm text-red-600 focus:bg-red-50 focus:text-red-600"
+                className="cursor-pointer rounded-md px-3 py-2 text-sm text-red-600 focus:bg-red-50 focus:text-red-600"
               >
                 Hapus
               </DropdownMenuItem>

@@ -171,7 +171,7 @@ export default function LaporanSuratJalanPage() {
                 e.stopPropagation();
                 router.push(`/dashboard/${slugParam}/laporan/laporan-surat-jalan/${item.id}`);
               }}
-              className="rounded-lg px-3 py-2 text-sm text-slate-900 focus:bg-slate-50 cursor-pointer"
+              className="rounded-md px-3 py-2 text-sm text-slate-900 focus:bg-slate-50 cursor-pointer"
             >
               <FileText className="mr-2 h-4 w-4" />
               Detail

@@ -208,7 +208,7 @@ export function SalesTable({
                         <AlertTriangle className="h-4 w-4" />
                       </button>
                     </TooltipTrigger>
-                    <TooltipContent side="top" align="center" className="max-w-xs bg-slate-900 text-white rounded-lg p-2 text-xs shadow-md">
+                    <TooltipContent side="top" align="center" className="max-w-xs bg-slate-900 text-white rounded-md p-2 text-xs shadow-md">
                       {tooltipText}
                     </TooltipContent>
                   </Tooltip>
@@ -338,7 +338,7 @@ export function SalesTable({
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="min-w-[150px] rounded-md border-slate-200 p-1.5 shadow-lg">
               <DropdownMenuItem
-                className="rounded-lg px-3 py-2 text-sm text-slate-900 focus:bg-slate-50 cursor-pointer"
+                className="rounded-md px-3 py-2 text-sm text-slate-900 focus:bg-slate-50 cursor-pointer"
                 onClick={() => router.push(slug ? `/dashboard/${slug}/transaksi/penjualan-unit/${item.id}` : `/transaksi/penjualan-unit/${item.id}`)}
               >
                 <Eye className="mr-2 h-4 w-4" /> Detail
@@ -347,20 +347,20 @@ export function SalesTable({
                 <>
                   <DropdownMenuItem
                     disabled={!canEdit}
-                    className="rounded-lg px-3 py-2 text-sm text-slate-900 focus:bg-slate-50 cursor-pointer"
+                    className="rounded-md px-3 py-2 text-sm text-slate-900 focus:bg-slate-50 cursor-pointer"
                     onClick={() => router.push(slug ? `/dashboard/${slug}/transaksi/penjualan-unit/edit/${item.id}` : `/transaksi/penjualan-unit/edit/${item.id}`)}
                   >
                     <Pencil className="mr-2 h-4 w-4" /> Edit
                   </DropdownMenuItem>
                   <DropdownMenuItem
-                    className="rounded-lg px-3 py-2 text-sm text-slate-900 focus:bg-slate-50 cursor-pointer"
+                    className="rounded-md px-3 py-2 text-sm text-slate-900 focus:bg-slate-50 cursor-pointer"
                     onClick={() => router.push(slug ? `/dashboard/${slug}/transaksi/penjualan-unit/${item.id}/refund` : `/transaksi/penjualan-unit/${item.id}/refund`)}
                     disabled={isRefunded(item) || !canEdit}
                   >
                     <RotateCcw className="mr-2 h-4 w-4" /> Refund Jual
                   </DropdownMenuItem>
                   <DropdownMenuItem
-                    className="rounded-lg px-3 py-2 text-sm text-slate-900 focus:bg-slate-50 cursor-pointer"
+                    className="rounded-md px-3 py-2 text-sm text-slate-900 focus:bg-slate-50 cursor-pointer"
                     disabled={!item.documentTemplateId}
                     title={!item.documentTemplateId ? 'Document template belum dipilih.' : undefined}
                     onClick={() => item.documentTemplateId && window.open(slug ? `/dashboard/${slug}/transaksi/penjualan-unit/print/${item.id}` : `/transaksi/penjualan-unit/print/${item.id}`, '_blank')}
@@ -380,7 +380,7 @@ export function SalesTable({
                   }}
                   disabled={item.isPaid || !canDelete}
                   className={cn(
-                    "rounded-lg px-3 py-2 text-sm text-red-600 focus:bg-red-50 focus:text-red-600 cursor-pointer",
+                    "rounded-md px-3 py-2 text-sm text-red-600 focus:bg-red-50 focus:text-red-600 cursor-pointer",
                     item.isPaid && "opacity-50 cursor-not-allowed hover:bg-transparent hover:text-red-600 focus:bg-transparent"
                   )}
                 >

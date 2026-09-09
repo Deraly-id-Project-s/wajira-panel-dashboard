@@ -266,7 +266,7 @@ export function UnitTransactionPaymentForm({
         <div className="space-y-6">
             <div className="space-y-6">
                 {/* ── Section: Biaya ── */}
-                <div className="rounded-lg border">
+                <div className="rounded-md border">
                     <div className="border-b px-4 py-3">
                         <h3 className="text-sm font-semibold text-muted-foreground">Biaya</h3>
                     </div>
@@ -287,7 +287,7 @@ export function UnitTransactionPaymentForm({
                 </div>
 
                 {/* ── Section: Invoice ── */}
-                <div className="rounded-lg border">
+                <div className="rounded-md border">
                     <div className="border-b px-4 py-3">
                         <h3 className="text-sm font-semibold text-muted-foreground">Biaya Invoice</h3>
                     </div>
@@ -336,7 +336,7 @@ export function UnitTransactionPaymentForm({
                 {/* ── Section: Pembayaran ── */}
                 <Form {...form}>
                     <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
-                        <div className="rounded-lg border">
+                        <div className="rounded-md border">
                             <div className="border-b px-4 py-3">
                                 <h3 className="text-sm font-semibold text-muted-foreground">Riwayat Pembayaran</h3>
                             </div>
@@ -422,7 +422,7 @@ export function UnitTransactionPaymentForm({
                         </div>
 
                         {/* Note */}
-                        <div className="rounded-lg border">
+                        <div className="rounded-md border">
                             <div className="border-b px-4 py-3">
                                 <h3 className="text-sm font-semibold text-muted-foreground">Catatan</h3>
                             </div>
@@ -455,11 +455,11 @@ export function UnitTransactionPaymentForm({
                                                 <FormLabel className="text-sm font-medium">Bukti Pembayaran (Opsional)</FormLabel>
                                                 <FormControl>
                                                     <label className={cn(
-                                                        "block cursor-pointer rounded-lg border border-dashed px-4 py-6 text-center text-sm transition-all duration-200",
+                                                        "block cursor-pointer rounded-md border border-dashed px-4 py-6 text-center text-sm transition-all duration-200",
                                                         isDisabled && "opacity-60 cursor-not-allowed pointer-events-none",
                                                         file
                                                             ? "border-emerald-300 bg-emerald-50/50 text-emerald-700 hover:border-emerald-400 hover:bg-emerald-50"
-                                                             : "border-slate-300 bg-slate-50 text-slate-600 hover:border-slate-400 hover:bg-slate-100"
+                                                            : "border-slate-300 bg-slate-50 text-slate-600 hover:border-slate-400 hover:bg-slate-100"
                                                     )}>
                                                         {file ? (
                                                             <>
@@ -522,7 +522,7 @@ export function UnitTransactionPaymentForm({
                 </Form>
 
                 {/* ── Section: Histori Pembayaran ── */}
-                <div className="rounded-lg border bg-white overflow-hidden">
+                <div className="rounded-md border bg-white overflow-hidden">
                     <div className="border-b px-4 py-3 bg-slate-50">
                         <h3 className="text-sm font-semibold text-muted-foreground">Riwayat Pembayaran</h3>
                     </div>
@@ -553,7 +553,7 @@ export function UnitTransactionPaymentForm({
                                     onDeleteHistory(deleteId);
                                     setDeleteId(null);
                                 }
-                             }}
+                            }}
                             disabled={!!billing?.is_paid}
                             className="rounded-md bg-red-600 hover:bg-red-700"
                         >

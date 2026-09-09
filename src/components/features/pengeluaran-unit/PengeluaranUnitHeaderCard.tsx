@@ -78,7 +78,7 @@ function SearchableSelect({
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
-        <Button type="button" variant="outline" role="combobox" aria-expanded={open} disabled={disabled} className="w-full justify-between font-normal bg-white h-10 rounded-lg border-gray-200">
+        <Button type="button" variant="outline" role="combobox" aria-expanded={open} disabled={disabled} className="w-full justify-between font-normal bg-white h-10 rounded-md border-gray-200">
           <span className={cn('truncate', !selectedLabel && 'text-gray-400')}>{selectedLabel || placeholder}</span>
           <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
         </Button>
@@ -134,7 +134,7 @@ export default function PengeluaranUnitHeaderCard({
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-[15px]">
         <div className="space-y-1">
           <label className="text-gray-500 font-medium text-xs uppercase tracking-wider">No Pengeluaran</label>
-          <Input value={values.activityNumber ?? '-'} disabled readOnly className="bg-gray-50 text-gray-500 rounded-lg h-10 border-gray-200" />
+          <Input value={values.activityNumber ?? '-'} disabled readOnly className="bg-gray-50 text-gray-500 rounded-md h-10 border-gray-200" />
         </div>
 
         <div className="space-y-1">
@@ -144,7 +144,7 @@ export default function PengeluaranUnitHeaderCard({
             onChange={onActivityDateChange}
             disabled={isDetail}
             placeholder="Pilih tanggal"
-            className="h-10 rounded-lg border-gray-200 text-gray-900"
+            className="h-10 rounded-md border-gray-200 text-gray-900"
           />
           {errors?.activityDate ? <p className={errorClassName}>{errors.activityDate}</p> : null}
         </div>
@@ -152,7 +152,7 @@ export default function PengeluaranUnitHeaderCard({
         <div className="space-y-1">
           <label className="text-gray-500 font-medium text-xs uppercase tracking-wider">Warehouse</label>
           {isDetail ? (
-            <Input value={values.warehouseName ?? '-'} disabled readOnly className="bg-gray-50 text-gray-500 rounded-lg h-10 border-gray-200" />
+            <Input value={values.warehouseName ?? '-'} disabled readOnly className="bg-gray-50 text-gray-500 rounded-md h-10 border-gray-200" />
           ) : (
             <SearchableSelect
               value={values.warehouseId}
@@ -172,7 +172,7 @@ export default function PengeluaranUnitHeaderCard({
         <div className="space-y-1">
           <label className="text-gray-500 font-medium text-xs uppercase tracking-wider">Supplier</label>
           {isDetail ? (
-            <Input value={values.supplierName ?? '-'} disabled readOnly className="bg-gray-50 text-gray-500 rounded-lg h-10 border-gray-200" />
+            <Input value={values.supplierName ?? '-'} disabled readOnly className="bg-gray-50 text-gray-500 rounded-md h-10 border-gray-200" />
           ) : (
             <SearchableSelect
               value={values.supplierId}
@@ -195,7 +195,7 @@ export default function PengeluaranUnitHeaderCard({
           disabled={isDetail}
           onChange={(event) => onDescriptionChange?.(event.target.value)}
           placeholder="Masukkan keterangan"
-          className="bg-white text-gray-900 rounded-lg min-h-24 border-gray-200 resize-y"
+          className="bg-white text-gray-900 rounded-md min-h-24 border-gray-200 resize-y"
         />
         {errors?.description ? <p className={errorClassName}>{errors.description}</p> : null}
       </div>

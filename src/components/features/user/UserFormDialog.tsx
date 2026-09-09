@@ -337,7 +337,7 @@ export function UserFormDialog({ open, onOpenChange, user }: Props) {
             )}
           />
 
-          <div className="rounded-lg border border-blue-100 bg-blue-50/55 p-3 text-[12px] text-blue-800 flex items-start gap-2 leading-relaxed">
+          <div className="rounded-md border border-blue-100 bg-blue-50/55 p-3 text-[12px] text-blue-800 flex items-start gap-2 leading-relaxed">
             <Info className="h-4 w-4 text-blue-500 shrink-0 mt-0.5" />
             <span>
               Pengaturan ini digunakan untuk memberi atau mencabut akses aktif pengguna agar dapat masuk (login) ke dalam sistem dashboard.

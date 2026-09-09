@@ -152,9 +152,9 @@ export default function LPJumlahPenyerahanPage() {
       cell: (item) => <span className="text-slate-600 whitespace-nowrap">{formatDateString(item.process_date || item.stnk_registration_date || item.bpkb_registration_date)}</span>,
     },
     {
-      header: activeTab === 'stnk' ? 'TGL TERIMA STNK' : 
-              activeTab === 'bpkb' ? 'TGL TERIMA BPKB' : 
-              activeTab === 'skpd' ? 'TGL TERIMA SKPD' : 'TGL TERIMA TNKB',
+      header: activeTab === 'stnk' ? 'TGL TERIMA STNK' :
+        activeTab === 'bpkb' ? 'TGL TERIMA BPKB' :
+          activeTab === 'skpd' ? 'TGL TERIMA SKPD' : 'TGL TERIMA TNKB',
       id: 'tgl_terima',
       alignment: 'center',
       cell: (item) => {
@@ -204,16 +204,16 @@ export default function LPJumlahPenyerahanPage() {
           {/* Tab triggers wrapped to look like pills */}
           <div className="flex no-print">
             <TabsList className="flex h-auto p-1 bg-gray-50 border border-gray-100 rounded-md">
-              <TabsTrigger value="stnk" className="rounded-lg px-6 py-2.5 text-[14px] font-medium data-[state=active]:bg-white data-[state=active]:text-gray-900 data-[state=active]:shadow-sm cursor-pointer">
+              <TabsTrigger value="stnk" className="rounded-md px-6 py-2.5 text-[14px] font-medium data-[state=active]:bg-white data-[state=active]:text-gray-900 data-[state=active]:shadow-sm cursor-pointer">
                 LP Jumlah Penyerahan STNK
               </TabsTrigger>
-              <TabsTrigger value="bpkb" className="rounded-lg px-6 py-2.5 text-[14px] font-medium data-[state=active]:bg-white data-[state=active]:text-gray-900 data-[state=active]:shadow-sm cursor-pointer">
+              <TabsTrigger value="bpkb" className="rounded-md px-6 py-2.5 text-[14px] font-medium data-[state=active]:bg-white data-[state=active]:text-gray-900 data-[state=active]:shadow-sm cursor-pointer">
                 LP Jumlah Penyerahan BPKB
               </TabsTrigger>
-              <TabsTrigger value="skpd" className="rounded-lg px-6 py-2.5 text-[14px] font-medium data-[state=active]:bg-white data-[state=active]:text-gray-900 data-[state=active]:shadow-sm cursor-pointer">
+              <TabsTrigger value="skpd" className="rounded-md px-6 py-2.5 text-[14px] font-medium data-[state=active]:bg-white data-[state=active]:text-gray-900 data-[state=active]:shadow-sm cursor-pointer">
                 LP Jumlah Penyerahan SKPD
               </TabsTrigger>
-              <TabsTrigger value="tnkb" className="rounded-lg px-6 py-2.5 text-[14px] font-medium data-[state=active]:bg-white data-[state=active]:text-gray-900 data-[state=active]:shadow-sm cursor-pointer">
+              <TabsTrigger value="tnkb" className="rounded-md px-6 py-2.5 text-[14px] font-medium data-[state=active]:bg-white data-[state=active]:text-gray-900 data-[state=active]:shadow-sm cursor-pointer">
                 LP Jumlah Penyerahan TNKB
               </TabsTrigger>
             </TabsList>
@@ -236,43 +236,43 @@ export default function LPJumlahPenyerahanPage() {
                 setPage(1);
               }}
             >
-            {/* Print Letter Wrapping Container */}
-            <PrintLetterPage
-              id="laporan-jumlah-penyerahan-print"
-              className="laporan-penerimaan-print-area"
-              letterheadSrc={selectedPrintBackground}
-            >
-              <div className="laporan-penerimaan-print-content print-letter-content">
-                {/* Cover Letter Heading - Visible only in Print */}
-                <div className="hidden print:flex flex-col items-center justify-center text-center space-y-1 mb-6 w-full">
-                  <h2 className="text-[18px] font-bold uppercase text-gray-900 tracking-wide">
-                    Laporan Jumlah Penyerahan {activeTab.toUpperCase()}
-                  </h2>
-                  <p className="text-[15px] font-bold text-gray-900 tracking-wide">
-                    PT WAJIRA YANOTAMA
-                  </p>
-                  <p className="text-[12px] text-gray-600">
-                    Tanggal Cetak: {formatDate(new Date())}
-                  </p>
-                </div>
+              {/* Print Letter Wrapping Container */}
+              <PrintLetterPage
+                id="laporan-jumlah-penyerahan-print"
+                className="laporan-penerimaan-print-area"
+                letterheadSrc={selectedPrintBackground}
+              >
+                <div className="laporan-penerimaan-print-content print-letter-content">
+                  {/* Cover Letter Heading - Visible only in Print */}
+                  <div className="hidden print:flex flex-col items-center justify-center text-center space-y-1 mb-6 w-full">
+                    <h2 className="text-[18px] font-bold uppercase text-gray-900 tracking-wide">
+                      Laporan Jumlah Penyerahan {activeTab.toUpperCase()}
+                    </h2>
+                    <p className="text-[15px] font-bold text-gray-900 tracking-wide">
+                      PT WAJIRA YANOTAMA
+                    </p>
+                    <p className="text-[12px] text-gray-600">
+                      Tanggal Cetak: {formatDate(new Date())}
+                    </p>
+                  </div>
 
-                {/* Table Rendering */}
-                <div className="rounded-md border border-gray-200 bg-white overflow-x-auto shadow-none w-full">
-                  <BaseTable
-                    data={data}
-                    columns={columns}
-                    loading={isLoading}
-                    sortBy={sortBy}
-                    sortDirection={sortOrder}
-                    onSortChange={(key, dir) => {
-                      setSortBy(key);
-                      setSortOrder(dir);
-                      setPage(1);
-                    }}
-                  />
+                  {/* Table Rendering */}
+                  <div className="rounded-md border border-gray-200 bg-white overflow-x-auto shadow-none w-full">
+                    <BaseTable
+                      data={data}
+                      columns={columns}
+                      loading={isLoading}
+                      sortBy={sortBy}
+                      sortDirection={sortOrder}
+                      onSortChange={(key, dir) => {
+                        setSortBy(key);
+                        setSortOrder(dir);
+                        setPage(1);
+                      }}
+                    />
+                  </div>
                 </div>
-              </div>
-            </PrintLetterPage>
+              </PrintLetterPage>
             </SearchPagination>
           </div>
         </Tabs>

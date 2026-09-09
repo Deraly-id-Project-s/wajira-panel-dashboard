@@ -267,7 +267,7 @@ function AccountSelect({
       placeholder={placeholderText}
       searchPlaceholder={searchPlaceholderText}
       emptyText="Akun tidak ditemukan."
-      className="h-10 rounded-lg border-slate-200 bg-white px-3 text-sm shadow-none focus-visible:ring-slate-300"
+      className="h-10 rounded-md border-slate-200 bg-white px-3 text-sm shadow-none focus-visible:ring-slate-300"
     />
   );
 }
@@ -472,9 +472,9 @@ export default function LaporanLabaRugiPage() {
   const calculatedNetIncomeUsd = explicitNetIncomeUsd !== undefined && explicitNetIncomeUsd !== null
     ? toNumber(explicitNetIncomeUsd)
     : normalizedSections.revenue.totalUsd
-      - normalizedSections.cogs.totalUsd
-      - normalizedSections.opex.totalUsd
-      + normalizedSections.noix.totalUsd;
+    - normalizedSections.cogs.totalUsd
+    - normalizedSections.opex.totalUsd
+    + normalizedSections.noix.totalUsd;
 
   const printSections = useMemo<ProfitLossPrintSection[]>(() => [
     {

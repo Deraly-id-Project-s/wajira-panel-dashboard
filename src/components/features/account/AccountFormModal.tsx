@@ -75,7 +75,7 @@ export function AccountFormModal({
                 <FormItem className="space-y-1.5">
                   <FormLabel className="text-xs font-semibold text-slate-700">Kode Akun<RequiredMark /></FormLabel>
                   <FormControl>
-                    <Input placeholder="Masukkan kode akun" className="h-10 rounded-lg border-slate-200 px-3 text-sm shadow-none focus-visible:ring-slate-300 bg-white" {...field} />
+                    <Input placeholder="Masukkan kode akun" className="h-10 rounded-md border-slate-200 px-3 text-sm shadow-none focus-visible:ring-slate-300 bg-white" {...field} />
                   </FormControl>
                   <FormMessage className="text-xs" />
                 </FormItem>
@@ -102,7 +102,7 @@ export function AccountFormModal({
                           onSearchChange={onGroupSearchChange}
                           onLoadMore={onLoadMoreGroups}
                           hasMore={hasMoreGroups}
-                          className="h-10 rounded-lg border-slate-200 px-3 text-sm shadow-none focus-visible:ring-slate-300 bg-white"
+                          className="h-10 rounded-md border-slate-200 px-3 text-sm shadow-none focus-visible:ring-slate-300 bg-white"
                         />
                       </div>
                       <Button type="button" onClick={() => setOpenCreateGroup(true)} className="btn-primary!">
@@ -123,7 +123,7 @@ export function AccountFormModal({
                   <FormLabel className="text-xs font-semibold text-slate-700">Kategori Laporan</FormLabel>
                   <FormControl>
                     <Select value={field.value ?? ''} onValueChange={(val) => field.onChange(val === 'none' ? undefined : val)}>
-                      <SelectTrigger className="h-10 rounded-lg border-slate-200 px-3 text-sm shadow-none focus:ring-slate-300 bg-white">
+                      <SelectTrigger className="h-10 rounded-md border-slate-200 px-3 text-sm shadow-none focus:ring-slate-300 bg-white">
                         <SelectValue placeholder="Pilih Kategori Laporan (Opsional)" />
                       </SelectTrigger>
                       <SelectContent>
@@ -148,7 +148,7 @@ export function AccountFormModal({
                 <FormItem className="space-y-1.5">
                   <FormLabel className="text-xs font-semibold text-slate-700">Nama Akun<RequiredMark /></FormLabel>
                   <FormControl>
-                    <Input placeholder="Masukkan nama akun" className="h-10 rounded-lg border-slate-200 px-3 text-sm shadow-none focus-visible:ring-slate-300 bg-white" {...field} />
+                    <Input placeholder="Masukkan nama akun" className="h-10 rounded-md border-slate-200 px-3 text-sm shadow-none focus-visible:ring-slate-300 bg-white" {...field} />
                   </FormControl>
                   <FormMessage className="text-xs" />
                 </FormItem>
@@ -162,7 +162,7 @@ export function AccountFormModal({
                 <FormItem className="space-y-1.5">
                   <FormLabel className="text-xs font-semibold text-slate-700">Deskripsi</FormLabel>
                   <FormControl>
-                    <Textarea placeholder="Tulis deskripsi di sini" className="min-h-[72px] resize-none rounded-lg border-slate-200 px-3 py-2 text-sm shadow-none focus-visible:ring-slate-300 bg-white" rows={3} {...field} />
+                    <Textarea placeholder="Tulis deskripsi di sini" className="min-h-[72px] resize-none rounded-md border-slate-200 px-3 py-2 text-sm shadow-none focus-visible:ring-slate-300 bg-white" rows={3} {...field} />
                   </FormControl>
                   <FormMessage className="text-xs" />
                 </FormItem>
@@ -170,10 +170,10 @@ export function AccountFormModal({
             />
 
             <div className="flex flex-col gap-2 pt-3 flex-shrink-0">
-              <Button type="submit" className={cn('h-10 w-full rounded-lg bg-[#1F3B5B] text-sm font-semibold text-white hover:bg-[#1B3450]')} disabled={isSubmitting}>
+              <Button type="submit" className={cn('h-10 w-full rounded-md bg-[#1F3B5B] text-sm font-semibold text-white hover:bg-[#1B3450]')} disabled={isSubmitting}>
                 {isSubmitting ? 'Menyimpan...' : submitLabel}
               </Button>
-              <Button type="button" variant="outline" className="h-10 w-full rounded-lg border-slate-200 text-sm font-semibold text-slate-700 shadow-none hover:bg-slate-50" onClick={() => onOpenChange(false)}>
+              <Button type="button" variant="outline" className="h-10 w-full rounded-md border-slate-200 text-sm font-semibold text-slate-700 shadow-none hover:bg-slate-50" onClick={() => onOpenChange(false)}>
                 Batal
               </Button>
             </div>

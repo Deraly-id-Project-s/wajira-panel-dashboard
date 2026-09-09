@@ -32,7 +32,7 @@ function RelatedSection({ title, description, icon, onAdd, children, addDisabled
       <div className="mb-4 flex items-start justify-between gap-3">
         <div>
           <div className="flex items-center gap-3">
-            <div className="rounded-lg bg-orange-100 p-2 text-orange-700">{icon}</div>
+            <div className="rounded-md bg-orange-100 p-2 text-orange-700">{icon}</div>
             <div>
               <h2 className="font-semibold text-slate-950">{title}</h2>
               {description && <p className="text-xs text-slate-500">{description}</p>}
@@ -197,7 +197,7 @@ export function DOEkspedisiDriverNotes({ data, onRefresh }: DOEkspedisiDriverNot
         <BaseTable
           data={data.driverNotes ?? []}
           columns={columns}
-          containerClassName="rounded-lg border"
+          containerClassName="rounded-md border"
           headerRowClassName="bg-orange-50"
         />
       </RelatedSection>

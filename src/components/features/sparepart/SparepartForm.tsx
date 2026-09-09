@@ -121,8 +121,8 @@ export function SparepartForm({
                           {field.value
                             ? categories?.find((category) => category.id === Number(field.value))?.name ?? 'Pilih grup'
                             : loadingCategories
-                            ? 'Memuat grup...'
-                            : 'Pilih grup'}
+                              ? 'Memuat grup...'
+                              : 'Pilih grup'}
                         </span>
                         <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                       </button>
@@ -279,7 +279,7 @@ export function SparepartForm({
           <Button
             type="submit"
             disabled={isSubmitting}
-            className="bg-[#1e293b] hover:bg-[#0f172a] text-white font-medium min-w-[120px] rounded-lg"
+            className="bg-[#1e293b] hover:bg-[#0f172a] text-white font-medium min-w-[120px] rounded-md"
           >
             {isSubmitting ? (
               'Menyimpan...'

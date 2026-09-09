@@ -90,16 +90,16 @@ export function BBNBillTable({
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-[160px] rounded-md bg-white shadow-md border border-slate-100 p-1.5">
-                <DropdownMenuItem onClick={() => onDetail(item)} className="cursor-pointer rounded-lg px-3 py-2 text-sm text-slate-700 hover:bg-slate-50">
+                <DropdownMenuItem onClick={() => onDetail(item)} className="cursor-pointer rounded-md px-3 py-2 text-sm text-slate-700 hover:bg-slate-50">
                   Detail
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => onPay(item)} className="cursor-pointer rounded-lg px-3 py-2 text-sm text-slate-700 hover:bg-slate-50">
+                <DropdownMenuItem onClick={() => onPay(item)} className="cursor-pointer rounded-md px-3 py-2 text-sm text-slate-700 hover:bg-slate-50">
                   Bayar Tagihan
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => onPrint(item)} className="cursor-pointer rounded-lg px-3 py-2 text-sm text-slate-700 hover:bg-slate-50">
+                <DropdownMenuItem onClick={() => onPrint(item)} className="cursor-pointer rounded-md px-3 py-2 text-sm text-slate-700 hover:bg-slate-50">
                   Print
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => onDelete(item)} className="cursor-pointer rounded-lg px-3 py-2 text-sm text-red-600 focus:text-red-600 hover:bg-slate-50">
+                <DropdownMenuItem onClick={() => onDelete(item)} className="cursor-pointer rounded-md px-3 py-2 text-sm text-red-600 focus:text-red-600 hover:bg-slate-50">
                   Hapus
                 </DropdownMenuItem>
               </DropdownMenuContent>

@@ -60,7 +60,7 @@ export function FormDialog({
             {children}
           </div>
 
-          <div className="shrink-0 flex justify-center items-center gap-6 px-6 py-4 border-t bg-gray-50/50">
+          <div className="flex items-center flex-col sm:flex-row w-full sm:w-auto justify-end gap-2 px-6 py-5">
             <Button
               type="button"
               variant={"outline"}

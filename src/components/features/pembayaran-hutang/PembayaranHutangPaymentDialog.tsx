@@ -303,7 +303,7 @@ export default function PembayaranHutangPaymentDialog({ open, onOpenChange, bill
             <Textarea placeholder="Catatan pembayaran" {...form.register('note')} disabled={isBusy} />
           </div>
 
-          <div className="rounded-lg border bg-muted/40 px-4 py-3 text-sm text-muted-foreground">
+          <div className="rounded-md border bg-muted/40 px-4 py-3 text-sm text-muted-foreground">
             Sisa hutang saat ini: <span className="font-semibold text-foreground">Rp{remainingPayment.toLocaleString('id-ID')}</span>
           </div>
 

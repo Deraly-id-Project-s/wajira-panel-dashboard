@@ -21,7 +21,7 @@ export function InvoiceInfoCard({ data }: { data: InvoiceInfo }) {
             <CardContent className="space-y-4 p-0">
                 {/* Header dengan Icon */}
                 <div className="flex flex-col sm:flex-row items-center gap-2 w-full sm:w-auto">
-                    <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-50">
+                    <div className="flex h-8 w-8 items-center justify-center rounded-md bg-blue-50">
                         <FileText className="h-4 w-4 text-blue-600" />
                     </div>
                     <span className="font-medium">Informasi Invoice</span>

@@ -17,7 +17,7 @@ export default function LaporanStockHeaderAction() {
         <div className="flex justify-end gap-3">
             <button
                 onClick={handlePrint}
-                className="flex items-center gap-2 border border-gray-200 px-4 py-2 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
+                className="flex items-center gap-2 border border-gray-200 px-4 py-2 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
             >
                 <Printer className="w-4 h-4" />
                 Print
@@ -25,7 +25,7 @@ export default function LaporanStockHeaderAction() {
 
             <button
                 onClick={handleDownload}
-                className="flex items-center gap-2 bg-[#00d26a] hover:bg-[#00b85c] text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors shadow-sm"
+                className="flex items-center gap-2 bg-[#00d26a] hover:bg-[#00b85c] text-white px-4 py-2 rounded-md text-sm font-medium transition-colors shadow-sm"
             >
                 <Download className="w-4 h-4" />
                 Download

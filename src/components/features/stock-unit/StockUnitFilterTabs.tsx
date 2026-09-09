@@ -9,7 +9,7 @@ interface StockUnitFilterTabsProps {
 export default function StockUnitFilterDropdown({ active, onChange }: StockUnitFilterTabsProps) {
   return (
     <Select value={active} onValueChange={(value) => onChange(value as StockStatus | 'all')}>
-      <SelectTrigger className="h-10 w-[200px] border-gray-300 bg-white text-gray-900 rounded-lg shadow-sm">
+      <SelectTrigger className="h-10 w-[200px] border-gray-300 bg-white text-gray-900 rounded-md shadow-sm">
         <SelectValue placeholder="Semua Status" />
       </SelectTrigger>
       <SelectContent>

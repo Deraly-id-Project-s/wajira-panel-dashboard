@@ -31,7 +31,7 @@ export const BrandTable = ({
                 sortable: true,
                 cell: (item) => (
                     <div className="flex items-center gap-3">
-                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border bg-slate-50 overflow-hidden">
+                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md border bg-slate-50 overflow-hidden">
                             {item.image ? (
                                 // eslint-disable-next-line @next/next/no-img-element
                                 <img src={item.image} alt={item.name} className="h-full w-full object-contain" />

@@ -183,7 +183,7 @@ export default function DetailDOEkspedisiPage() {
         <div className="space-y-4">
           {pageHeader()}
 
-          <div className="rounded-lg border border-red-200 bg-red-50 p-6 text-center">
+          <div className="rounded-md border border-red-200 bg-red-50 p-6 text-center">
             <p className="mb-4 text-red-700">
               {detailQuery.error instanceof Error
                 ? detailQuery.error.message
@@ -192,7 +192,7 @@ export default function DetailDOEkspedisiPage() {
             <button
               onClick={() => detailQuery.refetch()}
               disabled={detailQuery.isFetching}
-              className="inline-flex items-center gap-2 rounded-lg bg-red-600 px-4 py-2 text-white transition-colors hover:bg-red-700 disabled:opacity-50"
+              className="inline-flex items-center gap-2 rounded-md bg-red-600 px-4 py-2 text-white transition-colors hover:bg-red-700 disabled:opacity-50"
             >
               {detailQuery.isFetching ? 'Memuat ulang...' : 'Coba Lagi'}
             </button>
@@ -208,11 +208,11 @@ export default function DetailDOEkspedisiPage() {
         <div className="space-y-4">
           {pageHeader()}
 
-          <div className="rounded-lg border border-yellow-200 bg-yellow-50 p-6 text-center">
+          <div className="rounded-md border border-yellow-200 bg-yellow-50 p-6 text-center">
             <p className="mb-4 text-yellow-700">Data DO Ekspedisi tidak ditemukan</p>
             <button
               onClick={() => slug && router.push(`/dashboard/${slug}/do-ekspedisi`)}
-              className="inline-flex items-center gap-2 rounded-lg bg-yellow-600 px-4 py-2 text-white transition-colors hover:bg-yellow-700"
+              className="inline-flex items-center gap-2 rounded-md bg-yellow-600 px-4 py-2 text-white transition-colors hover:bg-yellow-700"
             >
               Kembali ke Daftar
             </button>

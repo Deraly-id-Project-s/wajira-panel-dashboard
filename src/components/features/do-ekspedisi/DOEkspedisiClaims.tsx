@@ -62,7 +62,7 @@ function RelatedSection({
       <div className="mb-4 flex items-start justify-between gap-3">
         <div>
           <div className="flex items-center gap-3">
-            <div className="rounded-lg bg-orange-100 p-2 text-orange-700">{icon}</div>
+            <div className="rounded-md bg-orange-100 p-2 text-orange-700">{icon}</div>
             <div>
               <h2 className="font-semibold text-slate-950">{title}</h2>
               {description && <p className="text-xs text-slate-500">{description}</p>}
@@ -408,7 +408,7 @@ export function DOEkspedisiClaims({ data, onRefresh }: DOEkspedisiClaimsProps) {
         <BaseTable
           data={data.expeditionClaims ?? []}
           columns={claimColumns}
-          containerClassName="rounded-lg border"
+          containerClassName="rounded-md border"
           headerRowClassName="bg-orange-50"
         />
       </RelatedSection>
@@ -537,7 +537,7 @@ export function DOEkspedisiClaims({ data, onRefresh }: DOEkspedisiClaimsProps) {
           <BaseTable
             data={docClaim?.documentations ?? []}
             columns={docColumns}
-            containerClassName="rounded-lg border"
+            containerClassName="rounded-md border"
             headerRowClassName="bg-orange-50"
           />
         </div>

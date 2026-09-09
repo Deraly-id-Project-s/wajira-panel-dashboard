@@ -43,7 +43,7 @@ export function SalesDetailCards({ data, billingHistories = [], unitType }: Prop
   return (
     <div className="grid gap-4 md:grid-cols-3">
       {/* Card 1: Informasi Penjualan */}
-      <Card className="rounded-lg border border-slate-200 shadow-sm h-full">
+      <Card className="rounded-md border border-slate-200 shadow-sm h-full">
         <CardContent className="p-5 flex flex-col h-full gap-4">
           <div className="flex items-center gap-3">
             <div className="p-2 bg-blue-50 rounded-md">
@@ -82,7 +82,7 @@ export function SalesDetailCards({ data, billingHistories = [], unitType }: Prop
       </Card>
 
       {/* Card 2: Detail Penjualan */}
-      <Card className="rounded-lg border border-slate-200 shadow-sm h-full">
+      <Card className="rounded-md border border-slate-200 shadow-sm h-full">
         <CardContent className="p-5 flex flex-col h-full gap-4">
           <div className="flex items-center gap-3">
             <div className="p-2 bg-emerald-50 rounded-md">
@@ -138,7 +138,7 @@ export function SalesDetailCards({ data, billingHistories = [], unitType }: Prop
       </Card>
 
       {/* Card 3: Riwayat Pembayaran */}
-      <Card className="rounded-lg border border-slate-200 shadow-sm h-full">
+      <Card className="rounded-md border border-slate-200 shadow-sm h-full">
         <CardContent className="p-5 flex flex-col h-full gap-4">
           <div className="flex items-center gap-3">
             <div className="p-2 rounded-md bg-purple-50">

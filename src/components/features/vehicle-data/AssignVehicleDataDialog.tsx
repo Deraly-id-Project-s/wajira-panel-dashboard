@@ -144,7 +144,7 @@ export function AssignVehicleDataDialog({ open, onOpenChange, initialVehicleIds 
               </PopoverContent>
             </Popover>
             {selectedVehicleIds.length > 0 ? (
-              <div className="flex flex-wrap gap-2 rounded-lg border border-slate-200 bg-slate-50 p-3">
+              <div className="flex flex-wrap gap-2 rounded-md border border-slate-200 bg-slate-50 p-3">
                 {selectedVehicleIds.map((id) => {
                   const matched = vehicleOptions.find((item) => item.id === id);
                   return (

@@ -61,7 +61,7 @@ export function PurchaseUnitTable({ units }: Props) {
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="min-w-[140px] rounded-md border-slate-200 p-1.5 shadow-lg">
-                <DropdownMenuItem className="text-red-600 focus:text-red-600 focus:bg-red-50 cursor-pointer rounded-lg px-3 py-2 text-sm" onClick={() => setDeleteId(unit.id)}>
+                <DropdownMenuItem className="text-red-600 focus:text-red-600 focus:bg-red-50 cursor-pointer rounded-md px-3 py-2 text-sm" onClick={() => setDeleteId(unit.id)}>
                   <Trash2 className="mr-2 h-4 w-4" />
                   Hapus
                 </DropdownMenuItem>

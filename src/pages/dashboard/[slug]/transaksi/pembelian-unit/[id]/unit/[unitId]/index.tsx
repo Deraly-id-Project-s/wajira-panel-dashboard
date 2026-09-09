@@ -454,13 +454,13 @@ export default function UnitPurchaseDetailPage() {
                   <span className="font-semibold text-slate-900">{currenciesFormat('idr', totalHpp)}</span>
                 </div>
                 {unitItem?.price_usd ? (
-                  <div className="flex items-center justify-between text-sm text-amber-800 bg-amber-50/50 px-2.5 py-1.5 rounded-lg border border-amber-100 mt-2">
+                  <div className="flex items-center justify-between text-sm text-amber-800 bg-amber-50/50 px-2.5 py-1.5 rounded-md border border-amber-100 mt-2">
                     <span className="font-medium">Total Harga (USD)</span>
                     <span className="font-bold">{currenciesFormat('usd', Number(unitItem.price_usd))}</span>
                   </div>
                 ) : null}
                 {unitItem?.price_per_unit_usd ? (
-                  <div className="flex items-center justify-between text-sm text-amber-800 bg-amber-50/50 px-2.5 py-1.5 rounded-lg border border-amber-100">
+                  <div className="flex items-center justify-between text-sm text-amber-800 bg-amber-50/50 px-2.5 py-1.5 rounded-md border border-amber-100">
                     <span className="font-medium">Harga Satuan (USD)</span>
                     <span className="font-bold">{currenciesFormat('usd', Number(unitItem.price_per_unit_usd))}</span>
                   </div>

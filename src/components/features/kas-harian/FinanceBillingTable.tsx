@@ -365,7 +365,7 @@ export default function FinanceBillingTable({ financeBillings, cashFlowDetail, c
         <div>
           <div className="flex items-center gap-3 flex-wrap">
             <h3 className="text-lg font-semibold text-slate-900">Rincian Pembayaran</h3>
-            <div className="flex items-center gap-1.5 bg-slate-50 border border-slate-200 rounded-lg px-2 py-0.5 text-xs text-slate-600 font-medium">
+            <div className="flex items-center gap-1.5 bg-slate-50 border border-slate-200 rounded-md px-2 py-0.5 text-xs text-slate-600 font-medium">
               {(cashFlowDetail.unit_transaction_billing_id || cashFlowDetail.goods_transaction_billing_id || cashFlowDetail.unit_transaction_billing || cashFlowDetail.goods_transaction_billing) ? (
                 <TooltipProvider>
                   <Tooltip>
@@ -374,7 +374,7 @@ export default function FinanceBillingTable({ financeBillings, cashFlowDetail, c
                         <Info className="h-3.5 w-3.5 mr-0.5" />
                       </button>
                     </TooltipTrigger>
-                    <TooltipContent side="top" align="center" className="max-w-xs bg-slate-900 text-white rounded-lg p-2 text-xs shadow-md">
+                    <TooltipContent side="top" align="center" className="max-w-xs bg-slate-900 text-white rounded-md p-2 text-xs shadow-md">
                       Data Arus Transaksi Kas Harian ini terhubung dengan data Administrasi
                     </TooltipContent>
                   </Tooltip>

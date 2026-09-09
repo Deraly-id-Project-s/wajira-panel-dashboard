@@ -77,7 +77,7 @@ export function KasBonPaymentForm({ billing, onSubmit, onCancel, isSubmitting = 
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
-        <div className="grid gap-4 rounded-lg border border-slate-200 p-4 sm:grid-cols-3">
+        <div className="grid gap-4 rounded-md border border-slate-200 p-4 sm:grid-cols-3">
           <div className="space-y-1"><p className="text-xs uppercase text-slate-500">Total Tagihan</p><p className="font-semibold">{currenciesFormat('idr', billing.grandTotal)}</p></div>
           <div className="space-y-1"><p className="text-xs uppercase text-slate-500">Sudah Dibayar</p><p className="font-semibold text-emerald-700">{currenciesFormat('idr', billing.totalPaid)}</p></div>
           <div className="space-y-1"><p className="text-xs uppercase text-slate-500">Sisa Setelah Input</p><p className="font-semibold text-rose-700">{currenciesFormat('idr', remaining)}</p></div>

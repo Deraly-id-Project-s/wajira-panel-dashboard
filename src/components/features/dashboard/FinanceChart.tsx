@@ -79,7 +79,7 @@ function SkeletonChart() {
           <div className="h-10 w-36 animate-pulse rounded-md bg-slate-100" />
         </div>
       </div>
-      <div className="h-80 animate-pulse rounded-lg bg-slate-100" />
+      <div className="h-80 animate-pulse rounded-md bg-slate-100" />
     </Card>
   );
 }

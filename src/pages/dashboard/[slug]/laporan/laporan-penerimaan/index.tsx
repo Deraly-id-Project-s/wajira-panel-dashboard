@@ -135,13 +135,13 @@ export default function LaporanPenerimaanPage() {
           <Tabs value={activeTab} onValueChange={handleTabChange} className="space-y-4">
             <div className="flex no-print">
               <TabsList className="flex h-auto p-1 bg-gray-50 border border-gray-100 rounded-md">
-                <TabsTrigger value="per-nota" className="rounded-lg px-6 py-2.5 text-[14px] font-medium data-[state=active]:bg-white data-[state=active]:text-gray-900 data-[state=active]:shadow-sm">
+                <TabsTrigger value="per-nota" className="rounded-md px-6 py-2.5 text-[14px] font-medium data-[state=active]:bg-white data-[state=active]:text-gray-900 data-[state=active]:shadow-sm">
                   Laporan Penerimaan
                 </TabsTrigger>
-                <TabsTrigger value="per-tipe" className="rounded-lg px-6 py-2.5 text-[14px] font-medium data-[state=active]:bg-white data-[state=active]:text-gray-900 data-[state=active]:shadow-sm">
+                <TabsTrigger value="per-tipe" className="rounded-md px-6 py-2.5 text-[14px] font-medium data-[state=active]:bg-white data-[state=active]:text-gray-900 data-[state=active]:shadow-sm">
                   Laporan Penerimaan Per Tipe
                 </TabsTrigger>
-                <TabsTrigger value="per-supplier" className="rounded-lg px-6 py-2.5 text-[14px] font-medium data-[state=active]:bg-white data-[state=active]:text-gray-900 data-[state=active]:shadow-sm">
+                <TabsTrigger value="per-supplier" className="rounded-md px-6 py-2.5 text-[14px] font-medium data-[state=active]:bg-white data-[state=active]:text-gray-900 data-[state=active]:shadow-sm">
                   Laporan Penerimaan Per Supplier
                 </TabsTrigger>
               </TabsList>

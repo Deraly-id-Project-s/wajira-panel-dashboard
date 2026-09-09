@@ -453,7 +453,7 @@ export function UnitTransactionForm({
               Batal
             </Button>
             {!readOnly && (
-              <Button type="submit" disabled={loading || submitDisabled} className="bg-[#1e293b] hover:bg-[#0f172a] text-white font-medium min-w-[120px] rounded-lg">
+              <Button type="submit" disabled={loading || submitDisabled} className="bg-[#1e293b] hover:bg-[#0f172a] text-white font-medium min-w-[120px] rounded-md">
                 {loading ? (
                   'Menyimpan...'
                 ) : (

@@ -190,14 +190,14 @@ export default function PengeluaranSparepartTable({
                   router.push(`/dashboard/${slug}/warehouse/pengeluaran-sparepart/${item.id}/detail`);
                 }
               }}
-              className="rounded-lg px-3 py-2 text-sm text-slate-900 focus:bg-slate-50 cursor-pointer"
+              className="rounded-md px-3 py-2 text-sm text-slate-900 focus:bg-slate-50 cursor-pointer"
             >
               Detail
             </DropdownMenuItem>
             <DropdownMenuItem
               disabled={!canEdit}
               onClick={() => handleOpenStateDialog(item.id, item.state || 'draft', item.state_note)}
-              className="rounded-lg px-3 py-2 text-sm text-slate-900 focus:bg-slate-50 cursor-pointer"
+              className="rounded-md px-3 py-2 text-sm text-slate-900 focus:bg-slate-50 cursor-pointer"
             >
               Ubah Status
             </DropdownMenuItem>
@@ -232,7 +232,7 @@ export default function PengeluaranSparepartTable({
                 value={selectedState}
                 onValueChange={(val) => setSelectedState(val as 'draft' | 'process' | 'done')}
               >
-                <SelectTrigger className="w-full bg-white border-slate-200 h-10 rounded-lg">
+                <SelectTrigger className="w-full bg-white border-slate-200 h-10 rounded-md">
                   <SelectValue placeholder="Pilih status" />
                 </SelectTrigger>
                 <SelectContent>
@@ -249,19 +249,19 @@ export default function PengeluaranSparepartTable({
                 placeholder="Masukkan catatan perubahan status..."
                 value={stateNote}
                 onChange={(e) => setStateNote(e.target.value)}
-                className="w-full min-h-[80px] bg-white border-slate-200 rounded-lg p-2 text-sm focus:outline-none"
+                className="w-full min-h-[80px] bg-white border-slate-200 rounded-md p-2 text-sm focus:outline-none"
               />
             </div>
           </div>
 
           <DialogFooter className="gap-2 sm:gap-0 border-t pt-4">
-            <Button variant="outline" className="rounded-lg" onClick={() => setEditingActivity(null)}>
+            <Button variant="outline" className="rounded-md" onClick={() => setEditingActivity(null)}>
               Batal
             </Button>
             <Button
               onClick={handleUpdateState}
               disabled={updateStateMutation.isPending}
-              className="rounded-lg px-5 btn-primary!"
+              className="rounded-md px-5 btn-primary!"
             >
               {updateStateMutation.isPending ? 'Menyimpan...' : 'Simpan'}
             </Button>

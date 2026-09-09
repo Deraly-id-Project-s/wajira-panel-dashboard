@@ -25,7 +25,7 @@ export function PurchaseDetailCards({ data }: Props) {
       <Card className="rounded-md border border-input shadow-sm h-full">
         <CardContent className="p-6 flex flex-col h-full">
           <div className="flex items-center gap-3 mb-6">
-            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-50">
+            <div className="flex h-10 w-10 items-center justify-center rounded-md bg-blue-50">
               <FileText className="h-5 w-5 text-blue-600" />
             </div>
             <span className="font-medium text-base">Informasi Penjualan</span>
@@ -48,7 +48,7 @@ export function PurchaseDetailCards({ data }: Props) {
       <Card className="rounded-md border border-input shadow-sm h-full">
         <CardContent className="p-6 flex flex-col h-full">
           <div className="flex items-center gap-3 mb-6">
-            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-green-50">
+            <div className="flex h-10 w-10 items-center justify-center rounded-md bg-green-50">
               <DollarSign className="h-5 w-5 text-green-600" />
             </div>
             <span className="font-medium text-base">Detail Penjualan</span>
@@ -82,7 +82,7 @@ export function PurchaseDetailCards({ data }: Props) {
       <Card className="rounded-md border border-input shadow-sm h-full">
         <CardContent className="p-6 flex flex-col h-full">
           <div className="flex items-center gap-3 mb-6">
-            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-orange-50">
+            <div className="flex h-10 w-10 items-center justify-center rounded-md bg-orange-50">
               <Receipt className="h-5 w-5 text-orange-600" />
             </div>
             <span className="font-medium text-base">Biaya Lainnya</span>

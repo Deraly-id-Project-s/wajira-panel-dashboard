@@ -164,7 +164,7 @@ export function DriverTable({
                                     e.preventDefault();
                                     onView(item);
                                 }}
-                                className="rounded-lg px-3 py-2 text-sm text-slate-900 focus:bg-slate-50 cursor-pointer"
+                                className="rounded-md px-3 py-2 text-sm text-slate-900 focus:bg-slate-50 cursor-pointer"
                             >
                                 Detail
                             </DropdownMenuItem>
@@ -174,14 +174,14 @@ export function DriverTable({
                                     onEdit(item);
                                 }}
                                 disabled={!canEdit}
-                                className="rounded-lg px-3 py-2 text-sm text-slate-900 focus:bg-slate-50 cursor-pointer"
+                                className="rounded-md px-3 py-2 text-sm text-slate-900 focus:bg-slate-50 cursor-pointer"
                             >
                                 Edit
                             </DropdownMenuItem>
                             <DropdownMenuItem
                                 onClick={() => handleCopyPassword(item.id)}
                                 disabled={!canEdit || fetchingPasswordId !== null}
-                                className="rounded-lg px-3 py-2 text-sm cursor-pointer disabled:pointer-events-none disabled:opacity-50"
+                                className="rounded-md px-3 py-2 text-sm cursor-pointer disabled:pointer-events-none disabled:opacity-50"
                             >
                                 {fetchingPasswordId === item.id ? 'Menyalin...' : 'Salin Password'}
                             </DropdownMenuItem>
@@ -191,7 +191,7 @@ export function DriverTable({
                                     onDelete(item);
                                 }}
                                 disabled={!canDelete}
-                                className="rounded-lg px-3 py-2 text-sm text-red-600 focus:bg-red-50 focus:text-red-600 cursor-pointer"
+                                className="rounded-md px-3 py-2 text-sm text-red-600 focus:bg-red-50 focus:text-red-600 cursor-pointer"
                             >
                                 Hapus
                             </DropdownMenuItem>

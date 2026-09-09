@@ -54,14 +54,14 @@ export function VehicleEquipmentTable({
                 <DropdownMenuItem
                   onClick={() => onEdit(item)}
                   disabled={!canEdit}
-                  className="cursor-pointer text-slate-900 font-medium rounded-lg hover:bg-gray-50 px-3 py-2 text-sm"
+                  className="cursor-pointer text-slate-900 font-medium rounded-md hover:bg-gray-50 px-3 py-2 text-sm"
                 >
                   Edit
                 </DropdownMenuItem>
                 <DropdownMenuItem
                   onClick={() => onDelete(item)}
                   disabled={!canDelete}
-                  className="text-red-600 cursor-pointer font-medium rounded-lg hover:bg-red-50 focus:bg-red-50 focus:text-red-600 px-3 py-2 text-sm"
+                  className="text-red-600 cursor-pointer font-medium rounded-md hover:bg-red-50 focus:bg-red-50 focus:text-red-600 px-3 py-2 text-sm"
                 >
                   Hapus
                 </DropdownMenuItem>

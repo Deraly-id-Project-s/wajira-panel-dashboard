@@ -60,14 +60,14 @@ export function RegionTable({
                             <DropdownMenuItem
                                 onClick={() => onEdit(item)}
                                 disabled={!canEdit}
-                                className="rounded-lg px-3 py-2 text-sm text-slate-900 focus:bg-slate-50 cursor-pointer"
+                                className="rounded-md px-3 py-2 text-sm text-slate-900 focus:bg-slate-50 cursor-pointer"
                             >
                                 Edit
                             </DropdownMenuItem>
                             <DropdownMenuItem
                                 onClick={() => onDelete(item)}
                                 disabled={!canDelete}
-                                className="rounded-lg px-3 py-2 text-sm text-red-600 focus:bg-red-50 focus:text-red-600 cursor-pointer"
+                                className="rounded-md px-3 py-2 text-sm text-red-600 focus:bg-red-50 focus:text-red-600 cursor-pointer"
                             >
                                 Hapus
                             </DropdownMenuItem>

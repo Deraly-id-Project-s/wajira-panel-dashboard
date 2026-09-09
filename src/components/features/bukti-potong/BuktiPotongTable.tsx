@@ -156,7 +156,7 @@ export default function WithholdingTaxTable({
   return (
     <div className="space-y-4">
       {isError && (
-        <div className="rounded-lg border border-red-200 bg-red-50 p-4 text-center">
+        <div className="rounded-md border border-red-200 bg-red-50 p-4 text-center">
           <p className="text-sm text-red-600 mb-2">{errorMessage ?? 'Gagal memuat data bukti potong'}</p>
           {onRetry && (
             <Button type="button" variant="outline" size="sm" onClick={onRetry}>

@@ -201,7 +201,7 @@ export default function PurchaseTable({
                         <AlertTriangle className="h-4 w-4" />
                       </button>
                     </TooltipTrigger>
-                    <TooltipContent side="top" align="center" className="max-w-xs bg-slate-900 text-white rounded-lg p-2 text-xs shadow-md">
+                    <TooltipContent side="top" align="center" className="max-w-xs bg-slate-900 text-white rounded-md p-2 text-xs shadow-md">
                       {tooltipText}
                     </TooltipContent>
                   </Tooltip>

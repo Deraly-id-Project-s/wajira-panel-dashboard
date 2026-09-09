@@ -415,7 +415,7 @@ export default function PPNPembelianTable({
                 type="date"
                 value={fpDate}
                 onChange={(e) => setFpDate(e.target.value)}
-                className="bg-white border-slate-200 h-9 text-xs rounded-lg"
+                className="bg-white border-slate-200 h-9 text-xs rounded-md"
               />
             </div>
 
@@ -425,7 +425,7 @@ export default function PPNPembelianTable({
                 type="date"
                 value={nsfpAge}
                 onChange={(e) => setNsfpAge(e.target.value)}
-                className="bg-white border-slate-200 h-9 text-xs rounded-lg"
+                className="bg-white border-slate-200 h-9 text-xs rounded-md"
               />
             </div>
 
@@ -436,7 +436,7 @@ export default function PPNPembelianTable({
                 placeholder="Jumlah NSFP"
                 value={nsfpAmount}
                 onChange={(e) => setNsfpAmount(e.target.value)}
-                className="bg-white border-slate-200 h-9 text-xs rounded-lg"
+                className="bg-white border-slate-200 h-9 text-xs rounded-md"
               />
             </div>
 
@@ -446,7 +446,7 @@ export default function PPNPembelianTable({
                 placeholder="Nominal Rupiah"
                 value={Number(amount) || 0}
                 onChangeValue={(value) => setAmount(value.toString())}
-                className="bg-white border-slate-200 h-9 text-xs rounded-lg"
+                className="bg-white border-slate-200 h-9 text-xs rounded-md"
               />
             </div>
 
@@ -457,7 +457,7 @@ export default function PPNPembelianTable({
                 placeholder="Contoh: FAP0012"
                 value={nsfpNumber}
                 onChange={(e) => setNsfpNumber(e.target.value)}
-                className="bg-white border-slate-200 h-9 text-xs rounded-lg"
+                className="bg-white border-slate-200 h-9 text-xs rounded-md"
               />
             </div>
           </div>

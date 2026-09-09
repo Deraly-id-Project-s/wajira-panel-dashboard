@@ -51,7 +51,7 @@ function RelatedSection({
       <div className="mb-4 flex items-start justify-between gap-3">
         <div>
           <div className="flex items-center gap-3">
-            <div className="rounded-lg bg-orange-100 p-2 text-orange-700">{icon}</div>
+            <div className="rounded-md bg-orange-100 p-2 text-orange-700">{icon}</div>
             <div>
               <h2 className="font-semibold text-slate-950">{title}</h2>
               {description && <p className="text-xs text-slate-500">{description}</p>}
@@ -148,7 +148,7 @@ export function DOEkspedisiClaimApplications({ data, onRefresh }: DOEkspedisiCla
         <BaseTable
           data={data.driverExpeditionClaims ?? []}
           columns={columns}
-          containerClassName="rounded-lg border"
+          containerClassName="rounded-md border"
           headerRowClassName="bg-rose-50"
         />
       </RelatedSection>
@@ -189,10 +189,10 @@ export function DOEkspedisiClaimApplications({ data, onRefresh }: DOEkspedisiCla
           </Select>
         </div>
         {availableClaims.isSuccess && availableClaims.data?.length === 0 && (
-          <p className="rounded-lg bg-slate-50 p-3 text-sm text-slate-600">Tidak ada claim outstanding untuk driver ini.</p>
+          <p className="rounded-md bg-slate-50 p-3 text-sm text-slate-600">Tidak ada claim outstanding untuk driver ini.</p>
         )}
         {selectedAvailableClaim && (
-          <div className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900">
+          <div className="rounded-md border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900">
             <p>Sisa claim: <strong>{formatCurrency(selectedAvailableClaim.remainingNominal)}</strong></p>
             <p>Sisa UJ tersedia: <strong>{formatCurrency(data.ujNominal)}</strong></p>
           </div>

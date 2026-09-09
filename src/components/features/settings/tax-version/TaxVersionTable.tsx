@@ -105,14 +105,14 @@ export const TaxVersionTable = ({
               <DropdownMenuItem
                 onClick={() => onEdit(item)}
                 disabled={!canEdit || item.is_lock === 1 || item.is_lock === true}
-                className="rounded-lg px-3 py-2 text-sm text-slate-900 focus:bg-slate-50 cursor-pointer animate-none"
+                className="rounded-md px-3 py-2 text-sm text-slate-900 focus:bg-slate-50 cursor-pointer animate-none"
               >
                 <Pencil className="mr-2 h-4 w-4" />
                 Edit
               </DropdownMenuItem>
               <DropdownMenuItem
                 onClick={() => onDelete(item)}
-                className="rounded-lg px-3 py-2 text-sm text-red-600 focus:bg-red-50 focus:text-red-600 cursor-pointer animate-none"
+                className="rounded-md px-3 py-2 text-sm text-red-600 focus:bg-red-50 focus:text-red-600 cursor-pointer animate-none"
                 disabled={!canDelete || item.is_default === 1 || item.is_default === true || item.is_lock === 1 || item.is_lock === true}
               >
                 <Trash className="mr-2 h-4 w-4" />

@@ -112,14 +112,14 @@ export const UnitTypePriceVersionTable = ({
               <DropdownMenuItem
                 onClick={() => onEdit(item)}
                 disabled={!canEdit || item.is_lock === 1 || item.is_lock === true}
-                className="rounded-lg px-3 py-2 text-sm text-slate-900 focus:bg-slate-50 cursor-pointer"
+                className="rounded-md px-3 py-2 text-sm text-slate-900 focus:bg-slate-50 cursor-pointer"
               >
                 <Pencil className="mr-2 h-4 w-4" />
                 Edit
               </DropdownMenuItem>
               <DropdownMenuItem
                 onClick={() => onDelete(item)}
-                className="rounded-lg px-3 py-2 text-sm text-red-600 focus:bg-red-50 focus:text-red-600 cursor-pointer"
+                className="rounded-md px-3 py-2 text-sm text-red-600 focus:bg-red-50 focus:text-red-600 cursor-pointer"
                 disabled={!canDelete || item.is_default === 1 || item.is_default === true || item.is_lock === 1 || item.is_lock === true}
               >
                 <Trash className="mr-2 h-4 w-4" />

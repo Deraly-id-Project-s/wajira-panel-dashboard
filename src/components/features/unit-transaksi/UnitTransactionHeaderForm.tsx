@@ -201,7 +201,7 @@ export function UnitTransactionHeaderForm({
             <Button
               type="submit"
               disabled={loading}
-              className="bg-[#1e293b] hover:bg-[#0f172a] text-white font-medium min-w-[120px] rounded-lg"
+              className="bg-[#1e293b] hover:bg-[#0f172a] text-white font-medium min-w-[120px] rounded-md"
             >
               {loading ? (
                 'Menyimpan...'

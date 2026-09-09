@@ -86,7 +86,7 @@ export const OrderListTable = React.memo(function OrderListTable({
                       onUpdateStatus(item, option.value);
                     }
                   }}
-                  className={cn('cursor-pointer rounded-lg px-2.5 py-2 text-xs font-medium', item.status === option.value && 'bg-slate-100 opacity-50')}
+                  className={cn('cursor-pointer rounded-md px-2.5 py-2 text-xs font-medium', item.status === option.value && 'bg-slate-100 opacity-50')}
                 >
                   {option.label}
                 </DropdownMenuItem>
@@ -224,7 +224,7 @@ export const OrderListTable = React.memo(function OrderListTable({
                   event.preventDefault();
                   onDetail(item);
                 }}
-                className="cursor-pointer rounded-lg px-3 py-2 text-sm text-slate-900 focus:bg-slate-50"
+                className="cursor-pointer rounded-md px-3 py-2 text-sm text-slate-900 focus:bg-slate-50"
               >
                 Detail
               </DropdownMenuItem>
@@ -234,7 +234,7 @@ export const OrderListTable = React.memo(function OrderListTable({
                   onEdit(item);
                 }}
                 disabled={!canEdit || item?.status !== 'draft'}
-                className="cursor-pointer rounded-lg px-3 py-2 text-sm text-slate-900 focus:bg-slate-50"
+                className="cursor-pointer rounded-md px-3 py-2 text-sm text-slate-900 focus:bg-slate-50"
               >
                 Edit
               </DropdownMenuItem>
@@ -244,7 +244,7 @@ export const OrderListTable = React.memo(function OrderListTable({
                   onDelete(item);
                 }}
                 disabled={!canDelete || item?.status !== 'draft'}
-                className="cursor-pointer rounded-lg px-3 py-2 text-sm text-red-600 focus:bg-red-50 focus:text-red-600"
+                className="cursor-pointer rounded-md px-3 py-2 text-sm text-red-600 focus:bg-red-50 focus:text-red-600"
               >
                 Hapus
               </DropdownMenuItem>

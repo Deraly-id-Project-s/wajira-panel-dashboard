@@ -64,25 +64,22 @@ export const WarehouseBlockTable = ({
             <DropdownMenuContent align="end" className="min-w-[150px] rounded-xl border-slate-200 p-1.5 shadow-lg">
               <DropdownMenuItem
                 onClick={() => onViewDetail(item)}
-                className="rounded-lg px-3 py-2 text-sm text-slate-900 focus:bg-slate-50 cursor-pointer"
+                className="rounded-md px-3 py-2 text-sm text-slate-900 focus:bg-slate-50 cursor-pointer"
               >
-                <Eye className="mr-2 h-4 w-4" />
                 Lihat Detail
               </DropdownMenuItem>
               <DropdownMenuItem
                 onClick={() => onEdit(item)}
                 disabled={!canEdit}
-                className="rounded-lg px-3 py-2 text-sm text-slate-900 focus:bg-slate-50 cursor-pointer"
+                className="rounded-md px-3 py-2 text-sm text-slate-900 focus:bg-slate-50 cursor-pointer"
               >
-                <Pencil className="mr-2 h-4 w-4" />
                 Edit
               </DropdownMenuItem>
               <DropdownMenuItem
                 onClick={() => onDelete(item)}
                 disabled={!canDelete}
-                className="rounded-lg px-3 py-2 text-sm text-red-600 focus:bg-red-50 focus:text-red-600 cursor-pointer"
+                className="rounded-md px-3 py-2 text-sm text-red-600 focus:bg-red-50 focus:text-red-600 cursor-pointer"
               >
-                <Trash className="mr-2 h-4 w-4" />
                 Hapus
               </DropdownMenuItem>
             </DropdownMenuContent>

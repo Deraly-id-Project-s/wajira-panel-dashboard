@@ -133,19 +133,19 @@ export function SalesTableRow({ item, isSelected, onToggle, onDelete, canEdit, c
                         </button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end" className="min-w-[150px] rounded-md border-slate-200 p-1.5 shadow-lg">
-                        <DropdownMenuItem className="rounded-lg px-3 py-2 text-sm text-slate-900 focus:bg-slate-50 cursor-pointer" onClick={handleEdit} disabled={!canEdit}>
+                        <DropdownMenuItem className="rounded-md px-3 py-2 text-sm text-slate-900 focus:bg-slate-50 cursor-pointer" onClick={handleEdit} disabled={!canEdit}>
                             Edit
                         </DropdownMenuItem>
-                        <DropdownMenuItem className="rounded-lg px-3 py-2 text-sm text-slate-900 focus:bg-slate-50 cursor-pointer" onClick={handleDetail}>
+                        <DropdownMenuItem className="rounded-md px-3 py-2 text-sm text-slate-900 focus:bg-slate-50 cursor-pointer" onClick={handleDetail}>
                             Detail
                         </DropdownMenuItem>
-                        <DropdownMenuItem className="rounded-lg px-3 py-2 text-sm text-slate-900 focus:bg-slate-50 cursor-pointer" onClick={handleRefund} disabled={Boolean(item.isRefunded) || !canEdit}>
+                        <DropdownMenuItem className="rounded-md px-3 py-2 text-sm text-slate-900 focus:bg-slate-50 cursor-pointer" onClick={handleRefund} disabled={Boolean(item.isRefunded) || !canEdit}>
                             {item.isRefunded ? 'Sudah Refund' : 'Refund'}
                         </DropdownMenuItem>
-                        <DropdownMenuItem className="rounded-lg px-3 py-2 text-sm text-slate-900 focus:bg-slate-50 cursor-pointer" onClick={() => item.documentTemplateId && window.open(slug ? `/dashboard/${slug}/transaksi/penjualan-unit/print/${item.id}` : `/transaksi/penjualan-unit/print/${item.id}`, '_blank')} disabled={!canEdit || !item.documentTemplateId} title={!item.documentTemplateId ? 'Document template belum dipilih.' : undefined}>
+                        <DropdownMenuItem className="rounded-md px-3 py-2 text-sm text-slate-900 focus:bg-slate-50 cursor-pointer" onClick={() => item.documentTemplateId && window.open(slug ? `/dashboard/${slug}/transaksi/penjualan-unit/print/${item.id}` : `/transaksi/penjualan-unit/print/${item.id}`, '_blank')} disabled={!canEdit || !item.documentTemplateId} title={!item.documentTemplateId ? 'Document template belum dipilih.' : undefined}>
                             Print
                         </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => setIsDeleteOpen(true)} className="rounded-lg px-3 py-2 text-sm text-red-600 focus:bg-red-50 focus:text-red-600 cursor-pointer" disabled={!canDelete}>
+                        <DropdownMenuItem onClick={() => setIsDeleteOpen(true)} className="rounded-md px-3 py-2 text-sm text-red-600 focus:bg-red-50 focus:text-red-600 cursor-pointer" disabled={!canDelete}>
                             Hapus
                         </DropdownMenuItem>
                     </DropdownMenuContent>

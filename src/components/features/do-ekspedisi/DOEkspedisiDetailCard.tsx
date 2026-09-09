@@ -35,7 +35,7 @@ function Section({ title, description, icon: Icon, children }: { title: string; 
     <Card className="border-slate-200 shadow-sm">
       <CardContent className="space-y-6 p-5 sm:p-6">
         <div className="flex items-start gap-3">
-          <div className="rounded-lg bg-orange-100 p-2 text-orange-700"><Icon className="h-5 w-5" /></div>
+          <div className="rounded-md bg-orange-100 p-2 text-orange-700"><Icon className="h-5 w-5" /></div>
           <div>
             <h2 className="text-base font-semibold text-slate-950">{title}</h2>
             <p className="mt-0.5 text-xs text-slate-500">{description}</p>
@@ -102,7 +102,7 @@ function TimelineDateCard({
     : 'bg-emerald-100 text-emerald-700';
 
   return (
-    <div className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
+    <div className="rounded-md border border-slate-200 bg-white p-4 shadow-sm">
       <div className="flex items-start gap-3">
         <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-md ${iconWrapperClassName}`}>
           {isAdmin ? <CalendarClock className="h-5 w-5" /> : <Clock3 className="h-5 w-5" />}
@@ -378,10 +378,10 @@ export function DOEkspedisiDetailCard({ data }: DOEkspedisiDetailCardProps) {
                         data={cargo}
                         columns={cargoColumns}
                         headerRowClassName="bg-orange-50"
-                        containerClassName="rounded-lg border border-slate-200"
+                        containerClassName="rounded-md border border-slate-200"
                       />
                     ) : (
-                      <div className="rounded-lg border border-dashed border-slate-200 px-4 py-6 text-center text-sm text-slate-500">
+                      <div className="rounded-md border border-dashed border-slate-200 px-4 py-6 text-center text-sm text-slate-500">
                         Data muatan tidak tersedia.
                       </div>
                     )}

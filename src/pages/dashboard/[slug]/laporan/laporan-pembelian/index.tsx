@@ -193,19 +193,19 @@ export default function LaporanPembelianPage() {
               <TabsList className="flex h-auto p-1 bg-gray-50 border border-gray-100 rounded-md">
                 <TabsTrigger
                   value="per-nota"
-                  className="rounded-lg px-6 py-2.5 text-[14px] font-medium data-[state=active]:bg-white data-[state=active]:text-gray-900 data-[state=active]:shadow-sm"
+                  className="rounded-md px-6 py-2.5 text-[14px] font-medium data-[state=active]:bg-white data-[state=active]:text-gray-900 data-[state=active]:shadow-sm"
                 >
                   Laporan Pembelian Per Nota
                 </TabsTrigger>
                 <TabsTrigger
                   value="per-tipe"
-                  className="rounded-lg px-6 py-2.5 text-[14px] font-medium data-[state=active]:bg-white data-[state=active]:text-gray-900 data-[state=active]:shadow-sm"
+                  className="rounded-md px-6 py-2.5 text-[14px] font-medium data-[state=active]:bg-white data-[state=active]:text-gray-900 data-[state=active]:shadow-sm"
                 >
                   Laporan Pembelian Per Tipe
                 </TabsTrigger>
                 <TabsTrigger
                   value="per-supplier"
-                  className="rounded-lg px-6 py-2.5 text-[14px] font-medium data-[state=active]:bg-white data-[state=active]:text-gray-900 data-[state=active]:shadow-sm"
+                  className="rounded-md px-6 py-2.5 text-[14px] font-medium data-[state=active]:bg-white data-[state=active]:text-gray-900 data-[state=active]:shadow-sm"
                 >
                   Laporan Pembelian Per Supplier
                 </TabsTrigger>

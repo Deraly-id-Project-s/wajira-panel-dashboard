@@ -149,7 +149,7 @@ export function KasBonPaymentDialog({
             className="flex flex-col flex-1 overflow-hidden"
           >
             <div className="flex-1 overflow-y-auto px-6 py-2 space-y-5">
-              <div className="grid gap-3 rounded-lg border border-slate-200 bg-slate-50/60 p-4 sm:grid-cols-3">
+              <div className="grid gap-3 rounded-md border border-slate-200 bg-slate-50/60 p-4 sm:grid-cols-3">
                 <div className="space-y-0.5">
                   <p className="text-xs font-medium uppercase tracking-wide text-slate-500">
                     Total Tagihan

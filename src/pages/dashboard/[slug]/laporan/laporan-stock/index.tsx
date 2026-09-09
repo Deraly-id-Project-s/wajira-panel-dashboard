@@ -195,25 +195,25 @@ export default function LaporanStockPage() {
                         <TabsList className="flex h-auto p-1 bg-gray-50 border border-gray-100 rounded-md self-start">
                             <TabsTrigger
                                 value="stock"
-                                className="rounded-lg px-6 py-2.5 text-[14px] font-medium data-[state=active]:bg-white data-[state=active]:text-gray-900 data-[state=active]:shadow-sm cursor-pointer"
+                                className="rounded-md px-6 py-2.5 text-[14px] font-medium data-[state=active]:bg-white data-[state=active]:text-gray-900 data-[state=active]:shadow-sm cursor-pointer"
                             >
                                 Jumlah Stock
                             </TabsTrigger>
                             <TabsTrigger
                                 value="stock-detail"
-                                className="rounded-lg px-6 py-2.5 text-[14px] font-medium data-[state=active]:bg-white data-[state=active]:text-gray-900 data-[state=active]:shadow-sm cursor-pointer"
+                                className="rounded-md px-6 py-2.5 text-[14px] font-medium data-[state=active]:bg-white data-[state=active]:text-gray-900 data-[state=active]:shadow-sm cursor-pointer"
                             >
                                 Stock Detail
                             </TabsTrigger>
                             <TabsTrigger
                                 value="purchase-order"
-                                className="rounded-lg px-6 py-2.5 text-[14px] font-medium data-[state=active]:bg-white data-[state=active]:text-gray-900 data-[state=active]:shadow-sm cursor-pointer"
+                                className="rounded-md px-6 py-2.5 text-[14px] font-medium data-[state=active]:bg-white data-[state=active]:text-gray-900 data-[state=active]:shadow-sm cursor-pointer"
                             >
                                 Purchase Order Outstanding
                             </TabsTrigger>
                             <TabsTrigger
                                 value="sales-order"
-                                className="rounded-lg px-6 py-2.5 text-[14px] font-medium data-[state=active]:bg-white data-[state=active]:text-gray-900 data-[state=active]:shadow-sm cursor-pointer"
+                                className="rounded-md px-6 py-2.5 text-[14px] font-medium data-[state=active]:bg-white data-[state=active]:text-gray-900 data-[state=active]:shadow-sm cursor-pointer"
                             >
                                 Sales Order Outstanding
                             </TabsTrigger>

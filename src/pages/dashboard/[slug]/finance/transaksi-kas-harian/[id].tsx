@@ -387,7 +387,7 @@ export default function KasHarianDetailPage() {
               </>
             ) : (
               <div className="col-span-3 grid gap-6 md:grid-cols-2">
-                <div className="space-y-4 p-4 rounded-lg bg-slate-50/50 border border-slate-100">
+                <div className="space-y-4 p-4 rounded-md bg-slate-50/50 border border-slate-100">
                   <h4 className="font-semibold text-slate-800 text-sm border-b border-slate-100 pb-2">Rincian Rupiah (IDR)</h4>
                   <div className="grid gap-4 sm:grid-cols-3">
                     <DetailItem label="Nilai Transaksi" icon={<WalletCards className="h-4 w-4" />}>{currenciesFormat('idr', expectedIdr)}</DetailItem>
@@ -400,7 +400,7 @@ export default function KasHarianDetailPage() {
                   </div>
                 </div>
 
-                <div className="space-y-4 p-4 rounded-lg bg-amber-50/10 border border-amber-100/50">
+                <div className="space-y-4 p-4 rounded-md bg-amber-50/10 border border-amber-100/50">
                   <h4 className="font-semibold text-slate-800 text-sm border-b border-slate-100 pb-2 text-amber-900">Rincian Dollar (USD)</h4>
                   <div className="grid gap-4 sm:grid-cols-3">
                     <DetailItem label="Nilai Transaksi" icon={<WalletCards className="h-4 w-4" />}>{currenciesFormat('usd', expectedUsd)}</DetailItem>

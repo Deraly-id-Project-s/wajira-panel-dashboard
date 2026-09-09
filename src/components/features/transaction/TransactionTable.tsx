@@ -110,10 +110,10 @@ export function TransactionTable({ data, onEdit, onDelete, canEdit, canDelete }:
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end" className="min-w-[150px] rounded-md border-slate-200 p-1.5 shadow-lg">
-                        <DropdownMenuItem onClick={() => onEdit(trx)} disabled={!canEdit} className="rounded-lg px-3 py-2 text-sm text-slate-900 focus:bg-slate-50 cursor-pointer">
+                        <DropdownMenuItem onClick={() => onEdit(trx)} disabled={!canEdit} className="rounded-md px-3 py-2 text-sm text-slate-900 focus:bg-slate-50 cursor-pointer">
                           Edit
                         </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => onDelete(trx)} disabled={!canDelete} className="rounded-lg px-3 py-2 text-sm text-red-600 focus:bg-red-50 focus:text-red-600 cursor-pointer">
+                        <DropdownMenuItem onClick={() => onDelete(trx)} disabled={!canDelete} className="rounded-md px-3 py-2 text-sm text-red-600 focus:bg-red-50 focus:text-red-600 cursor-pointer">
                           Hapus
                         </DropdownMenuItem>
                       </DropdownMenuContent>
