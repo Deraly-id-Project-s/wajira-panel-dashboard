@@ -949,7 +949,7 @@ export default function LaporanNeracaPage() {
                       cashRows
                         .filter((row) => !searchKeyword || `${row.cash_code ?? ''} ${row.cash_name}`.toLowerCase().includes(searchKeyword))
                         .map((row) => {
-                          const currency = String(row.type ?? row.currency_type ?? 'IDR').toUpperCase() === 'USD' ? 'usd' : 'idr';
+                          const currency = String(row.type ?? 'IDR').toUpperCase() === 'USD' ? 'usd' : 'idr';
                           return (
                             <TableRow key={row.id} className="hover:bg-slate-50">
                               <TableCell className="text-slate-700">{row.cash_code ? `${row.cash_code} - ${row.cash_name}` : row.cash_name}</TableCell>

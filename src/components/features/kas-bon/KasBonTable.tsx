@@ -146,7 +146,7 @@ export function KasBonTable({
         ),
       },
     ],
-    [canDelete, canEdit, onApprove, onDelete, onDetail, onEdit],
+    [canDelete, canEdit, onApprove, onDelete, onDetail, onEdit, slug],
   );
 
   return <BaseTable data={data} columns={columns} loading={isLoading} defaultSort={{ key: 'id', direction: 'desc' }} />;

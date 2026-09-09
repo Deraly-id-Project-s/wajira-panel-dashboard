@@ -114,6 +114,7 @@ export function SparepartForm({
                         type="button"
                         role="combobox"
                         aria-expanded={openGroupSelect}
+                        aria-controls="sparepart-group-popover"
                         disabled={loadingCategories || isSubmitting}
                         className="flex h-10 w-full items-center justify-between rounded-md border border-input bg-transparent px-3 py-2 text-sm ring-offset-background disabled:cursor-not-allowed disabled:opacity-50 min-w-0 font-normal text-left"
                       >
@@ -127,7 +128,7 @@ export function SparepartForm({
                         <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                       </button>
                     </PopoverTrigger>
-                    <PopoverContent className="w-[--radix-popover-trigger-width] p-0" align="start">
+                    <PopoverContent id="sparepart-group-popover" className="w-[--radix-popover-trigger-width] p-0" align="start">
                       <Command shouldFilter={false}>
                         <CommandInput
                           placeholder="Cari grup..."
