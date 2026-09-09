@@ -23,8 +23,15 @@ interface LaporanLabaRugiPrintDocumentProps {
   sections: ProfitLossPrintSection[];
   grossProfit: number;
   grossProfitUsd: number;
-  netIncome: number;
-  netIncomeUsd: number;
+  netIncome?: number;
+  netIncomeUsd?: number;
+  profitBeforeTax: number;
+  profitBeforeTaxUsd: number;
+  taxPercentage: number;
+  taxAmount: number;
+  taxAmountUsd: number;
+  profitAfterTax: number;
+  profitAfterTaxUsd: number;
   printedAt: Date;
 }
 
@@ -90,8 +97,13 @@ export function LaporanLabaRugiPrintDocument({
   sections,
   grossProfit,
   grossProfitUsd,
-  netIncome,
-  netIncomeUsd,
+  profitBeforeTax,
+  profitBeforeTaxUsd,
+  taxPercentage,
+  taxAmount,
+  taxAmountUsd,
+  profitAfterTax,
+  profitAfterTaxUsd,
   printedAt,
 }: LaporanLabaRugiPrintDocumentProps) {
   if (!template) return null;
@@ -168,11 +180,27 @@ export function LaporanLabaRugiPrintDocument({
                   </Fragment>
                 ))}
 
+                <tr className="font-bold text-slate-900" style={{ backgroundColor: `${tableColor}18` }}>
+                  <td className="border border-slate-400 px-2 py-2" />
+                  <td className="border border-slate-400 px-2 py-2 uppercase tracking-[0.05em]">Laba (Rugi) Bersih Sebelum Pajak</td>
+                  <td className="border border-slate-400 px-2 py-2 text-right tabular-nums">{formatAccountingAmount(profitBeforeTax, 'idr')}</td>
+                  <td className="border border-slate-400 px-2 py-2 text-right tabular-nums">{formatAccountingAmount(profitBeforeTaxUsd, 'usd')}</td>
+                </tr>
+
+                {taxPercentage > 0 && (
+                  <tr className="font-semibold text-slate-800" style={{ backgroundColor: `${tableColor}08` }}>
+                    <td className="border border-slate-300 px-2 py-1.5" />
+                    <td className="border border-slate-300 px-2 py-1.5 uppercase tracking-wide">Pajak ({taxPercentage}%)</td>
+                    <td className="border border-slate-300 px-2 py-1.5 text-right tabular-nums">{formatAccountingAmount(taxAmount, 'idr', true)}</td>
+                    <td className="border border-slate-300 px-2 py-1.5 text-right tabular-nums">{formatAccountingAmount(taxAmountUsd, 'usd', true)}</td>
+                  </tr>
+                )}
+
                 <tr className="font-bold text-white" style={{ backgroundColor: tableColor }}>
                   <td className="border border-white/30 px-2 py-2.5" />
-                  <td className="border border-white/30 px-2 py-2.5 uppercase tracking-[0.08em]">Laba (Rugi) Bersih</td>
-                  <td className="border border-white/30 px-2 py-2.5 text-right tabular-nums">{formatAccountingAmount(netIncome, 'idr')}</td>
-                  <td className="border border-white/30 px-2 py-2.5 text-right tabular-nums">{formatAccountingAmount(netIncomeUsd, 'usd')}</td>
+                  <td className="border border-white/30 px-2 py-2.5 uppercase tracking-[0.08em]">Laba (Rugi) Bersih Setelah Pajak</td>
+                  <td className="border border-white/30 px-2 py-2.5 text-right tabular-nums">{formatAccountingAmount(profitAfterTax, 'idr')}</td>
+                  <td className="border border-white/30 px-2 py-2.5 text-right tabular-nums">{formatAccountingAmount(profitAfterTaxUsd, 'usd')}</td>
                 </tr>
               </tbody>
             </table>
