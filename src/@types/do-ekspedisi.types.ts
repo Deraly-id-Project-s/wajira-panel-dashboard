@@ -179,6 +179,20 @@ export interface DoEkspedisiClaim {
   documentations: DoEkspedisiClaimDocumentation[];
 }
 
+export interface DoEkspedisiClaimPayload {
+  do_expeditions_id: number | string;
+  driver_id: number | string;
+  subject: string;
+  description: string;
+  claim_nominal: number | string;
+}
+
+export interface DoEkspedisiClaimDocumentationPayload {
+  do_expedition_claim_id: number | string;
+  caption?: string | null;
+  image: File;
+}
+
 export interface DoEkspedisiClaimApplication {
   id: number;
   uuid?: string;
@@ -304,4 +318,3 @@ export interface DoEkspedisiDocumentationListParams {
 }
 
 export type DoEkspedisiDocumentationListResponse = PaginatedResult<DoEkspedisiDocumentation>;
-

@@ -86,6 +86,8 @@ export interface DriverCashAdvance {
   remainingPayment?: number;
   is_paid?: boolean;
   isPaid?: boolean;
+  is_driver_request?: boolean;
+  isDriverRequest?: boolean;
 }
 
 export interface DriverCashAdvancePayload {
@@ -100,6 +102,7 @@ export interface DriverCashAdvancePayload {
 export interface DriverCashAdvanceApprovalPayload {
   is_approve: boolean;
   approve_date: string;
+  approve_nominal?: number;
 }
 
 export interface DriverCashAdvanceBillingHistoryPayload {
@@ -107,10 +110,11 @@ export interface DriverCashAdvanceBillingHistoryPayload {
   bca_payment_amount: number;
   bca_payment_usd_amount: number;
   cash_payment_amount: number;
-  bca_payment_usd_original_amount?: number | null;
-  bca_payment_usd_exchange_amount?: number | null;
   payment_at: string;
   note?: string | null;
+  payment_proof?: File | null;
+  bca_payment_usd_original_amount?: number | null;
+  bca_payment_usd_exchange_amount?: number | null;
 }
 
 export interface DriverCashAdvanceBillingStatusPayload {

@@ -8,6 +8,8 @@ import type {
   DoEkspedisiListParams,
   DoEkspedisiPayload,
   DoEkspedisiDocumentationListParams,
+  DoEkspedisiClaimPayload,
+  DoEkspedisiClaimDocumentationPayload,
 } from '@/@types/do-ekspedisi.types';
 import type { PaginationParams } from '@/@types/pagination.types';
 import {
@@ -37,6 +39,10 @@ import {
   updateDoEkspedisiItemDestination,
   updateDoDetailResource,
   getDoEkspedisiDocumentations,
+  getExpeditionClaimById,
+  createExpeditionClaim,
+  updateExpeditionClaim,
+  createExpeditionClaimDocumentation,
   type DetailResource,
 } from '@/services/do-ekspedisi.service';
 
@@ -59,6 +65,15 @@ export function useDoEkspedisiDetail(id: string | number | null) {
     retry: 3,
     retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 10000),
     staleTime: 1000 * 60 * 5, // 5 minutes
+  });
+}
+
+export function useExpeditionClaimDetail(id: string | number | null) {
+  return useQuery({
+    queryKey: ['expedition-claim', 'detail', id],
+    queryFn: () => getExpeditionClaimById(id as string | number),
+    enabled: !!id,
+    retry: false,
   });
 }
 
@@ -265,6 +280,46 @@ export function useDoDetailResourceMutation(resource: DetailResource, expedition
     update: useMutation({ mutationFn: ({ id, payload }: { id: string | number; payload: Record<string, unknown> | FormData }) => updateDoDetailResource(resource, id, payload), onSuccess: invalidate }),
     remove: useMutation({ mutationFn: (id: string | number) => deleteDoDetailResource(resource, id), onSuccess: invalidate }),
   };
+}
+
+export function useCreateExpeditionClaim(expeditionId: string | number) {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (payload: DoEkspedisiClaimPayload) => createExpeditionClaim(payload),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['do-ekspedisi'] });
+      queryClient.invalidateQueries({ queryKey: ['do-ekspedisi', 'detail', String(expeditionId)] });
+      queryClient.invalidateQueries({ queryKey: ['expedition-claim'] });
+    },
+  });
+}
+
+export function useUpdateExpeditionClaim(expeditionId: string | number) {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ id, payload }: { id: string | number; payload: DoEkspedisiClaimPayload }) => updateExpeditionClaim(id, payload),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['do-ekspedisi'] });
+      queryClient.invalidateQueries({ queryKey: ['do-ekspedisi', 'detail', String(expeditionId)] });
+      queryClient.invalidateQueries({ queryKey: ['expedition-claim'] });
+      queryClient.invalidateQueries({ queryKey: ['expedition-claim', 'detail', variables.id] });
+    },
+  });
+}
+
+export function useCreateExpeditionClaimDocumentation(expeditionId: string | number) {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (payload: DoEkspedisiClaimDocumentationPayload) => createExpeditionClaimDocumentation(payload),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['do-ekspedisi', 'detail', String(expeditionId)] });
+      queryClient.invalidateQueries({ queryKey: ['expedition-claim'] });
+      queryClient.invalidateQueries({ queryKey: ['expedition-claim', 'detail', String(variables.do_expedition_claim_id)] });
+    },
+  });
 }
 
 export function useAvailableExpeditionClaims(driverId: number | null, enabled = true) {

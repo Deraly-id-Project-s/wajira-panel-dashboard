@@ -1,18 +1,20 @@
 import * as React from 'react';
 import Head from 'next/head';
 import { format } from 'date-fns';
-import { Plus } from 'lucide-react';
+import { Plus, Printer } from 'lucide-react';
 import { useRouter } from 'next/router';
 import type { DateRange } from 'react-day-picker';
 import { toast } from 'sonner';
-import type { DriverCashAdvance } from '@/@types/driver-cash-advance.types';
+import type { DriverCashAdvance, DriverCashAdvanceApprovalPayload } from '@/@types/driver-cash-advance.types';
 import { KasBonApprovalDialog } from '@/components/features/kas-bon/KasBonApprovalDialog';
 import { KasBonDeleteDialog } from '@/components/features/kas-bon/KasBonDeleteDialog';
 import { KasBonTable } from '@/components/features/kas-bon/KasBonTable';
+import { KasBonTablePrintDocument } from '@/components/features/kas-bon/KasBonTablePrintDocument';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { Button } from '@/components/ui/button';
 import { DatePickerWithRange } from '@/components/ui/date-range-picker';
 import { PageHeader } from '@/components/ui/page-header';
+import { ReportTemplatePrintDialog } from '@/components/ui/report-template-print-dialog';
 import { SearchPagination } from '@/components/ui/search-pagination';
 import { useCompany } from '@/contexts/CompanyContext';
 import {
@@ -22,11 +24,17 @@ import {
 } from '@/hooks/useDriverCashAdvance';
 import { usePermissionGuard } from '@/hooks/usePermissionGuard';
 import { useQueryParamsTable } from '@/hooks/useQueryParamsTable';
+import { useReportTemplatePrint } from '@/hooks/useReportTemplatePrint';
+import { getCompanyName, getLetterheadByCompanyId, resolveCompanyId } from '@/lib/print-letterhead';
 
 export default function KasBonPage() {
   const router = useRouter();
   const slug = typeof router.query.slug === 'string' ? router.query.slug : '';
   const { companyId } = useCompany();
+  const resolvedCompanyId = resolveCompanyId(slug, companyId) || 1;
+  const selectedPrintBackground = getLetterheadByCompanyId(resolvedCompanyId);
+  const templatePrint = useReportTemplatePrint(selectedPrintBackground);
+
   const { hasPermission } = usePermissionGuard();
   const canCreate = hasPermission('transaction:create');
   const canEdit = hasPermission('transaction:edit');
@@ -113,24 +121,28 @@ export default function KasBonPage() {
     }
   }, [deleteMutation, selectedItem]);
 
-  const handleApprove = React.useCallback(async () => {
-    if (!selectedItem) return;
+  const handleApprove = React.useCallback(
+    async (payload: DriverCashAdvanceApprovalPayload) => {
+      if (!selectedItem) return;
 
-    try {
-      await approveMutation.mutateAsync({
-        id: selectedItem.id,
-        payload: {
-          is_approve: true,
-          approve_date: format(new Date(), 'yyyy-MM-dd'),
-        },
-      });
-      toast.success('Kas bon berhasil diapprove');
-      setApprovalOpen(false);
-      setSelectedItem(null);
-    } catch (error: any) {
-      toast.error(error.message || 'Gagal approve kas bon');
-    }
-  }, [approveMutation, selectedItem]);
+      try {
+        await approveMutation.mutateAsync({
+          id: selectedItem.id,
+          payload,
+        });
+        toast.success(
+          payload.is_approve
+            ? 'Kas bon berhasil disetujui'
+            : 'Kas bon berhasil ditolak',
+        );
+        setApprovalOpen(false);
+        setSelectedItem(null);
+      } catch (error: any) {
+        toast.error(error.message || 'Gagal memproses approval kas bon');
+      }
+    },
+    [approveMutation, selectedItem],
+  );
 
   return (
     <DashboardLayout>
@@ -142,6 +154,12 @@ export default function KasBonPage() {
         <PageHeader
           title="Kas Bon"
           subtitle="Kelola pengajuan kas bon driver"
+          actions={
+            <Button onClick={templatePrint.openPrintDialog} variant="outline">
+              <Printer className="mr-2 h-4 w-4" />
+              Print
+            </Button>
+          }
         />
 
         <SearchPagination
@@ -209,9 +227,9 @@ export default function KasBonPage() {
       <KasBonApprovalDialog
         open={approvalOpen}
         onOpenChange={setApprovalOpen}
+        item={selectedItem}
         onConfirm={handleApprove}
         isApproving={approveMutation.isPending}
-        itemName={selectedItem?.subject}
       />
 
       <KasBonDeleteDialog
@@ -220,6 +238,33 @@ export default function KasBonPage() {
         onConfirm={handleDelete}
         isDeleting={deleteMutation.isPending}
         itemName={selectedItem?.subject}
+      />
+
+      <KasBonTablePrintDocument
+        data={tableData}
+        template={templatePrint.selectedTemplate}
+        fallbackBackground={selectedPrintBackground}
+        companyName={getCompanyName(resolvedCompanyId)}
+        periodLabel={
+          startDate
+            ? `${dateRange?.from ? format(dateRange.from, 'dd MMM yyyy') : '-'}${
+                endDate && endDate !== startDate && dateRange?.to ? ` – ${format(dateRange.to, 'dd MMM yyyy')}` : ''
+              }`
+            : 'Semua Periode'
+        }
+        reportPage={page}
+        reportTotal={listQuery.data?.meta.total ?? tableData.length}
+        printedAt={templatePrint.printedAt}
+      />
+
+      <ReportTemplatePrintDialog
+        open={templatePrint.isDialogOpen}
+        onOpenChange={templatePrint.setIsDialogOpen}
+        selectedTemplateId={templatePrint.selectedTemplateId}
+        onTemplateChange={templatePrint.setSelectedTemplateId}
+        onPrint={templatePrint.printWithSelectedTemplate}
+        isPreparingPrint={templatePrint.isPreparingPrint}
+        reportName="kas bon"
       />
     </DashboardLayout>
   );

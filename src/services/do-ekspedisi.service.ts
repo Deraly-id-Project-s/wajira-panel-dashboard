@@ -25,6 +25,8 @@ import type {
   DoEkspedisiDocumentation,
   DoEkspedisiDocumentationListParams,
   DoEkspedisiDocumentationListResponse,
+  DoEkspedisiClaimPayload,
+  DoEkspedisiClaimDocumentationPayload,
 } from '@/@types/do-ekspedisi.types';
 import type { PaginationParams } from '@/@types/pagination.types';
 import { apiClient } from '@/lib/api/client';
@@ -156,6 +158,22 @@ const mapClaim = (item: any): DoEkspedisiClaim => ({
   sourceExpeditionCode: toText(item?.expedition?.code, item?.source_expedition_code),
   documentations: (item?.documentations ?? item?.expedition_claim_documentations ?? []).map(mapClaimDocumentation),
 });
+
+const buildClaimPayload = (payload: DoEkspedisiClaimPayload) => ({
+  do_expeditions_id: payload.do_expeditions_id,
+  driver_id: payload.driver_id,
+  subject: payload.subject,
+  description: payload.description,
+  claim_nominal: payload.claim_nominal,
+});
+
+const buildClaimDocumentationPayload = (payload: DoEkspedisiClaimDocumentationPayload) => {
+  const formData = new FormData();
+  formData.append('do_expedition_claim_id', String(payload.do_expedition_claim_id));
+  if (payload.caption != null) formData.append('caption', payload.caption);
+  formData.append('image', payload.image);
+  return formData;
+};
 
 const mapClaimApplication = (item: any): DoEkspedisiClaimApplication => ({
   id: Number(item?.id ?? 0),
@@ -783,6 +801,32 @@ export const updateDoDetailResource = async (resource: DetailResource, id: strin
 export const deleteDoDetailResource = async (resource: DetailResource, id: string | number) => {
   const response = await apiClient.delete<LaravelApiResponse<null>>(`${detailPaths[resource]}/${id}`);
   ensureSuccess(response.data);
+};
+
+export const getExpeditionClaimById = async (id: string | number): Promise<DoEkspedisiClaim> => {
+  const response = await apiClient.get<LaravelApiResponse<any>>(`${expeditionClaimPath}/${id}`);
+  return mapClaim(ensureSuccess(response.data));
+};
+
+export const createExpeditionClaim = async (payload: DoEkspedisiClaimPayload): Promise<DoEkspedisiClaim> => {
+  const response = await apiClient.post<LaravelApiResponse<any>>(expeditionClaimPath, buildClaimPayload(payload));
+  return mapClaim(ensureSuccess(response.data));
+};
+
+export const updateExpeditionClaim = async (id: string | number, payload: DoEkspedisiClaimPayload): Promise<DoEkspedisiClaim> => {
+  const response = await apiClient.put<LaravelApiResponse<any>>(`${expeditionClaimPath}/${id}`, buildClaimPayload(payload));
+  return mapClaim(ensureSuccess(response.data));
+};
+
+export const createExpeditionClaimDocumentation = async (
+  payload: DoEkspedisiClaimDocumentationPayload,
+): Promise<DoEkspedisiClaimDocumentation> => {
+  const response = await apiClient.post<LaravelApiResponse<any>>(
+    claimDocumentationPath,
+    buildClaimDocumentationPayload(payload),
+    { headers: { 'Content-Type': 'multipart/form-data' } },
+  );
+  return mapClaimDocumentation(ensureSuccess(response.data));
 };
 
 export const getAvailableExpeditionClaims = async (driverId: number): Promise<DoEkspedisiClaim[]> => {

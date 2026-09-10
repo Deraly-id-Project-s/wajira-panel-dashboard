@@ -15,6 +15,7 @@ import {
   Plus,
   Edit,
   Trash2,
+  Printer,
 } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -22,6 +23,10 @@ import { z } from 'zod';
 import { toast } from 'sonner';
 import { useRouter } from 'next/router';
 import BaseTable from '@/components/ui/base-table';
+import { OrderListDetailPrintDocument } from './OrderListDetailPrintDocument';
+import { ReportTemplatePrintDialog } from '@/components/ui/report-template-print-dialog';
+import { useReportTemplatePrint } from '@/hooks/useReportTemplatePrint';
+import { getCompanyName, getLetterheadByCompanyId, resolveCompanyId } from '@/lib/print-letterhead';
 
 import type { OrderList, OrderListStatus, OrderListTarifItem, OrderListVehicleType } from '@/@types/order-list.types';
 import { Badge } from '@/components/ui/badge';
@@ -283,6 +288,9 @@ export function OrderListDetailView({
   const router = useRouter();
   const slug = typeof router.query.slug === 'string' ? router.query.slug : '';
   const { companyId } = useCompany();
+  const resolvedCompanyId = resolveCompanyId(slug, companyId) || 1;
+  const selectedPrintBackground = getLetterheadByCompanyId(resolvedCompanyId);
+  const templatePrint = useReportTemplatePrint(selectedPrintBackground);
   const isDraft = data.status === 'draft';
 
   // Search states for selects
@@ -583,27 +591,37 @@ export function OrderListDetailView({
           </div>
         )}
         actions={
-          canUpdateStatus ? (
-            data.status === 'draft' ? (
-              <Button
-                type="button"
-                disabled={isUpdatingStatus}
-                variant="default"
-                onClick={() => onUpdateStatus?.('deliver')}
-              >
-                {isUpdatingStatus ? 'Memproses...' : 'Proses Order List'}
-              </Button>
-            ) : data.status === 'deliver' ? (
-              <Button
-                type="button"
-                variant="outline"
-                disabled={isUpdatingStatus}
-                onClick={() => onUpdateStatus?.('draft')}
-              >
-                {isUpdatingStatus ? 'Memproses...' : 'Jadikan Draft'}
-              </Button>
-            ) : undefined
-          ) : undefined
+          <div className="flex items-center gap-2">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={templatePrint.openPrintDialog}
+            >
+              <Printer className="mr-2 h-4 w-4" />
+              Print
+            </Button>
+            {canUpdateStatus ? (
+              data.status === 'draft' ? (
+                <Button
+                  type="button"
+                  disabled={isUpdatingStatus}
+                  variant="default"
+                  onClick={() => onUpdateStatus?.('deliver')}
+                >
+                  {isUpdatingStatus ? 'Memproses...' : 'Proses Order List'}
+                </Button>
+              ) : data.status === 'deliver' ? (
+                <Button
+                  type="button"
+                  variant="outline"
+                  disabled={isUpdatingStatus}
+                  onClick={() => onUpdateStatus?.('draft')}
+                >
+                  {isUpdatingStatus ? 'Memproses...' : 'Jadikan Draft'}
+                </Button>
+              ) : undefined
+            ) : undefined}
+          </div>
         }
       />
 
@@ -1040,6 +1058,24 @@ export function OrderListDetailView({
           </AlertDialog>
         </>
       )}
+
+      <OrderListDetailPrintDocument
+        data={data}
+        template={templatePrint.selectedTemplate}
+        fallbackBackground={selectedPrintBackground}
+        companyName={getCompanyName(resolvedCompanyId)}
+        printedAt={templatePrint.printedAt}
+      />
+
+      <ReportTemplatePrintDialog
+        open={templatePrint.isDialogOpen}
+        onOpenChange={templatePrint.setIsDialogOpen}
+        selectedTemplateId={templatePrint.selectedTemplateId}
+        onTemplateChange={templatePrint.setSelectedTemplateId}
+        onPrint={templatePrint.printWithSelectedTemplate}
+        isPreparingPrint={templatePrint.isPreparingPrint}
+        reportName="order ekspedisi"
+      />
     </div>
   );
 }

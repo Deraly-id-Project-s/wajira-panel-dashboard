@@ -112,6 +112,8 @@ const mapDriverCashAdvance = (item: any): DriverCashAdvance => {
     is_paid: isPaid,
     remainingPayment,
     remaining_payment: remainingPayment,
+    isDriverRequest: toBoolean(item?.is_driver_request ?? item?.isDriverRequest),
+    is_driver_request: toBoolean(item?.is_driver_request ?? item?.isDriverRequest),
   };
 };
 
@@ -216,8 +218,38 @@ export const getDriverCashAdvanceBillingById = async (id: string | number): Prom
 export const createDriverCashAdvanceBillingHistory = async (
   payload: DriverCashAdvanceBillingHistoryPayload,
 ): Promise<DriverCashAdvanceBillingHistory> => {
-  const response = await apiClient.post<LaravelApiResponse<any>>(billingHistoryBasePath, payload);
+  const formData = new FormData();
+  formData.append('driver_cash_advance_billing_id', String(payload.driver_cash_advance_billing_id));
+  formData.append('bca_payment_amount', String(payload.bca_payment_amount ?? 0));
+  formData.append('bca_payment_usd_amount', String(payload.bca_payment_usd_amount ?? 0));
+  formData.append('cash_payment_amount', String(payload.cash_payment_amount ?? 0));
+  formData.append('payment_at', payload.payment_at);
+  if (payload.note) {
+    formData.append('note', payload.note);
+  }
+  if (payload.payment_proof) {
+    formData.append('payment_proof', payload.payment_proof);
+  }
+  if (payload.bca_payment_usd_original_amount != null) {
+    formData.append('bca_payment_usd_original_amount', String(payload.bca_payment_usd_original_amount));
+  }
+  if (payload.bca_payment_usd_exchange_amount != null) {
+    formData.append('bca_payment_usd_exchange_amount', String(payload.bca_payment_usd_exchange_amount));
+  }
+
+  const response = await apiClient.post<LaravelApiResponse<any>>(billingHistoryBasePath, formData, {
+    headers: {
+      'Content-Type': 'multipart/form-data',
+    },
+  });
   return mapBillingHistory(ensureSuccess(response.data));
+};
+
+export const deleteDriverCashAdvanceBillingHistory = async (id: string | number): Promise<void> => {
+  const response = await apiClient.delete<LaravelApiResponse<null>>(`${billingHistoryBasePath}/${id}`);
+  if (!response.data.status) {
+    throw new ApiResponseError(response.data.message ?? 'Gagal menghapus riwayat pembayaran');
+  }
 };
 
 export const updateDriverCashAdvanceBillingStatus = async (

@@ -21,6 +21,21 @@ export function KasBonDetailCards({ data, billing }: { data: DriverCashAdvance; 
         <div className="grid gap-x-8 gap-y-5 sm:grid-cols-2">
           <DetailItem label="Driver" value={<span className="inline-flex items-center gap-2"><CircleUserRound className="h-4 w-4 text-slate-400" />{data.driver?.name || '-'}</span>} />
           <DetailItem label="Kode Driver" value={data.driver?.code || '-'} />
+          <DetailItem
+            label="Sumber Pengajuan"
+            value={
+              <Badge
+                variant="outline"
+                className={
+                  Boolean(data.is_driver_request ?? data.isDriverRequest)
+                    ? 'border-blue-200 bg-blue-50 text-blue-700 font-medium'
+                    : 'border-slate-200 bg-slate-100 text-slate-700 font-medium'
+                }
+              >
+                {Boolean(data.is_driver_request ?? data.isDriverRequest) ? 'Driver' : 'Kantor'}
+              </Badge>
+            }
+          />
           <DetailItem label="Subjek" value={data.subject || '-'} />
           <DetailItem label="Tanggal Klaim" value={<span className="inline-flex items-center gap-2"><CalendarDays className="h-4 w-4 text-slate-400" />{formatKasBonDate(data.claimDate)}</span>} />
           <DetailItem label="Nominal Klaim" value={currenciesFormat('idr', data.claimNominal)} />

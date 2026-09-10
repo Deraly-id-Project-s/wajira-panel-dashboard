@@ -40,6 +40,7 @@ export function KasBonTable({
 }: KasBonTableProps) {
   const router = useRouter();
   const slug = typeof router.query.slug === 'string' ? router.query.slug : '';
+  const [openMenuId, setOpenMenuId] = React.useState<number | null>(null);
 
   const columns = React.useMemo<ColumnDef<DriverCashAdvance>[]>(
     () => [
@@ -55,6 +56,27 @@ export function KasBonTable({
         sortable: true,
         cell: (item) =>
           item?.driver ? <ReferenceLink target='_blank' href={`/dashboard/${slug}/master/driver/${item?.driver?.id}`}>{item?.driver?.name}</ReferenceLink> : '-',
+      },
+      {
+        header: 'PENGAJUAN',
+        accessorKey: 'is_driver_request',
+        alignment: 'center',
+        cell: (item) => {
+          const isDriver = Boolean(item.is_driver_request ?? item.isDriverRequest);
+          return (
+            <Badge
+              variant="outline"
+              className={cn(
+                'font-medium text-xs',
+                isDriver
+                  ? 'border-blue-200 bg-blue-50 text-blue-700'
+                  : 'border-slate-200 bg-slate-100 text-slate-700',
+              )}
+            >
+              {isDriver ? 'Driver' : 'Kantor'}
+            </Badge>
+          );
+        },
       },
       {
         header: 'SUBJECT',
@@ -95,7 +117,10 @@ export function KasBonTable({
         alignment: 'center',
         sticky: 'right',
         cell: (item) => (
-          <DropdownMenu>
+          <DropdownMenu
+            open={openMenuId === item.id}
+            onOpenChange={(open) => setOpenMenuId(open ? item.id : null)}
+          >
             <DropdownMenuTrigger asChild>
               <Button type="button" variant="ghost" size="icon" className="h-8 w-8 cursor-pointer rounded-full">
                 <MoreVertical className="h-4 w-4 text-slate-600" />
@@ -103,8 +128,8 @@ export function KasBonTable({
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-[170px] rounded-xl border-slate-200 p-1.5 shadow-lg">
               <DropdownMenuItem
-                onSelect={(event) => {
-                  event.preventDefault();
+                onSelect={() => {
+                  setOpenMenuId(null);
                   onDetail(item);
                 }}
                 className="cursor-pointer rounded-md px-3 py-2 text-sm text-slate-900 focus:bg-slate-50"
@@ -112,18 +137,18 @@ export function KasBonTable({
                 Detail
               </DropdownMenuItem>
               <DropdownMenuItem
-                onSelect={(event) => {
-                  event.preventDefault();
+                onSelect={() => {
+                  setOpenMenuId(null);
                   onApprove(item);
                 }}
-                disabled={!canEdit || item.isApprove || !isKasBonPaid(item)}
+                disabled={!canEdit || item.isApprove}
                 className="cursor-pointer rounded-md px-3 py-2 text-sm text-slate-900 focus:bg-slate-50"
               >
                 Approve
               </DropdownMenuItem>
               <DropdownMenuItem
-                onSelect={(event) => {
-                  event.preventDefault();
+                onSelect={() => {
+                  setOpenMenuId(null);
                   onEdit(item);
                 }}
                 disabled={!canEdit || item.isApprove}
@@ -132,8 +157,8 @@ export function KasBonTable({
                 Edit
               </DropdownMenuItem>
               <DropdownMenuItem
-                onSelect={(event) => {
-                  event.preventDefault();
+                onSelect={() => {
+                  setOpenMenuId(null);
                   onDelete(item);
                 }}
                 disabled={!canDelete || item.isApprove}
@@ -146,7 +171,7 @@ export function KasBonTable({
         ),
       },
     ],
-    [canDelete, canEdit, onApprove, onDelete, onDetail, onEdit, slug],
+    [canDelete, canEdit, onApprove, onDelete, onDetail, onEdit, openMenuId, slug],
   );
 
   return <BaseTable data={data} columns={columns} loading={isLoading} defaultSort={{ key: 'id', direction: 'desc' }} />;

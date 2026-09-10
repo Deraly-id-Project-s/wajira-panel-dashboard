@@ -438,7 +438,7 @@ export default function FinanceBillingTable({ financeBillings, cashFlowDetail, c
       <FormDialog
         open={isFormOpen}
         onOpenChange={(open: boolean) => { if (!open) closeForm(); }}
-        title={editingId ? 'Edit Pembayaran' : 'Tambah Pembayaran Baru'}
+        title={editingId ? 'Edit Pembayaran Finance' : 'Tambah Pembayaran Finance Baru'}
         onSubmit={(e: React.FormEvent) => { e.preventDefault(); void handleSubmitForm(); }}
         maxWidthClassName="sm:max-w-5xl"
         isSubmitting={isLoading}

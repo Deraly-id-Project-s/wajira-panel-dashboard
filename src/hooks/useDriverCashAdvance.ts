@@ -14,6 +14,7 @@ import {
   getDriverCashAdvances,
   getDriverCashAdvanceBillingById,
   createDriverCashAdvanceBillingHistory,
+  deleteDriverCashAdvanceBillingHistory,
   updateDriverCashAdvanceBillingStatus,
   updateDriverCashAdvance,
 } from '@/services/driver-cash-advance.service';
@@ -55,6 +56,17 @@ export function useCreateDriverCashAdvanceBillingHistory() {
     onSuccess: (_, payload) => {
       queryClient.invalidateQueries({ queryKey: driverCashAdvanceKeys.all });
       queryClient.invalidateQueries({ queryKey: driverCashAdvanceKeys.billing(payload.driver_cash_advance_billing_id) });
+    },
+  });
+}
+
+export function useDeleteDriverCashAdvanceBillingHistory() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (id: string | number) => deleteDriverCashAdvanceBillingHistory(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: driverCashAdvanceKeys.all });
     },
   });
 }

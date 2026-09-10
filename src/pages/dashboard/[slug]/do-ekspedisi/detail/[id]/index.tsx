@@ -4,6 +4,7 @@ import { useRouter } from 'next/router';
 import { toast } from 'sonner';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { DOEkspedisiDetailCard } from '@/components/features/do-ekspedisi/DOEkspedisiDetailCard';
+import { DOEkspedisiPrintDocument } from '@/components/features/do-ekspedisi/DOEkspedisiPrintDocument';
 // import { DOEkspedisiDetailTable } from '@/components/features/do-ekspedisi/DOEkspedisiDetailTable';
 import { DeleteDOEkspedisiModal } from '@/components/features/do-ekspedisi/DeleteDOEkspedisiModal';
 import type { DoEkspedisiItem } from '@/@types/do-ekspedisi.types';
@@ -14,9 +15,13 @@ import { LoadingState } from '@/components/ui/loading-state';
 import { PageHeader } from '@/components/ui/page-header';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { ReportTemplatePrintDialog } from '@/components/ui/report-template-print-dialog';
 import { cn } from '@/lib/utils';
 import { formatDate } from '@/lib/utils/format';
 import { DOEkspedisiRelatedData } from '@/components/features/do-ekspedisi/DOEkspedisiRelatedData';
+import { useCompany } from '@/contexts/CompanyContext';
+import { useReportTemplatePrint } from '@/hooks/useReportTemplatePrint';
+import { getCompanyName, getLetterheadByCompanyId, resolveCompanyId } from '@/lib/print-letterhead';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import {
   AlertDialog,
@@ -68,6 +73,10 @@ const getDoStatusLabel = (status: string) => {
 export default function DetailDOEkspedisiPage() {
   const router = useRouter();
   const { slug, id } = router.query;
+  const { companyId } = useCompany();
+  const resolvedCompanyId = resolveCompanyId(slug, companyId) || 1;
+  const selectedPrintBackground = getLetterheadByCompanyId(resolvedCompanyId);
+  const templatePrint = useReportTemplatePrint(selectedPrintBackground);
 
   const [selectedItem, setSelectedItem] = React.useState<DoEkspedisiItem | null>(null);
   const [deleteOpen, setDeleteOpen] = React.useState(false);
@@ -259,8 +268,11 @@ export default function DetailDOEkspedisiPage() {
               onClick={async () => {
                 if (!id || !slug) return;
                 try {
-                  await processExpeditionMutation.mutateAsync({ id: Number(id) });
-                  router.push(`/dashboard/${slug}/do-ekspedisi/print/${id}`);
+                  if (detailQuery.data.status !== 'process' && detailQuery.data.status !== 'done') {
+                    await processExpeditionMutation.mutateAsync({ id: Number(id) });
+                    await detailQuery.refetch();
+                  }
+                  templatePrint.openPrintDialog();
                 } catch (error: any) {
                   toast.error(getApiErrorMessage(error));
                 }
@@ -403,6 +415,26 @@ export default function DetailDOEkspedisiPage() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {detailQuery.data && (
+        <DOEkspedisiPrintDocument
+          data={detailQuery.data}
+          template={templatePrint.selectedTemplate}
+          fallbackBackground={selectedPrintBackground}
+          companyName={getCompanyName(resolvedCompanyId)}
+          printedAt={templatePrint.printedAt}
+        />
+      )}
+
+      <ReportTemplatePrintDialog
+        open={templatePrint.isDialogOpen}
+        onOpenChange={templatePrint.setIsDialogOpen}
+        selectedTemplateId={templatePrint.selectedTemplateId}
+        onTemplateChange={templatePrint.setSelectedTemplateId}
+        onPrint={templatePrint.printWithSelectedTemplate}
+        isPreparingPrint={templatePrint.isPreparingPrint}
+        reportName="DO ekspedisi"
+      />
     </DashboardLayout>
   );
 }
