@@ -8,6 +8,7 @@ import * as z from 'zod';
 import { UnitBilling, UnitBillingHistory } from '@/@types/unit-billing.types';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { InputDate } from '@/components/ui/input-date';
 import { MoneyInput } from '@/components/ui/money-input';
 import { currenciesFormat } from '@/components/ui/currenciesFormat';
 import { TextTruncate } from '@/components/ui/text-truncate';
@@ -295,8 +296,7 @@ export function UnitTransactionPaymentForm({
                         {/* Tanggal */}
                         <div className="space-y-2">
                             <p className="text-sm font-medium">Tanggal</p>
-                            <Input
-                                type="date"
+                            <InputDate
                                 value={form.watch('paymentDate')}
                                 disabled
                             />
@@ -343,8 +343,7 @@ export function UnitTransactionPaymentForm({
                             <div className="grid grid-cols-1 gap-4 p-4 md:grid-cols-3">
                                 <div className="space-y-2 md:col-span-3">
                                     <p className="text-sm font-medium">Tanggal Bayar</p>
-                                    <Input
-                                        type="date"
+                                    <InputDate
                                         value={form.watch('paymentDate')}
                                         disabled={billing && billingRemaining === 0 || isPaidAndValid}
                                         onChange={(e) => form.setValue('paymentDate', e.target.value)}

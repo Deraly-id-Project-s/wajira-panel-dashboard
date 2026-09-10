@@ -3,6 +3,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, FormDescription } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
+import { InputDate } from '@/components/ui/input-date';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Switch } from '@/components/ui/switch';
@@ -126,7 +127,7 @@ export function TaxVersionForm({ open, onOpenChange, initialData, baseTaxId, onS
                   <FormItem>
                     <FormLabel>Berlaku Dari (Opsional)</FormLabel>
                     <FormControl>
-                      <Input type="date" disabled={isSubmitting} {...field} />
+                      <InputDate disabled={isSubmitting} {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -139,7 +140,7 @@ export function TaxVersionForm({ open, onOpenChange, initialData, baseTaxId, onS
                   <FormItem>
                     <FormLabel>Berlaku Sampai (Opsional)</FormLabel>
                     <FormControl>
-                      <Input type="date" disabled={isSubmitting} {...field} />
+                      <InputDate disabled={isSubmitting} {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>

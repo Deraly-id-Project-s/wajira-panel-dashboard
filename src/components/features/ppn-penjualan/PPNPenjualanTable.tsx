@@ -19,6 +19,7 @@ import {
   DialogFooter,
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
+import { InputDate } from '@/components/ui/input-date';
 import { useBulkUpdatePPNPenjualan } from '@/hooks/usePPN';
 import { toast } from 'sonner';
 import { MoneyInput } from '@/components/ui/money-input';
@@ -416,8 +417,7 @@ export default function PPNPenjualanTable({
             <form id="bulk-update-ppn-penjualan-form" onSubmit={handleSubmitBulk} className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-1.5">
                 <label className="text-xs font-semibold text-slate-700">Tanggal FPM (fp_date)</label>
-                <Input
-                  type="date"
+                <InputDate
                   value={fpDate}
                   onChange={(e) => setFpDate(e.target.value)}
                   className="bg-white border-slate-200 h-9 text-xs rounded-md"
@@ -426,8 +426,7 @@ export default function PPNPenjualanTable({
 
               <div className="space-y-1.5">
                 <label className="text-xs font-semibold text-slate-700">Masa NSFPM (nsfp_age)</label>
-                <Input
-                  type="date"
+                <InputDate
                   value={nsfpAge}
                   onChange={(e) => setNsfpAge(e.target.value)}
                   className="bg-white border-slate-200 h-9 text-xs rounded-md"

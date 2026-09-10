@@ -8,6 +8,7 @@ import { createRefundPaymentSchema, type CreateRefundPaymentFormValues } from '@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { InputDate } from '@/components/ui/input-date';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { toast } from 'sonner';
@@ -137,10 +138,11 @@ export default function PurchaseRefundPaymentDetailModal({ open, onClose, refund
 
           <div>
             <Label className={refundLabelClassName}>Tanggal Refund</Label>
-            <div className="relative">
-              <Input type="date" {...form.register('payment_date')} />
-            </div>
-            {form.formState.errors.payment_date ? <p className="mt-2 text-sm text-red-600">{form.formState.errors.payment_date.message}</p> : null}
+            <Controller
+              control={form.control}
+              name="payment_date"
+              render={({ field }) => <InputDate {...field} />}
+            />
           </div>
 
           <div>

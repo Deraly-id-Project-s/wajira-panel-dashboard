@@ -5,6 +5,8 @@ import BaseTable, { type ColumnDef } from '@/components/ui/base-table';
 import { FormDialog } from '@/components/ui/form-dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { InputDate } from '@/components/ui/input-date';
+import { InputDateTime } from '@/components/ui/input-date-time';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -23,7 +25,13 @@ interface DOEkspedisiClaimApplicationsProps {
 const field = (label: string, value: string, placeholder: string, onChange: (value: string) => void, type = 'text', required = true) => (
   <div className="space-y-1">
     <Label>{label}{required && <span className="text-red-500"> *</span>}</Label>
-    <Input required={required} type={type} value={value} onChange={(e) => onChange(e.target.value)} placeholder={placeholder} className="mt-2" />
+    {type === 'datetime-local' ? (
+      <InputDateTime value={value} onChange={(e) => onChange(e.target.value)} className="mt-2" />
+    ) : type === 'date' ? (
+      <InputDate value={value} onChange={(e) => onChange(e.target.value)} className="mt-2" />
+    ) : (
+      <Input required={required} type={type} value={value} onChange={(e) => onChange(e.target.value)} placeholder={placeholder} className="mt-2" />
+    )}
   </div>
 );
 

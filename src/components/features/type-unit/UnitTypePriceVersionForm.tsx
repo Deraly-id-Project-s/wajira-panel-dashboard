@@ -2,6 +2,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, FormDescription } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
+import { InputDate } from '@/components/ui/input-date';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Switch } from '@/components/ui/switch';
@@ -147,7 +148,7 @@ export function UnitTypePriceVersionForm({
                   <FormItem>
                     <FormLabel>Berlaku Dari (Opsional)</FormLabel>
                     <FormControl>
-                      <Input type="date" disabled={isSubmitting} {...field} value={field.value ?? ''} />
+                      <InputDate disabled={isSubmitting} {...field} value={field.value ?? ''} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -160,7 +161,7 @@ export function UnitTypePriceVersionForm({
                   <FormItem>
                     <FormLabel>Berlaku Sampai (Opsional)</FormLabel>
                     <FormControl>
-                      <Input type="date" disabled={isSubmitting} {...field} value={field.value ?? ''} />
+                      <InputDate disabled={isSubmitting} {...field} value={field.value ?? ''} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>

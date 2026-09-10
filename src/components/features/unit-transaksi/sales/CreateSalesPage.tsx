@@ -15,6 +15,7 @@ import { getCustomerById, getCustomers } from '@/services/customer.service';
 import { mapCustomerDetailToSalesForm, mapCustomerToSalesOption, SalesCustomerOption } from '@/services/sales-customer.mapper';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
+import { InputDate } from '@/components/ui/input-date';
 import { Button } from '@/components/ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
@@ -261,8 +262,7 @@ export default function CreateSalesPage() {
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <div className="space-y-2 flex flex-col">
                   <Label className="text-sm font-medium">Tanggal</Label>
-                  <Input
-                    type="date"
+                  <InputDate
                     value={form.tanggal}
                     onChange={(e) => setForm((prev) => ({ ...prev, tanggal: e.target.value }))}
                     className="bg-transparent"

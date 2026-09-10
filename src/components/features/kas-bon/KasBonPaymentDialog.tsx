@@ -27,6 +27,7 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
+import { InputDate } from '@/components/ui/input-date';
 import { LoadingState } from '@/components/ui/loading-state';
 import { MoneyInput } from '@/components/ui/money-input';
 import RequiredMark from '@/components/ui/required-mark';
@@ -212,8 +213,7 @@ export function KasBonPaymentDialog({
                         Tanggal Bayar <RequiredMark />
                       </FormLabel>
                       <FormControl>
-                        <Input
-                          type="date"
+                        <InputDate
                           {...field}
                           disabled={isSubmitting || billing.isPaid}
                         />

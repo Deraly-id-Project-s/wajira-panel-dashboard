@@ -9,6 +9,7 @@ import { currenciesFormat } from '@/components/ui/currenciesFormat';
 import { FileInput } from '@/components/ui/file-input';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
+import { InputDate } from '@/components/ui/input-date';
 import { MoneyInput } from '@/components/ui/money-input';
 import { LoadingState } from '@/components/ui/loading-state';
 import RequiredMark from '@/components/ui/required-mark';
@@ -110,7 +111,7 @@ export function KasBonPaymentForm({ billing, onSubmit, onCancel, isSubmitting = 
             render={({ field }) => (
               <FormItem className="space-y-2 sm:col-span-2">
                 <FormLabel>Tanggal Bayar <RequiredMark /></FormLabel>
-                <FormControl><Input type="date" {...field} disabled={isSubmitting || billing.isPaid} /></FormControl>
+                <FormControl><InputDate {...field} disabled={isSubmitting || billing.isPaid} /></FormControl>
                 <FormMessage />
               </FormItem>
             )}

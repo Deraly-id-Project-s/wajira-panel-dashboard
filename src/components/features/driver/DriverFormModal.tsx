@@ -3,6 +3,7 @@ import { useForm } from 'react-hook-form';
 import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from '@/components/ui/form';
 import { FormDialog } from '@/components/ui/form-dialog';
 import { Input } from '@/components/ui/input';
+import { InputDate } from '@/components/ui/input-date';
 import { Textarea } from '@/components/ui/textarea';
 import type { Driver, DriverPayload } from '@/@types/driver.types';
 
@@ -201,7 +202,7 @@ export function DriverFormModal({
               <FormItem>
                 <FormLabel>Tgl. Gabung</FormLabel>
                 <FormControl>
-                  <Input type="date" {...field} />
+                  <InputDate {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>

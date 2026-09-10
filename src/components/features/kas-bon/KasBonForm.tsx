@@ -8,6 +8,7 @@ import { PageHeader } from '@/components/ui/page-header';
 import { Button } from '@/components/ui/button';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
+import { InputDate } from '@/components/ui/input-date';
 import { MoneyInput } from '@/components/ui/money-input';
 import RequiredMark from '@/components/ui/required-mark';
 import { Textarea } from '@/components/ui/textarea';
@@ -121,7 +122,7 @@ export function KasBonForm({
                     Tanggal Klaim <RequiredMark />
                   </FormLabel>
                   <FormControl>
-                    <Input type="date" {...field} />
+                    <InputDate {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
