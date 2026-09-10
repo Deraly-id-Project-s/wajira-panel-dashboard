@@ -52,7 +52,7 @@ export function TransactionTable({ data, onEdit, onDelete, canEdit, canDelete }:
               {renderSortHeader('date', 'TANGGAL', 'center')}
             </th>
             <th className="p-0 text-left min-w-[150px] align-middle" rowSpan={2}>
-              {renderSortHeader('name', 'TRANSAKSI', 'left')}
+              {renderSortHeader('name', 'NAMA TRANSAKSI', 'left')}
             </th>
             <th className="px-4 py-2 text-center text-xs font-semibold uppercase text-slate-500 border-l border-r align-middle" colSpan={4}>
               BANK
@@ -62,6 +62,9 @@ export function TransactionTable({ data, onEdit, onDelete, canEdit, canDelete }:
             </th>
             <th className="p-0 text-left min-w-[150px] align-middle" rowSpan={2}>
               {renderSortHeader('description', 'KETERANGAN', 'left')}
+            </th>
+            <th className="p-0 text-left min-w-[130px] align-middle border-l" rowSpan={2}>
+              <span className="px-4 py-4 text-xs font-semibold uppercase text-slate-500 block">BUKTI TRANSAKSI</span>
             </th>
             <th className="w-[80px] px-4 py-4 text-center text-xs font-semibold uppercase text-slate-500 align-middle sticky right-0 bg-[#f8f9fa] z-10 border-l border-slate-200 shadow-[-4px_0_6px_-4px_rgba(0,0,0,0.05)]" rowSpan={2}>
               ACTION
@@ -85,7 +88,7 @@ export function TransactionTable({ data, onEdit, onDelete, canEdit, canDelete }:
               <tr key={trx.id} className="border-b hover:bg-gray-50 transition-colors border-slate-100 last:border-0">
                 <td className="px-4 py-4 text-center text-sm text-slate-700 whitespace-nowrap">{formatDate(trx.date)}</td>
                 <td className="px-4 py-4 text-left text-sm font-medium text-slate-900">
-                  <CopyBox text={trx.name} />
+                  <CopyBox text={trx.name || '-'} />
                 </td>
 
                 {/* BANK */}
@@ -100,6 +103,19 @@ export function TransactionTable({ data, onEdit, onDelete, canEdit, canDelete }:
 
                 <td className="px-4 py-4 text-left text-sm text-slate-500 max-w-[150px] truncate" title={trx.description}>
                   {trx.description || '-'}
+                </td>
+                <td className="px-4 py-4 text-left text-sm text-slate-500 border-l max-w-[130px] truncate">
+                  {typeof trx.transactionProof === 'string' && trx.transactionProof ? (
+                    trx.transactionProof.startsWith('http') ? (
+                      <a href={trx.transactionProof} target="_blank" rel="noreferrer" className="text-blue-600 hover:underline font-medium">
+                        Lihat Bukti
+                      </a>
+                    ) : (
+                      <CopyBox text={trx.transactionProof} />
+                    )
+                  ) : (
+                    '-'
+                  )}
                 </td>
                 <td className="px-4 py-4 text-center sticky right-0 bg-white group-hover:bg-gray-50 z-10 border-l border-slate-200 shadow-[-4px_0_6px_-4px_rgba(0,0,0,0.05)]">
                   <div className="flex justify-center">

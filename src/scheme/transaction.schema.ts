@@ -5,7 +5,8 @@ const amountField = z.coerce.number().min(0, 'Nominal tidak boleh negatif').opti
 export const transactionSchema = z
   .object({
     date: z.string().min(1, 'Tanggal wajib diisi'),
-    name: z.string().trim().min(3, 'Nama transaksi minimal 3 karakter'),
+    name: z.string().trim().min(1, 'Nama transaksi wajib diisi'),
+    unitTransactionId: z.union([z.string(), z.number()]).nullable().optional(),
     debitUSD: amountField,
     creditUSD: amountField,
     debitIDR: amountField,
@@ -13,6 +14,7 @@ export const transactionSchema = z
     debitCash: amountField,
     creditCash: amountField,
     description: z.string().optional(),
+    transactionProof: z.union([z.custom<File>((val) => typeof window !== 'undefined' && val instanceof File), z.string()]).nullable().optional(),
   })
   .superRefine((data, ctx) => {
     const hasDebit = Number(data.debitUSD || 0) > 0 || Number(data.debitIDR || 0) > 0 || Number(data.debitCash || 0) > 0;

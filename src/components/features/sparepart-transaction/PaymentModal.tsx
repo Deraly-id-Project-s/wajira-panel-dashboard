@@ -5,6 +5,7 @@ import { z } from 'zod';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
+import { InputDate } from '@/components/ui/input-date';
 import { MoneyInput } from '@/components/ui/money-input';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
@@ -101,7 +102,7 @@ export function PaymentModal({ open, onClose, onSubmit, defaultValues, loading, 
             <FormField control={form.control} name="payment_at" render={({ field }) => (
               <FormItem>
                 <FormLabel>Tanggal Transaksi Pembayaran</FormLabel>
-                <FormControl><Input type="date" {...field} /></FormControl>
+                <FormControl><InputDate {...field} /></FormControl>
                 <FormMessage />
               </FormItem>
             )} />

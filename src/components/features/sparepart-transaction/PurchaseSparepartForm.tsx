@@ -2,6 +2,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
+import { InputDate } from '@/components/ui/input-date';
 import { MoneyInput } from '@/components/ui/money-input';
 import { Button } from '@/components/ui/button';
 import { Save } from 'lucide-react';
@@ -96,7 +97,7 @@ export function PurchaseSparepartForm({ defaultValues, onSubmit, onCancel, readO
           <FormField control={form.control} name="transaction_date" render={({ field }) => (
             <FormItem>
               <FormLabel>Tanggal Transaksi</FormLabel>
-              <FormControl><Input type="date" {...field} disabled={readOnly} /></FormControl>
+              <FormControl><InputDate {...field} disabled={readOnly} /></FormControl>
               <FormMessage />
             </FormItem>
           )} />
