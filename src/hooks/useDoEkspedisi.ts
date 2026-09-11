@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type {
   ApplyExpeditionClaimPayload,
+  UpdateExpeditionClaimApplicationPayload,
   DoEkspedisiItemDestinationListParams,
   DoEkspedisiItemDestinationPayload,
   DoEkspedisiItemListParams,
@@ -15,6 +16,7 @@ import type { PaginationParams } from '@/@types/pagination.types';
 import {
   createDoEkspedisi,
   applyExpeditionClaim,
+  deleteExpeditionClaimApplication,
   createDoDetailResource,
   createDoEkspedisiItem,
   createDoEkspedisiItemDestination,
@@ -34,6 +36,7 @@ import {
   lookupDoEkspedisiDrivers,
   lookupDoEkspedisiVehicles,
   updateDoEkspedisi,
+  updateExpeditionClaimApplication,
   updateDoExpeditionStatus,
   updateDoEkspedisiItem,
   updateDoEkspedisiItemDestination,
@@ -338,7 +341,33 @@ export function useApplyExpeditionClaim(expeditionId: string | number) {
     onSuccess: (_, payload) => {
       queryClient.invalidateQueries({ queryKey: ['do-ekspedisi'] });
       queryClient.invalidateQueries({ queryKey: ['do-ekspedisi', 'detail', String(expeditionId)] });
-      queryClient.invalidateQueries({ queryKey: ['expedition-claim', 'available', payload.driver_id] });
+    },
+  });
+}
+
+export function useUpdateExpeditionClaimApplication(expeditionId: string | number) {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ id, payload }: { id: string | number; payload: UpdateExpeditionClaimApplicationPayload }) =>
+      updateExpeditionClaimApplication(id, payload),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['do-ekspedisi'] });
+      queryClient.invalidateQueries({ queryKey: ['do-ekspedisi', 'detail', String(expeditionId)] });
+      queryClient.invalidateQueries({ queryKey: ['expedition-claim'] });
+    },
+  });
+}
+
+export function useDeleteExpeditionClaimApplication(expeditionId: string | number) {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (id: string | number) => deleteExpeditionClaimApplication(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['do-ekspedisi'] });
+      queryClient.invalidateQueries({ queryKey: ['do-ekspedisi', 'detail', String(expeditionId)] });
+      queryClient.invalidateQueries({ queryKey: ['expedition-claim'] });
     },
   });
 }

@@ -1,6 +1,7 @@
 import type {
   DoEkspedisi,
   ApplyExpeditionClaimPayload,
+  UpdateExpeditionClaimApplicationPayload,
   DoEkspedisiCustomer,
   DoEkspedisiClaim,
   DoEkspedisiClaimApplication,
@@ -31,6 +32,7 @@ import type {
 import type { PaginationParams } from '@/@types/pagination.types';
 import { apiClient } from '@/lib/api/client';
 import { ApiResponseError, ApiValidationError, ensureSuccess, type LaravelApiResponse, toPaginatedResult } from '@/lib/api/response';
+import { mapDriverCashAdvanceClaim } from './driver-cash-advance.service';
 
 const expeditionBasePath = '/wapi/transaction/do-expedition';
 const expeditionItemBasePath = '/wapi/transaction/do-expedition-item';
@@ -40,8 +42,8 @@ const vehicleLookupPath = '/wapi/master-data/vehicle-fleet';
 const driverLookupPath = '/wapi/master-data/driver';
 export const driverNotePath = '/wapi/transaction/driver-note';
 export const expeditionExpensePath = '/wapi/transaction/expedition-expense';
-export const expeditionClaimPath = '/wapi/transaction/expedition-claim';
-export const claimDocumentationPath = '/wapi/transaction/expedition-claim-documentation';
+export const expeditionClaimPath = '/wapi/transaction/do-expedition-claim';
+export const claimDocumentationPath = '/wapi/transaction/do-expedition-claim-documentation';
 export const expeditionDocumentationBasePath = '/wapi/transaction/do-expedition-documentation';
 
 const toNumber = (value: unknown) => {
@@ -191,11 +193,11 @@ const mapDoOrderTarifItem = (entry: any, parent?: any) => {
   const pivot = entry?.pivot ?? entry;
   const tarifItems = Array.isArray(entry?.do_order_list_tarif_items)
     ? entry.do_order_list_tarif_items.map((item: any): DoEkspedisiOrderTarifLoadItem => ({
-        id: Number(item?.id ?? 0),
-        uuid: item?.uuid,
-        loadContent: toText(item?.load_content, item?.muatan, item?.loadContent),
-        qty: toNumber(item?.qty),
-      }))
+      id: Number(item?.id ?? 0),
+      uuid: item?.uuid,
+      loadContent: toText(item?.load_content, item?.muatan, item?.loadContent),
+      qty: toNumber(item?.qty),
+    }))
     : [];
   const primaryTarifItem = tarifItems[0];
 
@@ -312,7 +314,7 @@ const mapDoEkspedisi = (item: any): DoEkspedisi => {
   const rawVehicle = item?.vehicle ?? orderListTarif?.vehicle;
   const rawDriver = item?.driver ?? orderListTarif?.driver;
   const rawOrderList = item?.do_order_list ?? item?.do_orderlist ?? item?.order_list ?? orderListTarif?.doOrderList ?? orderListTarif?.do_order_list;
-  
+
   return {
     id: Number(item?.id ?? 0),
     uuid: item?.uuid,
@@ -340,6 +342,7 @@ const mapDoEkspedisi = (item: any): DoEkspedisi => {
     ujNominal: toNumber(item?.uj_nominal ?? item?.ujNominal),
     ujNominalBeforeClaim: toNumber(item?.uj_nominal_before_claim ?? item?.uj_nominal ?? item?.ujNominal),
     claimDeductionNominal: toNumber(item?.claim_deduction_nominal),
+    cashAdvanceDeductionNominal: toNumber(item?.cash_advance_deduction_nominal),
     startDate: item?.start_date ?? null,
     endDate: item?.end_date ?? null,
     doOrderListTarifId: Number(item?.do_order_list_tarif_id ?? item?.doOrderListTarifId ?? 0),
@@ -349,6 +352,7 @@ const mapDoEkspedisi = (item: any): DoEkspedisi => {
     expeditionExpenses: (item?.expedition_expenses ?? []).map(mapExpense),
     expeditionClaims: (item?.expedition_claims ?? []).map(mapClaim),
     driverExpeditionClaims: (item?.driver_expedition_claims ?? []).map(mapClaimApplication),
+    driverCashAdvanceClaims: (item?.driver_cash_advance_claims ?? []).map(mapDriverCashAdvanceClaim),
   };
 };
 
@@ -831,7 +835,7 @@ export const createExpeditionClaimDocumentation = async (
 
 export const getAvailableExpeditionClaims = async (driverId: number): Promise<DoEkspedisiClaim[]> => {
   const response = await apiClient.get<LaravelApiResponse<any>>(expeditionClaimPath, {
-    params: { driver_id: driverId, page: 1, per_page: 100 },
+    params: { driver_id: driverId, is_claim: false, page: 1, per_page: 100 },
   });
   const normalized = normalizePagination(ensureSuccess(response.data));
 
@@ -839,8 +843,34 @@ export const getAvailableExpeditionClaims = async (driverId: number): Promise<Do
 };
 
 export const applyExpeditionClaim = async (payload: ApplyExpeditionClaimPayload): Promise<DoEkspedisiClaimApplication> => {
-  const response = await apiClient.post<LaravelApiResponse<any>>(`${expeditionClaimPath}/apply`, payload);
+  const response = await apiClient.post<LaravelApiResponse<any>>(
+    `${expeditionBasePath}/${payload.do_expedition_id}/assign-expedition-claim`,
+    {
+      do_expedition_claim_id: payload.do_expedition_claim_id,
+      nominal: payload.nominal,
+      type: payload.type,
+      ...(payload.date ? { date: payload.date } : {}),
+    },
+  );
   return mapClaimApplication(ensureSuccess(response.data));
+};
+
+export const updateExpeditionClaimApplication = async (
+  id: string | number,
+  payload: UpdateExpeditionClaimApplicationPayload,
+): Promise<DoEkspedisiClaimApplication> => {
+  const response = await apiClient.put<LaravelApiResponse<any>>(
+    `/wapi/transaction/driver-do-expedition-claim/${id}`,
+    payload,
+  );
+  return mapClaimApplication(ensureSuccess(response.data));
+};
+
+export const deleteExpeditionClaimApplication = async (id: string | number): Promise<void> => {
+  const response = await apiClient.delete<LaravelApiResponse<null>>(`/wapi/transaction/driver-do-expedition-claim/${id}`);
+  if (!response.data.status) {
+    throw new ApiResponseError(response.data.message ?? 'Gagal menghapus potongan claim');
+  }
 };
 
 export const updateDoExpeditionStatus = async (id: string | number, status: string): Promise<DoEkspedisi> => {

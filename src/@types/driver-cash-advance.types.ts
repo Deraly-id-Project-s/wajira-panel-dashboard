@@ -90,6 +90,19 @@ export interface DriverCashAdvance {
   isDriverRequest?: boolean;
 }
 
+export interface DriverCashAdvanceClaim {
+  id: number;
+  uuid?: string | null;
+  doExpeditionId: number;
+  driverCashAdvanceId: number;
+  driverId: number;
+  nominal: number;
+  type: 'cash' | 'transfer';
+  date: string;
+  cashAdvance?: DriverCashAdvance | null;
+  driver?: DriverCashAdvanceDriver | null;
+}
+
 export interface DriverCashAdvancePayload {
   company_id: number;
   driver_id: number;
@@ -122,8 +135,26 @@ export interface DriverCashAdvanceBillingStatusPayload {
   is_paid: boolean;
 }
 
+export interface ApplyDriverCashAdvancePayload {
+  driver_cash_advance_id: number;
+  do_expedition_id: number;
+  nominal: number;
+  type: 'cash' | 'transfer';
+  date: string;
+}
+
+export interface UpdateDriverCashAdvanceClaimPayload {
+  driver_cash_advance_id: number;
+  nominal: number;
+  type: 'cash' | 'transfer';
+  date: string;
+}
+
 export interface DriverCashAdvanceListParams extends PaginationParams {
   company_id?: number | string;
+  driver_id?: number | string;
+  is_claim?: boolean;
+  is_approve?: boolean;
   start_date?: string | null;
   end_date?: string | null;
 }

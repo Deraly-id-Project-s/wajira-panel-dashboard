@@ -1,13 +1,16 @@
 import type {
   DriverCashAdvance,
+  ApplyDriverCashAdvancePayload,
   DriverCashAdvanceApprovalPayload,
   DriverCashAdvanceBilling,
   DriverCashAdvanceBillingHistory,
   DriverCashAdvanceBillingHistoryPayload,
   DriverCashAdvanceBillingStatusPayload,
+  DriverCashAdvanceClaim,
   DriverCashAdvanceListParams,
   DriverCashAdvanceListResponse,
   DriverCashAdvancePayload,
+  UpdateDriverCashAdvanceClaimPayload,
 } from '@/@types/driver-cash-advance.types';
 import { apiClient } from '@/lib/api/client';
 import { buildLaravelPaginationQuery } from '@/lib/api/pagination';
@@ -16,6 +19,7 @@ import { ApiResponseError, ensureSuccess, type LaravelApiResponse, toPaginatedRe
 const basePath = '/wapi/transaction/driver-cash-advance';
 const billingBasePath = '/wapi/transaction/driver-cash-advance-billing';
 const billingHistoryBasePath = '/wapi/transaction/driver-cash-advance-billing-history';
+const claimBasePath = '/wapi/transaction/driver-cash-advance-claim';
 
 const toNumber = (value: unknown): number => {
   if (value == null || value === '') return 0;
@@ -146,6 +150,19 @@ const mapBilling = (item: any): DriverCashAdvanceBilling => {
   };
 };
 
+export const mapDriverCashAdvanceClaim = (item: any): DriverCashAdvanceClaim => ({
+  id: Number(item?.id ?? 0),
+  uuid: item?.uuid ?? null,
+  doExpeditionId: Number(item?.do_expedition_id ?? 0),
+  driverCashAdvanceId: Number(item?.driver_cash_advance_id ?? item?.cash_advance?.id ?? 0),
+  driverId: Number(item?.driver_id ?? item?.driver?.id ?? 0),
+  nominal: toNumber(item?.nominal),
+  type: item?.type === 'transfer' ? 'transfer' : 'cash',
+  date: item?.date ?? '',
+  cashAdvance: item?.cash_advance ? mapDriverCashAdvance(item.cash_advance) : null,
+  driver: item?.driver ? mapDriver(item.driver) : null,
+});
+
 const unwrapListData = (payload: any) => {
   if (Array.isArray(payload)) {
     return {
@@ -174,6 +191,9 @@ export const getDriverCashAdvances = async (params: DriverCashAdvanceListParams)
     params: {
       ...buildLaravelPaginationQuery(params),
       company_id: params.company_id,
+      driver_id: params.driver_id,
+      is_claim: params.is_claim,
+      is_approve: params.is_approve,
       start_date: params.start_date || undefined,
       end_date: params.end_date || undefined,
     },
@@ -258,4 +278,32 @@ export const updateDriverCashAdvanceBillingStatus = async (
 ): Promise<DriverCashAdvanceBilling> => {
   const response = await apiClient.put<LaravelApiResponse<any>>(`${billingBasePath}/${id}`, payload);
   return mapBilling(ensureSuccess(response.data));
+};
+
+export const applyDriverCashAdvance = async (payload: ApplyDriverCashAdvancePayload): Promise<DriverCashAdvanceClaim> => {
+  const response = await apiClient.post<LaravelApiResponse<any>>(
+    `${basePath}/${payload.driver_cash_advance_id}/assign-expedition`,
+    {
+      do_expedition_id: payload.do_expedition_id,
+      nominal: payload.nominal,
+      type: payload.type,
+      date: payload.date,
+    },
+  );
+  return mapDriverCashAdvanceClaim(ensureSuccess(response.data));
+};
+
+export const updateDriverCashAdvanceClaim = async (
+  id: string | number,
+  payload: UpdateDriverCashAdvanceClaimPayload,
+): Promise<DriverCashAdvanceClaim> => {
+  const response = await apiClient.put<LaravelApiResponse<any>>(`${claimBasePath}/${id}`, payload);
+  return mapDriverCashAdvanceClaim(ensureSuccess(response.data));
+};
+
+export const deleteDriverCashAdvanceClaim = async (id: string | number): Promise<void> => {
+  const response = await apiClient.delete<LaravelApiResponse<null>>(`${claimBasePath}/${id}`);
+  if (!response.data.status) {
+    throw new ApiResponseError(response.data.message ?? 'Gagal menghapus potongan kas bon');
+  }
 };

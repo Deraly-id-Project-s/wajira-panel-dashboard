@@ -253,6 +253,7 @@ export function DOEkspedisiDetailCard({ data }: DOEkspedisiDetailCardProps) {
           <DetailField label="Kode DO" value={data.doCode || '-'} icon={ClipboardList} />
           <DetailField label="UJ Awal" value={formatCurrency(data.ujNominalBeforeClaim)} icon={WalletCards} />
           <DetailField label="Potongan Claim" value={<span className="text-rose-700">-{formatCurrency(data.claimDeductionNominal)}</span>} icon={ReceiptText} />
+          <DetailField label="Potongan Kas Bon" value={<span className="text-rose-700">-{formatCurrency(data.cashAdvanceDeductionNominal)}</span>} icon={WalletCards} />
           <DetailField label="UJ Diterima Driver" value={<span className="text-emerald-700">{formatCurrency(data.ujNominal)}</span>} icon={WalletCards} />
           <DetailField
             label="Nama Driver"

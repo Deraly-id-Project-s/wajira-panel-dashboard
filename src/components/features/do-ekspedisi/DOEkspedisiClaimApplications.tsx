@@ -1,9 +1,10 @@
 import React from 'react';
-import { WalletCards, Plus } from 'lucide-react';
+import { WalletCards, Plus, MoreVertical, Pencil, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
 import BaseTable, { type ColumnDef } from '@/components/ui/base-table';
 import { FormDialog } from '@/components/ui/form-dialog';
 import { Button } from '@/components/ui/button';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Input } from '@/components/ui/input';
 import { InputDate } from '@/components/ui/input-date';
 import { InputDateTime } from '@/components/ui/input-date-time';
@@ -13,7 +14,12 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { MoneyInput } from '@/components/ui/money-input';
 import { formatCurrency } from '@/lib/utils/currency';
 import { formatDate } from '@/lib/utils/format';
-import { useApplyExpeditionClaim, useAvailableExpeditionClaims } from '@/hooks/useDoEkspedisi';
+import {
+  useApplyExpeditionClaim,
+  useAvailableExpeditionClaims,
+  useDeleteExpeditionClaimApplication,
+  useUpdateExpeditionClaimApplication,
+} from '@/hooks/useDoEkspedisi';
 import { getApiErrorMessage } from '@/utils/apiErrorHandler';
 import type { DoEkspedisi, DoEkspedisiClaimApplication } from '@/@types/do-ekspedisi.types';
 
@@ -81,6 +87,7 @@ function RelatedSection({
 
 export function DOEkspedisiClaimApplications({ data, onRefresh }: DOEkspedisiClaimApplicationsProps) {
   const [applyOpen, setApplyOpen] = React.useState(false);
+  const [editingApplication, setEditingApplication] = React.useState<DoEkspedisiClaimApplication | null>(null);
   const [applyForm, setApplyForm] = React.useState({
     claimId: '',
     nominal: '' as string | number,
@@ -88,35 +95,79 @@ export function DOEkspedisiClaimApplications({ data, onRefresh }: DOEkspedisiCla
     date: new Date().toISOString().slice(0, 16),
   });
 
-  const canManageClaims = data.status === 'done' && Boolean(data.driverId);
+  const canManageClaims = ['draft', 'pending'].includes(String(data.status).toLowerCase()) && Boolean(data.driverId);
   const canApplyClaims = canManageClaims && data.ujNominal > 0;
   const availableClaims = useAvailableExpeditionClaims(data.driverId, canManageClaims && applyOpen);
   const applyClaim = useApplyExpeditionClaim(data.id);
+  const updateClaim = useUpdateExpeditionClaimApplication(data.id);
+  const deleteClaim = useDeleteExpeditionClaimApplication(data.id);
 
   const selectedAvailableClaim = availableClaims.data?.find((item) => String(item.id) === applyForm.claimId);
 
+  const resetForm = () => {
+    setEditingApplication(null);
+    setApplyForm({ claimId: '', nominal: '', type: 'cash', date: new Date().toISOString().slice(0, 16) });
+  };
+
+  const openCreate = () => {
+    resetForm();
+    setApplyOpen(true);
+  };
+
+  const openEdit = (item: DoEkspedisiClaimApplication) => {
+    setEditingApplication(item);
+    setApplyForm({
+      claimId: String(item.doExpeditionClaimId),
+      nominal: item.nominal,
+      type: item.type,
+      date: item.date ? item.date.slice(0, 16) : new Date().toISOString().slice(0, 16),
+    });
+    setApplyOpen(true);
+  };
+
   const submitClaimApplication = async (event: React.FormEvent) => {
     event.preventDefault();
-    if (!data.driverId || !applyForm.claimId) return;
+    if (!data.driverId || (!editingApplication && !applyForm.claimId)) return;
 
     const nominal = Number(applyForm.nominal);
-    if (!selectedAvailableClaim || nominal < 1 || nominal > selectedAvailableClaim.remainingNominal || nominal > data.ujNominal) {
+    const maxAvailableNominal = editingApplication
+      ? (editingApplication.claim?.remainingNominal ?? 0) + editingApplication.nominal
+      : selectedAvailableClaim?.remainingNominal ?? 0;
+    if (nominal < 1 || nominal > maxAvailableNominal || nominal > (data.ujNominal + (editingApplication?.nominal ?? 0))) {
       toast.error('Nominal potongan harus lebih dari 0 dan tidak boleh melebihi sisa claim atau sisa UJ.');
       return;
     }
 
     try {
-      await applyClaim.mutateAsync({
-        do_expedition_claim_id: Number(applyForm.claimId),
-        do_expedition_id: data.id,
-        driver_id: data.driverId,
-        nominal,
-        type: applyForm.type,
-        date: applyForm.date,
-      });
-      toast.success('Claim berhasil dipotong dari UJ driver');
+      if (editingApplication) {
+        await updateClaim.mutateAsync({
+          id: editingApplication.id,
+          payload: { nominal, type: applyForm.type, date: applyForm.date },
+        });
+        toast.success('Potongan claim berhasil diperbarui');
+      } else {
+        await applyClaim.mutateAsync({
+          do_expedition_claim_id: Number(applyForm.claimId),
+          do_expedition_id: data.id,
+          nominal,
+          type: applyForm.type,
+          date: applyForm.date,
+        });
+        toast.success('Claim berhasil dipotong dari UJ driver');
+      }
       setApplyOpen(false);
-      setApplyForm({ claimId: '', nominal: '', type: 'cash', date: new Date().toISOString().slice(0, 16) });
+      resetForm();
+      onRefresh?.();
+    } catch (error) {
+      toast.error(getApiErrorMessage(error));
+    }
+  };
+
+  const handleDelete = async (item: DoEkspedisiClaimApplication) => {
+    if (!window.confirm('Hapus potongan claim ini?')) return;
+    try {
+      await deleteClaim.mutateAsync(item.id);
+      toast.success('Potongan claim berhasil dihapus');
       onRefresh?.();
     } catch (error) {
       toast.error(getApiErrorMessage(error));
@@ -141,6 +192,29 @@ export function DOEkspedisiClaimApplications({ data, onRefresh }: DOEkspedisiCla
       alignment: 'right',
       cell: (x) => <span className="font-semibold text-rose-700">-{formatCurrency(x.nominal)}</span>,
     },
+    {
+      header: '',
+      alignment: 'right',
+      cell: (x) => (
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="ghost" size="icon">
+              <MoreVertical className="h-4 w-4" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuItem onClick={() => openEdit(x)}>
+              <Pencil className="mr-2 h-4 w-4" />
+              Edit
+            </DropdownMenuItem>
+            <DropdownMenuItem className="text-red-600" onClick={() => void handleDelete(x)}>
+              <Trash2 className="mr-2 h-4 w-4" />
+              Hapus
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      ),
+    },
   ];
 
   return (
@@ -149,7 +223,7 @@ export function DOEkspedisiClaimApplications({ data, onRefresh }: DOEkspedisiCla
         title="Potongan Claim pada UJ"
         icon={<WalletCards />}
         description={'Claim dari ekspedisi mana pun milik driver yang sama dapat digunakan sebagai potongan UJ.'}
-        onAdd={() => setApplyOpen(true)}
+        onAdd={openCreate}
         addLabel="Terapkan Claim"
         addDisabled={!canApplyClaims}
       >
@@ -163,41 +237,48 @@ export function DOEkspedisiClaimApplications({ data, onRefresh }: DOEkspedisiCla
 
       <FormDialog
         open={applyOpen}
-        onOpenChange={setApplyOpen}
-        title="Terapkan Claim ke UJ"
+        onOpenChange={(open) => {
+          setApplyOpen(open);
+          if (!open) resetForm();
+        }}
+        title={editingApplication ? 'Edit Potongan Claim' : 'Terapkan Claim ke UJ'}
         description="Pilih tagihan driver yang akan dipotong dari uang jalan ekspedisi ini."
         onSubmit={submitClaimApplication}
-        submitLabel="Terapkan Claim"
-        isSubmitting={applyClaim.isPending}
+        submitLabel={editingApplication ? 'Simpan Perubahan' : 'Terapkan Claim'}
+        isSubmitting={applyClaim.isPending || updateClaim.isPending}
         maxWidthClassName="max-w-lg"
       >
-        <div className="space-y-1">
-          <Label>Claim *</Label>
-          <Select
-            value={applyForm.claimId}
-            onValueChange={(claimId) => {
-              const selected = availableClaims.data?.find((item) => String(item.id) === claimId);
-              setApplyForm((old) => ({
-                ...old,
-                claimId,
-                nominal: selected ? String(Math.min(selected.remainingNominal, data.ujNominal)) : '',
-              }));
-            }}
-          >
-            <SelectTrigger>
-              <SelectValue placeholder={availableClaims.isLoading ? 'Memuat claim...' : 'Pilih claim driver'} />
-            </SelectTrigger>
-            <SelectContent>
-              {availableClaims.data?.map((item) => (
-                <SelectItem key={item.id} value={String(item.id)}>
-                  {item.sourceExpeditionCode || `Ekspedisi #${item.doExpeditionsId}`} · {item.subject} · Sisa {formatCurrency(item.remainingNominal)}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-        {availableClaims.isSuccess && availableClaims.data?.length === 0 && (
-          <p className="rounded-md bg-slate-50 p-3 text-sm text-slate-600">Tidak ada claim outstanding untuk driver ini.</p>
+        {!editingApplication && (
+          <>
+            <div className="space-y-1">
+              <Label>Claim *</Label>
+              <Select
+                value={applyForm.claimId}
+                onValueChange={(claimId) => {
+                  const selected = availableClaims.data?.find((item) => String(item.id) === claimId);
+                  setApplyForm((old) => ({
+                    ...old,
+                    claimId,
+                    nominal: selected ? String(Math.min(selected.remainingNominal, data.ujNominal)) : '',
+                  }));
+                }}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder={availableClaims.isLoading ? 'Memuat claim...' : 'Pilih claim driver'} />
+                </SelectTrigger>
+                <SelectContent>
+                  {availableClaims.data?.map((item) => (
+                    <SelectItem key={item.id} value={String(item.id)}>
+                      {item.sourceExpeditionCode || `Ekspedisi #${item.doExpeditionsId}`} · {item.subject} · Sisa {formatCurrency(item.remainingNominal)}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            {availableClaims.isSuccess && availableClaims.data?.length === 0 && (
+              <p className="rounded-md bg-slate-50 p-3 text-sm text-slate-600">Tidak ada claim outstanding untuk driver ini.</p>
+            )}
+          </>
         )}
         {selectedAvailableClaim && (
           <div className="rounded-md border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900">

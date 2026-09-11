@@ -5,6 +5,7 @@ import { DOEkspedisiExpenses } from './DOEkspedisiExpenses';
 import { DOEkspedisiDocumentations } from './DOEkspedisiDocumentations';
 import { DOEkspedisiClaims } from './DOEkspedisiClaims';
 import { DOEkspedisiClaimApplications } from './DOEkspedisiClaimApplications';
+import { DOEkspedisiCashAdvanceClaims } from './DOEkspedisiCashAdvanceClaims';
 
 interface DOEkspedisiRelatedDataProps {
   data: DoEkspedisi;
@@ -18,7 +19,10 @@ export function DOEkspedisiRelatedData({ data, onRefresh }: DOEkspedisiRelatedDa
       <DOEkspedisiExpenses data={data} onRefresh={onRefresh} />
       <DOEkspedisiDocumentations data={data} onRefresh={onRefresh} />
       <DOEkspedisiClaims data={data} onRefresh={onRefresh} />
-      <DOEkspedisiClaimApplications data={data} onRefresh={onRefresh} />
+      <div className="grid grid-cols-1 gap-6 xl:grid-cols-2">
+        <DOEkspedisiClaimApplications data={data} onRefresh={onRefresh} />
+        <DOEkspedisiCashAdvanceClaims data={data} onRefresh={onRefresh} />
+      </div>
     </div>
   );
 }
