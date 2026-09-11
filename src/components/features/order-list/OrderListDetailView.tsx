@@ -634,7 +634,7 @@ export function OrderListDetailView({
         ].map((item) => (
           <Card key={item.label} className="border-slate-200 shadow-sm">
             <CardContent className="flex items-center gap-4 p-5">
-              <div className="rounded-xl bg-orange-100 p-3 text-orange-700"><item.icon className="h-5 w-5" /></div>
+              <div className="rounded-md bg-orange-100 p-3 text-orange-700"><item.icon className="h-5 w-5" /></div>
               <div>
                 <p className="text-xs text-slate-500">{item.label}</p>
                 <p className="mt-1 font-bold text-slate-950">
@@ -667,13 +667,13 @@ export function OrderListDetailView({
             <Field label="Tipe Armada" value={getOrderVehicleTypeLabel(data)} icon={Truck} />
             <Field label="DO Ekspedisi" value={`${expeditions.length} data`} icon={FileText} />
           </div>
-          <div className="grid gap-5 rounded-xl bg-orange-50 p-4 md:grid-cols-3">
+          <div className="grid gap-5 rounded-md bg-orange-50 p-4 md:grid-cols-3">
             <Field label="Lokasi Muat" value={data.loadingIn || '-'} icon={MapPin} />
             <Field label="Lokasi Bongkar" value={data.loadingOut || '-'} icon={MapPin} />
             <Field label="Tujuan Pengiriman" value={data.deliveryDestination || '-'} icon={MapPin} />
           </div>
           {data.note && (
-            <div className="rounded-xl border border-slate-100 bg-slate-50/50 p-4">
+            <div className="rounded-md border border-slate-100 bg-slate-50/50 p-4">
               <p className="text-xs font-medium uppercase tracking-wide text-slate-500 mb-1">Catatan / Keterangan</p>
               <p className="text-sm font-semibold text-slate-950">{data.note}</p>
             </div>
@@ -704,7 +704,7 @@ export function OrderListDetailView({
                 const cargoCount = route.tarifItems?.length ?? (route.loadContent ? 1 : 0);
 
                 return (
-                  <div key={route.uuid || route.id || index} className="overflow-hidden rounded-xl border border-slate-200">
+                  <div key={route.uuid || route.id || index} className="overflow-hidden rounded-md border border-slate-200">
                     <div className="flex flex-col gap-3 border-b border-orange-200 bg-orange-50 px-4 py-4 sm:flex-row sm:items-center sm:justify-between">
                       <div className="flex items-center gap-3">
                         <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-orange-300 text-sm font-bold text-orange-950">{index + 1}</span>
@@ -816,7 +816,7 @@ export function OrderListDetailView({
               })}
             </div>
           ) : (
-            <div className="rounded-xl border border-dashed border-slate-200 px-6 py-10 text-center text-sm text-slate-500">
+            <div className="rounded-md border border-dashed border-slate-200 px-6 py-10 text-center text-sm text-slate-500">
               Belum ada data rute dan tarif pada order ini.
             </div>
           )}
@@ -844,7 +844,7 @@ export function OrderListDetailView({
               { label: 'CDD', uj: data.ujCdd, invoice: data.invCdd },
               { label: 'Fuso', uj: data.ujFuso, invoice: data.invFuso },
             ].map((item) => (
-              <div key={item.label} className="space-y-3 rounded-xl border border-slate-200 bg-slate-50/60 p-4">
+              <div key={item.label} className="space-y-3 rounded-md border border-slate-200 bg-slate-50/60 p-4">
                 <p className="text-sm font-bold uppercase text-slate-900">{item.label}</p>
                 <CurrencyRow label="UJ Driver" value={item.uj} />
                 <CurrencyRow label="Invoice" value={item.invoice} />
@@ -1015,7 +1015,7 @@ export function OrderListDetailView({
 
           {/* Delete Route Confirmation Dialog */}
           <AlertDialog open={deleteRouteTarget !== null} onOpenChange={(open) => !open && setDeleteRouteTarget(null)}>
-            <AlertDialogContent className="rounded-xl border-slate-200">
+            <AlertDialogContent className="rounded-md border-slate-200">
               <AlertDialogHeader>
                 <AlertDialogTitle>Konfirmasi Hapus Rute</AlertDialogTitle>
                 <AlertDialogDescription>
@@ -1037,7 +1037,7 @@ export function OrderListDetailView({
 
           {/* Delete Cargo Confirmation Dialog */}
           <AlertDialog open={deleteCargoTarget !== null} onOpenChange={(open) => !open && setDeleteCargoTarget(null)}>
-            <AlertDialogContent className="rounded-xl border-slate-200">
+            <AlertDialogContent className="rounded-md border-slate-200">
               <AlertDialogHeader>
                 <AlertDialogTitle>Konfirmasi Hapus Muatan</AlertDialogTitle>
                 <AlertDialogDescription>

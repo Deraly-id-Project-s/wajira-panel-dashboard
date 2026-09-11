@@ -501,7 +501,7 @@ export function OrderListForm({
           <input autoComplete="off" type="hidden" {...register('status')} />
 
           {/* ── Main form container matching UnitTransactionForm card style ── */}
-          <div className="rounded-xl border border-slate-200 bg-white p-5 md:p-8 shadow-sm space-y-8">
+          <div className="rounded-md border border-slate-200 bg-white p-5 md:p-8 shadow-sm space-y-8">
 
             {/* ── Section 1: Informasi Utama ── */}
             <div>
@@ -534,7 +534,7 @@ export function OrderListForm({
                       </div>
                       <Button
                         type="button"
-                        variant="outline"
+                        variant="default"
                         size="icon"
                         aria-label="Tambah customer"
                         onClick={() => {
@@ -592,7 +592,7 @@ export function OrderListForm({
                 return (
                   <div
                     key={field.id}
-                    className="rounded-xl border border-slate-200 bg-slate-50/20 p-5 md:p-6 space-y-6 relative hover:border-slate-300 transition-all duration-200"
+                    className="rounded-md border border-slate-200 bg-slate-50/20 p-5 md:p-6 space-y-6 relative hover:border-slate-300 transition-all duration-200"
                   >
                     <div className="flex items-center justify-between">
                       <span className="text-sm font-bold text-slate-900 px-3 py-1 bg-slate-100/80 rounded-md">
@@ -831,7 +831,7 @@ export function OrderListForm({
 
                       <Button
                         type="button"
-                        variant="outline"
+                        variant="default"
                         onClick={() => appendCargoItem(index)}
                         className="bg-white border-slate-200 hover:bg-slate-50/50"
                       >
@@ -846,7 +846,7 @@ export function OrderListForm({
 
             <Button
               type="button"
-              variant="outline"
+              variant="default"
               onClick={() => {
                 const currentVehicleType = watchedItems?.[0]?.vehicleType ?? 'fuso';
                 append({
@@ -863,7 +863,7 @@ export function OrderListForm({
                   expeditionInvoice: 0,
                 });
               }}
-              className="w-full border-slate-200 border-dashed hover:bg-slate-50"
+              className="w-full"
             >
               <Plus className="h-4 w-4 mr-2" />
               Tambah Rute Baru
@@ -960,7 +960,7 @@ export function OrderListForm({
               />
             </div>
 
-            <div className="rounded-xl border border-dashed border-slate-200 bg-slate-50/50 p-4 text-sm text-slate-600 font-medium">
+            <div className="rounded-md border border-dashed border-slate-200 bg-slate-50/50 p-4 text-sm text-slate-600 font-medium">
               Ringkasan biaya: UJ Driver {formatOrderCurrency(watchedUjDriver)} • Invoice {formatOrderCurrency(invoiceBill)} • PPN {formatOrderCurrency(watchedPpn)} • PPh {formatOrderCurrency(watchedPph)}
             </div>
 

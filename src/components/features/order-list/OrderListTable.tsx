@@ -73,7 +73,7 @@ export const OrderListTable = React.memo(function OrderListTable({
                 {getOrderStatusLabel(item.status)}
               </button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="center" className="w-[140px] rounded-xl border-slate-200 shadow-lg p-1">
+            <DropdownMenuContent align="center" className="w-[140px] rounded-md border-slate-200 shadow-lg p-1">
               <div className="px-2 py-1.5 text-xs font-semibold text-slate-500">Ubah Status</div>
               <DropdownMenuSeparator />
               {ORDER_LIST_STATUS_OPTIONS.map((option) => (
@@ -218,7 +218,7 @@ export const OrderListTable = React.memo(function OrderListTable({
                 <MoreVertical className="h-4 w-4 text-slate-600" />
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-[160px] rounded-xl border-slate-200 p-1.5 shadow-lg">
+            <DropdownMenuContent align="end" className="w-[160px] rounded-md border-slate-200 p-1.5 shadow-lg">
               <DropdownMenuItem
                 onSelect={(event) => {
                   event.preventDefault();
