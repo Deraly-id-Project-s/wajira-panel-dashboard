@@ -1,5 +1,5 @@
 import React from 'react';
-import { WalletCards, Plus, MoreVertical, Pencil, Trash2 } from 'lucide-react';
+import { WalletCards, Plus, MoreVertical } from 'lucide-react';
 import { toast } from 'sonner';
 import BaseTable, { type ColumnDef } from '@/components/ui/base-table';
 import { FormDialog } from '@/components/ui/form-dialog';
@@ -12,6 +12,7 @@ import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { MoneyInput } from '@/components/ui/money-input';
+import { SearchableSelect } from '@/components/features/vehicle-data/SearchableSelect';
 import { formatCurrency } from '@/lib/utils/currency';
 import { formatDate } from '@/lib/utils/format';
 import {
@@ -21,7 +22,9 @@ import {
   useUpdateExpeditionClaimApplication,
 } from '@/hooks/useDoEkspedisi';
 import { getApiErrorMessage } from '@/utils/apiErrorHandler';
-import type { DoEkspedisi, DoEkspedisiClaimApplication } from '@/@types/do-ekspedisi.types';
+import type { DoEkspedisi, DoEkspedisiClaim, DoEkspedisiClaimApplication } from '@/@types/do-ekspedisi.types';
+import { CopyBox } from '@/components/ui/copy-box';
+import { useRouter } from 'next/router';
 
 interface DOEkspedisiClaimApplicationsProps {
   data: DoEkspedisi;
@@ -61,7 +64,7 @@ function RelatedSection({
   children: React.ReactNode;
 }) {
   return (
-    <section className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+    <section className="rounded-md border border-slate-200 bg-white p-5 shadow-sm">
       <div className="mb-4 flex items-start justify-between gap-3">
         <div>
           <div className="flex items-center gap-3">
@@ -102,7 +105,32 @@ export function DOEkspedisiClaimApplications({ data, onRefresh }: DOEkspedisiCla
   const updateClaim = useUpdateExpeditionClaimApplication(data.id);
   const deleteClaim = useDeleteExpeditionClaimApplication(data.id);
 
-  const selectedAvailableClaim = availableClaims.data?.find((item) => String(item.id) === applyForm.claimId);
+  const router = useRouter();
+  const slug = typeof router.query.slug === 'string' ? router.query.slug : '';
+
+  const usedClaimIds = React.useMemo(
+    () => new Set((data.driverExpeditionClaims ?? []).map((item) => String(item.doExpeditionClaimId))),
+    [data.driverExpeditionClaims],
+  );
+  const claimOptions = React.useMemo(() => {
+    const optionsById = new Map<number, DoEkspedisiClaim>();
+
+    (availableClaims.data ?? []).forEach((item) => optionsById.set(item.id, item));
+    (data.driverExpeditionClaims ?? []).forEach((item) => {
+      if (item.claim) optionsById.set(item.claim.id, item.claim);
+    });
+
+    return Array.from(optionsById.values());
+  }, [availableClaims.data, data.driverExpeditionClaims]);
+  const claimSelectOptions = React.useMemo(
+    () => claimOptions.map((item) => ({
+      value: String(item.id),
+      label: item.sourceExpeditionCode || `Ekspedisi #${item.doExpeditionsId}`,
+      subtitle: `${item.subject} · Sisa ${formatCurrency(item.remainingNominal)}`,
+    })),
+    [claimOptions],
+  );
+  const selectedAvailableClaim = claimOptions.find((item) => String(item.id) === applyForm.claimId);
 
   const resetForm = () => {
     setEditingApplication(null);
@@ -128,6 +156,10 @@ export function DOEkspedisiClaimApplications({ data, onRefresh }: DOEkspedisiCla
   const submitClaimApplication = async (event: React.FormEvent) => {
     event.preventDefault();
     if (!data.driverId || (!editingApplication && !applyForm.claimId)) return;
+    if (!editingApplication && usedClaimIds.has(applyForm.claimId)) {
+      toast.error('Claim ini sudah ditambahkan ke DO Ekspedisi.');
+      return;
+    }
 
     const nominal = Number(applyForm.nominal);
     const maxAvailableNominal = editingApplication
@@ -151,7 +183,6 @@ export function DOEkspedisiClaimApplications({ data, onRefresh }: DOEkspedisiCla
           do_expedition_id: data.id,
           nominal,
           type: applyForm.type,
-          date: applyForm.date,
         });
         toast.success('Claim berhasil dipotong dari UJ driver');
       }
@@ -175,16 +206,17 @@ export function DOEkspedisiClaimApplications({ data, onRefresh }: DOEkspedisiCla
   };
 
   const columns: ColumnDef<DoEkspedisiClaimApplication>[] = [
-    { header: 'No', cell: (_, i) => i + 1 },
     {
       header: 'Sumber Claim',
       cell: (x) => (
         <div>
-          <p className="font-medium text-slate-900">{x.claim?.sourceExpeditionCode || '-'}</p>
-          <p className="text-xs text-slate-500">{x.claim?.subject || '-'}</p>
+          <div className='flex items-center gap-2'>
+            {x.claim?.sourceExpeditionCode && <CopyBox text={x.claim?.sourceExpeditionCode} href={x.claim?.sourceExpeditionCode ? `/dashboard/${slug}/do-ekspedisi/detail/${x.claim.doExpeditionsId}` : undefined} />}
+          </div>
         </div>
       ),
     },
+    { header: 'Alasan Claim', cell: (x) => x.claim?.subject || '-' },
     { header: 'Tanggal', cell: (x) => x.date ? formatDate(x.date) : '-' },
     { header: 'Metode', cell: (x) => <Badge variant="outline" className="capitalize">{x.type}</Badge> },
     {
@@ -193,9 +225,10 @@ export function DOEkspedisiClaimApplications({ data, onRefresh }: DOEkspedisiCla
       cell: (x) => <span className="font-semibold text-rose-700">-{formatCurrency(x.nominal)}</span>,
     },
     {
-      header: '',
-      alignment: 'right',
-      cell: (x) => (
+      header: 'Aksi',
+      alignment: 'center',
+      sticky: 'right',
+      cell: (item) => (
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" size="icon">
@@ -203,12 +236,10 @@ export function DOEkspedisiClaimApplications({ data, onRefresh }: DOEkspedisiCla
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
-            <DropdownMenuItem onClick={() => openEdit(x)}>
-              <Pencil className="mr-2 h-4 w-4" />
+            <DropdownMenuItem onClick={() => openEdit(item)} disabled={!canApplyClaims}>
               Edit
             </DropdownMenuItem>
-            <DropdownMenuItem className="text-red-600" onClick={() => void handleDelete(x)}>
-              <Trash2 className="mr-2 h-4 w-4" />
+            <DropdownMenuItem className="text-red-600" onClick={() => void handleDelete(item)} disabled={!canApplyClaims}>
               Hapus
             </DropdownMenuItem>
           </DropdownMenuContent>
@@ -252,28 +283,22 @@ export function DOEkspedisiClaimApplications({ data, onRefresh }: DOEkspedisiCla
           <>
             <div className="space-y-1">
               <Label>Claim *</Label>
-              <Select
+              <SearchableSelect
                 value={applyForm.claimId}
-                onValueChange={(claimId) => {
-                  const selected = availableClaims.data?.find((item) => String(item.id) === claimId);
+                onChange={(claimId) => {
+                  const selected = claimOptions.find((item) => String(item.id) === claimId);
                   setApplyForm((old) => ({
                     ...old,
                     claimId,
                     nominal: selected ? String(Math.min(selected.remainingNominal, data.ujNominal)) : '',
                   }));
                 }}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder={availableClaims.isLoading ? 'Memuat claim...' : 'Pilih claim driver'} />
-                </SelectTrigger>
-                <SelectContent>
-                  {availableClaims.data?.map((item) => (
-                    <SelectItem key={item.id} value={String(item.id)}>
-                      {item.sourceExpeditionCode || `Ekspedisi #${item.doExpeditionsId}`} · {item.subject} · Sisa {formatCurrency(item.remainingNominal)}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+                options={claimSelectOptions}
+                placeholder="Pilih claim driver"
+                searchPlaceholder="Cari claim..."
+                loading={availableClaims.isLoading}
+                disabledValues={Array.from(usedClaimIds)}
+              />
             </div>
             {availableClaims.isSuccess && availableClaims.data?.length === 0 && (
               <p className="rounded-md bg-slate-50 p-3 text-sm text-slate-600">Tidak ada claim outstanding untuk driver ini.</p>
@@ -308,7 +333,7 @@ export function DOEkspedisiClaimApplications({ data, onRefresh }: DOEkspedisiCla
             </SelectContent>
           </Select>
         </div>
-        {field('Tanggal', applyForm.date, 'Pilih tanggal penerapan claim', (date) => setApplyForm((old) => ({ ...old, date })), 'datetime-local')}
+        {editingApplication && field('Tanggal', applyForm.date, 'Pilih tanggal penerapan claim', (date) => setApplyForm((old) => ({ ...old, date })), 'datetime-local')}
       </FormDialog>
     </>
   );

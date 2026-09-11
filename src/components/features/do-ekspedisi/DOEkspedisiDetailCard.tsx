@@ -361,7 +361,7 @@ export function DOEkspedisiDetailCard({ data }: DOEkspedisiDetailCardProps) {
                 : [];
 
             return (
-              <div key={`${item.id}-${index}`} className="overflow-hidden rounded-xl border border-slate-200">
+              <div key={`${item.id}-${index}`} className="overflow-hidden rounded-md border border-slate-200">
                 <div className="flex items-center gap-3 border-b border-orange-200 bg-orange-50 px-4 py-3">
                   <span className="flex h-8 w-8 items-center justify-center rounded-full bg-orange-300 text-sm font-bold text-orange-950">{index + 1}</span>
                   <div className="text-sm font-semibold text-slate-950">Detail Order #{index + 1}</div>

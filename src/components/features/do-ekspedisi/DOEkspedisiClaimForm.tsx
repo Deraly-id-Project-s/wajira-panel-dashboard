@@ -11,7 +11,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { formatCurrency } from '@/lib/utils/currency';
 
 const CLAIM_DOCUMENT_MAX_SIZE = 10 * 1024 * 1024;
-const CLAIM_DOCUMENT_ACCEPT = 'image/png,image/jpeg,.png,.jpg,.jpeg';
+export const CLAIM_DOCUMENT_ACCEPT = 'image/png,image/jpeg,.png,.jpg,.jpeg';
 const CLAIM_DOCUMENT_ALLOWED_TYPES = new Set(['image/png', 'image/jpeg']);
 const CLAIM_DOCUMENT_ALLOWED_EXTENSIONS = new Set(['png', 'jpg', 'jpeg']);
 
@@ -51,7 +51,7 @@ const isAllowedClaimDocument = (file: File) => {
   return CLAIM_DOCUMENT_ALLOWED_TYPES.has(file.type) || CLAIM_DOCUMENT_ALLOWED_EXTENSIONS.has(extension);
 };
 
-const validateClaimDocument = (file: File) => {
+export const validateClaimDocument = (file: File) => {
   if (file.size > CLAIM_DOCUMENT_MAX_SIZE) {
     toast.error('Ukuran file maksimal 10MB');
     return false;
@@ -168,7 +168,7 @@ export function DOEkspedisiClaimForm({
         <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
           <div className="space-y-2">
             <Label>Driver</Label>
-            <Input value={expedition.driver?.name || `Driver #${expedition.driverId ?? '-'}`} disabled className="h-12 rounded-md border-[#E5E7EB] bg-[#F8FAFC]" />
+            <Input value={expedition.driver?.name || `Driver #${expedition.driverId ?? '-'}`} disabled className="rounded-md border-[#E5E7EB] bg-[#F8FAFC]" />
           </div>
           <div className="space-y-2">
             <Label>Nominal Claim <span className="text-red-500">*</span></Label>
@@ -177,7 +177,7 @@ export function DOEkspedisiClaimForm({
               onChangeValue={setClaimNominal}
               placeholder="Nominal klaim supir"
               disabled={isSubmitting}
-              className="h-12 rounded-md border-[#E5E7EB]"
+              className="rounded-md border-[#E5E7EB]"
             />
           </div>
           <div className="space-y-2 md:col-span-2">
@@ -188,7 +188,7 @@ export function DOEkspedisiClaimForm({
               onChange={(event) => setSubject(event.target.value)}
               placeholder="Subjek claim"
               disabled={isSubmitting}
-              className="h-12 rounded-md border-[#E5E7EB]"
+              className="rounded-md border-[#E5E7EB]"
             />
           </div>
           <div className="space-y-2 md:col-span-2">
@@ -240,7 +240,7 @@ export function DOEkspedisiClaimForm({
             <h2 className="text-[16px] font-semibold text-slate-900">Dokumentasi Claim Baru</h2>
             <p className="mt-1 text-sm text-slate-500">Setiap claim dapat memiliki banyak dokumentasi. Caption bersifat opsional.</p>
           </div>
-          <Button type="button" variant="outline" size="sm" onClick={addDocumentationForm} disabled={isSubmitting}>
+          <Button type="button" variant="default" onClick={addDocumentationForm} disabled={isSubmitting}>
             <Plus className="mr-2 h-4 w-4" />
             Tambah Dokumentasi
           </Button>
@@ -261,7 +261,7 @@ export function DOEkspedisiClaimForm({
                     onChange={(event) => updateDocumentationForm(documentation.key, { caption: event.target.value })}
                     placeholder={`Caption dokumentasi ${index + 1}`}
                     disabled={isSubmitting}
-                    className="h-11 rounded-md border-[#E5E7EB]"
+                    className="rounded-md border-[#E5E7EB]"
                   />
                 </div>
                 <div className="space-y-2">
@@ -296,7 +296,7 @@ export function DOEkspedisiClaimForm({
         <p className="text-sm text-slate-500">
           Total claim: <span className="font-semibold text-slate-900">{formatCurrency(claimNominal)}</span>
         </p>
-        <Button type="submit" className="btn-primary-orange!" disabled={isSubmitting}>
+        <Button type="submit" variant="default" disabled={isSubmitting}>
           <Save className="mr-2 h-4 w-4" />
           {isSubmitting ? 'Menyimpan...' : 'Simpan Claim'}
         </Button>

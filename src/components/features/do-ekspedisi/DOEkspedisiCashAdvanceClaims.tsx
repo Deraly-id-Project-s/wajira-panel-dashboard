@@ -1,5 +1,5 @@
 import React from 'react';
-import { CreditCard, MoreVertical, Pencil, Plus, Trash2 } from 'lucide-react';
+import { CreditCard, MoreVertical, Plus } from 'lucide-react';
 import { toast } from 'sonner';
 import BaseTable, { type ColumnDef } from '@/components/ui/base-table';
 import { FormDialog } from '@/components/ui/form-dialog';
@@ -10,11 +10,12 @@ import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { MoneyInput } from '@/components/ui/money-input';
+import { SearchableSelect } from '@/components/features/vehicle-data/SearchableSelect';
 import { formatCurrency } from '@/lib/utils/currency';
 import { formatDate } from '@/lib/utils/format';
 import { getApiErrorMessage } from '@/utils/apiErrorHandler';
 import type { DoEkspedisi } from '@/@types/do-ekspedisi.types';
-import type { DriverCashAdvanceClaim } from '@/@types/driver-cash-advance.types';
+import type { DriverCashAdvance, DriverCashAdvanceClaim } from '@/@types/driver-cash-advance.types';
 import {
   useApplyDriverCashAdvance,
   useDeleteDriverCashAdvanceClaim,
@@ -47,7 +48,7 @@ function RelatedSection({
   children: React.ReactNode;
 }) {
   return (
-    <section className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+    <section className="rounded-md border border-slate-200 bg-white p-5 shadow-sm">
       <div className="mb-4 flex items-start justify-between gap-3">
         <div className="flex items-center gap-3">
           <div className="rounded-md bg-orange-100 p-2 text-orange-700">{icon}</div>
@@ -91,8 +92,33 @@ export function DOEkspedisiCashAdvanceClaims({ data, onRefresh }: DOEkspedisiCas
   const updateCashAdvanceClaim = useUpdateDriverCashAdvanceClaim(data.id);
   const deleteCashAdvanceClaim = useDeleteDriverCashAdvanceClaim(data.id);
 
-  const availableItems = availableCashAdvances.data?.data ?? [];
-  const selectedCashAdvance = availableItems.find((item) => String(item.id) === form.cashAdvanceId);
+  const availableItems = React.useMemo(
+    () => availableCashAdvances.data?.data ?? [],
+    [availableCashAdvances.data?.data],
+  );
+  const usedCashAdvanceIds = React.useMemo(
+    () => new Set((data.driverCashAdvanceClaims ?? []).map((item) => String(item.driverCashAdvanceId))),
+    [data.driverCashAdvanceClaims],
+  );
+  const cashAdvanceOptions = React.useMemo(() => {
+    const optionsById = new Map<number, DriverCashAdvance>();
+
+    availableItems.forEach((item) => optionsById.set(item.id, item));
+    (data.driverCashAdvanceClaims ?? []).forEach((item) => {
+      if (item.cashAdvance) optionsById.set(item.cashAdvance.id, item.cashAdvance);
+    });
+
+    return Array.from(optionsById.values());
+  }, [availableItems, data.driverCashAdvanceClaims]);
+  const cashAdvanceSelectOptions = React.useMemo(
+    () => cashAdvanceOptions.map((item) => ({
+      value: String(item.id),
+      label: `${item.subject || `Kas Bon #${item.id}`} · Sisa ${formatCurrency(item.remainingNominal)}`,
+      subtitle: item.code || undefined,
+    })),
+    [cashAdvanceOptions],
+  );
+  const selectedCashAdvance = cashAdvanceOptions.find((item) => String(item.id) === form.cashAdvanceId);
 
   const resetForm = () => {
     setEditingClaim(null);
@@ -118,6 +144,10 @@ export function DOEkspedisiCashAdvanceClaims({ data, onRefresh }: DOEkspedisiCas
   const submit = async (event: React.FormEvent) => {
     event.preventDefault();
     if (!data.driverId || (!editingClaim && !form.cashAdvanceId)) return;
+    if (!editingClaim && usedCashAdvanceIds.has(form.cashAdvanceId)) {
+      toast.error('Kas bon ini sudah ditambahkan ke DO Ekspedisi.');
+      return;
+    }
 
     const nominal = Number(form.nominal);
     const maxAvailableNominal = editingClaim
@@ -172,7 +202,6 @@ export function DOEkspedisiCashAdvanceClaims({ data, onRefresh }: DOEkspedisiCas
   };
 
   const columns: ColumnDef<DriverCashAdvanceClaim>[] = [
-    { header: 'No', cell: (_, i) => i + 1 },
     {
       header: 'Kas Bon',
       cell: (x) => (
@@ -190,9 +219,10 @@ export function DOEkspedisiCashAdvanceClaims({ data, onRefresh }: DOEkspedisiCas
       cell: (x) => <span className="font-semibold text-rose-700">-{formatCurrency(x.nominal)}</span>,
     },
     {
-      header: '',
-      alignment: 'right',
-      cell: (x) => (
+      header: 'Aksi',
+      alignment: 'center',
+      sticky: 'right',
+      cell: (item) => (
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" size="icon">
@@ -200,12 +230,10 @@ export function DOEkspedisiCashAdvanceClaims({ data, onRefresh }: DOEkspedisiCas
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
-            <DropdownMenuItem onClick={() => openEdit(x)}>
-              <Pencil className="mr-2 h-4 w-4" />
+            <DropdownMenuItem onClick={() => openEdit(item)} disabled={!canManage}>
               Edit
             </DropdownMenuItem>
-            <DropdownMenuItem className="text-red-600" onClick={() => void handleDelete(x)}>
-              <Trash2 className="mr-2 h-4 w-4" />
+            <DropdownMenuItem className="text-red-600" onClick={() => void handleDelete(item)} disabled={!canManage}>
               Hapus
             </DropdownMenuItem>
           </DropdownMenuContent>
@@ -249,28 +277,22 @@ export function DOEkspedisiCashAdvanceClaims({ data, onRefresh }: DOEkspedisiCas
           <>
             <div className="space-y-1">
               <Label>Kas Bon *</Label>
-              <Select
+              <SearchableSelect
                 value={form.cashAdvanceId}
-                onValueChange={(cashAdvanceId) => {
-                  const selected = availableItems.find((item) => String(item.id) === cashAdvanceId);
+                onChange={(cashAdvanceId) => {
+                  const selected = cashAdvanceOptions.find((item) => String(item.id) === cashAdvanceId);
                   setForm((old) => ({
                     ...old,
                     cashAdvanceId,
                     nominal: selected ? String(Math.min(selected.remainingNominal, data.ujNominal)) : '',
                   }));
                 }}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder={availableCashAdvances.isLoading ? 'Memuat kas bon...' : 'Pilih kas bon driver'} />
-                </SelectTrigger>
-                <SelectContent>
-                  {availableItems.map((item) => (
-                    <SelectItem key={item.id} value={String(item.id)}>
-                      {item.subject} · Sisa {formatCurrency(item.remainingNominal)}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+                options={cashAdvanceSelectOptions}
+                placeholder="Pilih kas bon driver"
+                searchPlaceholder="Cari kas bon..."
+                loading={availableCashAdvances.isLoading}
+                disabledValues={Array.from(usedCashAdvanceIds)}
+              />
             </div>
             {availableCashAdvances.isSuccess && availableItems.length === 0 && (
               <p className="rounded-md bg-slate-50 p-3 text-sm text-slate-600">Tidak ada kas bon outstanding untuk driver ini.</p>

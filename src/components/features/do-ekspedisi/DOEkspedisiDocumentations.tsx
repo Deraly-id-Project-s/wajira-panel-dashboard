@@ -7,6 +7,7 @@ import { useDoEkspedisiDocumentations } from '@/hooks/useDoEkspedisi';
 import { getObjectStorageUrl } from '@/components/ui/storage-image';
 import { ImagePreview } from '@/components/ui/image-preview';
 import type { DoEkspedisi, DoEkspedisiDocumentation } from '@/@types/do-ekspedisi.types';
+import { TextTruncate } from '@/components/ui/text-truncate';
 
 interface DOEkspedisiDocumentationsProps {
   data: DoEkspedisi;
@@ -25,7 +26,7 @@ function RelatedSection({
   children: React.ReactNode;
 }) {
   return (
-    <section className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+    <section className="rounded-md border border-slate-200 bg-white p-5 shadow-sm">
       <div className="mb-4 flex items-start justify-between gap-3">
         <div className="flex items-center gap-3">
           <div className="rounded-md bg-orange-100 p-2 text-orange-700">{icon}</div>
@@ -51,25 +52,24 @@ export function DOEkspedisiDocumentations({ data }: DOEkspedisiDocumentationsPro
   const documentations = responseData?.data ?? [];
 
   const columns: ColumnDef<DoEkspedisiDocumentation>[] = [
-    { header: 'No', cell: (_, i) => i + 1 },
     {
       header: 'Posisi',
-      cell: (x) => (
+      cell: (item) => (
         <Badge variant="outline" className="capitalize">
-          {x.documentationPosition === 'start' ? 'Dokumentasi Ekspedisi' : x.documentationPosition === 'end' ? 'Dokumentasi Penyerahan' : x.documentationPosition}
+          {item.documentationPosition === 'start' ? 'Ekspedisi' : item.documentationPosition === 'end' ? 'Penyerahan' : item.documentationPosition}
         </Badge>
       ),
     },
-    { header: 'Subject', cell: (x) => x.subject },
-    { header: 'Deskripsi', cell: (x) => x.description || '-' },
+    { header: 'Subjek', cell: (item) => item.subject || '-' },
+    { header: 'Deskripsi', cell: (item) => <TextTruncate text={item.description || '-'} maxLength={25} /> },
     {
       header: 'Gambar',
-      cell: (x) => x.image ? (
+      cell: (item) => item.image ? (
         <Button
           type="button"
           variant="link"
           className="p-0 h-auto font-semibold text-orange-600 hover:text-orange-700 cursor-pointer"
-          onClick={() => setPreviewUrl(getObjectStorageUrl(x.image))}
+          onClick={() => setPreviewUrl(getObjectStorageUrl(item.image))}
         >
           Lihat Gambar
         </Button>
