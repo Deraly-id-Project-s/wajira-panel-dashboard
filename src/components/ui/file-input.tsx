@@ -7,6 +7,8 @@ interface FileInputProps extends Omit<React.InputHTMLAttributes<HTMLInputElement
   value?: File | null;
   onFileChange: (file: File | null) => void;
   helperText?: string;
+  triggerClassName?: string;
+  triggerContent?: React.ReactNode;
 }
 
 /** File input yang memiliki style drag & click box premium (seperti uploader avatar profile) */
@@ -19,6 +21,8 @@ export function FileInput({
   accept,
   required,
   helperText = 'Format PNG, JPG maksimal 2MB',
+  triggerClassName,
+  triggerContent,
   ...props
 }: FileInputProps) {
   const inputRef = React.useRef<HTMLInputElement>(null);
@@ -51,16 +55,21 @@ export function FileInput({
         onClick={() => inputRef.current?.click()}
         className={cn(
           "flex w-full cursor-pointer flex-col items-center justify-center rounded-md border border-dashed border-slate-200 bg-slate-50 px-5 py-5 text-center hover:bg-slate-100/70 transition disabled:opacity-50 disabled:pointer-events-none disabled:cursor-not-allowed",
-          value && "border-solid border-[#1e3a5f]/20 bg-[#1e3a5f]/5"
+          value && "border-solid border-[#1e3a5f]/20 bg-[#1e3a5f]/5",
+          triggerClassName,
         )}
       >
-        <Upload className="mb-2 h-6 w-6 text-slate-500" />
-        <span className="text-sm font-medium text-slate-700">
-          {value ? <TextTruncate text={value.name} maxLength={25} /> : 'Klik untuk upload gambar'}
-        </span>
-        <span className="mt-1 text-xs text-slate-400">
-          {helperText}
-        </span>
+        {triggerContent ?? (
+          <>
+            <Upload className="mb-2 h-6 w-6 text-slate-500" />
+            <span className="text-sm font-medium text-slate-700">
+              {value ? <TextTruncate text={value.name} maxLength={25} /> : 'Klik untuk upload gambar'}
+            </span>
+            <span className="mt-1 text-xs text-slate-400">
+              {helperText}
+            </span>
+          </>
+        )}
       </button>
     </div>
   );
