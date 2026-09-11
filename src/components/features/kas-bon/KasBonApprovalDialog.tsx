@@ -98,7 +98,7 @@ export function KasBonApprovalDialog({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
-        className="max-w-[calc(100%-2rem)] sm:max-w-md rounded-xl p-0 overflow-hidden"
+        className="max-w-[calc(100%-2rem)] sm:max-w-md rounded-md p-0 overflow-hidden"
         showCloseButton={!isApproving}
       >
         <DialogHeader className="p-6 pb-3">

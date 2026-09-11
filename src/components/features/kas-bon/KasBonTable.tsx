@@ -126,7 +126,7 @@ export function KasBonTable({
                 <MoreVertical className="h-4 w-4 text-slate-600" />
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-[170px] rounded-xl border-slate-200 p-1.5 shadow-lg">
+            <DropdownMenuContent align="end" className="w-[170px] rounded-md border-slate-200 p-1.5 shadow-lg">
               <DropdownMenuItem
                 onSelect={() => {
                   setOpenMenuId(null);

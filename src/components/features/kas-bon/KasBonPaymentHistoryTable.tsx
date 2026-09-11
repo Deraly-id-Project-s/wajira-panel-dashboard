@@ -98,24 +98,24 @@ export function KasBonPaymentHistoryTable({
       },
       ...(onDelete
         ? [
-            {
-              header: 'Aksi',
-              alignment: 'center' as const,
-              cell: (item: DriverCashAdvanceBillingHistory) => (
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="icon"
-                  disabled={!canDelete || isDeleting}
-                  onClick={() => handleDeleteClick(item)}
-                  className="h-8 w-8 text-rose-600 hover:bg-rose-50 hover:text-rose-700 cursor-pointer rounded-full"
-                  title="Hapus riwayat pembayaran"
-                >
-                  <Trash2 className="h-4 w-4" />
-                </Button>
-              ),
-            },
-          ]
+          {
+            header: 'Aksi',
+            alignment: 'center' as const,
+            cell: (item: DriverCashAdvanceBillingHistory) => (
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                disabled={!canDelete || isDeleting}
+                onClick={() => handleDeleteClick(item)}
+                className="h-8 w-8 text-rose-600 hover:bg-rose-50 hover:text-rose-700 cursor-pointer rounded-full"
+                title="Hapus riwayat pembayaran"
+              >
+                <Trash2 className="h-4 w-4" />
+              </Button>
+            ),
+          },
+        ]
         : []),
     ],
     [canDelete, isDeleting, onDelete],
@@ -129,7 +129,7 @@ export function KasBonPaymentHistoryTable({
         open={deleteConfirmOpen}
         onOpenChange={setDeleteConfirmOpen}
       >
-        <AlertDialogContent className="rounded-xl border-slate-200">
+        <AlertDialogContent className="rounded-md border-slate-200">
           <AlertDialogHeader>
             <AlertDialogTitle>Hapus Riwayat Pembayaran?</AlertDialogTitle>
             <AlertDialogDescription>

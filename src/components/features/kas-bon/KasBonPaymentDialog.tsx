@@ -147,7 +147,7 @@ export function KasBonPaymentDialog({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
-        className="max-w-[calc(100%-2rem)] sm:max-w-2xl max-h-[90vh] overflow-hidden flex flex-col rounded-xl p-0"
+        className="max-w-[calc(100%-2rem)] sm:max-w-2xl max-h-[90vh] overflow-hidden flex flex-col rounded-md p-0"
         showCloseButton={!isSubmitting}
       >
         <DialogHeader className="p-6 pb-2 shrink-0">
