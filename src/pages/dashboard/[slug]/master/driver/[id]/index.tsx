@@ -83,7 +83,7 @@ export default function DriverDetailPage() {
         <PageHeader title="Detail Driver" subtitle={driver ? `${driver.code || '-'} · ${driver.name}` : 'Informasi lengkap driver'} breadcrumbs={[{ label: 'Driver', onClick: () => router.push(listPath) }, { label: 'Detail' }]} onBack={() => router.push(listPath)} actions={canEdit && driver ? <Button onClick={() => router.push(`${listPath}/${id}/edit`)}><Pencil className="mr-2 h-4 w-4" />Edit Driver</Button> : undefined} />
         {isLoading ? <LoadingState variant="section" text="Memuat detail driver..." /> : isError || !driver ? <div className="rounded-md border bg-white p-6 text-sm text-red-600">Detail driver tidak dapat dimuat.</div> : (
           <div className="grid grid-cols-1 gap-6 xl:grid-cols-3">
-            <Card className="border-0 shadow-sm rounded-xl xl:col-span-2">
+            <Card className="border-0 shadow-sm rounded-md xl:col-span-2">
               <CardHeader className="border-b px-6 py-4"><CardTitle className="text-base">Informasi Driver</CardTitle></CardHeader>
               <CardContent className="grid grid-cols-1 gap-6 p-6 md:grid-cols-2">
                 <DetailItem label="Nama Driver" value={driver.name} />
@@ -96,7 +96,7 @@ export default function DriverDetailPage() {
               </CardContent>
             </Card>
 
-            <Card className="border-0 shadow-sm rounded-xl">
+            <Card className="border-0 shadow-sm rounded-md">
               <CardHeader className="border-b px-6 py-4"><CardTitle className="text-base">Akun Driver</CardTitle></CardHeader>
               <CardContent className="space-y-6 p-6">
                 <DetailItem label="Username" value={driver.username} />
@@ -106,7 +106,7 @@ export default function DriverDetailPage() {
               </CardContent>
             </Card>
 
-            <Card className="border-0 shadow-sm rounded-xl xl:col-span-3">
+            <Card className="border-0 shadow-sm rounded-md xl:col-span-3">
               <CardHeader className="border-b px-6 py-4"><CardTitle className="text-base">Tautan & Informasi Tambahan</CardTitle></CardHeader>
               <CardContent className="grid grid-cols-1 gap-6 p-6 md:grid-cols-3">
                 <DetailItem label="Link Maps" value={driver.mapLink} /><DetailItem label="Website" value={driver.websiteLink} /><DetailItem label="Foto" value={driver.image} />

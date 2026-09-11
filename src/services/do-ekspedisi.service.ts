@@ -849,7 +849,6 @@ export const applyExpeditionClaim = async (payload: ApplyExpeditionClaimPayload)
       do_expedition_claim_id: payload.do_expedition_claim_id,
       nominal: payload.nominal,
       type: payload.type,
-      ...(payload.date ? { date: payload.date } : {}),
     },
   );
   return mapClaimApplication(ensureSuccess(response.data));

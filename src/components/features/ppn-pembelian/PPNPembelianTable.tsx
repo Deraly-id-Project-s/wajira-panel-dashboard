@@ -373,7 +373,7 @@ export default function PPNPembelianTable({
       >
         <div className="space-y-6">
           {/* Selected Items Summary Table */}
-          <div className="border border-slate-200 rounded-xl overflow-hidden shadow-sm bg-white">
+          <div className="border border-slate-200 rounded-md overflow-hidden shadow-sm bg-white">
             <div className="max-h-52 overflow-y-auto overflow-x-auto">
               <table className="w-full text-sm text-left border-collapse">
                 <thead className="bg-[#f8f9fa] text-slate-600 uppercase text-xs font-semibold border-b border-slate-200 sticky top-0 z-10">

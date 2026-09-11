@@ -146,7 +146,7 @@ export default function EditDOEkspedisiFormPage() {
           onBack={() => router.back()}
         />
 
-        <div className="rounded-xl border border-slate-200 bg-white p-5 md:p-8 shadow-sm space-y-6">
+        <div className="rounded-md border border-slate-200 bg-white p-5 md:p-8 shadow-sm space-y-6">
           <Form {...formMethods}>
             <form onSubmit={handleSubmit(handleSave)} className="space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

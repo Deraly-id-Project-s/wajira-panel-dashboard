@@ -17,6 +17,7 @@ import { buildLaravelPaginationQuery } from '@/lib/api/pagination';
 import { ApiResponseError, ensureSuccess, type LaravelApiResponse, toPaginatedResult } from '@/lib/api/response';
 
 const basePath = '/wapi/transaction/driver-cash-advance';
+const doExpeditionBasePath = '/wapi/transaction/do-expedition';
 const billingBasePath = '/wapi/transaction/driver-cash-advance-billing';
 const billingHistoryBasePath = '/wapi/transaction/driver-cash-advance-billing-history';
 const claimBasePath = '/wapi/transaction/driver-cash-advance-claim';
@@ -75,8 +76,8 @@ const mapDriverCashAdvance = (item: any): DriverCashAdvance => {
   const billings = Array.isArray(item?.driver_cash_advance_billings)
     ? item.driver_cash_advance_billings.map((billing: any) => mapBilling(billing))
     : Array.isArray(item?.billings)
-    ? item.billings.map((billing: any) => mapBilling(billing))
-    : [];
+      ? item.billings.map((billing: any) => mapBilling(billing))
+      : [];
 
   const firstBilling = billings[0];
   const isPaid = toBoolean(item?.is_paid ?? item?.isPaid ?? firstBilling?.isPaid);
@@ -84,10 +85,10 @@ const mapDriverCashAdvance = (item: any): DriverCashAdvance => {
     item?.remaining_payment != null
       ? toNumber(item.remaining_payment)
       : item?.remainingPayment != null
-      ? toNumber(item.remainingPayment)
-      : firstBilling != null
-      ? firstBilling.remainingPayment
-      : toNumber(item?.billing_remaining_nominal ?? item?.remaining_nominal);
+        ? toNumber(item.remainingPayment)
+        : firstBilling != null
+          ? firstBilling.remainingPayment
+          : toNumber(item?.billing_remaining_nominal ?? item?.remaining_nominal);
 
   return {
     id: Number(item.id ?? 0),
@@ -282,9 +283,9 @@ export const updateDriverCashAdvanceBillingStatus = async (
 
 export const applyDriverCashAdvance = async (payload: ApplyDriverCashAdvancePayload): Promise<DriverCashAdvanceClaim> => {
   const response = await apiClient.post<LaravelApiResponse<any>>(
-    `${basePath}/${payload.driver_cash_advance_id}/assign-expedition`,
+    `${doExpeditionBasePath}/${payload.do_expedition_id}/assign-cash-advance-claim`,
     {
-      do_expedition_id: payload.do_expedition_id,
+      driver_cash_advance_id: payload.driver_cash_advance_id,
       nominal: payload.nominal,
       type: payload.type,
       date: payload.date,

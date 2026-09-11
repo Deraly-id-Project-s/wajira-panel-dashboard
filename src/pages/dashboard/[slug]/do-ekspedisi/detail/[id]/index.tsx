@@ -1,11 +1,10 @@
 import React from 'react';
-import { AlertTriangle, CheckCircle2, Pencil, Play, Printer } from 'lucide-react';
+import { AlertTriangle, Pencil, Printer, Truck } from 'lucide-react';
 import { useRouter } from 'next/router';
 import { toast } from 'sonner';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { DOEkspedisiDetailCard } from '@/components/features/do-ekspedisi/DOEkspedisiDetailCard';
 import { DOEkspedisiPrintDocument } from '@/components/features/do-ekspedisi/DOEkspedisiPrintDocument';
-// import { DOEkspedisiDetailTable } from '@/components/features/do-ekspedisi/DOEkspedisiDetailTable';
 import { DeleteDOEkspedisiModal } from '@/components/features/do-ekspedisi/DeleteDOEkspedisiModal';
 import type { DoEkspedisiItem } from '@/@types/do-ekspedisi.types';
 import { useDeleteDoEkspedisiItem, useDoEkspedisiDetail, useUpdateDoEkspedisi, useUpdateDoExpeditionStatus } from '@/hooks/useDoEkspedisi';
@@ -243,7 +242,7 @@ export default function DetailDOEkspedisiPage() {
                 onClick={() => setStatusConfirmOpen(true)}
                 className="bg-orange-600 hover:bg-orange-700 text-white min-w-[120px] cursor-pointer font-medium"
               >
-                <Play className="h-4 w-4" />
+                <Truck className="h-4 w-4" />
                 {updateStatusMutation.isPending ? 'Memproses...' : 'Serahkan ke Driver'}
               </Button>
             ) : detailQuery.data?.status === 'pending' ? (
@@ -278,10 +277,10 @@ export default function DetailDOEkspedisiPage() {
                 }
               }}
               disabled={processExpeditionMutation.isPending || detailQuery.data.status === 'draft' || !detailQuery.data.driverId || !detailQuery.data.vehicleId}
-              className="btn-primary-orange!"
+              variant="outline"
             >
               <Printer className="h-4 w-4" />
-              {processExpeditionMutation.isPending ? 'Menyiapkan...' : 'Print DO'}
+              {processExpeditionMutation.isPending ? 'Menyiapkan...' : 'Print'}
             </Button>
           </>,
         )}

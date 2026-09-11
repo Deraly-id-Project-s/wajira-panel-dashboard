@@ -213,7 +213,6 @@ export interface ApplyExpeditionClaimPayload {
   do_expedition_id: number;
   nominal: number;
   type: 'cash' | 'transfer';
-  date?: string;
 }
 
 export interface UpdateExpeditionClaimApplicationPayload {

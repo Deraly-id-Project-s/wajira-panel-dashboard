@@ -435,7 +435,7 @@ export default function SalesUnitDetailPage() {
               </div>
 
               <div className={cn(
-                "flex items-center gap-4 px-4 py-2.5 rounded-xl border",
+                "flex items-center gap-4 px-4 py-2.5 rounded-md border",
                 selectedCount >= requiredQty
                   ? "bg-emerald-50/50 border-emerald-100"
                   : "bg-blue-50/50 border-blue-100"

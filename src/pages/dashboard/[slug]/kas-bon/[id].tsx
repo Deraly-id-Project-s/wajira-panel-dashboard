@@ -1,7 +1,7 @@
 import * as React from 'react';
 import Head from 'next/head';
 import { format } from 'date-fns';
-import { CheckCircle2, CreditCard, Printer } from 'lucide-react';
+import { CheckCircle2, CreditCard, History, Printer } from 'lucide-react';
 import { useRouter } from 'next/router';
 import { toast } from 'sonner';
 import type {
@@ -25,10 +25,10 @@ import {
 } from '@/components/ui/alert-dialog';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
 import { LoadingState } from '@/components/ui/loading-state';
 import { PageHeader } from '@/components/ui/page-header';
 import { ReportTemplatePrintDialog } from '@/components/ui/report-template-print-dialog';
-import { SectionCard } from '@/components/common/SectionCard';
 import {
   Tooltip,
   TooltipContent,
@@ -46,6 +46,7 @@ import { usePermissionGuard } from '@/hooks/usePermissionGuard';
 import { useReportTemplatePrint } from '@/hooks/useReportTemplatePrint';
 import { getCompanyName, getLetterheadByCompanyId, resolveCompanyId } from '@/lib/print-letterhead';
 import { getApiErrorMessage } from '@/utils/apiErrorHandler';
+import { formatKasBonDate } from '@/components/features/kas-bon/kas-bon.utils';
 
 export default function KasBonDetailPage() {
   const router = useRouter();
@@ -135,20 +136,22 @@ export default function KasBonDetailPage() {
           title="Detail Kas Bon"
           subtitle={
             <div className="flex flex-wrap items-center gap-2">
-              <span>{data.code || `KAS-BON-${data.id}`}</span>
-              <Badge variant="outline" className={isPaid ? 'border-emerald-200 bg-emerald-50 text-emerald-700' : 'border-rose-200 bg-rose-50 text-rose-700'}>
+              <span>Kode Kas Bon:</span>
+              <span className="font-semibold text-orange-600">{data.code || `KAS-BON-${data.id}`}</span>
+              <Badge variant="outline" className={`rounded-full px-3 py-1 font-semibold ${isPaid ? 'border-emerald-200 bg-emerald-50 text-emerald-700' : 'border-rose-200 bg-rose-50 text-rose-700'}`}>
                 {isPaid ? 'Lunas' : 'Belum Lunas'}
               </Badge>
               <Badge
                 variant="outline"
-                className={
+                className={`rounded-full px-3 py-1 font-semibold ${
                   Boolean(data.is_driver_request ?? data.isDriverRequest)
                     ? 'border-blue-200 bg-blue-50 text-blue-700'
                     : 'border-slate-200 bg-slate-100 text-slate-700'
-                }
+                }`}
               >
                 {Boolean(data.is_driver_request ?? data.isDriverRequest) ? 'Pengajuan Driver' : 'Input Kantor'}
               </Badge>
+              <span className="text-xs text-slate-500">Ditambahkan {formatKasBonDate(data.createdAt)}</span>
             </div>
           }
           onBack={backToList}
@@ -157,18 +160,20 @@ export default function KasBonDetailPage() {
               <Button
                 type="button"
                 variant="outline"
+                className="border-slate-200 font-medium text-slate-700 hover:bg-slate-50"
                 onClick={templatePrint.openPrintDialog}
               >
-                <Printer className="mr-2 h-4 w-4" />
-                Print
+                <Printer className="h-4 w-4" />
+                Print Kas Bon
               </Button>
               <Button
                 type="button"
-                className="bg-emerald-600 text-white hover:bg-emerald-700"
+                className="min-w-[120px] bg-orange-600 font-medium text-white hover:bg-orange-700"
                 disabled={!canEdit || !billingId || isPaid}
                 onClick={() => setPaymentOpen(true)}
               >
-                <CreditCard className="mr-2 h-4 w-4" />{isPaid ? 'Sudah Dibayar' : 'Bayar'}
+                <CreditCard className="h-4 w-4" />
+                {isPaid ? 'Sudah Dibayar' : 'Bayar'}
               </Button>
               <Tooltip>
                 <TooltipTrigger asChild>
@@ -176,11 +181,12 @@ export default function KasBonDetailPage() {
                     <Button
                       type="button"
                       variant="outline"
-                      className="border-blue-600 text-blue-600 hover:bg-blue-50"
+                      className="min-w-[120px] border-emerald-300 font-medium text-emerald-700 hover:bg-emerald-50"
                       disabled={!canEdit || !billingId || isPaid || updateStatus.isPending}
                       onClick={() => setConfirmOpen(true)}
                     >
-                      <CheckCircle2 className="mr-2 h-4 w-4" />{isPaid ? 'Sudah Lunas' : 'Tandai Lunas'}
+                      <CheckCircle2 className="h-4 w-4" />
+                      {isPaid ? 'Sudah Lunas' : 'Tandai Lunas'}
                     </Button>
                   </span>
                 </TooltipTrigger>
@@ -194,14 +200,27 @@ export default function KasBonDetailPage() {
 
         <KasBonDetailCards data={data} billing={billing} />
         {billing ? (
-          <SectionCard title="Riwayat Pembayaran">
-            <KasBonPaymentHistoryTable
-              histories={billing.histories}
-              onDelete={handleDeletePaymentHistory}
-              isDeleting={deletePayment.isPending}
-              canDelete={canEdit}
-            />
-          </SectionCard>
+          <Card className="border-slate-200 shadow-sm">
+            <CardContent className="space-y-6 p-5 sm:p-6">
+              <div className="flex items-start gap-3">
+                <div className="rounded-md bg-orange-100 p-2 text-orange-700">
+                  <History className="h-5 w-5" />
+                </div>
+                <div>
+                  <h2 className="text-base font-semibold text-slate-950">Riwayat Pembayaran</h2>
+                  <p className="mt-0.5 text-xs text-slate-500">Daftar transaksi pembayaran untuk kas bon ini</p>
+                </div>
+              </div>
+              <div className="border-t border-slate-100 pt-5">
+                <KasBonPaymentHistoryTable
+                  histories={billing.histories}
+                  onDelete={handleDeletePaymentHistory}
+                  isDeleting={deletePayment.isPending}
+                  canDelete={canEdit}
+                />
+              </div>
+            </CardContent>
+          </Card>
         ) : null}
       </div>
 

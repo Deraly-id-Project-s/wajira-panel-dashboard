@@ -373,7 +373,7 @@ export default function TypeUnitDetailPage() {
           </div>
 
           {/* FILTERS */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 bg-slate-50 p-4 rounded-xl">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 bg-slate-50 p-4 rounded-md">
             <div className="space-y-1">
               <span className="text-xs font-semibold text-slate-500">Warna</span>
               <div className="relative">

@@ -201,7 +201,7 @@ export default function WarehouseBlockDetailPage() {
             onBack={() => router.push(`/dashboard/${slug}/master/warehouse-block`)}
           />
 
-          <Card className="border-0 shadow-sm rounded-xl">
+          <Card className="border-0 shadow-sm rounded-md">
             <CardHeader className="border-b px-6 py-4">
               <CardTitle className="text-base font-semibold">Informasi Blok Gudang</CardTitle>
             </CardHeader>

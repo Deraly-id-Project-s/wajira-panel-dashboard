@@ -138,7 +138,7 @@ export default function TaxDetailPage() {
             onBack={() => router.push(`/dashboard/${slug}/master/tax`)}
           />
 
-          <Card className="border-0 shadow-sm rounded-xl">
+          <Card className="border-0 shadow-sm rounded-md">
             <CardHeader className="border-b px-6 py-4">
               <CardTitle className="text-base font-semibold">Informasi Pajak</CardTitle>
             </CardHeader>
