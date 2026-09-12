@@ -1,9 +1,14 @@
 import * as React from 'react';
-import { ExternalLink, Trash2 } from 'lucide-react';
+import { MoreVertical, Image as ImageIcon } from 'lucide-react';
 import type { DriverCashAdvanceBillingHistory } from '@/@types/driver-cash-advance.types';
 import BaseTable, { type ColumnDef } from '@/components/ui/base-table';
-import { Button } from '@/components/ui/button';
 import { currenciesFormat } from '@/components/ui/currenciesFormat';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -15,6 +20,8 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { LoadingState } from '@/components/ui/loading-state';
+import { ImagePreview } from '@/components/ui/image-preview';
+import { getObjectStorageUrl } from '@/components/ui/storage-image';
 import { formatKasBonDate } from './kas-bon.utils';
 
 const cashAmount = (history: DriverCashAdvanceBillingHistory, code: string) =>
@@ -36,6 +43,9 @@ export function KasBonPaymentHistoryTable({
   const [selectedHistory, setSelectedHistory] =
     React.useState<DriverCashAdvanceBillingHistory | null>(null);
   const [deleteConfirmOpen, setDeleteConfirmOpen] = React.useState(false);
+  const [openActionId, setOpenActionId] =
+    React.useState<string | number | null>(null);
+  const [previewImage, setPreviewImage] = React.useState<string | null>(null);
 
   const handleDeleteClick = (history: DriverCashAdvanceBillingHistory) => {
     setSelectedHistory(history);
@@ -77,20 +87,20 @@ export function KasBonPaymentHistoryTable({
       {
         header: 'Bukti Bayar',
         alignment: 'center',
-        cell: (item) =>
-          item.paymentProof ? (
-            <a
-              href={item.paymentProof}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-1 text-xs font-medium text-blue-600 hover:text-blue-800 hover:underline"
+        cell: (item) => {
+          if (!item.paymentProof) return <span className="text-slate-400">-</span>;
+          const fullUrl = getObjectStorageUrl(item.paymentProof);
+          return (
+            <button
+              type="button"
+              onClick={() => setPreviewImage(fullUrl)}
+              className="inline-flex items-center gap-1 text-xs font-medium text-blue-600 hover:text-blue-800 hover:underline cursor-pointer"
             >
+              <ImageIcon className="h-3.5 w-3.5" />
               <span>Lihat Bukti</span>
-              <ExternalLink className="h-3 w-3" />
-            </a>
-          ) : (
-            <span className="text-slate-400">-</span>
-          ),
+            </button>
+          );
+        },
       },
       {
         header: 'Catatan',
@@ -98,32 +108,50 @@ export function KasBonPaymentHistoryTable({
       },
       ...(onDelete
         ? [
-          {
-            header: 'Aksi',
-            alignment: 'center' as const,
-            cell: (item: DriverCashAdvanceBillingHistory) => (
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon"
-                disabled={!canDelete || isDeleting}
-                onClick={() => handleDeleteClick(item)}
-                className="h-8 w-8 text-rose-600 hover:bg-rose-50 hover:text-rose-700 cursor-pointer rounded-full"
-                title="Hapus riwayat pembayaran"
-              >
-                <Trash2 className="h-4 w-4" />
-              </Button>
-            ),
-          },
-        ]
+            {
+              header: 'Aksi',
+              alignment: 'center' as const,
+              sticky: 'right' as const,
+              cell: (item: DriverCashAdvanceBillingHistory) => (
+                <DropdownMenu
+                  open={openActionId === item.id}
+                  onOpenChange={(open) => setOpenActionId(open ? item.id : null)}
+                >
+                  <DropdownMenuTrigger asChild>
+                    <button className="inline-flex items-center justify-center h-8 w-8 p-0 rounded-full text-slate-600 hover:bg-slate-100 hover:text-slate-900 cursor-pointer">
+                      <MoreVertical className="h-4 w-4" />
+                    </button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="min-w-[150px] rounded-md border-slate-200 p-1.5 shadow-lg">
+                    <DropdownMenuItem
+                      className="rounded-md px-3 py-2 text-sm text-red-600 focus:bg-red-50 focus:text-red-600 cursor-pointer"
+                      disabled={!canDelete || isDeleting}
+                      onSelect={() => {
+                        setOpenActionId(null);
+                        handleDeleteClick(item);
+                      }}
+                    >
+                      Hapus
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              ),
+            },
+          ]
         : []),
     ],
-    [canDelete, isDeleting, onDelete],
+    [canDelete, isDeleting, onDelete, openActionId],
   );
 
   return (
     <>
       <BaseTable data={histories} columns={columns} />
+
+      <ImagePreview
+        open={Boolean(previewImage)}
+        onClose={() => setPreviewImage(null)}
+        src={previewImage}
+      />
 
       <AlertDialog
         open={deleteConfirmOpen}

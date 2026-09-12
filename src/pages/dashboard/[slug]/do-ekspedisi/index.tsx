@@ -17,7 +17,6 @@ import {
   useDeleteDoEkspedisi,
   useDoEkspedisis,
 } from '@/hooks/useDoEkspedisi';
-import { useProcessDoExpedition } from '@/hooks/useDoInvoice';
 import { PageHeader } from '@/components/ui/page-header';
 import { getApiErrorMessage } from '@/utils/apiErrorHandler';
 import { useCompany } from '@/contexts/CompanyContext';
@@ -65,9 +64,9 @@ export default function DOEkspedisiPage() {
     end_date: date?.to ? date.to.toISOString().split('T')[0] : undefined,
   });
   const deleteMutation = useDeleteDoEkspedisi();
-  const processExpeditionMutation = useProcessDoExpedition();
 
   const handleDelete = (item: DoEkspedisi) => {
+    if (!['draft', 'pending'].includes(String(item.status).toLowerCase())) return;
     setSelectedItem(item);
     setIsDeleteOpen(true);
   };
@@ -88,6 +87,7 @@ export default function DOEkspedisiPage() {
   const handleEditClick = useCallback(
     (item: DoEkspedisi) => {
       if (!slug) return;
+      if (!['draft', 'pending'].includes(String(item.status).toLowerCase())) return;
       router.push(`/dashboard/${slug}/do-ekspedisi/form/${item.id}`);
     },
     [slug, router],
@@ -102,17 +102,11 @@ export default function DOEkspedisiPage() {
   );
 
   const handlePrintClick = useCallback(
-    async (item: DoEkspedisi) => {
+    (item: DoEkspedisi) => {
       if (!slug) return;
-      try {
-        await processExpeditionMutation.mutateAsync({ id: item.id });
-      } catch (error: any) {
-        toast.error(getApiErrorMessage(error));
-        return;
-      }
-      router.push(`/dashboard/${slug}/do-ekspedisi/print/${item.id}`);
+      void router.push(`/dashboard/${slug}/do-ekspedisi/detail/${item.id}?print=1`);
     },
-    [processExpeditionMutation, slug, router],
+    [slug, router],
   );
 
   return (

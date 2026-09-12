@@ -47,19 +47,26 @@ function Section({ title, description, icon: Icon, children }: { title: string; 
   );
 }
 
+const parseDateString = (value?: string | null) => {
+  if (!value) return null;
+  const str = value.includes(' ') && !value.includes('T') ? value.replace(' ', 'T') : value;
+  const date = new Date(str);
+  return Number.isNaN(date.getTime()) ? null : date;
+};
+
 const formatDateTime = (value?: string | null) => {
   if (!value) return '-';
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return value;
+  const date = parseDateString(value);
+  if (!date) return value;
   return format(date, 'dd/MM/yyyy HH:mm');
 };
 
 const getDurationLabel = (start?: string | null, end?: string | null) => {
   if (!start || !end) return '-';
 
-  const startDate = new Date(start);
-  const endDate = new Date(end);
-  if (Number.isNaN(startDate.getTime()) || Number.isNaN(endDate.getTime())) return '-';
+  const startDate = parseDateString(start);
+  const endDate = parseDateString(end);
+  if (!startDate || !endDate) return '-';
 
   const diffInMinutes = Math.max(0, Math.round((endDate.getTime() - startDate.getTime()) / (1000 * 60)));
   const days = Math.floor(diffInMinutes / 1440);
@@ -210,8 +217,8 @@ export function DOEkspedisiDetailCard({ data }: DOEkspedisiDetailCardProps) {
       await updateMutation.mutateAsync({
         id: data.id,
         payload: {
-          target_start_date: start.toISOString(),
-          target_end_date: end.toISOString(),
+          target_start_date: format(start, 'yyyy-MM-dd HH:mm:ss'),
+          target_end_date: format(end, 'yyyy-MM-dd HH:mm:ss'),
         },
       });
       toast.success('Target jadwal ekspedisi berhasil diperbarui.');

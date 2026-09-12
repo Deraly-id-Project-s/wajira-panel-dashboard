@@ -208,21 +208,21 @@ export function DOEkspedisiClaimApplications({ data, onRefresh }: DOEkspedisiCla
   const columns: ColumnDef<DoEkspedisiClaimApplication>[] = [
     {
       header: 'Sumber Claim',
-      cell: (x) => (
+      cell: (item) => (
         <div>
-          <div className='flex items-center gap-2'>
-            {x.claim?.sourceExpeditionCode && <CopyBox text={x.claim?.sourceExpeditionCode} href={x.claim?.sourceExpeditionCode ? `/dashboard/${slug}/do-ekspedisi/detail/${x.claim.doExpeditionsId}` : undefined} />}
+          <div className="flex items-center gap-2">
+            {item.claim?.sourceExpeditionCode && <CopyBox text={item.claim?.sourceExpeditionCode} href={item.claim?.sourceExpeditionCode ? `/dashboard/${slug}/do-ekspedisi/detail/${item.claim.doExpeditionsId}` : undefined} />}
           </div>
         </div>
       ),
     },
-    { header: 'Alasan Claim', cell: (x) => x.claim?.subject || '-' },
-    { header: 'Tanggal', cell: (x) => x.date ? formatDate(x.date) : '-' },
-    { header: 'Metode', cell: (x) => <Badge variant="outline" className="capitalize">{x.type}</Badge> },
+    { header: 'Alasan Claim', cell: (item) => item.claim?.subject || '-' },
+    { header: 'Tanggal', cell: (item) => item.date ? formatDate(item.date) : '-' },
+    { header: 'Metode', cell: (item) => <Badge variant="outline" className="capitalize">{item.type}</Badge> },
     {
       header: 'Potongan UJ',
       alignment: 'right',
-      cell: (x) => <span className="font-semibold text-rose-700">-{formatCurrency(x.nominal)}</span>,
+      cell: (item) => <span className="font-semibold text-rose-700">-{formatCurrency(item.nominal)}</span>,
     },
     {
       header: 'Aksi',

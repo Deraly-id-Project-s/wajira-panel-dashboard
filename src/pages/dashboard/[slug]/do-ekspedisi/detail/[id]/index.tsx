@@ -8,7 +8,6 @@ import { DOEkspedisiPrintDocument } from '@/components/features/do-ekspedisi/DOE
 import { DeleteDOEkspedisiModal } from '@/components/features/do-ekspedisi/DeleteDOEkspedisiModal';
 import type { DoEkspedisiItem } from '@/@types/do-ekspedisi.types';
 import { useDeleteDoEkspedisiItem, useDoEkspedisiDetail, useUpdateDoEkspedisi, useUpdateDoExpeditionStatus } from '@/hooks/useDoEkspedisi';
-import { useProcessDoExpedition } from '@/hooks/useDoInvoice';
 import { getApiErrorMessage } from '@/utils/apiErrorHandler';
 import { LoadingState } from '@/components/ui/loading-state';
 import { PageHeader } from '@/components/ui/page-header';
@@ -80,9 +79,9 @@ export default function DetailDOEkspedisiPage() {
   const [selectedItem, setSelectedItem] = React.useState<DoEkspedisiItem | null>(null);
   const [deleteOpen, setDeleteOpen] = React.useState(false);
   const [statusConfirmOpen, setStatusConfirmOpen] = React.useState(false);
+  const autoPrintOpenedRef = React.useRef(false);
 
   const detailQuery = useDoEkspedisiDetail(id ? String(id) : null);
-  const processExpeditionMutation = useProcessDoExpedition();
   const updateMutation = useUpdateDoEkspedisi();
   const updateStatusMutation = useUpdateDoExpeditionStatus();
   const deleteItemMutation = useDeleteDoEkspedisiItem();
@@ -167,6 +166,21 @@ export default function DetailDOEkspedisiPage() {
       toast.error(errorMsg);
     }
   }, [detailQuery.isError, detailQuery.error]);
+
+  React.useEffect(() => {
+    if (
+      !router.isReady
+      || router.query.print !== '1'
+      || !detailQuery.data
+      || autoPrintOpenedRef.current
+    ) return;
+
+    autoPrintOpenedRef.current = true;
+    templatePrint.openPrintDialog();
+    if (slug && id) {
+      void router.replace(`/dashboard/${slug}/do-ekspedisi/detail/${id}`, undefined, { shallow: true });
+    }
+  }, [detailQuery.data, id, router, slug, templatePrint]);
 
   if (detailQuery.isLoading) {
     return (
@@ -264,23 +278,11 @@ export default function DetailDOEkspedisiPage() {
               </Button>
             )}
             <Button
-              onClick={async () => {
-                if (!id || !slug) return;
-                try {
-                  if (detailQuery.data.status !== 'process' && detailQuery.data.status !== 'done') {
-                    await processExpeditionMutation.mutateAsync({ id: Number(id) });
-                    await detailQuery.refetch();
-                  }
-                  templatePrint.openPrintDialog();
-                } catch (error: any) {
-                  toast.error(getApiErrorMessage(error));
-                }
-              }}
-              disabled={processExpeditionMutation.isPending || detailQuery.data.status === 'draft' || !detailQuery.data.driverId || !detailQuery.data.vehicleId}
+              onClick={templatePrint.openPrintDialog}
               variant="outline"
             >
               <Printer className="h-4 w-4" />
-              {processExpeditionMutation.isPending ? 'Menyiapkan...' : 'Print'}
+              Print
             </Button>
           </>,
         )}
