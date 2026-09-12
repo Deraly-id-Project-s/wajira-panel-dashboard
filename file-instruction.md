@@ -60,6 +60,8 @@ Dokumen ini wajib dibaca terlebih dahulu oleh AI MVC sebelum menerapkan fitur ba
 | Separator | `src/components/ui/separator.tsx` | Gunakan untuk pemisah visual. |
 | Card | `src/components/ui/card.tsx` | Gunakan hanya jika perlu framing item/panel sesuai pola existing. |
 | Copy box | `src/components/ui/copy-box.tsx` | Gunakan untuk teks yang perlu disalin. |
+| Input koordinat Leaflet | `src/components/ui/leaflet-coordinate-input.tsx` | Gunakan untuk memilih koordinat opsional melalui teks, klik peta, atau geolokasi perangkat. Value dan payload memakai format `latitude,longitude`; nilai kosong dikirim sebagai `null`/string kosong pada `FormData`. |
+| Tampilan peta Leaflet | `src/components/ui/show-map-leaflet.tsx` | Gunakan untuk menampilkan lokasi dari koordinat. Prop `onCoordinateChange` bersifat opsional; jika diberikan, peta dapat dipakai memilih titik. Import Leaflet dilakukan client-only agar aman pada SSR Next.js. |
 | Text truncate | `src/components/ui/text-truncate.tsx` | Gunakan untuk memotong teks panjang secara konsisten. |
 | Image preview | `src/components/ui/image-preview.tsx` | Gunakan untuk preview gambar. |
 | Parsed image | `src/components/ui/parsed-image.tsx` | Gunakan untuk render image dari value yang perlu diparse. |
@@ -99,6 +101,17 @@ Dokumen ini wajib dibaca terlebih dahulu oleh AI MVC sebelum menerapkan fitur ba
 8. Untuk upload file, gunakan `FileInput` dan sesuaikan `name`, `accept`, `helperText`, validasi ukuran, dan validasi tipe file berdasarkan kebutuhan API.
 9. Untuk header setiap halaman (daftar, form, atau detail), gunakan `PageHeader` dari `src/components/ui/page-header.tsx` mengikuti panduan pada bagian [Panduan Komponen PageHeader (Header Halaman)](#panduan-komponen-pageheader-header-halaman).
 10. Untuk fitur cetak laporan atau dokumen transaksi, wajib mengikuti panduan arsitektur print terstandarisasi pada bagian [Panduan Fitur Print Laporan & Dokumen](#panduan-fitur-print-laporan--dokumen).
+11. Untuk field lokasi customer/driver, simpan koordinat pada request key `map_coordinat` (nullable), terpisah dari `map_link`. Gunakan `LeafletCoordinateInput`; jangan membuat ulang parsing atau instance Leaflet di form fitur.
+
+## Panduan Komponen Koordinat Leaflet
+
+- Library runtime menggunakan `leaflet` dan stylesheet global diimpor dari `src/styles/globals.css`.
+- `LeafletCoordinateInput` adalah komponen form controlled dengan kontrak `value?: string | null` dan `onChange(value: string | null)`. Kontrol utamanya adalah input nama tempat, tombol icon lokasi perangkat, dan tombol X untuk membersihkan seluruh data map dalam satu baris. Pencarian Nominatim OpenStreetMap dimulai saat pointer berada di input setelah minimal 3 karakter (dengan debounce), sedangkan koordinat dapat dipilih dari hasil pencarian atau klik peta. Tombol X mengosongkan nama/hasil pencarian, mengirim nilai `null`, menghapus marker, dan mengembalikan peta ke posisi awal. Nama hasil pencarian hanya membantu memilih titik dan tidak mengubah kontrak payload `map_coordinat`.
+- `ShowMapLeaflet` menerima string `latitude,longitude`, object `{ lat, lng }`, JSON koordinat, atau `null`. Gunakan tanpa `onCoordinateChange` untuk mode tampilan; berikan callback tersebut untuk mode pemilihan titik.
+- Format penyimpanan standar adalah `latitude,longitude` dengan maksimal tujuh angka desimal. Latitude harus berada pada rentang -90 sampai 90, longitude -180 sampai 180.
+- Leaflet hanya di-import secara dinamis di client karena project memakai Next.js Pages Router dan proses SSR tidak memiliki object `window`.
+- Saat request memakai `FormData`, key `map_coordinat` tetap harus dikirim dengan string kosong ketika pengguna menghapus titik agar backend dapat mengubah nilai sebelumnya menjadi `null`.
+- Tombol geolokasi memerlukan header `Permissions-Policy` dengan `geolocation=(self)`. Jangan memperluas izin ke origin atau iframe pihak ketiga tanpa kebutuhan eksplisit.
 
 ## Panduan Komponen PageHeader (Header Halaman)
 
@@ -580,4 +593,3 @@ Sebelum menyelesaikan implementasi fitur print, pastikan seluruh poin berikut te
 - [ ] Nomor halaman ditampilkan di footer setiap lembar (`Halaman {pageIndex + 1} dari {pages.length}`).
 - [ ] Dokumen cetak dibungkus class `.accounting-print-root` (tersembunyi saat di browser web biasa).
 - [ ] Header, filter, tombol, dan komponen UI non-cetak dibungkus class `.no-print`.
-

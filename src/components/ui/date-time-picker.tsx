@@ -31,7 +31,9 @@ export function DateTimePicker({
   const [open, setOpen] = React.useState(false);
 
   // Ensure value is a valid Date object if string/null is passed
-  let dateValue = typeof value === 'string' ? new Date(value) : (value as Date | undefined | null);
+  let dateValue = typeof value === 'string'
+    ? new Date(value.includes(' ') && !value.includes('T') ? value.replace(' ', 'T') : value)
+    : (value as Date | undefined | null);
 
   // Fallback if date is invalid to prevent "Invalid time value" crashes
   if (dateValue && (isNaN(dateValue.getTime()) || !(dateValue instanceof Date))) {

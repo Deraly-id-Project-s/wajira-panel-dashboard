@@ -28,7 +28,9 @@ interface DateTimeRangeDialogProps {
 
 const toValidDate = (value?: Date | string | null) => {
   if (!value) return undefined;
-  const date = value instanceof Date ? new Date(value) : new Date(value);
+  if (value instanceof Date) return Number.isNaN(value.getTime()) ? undefined : new Date(value);
+  const str = typeof value === 'string' && value.includes(' ') && !value.includes('T') ? value.replace(' ', 'T') : value;
+  const date = new Date(str);
   return Number.isNaN(date.getTime()) ? undefined : date;
 };
 
