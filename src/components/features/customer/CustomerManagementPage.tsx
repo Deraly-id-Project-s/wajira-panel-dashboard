@@ -25,6 +25,7 @@ const defaultCustomerValues: CustomerFormValues = {
   pic: '',
   phone: '',
   map_link: '',
+  map_coordinat: null,
 };
 
 const normalizeCompanyId = (value: string | number | null | undefined) => {
@@ -128,6 +129,7 @@ export function CustomerManagementPage() {
         pic: detail.pic ?? '',
         phone: detail.phone ?? '',
         map_link: detail.map_link ?? '',
+        map_coordinat: detail.mapCoordinat ?? null,
       });
       setIsFormOpen(true);
     } catch (error) {

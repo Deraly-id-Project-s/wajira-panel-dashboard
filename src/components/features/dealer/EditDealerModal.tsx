@@ -7,6 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { DealerFormData } from './DealerFormModal';
 import type { Dealer } from '@/@types/dealer.types';
+import RequiredMark from '@/components/ui/required-mark';
 
 interface EditDealerModalProps {
     isOpen: boolean;
@@ -62,7 +63,7 @@ function EditDealerInnerForm({ initialData, onClose, onSave }: InnerProps) {
         <form onSubmit={handleSubmit(onSubmit)} className="flex-1 flex flex-col overflow-hidden">
             <div className="flex-1 overflow-y-auto px-6 py-5 space-y-4">
                 <div className="space-y-2">
-                    <Label htmlFor="edit-namaDealer" className="text-gray-900 font-medium">Nama Dealer</Label>
+                    <Label htmlFor="edit-namaDealer" className="text-gray-900 font-medium">Nama Dealer<RequiredMark /></Label>
                     <Input
                         id="edit-namaDealer"
                         placeholder="Masukkan nama dealer"
@@ -73,7 +74,7 @@ function EditDealerInnerForm({ initialData, onClose, onSave }: InnerProps) {
                 </div>
 
                 <div className="space-y-2">
-                    <Label htmlFor="edit-alamat" className="text-gray-900 font-medium">Alamat</Label>
+                    <Label htmlFor="edit-alamat" className="text-gray-900 font-medium">Alamat<RequiredMark /></Label>
                     <Textarea
                         id="edit-alamat"
                         placeholder="Masukkan alamat dealer"
@@ -89,14 +90,14 @@ function EditDealerInnerForm({ initialData, onClose, onSave }: InnerProps) {
                     <Input
                         id="edit-pic"
                         placeholder="Masukkan PIC"
-                        {...register('pic', { required: 'PIC wajib diisi' })}
+                        {...register('pic')}
                         className={errors.pic ? 'border-red-500' : ''}
                     />
                     {errors.pic && <p className="text-red-500 text-xs">{errors.pic.message}</p>}
                 </div>
 
                 <div className="space-y-2">
-                    <Label htmlFor="edit-handphone" className="text-gray-900 font-medium">Handphone</Label>
+                    <Label htmlFor="edit-handphone" className="text-gray-900 font-medium">Handphone<RequiredMark /></Label>
                     <Input
                         id="edit-handphone"
                         placeholder="Masukkan nomor handphone"

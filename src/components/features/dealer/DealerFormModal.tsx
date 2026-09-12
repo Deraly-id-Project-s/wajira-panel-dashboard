@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import RequiredMark from '@/components/ui/required-mark';
 
 export interface DealerFormData {
     namaDealer: string;
@@ -52,18 +53,18 @@ export function DealerFormModal({ isOpen, onClose, onSave }: DealerFormModalProp
                 <form onSubmit={handleSubmit(onSubmit)} className="flex-1 flex flex-col overflow-hidden">
                     <div className="flex-1 overflow-y-auto px-6 py-5 space-y-4">
                         <div className="space-y-2">
-                            <Label htmlFor="namaDealer" className="text-gray-900 font-medium">Nama Dealer</Label>
+                            <Label htmlFor="namaDealer" className="text-gray-900 font-medium">Nama Dealer<RequiredMark /></Label>
                             <Input
                                 id="namaDealer"
                                 placeholder="Masukkan nama dealer"
-                                {...register('namaDealer', { required: 'Nama Dealer wajid diisi' })}
+                                {...register('namaDealer', { required: 'Nama Dealer wajib diisi' })}
                                 className={errors.namaDealer ? 'border-red-500' : ''}
                             />
                             {errors.namaDealer && <p className="text-red-500 text-xs">{errors.namaDealer.message}</p>}
                         </div>
 
                         <div className="space-y-2">
-                            <Label htmlFor="alamat" className="text-gray-900 font-medium">Alamat</Label>
+                            <Label htmlFor="alamat" className="text-gray-900 font-medium">Alamat<RequiredMark /></Label>
                             <Textarea
                                 id="alamat"
                                 placeholder="Masukkan alamat dealer"
@@ -79,14 +80,14 @@ export function DealerFormModal({ isOpen, onClose, onSave }: DealerFormModalProp
                             <Input
                                 id="pic"
                                 placeholder="Masukkan PIC"
-                                {...register('pic', { required: 'PIC wajib diisi' })}
+                                {...register('pic')}
                                 className={errors.pic ? 'border-red-500' : ''}
                             />
                             {errors.pic && <p className="text-red-500 text-xs">{errors.pic.message}</p>}
                         </div>
 
                         <div className="space-y-2">
-                            <Label htmlFor="handphone" className="text-gray-900 font-medium">Phone</Label>
+                            <Label htmlFor="handphone" className="text-gray-900 font-medium">Phone<RequiredMark /></Label>
                             <Input
                                 id="handphone"
                                 placeholder="Masukkan nomor handphone"

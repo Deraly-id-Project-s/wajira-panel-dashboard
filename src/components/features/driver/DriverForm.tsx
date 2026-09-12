@@ -9,6 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Switch } from '@/components/ui/switch';
 import RequiredMark from '@/components/ui/required-mark';
 import type { Driver, DriverPayload } from '@/@types/driver.types';
+import { LeafletCoordinateInput } from '@/components/ui/leaflet-coordinate-input';
 
 type DriverFormValues = {
   name: string;
@@ -23,6 +24,7 @@ type DriverFormValues = {
   identityNumber: string;
   driveLicenseNumber: string;
   mapLink: string;
+  mapCoordinat: string | null;
   socialMedia1Link: string;
   socialMedia2Link: string;
   socialMedia3Link: string;
@@ -43,7 +45,7 @@ interface DriverFormProps {
 const emptyValues: DriverFormValues = {
   name: '', username: '', password: '', passwordConfirmation: '', isActive: true,
   address: '', phone: '', npwp: '', picName: '', identityNumber: '', driveLicenseNumber: '',
-  mapLink: '', socialMedia1Link: '', socialMedia2Link: '', socialMedia3Link: '',
+  mapLink: '', mapCoordinat: null, socialMedia1Link: '', socialMedia2Link: '', socialMedia3Link: '',
   socialMedia4Link: '', websiteLink: '', joinDate: '', image: null,
 };
 
@@ -70,6 +72,7 @@ export function DriverForm({ initialData, companyId, isSubmitting = false, onSub
       identityNumber: initialData.identityNumber ?? '',
       driveLicenseNumber: initialData.driveLicenseNumber ?? '',
       mapLink: initialData.mapLink ?? '',
+      mapCoordinat: initialData.mapCoordinat ?? null,
       socialMedia1Link: initialData.socialMedia1Link ?? '',
       socialMedia2Link: initialData.socialMedia2Link ?? '',
       socialMedia3Link: initialData.socialMedia3Link ?? '',
@@ -92,6 +95,7 @@ export function DriverForm({ initialData, companyId, isSubmitting = false, onSub
     identity_number: values.identityNumber || undefined,
     drive_license_identity_number: values.driveLicenseNumber || undefined,
     map_link: values.mapLink || undefined,
+    map_coordinat: values.mapCoordinat,
     social_media_1_link: values.socialMedia1Link || undefined,
     social_media_2_link: values.socialMedia2Link || undefined,
     social_media_3_link: values.socialMedia3Link || undefined,
@@ -134,6 +138,18 @@ export function DriverForm({ initialData, companyId, isSubmitting = false, onSub
               {textField('npwp', 'NPWP', 'Masukkan NPWP driver')}
               {textField('picName', 'Nama PIC', 'Masukkan nama PIC')}
               {textField('mapLink', 'Link Maps', 'Masukkan link Google Maps')}
+              <FormField control={form.control} name="mapCoordinat" render={({ field }) => (
+                <FormItem className="md:col-span-2">
+                  <FormLabel>Koordinat Lokasi</FormLabel>
+                  <LeafletCoordinateInput
+                    id="driver-map-coordinate"
+                    value={field.value}
+                    onChange={field.onChange}
+                    disabled={isSubmitting}
+                  />
+                  <FormMessage />
+                </FormItem>
+              )} />
               {textField('identityNumber', 'Nomor KTP', 'Masukkan nomor KTP')}
               {textField('driveLicenseNumber', 'Nomor SIM', 'Masukkan nomor SIM')}
               {textField('joinDate', 'Tanggal Bergabung', 'Pilih tanggal bergabung', 'date')}

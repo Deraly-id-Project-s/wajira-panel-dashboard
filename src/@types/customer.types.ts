@@ -11,6 +11,7 @@ export interface Customer {
   pic?: string | null;
   phone?: string | null;
   map_link?: string | null;
+  mapCoordinat?: string | null;
   userId?: number | string;
   companyId?: number | string;
   createdAt?: string;
@@ -24,6 +25,7 @@ export interface CustomerPayload {
   pic?: string;
   phone?: string;
   map_link?: string;
+  map_coordinat?: string | null;
   userId?: number | string;
   companyId?: number | string;
 }
