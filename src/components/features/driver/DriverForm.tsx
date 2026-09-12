@@ -95,7 +95,7 @@ export function DriverForm({ initialData, companyId, isSubmitting = false, onSub
     identity_number: values.identityNumber || undefined,
     drive_license_identity_number: values.driveLicenseNumber || undefined,
     map_link: values.mapLink || undefined,
-    map_coordinat: values.mapCoordinat,
+    map_coordinate: values.mapCoordinat,
     social_media_1_link: values.socialMedia1Link || undefined,
     social_media_2_link: values.socialMedia2Link || undefined,
     social_media_3_link: values.socialMedia3Link || undefined,

@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { cn } from '@/lib/utils';
 
 export interface MapCoordinate {
@@ -87,6 +87,8 @@ export function ShowMapLeaflet({
   const markerRef = useRef<LeafletMarkerInstance | null>(null);
   const leafletRef = useRef<LeafletRuntime | null>(null);
   const onCoordinateChangeRef = useRef(onCoordinateChange);
+  const [mapLoadError, setMapLoadError] = useState(false);
+  const [loadAttempt, setLoadAttempt] = useState(0);
   const coordinate = parseMapCoordinate(value);
   const coordinateLat = coordinate?.lat;
   const coordinateLng = coordinate?.lng;
@@ -102,45 +104,51 @@ export function ShowMapLeaflet({
     const initializeMap = async () => {
       if (!containerRef.current || mapRef.current) return;
 
-      // Leaflet does not ship TypeScript declarations; keep the runtime import client-only for Next.js SSR.
-      const imported = (await import('leaflet')) as unknown as LeafletRuntime & { default?: LeafletRuntime };
-      const leaflet = imported.default ?? imported;
-      if (cancelled || !containerRef.current) return;
+      try {
+        // Keep Leaflet client-only for SSR, but bundle it eagerly with this module so
+        // Next.js does not request a separate, failure-prone Leaflet runtime chunk.
+        const imported = (await import(/* webpackMode: "eager" */ 'leaflet')) as unknown as LeafletRuntime & { default?: LeafletRuntime };
+        const leaflet = imported.default ?? imported;
+        if (cancelled || !containerRef.current) return;
 
-      leafletRef.current = leaflet;
-      const initialCoordinate = parseMapCoordinate(value);
-      const center: [number, number] = initialCoordinate
-        ? [initialCoordinate.lat, initialCoordinate.lng]
-        : DEFAULT_CENTER;
-      const map = leaflet.map(containerRef.current, {
-        center,
-        zoom: initialCoordinate ? zoom : 11,
-        scrollWheelZoom: true,
-      });
+        leafletRef.current = leaflet;
+        const initialCoordinate = parseMapCoordinate(value);
+        const center: [number, number] = initialCoordinate
+          ? [initialCoordinate.lat, initialCoordinate.lng]
+          : DEFAULT_CENTER;
+        const map = leaflet.map(containerRef.current, {
+          center,
+          zoom: initialCoordinate ? zoom : 11,
+          scrollWheelZoom: true,
+        });
 
-      leaflet.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '&copy; OpenStreetMap contributors',
-        maxZoom: 19,
-      }).addTo(map);
-
-      map.on('click', (event) => onCoordinateChangeRef.current?.(event.latlng));
-      mapRef.current = map;
-
-      if (initialCoordinate) {
-        markerRef.current = leaflet.marker([initialCoordinate.lat, initialCoordinate.lng], {
-          icon: leaflet.divIcon({
-            className: 'leaflet-coordinate-marker',
-            html: '<span aria-hidden="true"></span>',
-            iconAnchor: [10, 10],
-            iconSize: [20, 20],
-          }),
+        leaflet.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+          attribution: '&copy; OpenStreetMap contributors',
+          maxZoom: 19,
         }).addTo(map);
-      }
 
-      window.setTimeout(() => map.invalidateSize(), 0);
-      if (typeof ResizeObserver !== 'undefined') {
-        resizeObserver = new ResizeObserver(() => map.invalidateSize());
-        resizeObserver.observe(containerRef.current);
+        map.on('click', (event) => onCoordinateChangeRef.current?.(event.latlng));
+        mapRef.current = map;
+
+        if (initialCoordinate) {
+          markerRef.current = leaflet.marker([initialCoordinate.lat, initialCoordinate.lng], {
+            icon: leaflet.divIcon({
+              className: 'leaflet-coordinate-marker',
+              html: '<span aria-hidden="true"></span>',
+              iconAnchor: [10, 10],
+              iconSize: [20, 20],
+            }),
+          }).addTo(map);
+        }
+
+        setMapLoadError(false);
+        window.setTimeout(() => map.invalidateSize(), 0);
+        if (typeof ResizeObserver !== 'undefined') {
+          resizeObserver = new ResizeObserver(() => map.invalidateSize());
+          resizeObserver.observe(containerRef.current);
+        }
+      } catch {
+        if (!cancelled) setMapLoadError(true);
       }
     };
 
@@ -156,9 +164,9 @@ export function ShowMapLeaflet({
       mapRef.current = null;
       leafletRef.current = null;
     };
-    // The map is initialized once; coordinate updates are handled by the effect below.
+    // Coordinate updates are handled by the effect below; this only reruns for an explicit retry.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [loadAttempt]);
 
   useEffect(() => {
     const map = mapRef.current;
@@ -190,11 +198,23 @@ export function ShowMapLeaflet({
   }, [coordinateLat, coordinateLng, zoom]);
 
   return (
-    <div
-      ref={containerRef}
-      role="application"
-      aria-label={ariaLabel}
-      className={cn('h-64 w-full overflow-hidden rounded-md border border-slate-200 bg-slate-100', className)}
-    />
+    <div className={cn('relative h-64 w-full overflow-hidden rounded-md border border-slate-200 bg-slate-100', className)}>
+      <div ref={containerRef} role="application" aria-label={ariaLabel} className="h-full w-full" />
+      {mapLoadError ? (
+        <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-slate-100 px-4 text-center text-sm text-slate-600" role="alert">
+          <span>Peta gagal dimuat.</span>
+          <button
+            type="button"
+            className="rounded-md border border-slate-300 bg-white px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400"
+            onClick={() => {
+              setMapLoadError(false);
+              setLoadAttempt((attempt) => attempt + 1);
+            }}
+          >
+            Muat ulang peta
+          </button>
+        </div>
+      ) : null}
+    </div>
   );
 }

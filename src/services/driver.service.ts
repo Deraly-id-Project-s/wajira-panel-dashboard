@@ -23,7 +23,7 @@ const mapDriver = (item: any): Driver => ({
   picName: item.pic_name ?? null,
   image: item.image ?? null,
   mapLink: item.map_link ?? null,
-  mapCoordinat: item.map_coordinat ?? null,
+  mapCoordinat: item.map_coordinate ?? item.map_coordinat ?? null,
   identityNumber: item.identity_number || '',
   driveLicenseNumber: item.drive_license_identity_number || '',
   socialMedia1Link: item.social_media_1_link ?? null,
@@ -84,7 +84,7 @@ const buildDriverPayload = (data: DriverPayload, opts?: { asUpdate?: boolean }) 
   if (data.identity_number !== undefined) formData.append('identity_number', data.identity_number ?? '');
   if (data.drive_license_identity_number !== undefined) formData.append('drive_license_identity_number', data.drive_license_identity_number ?? '');
   if (data.map_link !== undefined) formData.append('map_link', data.map_link ?? '');
-  formData.append('map_coordinat', data.map_coordinat ?? '');
+  formData.append('map_coordinate', data.map_coordinate ?? '');
   if (data.social_media_1_link !== undefined) formData.append('social_media_1_link', data.social_media_1_link ?? '');
   if (data.social_media_2_link !== undefined) formData.append('social_media_2_link', data.social_media_2_link ?? '');
   if (data.social_media_3_link !== undefined) formData.append('social_media_3_link', data.social_media_3_link ?? '');

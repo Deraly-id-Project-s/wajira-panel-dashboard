@@ -48,7 +48,7 @@ export interface DriverPayload {
     pic_name?: string | null;
     image?: File | null;
     map_link?: string | null;
-    map_coordinat?: string | null;
+    map_coordinate?: string | null;
     identity_number?: string;
     drive_license_identity_number?: string;
     social_media_1_link?: string | null;
