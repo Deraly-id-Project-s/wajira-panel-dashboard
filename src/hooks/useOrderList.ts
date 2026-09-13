@@ -28,6 +28,7 @@ import {
   updateOrderListTarif,
   updateOrderListTarifItem,
   updateOrderListState,
+  processOrderListInvoice,
 } from '@/services/order-list.service';
 
 export function useOrderLists(params: OrderListListParams & { enabled?: boolean }) {
@@ -128,6 +129,19 @@ export function useUpdateOrderListState() {
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ['order-list'] });
       queryClient.invalidateQueries({ queryKey: ['order-list', 'detail', variables.id] });
+    },
+  });
+}
+
+export function useProcessOrderListInvoice() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (id: string | number) => processOrderListInvoice(id),
+    onSuccess: (_, id) => {
+      queryClient.invalidateQueries({ queryKey: ['order-list'] });
+      queryClient.invalidateQueries({ queryKey: ['order-list', 'detail', id] });
+      queryClient.invalidateQueries({ queryKey: ['do-invoice'] });
     },
   });
 }

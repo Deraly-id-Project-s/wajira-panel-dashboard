@@ -16,13 +16,14 @@ import {
   Edit,
   Trash2,
   Printer,
+  MoreVertical,
 } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { toast } from 'sonner';
 import { useRouter } from 'next/router';
-import BaseTable from '@/components/ui/base-table';
+import BaseTable, { type ColumnDef } from '@/components/ui/base-table';
 import { OrderListDetailPrintDocument } from './OrderListDetailPrintDocument';
 import { ReportTemplatePrintDialog } from '@/components/ui/report-template-print-dialog';
 import { useReportTemplatePrint } from '@/hooks/useReportTemplatePrint';
@@ -48,6 +49,17 @@ import {
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { FormDialog } from '@/components/ui/form-dialog';
 import { SearchableSelect } from '@/components/features/vehicle-data/SearchableSelect';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -106,6 +118,8 @@ interface OrderListDetailViewProps {
   onUpdateStatus?: (status: OrderListStatus) => void;
   canUpdateStatus?: boolean;
   isUpdatingStatus?: boolean;
+  onProcessInvoice?: () => void;
+  isProcessingInvoice?: boolean;
 }
 
 function formatDate(value?: string | null, includeTime = false) {
@@ -196,7 +210,7 @@ function CargoList({
       : [];
 
   const columns = React.useMemo(() => {
-    const cols = [
+    const cols: ColumnDef<any>[] = [
       {
         header: 'No',
         alignment: 'center' as const,
@@ -227,29 +241,37 @@ function CargoList({
       cols.push({
         header: 'Aksi',
         alignment: 'center' as const,
-        headerClassName: 'w-[100px] text-slate-500 font-semibold text-center',
+        sticky: 'right',
+        headerClassName: 'w-[80px] text-slate-500 font-semibold text-center',
         cell: (item: any) => (
-          <div className="flex items-center justify-center gap-1">
-            <Button
-              type="button"
-              variant="ghost"
-              size="icon"
-              disabled={!!item.isFallback}
-              onClick={() => onEditCargo?.(route, item)}
-              className="h-7 w-7 text-slate-500 hover:text-slate-700 hover:bg-slate-100 rounded-md cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed"
-            >
-              <Edit className="h-4.5 w-4.5" />
-            </Button>
-            <Button
-              type="button"
-              variant="ghost"
-              size="icon"
-              disabled={!!item.isFallback}
-              onClick={() => onDeleteCargo?.(route, item)}
-              className="h-7 w-7 text-red-500 hover:text-red-600 hover:bg-red-50 rounded-md cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed"
-            >
-              <Trash2 className="h-4.5 w-4.5" />
-            </Button>
+          <div className="flex justify-center">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="ghost"
+                  disabled={!!item.isFallback}
+                  className="h-8 w-8 p-0 rounded-full text-slate-600 hover:bg-slate-100 hover:text-slate-900 disabled:opacity-30 disabled:cursor-not-allowed"
+                >
+                  <MoreVertical className="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="min-w-[140px] rounded-md border-slate-200 p-1.5 shadow-lg">
+                <DropdownMenuItem
+                  disabled={!!item.isFallback}
+                  onClick={() => onEditCargo?.(route, item)}
+                  className="rounded-md px-3 py-2 text-sm text-slate-900 focus:bg-slate-50 cursor-pointer disabled:cursor-not-allowed"
+                >
+                  Edit
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  disabled={!!item.isFallback}
+                  onClick={() => onDeleteCargo?.(route, item)}
+                  className="rounded-md px-3 py-2 text-sm text-red-600 focus:bg-red-50 focus:text-red-600 cursor-pointer disabled:cursor-not-allowed"
+                >
+                  Hapus
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         ),
       });
@@ -284,6 +306,8 @@ export function OrderListDetailView({
   onUpdateStatus,
   canUpdateStatus = false,
   isUpdatingStatus = false,
+  onProcessInvoice,
+  isProcessingInvoice = false,
 }: OrderListDetailViewProps) {
   const router = useRouter();
   const slug = typeof router.query.slug === 'string' ? router.query.slug : '';
@@ -387,6 +411,12 @@ export function OrderListDetailView({
       ...tarifOptions,
     ];
   }, [tarifOptions, selectedRoute]);
+
+  const existingTarifIds = React.useMemo(() => {
+    return (data.tarifs ?? [])
+      .map((route) => String(route.tarifId || route.tarif?.id || ''))
+      .filter(Boolean);
+  }, [data.tarifs]);
 
   const mergedVehicleOptions = React.useMemo(() => {
     const currentList = vehicleOptions[watchedVehicleType] || [];
@@ -560,6 +590,11 @@ export function OrderListDetailView({
 
   const routes = data.tarifs ?? [];
   const expeditions = Array.isArray(data.expeditions) ? data.expeditions : [];
+  const isAllExpeditionsDraft =
+    expeditions.length === 0 ||
+    expeditions.every(
+      (exp: any) => !exp?.status || String(exp.status).toLowerCase() === 'draft'
+    );
   const totalCargo = routes.reduce(
     (total, route) => total + (route.tarifItems ?? []).reduce((sum, item) => sum + Number(item.qty ?? 0), 0),
     0,
@@ -600,6 +635,21 @@ export function OrderListDetailView({
               <Printer className="mr-2 h-4 w-4" />
               Print
             </Button>
+            <Button
+              type="button"
+              disabled={
+                !canUpdateStatus ||
+                data.status !== 'done' ||
+                !data.canMarkDone ||
+                data.isHasInvoice ||
+                isProcessingInvoice
+              }
+              loading={isProcessingInvoice}
+              onClick={onProcessInvoice}
+            >
+              <FileText className="mr-2 h-4 w-4" />
+              {data.isHasInvoice ? 'Invoice Sudah Dibuat' : 'Proses DO Invoice'}
+            </Button>
             {canUpdateStatus ? (
               data.status === 'draft' ? (
                 <Button
@@ -611,14 +661,23 @@ export function OrderListDetailView({
                   {isUpdatingStatus ? 'Memproses...' : 'Proses Order List'}
                 </Button>
               ) : data.status === 'deliver' ? (
-                <Button
-                  type="button"
-                  variant="outline"
-                  disabled={isUpdatingStatus}
-                  onClick={() => onUpdateStatus?.('draft')}
-                >
-                  {isUpdatingStatus ? 'Memproses...' : 'Jadikan Draft'}
-                </Button>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <span className="inline-block">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        disabled={isUpdatingStatus || !isAllExpeditionsDraft}
+                        onClick={() => onUpdateStatus?.('draft')}
+                      >
+                        {isUpdatingStatus ? 'Memproses...' : 'Jadikan Draft'}
+                      </Button>
+                    </span>
+                  </TooltipTrigger>
+                  <TooltipContent side="bottom" className="max-w-xs text-center text-xs">
+                    DO ekspedisi harus draft untuk dapat membuatnya jadikan draft
+                  </TooltipContent>
+                </Tooltip>
               ) : undefined
             ) : undefined}
           </div>
@@ -689,7 +748,7 @@ export function OrderListDetailView({
               <Button
                 type="button"
                 onClick={handleOpenAddRoute}
-                className="bg-[#1f3b5b] hover:bg-[#19314b] text-white rounded-md flex items-center gap-1.5 cursor-pointer shadow-sm text-sm"
+                variant="default"
               >
                 <Plus className="h-4 w-4" />
                 Tambah Rute
@@ -878,6 +937,7 @@ export function OrderListDetailView({
                         value={field.value}
                         onChange={field.onChange}
                         options={mergedTarifOptions}
+                        disabledValues={existingTarifIds.filter((id) => id !== field.value)}
                         placeholder="Pilih tarif"
                         searchPlaceholder="Cari tarif..."
                         loading={tarifQuery.isLoading}

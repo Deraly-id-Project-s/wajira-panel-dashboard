@@ -131,7 +131,7 @@ const toItemDefaults = (order?: OrderList | null): OrderListFormItemValue[] => {
   return order.tarifs.map((item) => ({
     localId: createItemId(),
     id: item.id,
-    tarifId: item.tarifId ? String(item.tarifId) : '',
+    tarifId: item.tarifId ? String(item.tarifId) : item.tarif?.id ? String(item.tarif.id) : '',
     vehicleType: item.vehicleType ?? 'fuso',
     vehicleId: item.vehicleId ? String(item.vehicleId) : '',
     driverId: item.driverId ? String(item.driverId) : '',
@@ -266,12 +266,15 @@ export function OrderListForm({
   const defaultTarifOptions = React.useMemo<SearchableSelectOption[]>(() => {
     if (!initialData?.tarifs?.length) return [];
     return initialData.tarifs
-      .filter((item) => item.tarifId)
-      .map((item) => ({
-        value: String(item.tarifId),
-        label: [item.tarif?.loadingIn || item.loadingIn, item.tarif?.loadingOut || item.loadingOut].filter(Boolean).join(' - ') || `Tarif #${item.tarifId}`,
-        subtitle: item.tarif?.customer?.name,
-      }));
+      .filter((item) => item.tarifId || item.tarif?.id)
+      .map((item) => {
+        const id = item.tarifId || item.tarif?.id;
+        return {
+          value: String(id),
+          label: [item.tarif?.loadingIn || item.loadingIn, item.tarif?.loadingOut || item.loadingOut].filter(Boolean).join(' - ') || `Tarif #${id}`,
+          subtitle: item.tarif?.customer?.name,
+        };
+      });
   }, [initialData?.tarifs]);
 
   const localCustomerOptions = React.useMemo<SearchableSelectOption[]>(
@@ -343,10 +346,17 @@ export function OrderListForm({
   const watchedPph = useWatch({ control, name: 'pph' });
   const watchedUjDriver = useWatch({ control, name: 'ujDriver' });
   const selectedCustomer = mergedCustomerOptions.find((item) => item.value === customerId);
-  const selectedTarifIds = React.useMemo(
-    () => (watchedItems ?? []).map((item) => item?.tarifId).filter((value): value is string => Boolean(value)),
-    [watchedItems],
-  );
+  const selectedTarifIds = React.useMemo(() => {
+    const ids = new Set<string>();
+    (initialData?.tarifs ?? []).forEach((item) => {
+      const id = item.tarifId || item.tarif?.id;
+      if (id) ids.add(String(id));
+    });
+    (watchedItems ?? []).forEach((item) => {
+      if (item?.tarifId) ids.add(String(item.tarifId));
+    });
+    return Array.from(ids);
+  }, [initialData?.tarifs, watchedItems]);
 
   const appendCargoItem = React.useCallback(
     (itemIndex: number) => {

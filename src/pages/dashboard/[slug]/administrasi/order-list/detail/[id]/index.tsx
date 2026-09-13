@@ -4,10 +4,11 @@ import { ChevronLeft } from 'lucide-react';
 import { toast } from 'sonner';
 import { OrderListDetailView } from '@/components/features/order-list/OrderListDetailView';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
-import { useOrderListDetail, useUpdateOrderListState } from '@/hooks/useOrderList';
+import { useOrderListDetail, useProcessOrderListInvoice, useUpdateOrderListState } from '@/hooks/useOrderList';
 import { LoadingState } from '@/components/ui/loading-state';
 import type { OrderListStatus } from '@/@types/order-list.types';
 import { OrderStatusConfirmDialog } from '@/components/features/order-list/OrderStatusConfirmDialog';
+import { ProcessDoInvoiceDialog } from '@/components/features/order-list/ProcessDoInvoiceDialog';
 import { usePermissionGuard } from '@/hooks/usePermissionGuard';
 
 export default function OrderListDetailPage() {
@@ -17,9 +18,11 @@ export default function OrderListDetailPage() {
   const { hasPermission } = usePermissionGuard();
   const canEdit = hasPermission('transaction:edit');
   const [nextStatus, setNextStatus] = React.useState<OrderListStatus | null>(null);
+  const [invoiceConfirmOpen, setInvoiceConfirmOpen] = React.useState(false);
 
   const detailQuery = useOrderListDetail(id);
   const updateStateMutation = useUpdateOrderListState();
+  const processInvoiceMutation = useProcessOrderListInvoice();
 
   // Handle error notifications
   React.useEffect(() => {
@@ -41,6 +44,21 @@ export default function OrderListDetailPage() {
       setNextStatus(null);
     } catch (error: any) {
       toast.error(error.message || 'Gagal memperbarui status order');
+    }
+  };
+
+  const handleProcessInvoice = async () => {
+    if (!id) return;
+    try {
+      const result = await processInvoiceMutation.mutateAsync(id);
+      toast.success('DO invoice dan billing berhasil dibuat');
+      setInvoiceConfirmOpen(false);
+      const invoiceId = result.invoice.uuid || result.invoice.id;
+      if (invoiceId) {
+        await router.push(`/dashboard/${slug}/administrasi/do-invoice/detail/${encodeURIComponent(String(invoiceId))}`);
+      }
+    } catch (error: any) {
+      toast.error(error.message || 'Gagal memproses DO invoice');
     }
   };
 
@@ -125,6 +143,15 @@ export default function OrderListDetailPage() {
         canUpdateStatus={canEdit}
         isUpdatingStatus={updateStateMutation.isPending}
         onUpdateStatus={setNextStatus}
+        onProcessInvoice={() => setInvoiceConfirmOpen(true)}
+        isProcessingInvoice={processInvoiceMutation.isPending}
+      />
+      <ProcessDoInvoiceDialog
+        open={invoiceConfirmOpen}
+        onOpenChange={setInvoiceConfirmOpen}
+        onConfirm={handleProcessInvoice}
+        isProcessing={processInvoiceMutation.isPending}
+        orderCode={effectiveData.code}
       />
       <OrderStatusConfirmDialog
         open={nextStatus !== null}

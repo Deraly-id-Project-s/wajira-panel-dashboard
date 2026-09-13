@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { Eye, FilePenLine, MoreVertical, Trash2 } from 'lucide-react';
+import { FileText, MoreVertical } from 'lucide-react';
 import type { OrderList, OrderListStatus } from '@/@types/order-list.types';
 import { Button } from '@/components/ui/button';
 import {
@@ -29,6 +29,8 @@ interface OrderListTableProps {
   onEdit: (item: OrderList) => void;
   onDelete: (item: OrderList) => void;
   onUpdateStatus?: (item: OrderList, newStatus: OrderListStatus) => void;
+  onProcessInvoice: (item: OrderList) => void;
+  processingInvoiceId?: number | null;
   canEdit: boolean;
   canDelete: boolean;
 }
@@ -40,6 +42,8 @@ export const OrderListTable = React.memo(function OrderListTable({
   onEdit,
   onDelete,
   onUpdateStatus,
+  onProcessInvoice,
+  processingInvoiceId,
   canEdit,
   canDelete,
 }: OrderListTableProps) {
@@ -248,12 +252,30 @@ export const OrderListTable = React.memo(function OrderListTable({
               >
                 Hapus
               </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem
+                onSelect={(event) => {
+                  event.preventDefault();
+                  onProcessInvoice(item);
+                }}
+                disabled={
+                  !canEdit ||
+                  item.status !== 'done' ||
+                  !item.canMarkDone ||
+                  item.isHasInvoice ||
+                  processingInvoiceId === item.id
+                }
+                className="cursor-pointer rounded-md px-3 py-2 text-sm text-orange-700 focus:bg-orange-50 focus:text-orange-800"
+              >
+                <FileText className="mr-2 h-4 w-4" />
+                {item.isHasInvoice ? 'Invoice Sudah Dibuat' : 'Proses DO Invoice'}
+              </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
         ),
       },
     ],
-    [onDetail, onEdit, onDelete, onUpdateStatus, canEdit, canDelete, slugStr]
+    [onDetail, onEdit, onDelete, onUpdateStatus, onProcessInvoice, processingInvoiceId, canEdit, canDelete, slugStr]
   );
 
   return (

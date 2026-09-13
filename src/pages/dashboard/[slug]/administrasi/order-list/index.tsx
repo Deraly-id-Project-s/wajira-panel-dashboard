@@ -7,8 +7,9 @@ import { OrderListDeleteDialog } from '@/components/features/order-list/OrderLis
 import { OrderListTable } from '@/components/features/order-list/OrderListTable';
 import { OrderListTablePrintDocument } from '@/components/features/order-list/OrderListTablePrintDocument';
 import { OrderStatusConfirmDialog } from '@/components/features/order-list/OrderStatusConfirmDialog';
+import { ProcessDoInvoiceDialog } from '@/components/features/order-list/ProcessDoInvoiceDialog';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
-import { useOrderLists, useDeleteOrderList, useUpdateOrderListState } from '@/hooks/useOrderList';
+import { useOrderLists, useDeleteOrderList, useProcessOrderListInvoice, useUpdateOrderListState } from '@/hooks/useOrderList';
 import { usePermissionGuard } from '@/hooks/usePermissionGuard';
 import { PageHeader } from '@/components/ui/page-header';
 import { Button } from '@/components/ui/button';
@@ -44,6 +45,7 @@ export default function OrderListPage() {
   const [selectedItem, setSelectedItem] = React.useState<OrderList | null>(null);
   const [statusConfirmOpen, setStatusConfirmOpen] = React.useState(false);
   const [statusUpdateData, setStatusUpdateData] = React.useState<{ item: OrderList; newStatus: OrderListStatus } | null>(null);
+  const [invoiceTarget, setInvoiceTarget] = React.useState<OrderList | null>(null);
 
   React.useEffect(() => {
     const timeout = window.setTimeout(() => {
@@ -75,6 +77,7 @@ export default function OrderListPage() {
   const listQuery = useOrderLists(listQueryParams);
   const deleteMutation = useDeleteOrderList();
   const updateMutation = useUpdateOrderListState();
+  const processInvoiceMutation = useProcessOrderListInvoice();
   const tableData = listQuery.data?.data ?? [];
 
   const handleDelete = React.useCallback(async () => {
@@ -146,6 +149,21 @@ export default function OrderListPage() {
     },
     [],
   );
+
+  const handleProcessInvoice = React.useCallback(async () => {
+    if (!invoiceTarget) return;
+    try {
+      const result = await processInvoiceMutation.mutateAsync(invoiceTarget.id);
+      toast.success('DO invoice dan billing berhasil dibuat');
+      setInvoiceTarget(null);
+      const invoiceId = result.invoice.uuid || result.invoice.id;
+      if (invoiceId) {
+        void router.push(`/dashboard/${slug}/administrasi/do-invoice/detail/${encodeURIComponent(String(invoiceId))}`);
+      }
+    } catch (error: any) {
+      toast.error(error.message || 'Gagal memproses DO invoice');
+    }
+  }, [invoiceTarget, processInvoiceMutation, router, slug]);
 
   const showTableSkeleton = !listQuery.data;
 
@@ -224,6 +242,8 @@ export default function OrderListPage() {
             onEdit={handleEdit}
             onDelete={handleDeleteClick}
             onUpdateStatus={handleUpdateStatus}
+            onProcessInvoice={setInvoiceTarget}
+            processingInvoiceId={processInvoiceMutation.isPending ? invoiceTarget?.id : null}
             canEdit={canEdit}
             canDelete={canDelete}
           />
@@ -245,6 +265,14 @@ export default function OrderListPage() {
         isUpdating={updateMutation.isPending}
         itemName={statusUpdateData?.item.code}
         newStatus={statusUpdateData?.newStatus}
+      />
+
+      <ProcessDoInvoiceDialog
+        open={invoiceTarget !== null}
+        onOpenChange={(open) => !open && setInvoiceTarget(null)}
+        onConfirm={handleProcessInvoice}
+        isProcessing={processInvoiceMutation.isPending}
+        orderCode={invoiceTarget?.code}
       />
 
       <OrderListTablePrintDocument

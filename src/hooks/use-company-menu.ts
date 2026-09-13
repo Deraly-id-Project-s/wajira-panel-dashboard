@@ -55,7 +55,7 @@ const FEATURE_MAP: Record<string, { path: string; label?: string; group?: string
   'do-expedition': { path: '/do-ekspedisi', label: 'DO Ekspedisi' },
   'witholding-tax': { path: '/administrasi/bukti-potong', label: 'Bukti Potong' },
   'order-list': { path: '/administrasi/order-list', label: 'Order List' },
-  'create-invoice': { path: '/administrasi/create-invoice', label: 'Create Invoice' },
+  'create-invoice': { path: '/administrasi/do-invoice', label: 'DO Invoice' },
   'data-kendaraan': { path: '/data-kendaraan', label: 'Data Kendaraan' },
   'stnk-bpkb': { path: '/stnk-bpkb', label: 'Input STNK/BPKB' },
   'tagihan-bbn': { path: '/tagihan-bbn', label: 'Tagihan BBN' },

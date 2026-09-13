@@ -19,6 +19,7 @@ import type {
   UpdateOrderListPayload,
   UpdateOrderListTarifPayload,
   UpdateOrderListStatePayload,
+  ProcessOrderListInvoiceResponse,
 } from '@/@types/order-list.types';
 import { apiClient } from '@/lib/api/client';
 import { buildLaravelPaginationQuery } from '@/lib/api/pagination';
@@ -286,6 +287,8 @@ const mapOrderList = (item: any): OrderList => {
     code: dataItem?.code ?? '-',
     customerId: Number(dataItem?.customer_id ?? dataItem?.customer?.id ?? 0),
     status: (dataItem?.status ?? 'draft') as OrderList['status'],
+    isHasInvoice: dataItem?.is_has_invoice === true || dataItem?.is_has_invoice === 1 || dataItem?.is_has_invoice === '1',
+    canMarkDone: dataItem?.can_mark_done === true || dataItem?.can_mark_done === 1 || dataItem?.can_mark_done === '1',
     vehicleType: normalizeVehicleType(dataItem?.vehicle_type ?? dataItem?.vehicleType ?? firstTarif?.vehicleType),
     billInvoice: toNumber(dataItem?.bill_invoice ?? dataItem?.invoice_bill),
     ppn: toNumber(dataItem?.ppn),
@@ -422,6 +425,21 @@ export const updateOrderListState = async (id: string | number, payload: UpdateO
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
   });
   return mapOrderList(ensureSuccess(response.data));
+};
+
+export const processOrderListInvoice = async (id: string | number): Promise<ProcessOrderListInvoiceResponse> => {
+  const response = await apiClient.put<LaravelApiResponse<any>>(`/wapi/do-order-list/${encodeURIComponent(String(id))}/process-invoice`);
+  const payload = ensureSuccess(response.data);
+
+  return {
+    doOrderList: mapOrderList(payload?.do_order_list),
+    invoice: {
+      id: Number(payload?.invoice?.id ?? 0),
+      uuid: payload?.invoice?.uuid,
+      code: payload?.invoice?.code ?? '-',
+      nominal: toNumber(payload?.invoice?.nominal),
+    },
+  };
 };
 
 export const deleteOrderList = async (id: string | number): Promise<void> => {
