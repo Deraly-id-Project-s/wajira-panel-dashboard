@@ -17,9 +17,9 @@ import type { PaginationParams } from '@/@types/pagination.types';
 import { apiClient } from '@/lib/api/client';
 import { ensureSuccess, type LaravelApiResponse, toPaginatedResult } from '@/lib/api/response';
 
-const basePath = '/wapi/do-invoice';
-const billingPath = '/wapi/do-invoice-billing';
-const billingHistoryPath = '/wapi/do-invoice-billing-history';
+const basePath = '/wapi/transaction/do-invoice';
+const billingPath = '/wapi/transaction/do-invoice-billing';
+const billingHistoryPath = '/wapi/transaction/do-invoice-billing-history';
 const paymentPath = '/wapi/finance/finance-invoice-billing-payment';
 
 const toNumber = (value: unknown) => {
