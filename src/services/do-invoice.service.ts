@@ -1,23 +1,25 @@
 import type {
   DoInvoice,
-  DoInvoiceCreatePayload,
-  DoInvoiceDeletePayload,
   DoInvoiceDriver,
   DoInvoiceExpedition,
   DoInvoiceListParams,
   DoInvoiceListResponse,
   DoInvoiceOrderList,
-  DoInvoiceProcessPayload,
-  DoInvoiceProcessResponse,
   DoInvoiceTarif,
   DoInvoiceVehicle,
   CreateFinanceInvoicePaymentPayload,
-} from '@/@types/create-invoice.types';
+  DoInvoiceBilling,
+  DoInvoiceBillingHistory,
+  DoInvoiceBillingHistoryPayload,
+  UpdateDoInvoiceBillingPayload,
+} from '@/@types/do-invoice.types';
 import type { PaginationParams } from '@/@types/pagination.types';
 import { apiClient } from '@/lib/api/client';
-import { ApiValidationError, ensureSuccess, type LaravelApiResponse, toPaginatedResult } from '@/lib/api/response';
+import { ensureSuccess, type LaravelApiResponse, toPaginatedResult } from '@/lib/api/response';
 
-const basePath = '/wapi/transaction/do-invoice';
+const basePath = '/wapi/do-invoice';
+const billingPath = '/wapi/do-invoice-billing';
+const billingHistoryPath = '/wapi/do-invoice-billing-history';
 const paymentPath = '/wapi/finance/finance-invoice-billing-payment';
 
 const toNumber = (value: unknown) => {
@@ -26,7 +28,7 @@ const toNumber = (value: unknown) => {
   return Number.isNaN(parsed) ? 0 : parsed;
 };
 
-const toBool = (value: unknown) => value === true || value === 1 || value === '1';
+const toBool = (value: unknown) => value === true || value === 1 || value === '1' || value === 'true';
 
 const normalizePagination = (payload: any) => {
   if (payload && Array.isArray(payload.data) && typeof payload.current_page !== 'undefined') {
@@ -82,6 +84,10 @@ const mapOrderList = (item: any): DoInvoiceOrderList | null => {
     loadingOut: item.loading_out ?? item.loadingOut ?? null,
     vehicleType: item.vehicle_type ?? item.vehicleType ?? null,
     billInvoice: toNumber(item.bill_invoice ?? item.billInvoice),
+    isHasInvoice: toBool(item.is_has_invoice),
+    canMarkDone: toBool(item.can_mark_done),
+    status: item.status,
+    customer: mapCustomer(item.customer),
   };
 };
 
@@ -107,6 +113,54 @@ const mapCustomer = (item: any) => {
     code: item.code,
     name: item.name ?? '-',
     pic: item.pic ?? item.pic_name ?? null,
+    address: item.address ?? null,
+    phone: item.phone ?? null,
+    npwp: item.npwp ?? null,
+  };
+};
+
+const mapBillingHistory = (item: any): DoInvoiceBillingHistory => ({
+  id: Number(item?.id ?? 0),
+  uuid: item?.uuid,
+  doInvoiceBillingId: Number(item?.do_invoice_billing_id ?? 0),
+  paymentAt: item?.payment_at ?? '',
+  paymentProof: item?.payment_proof ?? null,
+  note: item?.note ?? null,
+  cashPaymentAmount: toNumber(item?.cash_payment_amount),
+  bcaPaymentAmount: toNumber(item?.bca_payment_amount),
+  bcaPaymentUsdAmount: toNumber(item?.bca_payment_usd_amount),
+  nominal: toNumber(item?.nominal),
+  remainingPayment: item?.remaining_payment == null ? undefined : toNumber(item.remaining_payment),
+  cashes: Array.isArray(item?.cashes)
+    ? item.cashes.map((cash: any) => ({
+        id: Number(cash?.id ?? 0),
+        uuid: cash?.uuid,
+        code: cash?.code ?? '',
+        currencyType: cash?.currency_type ?? '',
+        cashName: cash?.cash_name ?? '-',
+      }))
+    : [],
+  createdAt: item?.created_at,
+  updatedAt: item?.updated_at,
+});
+
+const mapBilling = (item: any): DoInvoiceBilling | null => {
+  if (!item || typeof item !== 'object') return null;
+  const histories = item.do_invoice_billing_histories ?? item.histories ?? [];
+  return {
+    id: Number(item.id ?? 0),
+    uuid: item.uuid,
+    doInvoiceId: Number(item.do_invoice_id ?? 0),
+    grandTotal: toNumber(item.grand_total),
+    lastPaymentAt: item.last_payment_at ?? null,
+    isPaid: toBool(item.is_paid),
+    totalCashPayment: toNumber(item.total_cash_payment),
+    totalBcaPayment: toNumber(item.total_bca_cash_payment ?? item.total_bca_payment),
+    totalUsdPayment: toNumber(item.total_usd_payment),
+    totalPaid: toNumber(item.total_paid),
+    remainingPayment: toNumber(item.remaining_payment),
+    totalPaymentCount: toNumber(item.total_payment_count),
+    histories: Array.isArray(histories) ? histories.map(mapBillingHistory) : [],
   };
 };
 
@@ -189,6 +243,13 @@ const mapDoInvoice = (item: any): DoInvoice => {
   const firstExpedition = expeditions[0];
   const orderList = mapOrderList(findNested(item, 'order_list', 'orderList')) ?? firstExpedition?.orderList ?? null;
   const customer = mapCustomer(findNested(item, 'customer')) ?? firstExpedition?.customer ?? null;
+  const rawBilling = findNested(item, 'do_invoice_billing', 'doInvoiceBilling');
+  const billing = mapBilling(rawBilling);
+  const topLevelHistories = findNested(item, 'do_invoice_billing_histories', 'doInvoiceBillingHistories');
+  if (billing && billing.histories.length === 0 && Array.isArray(topLevelHistories)) {
+    billing.histories = topLevelHistories.map(mapBillingHistory);
+    billing.totalPaymentCount = billing.totalPaymentCount || billing.histories.length;
+  }
 
   return {
     id: Number(item?.id ?? 0),
@@ -202,6 +263,11 @@ const mapDoInvoice = (item: any): DoInvoice => {
     isAlreadyPrint: toBool(item?.is_already_print ?? item?.is_printed),
     other_fee: toNumber(item?.other_fee),
     additional_fee: toNumber(item?.additional_fee),
+    nominal: toNumber(item?.nominal),
+    paidNominal: toNumber(item?.paid_nominal),
+    billingRemainingNominal: toNumber(item?.billing_remaining_nominal ?? rawBilling?.remaining_payment),
+    isPaid: toBool(item?.is_paid ?? rawBilling?.is_paid),
+    billing,
     finance_billing_payment: item?.finance_billing_payment || null,
     createdAt: item?.created_at,
     updatedAt: item?.updated_at,
@@ -231,21 +297,6 @@ const appendFormData = (body: FormData, key: string, value: unknown, options?: {
   body.append(key, String(value));
 };
 
-export const createDoInvoice = async (payload: DoInvoiceCreatePayload): Promise<DoInvoice> => {
-  const body = new FormData();
-  appendFormData(body, 'customer_id', payload.customer_id);
-  appendFormData(body, 'date', payload.date);
-  appendFormData(body, 'subject', payload.subject);
-  appendFormData(body, 'letter_content', payload.letter_content);
-  appendFormData(body, 'description', payload.description ?? '', { allowEmptyString: true });
-
-  const response = await apiClient.post<LaravelApiResponse<any>>(basePath, body, {
-    headers: { 'Content-Type': 'multipart/form-data' },
-  });
-
-  return mapDoInvoice(ensureSuccess(response.data));
-};
-
 export const getDoInvoicesList = async (
   params: PaginationParams & DoInvoiceListParams,
 ): Promise<DoInvoiceListResponse> => {
@@ -257,7 +308,13 @@ export const getDoInvoicesList = async (
       per_page: params.perPage ?? 10,
       page: params.page ?? 1,
       date: params.date || undefined,
-      is_printed: params.is_printed || undefined,
+      is_already_print: params.is_already_print ?? (params.is_printed === '' ? undefined : params.is_printed),
+      is_paid: params.is_paid,
+      customer_id: params.customer_id,
+      company_id: params.company_id,
+      do_order_list_id: params.do_order_list_id,
+      start_date: params.start_date,
+      end_date: params.end_date,
     },
   });
 
@@ -272,79 +329,56 @@ export const getDoInvoicesList = async (
 };
 
 export const getDoInvoiceById = async (id: string | number): Promise<DoInvoice> => {
-  const response = await apiClient.get<LaravelApiResponse<any>>(`${basePath}/${id}`);
+  const response = await apiClient.get<LaravelApiResponse<any>>(`${basePath}/${encodeURIComponent(String(id))}`);
   return mapDoInvoice(ensureSuccess(response.data));
 };
 
-export const deleteDoInvoice = async (
-  id: string | number,
-  payload?: DoInvoiceDeletePayload,
-) => {
-  const body = new FormData();
-  appendFormData(body, 'do_code', payload?.do_code);
-
-  const response = await apiClient.request<LaravelApiResponse<any>>({
-    url: `${basePath}/${id}`,
-    method: 'DELETE',
-    data: body,
-    headers: { 'Content-Type': 'multipart/form-data' },
-  });
-
-  return ensureSuccess(response.data);
-};
-
-export const processInvoiceById = async (
-  id: string | number,
-  payload: DoInvoiceProcessPayload = {},
-): Promise<DoInvoiceProcessResponse> => {
-  const body = new FormData();
-  appendFormData(body, 'date', payload.date);
-  appendFormData(body, 'subject', payload.subject);
-  appendFormData(body, 'attachment', payload.attachment);
-  appendFormData(body, 'letter_content', payload.letter_content);
-  appendFormData(body, 'customer_name', payload.customer_name);
-  appendFormData(body, 'do_expedition_invoice_ids', payload.do_expedition_invoice_ids);
-
-  const response = await apiClient.post<LaravelApiResponse<any>>(`${basePath}/process-invoice/${id}`, body, {
-    headers: { 'Content-Type': 'multipart/form-data' },
-  });
-
-  return ensureSuccess(response.data);
-};
-
-export const processExpeditionById = async (
-  id: string | number,
-  payload: DoInvoiceProcessPayload = {},
-): Promise<DoInvoiceProcessResponse> => {
-  const body = new FormData();
-  appendFormData(body, 'date', payload.date);
-  appendFormData(body, 'subject', payload.subject);
-  appendFormData(body, 'attachment', payload.attachment);
-  appendFormData(body, 'letter_content', payload.letter_content);
-  appendFormData(body, 'customer_name', payload.customer_name);
-  appendFormData(body, 'do_expedition_invoice_ids', payload.do_expedition_invoice_ids);
-
-  const response = await apiClient.post<LaravelApiResponse<any>>(`${basePath}/process-expedition/${id}`, body, {
-    headers: { 'Content-Type': 'multipart/form-data' },
-  });
-
-  return ensureSuccess(response.data);
-};
-
 export const createFinanceInvoiceBillingPayment = async (payload: CreateFinanceInvoicePaymentPayload): Promise<any> => {
-  try {
-    const formData = new FormData();
-    formData.append('do_invoice_id', String(payload.do_invoice_id));
-    formData.append('cash_id', String(payload.cash_id));
-    formData.append('amount', String(payload.amount));
+  const formData = new FormData();
+  formData.append('do_invoice_id', String(payload.do_invoice_id));
+  formData.append('cash_id', String(payload.cash_id));
+  formData.append('amount', String(payload.amount));
+  const response = await apiClient.post<LaravelApiResponse<any>>(paymentPath, formData, {
+    headers: { 'Content-Type': 'multipart/form-data' },
+  });
+  return ensureSuccess(response.data);
+};
 
-    const response = await apiClient.post<LaravelApiResponse<any>>(paymentPath, formData, {
-      headers: { 'Content-Type': 'multipart/form-data' },
-    });
+const buildBillingHistoryBody = (payload: DoInvoiceBillingHistoryPayload, method?: 'PUT') => {
+  const body = new FormData();
+  if (method) body.append('_method', method);
+  appendFormData(body, 'do_invoice_billing_id', payload.do_invoice_billing_id);
+  appendFormData(body, 'cash_payment_amount', payload.cash_payment_amount ?? 0);
+  appendFormData(body, 'bca_payment_amount', payload.bca_payment_amount ?? 0);
+  appendFormData(body, 'bca_payment_usd_amount', payload.bca_payment_usd_amount ?? 0);
+  appendFormData(body, 'payment_at', payload.payment_at);
+  appendFormData(body, 'note', payload.note ?? '', { allowEmptyString: true });
+  appendFormData(body, 'payment_proof', payload.payment_proof);
+  return body;
+};
 
-    return ensureSuccess(response.data);
-  } catch (error) {
-    if (error instanceof ApiValidationError) throw error;
-    throw error;
-  }
+export const createDoInvoiceBillingHistory = async (payload: DoInvoiceBillingHistoryPayload) => {
+  const response = await apiClient.post<LaravelApiResponse<any>>(billingHistoryPath, buildBillingHistoryBody(payload), {
+    headers: { 'Content-Type': 'multipart/form-data' },
+  });
+  return mapBillingHistory(ensureSuccess(response.data));
+};
+
+export const updateDoInvoiceBillingHistory = async (id: string | number, payload: DoInvoiceBillingHistoryPayload) => {
+  const response = await apiClient.post<LaravelApiResponse<any>>(
+    `${billingHistoryPath}/${encodeURIComponent(String(id))}`,
+    buildBillingHistoryBody(payload, 'PUT'),
+    { headers: { 'Content-Type': 'multipart/form-data' } },
+  );
+  return mapBillingHistory(ensureSuccess(response.data));
+};
+
+export const deleteDoInvoiceBillingHistory = async (id: string | number) => {
+  const response = await apiClient.delete<LaravelApiResponse<any>>(`${billingHistoryPath}/${encodeURIComponent(String(id))}`);
+  return ensureSuccess(response.data);
+};
+
+export const updateDoInvoiceBilling = async (id: string | number, payload: UpdateDoInvoiceBillingPayload) => {
+  const response = await apiClient.put<LaravelApiResponse<any>>(`${billingPath}/${encodeURIComponent(String(id))}`, payload);
+  return mapBilling(ensureSuccess(response.data));
 };

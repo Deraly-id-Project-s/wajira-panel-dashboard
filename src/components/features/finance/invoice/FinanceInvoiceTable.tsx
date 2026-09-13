@@ -1,4 +1,4 @@
-import type { DoInvoice, DoInvoiceListResponse } from '@/@types/create-invoice.types';
+import type { DoInvoice, DoInvoiceListResponse } from '@/@types/do-invoice.types';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { formatCurrency } from '@/lib/utils/currency';

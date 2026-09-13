@@ -1,5 +1,5 @@
 import { getDoInvoicesList } from '@/services/do-invoice.service';
-import type { DoInvoiceListParams, DoInvoiceListResponse } from '@/@types/create-invoice.types';
+import type { DoInvoiceListParams, DoInvoiceListResponse } from '@/@types/do-invoice.types';
 import type { PaginationParams } from '@/@types/pagination.types';
 
 export interface InvoiceReportParams extends PaginationParams, DoInvoiceListParams {}

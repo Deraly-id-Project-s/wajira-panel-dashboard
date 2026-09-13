@@ -6,6 +6,9 @@ export interface DoInvoiceCustomer {
   code?: string;
   name: string;
   pic?: string | null;
+  address?: string | null;
+  phone?: string | null;
+  npwp?: string | null;
 }
 
 export interface DoInvoiceOrderList {
@@ -17,6 +20,51 @@ export interface DoInvoiceOrderList {
   loadingOut?: string | null;
   vehicleType?: string | null;
   billInvoice?: number | null;
+  isHasInvoice?: boolean;
+  canMarkDone?: boolean;
+  status?: string;
+  customer?: DoInvoiceCustomer | null;
+}
+
+export interface DoInvoiceCash {
+  id: number;
+  uuid?: string;
+  code: 'cash_idr' | 'bca_idr' | 'bca_usd' | string;
+  currencyType: 'idr' | 'usd' | string;
+  cashName: string;
+}
+
+export interface DoInvoiceBillingHistory {
+  id: number;
+  uuid?: string;
+  doInvoiceBillingId: number;
+  paymentAt: string;
+  paymentProof?: string | null;
+  note?: string | null;
+  cashPaymentAmount: number;
+  bcaPaymentAmount: number;
+  bcaPaymentUsdAmount: number;
+  nominal: number;
+  remainingPayment?: number;
+  cashes: DoInvoiceCash[];
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface DoInvoiceBilling {
+  id: number;
+  uuid?: string;
+  doInvoiceId: number;
+  grandTotal: number;
+  lastPaymentAt?: string | null;
+  isPaid: boolean;
+  totalCashPayment: number;
+  totalBcaPayment: number;
+  totalUsdPayment: number;
+  totalPaid: number;
+  remainingPayment: number;
+  totalPaymentCount: number;
+  histories: DoInvoiceBillingHistory[];
 }
 
 export interface DoInvoiceVehicle {
@@ -87,6 +135,11 @@ export interface DoInvoice {
   isAlreadyPrint: boolean;
   other_fee?: number | null;
   additional_fee?: number | null;
+  nominal: number;
+  paidNominal: number;
+  billingRemainingNominal: number;
+  isPaid: boolean;
+  billing?: DoInvoiceBilling | null;
   finance_billing_payment?: FinanceBillingPayment | null;
   createdAt?: string;
   updatedAt?: string;
@@ -104,105 +157,28 @@ export interface DoInvoiceListParams {
   order_by?: string;
   date?: string;
   is_printed?: '' | '0' | '1';
+  is_paid?: boolean;
+  is_already_print?: boolean;
+  customer_id?: number;
+  company_id?: string | number;
+  do_order_list_id?: number;
+  start_date?: string;
+  end_date?: string;
 }
 
-export interface DoInvoiceCreatePayload {
-  customer_id: string | number;
-  date: string;
-  subject: string;
-  letter_content: string;
-  description?: string;
+export interface DoInvoiceBillingHistoryPayload {
+  do_invoice_billing_id: number;
+  cash_payment_amount?: number;
+  bca_payment_amount?: number;
+  bca_payment_usd_amount?: number;
+  payment_at?: string;
+  note?: string;
+  payment_proof?: File | null;
 }
 
-export interface DoInvoiceDeletePayload {
-  do_code: string;
-}
-
-export interface DoInvoiceProcessPayload {
-  date?: string;
-  subject?: string;
-  attachment?: File | string | null;
-  letter_content?: string;
-  do_expedition_invoice_ids?: Array<number | string>;
-  customer_name?: string;
-}
-
-export interface DoInvoiceProcessResponse {
-  id?: number | string;
-  uuid?: string;
-  code?: string;
-  [key: string]: unknown;
-}
-
-export interface DoInvoiceTableRow {
-  id: number;
-  code: string;
-  orderCode: string;
-  customerName: string;
-  date: string;
-  isPrinted: boolean;
-  statusLabel: string;
-  raw: DoInvoice;
-}
-
-export interface CreateInvoiceDetailRow {
-  invoiceId: number;
-  expeditionId: number;
-  orderListId?: number | null;
-  date: string;
-  noPolisi: string;
-  type: string;
-  driver: string;
-  loadingIn: string;
-  destination: string;
-  loadingOut: string;
-  noSuratDo: string;
-  description: string;
-  qty: number;
-  invoiceExpedition: number;
-  ppn: number;
-  totalAmount: number;
-  status: string;
-  isPrinted: boolean;
-  kodeOrder: string;
-}
-
-export interface CreateInvoiceProcessValues {
-  invoiceCode: string;
-  date: string;
-  subject: string;
-  attachmentLabel: string;
-  letterContent: string;
-  customerName: string;
-  description: string;
-  attachmentFile: File | null;
-  isUsd?: boolean;
-  rateUsd?: number;
-}
-
-export interface InvoiceProcessDraft {
-  primaryInvoiceId: number;
-  invoiceIds: number[];
-  selectedExpeditionIds?: number[];
-  invoiceCode: string;
-  date: string;
-  subject: string;
-  attachmentLabel: string;
-  letterContent: string;
-  customerName: string;
-  description: string;
-  savedAt: string;
-  isUsd?: boolean;
-  rateUsd?: number;
-}
-
-export interface CreateInvoicePrintPayload {
-  draft: InvoiceProcessDraft;
-  invoiceCode: string;
-  companyName: string;
-  customerName: string;
-  rows: CreateInvoiceDetailRow[];
-  statusLabel: string;
+export interface UpdateDoInvoiceBillingPayload {
+  is_paid: boolean;
+  last_payment_at?: string;
 }
 
 export interface CreateFinanceInvoicePaymentPayload {
