@@ -291,6 +291,102 @@ export default function DetailPage() {
 
 ---
 
+## Panduan Standarisasi Struktur Tabel & Kolom Aksi (BaseTable)
+
+Komponen `BaseTable` (`src/components/ui/base-table.tsx`) adalah standar tunggal untuk menyusun tabel data pada seluruh fitur aplikasi. Format definisi kolom dan terutama kolom **Aksi** harus mengikuti pola terstandarisasi untuk menjaga keseragaman visual dan interaksi pengguna.
+
+Referensi implementasi utama: `src/components/features/do-ekspedisi/DOEkspedisiTable.tsx`.
+
+### 1. Aturan Kolom & Perataan Data (Alignment)
+
+| Tipe Data | Alignment | Karakteristik / Styling |
+| --- | --- | --- |
+| **Nomor Urut (No)** | `'center'` | Lebar kolom tetap (`w-[60px]`), teks netral (`text-slate-400`). |
+| **Teks Umum / Nama / Kode** | `'left'` (default) | Teks utama tebal (`font-medium text-slate-900`), dapat dipotong jika terlalu panjang dengan `TextTruncate`. |
+| **Nominal Uang / Qty / Angka** | `'right'` | Angka tabular (`tabular-nums font-semibold`), format mata uang menggunakan `currenciesFormat('idr', ...)` atau `formatCurrency(...)`. |
+| **Tanggal & Waktu** | `'center'` | Susun tanggal dan jam vertikal rapi (`flex flex-col text-xs leading-tight`). |
+| **Badge Status** | `'center'` | Gunakan styling badge semantik terstandarisasi. |
+| **Kolom Aksi** | `'center'` | Wajib `sticky: 'right'`, menggunakan DropdownMenu dengan trigger icon `MoreVertical`. |
+
+---
+
+### 2. Standarisasi Kolom Aksi (`Aksi`)
+
+Setiap tabel dengan opsi aksi per baris wajib mengikuti spesifikasi berikut:
+
+1. **Properti Kolom**:
+   - `header: 'Aksi'`
+   - `alignment: 'center'`
+   - `sticky: 'right'` (agar kolom aksi tidak terpotong saat tabel discroll horizontal pada layar sempit).
+2. **Trigger Button**:
+   - Menggunakan komponen `DropdownMenu` + `DropdownMenuTrigger`.
+   - Button berbentuk bulat kecil: `variant="ghost" className="h-8 w-8 p-0 rounded-full text-slate-600 hover:bg-slate-100 hover:text-slate-900"`.
+   - Icon trigger: `<MoreVertical className="h-4 w-4" />`.
+3. **Dropdown Menu Content**:
+   - `align="end" className="min-w-[150px] rounded-md border-slate-200 p-1.5 shadow-lg"`
+4. **Item Menu (DropdownMenuItem)**:
+   - **Dilarang menggunakan icon di dalam menu aksi tabel** (standarisasi tampilan bersih, text-only).
+   - Tombol aksi standar (Edit, Detail, Print):
+     `className="rounded-md px-3 py-2 text-sm text-slate-900 focus:bg-slate-50 cursor-pointer disabled:cursor-not-allowed"`
+   - Tombol aksi destruktif (Hapus):
+     `className="rounded-md px-3 py-2 text-sm text-red-600 focus:bg-red-50 focus:text-red-600 cursor-pointer disabled:cursor-not-allowed"`
+   - Kondisi `disabled`:
+     Gunakan atribut `disabled={!canModify}` dan pastikan class memuat `disabled:cursor-not-allowed` sehingga menu item tidak dapat diklik dan kursor berubah menjadi not-allowed.
+
+---
+
+### 3. Contoh Implementasi Kolom Aksi Terstandarisasi
+
+```tsx
+{
+  header: 'Aksi',
+  alignment: 'center',
+  sticky: 'right',
+  cell: (item) => {
+    const canModify = item.status === 'draft';
+
+    return (
+      <div className="flex justify-center">
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button
+              variant="ghost"
+              className="h-8 w-8 p-0 rounded-full text-slate-600 hover:bg-slate-100 hover:text-slate-900"
+            >
+              <MoreVertical className="h-4 w-4" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="min-w-[150px] rounded-md border-slate-200 p-1.5 shadow-lg">
+            <DropdownMenuItem
+              disabled={!canModify}
+              onClick={() => onEdit(item)}
+              className="rounded-md px-3 py-2 text-sm text-slate-900 focus:bg-slate-50 cursor-pointer disabled:cursor-not-allowed"
+            >
+              Edit
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              onClick={() => onDetail(item)}
+              className="rounded-md px-3 py-2 text-sm text-slate-900 focus:bg-slate-50 cursor-pointer"
+            >
+              Detail
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              disabled={!canModify}
+              onClick={() => onDelete(item)}
+              className="rounded-md px-3 py-2 text-sm text-red-600 focus:bg-red-50 focus:text-red-600 cursor-pointer disabled:cursor-not-allowed"
+            >
+              Hapus
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </div>
+    );
+  },
+}
+```
+
+---
+
 ## Panduan Fitur Print Laporan & Dokumen
 
 Fitur cetak laporan di project ini menggunakan pola **In-Page Hidden Print Document + Template Print Dialog + Media Print Isolation** (referensi: `src/pages/dashboard/[slug]/laporan/laporan-jurnal/index.tsx`). Pola ini memastikan dokumen cetak diformat presisi standar kertas A4, mendukung pemilihan template dokumen dinamis, mem-preload aset gambar kop & tanda tangan sebelum dialog cetak browser terbuka, serta mengisolasi tampilan cetak agar bersih dari UI web.

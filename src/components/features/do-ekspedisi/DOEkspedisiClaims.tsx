@@ -120,6 +120,8 @@ export function DOEkspedisiClaims({ data, onRefresh }: DOEkspedisiClaimsProps) {
   const [documentationFile, setDocumentationFile] = React.useState<File | null>(null);
   const [documentationCaption, setDocumentationCaption] = React.useState('');
   const [previewUrl, setPreviewUrl] = React.useState<string | null>(null);
+  const [deleteClaimTarget, setDeleteClaimTarget] = React.useState<DoEkspedisiClaim | null>(null);
+  const [deleteDocTarget, setDeleteDocTarget] = React.useState<DoEkspedisiClaimDocumentation | null>(null);
 
   const selectedClaim = React.useMemo(
     () => (data.expeditionClaims ?? []).find((claim) => claim.id === selectedClaimId) ?? null,
@@ -151,11 +153,16 @@ export function DOEkspedisiClaims({ data, onRefresh }: DOEkspedisiClaimsProps) {
     void router.push(`/dashboard/${slug}/do-ekspedisi/detail/${data.id}/claim/create`);
   };
 
-  const handleDeleteClaim = async (item: DoEkspedisiClaim) => {
-    if (!window.confirm('Hapus claim ini?')) return;
+  const confirmDeleteClaim = async () => {
+    if (!deleteClaimTarget) return;
     try {
-      await claimMutations.remove.mutateAsync(item.id);
+      await claimMutations.remove.mutateAsync(deleteClaimTarget.id);
       toast.success('Claim berhasil dihapus');
+      if (selectedClaimId === deleteClaimTarget.id) {
+        setSelectedClaimId(null);
+        setDetailDialogOpen(false);
+      }
+      setDeleteClaimTarget(null);
       onRefresh?.();
     } catch (error) {
       toast.error(getApiErrorMessage(error));
@@ -193,11 +200,12 @@ export function DOEkspedisiClaims({ data, onRefresh }: DOEkspedisiClaimsProps) {
     }
   };
 
-  const handleDeleteDocumentation = async (item: DoEkspedisiClaimDocumentation) => {
-    if (!window.confirm('Hapus dokumentasi claim ini?')) return;
+  const confirmDeleteDocumentation = async () => {
+    if (!deleteDocTarget) return;
     try {
-      await documentationMutations.remove.mutateAsync(item.id);
+      await documentationMutations.remove.mutateAsync(deleteDocTarget.id);
       toast.success('Dokumentasi claim berhasil dihapus.');
+      setDeleteDocTarget(null);
       onRefresh?.();
     } catch (error) {
       toast.error(getApiErrorMessage(error));
@@ -234,25 +242,25 @@ export function DOEkspedisiClaims({ data, onRefresh }: DOEkspedisiClaimsProps) {
       sticky: 'right',
       alignment: 'center',
       cell: (item) => (
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="icon" aria-label={`Aksi claim ${item.subject}`}>
-              <MoreVertical className="h-4 w-4" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuItem onClick={() => openClaimDetail(item)}>
-              <Eye className="mr-2 h-4 w-4" />
-              Detail
-            </DropdownMenuItem>
-            {Number(item.appliedNominal) === 0 && (
-              <DropdownMenuItem className="text-red-600" onClick={() => void handleDeleteClaim(item)}>
-                <Trash2 className="mr-2 h-4 w-4" />
-                Hapus
+        <div className="flex justify-center">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" className="h-8 w-8 p-0 rounded-full text-slate-600 hover:bg-slate-100 hover:text-slate-900" aria-label={`Aksi claim ${item.subject}`}>
+                <MoreVertical className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="min-w-[140px] rounded-md border-slate-200 p-1.5 shadow-lg">
+              <DropdownMenuItem onClick={() => openClaimDetail(item)} className="rounded-md px-3 py-2 text-sm text-slate-900 focus:bg-slate-50 cursor-pointer">
+                Detail
               </DropdownMenuItem>
-            )}
-          </DropdownMenuContent>
-        </DropdownMenu>
+              {Number(item.appliedNominal) === 0 && (
+                <DropdownMenuItem className="rounded-md px-3 py-2 text-sm text-red-600 focus:bg-red-50 focus:text-red-600 cursor-pointer" onClick={() => setDeleteClaimTarget(item)}>
+                  Hapus
+                </DropdownMenuItem>
+              )}
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
       ),
     },
   ];
@@ -268,7 +276,8 @@ export function DOEkspedisiClaims({ data, onRefresh }: DOEkspedisiClaimsProps) {
         icon={<ShieldAlert />}
         onAdd={openCreateClaim}
         addDisabled={!canManageClaims}
-        description={!canManageClaims ? 'Claim baru hanya dapat dibuat setelah ekspedisi selesai.' : undefined}
+        description="Daftar klaim driver dan bukti dokumentasi pada ekspedisi ini."
+        helper={!canManageClaims ? 'Claim baru hanya dapat dibuat setelah ekspedisi selesai.' : undefined}
       >
         {data.status !== 'done' && (
           <Alert variant="warning" className="mb-2">
@@ -391,7 +400,7 @@ export function DOEkspedisiClaims({ data, onRefresh }: DOEkspedisiClaimsProps) {
                               size="icon"
                               className="h-8 w-8 shrink-0 text-rose-600 hover:bg-rose-50 hover:text-rose-700"
                               disabled={!canManageClaims || documentationMutations.remove.isPending}
-                              onClick={() => void handleDeleteDocumentation(documentation)}
+                              onClick={() => setDeleteDocTarget(documentation)}
                               aria-label={`Hapus ${caption}`}
                             >
                               <Trash2 className="h-4 w-4" />
@@ -450,6 +459,46 @@ export function DOEkspedisiClaims({ data, onRefresh }: DOEkspedisiClaimsProps) {
             <DialogClose asChild>
               <Button type="button" variant="outline">Tutup</Button>
             </DialogClose>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Confirmation Dialog Hapus Claim */}
+      <Dialog open={deleteClaimTarget !== null} onOpenChange={(open) => !open && setDeleteClaimTarget(null)}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Konfirmasi Hapus Claim</DialogTitle>
+            <DialogDescription>
+              Apakah Anda yakin ingin menghapus claim &quot;{deleteClaimTarget?.subject || 'ini'}&quot;? Tindakan ini tidak dapat dibatalkan.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="mt-4 sm:justify-end gap-2">
+            <Button type="button" variant="outline" onClick={() => setDeleteClaimTarget(null)} disabled={claimMutations.remove.isPending}>
+              Batal
+            </Button>
+            <Button type="button" variant="destructive" onClick={() => void confirmDeleteClaim()} disabled={claimMutations.remove.isPending}>
+              {claimMutations.remove.isPending ? 'Menghapus...' : 'Hapus'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Confirmation Dialog Hapus Dokumentasi */}
+      <Dialog open={deleteDocTarget !== null} onOpenChange={(open) => !open && setDeleteDocTarget(null)}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Konfirmasi Hapus Dokumentasi</DialogTitle>
+            <DialogDescription>
+              Apakah Anda yakin ingin menghapus dokumentasi claim ini? Tindakan ini tidak dapat dibatalkan.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="mt-4 sm:justify-end gap-2">
+            <Button type="button" variant="outline" onClick={() => setDeleteDocTarget(null)} disabled={documentationMutations.remove.isPending}>
+              Batal
+            </Button>
+            <Button type="button" variant="destructive" onClick={() => void confirmDeleteDocumentation()} disabled={documentationMutations.remove.isPending}>
+              {documentationMutations.remove.isPending ? 'Menghapus...' : 'Hapus'}
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

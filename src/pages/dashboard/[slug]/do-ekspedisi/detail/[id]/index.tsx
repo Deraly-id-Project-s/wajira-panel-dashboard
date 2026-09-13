@@ -267,16 +267,15 @@ export default function DetailDOEkspedisiPage() {
               </>
             ) : null}
 
-            {detailQuery.data?.status === 'draft' && (
-              <Button
-                variant="outline"
-                onClick={() => slug && id && void router.push(`/dashboard/${slug}/do-ekspedisi/form/${id}`)}
-                className="border-slate-200 text-slate-700 hover:bg-slate-50 font-medium"
-              >
-                <Pencil className="h-4 w-4" />
-                Edit
-              </Button>
-            )}
+            <Button
+              variant="outline"
+              disabled={detailQuery.data?.status !== 'draft'}
+              onClick={() => slug && id && void router.push(`/dashboard/${slug}/do-ekspedisi/form/${id}`)}
+              className="border-slate-200 text-slate-700 hover:bg-slate-50 font-medium"
+            >
+              <Pencil className="h-4 w-4" />
+              Edit
+            </Button>
             <Button
               onClick={templatePrint.openPrintDialog}
               variant="outline"

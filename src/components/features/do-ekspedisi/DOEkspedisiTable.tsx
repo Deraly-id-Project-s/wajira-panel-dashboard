@@ -217,7 +217,8 @@ export const DOEkspedisiTable = React.memo(function DOEkspedisiTable({
         alignment: 'center',
         sticky: 'right',
         cell: (item) => {
-          const canModify = ['draft', 'pending'].includes(String(item.status).toLowerCase());
+          const canEdit = String(item.status).toLowerCase() === 'draft';
+          const canDelete = String(item.status).toLowerCase() === 'draft';
 
           return (
             <div className="flex justify-center">
@@ -228,7 +229,7 @@ export const DOEkspedisiTable = React.memo(function DOEkspedisiTable({
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="min-w-[150px] rounded-md border-slate-200 p-1.5 shadow-lg">
-                <DropdownMenuItem disabled={!canModify} onClick={() => onEdit(item)} className="rounded-md px-3 py-2 text-sm text-slate-900 focus:bg-slate-50 cursor-pointer disabled:cursor-not-allowed">
+                <DropdownMenuItem disabled={!canEdit} onClick={() => canEdit && onEdit(item)} className="rounded-md px-3 py-2 text-sm text-slate-900 focus:bg-slate-50 cursor-pointer disabled:cursor-not-allowed">
                   Edit
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => onDetail(item)} className="rounded-md px-3 py-2 text-sm text-slate-900 focus:bg-slate-50 cursor-pointer">
@@ -237,7 +238,7 @@ export const DOEkspedisiTable = React.memo(function DOEkspedisiTable({
                 <DropdownMenuItem onClick={() => onPrint(item)} className="rounded-md px-3 py-2 text-sm text-slate-900 focus:bg-slate-50 cursor-pointer">
                   Print
                 </DropdownMenuItem>
-                <DropdownMenuItem disabled={!canModify} onClick={() => onDelete(item)} className="rounded-md px-3 py-2 text-sm text-red-600 focus:bg-red-50 focus:text-red-600 cursor-pointer disabled:cursor-not-allowed">
+                <DropdownMenuItem disabled={!canDelete} onClick={() => canDelete && onDelete(item)} className="rounded-md px-3 py-2 text-sm text-red-600 focus:bg-red-50 focus:text-red-600 cursor-pointer disabled:cursor-not-allowed">
                   Hapus
                 </DropdownMenuItem>
               </DropdownMenuContent>

@@ -87,7 +87,7 @@ export default function DOEkspedisiPage() {
   const handleEditClick = useCallback(
     (item: DoEkspedisi) => {
       if (!slug) return;
-      if (!['draft', 'pending'].includes(String(item.status).toLowerCase())) return;
+      if (String(item.status).toLowerCase() !== 'draft') return;
       router.push(`/dashboard/${slug}/do-ekspedisi/form/${item.id}`);
     },
     [slug, router],

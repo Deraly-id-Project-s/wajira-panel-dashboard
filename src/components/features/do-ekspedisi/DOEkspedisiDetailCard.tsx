@@ -154,6 +154,8 @@ function TimelineDateCard({
 }
 
 function ExpeditionDateOverview({ data, onEditTarget }: { data: DoEkspedisi; onEditTarget: () => void }) {
+  const canEdit = String(data.status).toLowerCase() === 'draft';
+
   return (
     <Section title="Informasi Waktu Ekspedisi" description="Target waktu dan proses pengiriman ekspedisi" icon={CalendarDays}>
       <div className="grid grid-cols-1 gap-4 border-t border-slate-100 pt-5 xl:grid-cols-2">
@@ -165,7 +167,7 @@ function ExpeditionDateOverview({ data, onEditTarget }: { data: DoEkspedisi; onE
           startDate={data.targetStartDate}
           endDate={data.targetEndDate}
           tone="admin"
-          onEdit={onEditTarget}
+          onEdit={canEdit ? onEditTarget : undefined}
         />
         <TimelineDateCard
           title="Waktu Aktual Diproses"

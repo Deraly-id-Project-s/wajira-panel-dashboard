@@ -133,6 +133,26 @@ export default function EditDOEkspedisiFormPage() {
     );
   }
 
+  if (detailQuery.data.status !== 'draft') {
+    return (
+      <DashboardLayout>
+        <div className="space-y-4 p-6">
+          <div className="rounded-md border border-amber-200 bg-amber-50 p-6 text-center">
+            <p className="mb-4 text-amber-800 font-medium">
+              DO Ekspedisi ini tidak dapat diedit karena sudah diserahkan ke driver atau statusnya bukan draft.
+            </p>
+            <Button
+              type="button"
+              onClick={() => router.push(`/dashboard/${slug}/do-ekspedisi`)}
+            >
+              Kembali ke Daftar DO Ekspedisi
+            </Button>
+          </div>
+        </div>
+      </DashboardLayout>
+    );
+  }
+
   return (
     <DashboardLayout>
       <div className="space-y-6">
