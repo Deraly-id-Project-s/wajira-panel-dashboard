@@ -181,7 +181,6 @@ export function KasBonForm({
               Batal
             </Button>
             <Button type="submit" disabled={isSubmitting} className="btn-primary!">
-              <Save className="mr-2 h-4 w-4" />
               {isSubmitting ? 'Menyimpan...' : 'Simpan'}
             </Button>
           </div>

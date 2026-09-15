@@ -154,11 +154,6 @@ export function KasBonPaymentDialog({
           <DialogTitle className="text-lg font-semibold text-slate-900">
             Pembayaran Kas Bon
           </DialogTitle>
-          <DialogDescription className="text-sm text-slate-500">
-            {code ? <span className="font-semibold text-slate-700">{code}</span> : null}
-            {code && subject ? ' — ' : null}
-            {subject ? <span>{subject}</span> : null}
-          </DialogDescription>
         </DialogHeader>
 
         <Form {...form}>
@@ -341,7 +336,6 @@ export function KasBonPaymentDialog({
                   />
                 ) : (
                   <>
-                    <CreditCard className="mr-2 h-4 w-4" />
                     {billing.isPaid ? 'Sudah Lunas' : 'Simpan Pembayaran'}
                   </>
                 )}

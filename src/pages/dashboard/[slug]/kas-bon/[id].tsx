@@ -71,7 +71,9 @@ export default function KasBonDetailPage() {
   const backToList = () => void router.push(`/dashboard/${slug}/kas-bon`);
 
   const handleMarkPaid = async () => {
-    if (!billingId) return;
+    const currentBilling = billingQuery.data ?? detailQuery.data?.billings[0];
+    const remaining = currentBilling?.remainingPayment ?? detailQuery.data?.remaining_payment ?? detailQuery.data?.remainingPayment ?? detailQuery.data?.billingRemainingNominal;
+    if (!billingId || detailQuery.data?.isApprove !== true || remaining !== 0 || currentBilling?.isPaid) return;
     try {
       await updateStatus.mutateAsync({
         id: billingId,
@@ -97,6 +99,12 @@ export default function KasBonDetailPage() {
   };
 
   const handlePaymentSubmit = async (payload: DriverCashAdvanceBillingHistoryPayload) => {
+    const currentBilling = billingQuery.data ?? detailQuery.data?.billings[0];
+    const remaining = currentBilling?.remainingPayment ?? detailQuery.data?.remaining_payment ?? detailQuery.data?.remainingPayment ?? detailQuery.data?.billingRemainingNominal;
+    if (detailQuery.data?.isApprove !== true || remaining === 0 || currentBilling?.isPaid) {
+      toast.error('Pembayaran hanya dapat ditambahkan pada kas bon yang disetujui dan masih memiliki sisa tagihan.');
+      return;
+    }
     try {
       await createPayment.mutateAsync(payload);
       toast.success('Pembayaran kas bon berhasil disimpan.');
@@ -126,6 +134,10 @@ export default function KasBonDetailPage() {
   const data = detailQuery.data;
   const billing = billingQuery.data ?? data.billings[0] ?? null;
   const isPaid = billing?.isPaid ?? false;
+  const remainingPayment = billing?.remainingPayment ?? data.remaining_payment ?? data.remainingPayment ?? data.billingRemainingNominal;
+  const isApproved = data.isApprove === true;
+  const paymentActionsUnavailable = !canEdit || !billingId || !isApproved || isPaid;
+  const canMarkPaid = canEdit && Boolean(billingId) && isApproved && !isPaid && remainingPayment === 0;
 
   return (
     <DashboardLayout>
@@ -143,11 +155,10 @@ export default function KasBonDetailPage() {
               </Badge>
               <Badge
                 variant="outline"
-                className={`rounded-full px-3 py-1 font-semibold ${
-                  Boolean(data.is_driver_request ?? data.isDriverRequest)
-                    ? 'border-blue-200 bg-blue-50 text-blue-700'
-                    : 'border-slate-200 bg-slate-100 text-slate-700'
-                }`}
+                className={`rounded-full px-3 py-1 font-semibold ${Boolean(data.is_driver_request ?? data.isDriverRequest)
+                  ? 'border-blue-200 bg-blue-50 text-blue-700'
+                  : 'border-slate-200 bg-slate-100 text-slate-700'
+                  }`}
               >
                 {Boolean(data.is_driver_request ?? data.isDriverRequest) ? 'Pengajuan Driver' : 'Input Kantor'}
               </Badge>
@@ -169,7 +180,7 @@ export default function KasBonDetailPage() {
               <Button
                 type="button"
                 className="min-w-[120px] bg-orange-600 font-medium text-white hover:bg-orange-700"
-                disabled={!canEdit || !billingId || isPaid}
+                disabled={paymentActionsUnavailable || remainingPayment === 0}
                 onClick={() => setPaymentOpen(true)}
               >
                 <CreditCard className="h-4 w-4" />
@@ -180,9 +191,8 @@ export default function KasBonDetailPage() {
                   <span className="inline-block">
                     <Button
                       type="button"
-                      variant="outline"
-                      className="min-w-[120px] border-emerald-300 font-medium text-emerald-700 hover:bg-emerald-50"
-                      disabled={!canEdit || !billingId || isPaid || updateStatus.isPending}
+                      variant="default"
+                      disabled={!canMarkPaid || updateStatus.isPending}
                       onClick={() => setConfirmOpen(true)}
                     >
                       <CheckCircle2 className="h-4 w-4" />
