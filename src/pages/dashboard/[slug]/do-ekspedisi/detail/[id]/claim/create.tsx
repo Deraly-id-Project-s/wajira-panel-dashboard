@@ -73,9 +73,9 @@ export default function CreateDOEkspedisiClaimPage() {
           breadcrumbs={[
             { label: 'DO Ekspedisi', onClick: backToList },
             { label: 'Detail DO', onClick: backToDetail },
-            { label: 'Tambah Driver Claim' },
+            { label: 'Tambah Klaim Ekspedisi' },
           ]}
-          title="Tambah Driver Claim"
+          title="Tambah Klaim Ekspedisi"
           subtitle={(
             <div className="flex flex-wrap items-center gap-2">
               <span>Kode DO:</span>

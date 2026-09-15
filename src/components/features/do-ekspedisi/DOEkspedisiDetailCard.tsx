@@ -2,7 +2,6 @@ import React from 'react';
 import { format } from 'date-fns';
 import { CalendarClock, CalendarDays, CheckCircle2, CircleUserRound, ClipboardList, Clock3, MapPin, Pencil, ReceiptText, Truck, WalletCards } from 'lucide-react';
 import type { DoEkspedisi, DoEkspedisiOrderTarifItem } from '@/@types/do-ekspedisi.types';
-import { Card, CardContent } from '@/components/ui/card';
 import BaseTable, { type ColumnDef } from '@/components/ui/base-table';
 import { useRouter } from 'next/router';
 import { ReferenceLink } from '@/components/ui/reference-link';
@@ -13,6 +12,7 @@ import { DateTimeRangeDialog } from '@/components/ui/date-time-range-dialog';
 import { useUpdateDoEkspedisi } from '@/hooks/useDoEkspedisi';
 import { toast } from 'sonner';
 import { getApiErrorMessage } from '@/utils/apiErrorHandler';
+import { CollapsibleBox } from '@/components/ui/collapsible-box';
 
 interface DOEkspedisiDetailCardProps {
   data: DoEkspedisi;
@@ -27,23 +27,6 @@ function DetailField({ label, value, icon: Icon }: { label: string; value: React
         <span>{value ?? '-'}</span>
       </div>
     </div>
-  );
-}
-
-function Section({ title, description, icon: Icon, children }: { title: string; description: string; icon: React.ElementType; children: React.ReactNode }) {
-  return (
-    <Card className="border-slate-200 shadow-sm">
-      <CardContent className="space-y-6 p-5 sm:p-6">
-        <div className="flex items-start gap-3">
-          <div className="rounded-md bg-orange-100 p-2 text-orange-700"><Icon className="h-5 w-5" /></div>
-          <div>
-            <h2 className="text-base font-semibold text-slate-950">{title}</h2>
-            <p className="mt-0.5 text-xs text-slate-500">{description}</p>
-          </div>
-        </div>
-        {children}
-      </CardContent>
-    </Card>
   );
 }
 
@@ -157,8 +140,8 @@ function ExpeditionDateOverview({ data, onEditTarget }: { data: DoEkspedisi; onE
   const canEdit = String(data.status).toLowerCase() === 'draft';
 
   return (
-    <Section title="Informasi Waktu Ekspedisi" description="Target waktu dan proses pengiriman ekspedisi" icon={CalendarDays}>
-      <div className="grid grid-cols-1 gap-4 border-t border-slate-100 pt-5 xl:grid-cols-2">
+    <CollapsibleBox title="Informasi Waktu Ekspedisi" description="Target waktu dan proses pengiriman ekspedisi" icon={CalendarDays} defaultExpanded>
+      <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
         <TimelineDateCard
           title="Target Jadwal Ekspedisi"
           description="Target waktu pengiriman yang ditentukan oleh admin sebelum DO diproses."
@@ -179,7 +162,7 @@ function ExpeditionDateOverview({ data, onEditTarget }: { data: DoEkspedisi; onE
           tone="process"
         />
       </div>
-    </Section>
+    </CollapsibleBox>
   );
 }
 
@@ -257,8 +240,8 @@ export function DOEkspedisiDetailCard({ data }: DOEkspedisiDetailCardProps) {
 
   return (
     <div className="space-y-6">
-      <Section title="Detail Driver" description="Informasi kendaraan dan penanggung jawab pengiriman" icon={Truck}>
-        <div className="grid grid-cols-1 gap-x-12 gap-y-6 border-t border-slate-100 pt-5 md:grid-cols-3">
+      <CollapsibleBox title="Detail Driver" description="Informasi kendaraan dan penanggung jawab pengiriman" icon={Truck} defaultExpanded>
+        <div className="grid grid-cols-1 gap-x-12 gap-y-6 md:grid-cols-3">
           <DetailField label="Kode DO" value={data.doCode || '-'} icon={ClipboardList} />
           <DetailField label="UJ Awal" value={formatCurrency(data.ujNominalBeforeClaim)} icon={WalletCards} />
           <DetailField label="Potongan Claim" value={<span className="text-rose-700">-{formatCurrency(data.claimDeductionNominal)}</span>} icon={ReceiptText} />
@@ -300,7 +283,7 @@ export function DOEkspedisiDetailCard({ data }: DOEkspedisiDetailCardProps) {
             </div>
           </div>
         </div>
-      </Section>
+      </CollapsibleBox>
 
       <ExpeditionDateOverview data={data} onEditTarget={() => setTargetDialogOpen(true)} />
 
@@ -317,8 +300,8 @@ export function DOEkspedisiDetailCard({ data }: DOEkspedisiDetailCardProps) {
         isSubmitting={updateMutation.isPending}
       />
 
-      <Section title="Informasi Customer" description="Identitas customer dan rincian rute pengiriman" icon={ClipboardList}>
-        <div className="grid grid-cols-1 gap-x-12 gap-y-6 border-t border-slate-100 pt-5 md:grid-cols-3">
+      <CollapsibleBox title="Informasi Customer" description="Identitas customer dan rincian rute pengiriman" icon={ClipboardList} defaultExpanded>
+        <div className="grid grid-cols-1 gap-x-12 gap-y-6 md:grid-cols-3">
           <DetailField
             label="Nama Customer"
             value={
@@ -401,7 +384,8 @@ export function DOEkspedisiDetailCard({ data }: DOEkspedisiDetailCardProps) {
             );
           })}
         </div>
-      </Section>
+      </CollapsibleBox>
     </div>
   );
 }
+

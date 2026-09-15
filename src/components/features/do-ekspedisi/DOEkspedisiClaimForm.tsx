@@ -1,5 +1,5 @@
 import React from 'react';
-import { Plus, Save, Trash2 } from 'lucide-react';
+import { Plus, PlusIcon, Save, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
 import type { DoEkspedisi, DoEkspedisiClaim, DoEkspedisiClaimDocumentation } from '@/@types/do-ekspedisi.types';
 import { Button } from '@/components/ui/button';
@@ -241,7 +241,7 @@ export function DOEkspedisiClaimForm({
             <p className="mt-1 text-sm text-slate-500">Setiap claim dapat memiliki banyak dokumentasi. Caption bersifat opsional.</p>
           </div>
           <Button type="button" variant="default" onClick={addDocumentationForm} disabled={isSubmitting}>
-            <Plus className="mr-2 h-4 w-4" />
+            <PlusIcon />
             Tambah Dokumentasi
           </Button>
         </div>
@@ -297,8 +297,7 @@ export function DOEkspedisiClaimForm({
           Total claim: <span className="font-semibold text-slate-900">{formatCurrency(claimNominal)}</span>
         </p>
         <Button type="submit" variant="default" disabled={isSubmitting}>
-          <Save className="mr-2 h-4 w-4" />
-          {isSubmitting ? 'Menyimpan...' : 'Simpan Claim'}
+          {isSubmitting ? 'Menyimpan...' : 'Simpan Klaim Ekspedisi'}
         </Button>
       </div>
     </form>

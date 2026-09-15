@@ -15,6 +15,20 @@ const formatCompactDate = (value: string | Date | null | undefined) => {
   }).format(date);
 };
 
+const formatCompactDateTime = (value: string | Date | null | undefined) => {
+  if (!value) return '-';
+  const date = value instanceof Date ? value : new Date(value);
+  if (Number.isNaN(date.getTime())) return '-';
+
+  return new Intl.DateTimeFormat('id-ID', {
+    day: '2-digit',
+    month: 'short',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  }).format(date);
+};
+
 const htmlToPlainText = (value?: string | null) =>
   (value ?? '')
     .replace(/<br\s*\/?>/gi, '\n')
@@ -80,17 +94,35 @@ export const DOEkspedisiPrintDocument: React.FC<DOEkspedisiPrintDocumentProps> =
   companyName,
   printedAt,
 }) => {
-  if (!template) return null;
+  const effectiveTemplate = template ?? {
+    id: 0,
+    documentTemplate: fallbackBackground ?? null,
+    tableColor: '#1f4163',
+    headerInformation: '',
+    footerInformation: '',
+    personSigner: 'Operasional',
+    personSignature: null,
+  };
 
-  const backgroundUrl = template.documentTemplate
-    ? getObjectStorageUrl(template.documentTemplate)
+  const backgroundUrl = effectiveTemplate.documentTemplate
+    ? getObjectStorageUrl(effectiveTemplate.documentTemplate)
     : fallbackBackground;
-  const signatureUrl = getObjectStorageUrl(template.personSignature);
-  const tableColor = /^#[0-9a-f]{6}$/i.test(template.tableColor) ? template.tableColor : '#1f4163';
-  const headerInformation = htmlToPlainText(template.headerInformation);
-  const footerInformation = htmlToPlainText(template.footerInformation);
+  const signatureUrl = effectiveTemplate.personSignature
+    ? getObjectStorageUrl(effectiveTemplate.personSignature)
+    : null;
+  const tableColor = /^#[0-9a-f]{6}$/i.test(effectiveTemplate.tableColor ?? '')
+    ? effectiveTemplate.tableColor
+    : '#1f4163';
+  const headerInformation = htmlToPlainText(effectiveTemplate.headerInformation);
+  const footerInformation = htmlToPlainText(effectiveTemplate.footerInformation);
+  const personSigner = effectiveTemplate.personSigner || 'Operasional';
 
   const order = data.orderList;
+  const customerName = order?.customerName || order?.customer?.name || data.items?.[0]?.customerName || data.items?.[0]?.customer?.name || '-';
+  const customerAddress = order?.customer?.address || data.items?.[0]?.customer?.address || '-';
+  const customerPhone = order?.customer?.phone || data.items?.[0]?.customer?.phone || '-';
+  const customerPic = order?.customer?.pic || data.items?.[0]?.customer?.pic || '-';
+
   const items =
     order?.tarifs && order.tarifs.length > 0
       ? order.tarifs.map((t, i) => ({
@@ -121,6 +153,9 @@ export const DOEkspedisiPrintDocument: React.FC<DOEkspedisiPrintDocumentProps> =
           },
         ];
 
+  const totalExpensesNominal = (data.expeditionExpenses ?? []).reduce((acc, exp) => acc + (exp.nominal || 0), 0);
+  const totalClaimsNominal = (data.expeditionClaims ?? []).reduce((acc, clm) => acc + (clm.claimNominal || 0), 0);
+
   const reconciliationRows: ReconciliationRow[] = [
     ...(data.expeditionExpenses ?? []).map((expense) => ({
       id: `expense-${expense.id}`,
@@ -132,16 +167,16 @@ export const DOEkspedisiPrintDocument: React.FC<DOEkspedisiPrintDocumentProps> =
     })),
     ...(data.expeditionClaims ?? []).map((claim) => ({
       id: `claim-${claim.id}`,
-      category: 'Claim Ekspedisi',
+      category: 'Claim Ekspedisi Driver',
       subject: claim.subject || '-',
-      description: claim.description || '-',
+      description: `${claim.description || '-'}${claim.appliedNominal ? ` (Dipotong: ${formatCurrency(claim.appliedNominal)} | Sisa: ${formatCurrency(claim.remainingNominal)})` : ''}`,
       nominal: claim.claimNominal,
       tone: 'information' as const,
     })),
     ...(data.driverExpeditionClaims ?? []).map((application) => ({
       id: `claim-application-${application.id}`,
       date: application.date,
-      category: 'Potongan Claim DO',
+      category: 'Potongan Claim UJ',
       subject: application.claim?.subject || application.claim?.sourceExpeditionCode || '-',
       description: `${application.type === 'transfer' ? 'Transfer' : 'Tunai'}${application.claim?.description ? ` · ${application.claim.description}` : ''}`,
       nominal: application.nominal,
@@ -150,7 +185,7 @@ export const DOEkspedisiPrintDocument: React.FC<DOEkspedisiPrintDocumentProps> =
     ...(data.driverCashAdvanceClaims ?? []).map((application) => ({
       id: `cash-advance-${application.id}`,
       date: application.date,
-      category: 'Potongan Kas Bon',
+      category: 'Potongan Kas Bon UJ',
       subject: application.cashAdvance?.subject || application.cashAdvance?.code || '-',
       description: `${application.type === 'transfer' ? 'Transfer' : 'Tunai'}${application.cashAdvance?.description ? ` · ${application.cashAdvance.description}` : ''}`,
       nominal: application.nominal,
@@ -166,6 +201,7 @@ export const DOEkspedisiPrintDocument: React.FC<DOEkspedisiPrintDocumentProps> =
       tone: 'information' as const,
     })),
   ];
+
   const reconciliationPages = reconciliationRows.length
     ? Array.from(
         { length: Math.ceil(reconciliationRows.length / RECONCILIATION_ROWS_PER_PAGE) },
@@ -200,12 +236,12 @@ export const DOEkspedisiPrintDocument: React.FC<DOEkspedisiPrintDocumentProps> =
                 </h1>
                 <p className="mt-0.5 text-[8.5pt] font-semibold uppercase text-slate-700">{companyName}</p>
               </div>
-              <dl className="grid min-w-[65mm] grid-cols-[24mm_1fr] gap-x-2 gap-y-0.5 text-[7pt] leading-tight">
+              <dl className="grid min-w-[68mm] grid-cols-[26mm_1fr] gap-x-2 gap-y-0.5 text-[7pt] leading-tight">
                 <dt className="text-slate-500">No. DO</dt>
                 <dd className="font-mono font-bold text-slate-900">: {data.doCode}</dd>
                 <dt className="text-slate-500">No. Order</dt>
                 <dd className="font-mono font-medium text-slate-900">: {data.orderCode}</dd>
-                <dt className="text-slate-500">Tgl Kirim</dt>
+                <dt className="text-slate-500">Tgl DO</dt>
                 <dd className="font-medium">: {formatCompactDate(data.date)}</dd>
                 <dt className="text-slate-500">Status DO</dt>
                 <dd className="font-semibold text-slate-900">: {getDoStatusLabel(data.status)}</dd>
@@ -220,34 +256,57 @@ export const DOEkspedisiPrintDocument: React.FC<DOEkspedisiPrintDocumentProps> =
             )}
           </header>
 
-          {/* Delivery & Driver Metadata */}
-          <div className="mt-3 grid grid-cols-2 gap-3">
-            <div className="rounded border border-slate-300 p-2 text-[7pt] leading-snug">
+          {/* Delivery, Customer & Time Metadata */}
+          <div className="mt-3 grid grid-cols-3 gap-2 text-[7pt] leading-snug">
+            <div className="rounded border border-slate-300 p-2">
               <p className="border-b border-slate-200 pb-1 font-bold uppercase text-slate-700">Armada & Pengemudi</p>
-              <dl className="mt-1.5 grid grid-cols-[24mm_1fr] gap-x-2 gap-y-1">
+              <dl className="mt-1.5 grid grid-cols-[20mm_1fr] gap-x-1.5 gap-y-0.5">
                 <dt className="text-slate-500">Nama Driver</dt>
                 <dd className="font-semibold text-slate-900">{data.driver?.name || '-'}</dd>
                 <dt className="text-slate-500">No. Telepon</dt>
                 <dd>{data.driver?.phone || '-'}</dd>
-                <dt className="text-slate-500">Kendaraan / Plat</dt>
+                <dt className="text-slate-500">Kendaraan</dt>
                 <dd className="font-medium">
                   {data.vehicle?.registrationNumber || '-'} {data.vehicle?.type ? `(${data.vehicle.type})` : ''}
                 </dd>
               </dl>
             </div>
 
-            <div className="rounded border border-slate-300 p-2 text-[7pt] leading-snug">
-              <p className="border-b border-slate-200 pb-1 font-bold uppercase text-slate-700">Customer & Catatan</p>
-              <dl className="mt-1.5 grid grid-cols-[24mm_1fr] gap-x-2 gap-y-1">
+            <div className="rounded border border-slate-300 p-2">
+              <p className="border-b border-slate-200 pb-1 font-bold uppercase text-slate-700">Informasi Customer</p>
+              <dl className="mt-1.5 grid grid-cols-[20mm_1fr] gap-x-1.5 gap-y-0.5">
                 <dt className="text-slate-500">Customer</dt>
-                <dd className="font-semibold text-slate-900">{order?.customerName || '-'}</dd>
+                <dd className="font-semibold text-slate-900">{customerName}</dd>
+                <dt className="text-slate-500">PIC</dt>
+                <dd className="font-medium text-slate-800">{customerPic}</dd>
+                <dt className="text-slate-500">Telepon</dt>
+                <dd>{customerPhone}</dd>
                 <dt className="text-slate-500">Alamat</dt>
-                <dd className="text-slate-800">{order?.customer?.address || '-'}</dd>
-                <dt className="text-slate-500">Atensi Driver</dt>
-                <dd className="text-slate-800">{data.driverNote || '-'}</dd>
+                <dd className="line-clamp-2 text-slate-800">{customerAddress}</dd>
+              </dl>
+            </div>
+
+            <div className="rounded border border-slate-300 p-2">
+              <p className="border-b border-slate-200 pb-1 font-bold uppercase text-slate-700">Waktu Ekspedisi</p>
+              <dl className="mt-1.5 grid grid-cols-[20mm_1fr] gap-x-1.5 gap-y-0.5">
+                <dt className="text-slate-500">Target Start</dt>
+                <dd>{formatCompactDateTime(data.targetStartDate)}</dd>
+                <dt className="text-slate-500">Target End</dt>
+                <dd>{formatCompactDateTime(data.targetEndDate)}</dd>
+                <dt className="text-slate-500">Waktu Mulai</dt>
+                <dd className="font-medium text-slate-900">{formatCompactDateTime(data.startDate)}</dd>
+                <dt className="text-slate-500">Waktu Selesai</dt>
+                <dd className="font-medium text-slate-900">{formatCompactDateTime(data.endDate)}</dd>
               </dl>
             </div>
           </div>
+
+          {data.driverNote && (
+            <div className="mt-2 rounded border border-amber-200 bg-amber-50/60 p-1.5 text-[6.5pt] leading-tight text-amber-900">
+              <span className="font-bold uppercase text-amber-800">Catatan / Atensi Driver: </span>
+              <span>{data.driverNote}</span>
+            </div>
+          )}
 
           {/* Items / Route Table */}
           <div className="mt-3">
@@ -319,7 +378,7 @@ export const DOEkspedisiPrintDocument: React.FC<DOEkspedisiPrintDocumentProps> =
                     <img src={signatureUrl} alt="" className="max-h-[14mm] max-w-[36mm] object-contain" />
                   )}
                 </div>
-                <p className="border-t border-slate-700 pt-1 font-semibold">{template.personSigner || 'Operasional'}</p>
+                <p className="border-t border-slate-700 pt-1 font-semibold">{personSigner}</p>
               </div>
             </div>
 
@@ -355,7 +414,7 @@ export const DOEkspedisiPrintDocument: React.FC<DOEkspedisiPrintDocumentProps> =
                 <div className="flex items-start justify-between gap-5">
                   <div>
                     <p className="text-[7pt] font-semibold uppercase tracking-[0.16em] text-slate-500">
-                      Rekonsiliasi Operasional Ekspedisi
+                      Rekonsiliasi Operasional & Potongan Uang Jalan
                     </p>
                     <h1 className="mt-0.5 text-[13pt] font-bold uppercase tracking-[0.08em]">
                       Biaya, Potongan, Claim & Catatan
@@ -380,20 +439,20 @@ export const DOEkspedisiPrintDocument: React.FC<DOEkspedisiPrintDocumentProps> =
 
               {pageIndex === 0 && (
                 <div className="mt-3 grid grid-cols-4 gap-2 text-[6.5pt]">
-                  <div className="rounded border border-slate-300 p-2">
-                    <p className="uppercase text-slate-500">UJ Awal</p>
+                  <div className="rounded border border-slate-300 bg-slate-50 p-2">
+                    <p className="uppercase text-slate-500">UJ Awal (Sebelum Claim)</p>
                     <p className="mt-1 font-bold text-slate-900">{formatCurrency(data.ujNominalBeforeClaim)}</p>
                   </div>
-                  <div className="rounded border border-rose-200 bg-rose-50/50 p-2">
-                    <p className="uppercase text-rose-600">Potongan Claim</p>
+                  <div className="rounded border border-rose-200 bg-rose-50/70 p-2">
+                    <p className="uppercase font-semibold text-rose-600">Potongan Claim Driver</p>
                     <p className="mt-1 font-bold text-rose-700">-{formatCurrency(data.claimDeductionNominal)}</p>
                   </div>
-                  <div className="rounded border border-rose-200 bg-rose-50/50 p-2">
-                    <p className="uppercase text-rose-600">Potongan Kas Bon</p>
+                  <div className="rounded border border-rose-200 bg-rose-50/70 p-2">
+                    <p className="uppercase font-semibold text-rose-600">Potongan Kas Bon Driver</p>
                     <p className="mt-1 font-bold text-rose-700">-{formatCurrency(data.cashAdvanceDeductionNominal)}</p>
                   </div>
-                  <div className="rounded border border-emerald-200 bg-emerald-50/50 p-2">
-                    <p className="uppercase text-emerald-700">UJ Diterima</p>
+                  <div className="rounded border border-emerald-300 bg-emerald-50 p-2">
+                    <p className="uppercase font-semibold text-emerald-700">UJ Net / Diterima Driver</p>
                     <p className="mt-1 font-bold text-emerald-800">{formatCurrency(data.ujNominal)}</p>
                   </div>
                 </div>
@@ -404,9 +463,9 @@ export const DOEkspedisiPrintDocument: React.FC<DOEkspedisiPrintDocumentProps> =
                   <colgroup>
                     <col className="w-[5%]" />
                     <col className="w-[14%]" />
-                    <col className="w-[19%]" />
                     <col className="w-[20%]" />
-                    <col className="w-[28%]" />
+                    <col className="w-[20%]" />
+                    <col className="w-[27%]" />
                     <col className="w-[14%]" />
                   </colgroup>
                   <thead>
@@ -414,7 +473,7 @@ export const DOEkspedisiPrintDocument: React.FC<DOEkspedisiPrintDocumentProps> =
                       <th className="border border-white/30 px-1 py-1.5 text-center uppercase">No</th>
                       <th className="border border-white/30 px-1 py-1.5 text-left uppercase">Tanggal</th>
                       <th className="border border-white/30 px-1 py-1.5 text-left uppercase">Kategori</th>
-                      <th className="border border-white/30 px-1 py-1.5 text-left uppercase">Subjek</th>
+                      <th className="border border-white/30 px-1 py-1.5 text-left uppercase">Subjek / Ref</th>
                       <th className="border border-white/30 px-1 py-1.5 text-left uppercase">Keterangan</th>
                       <th className="border border-white/30 px-1 py-1.5 text-right uppercase">Nominal</th>
                     </tr>
@@ -429,7 +488,7 @@ export const DOEkspedisiPrintDocument: React.FC<DOEkspedisiPrintDocumentProps> =
                         <td className="border border-slate-300 px-1 py-1.5 font-semibold">{row.category}</td>
                         <td className="border border-slate-300 px-1 py-1.5">{row.subject}</td>
                         <td className="border border-slate-300 px-1 py-1.5">{row.description}</td>
-                        <td className={`border border-slate-300 px-1 py-1.5 text-right font-semibold tabular-nums ${row.tone === 'deduction' ? 'text-rose-700' : ''}`}>
+                        <td className={`border border-slate-300 px-1 py-1.5 text-right font-semibold tabular-nums ${row.tone === 'deduction' ? 'text-rose-700' : row.tone === 'addition' ? 'text-blue-700' : ''}`}>
                           {row.nominal === null || row.nominal === undefined
                             ? '-'
                             : `${row.tone === 'deduction' ? '-' : ''}${formatCurrency(row.nominal)}`}
@@ -449,20 +508,26 @@ export const DOEkspedisiPrintDocument: React.FC<DOEkspedisiPrintDocumentProps> =
               {isLastPage && (
                 <div className="mt-3 grid grid-cols-2 gap-3 text-[6.5pt]">
                   <div className="rounded border border-slate-300 p-2">
-                    <p className="font-bold uppercase text-slate-700">Ringkasan Biaya DO</p>
+                    <p className="font-bold uppercase text-slate-700">Ringkasan Biaya DO & Uang Jalan</p>
                     <dl className="mt-1.5 grid grid-cols-[1fr_auto] gap-x-3 gap-y-1">
-                      <dt>Bruto</dt><dd className="text-right font-medium">{formatCurrency(data.bruttoValue)}</dd>
-                      <dt>PPN</dt><dd className="text-right">{formatCurrency(data.totalPpn)}</dd>
-                      <dt>PPH</dt><dd className="text-right">{formatCurrency(data.totalPph)}</dd>
-                      <dt>Service Fee</dt><dd className="text-right">{formatCurrency(data.totalServiceFee)}</dd>
-                      <dt>Tambahan Biaya</dt><dd className="text-right">{formatCurrency(data.totalAdditionalCost)}</dd>
-                      <dt>Biaya Lain</dt><dd className="text-right">{formatCurrency(data.totalOtherFee)}</dd>
-                      <dt>Biaya Driver</dt><dd className="text-right">{formatCurrency(data.totalDriverFee)}</dd>
+                      <dt>Nilai Bruto</dt><dd className="text-right font-medium">{formatCurrency(data.bruttoValue)}</dd>
+                      <dt>Total Tambahan Biaya</dt><dd className="text-right font-medium text-blue-700">+{formatCurrency(totalExpensesNominal || data.totalAdditionalCost)}</dd>
+                      <dt>Total Claim Ekspedisi Driver</dt><dd className="text-right font-medium text-amber-700">{formatCurrency(totalClaimsNominal)}</dd>
+                      <dt>Potongan Claim pada UJ</dt><dd className="text-right font-medium text-rose-700">-{formatCurrency(data.claimDeductionNominal)}</dd>
+                      <dt>Potongan Kas Bon pada UJ</dt><dd className="text-right font-medium text-rose-700">-{formatCurrency(data.cashAdvanceDeductionNominal)}</dd>
+                      <dt className="border-t border-slate-200 pt-0.5 font-bold text-slate-900">Uang Jalan (UJ) Net Diterima</dt>
+                      <dd className="border-t border-slate-200 pt-0.5 text-right font-bold text-emerald-800">{formatCurrency(data.ujNominal)}</dd>
                     </dl>
                   </div>
                   <div className="rounded border border-slate-300 p-2">
-                    <p className="font-bold uppercase text-slate-700">Atensi Driver</p>
-                    <p className="mt-1.5 whitespace-pre-line leading-snug text-slate-700">{data.driverNote || '-'}</p>
+                    <p className="font-bold uppercase text-slate-700">Ringkasan Waktu & Customer</p>
+                    <dl className="mt-1.5 grid grid-cols-[22mm_1fr] gap-x-2 gap-y-1">
+                      <dt className="text-slate-500">Customer</dt><dd className="font-semibold text-slate-900">{customerName}</dd>
+                      <dt className="text-slate-500">PIC / HP</dt><dd>{customerPic} {customerPhone !== '-' ? `(${customerPhone})` : ''}</dd>
+                      <dt className="text-slate-500">Target Jadwal</dt><dd>{formatCompactDateTime(data.targetStartDate)} s/d {formatCompactDateTime(data.targetEndDate)}</dd>
+                      <dt className="text-slate-500">Waktu Realisasi</dt><dd className="font-medium">{formatCompactDateTime(data.startDate)} s/d {formatCompactDateTime(data.endDate)}</dd>
+                      <dt className="text-slate-500">Atensi Driver</dt><dd className="whitespace-pre-line text-slate-700">{data.driverNote || '-'}</dd>
+                    </dl>
                   </div>
                 </div>
               )}
@@ -479,7 +544,7 @@ export const DOEkspedisiPrintDocument: React.FC<DOEkspedisiPrintDocumentProps> =
                           <img src={signatureUrl} alt="" className="max-h-[14mm] max-w-[36mm] object-contain" />
                         )}
                       </div>
-                      <p className="border-t border-slate-700 pt-1 font-semibold">{template.personSigner || 'Operasional'}</p>
+                      <p className="border-t border-slate-700 pt-1 font-semibold">{personSigner}</p>
                     </div>
                   </div>
                 )}
@@ -497,3 +562,4 @@ export const DOEkspedisiPrintDocument: React.FC<DOEkspedisiPrintDocumentProps> =
 };
 
 export default DOEkspedisiPrintDocument;
+
