@@ -38,8 +38,9 @@ export const AccountListPage = () => {
   const canCreate = hasPermission('master-data:create');
   const canEdit = hasPermission('master-data:edit');
   const canDelete = hasPermission('master-data:delete');
-  const { page, perPage, search, setPage, setPerPage, setSearch, updateQuery } = useQueryParamsTable({ defaultPerPage: 25 });
+  const { page, perPage, search, getParam, setPage, setPerPage, setSearch, updateQuery } = useQueryParamsTable({ defaultPerPage: 25 });
   const [searchInput, setSearchInput] = useState(search);
+  const accountGroupId = getParam('account_group_id', '');
 
   useEffect(() => {
     const timeout = window.setTimeout(() => {
@@ -50,10 +51,19 @@ export const AccountListPage = () => {
     return () => window.clearTimeout(timeout);
   }, [searchInput, search, setSearch]);
 
+  const { data: filterGroupsData, isLoading: isLoadingFilterGroups } = useAccountGroups({
+    page: 1,
+    perPage: 500,
+    company_id: companyId ?? undefined,
+    enabled: !isLoadingCompany && !!companyId,
+  });
+  const filterAccountGroups = useMemo(() => filterGroupsData?.data ?? [], [filterGroupsData?.data]);
+
   const { data, isLoading, isError, isFetching } = useAccounts({
     page,
     perPage,
     search,
+    account_group_id: accountGroupId || undefined,
     company_id: companyId ?? undefined,
     enabled: !isLoadingCompany && !!companyId,
   });
@@ -314,6 +324,31 @@ export const AccountListPage = () => {
           onSearchChange={setSearchInput}
           searchPlaceholder="Search here"
           searchAriaLabel="Cari akun"
+          filters={
+            <div className="w-full sm:w-[220px]">
+              <Select
+                value={accountGroupId || 'all'}
+                onValueChange={(val) => {
+                  updateQuery({
+                    account_group_id: val === 'all' ? undefined : val,
+                    page: 1,
+                  });
+                }}
+              >
+                <SelectTrigger className="h-9 w-full rounded-md border-slate-200 bg-white text-sm shadow-none cursor-pointer" aria-label="Filter Grup Akun">
+                  <SelectValue placeholder={isLoadingFilterGroups ? 'Memuat grup...' : 'Semua Grup Akun'} />
+                </SelectTrigger>
+                <SelectContent showSearch searchPlaceholder="Cari grup akun...">
+                  <SelectItem value="all">Semua Grup Akun</SelectItem>
+                  {filterAccountGroups.map((group) => (
+                    <SelectItem key={group.id} value={String(group.id)}>
+                      {group.code ? `${group.code} - ${group.name}` : group.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          }
           page={page}
           perPage={perPage}
           total={data?.meta.total}
@@ -322,13 +357,13 @@ export const AccountListPage = () => {
           onPerPageChange={setPerPage}
           actions={
             <>
-              {search && (
+              {(search || accountGroupId) && (
                 <Button
                   variant="outline"
                   size="sm"
                   onClick={() => {
                     setSearchInput('');
-                    updateQuery({ search: undefined, page: 1 });
+                    updateQuery({ search: undefined, account_group_id: undefined, page: 1 });
                   }}
                   className="rounded-md border-slate-200 text-slate-700 bg-white hover:bg-slate-50 cursor-pointer h-9 text-xs px-3"
                 >

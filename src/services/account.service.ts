@@ -60,20 +60,28 @@ type AccountItemResponse = LaravelApiResponse<AccountApiModel>;
 
 type DeleteResponse = LaravelApiResponse<null>;
 
-export const getAccounts = async (params: PaginationParams & { search?: string; company_id?: string | number; type?: string }): Promise<AccountListResponse> => {
+export const getAccounts = async (params: PaginationParams & { search?: string; company_id?: string | number; type?: string; account_group_id?: string | number }): Promise<AccountListResponse> => {
   const response = await apiClient.get<PaginatedAccountResponse>(basePath, {
     params: {
       ...buildLaravelPaginationQuery(params),
       company_id: params.company_id,
       type: params.type,
+      account_group_id: params.account_group_id && params.account_group_id !== 'all' ? params.account_group_id : undefined,
     },
   });
 
   const data = ensureSuccess(response.data);
-  const scopedData = params.company_id
+  let scopedData = params.company_id
     ? (data.data ?? []).filter((item) => String(item.account_group?.company_id) === String(params.company_id))
     : (data.data ?? []);
-  const isFrontendFallback = params.company_id ? (scopedData.length !== (data.data ?? []).length) : false;
+
+  if (params.account_group_id && params.account_group_id !== 'all') {
+    scopedData = scopedData.filter((item) => String(item.account_group_id) === String(params.account_group_id));
+  }
+
+  const isFrontendFallback = params.company_id || (params.account_group_id && params.account_group_id !== 'all')
+    ? (scopedData.length !== (data.data ?? []).length)
+    : false;
 
   return toPaginatedResult(
     {
