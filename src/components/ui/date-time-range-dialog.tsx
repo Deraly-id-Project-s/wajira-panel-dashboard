@@ -111,7 +111,7 @@ export function DateTimeRangeDialog({
               Batal
             </Button>
             <Button type="submit" disabled={isSubmitting} className="btn-primary!">
-              {isSubmitting ? <LoadingState variant="inline" text="Menyimpan..." iconClassName="text-white" /> : <><Save className="mr-2 h-4 w-4" />Simpan</>}
+              {isSubmitting ? <LoadingState variant="inline" text="Menyimpan..." iconClassName="text-white" /> : <>Simpan</>}
             </Button>
           </DialogFooter>
         </form>
