@@ -3,18 +3,99 @@ import type { PaginatedResult } from './pagination.types';
 export interface DoInvoiceCustomer {
   id: number;
   uuid?: string;
+  companyId?: number;
   code?: string;
+  type?: string;
   name: string;
+  username?: string | null;
+  isActive?: boolean;
+  lastLogin?: string | null;
   pic?: string | null;
+  picName?: string | null;
   address?: string | null;
+  mapCoordinate?: string | null;
   phone?: string | null;
   npwp?: string | null;
+  identityNumber?: string | null;
+  driveLicenseIdentityNumber?: string | null;
+  image?: string | null;
+  mapLink?: string | null;
+  socialMedia1Link?: string | null;
+  socialMedia2Link?: string | null;
+  socialMedia3Link?: string | null;
+  socialMedia4Link?: string | null;
+  websiteLink?: string | null;
+  joinDate?: string | null;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface DoInvoiceTarifPivot {
+  doOrderlistId?: number;
+  tarifId?: number;
+  uuid?: string;
+  deliveryDestination?: string;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface DoInvoiceTarif {
+  id: number;
+  uuid?: string;
+  description?: string | null;
+  qty?: number;
+  invoicePrice?: number;
+  ppnPrice?: number;
+  loadingIn?: string;
+  destination?: string;
+  loadingOut?: string;
+  distance?: number;
+  invCdd?: number | null;
+  invFuso?: number | null;
+  invTowing?: number | null;
+  ujTowing?: number | null;
+  ujCdd?: number | null;
+  ujFuso?: number | null;
+  isActive?: number | boolean;
+  createdAt?: string;
+  updatedAt?: string;
+  pivot?: DoInvoiceTarifPivot | null;
+}
+
+export interface DoInvoiceOrderListTarifItem {
+  id: number;
+  uuid?: string;
+  doOrderListTarifId?: number;
+  loadContent?: string;
+  qty?: number;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface DoInvoiceOrderListTarif {
+  id: number;
+  uuid?: string;
+  doOrderlistId?: number;
+  tarifId?: number;
+  vehicleType?: string;
+  deliveryDestination?: string;
+  vehicleId?: number;
+  driverId?: number;
+  createdAt?: string;
+  updatedAt?: string;
+  vehicle?: DoInvoiceVehicle | null;
+  driver?: DoInvoiceDriver | null;
+  tarif?: DoInvoiceTarif | null;
+  doOrderListTarifItems?: DoInvoiceOrderListTarifItem[];
 }
 
 export interface DoInvoiceOrderList {
   id: number;
   uuid?: string;
   code: string;
+  companyId?: number;
+  customerId?: number;
+  description?: string | null;
   doDeliveryDestination?: string | null;
   loadingIn?: string | null;
   loadingOut?: string | null;
@@ -23,7 +104,22 @@ export interface DoInvoiceOrderList {
   isHasInvoice?: boolean;
   canMarkDone?: boolean;
   status?: string;
+  ujDriver?: number | null;
+  ppn?: number | null;
+  pph?: number | null;
+  ujTowing?: number | null;
+  ujCdd?: number | null;
+  ujFuso?: number | null;
+  invTowing?: number | null;
+  invCdd?: number | null;
+  invFuso?: number | null;
+  driver?: string | DoInvoiceDriver | null;
   customer?: DoInvoiceCustomer | null;
+  tarifs?: DoInvoiceTarif[];
+  expeditions?: DoInvoiceExpedition[];
+  doOrderListTarifs?: DoInvoiceOrderListTarif[];
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface DoInvoiceCash {
@@ -46,7 +142,7 @@ export interface DoInvoiceBillingHistory {
   bcaPaymentUsdAmount: number;
   nominal: number;
   remainingPayment?: number;
-  cashes: DoInvoiceCash[];
+  cashes?: DoInvoiceCash[];
   createdAt?: string;
   updatedAt?: string;
 }
@@ -58,13 +154,16 @@ export interface DoInvoiceBilling {
   grandTotal: number;
   lastPaymentAt?: string | null;
   isPaid: boolean;
-  totalCashPayment: number;
-  totalBcaPayment: number;
-  totalUsdPayment: number;
-  totalPaid: number;
-  remainingPayment: number;
-  totalPaymentCount: number;
+  totalCashPayment?: number;
+  totalBcaPayment?: number;
+  totalUsdPayment?: number;
+  totalPaid?: number;
+  remainingPayment?: number;
+  totalPaymentCount?: number;
+  doInvoiceBillingHistories?: DoInvoiceBillingHistory[];
   histories: DoInvoiceBillingHistory[];
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface DoInvoiceVehicle {
@@ -78,22 +177,14 @@ export interface DoInvoiceDriver {
   id: number;
   uuid?: string;
   name: string;
-}
-
-export interface DoInvoiceTarif {
-  id: number;
-  description?: string | null;
-  qty?: number;
-  invoicePrice?: number;
-  ppnPrice?: number;
-  loadingIn?: string;
-  destination?: string;
-  loadingOut?: string;
+  companyList?: string;
+  company?: any;
 }
 
 export interface DoInvoiceExpedition {
   id: number;
   uuid?: string;
+  code?: string;
   date?: string;
   description?: string | null;
   qty?: number;
@@ -102,25 +193,38 @@ export interface DoInvoiceExpedition {
   noSuratDo?: string | null;
   doLetterCode?: string | null;
   doAssignmentCode?: string | null;
+  doOrderListTarifId?: number;
+  startDate?: string;
+  endDate?: string;
+  targetStartDate?: string;
+  targetEndDate?: string;
+  ujNominal?: number;
+  ujNominalBeforeClaim?: number;
+  claimDeductionNominal?: number;
+  cashAdvanceDeductionNominal?: number;
+  laravelThroughKey?: number;
   vehicle?: DoInvoiceVehicle | null;
   driver?: DoInvoiceDriver | null;
   orderList?: DoInvoiceOrderList | null;
+  orderListTarif?: DoInvoiceOrderListTarif | null;
   customer?: DoInvoiceCustomer | null;
   tarif?: DoInvoiceTarif | null;
   invoiceExpedition?: number;
   ppn?: number;
   totalAmount?: number;
   destination?: string;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface FinanceBillingPayment {
   id?: number;
   uuid?: string | null;
   amount?: number | null;
-  total_paid?: number | null;
-  cash_id?: number | null;
-  created_at?: string | null;
-  updated_at?: string | null;
+  totalPaid?: number | null;
+  cashId?: number | null;
+  createdAt?: string | null;
+  updatedAt?: string | null;
 }
 
 export interface DoInvoice {
@@ -128,19 +232,21 @@ export interface DoInvoice {
   uuid?: string;
   code: string;
   customerId?: number | null;
+  doOrderListId?: number | null;
   date: string;
-  subject: string;
-  letterContent: string;
-  description: string | null;
+  subject?: string | null;
+  letterContent?: string | null;
+  description?: string | null;
   isAlreadyPrint: boolean;
-  other_fee?: number | null;
-  additional_fee?: number | null;
+  otherFee?: number | null;
+  additionalFee?: number | null;
   nominal: number;
   paidNominal: number;
   billingRemainingNominal: number;
   isPaid: boolean;
+  doInvoiceBilling?: DoInvoiceBilling | null;
   billing?: DoInvoiceBilling | null;
-  finance_billing_payment?: FinanceBillingPayment | null;
+  financeBillingPayment?: FinanceBillingPayment | null;
   createdAt?: string;
   updatedAt?: string;
   customer?: DoInvoiceCustomer | null;

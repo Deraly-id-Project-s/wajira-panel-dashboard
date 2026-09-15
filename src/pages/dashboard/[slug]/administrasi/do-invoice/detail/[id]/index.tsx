@@ -1,31 +1,107 @@
 import * as React from 'react';
 import { useRouter } from 'next/router';
-import { CreditCard, FileText, Pencil, Printer, Trash2 } from 'lucide-react';
+import {
+  CreditCard,
+  ExternalLink,
+  FileText,
+  Image as ImageIcon,
+  MoreVertical,
+  Printer,
+  Receipt,
+} from 'lucide-react';
 import { toast } from 'sonner';
-import type { DoInvoiceBillingHistory, DoInvoiceBillingHistoryPayload } from '@/@types/do-invoice.types';
+import type {
+  DoInvoiceBillingHistory,
+  DoInvoiceBillingHistoryPayload,
+} from '@/@types/do-invoice.types';
 import { DoInvoicePaymentDialog } from '@/components/features/do-invoice/DoInvoicePaymentDialog';
 import { DoInvoicePrintDocument } from '@/components/features/do-invoice/DoInvoicePrintDocument';
-import { formatInvoiceDate, formatInvoiceMoney } from '@/components/features/do-invoice/do-invoice.utils';
+import {
+  formatInvoiceDate,
+  formatInvoiceMoney,
+} from '@/components/features/do-invoice/do-invoice.utils';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { useCompany } from '@/contexts/CompanyContext';
-import { useCreateDoInvoiceBillingHistory, useDeleteDoInvoiceBillingHistory, useDoInvoiceDetail, useUpdateDoInvoiceBilling, useUpdateDoInvoiceBillingHistory } from '@/hooks/useDoInvoice';
+import {
+  useCreateDoInvoiceBillingHistory,
+  useDeleteDoInvoiceBillingHistory,
+  useDoInvoiceDetail,
+  useUpdateDoInvoiceBilling,
+  useUpdateDoInvoiceBillingHistory,
+} from '@/hooks/useDoInvoice';
 import { usePermissionGuard } from '@/hooks/usePermissionGuard';
 import { useReportTemplatePrint } from '@/hooks/useReportTemplatePrint';
-import { getCompanyName, getLetterheadByCompanyId, resolveCompanyId } from '@/lib/print-letterhead';
-import { getObjectStorageUrl } from '@/components/ui/storage-image';
+import {
+  getCompanyName,
+  getLetterheadByCompanyId,
+  resolveCompanyId,
+} from '@/lib/print-letterhead';
 import { getApiErrorMessage } from '@/utils/apiErrorHandler';
 import { Badge } from '@/components/ui/badge';
+import BaseTable, { type ColumnDef } from '@/components/ui/base-table';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { ImagePreview } from '@/components/ui/image-preview';
 import { LoadingState } from '@/components/ui/loading-state';
 import { PageHeader } from '@/components/ui/page-header';
 import { ReportTemplatePrintDialog } from '@/components/ui/report-template-print-dialog';
+import { getObjectStorageUrl } from '@/components/ui/storage-image';
 
-function PaymentProofLink({ path }: { path?: string | null }) {
+interface PaymentProofLinkProps {
+  path?: string | null;
+  onPreviewImage?: (url: string) => void;
+}
+
+function PaymentProofLink({ path, onPreviewImage }: PaymentProofLinkProps) {
   const url = getObjectStorageUrl(path);
   if (!/^https?:\/\//i.test(url)) return null;
-  return <a href={url} target="_blank" rel="noopener noreferrer" className="mt-1 block text-xs font-medium text-orange-700 hover:underline">Lihat bukti bayar</a>;
+
+  const isPdf = /\.pdf($|\?)/i.test(url);
+
+  if (isPdf || !onPreviewImage) {
+    return (
+      <a
+        href={url}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="mt-1 inline-flex items-center gap-1 text-xs font-medium text-orange-700 hover:text-orange-800 hover:underline"
+      >
+        <ExternalLink className="h-3.5 w-3.5" />
+        <span>Lihat bukti bayar</span>
+      </a>
+    );
+  }
+
+  return (
+    <button
+      type="button"
+      onClick={() => onPreviewImage(url)}
+      className="mt-1 inline-flex items-center gap-1 text-xs font-medium text-orange-700 hover:text-orange-800 hover:underline cursor-pointer"
+    >
+      <ImageIcon className="h-3.5 w-3.5" />
+      <span>Lihat bukti bayar</span>
+    </button>
+  );
 }
 
 export default function DoInvoiceDetailPage() {
@@ -43,22 +119,45 @@ export default function DoInvoiceDetailPage() {
   const updatePayment = useUpdateDoInvoiceBillingHistory(id);
   const deletePayment = useDeleteDoInvoiceBillingHistory(id);
   const updateBilling = useUpdateDoInvoiceBilling(id);
+
   const [paymentOpen, setPaymentOpen] = React.useState(false);
   const [editingHistory, setEditingHistory] = React.useState<DoInvoiceBillingHistory | null>(null);
   const [deleteTarget, setDeleteTarget] = React.useState<DoInvoiceBillingHistory | null>(null);
   const [paidConfirmOpen, setPaidConfirmOpen] = React.useState(false);
+  const [previewImage, setPreviewImage] = React.useState<string | null>(null);
+
   const invoice = detailQuery.data;
   const billing = invoice?.billing;
 
   const backToList = () => void router.push(`/dashboard/${slug}/administrasi/do-invoice`);
+
+  const handleOpenCreatePayment = () => {
+    setEditingHistory(null);
+    setPaymentOpen(true);
+  };
+
+  const handleOpenEditPayment = (history: DoInvoiceBillingHistory) => {
+    setEditingHistory(history);
+    setPaymentOpen(true);
+  };
+
   const submitPayment = async (payload: DoInvoiceBillingHistoryPayload) => {
     try {
-      if (editingHistory) await updatePayment.mutateAsync({ id: editingHistory.id, payload });
-      else await createPayment.mutateAsync(payload);
-      toast.success(editingHistory ? 'Pembayaran berhasil diperbarui' : 'Pembayaran berhasil ditambahkan');
+      if (editingHistory) {
+        await updatePayment.mutateAsync({ id: editingHistory.id, payload });
+      } else {
+        await createPayment.mutateAsync(payload);
+      }
+      toast.success(
+        editingHistory
+          ? 'Pembayaran berhasil diperbarui'
+          : 'Pembayaran berhasil ditambahkan',
+      );
       setPaymentOpen(false);
       setEditingHistory(null);
-    } catch (error) { toast.error(getApiErrorMessage(error)); }
+    } catch (error) {
+      toast.error(getApiErrorMessage(error));
+    }
   };
 
   const confirmDelete = async () => {
@@ -67,7 +166,9 @@ export default function DoInvoiceDetailPage() {
       await deletePayment.mutateAsync(deleteTarget.id);
       toast.success('Riwayat pembayaran berhasil dihapus');
       setDeleteTarget(null);
-    } catch (error) { toast.error(getApiErrorMessage(error)); }
+    } catch (error) {
+      toast.error(getApiErrorMessage(error));
+    }
   };
 
   const confirmPaidStatus = async () => {
@@ -84,37 +185,438 @@ export default function DoInvoiceDetailPage() {
       });
       toast.success(`Billing ditandai ${billing.isPaid ? 'belum lunas' : 'lunas'}`);
       setPaidConfirmOpen(false);
-    } catch (error) { toast.error(getApiErrorMessage(error)); }
+    } catch (error) {
+      toast.error(getApiErrorMessage(error));
+    }
   };
 
-  if (!router.isReady || detailQuery.isLoading) return <DashboardLayout><LoadingState variant="page" /></DashboardLayout>;
-  if (!invoice) return <DashboardLayout><div className="py-20 text-center text-sm text-slate-500">Data DO invoice tidak ditemukan.</div></DashboardLayout>;
+  const paymentColumns = React.useMemo<ColumnDef<DoInvoiceBillingHistory>[]>(
+    () => [
+      {
+        header: 'Tanggal',
+        accessorKey: 'paymentAt',
+        sortable: true,
+        cell: (item) => (
+          <span className="font-medium text-slate-900">
+            {formatInvoiceDate(item.paymentAt)}
+          </span>
+        ),
+      },
+      {
+        header: 'Kas',
+        accessorKey: 'cashPaymentAmount',
+        alignment: 'right',
+        sortable: true,
+        cell: (item) => (
+          <span className="font-medium text-slate-900">
+            {formatInvoiceMoney(item.cashPaymentAmount)}
+          </span>
+        ),
+      },
+      {
+        header: 'BCA IDR',
+        accessorKey: 'bcaPaymentAmount',
+        alignment: 'right',
+        sortable: true,
+        cell: (item) => (
+          <span className="font-medium text-slate-900">
+            {formatInvoiceMoney(item.bcaPaymentAmount)}
+          </span>
+        ),
+      },
+      {
+        header: 'BCA USD',
+        accessorKey: 'bcaPaymentUsdAmount',
+        alignment: 'right',
+        sortable: true,
+        cell: (item) => (
+          <span className="font-medium text-slate-900">
+            {formatInvoiceMoney(item.bcaPaymentUsdAmount, 'USD')}
+          </span>
+        ),
+      },
+      {
+        header: 'Catatan / Bukti',
+        className: 'max-w-[260px] break-words',
+        cell: (item) => (
+          <div className="space-y-1">
+            <p className="text-slate-800">{item.note || '-'}</p>
+            <PaymentProofLink
+              path={item.paymentProof}
+              onPreviewImage={setPreviewImage}
+            />
+          </div>
+        ),
+      },
+      {
+        header: 'Aksi',
+        alignment: 'center',
+        sticky: 'right',
+        cell: (item) => (
+          <div className="flex justify-center">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="ghost"
+                  disabled={!canEdit && !item.paymentProof}
+                  className="h-8 w-8 p-0 rounded-full text-slate-600 hover:bg-slate-100 hover:text-slate-900"
+                >
+                  <MoreVertical className="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent
+                align="end"
+                className="min-w-[150px] rounded-md border-slate-200 p-1.5 shadow-lg"
+              >
+                {item.paymentProof && (
+                  <DropdownMenuItem
+                    onClick={() => {
+                      const url = getObjectStorageUrl(item.paymentProof);
+                      if (url) {
+                        if (/\.pdf($|\?)/i.test(url)) {
+                          window.open(url, '_blank');
+                        } else {
+                          setPreviewImage(url);
+                        }
+                      }
+                    }}
+                    className="rounded-md px-3 py-2 text-sm text-slate-900 focus:bg-slate-50 cursor-pointer"
+                  >
+                    Lihat Bukti
+                  </DropdownMenuItem>
+                )}
+                <DropdownMenuItem
+                  disabled={!canEdit}
+                  onClick={() => handleOpenEditPayment(item)}
+                  className="rounded-md px-3 py-2 text-sm text-slate-900 focus:bg-slate-50 cursor-pointer"
+                >
+                  Edit
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  disabled={!canEdit}
+                  onClick={() => setDeleteTarget(item)}
+                  className="rounded-md px-3 py-2 text-sm text-red-600 focus:bg-red-50 focus:text-red-600 cursor-pointer"
+                >
+                  Hapus
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+        ),
+      },
+    ],
+    [canEdit],
+  );
+
+  if (!router.isReady || detailQuery.isLoading) {
+    return (
+      <DashboardLayout>
+        <LoadingState variant="page" />
+      </DashboardLayout>
+    );
+  }
+
+  if (!invoice) {
+    return (
+      <DashboardLayout>
+        <div className="flex flex-col items-center justify-center py-20 text-center">
+          <p className="text-sm text-slate-500">Data DO invoice tidak ditemukan.</p>
+          <Button
+            type="button"
+            variant="outline"
+            className="mt-4"
+            onClick={backToList}
+          >
+            Kembali ke Daftar
+          </Button>
+        </div>
+      </DashboardLayout>
+    );
+  }
+
+  const summaryCards = [
+    {
+      label: 'Nominal Invoice',
+      value: formatInvoiceMoney(invoice.nominal || billing?.grandTotal),
+      valueClass: 'text-slate-950',
+    },
+    {
+      label: 'Total Dibayar',
+      value: formatInvoiceMoney(billing?.totalPaid ?? invoice.paidNominal),
+      valueClass: 'text-emerald-600',
+    },
+    {
+      label: 'Sisa Tagihan',
+      value: formatInvoiceMoney(billing?.remainingPayment ?? invoice.billingRemainingNominal),
+      valueClass: 'text-rose-600',
+    },
+    {
+      label: 'Jumlah Pembayaran',
+      value: `${billing?.totalPaymentCount ?? billing?.histories.length ?? 0} transaksi`,
+      valueClass: 'text-slate-950',
+    },
+  ];
+
+  const invoiceInfo = [
+    { label: 'Kode Order', value: invoice.orderList?.code },
+    { label: 'Customer', value: invoice.customer?.name || invoice.orderList?.customer?.name },
+    { label: 'Tanggal', value: formatInvoiceDate(invoice.date) },
+    { label: 'Perihal', value: invoice.subject },
+    { label: 'Biaya Lain', value: formatInvoiceMoney(invoice.otherFee) },
+    { label: 'Biaya Tambahan', value: formatInvoiceMoney(invoice.additionalFee) },
+    { label: 'Terakhir Bayar', value: formatInvoiceDate(billing?.lastPaymentAt) },
+    { label: 'Status Print', value: invoice.isAlreadyPrint ? 'Sudah diprint' : 'Belum diprint' },
+  ];
 
   return (
     <DashboardLayout>
       <div className="space-y-6 pb-8">
+        {/* Page Header */}
         <PageHeader
-          breadcrumbs={[{ label: 'DO Invoice', onClick: backToList }, { label: 'Detail Invoice' }]}
+          breadcrumbs={[
+            { label: 'DO Invoice', onClick: backToList },
+            { label: 'Detail Invoice' },
+          ]}
           title="Detail DO Invoice"
           onBack={backToList}
-          subtitle={<div className="flex flex-wrap items-center gap-2"><span>{invoice.code}</span><Badge variant="outline" className={invoice.isPaid ? 'border-emerald-200 bg-emerald-50 text-emerald-700' : 'border-amber-200 bg-amber-50 text-amber-700'}>{invoice.isPaid ? 'Lunas' : 'Belum Lunas'}</Badge></div>}
-          actions={<><Button type="button" variant="outline" onClick={templatePrint.openPrintDialog}><Printer className="mr-2 h-4 w-4" />Print</Button><Button type="button" disabled={!canEdit || !billing || billing.isPaid} onClick={() => { setEditingHistory(null); setPaymentOpen(true); }}><CreditCard className="mr-2 h-4 w-4" />Tambah Pembayaran</Button>{billing ? <Button type="button" variant="outline" disabled={!canEdit || updateBilling.isPending} onClick={() => setPaidConfirmOpen(true)}>{billing.isPaid ? 'Tandai Belum Lunas' : 'Tandai Lunas'}</Button> : null}</>}
+          subtitle={
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="font-medium text-slate-600">{invoice.code}</span>
+              <Badge
+                variant="outline"
+                className={
+                  invoice.isPaid
+                    ? 'border-emerald-200 bg-emerald-50 text-emerald-700'
+                    : 'border-amber-200 bg-amber-50 text-amber-700'
+                }
+              >
+                {invoice.isPaid ? 'Lunas' : 'Belum Lunas'}
+              </Badge>
+            </div>
+          }
+          actions={
+            <div className="flex flex-wrap items-center gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={templatePrint.openPrintDialog}
+                className="gap-2"
+              >
+                <Printer className="h-4 w-4" />
+                <span>Print</span>
+              </Button>
+              {billing && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  disabled={!canEdit || updateBilling.isPending}
+                  onClick={() => setPaidConfirmOpen(true)}
+                >
+                  {billing.isPaid ? 'Tandai Belum Lunas' : 'Tandai Lunas'}
+                </Button>
+              )}
+            </div>
+          }
         />
 
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          {[['Nominal Invoice', formatInvoiceMoney(invoice.nominal || billing?.grandTotal)], ['Total Dibayar', formatInvoiceMoney(billing?.totalPaid ?? invoice.paidNominal)], ['Sisa Tagihan', formatInvoiceMoney(billing?.remainingPayment ?? invoice.billingRemainingNominal)], ['Jumlah Pembayaran', `${billing?.totalPaymentCount ?? billing?.histories.length ?? 0} transaksi`]].map(([label, value]) => <Card key={label}><CardContent className="p-5"><p className="text-xs text-slate-500">{label}</p><p className="mt-1 font-bold text-slate-950">{value}</p></CardContent></Card>)}
-        </div>
+        {/* Metric Cards */}
+        <section aria-label="Statistik Tagihan dan Pembayaran">
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            {summaryCards.map((card) => (
+              <Card key={card.label} className="border-slate-200 shadow-sm">
+                <CardContent className="p-5">
+                  <p className="text-xs font-medium text-slate-500">{card.label}</p>
+                  <p className={`mt-1 text-lg font-bold sm:text-xl ${card.valueClass}`}>
+                    {card.value}
+                  </p>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </section>
 
-        <Card><CardContent className="space-y-5 p-5 sm:p-6"><div className="flex items-center gap-2"><FileText className="h-5 w-5 text-orange-600" /><h2 className="font-semibold">Informasi Invoice</h2></div><dl className="grid gap-5 border-t pt-5 sm:grid-cols-2 lg:grid-cols-4">{[['Kode Order', invoice.orderList?.code], ['Customer', invoice.customer?.name || invoice.orderList?.customer?.name], ['Tanggal', formatInvoiceDate(invoice.date)], ['Perihal', invoice.subject], ['Biaya Lain', formatInvoiceMoney(invoice.other_fee)], ['Biaya Tambahan', formatInvoiceMoney(invoice.additional_fee)], ['Terakhir Bayar', formatInvoiceDate(billing?.lastPaymentAt)], ['Status Print', invoice.isAlreadyPrint ? 'Sudah diprint' : 'Belum diprint']].map(([label, value]) => <div key={label}><dt className="text-xs uppercase tracking-wide text-slate-500">{label}</dt><dd className="mt-1 text-sm font-semibold text-slate-950">{value || '-'}</dd></div>)}</dl>{invoice.description ? <p className="whitespace-pre-line rounded-md bg-slate-50 p-4 text-sm text-slate-700">{invoice.description}</p> : null}</CardContent></Card>
+        {/* Informasi Invoice */}
+        <Card className="border-slate-200 shadow-sm">
+          <CardHeader className="flex flex-row items-center gap-3 border-b border-slate-100 p-5 sm:p-6">
+            <div className="rounded-md bg-orange-100 p-2 text-orange-700">
+              <FileText className="h-5 w-5" />
+            </div>
+            <div>
+              <CardTitle className="text-base font-semibold text-slate-950">
+                Informasi Invoice
+              </CardTitle>
+              <CardDescription className="text-xs text-slate-500">
+                Rincian informasi data DO invoice dan pemesanan
+              </CardDescription>
+            </div>
+          </CardHeader>
+          <CardContent className="space-y-6 p-5 sm:p-6">
+            <dl className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+              {invoiceInfo.map((info) => (
+                <div key={info.label} className="space-y-1">
+                  <dt className="text-xs font-medium uppercase tracking-wider text-slate-500">
+                    {info.label}
+                  </dt>
+                  <dd className="text-sm font-semibold text-slate-950">
+                    {info.value || '-'}
+                  </dd>
+                </div>
+              ))}
+            </dl>
 
-        <Card><CardContent className="p-0"><div className="flex items-center justify-between border-b px-5 py-4"><div><h2 className="font-semibold">Riwayat Pembayaran</h2><p className="text-xs text-slate-500">Kas, BCA IDR, dan BCA USD.</p></div></div><div className="overflow-x-auto"><table className="w-full text-sm"><thead className="bg-slate-50 text-xs uppercase text-slate-500"><tr><th className="px-5 py-3 text-left">Tanggal</th><th className="px-5 py-3 text-right">Kas</th><th className="px-5 py-3 text-right">BCA IDR</th><th className="px-5 py-3 text-right">BCA USD</th><th className="px-5 py-3 text-left">Catatan / Bukti</th><th className="px-5 py-3 text-center">Aksi</th></tr></thead><tbody>{billing?.histories.length ? billing.histories.map((history) => <tr key={history.id} className="border-t"><td className="px-5 py-3">{formatInvoiceDate(history.paymentAt)}</td><td className="px-5 py-3 text-right">{formatInvoiceMoney(history.cashPaymentAmount)}</td><td className="px-5 py-3 text-right">{formatInvoiceMoney(history.bcaPaymentAmount)}</td><td className="px-5 py-3 text-right">{formatInvoiceMoney(history.bcaPaymentUsdAmount, 'USD')}</td><td className="max-w-[260px] px-5 py-3 break-words"><span>{history.note || '-'}</span><PaymentProofLink path={history.paymentProof} /></td><td className="px-5 py-3"><div className="flex justify-center gap-1"><Button type="button" size="icon" variant="ghost" disabled={!canEdit} aria-label="Edit pembayaran" onClick={() => { setEditingHistory(history); setPaymentOpen(true); }}><Pencil className="h-4 w-4" /></Button><Button type="button" size="icon" variant="ghost" disabled={!canEdit} aria-label="Hapus pembayaran" className="text-red-600" onClick={() => setDeleteTarget(history)}><Trash2 className="h-4 w-4" /></Button></div></td></tr>) : <tr><td colSpan={6} className="px-5 py-10 text-center text-slate-500">Belum ada pembayaran.</td></tr>}</tbody></table></div></CardContent></Card>
+            {invoice.description && (
+              <div className="rounded-md border border-slate-200/60 bg-slate-50 p-4">
+                <p className="text-xs font-medium uppercase tracking-wider text-slate-500">
+                  Keterangan
+                </p>
+                <p className="mt-1 whitespace-pre-line text-sm text-slate-700">
+                  {invoice.description}
+                </p>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Riwayat Pembayaran */}
+        <Card className="border-slate-200 shadow-sm">
+          <CardHeader className="flex flex-col gap-4 border-b border-slate-100 p-5 sm:flex-row sm:items-center sm:justify-between sm:p-6">
+            <div className="flex items-center gap-3">
+              <div className="rounded-md bg-orange-100 p-2 text-orange-700">
+                <Receipt className="h-5 w-5" />
+              </div>
+              <div>
+                <CardTitle className="text-base font-semibold text-slate-950">
+                  Riwayat Pembayaran
+                </CardTitle>
+                <CardDescription className="text-xs text-slate-500">
+                  Kas, BCA IDR, dan BCA USD.
+                </CardDescription>
+              </div>
+            </div>
+            <Button
+              type="button"
+              size="sm"
+              disabled={!canEdit || !billing || billing.isPaid}
+              onClick={handleOpenCreatePayment}
+              className="gap-2 self-start sm:self-auto"
+            >
+              <CreditCard className="h-4 w-4" />
+              <span>Tambah Pembayaran</span>
+            </Button>
+          </CardHeader>
+          <CardContent className="p-5 sm:p-6">
+            <BaseTable<DoInvoiceBillingHistory>
+              data={billing?.histories ?? []}
+              columns={paymentColumns}
+              defaultSort={{ key: 'paymentAt', direction: 'desc' }}
+            />
+          </CardContent>
+        </Card>
       </div>
 
-      {billing ? <DoInvoicePaymentDialog open={paymentOpen} billingId={billing.id} history={editingHistory} isSubmitting={createPayment.isPending || updatePayment.isPending} onOpenChange={(open) => { setPaymentOpen(open); if (!open) setEditingHistory(null); }} onSubmit={submitPayment} /> : null}
-      <Dialog open={deleteTarget !== null} onOpenChange={(open) => !open && setDeleteTarget(null)}><DialogContent closeOnInteractOutside={!deletePayment.isPending}><DialogHeader><DialogTitle>Hapus riwayat pembayaran?</DialogTitle><DialogDescription>Data pembayaran ini akan dihapus dan saldo billing akan dihitung ulang.</DialogDescription></DialogHeader><DialogFooter><Button type="button" variant="outline" disabled={deletePayment.isPending} onClick={() => setDeleteTarget(null)}>Batal</Button><Button type="button" variant="destructive" loading={deletePayment.isPending} onClick={() => void confirmDelete()}>Hapus</Button></DialogFooter></DialogContent></Dialog>
-      <Dialog open={paidConfirmOpen} onOpenChange={setPaidConfirmOpen}><DialogContent closeOnInteractOutside={!updateBilling.isPending}><DialogHeader><DialogTitle>Ubah status billing?</DialogTitle><DialogDescription>Billing {invoice.code} akan ditandai {billing?.isPaid ? 'belum lunas' : 'lunas'} secara manual.</DialogDescription></DialogHeader><DialogFooter><Button type="button" variant="outline" disabled={updateBilling.isPending} onClick={() => setPaidConfirmOpen(false)}>Batal</Button><Button type="button" loading={updateBilling.isPending} onClick={() => void confirmPaidStatus()}>Konfirmasi</Button></DialogFooter></DialogContent></Dialog>
-      <DoInvoicePrintDocument invoice={invoice} template={templatePrint.selectedTemplate} fallbackBackground={fallbackBackground} companyName={getCompanyName(resolvedCompanyId)} printedAt={templatePrint.printedAt} />
-      <ReportTemplatePrintDialog open={templatePrint.isDialogOpen} onOpenChange={templatePrint.setIsDialogOpen} selectedTemplateId={templatePrint.selectedTemplateId} onTemplateChange={templatePrint.setSelectedTemplateId} onPrint={templatePrint.printWithSelectedTemplate} isPreparingPrint={templatePrint.isPreparingPrint} reportName="DO invoice" />
+      {/* Dialog Form Tambah / Edit Pembayaran */}
+      {billing && (
+        <DoInvoicePaymentDialog
+          open={paymentOpen}
+          billingId={billing.id}
+          history={editingHistory}
+          isSubmitting={createPayment.isPending || updatePayment.isPending}
+          onOpenChange={(open) => {
+            setPaymentOpen(open);
+            if (!open) setEditingHistory(null);
+          }}
+          onSubmit={submitPayment}
+        />
+      )}
+
+      {/* Dialog Konfirmasi Hapus Pembayaran */}
+      <Dialog
+        open={deleteTarget !== null}
+        onOpenChange={(open) => !open && setDeleteTarget(null)}
+      >
+        <DialogContent closeOnInteractOutside={!deletePayment.isPending}>
+          <DialogHeader>
+            <DialogTitle>Hapus riwayat pembayaran?</DialogTitle>
+            <DialogDescription>
+              Data pembayaran ini akan dihapus dan saldo billing akan dihitung ulang.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button
+              type="button"
+              variant="outline"
+              disabled={deletePayment.isPending}
+              onClick={() => setDeleteTarget(null)}
+            >
+              Batal
+            </Button>
+            <Button
+              type="button"
+              variant="destructive"
+              loading={deletePayment.isPending}
+              onClick={() => void confirmDelete()}
+            >
+              Hapus
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Dialog Konfirmasi Ubah Status Billing */}
+      <Dialog open={paidConfirmOpen} onOpenChange={setPaidConfirmOpen}>
+        <DialogContent closeOnInteractOutside={!updateBilling.isPending}>
+          <DialogHeader>
+            <DialogTitle>Ubah status billing?</DialogTitle>
+            <DialogDescription>
+              Billing {invoice.code} akan ditandai{' '}
+              {billing?.isPaid ? 'belum lunas' : 'lunas'} secara manual.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button
+              type="button"
+              variant="outline"
+              disabled={updateBilling.isPending}
+              onClick={() => setPaidConfirmOpen(false)}
+            >
+              Batal
+            </Button>
+            <Button
+              type="button"
+              loading={updateBilling.isPending}
+              onClick={() => void confirmPaidStatus()}
+            >
+              Konfirmasi
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Preview Gambar Bukti Pembayaran */}
+      <ImagePreview
+        open={Boolean(previewImage)}
+        onClose={() => setPreviewImage(null)}
+        src={previewImage}
+      />
+
+      <DoInvoicePrintDocument
+        invoice={invoice}
+        template={templatePrint.selectedTemplate}
+        fallbackBackground={fallbackBackground}
+        companyName={getCompanyName(resolvedCompanyId)}
+        printedAt={templatePrint.printedAt}
+      />
+
+      <ReportTemplatePrintDialog
+        open={templatePrint.isDialogOpen}
+        onOpenChange={templatePrint.setIsDialogOpen}
+        selectedTemplateId={templatePrint.selectedTemplateId}
+        onTemplateChange={templatePrint.setSelectedTemplateId}
+        onPrint={templatePrint.printWithSelectedTemplate}
+        isPreparingPrint={templatePrint.isPreparingPrint}
+        reportName="DO invoice"
+      />
     </DashboardLayout>
   );
 }
+

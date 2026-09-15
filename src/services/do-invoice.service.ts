@@ -12,6 +12,8 @@ import type {
   DoInvoiceBillingHistory,
   DoInvoiceBillingHistoryPayload,
   UpdateDoInvoiceBillingPayload,
+  DoInvoiceCustomer,
+  FinanceBillingPayment,
 } from '@/@types/do-invoice.types';
 import type { PaginationParams } from '@/@types/pagination.types';
 import { apiClient } from '@/lib/api/client';
@@ -70,6 +72,76 @@ const mapDriver = (item: any): DoInvoiceDriver | null => {
     id: Number(item.id ?? 0),
     uuid: item.uuid,
     name: item.name ?? item.driverName ?? '-',
+    companyList: item.company_list ?? item.companyList ?? '',
+    company: item.company ?? null,
+  };
+};
+
+const mapCustomer = (item: any): DoInvoiceCustomer | null => {
+  if (!item || typeof item !== 'object') return null;
+  return {
+    id: Number(item.id ?? 0),
+    uuid: item.uuid,
+    companyId: item.company_id != null ? Number(item.company_id) : undefined,
+    code: item.code,
+    type: item.type,
+    name: item.name ?? '-',
+    username: item.username ?? null,
+    isActive: toBool(item.is_active ?? item.isActive),
+    lastLogin: item.last_login ?? item.lastLogin ?? null,
+    pic: item.pic ?? item.pic_name ?? item.picName ?? null,
+    picName: item.pic_name ?? item.picName ?? item.pic ?? null,
+    address: item.address ?? null,
+    mapCoordinate: item.map_coordinate ?? item.mapCoordinate ?? null,
+    phone: item.phone ?? null,
+    npwp: item.npwp ?? null,
+    identityNumber: item.identity_number ?? item.identityNumber ?? null,
+    driveLicenseIdentityNumber: item.drive_license_identity_number ?? item.driveLicenseIdentityNumber ?? null,
+    image: item.image ?? null,
+    mapLink: item.map_link ?? item.mapLink ?? null,
+    socialMedia1Link: item.social_media_1_link ?? item.socialMedia1Link ?? null,
+    socialMedia2Link: item.social_media_2_link ?? item.socialMedia2Link ?? null,
+    socialMedia3Link: item.social_media_3_link ?? item.socialMedia3Link ?? null,
+    socialMedia4Link: item.social_media_4_link ?? item.socialMedia4Link ?? null,
+    websiteLink: item.website_link ?? item.websiteLink ?? null,
+    joinDate: item.join_date ?? item.joinDate ?? null,
+    createdAt: item.created_at ?? item.createdAt,
+    updatedAt: item.updated_at ?? item.updatedAt,
+  };
+};
+
+const mapTarif = (item: any): DoInvoiceTarif | null => {
+  if (!item || typeof item !== 'object') return null;
+  return {
+    id: Number(item.id ?? 0),
+    uuid: item.uuid,
+    description: item.description || item.name || null,
+    qty: toNumber(item.qty),
+    invoicePrice: toNumber(item.invoice || item.invoice_price || item.invoicePrice || item.price),
+    ppnPrice: toNumber(item.ppn || item.ppn_price || item.ppnPrice),
+    loadingIn: item.loading_in || item.loadingIn || '',
+    destination: item.destination || item.tujuan_kirim || item.delivery_destination || item.deliveryDestination || '',
+    loadingOut: item.loading_out || item.loadingOut || '',
+    distance: item.distance != null ? Number(item.distance) : undefined,
+    invCdd: item.inv_cdd != null ? toNumber(item.inv_cdd) : (item.invCdd != null ? toNumber(item.invCdd) : null),
+    invFuso: item.inv_fuso != null ? toNumber(item.inv_fuso) : (item.invFuso != null ? toNumber(item.invFuso) : null),
+    invTowing: item.inv_towing != null ? toNumber(item.inv_towing) : (item.invTowing != null ? toNumber(item.invTowing) : null),
+    ujTowing: item.uj_towing != null ? toNumber(item.uj_towing) : (item.ujTowing != null ? toNumber(item.ujTowing) : null),
+    ujCdd: item.uj_cdd != null ? toNumber(item.uj_cdd) : (item.ujCdd != null ? toNumber(item.ujCdd) : null),
+    ujFuso: item.uj_fuso != null ? toNumber(item.uj_fuso) : (item.ujFuso != null ? toNumber(item.ujFuso) : null),
+    isActive: item.is_active ?? item.isActive,
+    createdAt: item.created_at ?? item.createdAt,
+    updatedAt: item.updated_at ?? item.updatedAt,
+    pivot: item.pivot
+      ? {
+          doOrderlistId: item.pivot.do_orderlist_id ? Number(item.pivot.do_orderlist_id) : undefined,
+          tarifId: item.pivot.tarif_id ? Number(item.pivot.tarif_id) : undefined,
+          uuid: item.pivot.uuid,
+          deliveryDestination: item.pivot.delivery_destination || item.pivot.deliveryDestination,
+          createdAt: item.pivot.created_at || item.pivot.createdAt,
+          updatedAt: item.pivot.updated_at || item.pivot.updatedAt,
+        }
+      : null,
   };
 };
 
@@ -79,88 +151,81 @@ const mapOrderList = (item: any): DoInvoiceOrderList | null => {
     id: Number(item.id ?? 0),
     uuid: item.uuid,
     code: item.code ?? '-',
+    companyId: item.company_id != null ? Number(item.company_id) : undefined,
+    customerId: item.customer_id != null ? Number(item.customer_id) : undefined,
+    description: item.description ?? null,
     doDeliveryDestination: item.do_delivery_destination ?? item.delivery_destination ?? item.doDeliveryDestination ?? null,
     loadingIn: item.loading_in ?? item.loadingIn ?? null,
     loadingOut: item.loading_out ?? item.loadingOut ?? null,
     vehicleType: item.vehicle_type ?? item.vehicleType ?? null,
     billInvoice: toNumber(item.bill_invoice ?? item.billInvoice),
-    isHasInvoice: toBool(item.is_has_invoice),
-    canMarkDone: toBool(item.can_mark_done),
+    isHasInvoice: toBool(item.is_has_invoice ?? item.isHasInvoice),
+    canMarkDone: toBool(item.can_mark_done ?? item.canMarkDone),
     status: item.status,
+    ujDriver: item.uj_driver != null ? toNumber(item.uj_driver) : null,
+    ppn: item.ppn != null ? toNumber(item.ppn) : null,
+    pph: item.pph != null ? toNumber(item.pph) : null,
+    ujTowing: item.uj_towing != null ? toNumber(item.uj_towing) : null,
+    ujCdd: item.uj_cdd != null ? toNumber(item.uj_cdd) : null,
+    ujFuso: item.uj_fuso != null ? toNumber(item.uj_fuso) : null,
+    invTowing: item.inv_towing != null ? toNumber(item.inv_towing) : null,
+    invCdd: item.inv_cdd != null ? toNumber(item.inv_cdd) : null,
+    invFuso: item.inv_fuso != null ? toNumber(item.inv_fuso) : null,
+    driver: typeof item.driver === 'object' ? mapDriver(item.driver) : item.driver ?? null,
     customer: mapCustomer(item.customer),
-  };
-};
-
-const mapTarif = (item: any): DoInvoiceTarif | null => {
-  if (!item || typeof item !== 'object') return null;
-  return {
-    id: Number(item.id ?? 0),
-    description: item.description || item.name || null,
-    qty: toNumber(item.qty),
-    invoicePrice: toNumber(item.invoice || item.invoice_price || item.price),
-    ppnPrice: toNumber(item.ppn || item.ppn_price),
-    loadingIn: item.loading_in || item.loadingIn || '',
-    destination: item.destination || item.tujuan_kirim || item.delivery_destination || item.deliveryDestination || '',
-    loadingOut: item.loading_out || item.loadingOut || '',
-  };
-};
-
-const mapCustomer = (item: any) => {
-  if (!item || typeof item !== 'object') return null;
-  return {
-    id: Number(item.id ?? 0),
-    uuid: item.uuid,
-    code: item.code,
-    name: item.name ?? '-',
-    pic: item.pic ?? item.pic_name ?? null,
-    address: item.address ?? null,
-    phone: item.phone ?? null,
-    npwp: item.npwp ?? null,
+    tarifs: Array.isArray(item.tarifs) ? item.tarifs.map(mapTarif).filter((t: any): t is DoInvoiceTarif => t !== null) : [],
+    expeditions: Array.isArray(item.expeditions) ? item.expeditions.map(mapExpedition) : [],
+    createdAt: item.created_at ?? item.createdAt,
+    updatedAt: item.updated_at ?? item.updatedAt,
   };
 };
 
 const mapBillingHistory = (item: any): DoInvoiceBillingHistory => ({
   id: Number(item?.id ?? 0),
   uuid: item?.uuid,
-  doInvoiceBillingId: Number(item?.do_invoice_billing_id ?? 0),
-  paymentAt: item?.payment_at ?? '',
-  paymentProof: item?.payment_proof ?? null,
+  doInvoiceBillingId: Number(item?.do_invoice_billing_id ?? item?.doInvoiceBillingId ?? 0),
+  paymentAt: item?.payment_at ?? item?.paymentAt ?? '',
+  paymentProof: item?.payment_proof ?? item?.paymentProof ?? null,
   note: item?.note ?? null,
-  cashPaymentAmount: toNumber(item?.cash_payment_amount),
-  bcaPaymentAmount: toNumber(item?.bca_payment_amount),
-  bcaPaymentUsdAmount: toNumber(item?.bca_payment_usd_amount),
+  cashPaymentAmount: toNumber(item?.cash_payment_amount ?? item?.cashPaymentAmount),
+  bcaPaymentAmount: toNumber(item?.bca_payment_amount ?? item?.bcaPaymentAmount),
+  bcaPaymentUsdAmount: toNumber(item?.bca_payment_usd_amount ?? item?.bcaPaymentUsdAmount),
   nominal: toNumber(item?.nominal),
-  remainingPayment: item?.remaining_payment == null ? undefined : toNumber(item.remaining_payment),
+  remainingPayment: item?.remaining_payment == null && item?.remainingPayment == null ? undefined : toNumber(item?.remaining_payment ?? item?.remainingPayment),
   cashes: Array.isArray(item?.cashes)
     ? item.cashes.map((cash: any) => ({
         id: Number(cash?.id ?? 0),
         uuid: cash?.uuid,
         code: cash?.code ?? '',
-        currencyType: cash?.currency_type ?? '',
-        cashName: cash?.cash_name ?? '-',
+        currencyType: cash?.currency_type ?? cash?.currencyType ?? '',
+        cashName: cash?.cash_name ?? cash?.cashName ?? '-',
       }))
     : [],
-  createdAt: item?.created_at,
-  updatedAt: item?.updated_at,
+  createdAt: item?.created_at ?? item?.createdAt,
+  updatedAt: item?.updated_at ?? item?.updatedAt,
 });
 
 const mapBilling = (item: any): DoInvoiceBilling | null => {
   if (!item || typeof item !== 'object') return null;
-  const histories = item.do_invoice_billing_histories ?? item.histories ?? [];
+  const histories = item.do_invoice_billing_histories ?? item.doInvoiceBillingHistories ?? item.histories ?? [];
+  const mappedHistories = Array.isArray(histories) ? histories.map(mapBillingHistory) : [];
   return {
     id: Number(item.id ?? 0),
     uuid: item.uuid,
-    doInvoiceId: Number(item.do_invoice_id ?? 0),
-    grandTotal: toNumber(item.grand_total),
-    lastPaymentAt: item.last_payment_at ?? null,
-    isPaid: toBool(item.is_paid),
-    totalCashPayment: toNumber(item.total_cash_payment),
-    totalBcaPayment: toNumber(item.total_bca_cash_payment ?? item.total_bca_payment),
-    totalUsdPayment: toNumber(item.total_usd_payment),
-    totalPaid: toNumber(item.total_paid),
-    remainingPayment: toNumber(item.remaining_payment),
-    totalPaymentCount: toNumber(item.total_payment_count),
-    histories: Array.isArray(histories) ? histories.map(mapBillingHistory) : [],
+    doInvoiceId: Number(item.do_invoice_id ?? item.doInvoiceId ?? 0),
+    grandTotal: toNumber(item.grand_total ?? item.grandTotal),
+    lastPaymentAt: item.last_payment_at ?? item.lastPaymentAt ?? null,
+    isPaid: toBool(item.is_paid ?? item.isPaid),
+    totalCashPayment: toNumber(item.total_cash_payment ?? item.totalCashPayment),
+    totalBcaPayment: toNumber(item.total_bca_cash_payment ?? item.total_bca_payment ?? item.totalBcaPayment),
+    totalUsdPayment: toNumber(item.total_usd_payment ?? item.totalUsdPayment),
+    totalPaid: toNumber(item.total_paid ?? item.totalPaid),
+    remainingPayment: toNumber(item.remaining_payment ?? item.remainingPayment),
+    totalPaymentCount: toNumber(item.total_payment_count ?? item.totalPaymentCount),
+    doInvoiceBillingHistories: mappedHistories,
+    histories: mappedHistories,
+    createdAt: item.created_at ?? item.createdAt,
+    updatedAt: item.updated_at ?? item.updatedAt,
   };
 };
 
@@ -214,14 +279,25 @@ const mapExpedition = (item: any): DoInvoiceExpedition => {
   return {
     id: Number(item?.id ?? 0),
     uuid: item?.uuid,
-    date: item?.date ?? item?.created_at ?? '',
+    code: item?.code,
+    date: item?.date ?? item?.created_at ?? item?.createdAt ?? '',
     description: item?.description ?? tarif?.description ?? null,
     qty,
     status: item?.status ?? item?.expedition_status ?? '-',
-    isAlreadyPrint: toBool(findNested(item, 'is_already_print', 'is_printed', 'status_print')),
-    noSuratDo: item?.no_surat_do ?? item?.do_letter_code ?? item?.do_code ?? '-',
-    doLetterCode: item?.do_letter_code ?? item?.do_code ?? null,
-    doAssignmentCode: item?.do_assignment_code ?? item?.surat_jalan_code ?? null,
+    isAlreadyPrint: toBool(findNested(item, 'is_already_print', 'is_printed', 'status_print', 'isAlreadyPrint')),
+    noSuratDo: item?.no_surat_do ?? item?.do_letter_code ?? item?.do_code ?? item?.noSuratDo ?? '-',
+    doLetterCode: item?.do_letter_code ?? item?.do_code ?? item?.doLetterCode ?? null,
+    doAssignmentCode: item?.do_assignment_code ?? item?.surat_jalan_code ?? item?.doAssignmentCode ?? null,
+    doOrderListTarifId: item?.do_order_list_tarif_id != null ? Number(item.do_order_list_tarif_id) : undefined,
+    startDate: item?.start_date ?? item?.startDate,
+    endDate: item?.end_date ?? item?.endDate,
+    targetStartDate: item?.target_start_date ?? item?.targetStartDate,
+    targetEndDate: item?.target_end_date ?? item?.targetEndDate,
+    ujNominal: toNumber(item?.uj_nominal ?? item?.ujNominal),
+    ujNominalBeforeClaim: toNumber(item?.uj_nominal_before_claim ?? item?.ujNominalBeforeClaim),
+    claimDeductionNominal: toNumber(item?.claim_deduction_nominal ?? item?.claimDeductionNominal),
+    cashAdvanceDeductionNominal: toNumber(item?.cash_advance_deduction_nominal ?? item?.cashAdvanceDeductionNominal),
+    laravelThroughKey: item?.laravel_through_key != null ? Number(item.laravel_through_key) : undefined,
     vehicle,
     driver,
     orderList,
@@ -231,6 +307,21 @@ const mapExpedition = (item: any): DoInvoiceExpedition => {
     ppn,
     totalAmount: invoiceExpedition + ppn,
     destination,
+    createdAt: item?.created_at ?? item?.createdAt,
+    updatedAt: item?.updated_at ?? item?.updatedAt,
+  };
+};
+
+const mapFinanceBillingPayment = (item: any): FinanceBillingPayment | null => {
+  if (!item || typeof item !== 'object') return null;
+  return {
+    id: item.id != null ? Number(item.id) : undefined,
+    uuid: item.uuid ?? null,
+    amount: item.amount != null ? toNumber(item.amount) : null,
+    totalPaid: item.total_paid != null ? toNumber(item.total_paid) : (item.totalPaid != null ? toNumber(item.totalPaid) : null),
+    cashId: item.cash_id != null ? Number(item.cash_id) : (item.cashId != null ? Number(item.cashId) : null),
+    createdAt: item.created_at ?? item.createdAt ?? null,
+    updatedAt: item.updated_at ?? item.updatedAt ?? null,
   };
 };
 
@@ -248,6 +339,7 @@ const mapDoInvoice = (item: any): DoInvoice => {
   const topLevelHistories = findNested(item, 'do_invoice_billing_histories', 'doInvoiceBillingHistories');
   if (billing && billing.histories.length === 0 && Array.isArray(topLevelHistories)) {
     billing.histories = topLevelHistories.map(mapBillingHistory);
+    billing.doInvoiceBillingHistories = billing.histories;
     billing.totalPaymentCount = billing.totalPaymentCount || billing.histories.length;
   }
 
@@ -256,21 +348,23 @@ const mapDoInvoice = (item: any): DoInvoice => {
     uuid: item?.uuid,
     code: item?.code ?? `INV-${item?.id ?? '-'}`,
     customerId: item?.customer_id == null ? customer?.id ?? null : Number(item.customer_id),
-    date: item?.date ?? item?.created_at ?? '',
+    doOrderListId: item?.do_order_list_id == null ? orderList?.id ?? null : Number(item.do_order_list_id),
+    date: item?.date ?? item?.created_at ?? item?.createdAt ?? '',
     subject: item?.subject ?? 'Invoice Ekspedisi',
-    letterContent: item?.letter_content ?? '',
+    letterContent: item?.letter_content ?? item?.letterContent ?? '',
     description: item?.description ?? null,
-    isAlreadyPrint: toBool(item?.is_already_print ?? item?.is_printed),
-    other_fee: toNumber(item?.other_fee),
-    additional_fee: toNumber(item?.additional_fee),
+    isAlreadyPrint: toBool(item?.is_already_print ?? item?.is_printed ?? item?.isAlreadyPrint),
+    otherFee: toNumber(item?.other_fee ?? item?.otherFee),
+    additionalFee: toNumber(item?.additional_fee ?? item?.additionalFee),
     nominal: toNumber(item?.nominal),
-    paidNominal: toNumber(item?.paid_nominal),
-    billingRemainingNominal: toNumber(item?.billing_remaining_nominal ?? rawBilling?.remaining_payment),
-    isPaid: toBool(item?.is_paid ?? rawBilling?.is_paid),
+    paidNominal: toNumber(item?.paid_nominal ?? item?.paidNominal),
+    billingRemainingNominal: toNumber(item?.billing_remaining_nominal ?? item?.billingRemainingNominal ?? rawBilling?.remaining_payment ?? rawBilling?.remainingPayment),
+    isPaid: toBool(item?.is_paid ?? item?.isPaid ?? rawBilling?.is_paid ?? rawBilling?.isPaid),
+    doInvoiceBilling: billing,
     billing,
-    finance_billing_payment: item?.finance_billing_payment || null,
-    createdAt: item?.created_at,
-    updatedAt: item?.updated_at,
+    financeBillingPayment: mapFinanceBillingPayment(item?.finance_billing_payment ?? item?.financeBillingPayment),
+    createdAt: item?.created_at ?? item?.createdAt,
+    updatedAt: item?.updated_at ?? item?.updatedAt,
     customer,
     orderList,
     vehicle: mapVehicle(item?.vehicle),

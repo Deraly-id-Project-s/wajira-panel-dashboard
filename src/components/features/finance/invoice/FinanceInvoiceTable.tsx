@@ -28,9 +28,9 @@ const formatDate = (value: string | null | undefined) => {
 };
 
 const getKasMasukAmount = (item: DoInvoice) => {
-  const payment = item.finance_billing_payment;
+  const payment = item.financeBillingPayment;
   if (!payment) return null;
-  return payment.amount ?? payment.total_paid ?? null;
+  return payment.amount ?? payment.totalPaid ?? null;
 };
 
 // Component for cells that require the orderListDetail data
@@ -194,7 +194,7 @@ export default function FinanceInvoiceTable({
       sortable: true,
       alignment: 'right',
       cell: (item) => {
-        const additionalFee = (item.additional_fee ?? 0) + (item.other_fee ?? 0);
+        const additionalFee = (item.additionalFee ?? 0) + (item.otherFee ?? 0);
         return <span className="font-medium text-slate-900">{formatCurrency(additionalFee)}</span>;
       },
     },
