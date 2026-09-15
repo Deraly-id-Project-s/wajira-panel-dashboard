@@ -33,6 +33,7 @@ import type { OrderList, OrderListStatus, OrderListTarifItem, OrderListVehicleTy
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
+import { CollapsibleBox } from '@/components/ui/collapsible-box';
 import { PageHeader } from '@/components/ui/page-header';
 import { cn } from '@/lib/utils';
 import { ReferenceLink } from '@/components/ui/reference-link';
@@ -142,20 +143,6 @@ function Field({ label, value, icon: Icon }: { label: string; value: React.React
       <div className="flex min-w-0 items-start gap-2 text-sm font-semibold text-slate-950">
         {Icon ? <Icon className="mt-0.5 h-4 w-4 shrink-0 text-slate-400" /> : null}
         <div className="min-w-0 break-words">{value || '-'}</div>
-      </div>
-    </div>
-  );
-}
-
-function SectionHeading({ icon: Icon, title, description }: { icon: React.ElementType; title: string; description?: string }) {
-  return (
-    <div className="flex items-start gap-3">
-      <div className="rounded-md bg-orange-100 p-2 text-orange-700">
-        <Icon className="h-5 w-5" />
-      </div>
-      <div>
-        <h2 className="text-base font-semibold text-slate-950">{title}</h2>
-        {description ? <p className="mt-0.5 text-xs text-slate-500">{description}</p> : null}
       </div>
     </div>
   );
@@ -705,10 +692,13 @@ export function OrderListDetailView({
         ))}
       </div>
 
-      <Card className="border-slate-200 shadow-sm">
-        <CardContent className="space-y-6 p-5 sm:p-6">
-          <SectionHeading icon={FileText} title="Informasi Order" description="Informasi customer dan rangkuman tujuan pengiriman" />
-          <div className="grid gap-5 border-t border-slate-100 pt-5 sm:grid-cols-2 lg:grid-cols-4">
+      <CollapsibleBox
+        title="Informasi Order"
+        description="Informasi customer dan rangkuman tujuan pengiriman"
+        defaultExpanded
+      >
+        <div className="space-y-6">
+          <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
             <Field
               label="Customer"
               value={
@@ -737,14 +727,17 @@ export function OrderListDetailView({
               <p className="text-sm font-semibold text-slate-950">{data.note}</p>
             </div>
           )}
-        </CardContent>
-      </Card>
+        </div>
+      </CollapsibleBox>
 
-      <Card className="border-slate-200 shadow-sm">
-        <CardContent className="space-y-5 p-5 sm:p-6">
-          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-            <SectionHeading icon={Route} title="Rute, Armada & Muatan" description="Data berasal dari setiap DO order list tarif" />
-            {isDraft && (
+      <CollapsibleBox
+        title="Rute, Armada & Muatan"
+        description="Data berasal dari setiap DO order list tarif"
+        defaultExpanded
+      >
+        <div className="space-y-5">
+          {isDraft && (
+            <div className="flex justify-end">
               <Button
                 type="button"
                 onClick={handleOpenAddRoute}
@@ -753,8 +746,8 @@ export function OrderListDetailView({
                 <Plus className="h-4 w-4" />
                 Tambah Rute
               </Button>
-            )}
-          </div>
+            </div>
+          )}
 
           {routes.length ? (
             <div className="space-y-5">
@@ -879,39 +872,41 @@ export function OrderListDetailView({
               Belum ada data rute dan tarif pada order ini.
             </div>
           )}
-        </CardContent>
-      </Card>
+        </div>
+      </CollapsibleBox>
 
-      <Card className="border-slate-200 shadow-sm">
-        <CardContent className="space-y-5 p-5 sm:p-6">
-          <SectionHeading icon={Wallet} title="Ringkasan Invoice" description="Nominal Invoice dari DO order list" />
-          <div className="space-y-3 border-t border-slate-100 pt-5">
-            <CurrencyRow label="Invoice Ekspedisi" value={data.billInvoice} />
-            <CurrencyRow label="PPN" value={data.ppn} />
-            <CurrencyRow label="PPh" value={data.pph} />
-            <CurrencyRow label="Total Tagihan" value={totalBilling} emphasized />
-          </div>
-        </CardContent>
-      </Card>
+      <CollapsibleBox
+        title="Ringkasan Invoice"
+        description="Nominal Invoice dari DO order list"
+        defaultExpanded
+      >
+        <div className="space-y-3">
+          <CurrencyRow label="Invoice Ekspedisi" value={data.billInvoice} />
+          <CurrencyRow label="PPN" value={data.ppn} />
+          <CurrencyRow label="PPh" value={data.pph} />
+          <CurrencyRow label="Total Tagihan" value={totalBilling} emphasized />
+        </div>
+      </CollapsibleBox>
 
-      <Card className="border-slate-200 shadow-sm">
-        <CardContent className="space-y-5 p-5 sm:p-6">
-          <SectionHeading icon={Truck} title="Ringkasan Biaya per Armada" description="Nilai agregat yang dikirim oleh API detail order list" />
-          <div className="grid gap-4 border-t border-slate-100 pt-5 md:grid-cols-3">
-            {[
-              { label: 'Towing', uj: data.ujTowing, invoice: data.invTowing },
-              { label: 'CDD', uj: data.ujCdd, invoice: data.invCdd },
-              { label: 'Fuso', uj: data.ujFuso, invoice: data.invFuso },
-            ].map((item) => (
-              <div key={item.label} className="space-y-3 rounded-md border border-slate-200 bg-slate-50/60 p-4">
-                <p className="text-sm font-bold uppercase text-slate-900">{item.label}</p>
-                <CurrencyRow label="UJ Driver" value={item.uj} />
-                <CurrencyRow label="Invoice" value={item.invoice} />
-              </div>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
+      <CollapsibleBox
+        title="Ringkasan Biaya per Armada"
+        description="Nilai agregat yang dikirim oleh API detail order list"
+        defaultExpanded
+      >
+        <div className="grid gap-4 md:grid-cols-3">
+          {[
+            { label: 'Towing', uj: data.ujTowing, invoice: data.invTowing },
+            { label: 'CDD', uj: data.ujCdd, invoice: data.invCdd },
+            { label: 'Fuso', uj: data.ujFuso, invoice: data.invFuso },
+          ].map((item) => (
+            <div key={item.label} className="space-y-3 rounded-md border border-slate-200 bg-slate-50/60 p-4">
+              <p className="text-sm font-bold uppercase text-slate-900">{item.label}</p>
+              <CurrencyRow label="UJ Driver" value={item.uj} />
+              <CurrencyRow label="Invoice" value={item.invoice} />
+            </div>
+          ))}
+        </div>
+      </CollapsibleBox>
 
       {/* ── dialog forms ── */}
       {isDraft && (

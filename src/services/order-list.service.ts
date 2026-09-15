@@ -177,24 +177,24 @@ const resolveInvoiceFee = (vehicleType: OrderListVehicleType | null, tarif?: Ord
 const mapOrderListTarifItem = (item: any, parent?: any): OrderListTarifItem => {
   const tarif = mapTarifReference(
     item.tarif ??
-      item.tariff ??
-      item.master_tarif ??
-      item.do_order_list_tarif?.tarif ??
-      (item.uj_towing !== undefined || item.uj_cdd !== undefined ? item : undefined)
+    item.tariff ??
+    item.master_tarif ??
+    item.do_order_list_tarif?.tarif ??
+    (item.uj_towing !== undefined || item.uj_cdd !== undefined ? item : undefined)
   );
   const vehicleType = normalizeVehicleType(
     item.vehicle_type ??
-      item.vehicleType ??
-      item.type ??
-      item.armada_type ??
-      item.vehicle_armada_type ??
-      item.tipe_armada ??
-      item.type_armada ??
-      item.armada ??
-      parent?.vehicle_type ??
-      parent?.vehicleType ??
-      item.pivot?.vehicle_type ??
-      item.pivot?.vehicleType
+    item.vehicleType ??
+    item.type ??
+    item.armada_type ??
+    item.vehicle_armada_type ??
+    item.tipe_armada ??
+    item.type_armada ??
+    item.armada ??
+    parent?.vehicle_type ??
+    parent?.vehicleType ??
+    item.pivot?.vehicle_type ??
+    item.pivot?.vehicleType
   );
 
   const tarifItems = Array.isArray(item?.do_order_list_tarif_items)
@@ -265,7 +265,7 @@ const mapOrderListTarifLoadItem = (item: any, parentTarif?: any): OrderListTarif
 
 const mapOrderList = (item: any): OrderList => {
   const dataItem = item?.do_order_list ?? item;
-  
+
   const tarifSource = Array.isArray(dataItem?.do_order_list_tarifs)
     ? dataItem.do_order_list_tarifs
     : Array.isArray(dataItem?.tarifs)
@@ -421,14 +421,14 @@ export const updateOrderList = async (id: string | number, payload: UpdateOrderL
 export const updateOrderListState = async (id: string | number, payload: UpdateOrderListStatePayload): Promise<OrderList> => {
   const body = new URLSearchParams();
   body.append('status', payload.status);
-  const response = await apiClient.put<LaravelApiResponse<any>>(`${orderListBasePath}/${id}/update-state`, body, {
+  const response = await apiClient.put<LaravelApiResponse<any>>(`${orderListBasePath}/${id}`, body, {
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
   });
   return mapOrderList(ensureSuccess(response.data));
 };
 
 export const processOrderListInvoice = async (id: string | number): Promise<ProcessOrderListInvoiceResponse> => {
-  const response = await apiClient.put<LaravelApiResponse<any>>(`/wapi/do-order-list/${encodeURIComponent(String(id))}/process-invoice`);
+  const response = await apiClient.put<LaravelApiResponse<any>>(`/wapi/transaction/do-order-list/${encodeURIComponent(String(id))}/process-invoice`);
   const payload = ensureSuccess(response.data);
 
   return {

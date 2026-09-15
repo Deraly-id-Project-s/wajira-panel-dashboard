@@ -495,9 +495,9 @@ export function OrderListForm({
       <PageHeader
         breadcrumbs={[
           { label: 'Order List', onClick: () => router.push(`/dashboard/${slug}/administrasi/order-list`) },
-          { label: mode === 'create' ? 'Tambah Data Order' : 'Edit Data Order' }
+          { label: mode === 'create' ? 'Tambah Order List' : 'Edit Order List' }
         ]}
-        title={mode === 'create' ? 'Tambah Data Order' : 'Edit Data Order'}
+        title={mode === 'create' ? 'Tambah Data Order List' : 'Edit Data Order List'}
         subtitle={
           mode === 'create'
             ? 'Buat pesanan baru dan tentukan rute serta muatan terkait.'
@@ -843,7 +843,6 @@ export function OrderListForm({
                         type="button"
                         variant="default"
                         onClick={() => appendCargoItem(index)}
-                        className="bg-white border-slate-200 hover:bg-slate-50/50"
                       >
                         <Plus className="h-4 w-4 mr-2" />
                         Tambah Muatan
@@ -993,7 +992,6 @@ export function OrderListForm({
                   'Menyimpan...'
                 ) : (
                   <>
-                    <Save className="mr-2 h-4 w-4" />
                     Simpan
                   </>
                 )}
