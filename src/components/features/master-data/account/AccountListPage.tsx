@@ -9,14 +9,14 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { SearchPagination } from '@/components/ui/search-pagination';
-import { useAccounts, useDeleteAccount, useUpdateAccount, useBulkUpdateAccounts } from '@/hooks/useAccount';
+import { useAccounts, useDeleteAccount, useBulkUpdateAccounts } from '@/hooks/useAccount';
 import { useAccountGroups } from '@/hooks/useAccountGroup';
 import { useQueryParamsTable } from '@/hooks/useQueryParamsTable';
 import { useCompany } from '@/contexts/CompanyContext';
 import { usePermissionGuard } from '@/hooks/usePermissionGuard';
 import type { Account } from '@/@types/account.types';
 import type { AccountGroup } from '@/@types/account-group.types';
-import { ACCOUNT_CATEGORY_OPTIONS, getAccountTypeFromCategory } from '@/lib/account';
+import { ACCOUNT_CATEGORY_OPTIONS } from '@/lib/account';
 import { ApiResponseError } from '@/lib/api/response';
 import { toast } from 'sonner';
 import { CircleAlert, Download, PencilLine, Plus, Upload } from 'lucide-react';
@@ -34,7 +34,7 @@ const initialBulkFormValues: BulkFormValues = {
 
 export const AccountListPage = () => {
   const { companyId, isLoading: isLoadingCompany } = useCompany();
-  const { hasPermission } = usePermissionGuard();
+  const { hasPermission, canManageMasterDataLock } = usePermissionGuard();
   const canCreate = hasPermission('master-data:create');
   const canEdit = hasPermission('master-data:edit');
   const canDelete = hasPermission('master-data:delete');
@@ -214,6 +214,12 @@ export const AccountListPage = () => {
       return;
     }
 
+    const selectedRows = accountRows.filter((account) => selectedIds.has(String(account.id)));
+    if (!canManageMasterDataLock && selectedRows.some((account) => account.is_lock)) {
+      toast.error('Akun terkunci hanya bisa diperbarui lewat form edit deskripsi');
+      return;
+    }
+
     resetBulkForm();
     setOpenBulkUpdate(true);
   };
@@ -371,6 +377,7 @@ export const AccountListPage = () => {
               isLoading={isLoading || isFetching}
               canEdit={canEdit}
               canDelete={canDelete}
+              canManageLock={canManageMasterDataLock}
               selectedIds={selectedIds}
               onToggleAll={toggleAll}
               onToggleRow={toggleRow}

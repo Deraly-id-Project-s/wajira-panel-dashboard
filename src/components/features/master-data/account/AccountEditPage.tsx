@@ -15,11 +15,13 @@ import { ApiValidationError } from '@/lib/api/response';
 import { toast } from 'sonner';
 import { getAccountTypeFromCategory } from '@/lib/account';
 import type { AccountGroup } from '@/@types/account-group.types';
+import { usePermissionGuard } from '@/hooks/usePermissionGuard';
 
 export const AccountEditPage = () => {
   const router = useRouter();
   const id = router.query.id as string | undefined;
   const { companyId, isLoading: isLoadingCompany } = useCompany();
+  const { canManageMasterDataLock } = usePermissionGuard();
   const basePath = router.query.slug ? `/dashboard/${router.query.slug}/master/account` : '/master-data/account';
 
   const { data, isLoading, isError } = useAccount(id);
@@ -33,6 +35,7 @@ export const AccountEditPage = () => {
       description: '',
       category: undefined,
       isActive: true,
+      is_lock: false,
     } satisfies Partial<AccountFormValues>,
   });
 
@@ -87,6 +90,7 @@ export const AccountEditPage = () => {
         description: data.description ?? '',
         category: (data.category as AccountFormValues['category']) ?? undefined,
         isActive: data.isActive,
+        is_lock: !!data.is_lock,
       });
     }
   }, [data, form]);
@@ -123,18 +127,24 @@ export const AccountEditPage = () => {
 
   const handleSubmit = async (values: AccountFormValues) => {
     if (!id) return;
+    const isDescriptionOnlyUpdate = Boolean(data?.is_lock && !canManageMasterDataLock);
     try {
       await updateMutation.mutateAsync({
         id,
-        payload: {
-          accountGroupId: values.accountGroupId,
-          code: values.code,
-          name: values.name,
-          description: values.description,
-          category: values.category,
-          type: getAccountTypeFromCategory(values.category),
-          // isActive: values.isActive,
-        },
+        payload: isDescriptionOnlyUpdate
+          ? {
+            description: values.description,
+          }
+          : {
+            accountGroupId: values.accountGroupId,
+            code: values.code,
+            name: values.name,
+            description: values.description,
+            category: values.category,
+            type: getAccountTypeFromCategory(values.category),
+            ...(canManageMasterDataLock ? { is_lock: !!values.is_lock } : {}),
+            // isActive: values.isActive,
+          },
       });
       toast.success('Akun berhasil diperbarui');
       router.push(basePath);
@@ -197,6 +207,8 @@ export const AccountEditPage = () => {
             onLoadMoreGroups={handleLoadMoreGroups}
             hasMoreGroups={hasMoreGroups}
             isLock={data?.is_lock}
+            canManageLock={canManageMasterDataLock}
+            showLockField={canManageMasterDataLock}
           />
         </Card>
       </div>

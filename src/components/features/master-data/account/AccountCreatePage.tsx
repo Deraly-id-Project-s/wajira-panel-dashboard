@@ -29,6 +29,7 @@ export const AccountCreatePage = () => {
       description: '',
       category: undefined,
       isActive: true,
+      is_lock: false,
     } satisfies Partial<AccountFormValues>,
   });
 

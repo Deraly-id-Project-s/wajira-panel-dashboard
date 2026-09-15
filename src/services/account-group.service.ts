@@ -1,4 +1,4 @@
-import type { AccountGroup, AccountGroupDetail, AccountGroupListResponse, AccountGroupPayload } from '@/@types/account-group.types';
+import type { AccountGroup, AccountGroupDetail, AccountGroupListResponse, AccountGroupPayload, AccountGroupUpdatePayload } from '@/@types/account-group.types';
 import type { PaginationParams } from '@/@types/pagination.types';
 import { apiClient } from '@/lib/api/client';
 import { buildLaravelPaginationQuery } from '@/lib/api/pagination';
@@ -108,11 +108,14 @@ export const getAccountGroupById = async (id: number | string): Promise<AccountG
 
 export const createAccountGroup = async (payload: AccountGroupPayload): Promise<AccountGroup> => {
   try {
-    const response = await apiClient.post<AccountGroupItemResponse>(basePath, {
+    const body: AccountGroupPayload = {
       company_id: payload.company_id,
       group_code: payload.group_code,
       description: payload.description,
-    });
+    };
+    if (payload.is_lock !== undefined) body.is_lock = payload.is_lock;
+
+    const response = await apiClient.post<AccountGroupItemResponse>(basePath, body);
 
     const data = ensureSuccess(response.data);
     return mapAccountGroup(data);
@@ -142,13 +145,16 @@ export const quickCreateAccountGroup = async (payload: QuickCreateAccountGroupPa
   return mapAccountGroup(data);
 };
 
-export const updateAccountGroup = async (id: number | string, payload: AccountGroupPayload): Promise<AccountGroup> => {
+export const updateAccountGroup = async (id: number | string, payload: AccountGroupUpdatePayload): Promise<AccountGroup> => {
   try {
-    const response = await apiClient.put<AccountGroupItemResponse>(`${basePath}/${id}`, {
+    const body: AccountGroupUpdatePayload = {
       company_id: payload.company_id,
-      group_code: payload.group_code,
-      description: payload.description,
-    });
+    };
+    if (payload.group_code !== undefined) body.group_code = payload.group_code;
+    if (payload.description !== undefined) body.description = payload.description;
+    if (payload.is_lock !== undefined) body.is_lock = payload.is_lock;
+
+    const response = await apiClient.put<AccountGroupItemResponse>(`${basePath}/${id}`, body);
 
     const data = ensureSuccess(response.data);
     return mapAccountGroup(data);

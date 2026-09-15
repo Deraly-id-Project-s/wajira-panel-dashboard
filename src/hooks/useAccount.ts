@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import type { AccountPayload } from '@/@types/account.types';
+import type { AccountPayload, AccountUpdatePayload } from '@/@types/account.types';
 import type { PaginationParams } from '@/@types/pagination.types';
 import { createAccount, deleteAccount, getAccountById, getAccountHierarchy, getAccounts, importAccount, updateAccount, bulkUpdateAccounts } from '@/services/account.service';
 
@@ -44,7 +44,7 @@ export const useUpdateAccount = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ id, payload }: { id: string | number; payload: AccountPayload }) => updateAccount(id, payload),
+    mutationFn: ({ id, payload }: { id: string | number; payload: AccountUpdatePayload }) => updateAccount(id, payload),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['accounts'] });
       queryClient.invalidateQueries({ queryKey: ['account'] });

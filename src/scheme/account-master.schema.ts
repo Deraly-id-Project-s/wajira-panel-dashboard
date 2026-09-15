@@ -7,6 +7,7 @@ export const accountSchema = z.object({
   description: z.string().optional(),
   category: z.enum(['general', 'operational', 'director_receivable', 'shareholder_receivable', 'receivable', 'inventory']).optional().nullable(),
   isActive: z.boolean(),
+  is_lock: z.boolean().optional(),
 });
 
 export type AccountFormValues = z.infer<typeof accountSchema>;

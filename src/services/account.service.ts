@@ -1,4 +1,4 @@
-import type { Account, AccountDetail, AccountListResponse, AccountPayload } from '@/@types/account.types';
+import type { Account, AccountDetail, AccountListResponse, AccountPayload, AccountUpdatePayload } from '@/@types/account.types';
 import type { PaginationParams } from '@/@types/pagination.types';
 import { apiClient } from '@/lib/api/client';
 import { buildLaravelPaginationQuery } from '@/lib/api/pagination';
@@ -103,6 +103,7 @@ export const createAccount = async (payload: AccountPayload): Promise<Account> =
     if (payload.description !== undefined && payload.description !== null) body.append('description', payload.description);
     body.append('type', type);
     if (payload.category) body.append('category', payload.category);
+    if (payload.is_lock !== undefined) body.append('is_lock', payload.is_lock ? '1' : '0');
 
     const response = await apiClient.post<AccountItemResponse>(basePath, body);
 
@@ -116,17 +117,18 @@ export const createAccount = async (payload: AccountPayload): Promise<Account> =
   }
 };
 
-export const updateAccount = async (id: number | string, payload: AccountPayload): Promise<Account> => {
+export const updateAccount = async (id: number | string, payload: AccountUpdatePayload): Promise<Account> => {
   try {
     const type = payload.type === 'debit' ? 'debet' : (payload.type ?? 'debet');
 
     const body = new URLSearchParams();
-    body.append('account_group_id', String(payload.accountGroupId));
-    body.append('code', payload.code);
-    body.append('name', payload.name);
+    if (payload.accountGroupId !== undefined) body.append('account_group_id', String(payload.accountGroupId));
+    if (payload.code !== undefined) body.append('code', payload.code);
+    if (payload.name !== undefined) body.append('name', payload.name);
     if (payload.description !== undefined && payload.description !== null) body.append('description', payload.description);
-    body.append('type', type);
-    if (payload.category) body.append('category', payload.category);
+    if (payload.type !== undefined) body.append('type', type);
+    if (payload.category !== undefined && payload.category !== null) body.append('category', payload.category);
+    if (payload.is_lock !== undefined) body.append('is_lock', payload.is_lock ? '1' : '0');
 
     const response = await apiClient.put<AccountItemResponse>(`${basePath}/${id}`, body, {
       headers: { 'Content-Type': 'application/x-www-form-urlencoded' },

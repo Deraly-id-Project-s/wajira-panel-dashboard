@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import type { AccountGroupDetail, AccountGroupPayload } from '@/@types/account-group.types';
+import type { AccountGroupDetail, AccountGroupPayload, AccountGroupUpdatePayload } from '@/@types/account-group.types';
 import type { PaginationParams } from '@/@types/pagination.types';
 import { createAccountGroup, deleteAccountGroup, getAccountGroupById, getAccountGroups, quickCreateAccountGroup, updateAccountGroup, importAccountGroup } from '@/services/account-group.service';
 import type { QuickCreateAccountGroupPayload } from '@/services/account-group.service';
@@ -56,7 +56,7 @@ export const useUpdateAccountGroup = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ id, payload }: { id: string | number; payload: AccountGroupPayload }) => updateAccountGroup(id, payload),
+    mutationFn: ({ id, payload }: { id: string | number; payload: AccountGroupUpdatePayload }) => updateAccountGroup(id, payload),
     onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({
         queryKey: companyQueryKeys.companyScope(variables.payload.company_id),

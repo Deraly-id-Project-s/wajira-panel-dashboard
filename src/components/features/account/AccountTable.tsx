@@ -17,6 +17,7 @@ interface AccountTableProps {
   selectedIds: Set<string>;
   canEdit: boolean;
   canDelete: boolean;
+  canManageLock: boolean;
   onToggleAll: (checked: boolean) => void;
   onToggleRow: (id: string, checked: boolean) => void;
   onEdit: (account: Account) => void;
@@ -33,6 +34,7 @@ export function AccountTable({
   onDelete,
   canEdit,
   canDelete,
+  canManageLock,
 }: AccountTableProps) {
   const router = useRouter();
   const { slug } = router.query;
@@ -166,7 +168,7 @@ export function AccountTable({
             <DropdownMenuContent align="end" className="min-w-[150px] rounded-md border-slate-200 p-1.5 shadow-lg">
               <DropdownMenuItem
                 className="rounded-md px-3 py-2 text-sm text-slate-900 focus:bg-slate-50 cursor-pointer"
-                disabled={account.is_lock || !canEdit}
+                disabled={!canEdit}
                 onSelect={(e) => {
                   e.preventDefault();
                   onEdit(account);
@@ -201,6 +203,7 @@ export function AccountTable({
       selectedIds={selectedIds}
       onSelectedIdsChange={handleSelectedIdsChange}
       getRowId={(item) => String(item.id)}
+      isCheckboxDisabled={(item) => Boolean(item.is_lock && !canManageLock)}
     />
   );
 }
