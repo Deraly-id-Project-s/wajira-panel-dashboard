@@ -4,6 +4,11 @@ Dokumen ini wajib dibaca terlebih dahulu oleh AI MVC sebelum menerapkan fitur ba
 
 ## Aturan Umum
 
+> [!CAUTION]
+> **DILARANG KERAS MENJALANKAN PERINTAH TERMINAL APAPUN!**
+> AI/Agent **SANGAT DILARANG** mengeksekusi atau menjalankan perintah apapun di terminal (seperti `npm run`, `npx`, `npm test`, `git`, dsb). Hal yang **PALING TERLARANG** adalah menjalankan testing atau script dalam bentuk apapun (seperti `npm run test`, `npm run dev`, `npm run build`, `npx ...`, dll). Pengerjaan HANYA BERFOKUS pada inspeksi dan edit file secara langsung tanpa eksekusi terminal!
+
+- **DILARANG KERAS EKSEKUSI TERMINAL / TESTING**: Tidak boleh menjalankan command terminal apapun (`npm`, `npx`, shell script, dsb).
 - Cek kebutuhan fitur terhadap struktur folder yang sudah ada sebelum membuat file baru.
 - Gunakan komponen reusable dari `src/components/ui` dan `src/components/common` sebelum membuat komponen baru.
 - Komponen utama per fitur ditempatkan di `src/components/features/<nama-fitur>`.
