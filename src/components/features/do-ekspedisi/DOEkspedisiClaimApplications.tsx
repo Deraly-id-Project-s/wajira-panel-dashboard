@@ -65,7 +65,7 @@ function RelatedSection({
 }) {
   return (
     <section className="rounded-md border border-slate-200 bg-white p-5 shadow-sm">
-      <div className="mb-4 flex items-start justify-between gap-3">
+      <div className="mb-4 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
         <div>
           <div className="flex items-center gap-3">
             <div className="rounded-md bg-orange-100 p-2 text-orange-700">{icon}</div>
@@ -77,7 +77,7 @@ function RelatedSection({
           {helper && <p className="ml-12 mt-1 text-xs text-slate-500">{helper}</p>}
         </div>
         {onAdd && (
-          <Button size="sm" onClick={onAdd} disabled={addDisabled}>
+          <Button size="sm" onClick={onAdd} disabled={addDisabled} className="w-full sm:w-auto">
             <Plus className="mr-2 h-4 w-4" />
             {addLabel}
           </Button>
