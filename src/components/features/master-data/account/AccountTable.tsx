@@ -181,7 +181,7 @@ export const AccountTable = ({ data, meta, search, page, perPage, isLoading = fa
       }}
       onPageChange={onPageChange}
       headerActions={
-        <Button onClick={onAdd} className="btn-primary!">
+        <Button onClick={onAdd} variant="default">
           <Plus className="mr-2 h-4 w-4" />
           Tambah Data
         </Button>

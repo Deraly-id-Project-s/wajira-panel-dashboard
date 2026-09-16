@@ -177,18 +177,17 @@ export const AccountGroupListPage = () => {
                     setSearchInput('');
                     updateQuery({ search: undefined, page: 1 });
                   }}
-                  className="rounded-md border-slate-200 text-slate-700 bg-white hover:bg-slate-50 cursor-pointer h-9 text-xs px-3"
                 >
                   Reset
                 </Button>
               )}
               {canCreate && (
                 <>
-                  <Button onClick={() => setOpenImport(true)} variant="outline" className="h-9 text-xs px-3 rounded-md border-slate-200 text-slate-700 bg-white hover:bg-slate-50 cursor-pointer">
+                  <Button onClick={() => setOpenImport(true)} variant="outline" size="sm">
                     <Upload className="h-4 w-4 mr-2" />
                     Import
                   </Button>
-                  <Button onClick={handleAdd} className="btn-primary!">
+                  <Button variant="default" onClick={handleAdd}>
                     <Plus className="h-4 w-4 mr-2" />
                     Tambah Data
                   </Button>

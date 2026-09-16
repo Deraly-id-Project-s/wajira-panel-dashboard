@@ -101,7 +101,7 @@ export const AccountForm = ({
                         className="h-10 rounded-md border-slate-200 px-3 text-sm shadow-none focus-visible:ring-slate-300 bg-white"
                       />
                     </div>
-                    <Button type="button" onClick={() => setOpenCreateGroup(true)} className="btn-primary!" disabled={lockRestricted}>
+                    <Button type="button" variant="default" size="icon" onClick={() => setOpenCreateGroup(true)} disabled={lockRestricted}>
                       <Plus className="h-4 w-4" />
                     </Button>
                   </div>

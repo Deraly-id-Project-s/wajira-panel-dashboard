@@ -365,22 +365,21 @@ export const AccountListPage = () => {
                     setSearchInput('');
                     updateQuery({ search: undefined, account_group_id: undefined, page: 1 });
                   }}
-                  className="rounded-md border-slate-200 text-slate-700 bg-white hover:bg-slate-50 cursor-pointer h-9 text-xs px-3"
                 >
                   Reset
                 </Button>
               )}
-              <Button onClick={handleExport} variant="outline" className="h-9 text-xs px-3 rounded-md border-slate-200 text-slate-700 bg-white hover:bg-slate-50 cursor-pointer">
+              <Button onClick={handleExport} variant="outline" size="sm">
                 <Download className="h-4 w-4 mr-2" />
                 Export
               </Button>
               {canCreate && (
                 <>
-                  <Button onClick={() => setOpenImport(true)} variant="outline" className="h-9 text-xs px-3 rounded-md border-slate-200 text-slate-700 bg-white hover:bg-slate-50 cursor-pointer">
+                  <Button onClick={() => setOpenImport(true)} variant="outline" size="sm">
                     <Upload className="h-4 w-4 mr-2" />
                     Import
                   </Button>
-                  <Button onClick={handleAdd} className="btn-primary!">
+                  <Button variant="default" onClick={handleAdd}>
                     <Plus className="h-4 w-4 mr-2" />
                     Tambah Data
                   </Button>
@@ -391,7 +390,7 @@ export const AccountListPage = () => {
         >
           {selectedIds.size > 0 && (
             <div className="flex flex-wrap items-center gap-3">
-              <Button variant="outline" className="h-10 rounded-md border-gray-200 px-4 text-sm font-medium text-slate-800 shadow-none hover:bg-slate-50" onClick={handleOpenBulkUpdate}>
+              <Button variant="outline" size="lg" onClick={handleOpenBulkUpdate}>
                 <PencilLine className="mr-1.5 h-4 w-4" />
                 Update
               </Button>
@@ -502,10 +501,10 @@ export const AccountListPage = () => {
             </div>
 
             <div className="mt-8 flex flex-col gap-3">
-              <Button className="h-14 rounded-md bg-[#1F3B5B] text-lg font-semibold text-white hover:bg-[#1B3450]" onClick={handleBulkUpdateRequest}>
+              <Button variant="default" size="lg" onClick={handleBulkUpdateRequest}>
                 Simpan
               </Button>
-              <Button variant="outline" className="h-14 rounded-md border-slate-200 text-lg font-semibold text-slate-950 shadow-none hover:bg-slate-50" onClick={() => setOpenBulkUpdate(false)}>
+              <Button variant="outline" size="lg" onClick={() => setOpenBulkUpdate(false)}>
                 Batal
               </Button>
             </div>

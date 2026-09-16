@@ -25,14 +25,12 @@ export function DeleteAssetModal({ isOpen, onClose, onConfirm, isDeleting = fals
                         variant="outline" 
                         onClick={onClose}
                         disabled={isDeleting}
-                        className="w-full sm:w-auto"
                     >
                         Batal
                     </Button>
                     <Button 
                         type="button" 
                         variant="destructive" 
-                        className="w-full sm:w-auto bg-[#e53e3e] hover:bg-[#c53030]" 
                         onClick={onConfirm}
                         disabled={isDeleting}
                     >

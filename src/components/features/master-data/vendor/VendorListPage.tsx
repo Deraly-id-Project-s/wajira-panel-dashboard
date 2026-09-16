@@ -153,22 +153,21 @@ export const VendorListPage = () => {
                                         setSearchInput('');
                                         updateQuery({ search: undefined, page: 1 });
                                     }}
-                                    className="rounded-md border-slate-200 text-slate-700 bg-white hover:bg-slate-50 cursor-pointer h-9 text-xs px-3"
                                 >
                                     Reset
                                 </Button>
                             )}
-                            <Button onClick={handleExport} disabled={exportMutation.isPending} variant="outline" className="h-9 text-xs px-3 rounded-md border-slate-200 text-slate-700 bg-white hover:bg-slate-50 cursor-pointer">
+                            <Button onClick={handleExport} disabled={exportMutation.isPending} variant="outline" size="sm">
                                 <Download className="h-4 w-4 mr-2" />
                                 {exportMutation.isPending ? 'Exporting...' : 'Export'}
                             </Button>
                             {canCreate && (
                                 <>
-                                    <Button onClick={() => setOpenImport(true)} variant="outline" className="h-9 text-xs px-3 rounded-md border-slate-200 text-slate-700 bg-white hover:bg-slate-50 cursor-pointer">
+                                    <Button onClick={() => setOpenImport(true)} variant="outline" size="sm">
                                         <Upload className="h-4 w-4 mr-2" />
                                         Import
                                     </Button>
-                                    <Button onClick={handleAddClick} className="btn-primary!">
+                                    <Button variant="default" onClick={handleAddClick}>
                                         <Plus className="h-4 w-4 mr-2" />
                                         Tambah Data
                                     </Button>
