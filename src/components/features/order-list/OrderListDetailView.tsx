@@ -624,11 +624,12 @@ export function OrderListDetailView({
             </Button>
             <Button
               type="button"
+              variant="default"
               disabled={
                 !canUpdateStatus ||
                 data.status !== 'done' ||
-                !data.canMarkDone ||
                 data.isHasInvoice ||
+                !data.canMarkDone ||
                 isProcessingInvoice
               }
               loading={isProcessingInvoice}

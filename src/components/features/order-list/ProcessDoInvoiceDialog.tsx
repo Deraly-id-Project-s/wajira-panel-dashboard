@@ -26,7 +26,7 @@ export function ProcessDoInvoiceDialog({
 }: ProcessDoInvoiceDialogProps) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent closeOnInteractOutside={!isProcessing} showCloseButton={!isProcessing}>
+      <DialogContent closeOnInteractOutside={false} showCloseButton={!isProcessing}>
         <DialogHeader>
           <div className="mb-2 flex h-10 w-10 items-center justify-center rounded-full bg-orange-100 text-orange-700">
             <FileText className="h-5 w-5" />

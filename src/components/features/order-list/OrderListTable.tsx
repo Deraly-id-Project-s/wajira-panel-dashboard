@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { FileText, MoreVertical } from 'lucide-react';
+import { FileText, MoreVertical, RotateCcw, Truck } from 'lucide-react';
 import type { OrderList, OrderListStatus } from '@/@types/order-list.types';
 import { Button } from '@/components/ui/button';
 import {
@@ -84,8 +84,7 @@ export const OrderListTable = React.memo(function OrderListTable({
                 <DropdownMenuItem
                   key={option.value}
                   disabled={item.status === option.value}
-                  onSelect={(e) => {
-                    e.preventDefault();
+                  onSelect={() => {
                     if (item.status !== option.value && onUpdateStatus) {
                       onUpdateStatus(item, option.value);
                     }
@@ -222,10 +221,9 @@ export const OrderListTable = React.memo(function OrderListTable({
                 <MoreVertical className="h-4 w-4 text-slate-600" />
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-[160px] rounded-md border-slate-200 p-1.5 shadow-lg">
+            <DropdownMenuContent align="end" className="w-[170px] rounded-md border-slate-200 p-1.5 shadow-lg">
               <DropdownMenuItem
-                onSelect={(event) => {
-                  event.preventDefault();
+                onSelect={() => {
                   onDetail(item);
                 }}
                 className="cursor-pointer rounded-md px-3 py-2 text-sm text-slate-900 focus:bg-slate-50"
@@ -233,8 +231,7 @@ export const OrderListTable = React.memo(function OrderListTable({
                 Detail
               </DropdownMenuItem>
               <DropdownMenuItem
-                onSelect={(event) => {
-                  event.preventDefault();
+                onSelect={() => {
                   onEdit(item);
                 }}
                 disabled={!canEdit || item?.status !== 'draft'}
@@ -243,8 +240,7 @@ export const OrderListTable = React.memo(function OrderListTable({
                 Edit
               </DropdownMenuItem>
               <DropdownMenuItem
-                onSelect={(event) => {
-                  event.preventDefault();
+                onSelect={() => {
                   onDelete(item);
                 }}
                 disabled={!canDelete || item?.status !== 'draft'}
@@ -253,23 +249,46 @@ export const OrderListTable = React.memo(function OrderListTable({
                 Hapus
               </DropdownMenuItem>
               <DropdownMenuSeparator />
-              <DropdownMenuItem
-                onSelect={(event) => {
-                  event.preventDefault();
-                  onProcessInvoice(item);
-                }}
-                disabled={
-                  !canEdit ||
-                  item.status !== 'done' ||
-                  !item.canMarkDone ||
-                  item.isHasInvoice ||
-                  processingInvoiceId === item.id
-                }
-                className="cursor-pointer rounded-md px-3 py-2 text-sm text-orange-700 focus:bg-orange-50 focus:text-orange-800"
-              >
-                <FileText className="mr-2 h-4 w-4" />
-                {item.isHasInvoice ? 'Invoice Sudah Dibuat' : 'Proses DO Invoice'}
-              </DropdownMenuItem>
+              {item.status === 'draft' ? (
+                <DropdownMenuItem
+                  onSelect={() => {
+                    if (onUpdateStatus) onUpdateStatus(item, 'deliver');
+                  }}
+                  disabled={!canEdit}
+                  className="cursor-pointer rounded-md px-3 py-2 text-sm font-medium text-orange-700 focus:bg-orange-50 focus:text-orange-800"
+                >
+                  <Truck className="mr-2 h-4 w-4" />
+                  Proses DO Ekspedisi
+                </DropdownMenuItem>
+              ) : item.status === 'deliver' ? (
+                <DropdownMenuItem
+                  onSelect={() => {
+                    if (onUpdateStatus) onUpdateStatus(item, 'draft');
+                  }}
+                  disabled={!canEdit}
+                  className="cursor-pointer rounded-md px-3 py-2 text-sm font-medium text-slate-700 focus:bg-slate-50 focus:text-slate-900"
+                >
+                  <RotateCcw className="mr-2 h-4 w-4" />
+                  Jadikan Draft
+                </DropdownMenuItem>
+              ) : (
+                <DropdownMenuItem
+                  onSelect={() => {
+                    onProcessInvoice(item);
+                  }}
+                  disabled={
+                    !canEdit ||
+                    item.status !== 'done' ||
+                    item.isHasInvoice ||
+                    !item.canMarkDone ||
+                    processingInvoiceId === item.id
+                  }
+                  className="cursor-pointer rounded-md px-3 py-2 text-sm font-medium text-orange-700 focus:bg-orange-50 focus:text-orange-800"
+                >
+                  <FileText className="mr-2 h-4 w-4" />
+                  {item.isHasInvoice ? 'Invoice Sudah Dibuat' : 'Proses DO Invoice'}
+                </DropdownMenuItem>
+              )}
             </DropdownMenuContent>
           </DropdownMenu>
         ),

@@ -80,6 +80,8 @@ export default function OrderListPage() {
   const processInvoiceMutation = useProcessOrderListInvoice();
   const tableData = listQuery.data?.data ?? [];
 
+  console.log(tableData);
+
   const handleDelete = React.useCallback(async () => {
     if (!selectedItem) return;
 
@@ -203,7 +205,7 @@ export default function OrderListPage() {
             />
           }
           actions={
-            <div className="flex flex-wrap items-center gap-2">
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full sm:w-auto [&>*]:w-full sm:[&>*]:w-auto">
               {search && (
                 <Button
                   type="button"
@@ -219,7 +221,7 @@ export default function OrderListPage() {
                 </Button>
               )}
               {listQuery.isFetching && (
-                <span className="text-xs font-medium text-slate-400 animate-pulse">
+                <span className="text-xs font-medium text-slate-400 animate-pulse text-center">
                   Memperbarui data...
                 </span>
               )}
@@ -242,7 +244,10 @@ export default function OrderListPage() {
             onEdit={handleEdit}
             onDelete={handleDeleteClick}
             onUpdateStatus={handleUpdateStatus}
-            onProcessInvoice={setInvoiceTarget}
+            onProcessInvoice={(item) => {
+              if (item.isHasInvoice || !item.canMarkDone || item.status !== 'done') return;
+              setInvoiceTarget(item);
+            }}
             processingInvoiceId={processInvoiceMutation.isPending ? invoiceTarget?.id : null}
             canEdit={canEdit}
             canDelete={canDelete}
@@ -282,9 +287,8 @@ export default function OrderListPage() {
         companyName={getCompanyName(resolvedCompanyId)}
         periodLabel={
           startDate
-            ? `${dateRange?.from ? format(dateRange.from, 'dd MMM yyyy') : '-'}${
-                endDate && endDate !== startDate && dateRange?.to ? ` – ${format(dateRange.to, 'dd MMM yyyy')}` : ''
-              }`
+            ? `${dateRange?.from ? format(dateRange.from, 'dd MMM yyyy') : '-'}${endDate && endDate !== startDate && dateRange?.to ? ` – ${format(dateRange.to, 'dd MMM yyyy')}` : ''
+            }`
             : 'Semua Periode'
         }
         reportPage={page}
