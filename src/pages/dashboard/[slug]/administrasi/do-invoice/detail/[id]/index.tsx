@@ -1,6 +1,7 @@
 import * as React from 'react';
 import { useRouter } from 'next/router';
 import {
+  CheckCircle2,
   CreditCard,
   ExternalLink,
   FileText,
@@ -16,10 +17,8 @@ import type {
 } from '@/@types/do-invoice.types';
 import { DoInvoicePaymentDialog } from '@/components/features/do-invoice/DoInvoicePaymentDialog';
 import { DoInvoicePrintDocument } from '@/components/features/do-invoice/DoInvoicePrintDocument';
-import {
-  formatInvoiceDate,
-  formatInvoiceMoney,
-} from '@/components/features/do-invoice/do-invoice.utils';
+import { currenciesFormat } from '@/components/ui/currenciesFormat';
+import { formatDate } from '@/lib/utils/format';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { useCompany } from '@/contexts/CompanyContext';
 import {
@@ -36,10 +35,20 @@ import {
   getLetterheadByCompanyId,
   resolveCompanyId,
 } from '@/lib/print-letterhead';
-import { getApiErrorMessage } from '@/utils/apiErrorHandler';
 import { Badge } from '@/components/ui/badge';
 import BaseTable, { type ColumnDef } from '@/components/ui/base-table';
 import { Button } from '@/components/ui/button';
+import { CollapsibleBox } from '@/components/ui/collapsible-box';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import {
   Card,
   CardContent,
@@ -61,6 +70,11 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
 import { ImagePreview } from '@/components/ui/image-preview';
 import { LoadingState } from '@/components/ui/loading-state';
 import { PageHeader } from '@/components/ui/page-header';
@@ -132,6 +146,11 @@ export default function DoInvoiceDetailPage() {
   const backToList = () => void router.push(`/dashboard/${slug}/administrasi/do-invoice`);
 
   const handleOpenCreatePayment = () => {
+    const remaining = Number(billing?.remainingPayment ?? invoice?.billingRemainingNominal ?? 0);
+    if (!billing || billing.isPaid || remaining <= 0) {
+      toast.error('Pembayaran hanya dapat ditambahkan pada invoice yang masih memiliki sisa tagihan.');
+      return;
+    }
     setEditingHistory(null);
     setPaymentOpen(true);
   };
@@ -155,6 +174,7 @@ export default function DoInvoiceDetailPage() {
       );
       setPaymentOpen(false);
       setEditingHistory(null);
+      await detailQuery.refetch();
     } catch (error) {
       toast.error(getApiErrorMessage(error));
     }
@@ -166,6 +186,7 @@ export default function DoInvoiceDetailPage() {
       await deletePayment.mutateAsync(deleteTarget.id);
       toast.success('Riwayat pembayaran berhasil dihapus');
       setDeleteTarget(null);
+      await detailQuery.refetch();
     } catch (error) {
       toast.error(getApiErrorMessage(error));
     }
@@ -173,18 +194,19 @@ export default function DoInvoiceDetailPage() {
 
   const confirmPaidStatus = async () => {
     if (!billing) return;
+    const remaining = Number(billing.remainingPayment ?? invoice?.billingRemainingNominal ?? 0);
+    if (billing.isPaid || remaining > 0) return;
     try {
       await updateBilling.mutateAsync({
         id: billing.id,
         payload: {
-          is_paid: !billing.isPaid,
-          last_payment_at: billing.isPaid
-            ? billing.lastPaymentAt?.slice(0, 10)
-            : new Date().toISOString().slice(0, 10),
+          is_paid: true,
+          last_payment_at: new Date().toISOString().slice(0, 10),
         },
       });
-      toast.success(`Billing ditandai ${billing.isPaid ? 'belum lunas' : 'lunas'}`);
+      toast.success('Billing ditandai lunas');
       setPaidConfirmOpen(false);
+      await detailQuery.refetch();
     } catch (error) {
       toast.error(getApiErrorMessage(error));
     }
@@ -198,7 +220,7 @@ export default function DoInvoiceDetailPage() {
         sortable: true,
         cell: (item) => (
           <span className="font-medium text-slate-900">
-            {formatInvoiceDate(item.paymentAt)}
+            {formatDate(item.paymentAt)}
           </span>
         ),
       },
@@ -209,7 +231,7 @@ export default function DoInvoiceDetailPage() {
         sortable: true,
         cell: (item) => (
           <span className="font-medium text-slate-900">
-            {formatInvoiceMoney(item.cashPaymentAmount)}
+            {currenciesFormat('idr', item.cashPaymentAmount)}
           </span>
         ),
       },
@@ -220,7 +242,7 @@ export default function DoInvoiceDetailPage() {
         sortable: true,
         cell: (item) => (
           <span className="font-medium text-slate-900">
-            {formatInvoiceMoney(item.bcaPaymentAmount)}
+            {currenciesFormat('idr', item.bcaPaymentAmount)}
           </span>
         ),
       },
@@ -231,7 +253,7 @@ export default function DoInvoiceDetailPage() {
         sortable: true,
         cell: (item) => (
           <span className="font-medium text-slate-900">
-            {formatInvoiceMoney(item.bcaPaymentUsdAmount, 'USD')}
+            {currenciesFormat('usd', item.bcaPaymentUsdAmount)}
           </span>
         ),
       },
@@ -337,17 +359,17 @@ export default function DoInvoiceDetailPage() {
   const summaryCards = [
     {
       label: 'Nominal Invoice',
-      value: formatInvoiceMoney(invoice.nominal || billing?.grandTotal),
+      value: currenciesFormat('idr', invoice.nominal || billing?.grandTotal),
       valueClass: 'text-slate-950',
     },
     {
       label: 'Total Dibayar',
-      value: formatInvoiceMoney(billing?.totalPaid ?? invoice.paidNominal),
+      value: currenciesFormat('idr', billing?.totalPaid ?? invoice.paidNominal),
       valueClass: 'text-emerald-600',
     },
     {
       label: 'Sisa Tagihan',
-      value: formatInvoiceMoney(billing?.remainingPayment ?? invoice.billingRemainingNominal),
+      value: currenciesFormat('idr', billing?.remainingPayment ?? invoice.billingRemainingNominal),
       valueClass: 'text-rose-600',
     },
     {
@@ -360,13 +382,18 @@ export default function DoInvoiceDetailPage() {
   const invoiceInfo = [
     { label: 'Kode Order', value: invoice.orderList?.code },
     { label: 'Customer', value: invoice.customer?.name || invoice.orderList?.customer?.name },
-    { label: 'Tanggal', value: formatInvoiceDate(invoice.date) },
+    { label: 'Tanggal', value: formatDate(invoice.date) },
     { label: 'Perihal', value: invoice.subject },
-    { label: 'Biaya Lain', value: formatInvoiceMoney(invoice.otherFee) },
-    { label: 'Biaya Tambahan', value: formatInvoiceMoney(invoice.additionalFee) },
-    { label: 'Terakhir Bayar', value: formatInvoiceDate(billing?.lastPaymentAt) },
+    { label: 'Biaya Lain', value: currenciesFormat('idr', invoice.otherFee) },
+    { label: 'Biaya Tambahan', value: currenciesFormat('idr', invoice.additionalFee) },
+    { label: 'Terakhir Bayar', value: formatDate(billing?.lastPaymentAt) },
     { label: 'Status Print', value: invoice.isAlreadyPrint ? 'Sudah diprint' : 'Belum diprint' },
   ];
+  const isPaid = billing?.isPaid ?? invoice.isPaid;
+  const remainingPayment = Number(billing?.remainingPayment ?? invoice.billingRemainingNominal ?? 0);
+  const isRemainingPaidOff = remainingPayment <= 0;
+  const canAddPayment = canEdit && Boolean(billing) && !isPaid && !isRemainingPaidOff;
+  const canMarkPaid = canEdit && Boolean(billing) && !isPaid && isRemainingPaidOff;
 
   return (
     <DashboardLayout>
@@ -385,12 +412,12 @@ export default function DoInvoiceDetailPage() {
               <Badge
                 variant="outline"
                 className={
-                  invoice.isPaid
+                  isPaid
                     ? 'border-emerald-200 bg-emerald-50 text-emerald-700'
                     : 'border-amber-200 bg-amber-50 text-amber-700'
                 }
               >
-                {invoice.isPaid ? 'Lunas' : 'Belum Lunas'}
+                {isPaid ? 'Lunas' : 'Belum Lunas'}
               </Badge>
             </div>
           }
@@ -405,16 +432,31 @@ export default function DoInvoiceDetailPage() {
                 <Printer className="h-4 w-4" />
                 <span>Print</span>
               </Button>
-              {billing && (
-                <Button
-                  type="button"
-                  variant="outline"
-                  disabled={!canEdit || updateBilling.isPending}
-                  onClick={() => setPaidConfirmOpen(true)}
-                >
-                  {billing.isPaid ? 'Tandai Belum Lunas' : 'Tandai Lunas'}
-                </Button>
-              )}
+              <Button
+                type="button"
+                className="min-w-[120px] bg-orange-600 font-medium text-white hover:bg-orange-700"
+                disabled={!canAddPayment}
+                onClick={handleOpenCreatePayment}
+              >
+                <CreditCard className="h-4 w-4" />
+                {isPaid ? 'Sudah Dibayar' : 'Bayar'}
+              </Button>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    type="button"
+                    variant="default"
+                    disabled={!canMarkPaid || updateBilling.isPending}
+                    onClick={() => setPaidConfirmOpen(true)}
+                  >
+                    <CheckCircle2 className="h-4 w-4" />
+                    {isPaid ? 'Sudah Lunas' : 'Tandai Lunas'}
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent side="bottom" className="max-w-xs text-center text-xs">
+                  Mengubah status menjadi lunas maka akan menambah data ke arus transaksi dan ke finance kas harian
+                </TooltipContent>
+              </Tooltip>
             </div>
           }
         />
@@ -436,21 +478,13 @@ export default function DoInvoiceDetailPage() {
         </section>
 
         {/* Informasi Invoice */}
-        <Card className="border-slate-200 shadow-sm">
-          <CardHeader className="flex flex-row items-center gap-3 border-b border-slate-100 p-5 sm:p-6">
-            <div className="rounded-md bg-orange-100 p-2 text-orange-700">
-              <FileText className="h-5 w-5" />
-            </div>
-            <div>
-              <CardTitle className="text-base font-semibold text-slate-950">
-                Informasi Invoice
-              </CardTitle>
-              <CardDescription className="text-xs text-slate-500">
-                Rincian informasi data DO invoice dan pemesanan
-              </CardDescription>
-            </div>
-          </CardHeader>
-          <CardContent className="space-y-6 p-5 sm:p-6">
+        <CollapsibleBox
+          title="Informasi Invoice"
+          description="Rincian informasi data DO invoice dan pemesanan"
+          icon={FileText}
+          defaultExpanded
+        >
+          <div className="space-y-6">
             <dl className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
               {invoiceInfo.map((info) => (
                 <div key={info.label} className="space-y-1">
@@ -474,44 +508,22 @@ export default function DoInvoiceDetailPage() {
                 </p>
               </div>
             )}
-          </CardContent>
-        </Card>
+          </div>
+        </CollapsibleBox>
 
         {/* Riwayat Pembayaran */}
-        <Card className="border-slate-200 shadow-sm">
-          <CardHeader className="flex flex-col gap-4 border-b border-slate-100 p-5 sm:flex-row sm:items-center sm:justify-between sm:p-6">
-            <div className="flex items-center gap-3">
-              <div className="rounded-md bg-orange-100 p-2 text-orange-700">
-                <Receipt className="h-5 w-5" />
-              </div>
-              <div>
-                <CardTitle className="text-base font-semibold text-slate-950">
-                  Riwayat Pembayaran
-                </CardTitle>
-                <CardDescription className="text-xs text-slate-500">
-                  Kas, BCA IDR, dan BCA USD.
-                </CardDescription>
-              </div>
-            </div>
-            <Button
-              type="button"
-              size="sm"
-              disabled={!canEdit || !billing || billing.isPaid}
-              onClick={handleOpenCreatePayment}
-              className="gap-2 self-start sm:self-auto"
-            >
-              <CreditCard className="h-4 w-4" />
-              <span>Tambah Pembayaran</span>
-            </Button>
-          </CardHeader>
-          <CardContent className="p-5 sm:p-6">
-            <BaseTable<DoInvoiceBillingHistory>
-              data={billing?.histories ?? []}
-              columns={paymentColumns}
-              defaultSort={{ key: 'paymentAt', direction: 'desc' }}
-            />
-          </CardContent>
-        </Card>
+        <CollapsibleBox
+          title="Riwayat Pembayaran"
+          description="Kas, BCA IDR, dan BCA USD."
+          icon={Receipt}
+          defaultExpanded
+        >
+          <BaseTable<DoInvoiceBillingHistory>
+            data={billing?.histories ?? []}
+            columns={paymentColumns}
+            defaultSort={{ key: 'paymentAt', direction: 'desc' }}
+          />
+        </CollapsibleBox>
       </div>
 
       {/* Dialog Form Tambah / Edit Pembayaran */}
@@ -519,6 +531,7 @@ export default function DoInvoiceDetailPage() {
         <DoInvoicePaymentDialog
           open={paymentOpen}
           billingId={billing.id}
+          remainingPayment={Number(billing.remainingPayment ?? invoice.billingRemainingNominal ?? 0)}
           history={editingHistory}
           isSubmitting={createPayment.isPending || updatePayment.isPending}
           onOpenChange={(open) => {
@@ -534,7 +547,7 @@ export default function DoInvoiceDetailPage() {
         open={deleteTarget !== null}
         onOpenChange={(open) => !open && setDeleteTarget(null)}
       >
-        <DialogContent closeOnInteractOutside={!deletePayment.isPending}>
+        <DialogContent>
           <DialogHeader>
             <DialogTitle>Hapus riwayat pembayaran?</DialogTitle>
             <DialogDescription>
@@ -563,34 +576,28 @@ export default function DoInvoiceDetailPage() {
       </Dialog>
 
       {/* Dialog Konfirmasi Ubah Status Billing */}
-      <Dialog open={paidConfirmOpen} onOpenChange={setPaidConfirmOpen}>
-        <DialogContent closeOnInteractOutside={!updateBilling.isPending}>
-          <DialogHeader>
-            <DialogTitle>Ubah status billing?</DialogTitle>
-            <DialogDescription>
-              Billing {invoice.code} akan ditandai{' '}
-              {billing?.isPaid ? 'belum lunas' : 'lunas'} secara manual.
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter>
-            <Button
-              type="button"
-              variant="outline"
+      <AlertDialog open={paidConfirmOpen} onOpenChange={setPaidConfirmOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Tandai invoice sebagai lunas?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Mengubah status menjadi lunas maka akan menambah data ke arus transaksi dan ke finance kas harian. Aksi ini akan mengubah status billing DO invoice menjadi lunas dengan tanggal pembayaran hari ini.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={updateBilling.isPending}>Batal</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={(event) => {
+                event.preventDefault();
+                void confirmPaidStatus();
+              }}
               disabled={updateBilling.isPending}
-              onClick={() => setPaidConfirmOpen(false)}
             >
-              Batal
-            </Button>
-            <Button
-              type="button"
-              loading={updateBilling.isPending}
-              onClick={() => void confirmPaidStatus()}
-            >
-              Konfirmasi
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+              {updateBilling.isPending ? <LoadingState variant="inline" text="Menyimpan..." iconClassName="text-white" /> : 'Tandai Lunas'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       {/* Preview Gambar Bukti Pembayaran */}
       <ImagePreview
@@ -619,4 +626,3 @@ export default function DoInvoiceDetailPage() {
     </DashboardLayout>
   );
 }
-

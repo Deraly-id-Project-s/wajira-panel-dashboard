@@ -336,11 +336,19 @@ const mapDoInvoice = (item: any): DoInvoice => {
   const customer = mapCustomer(findNested(item, 'customer')) ?? firstExpedition?.customer ?? null;
   const rawBilling = findNested(item, 'do_invoice_billing', 'doInvoiceBilling');
   const billing = mapBilling(rawBilling);
+  const nominal = toNumber(item?.nominal);
+  const paidNominal = toNumber(item?.paid_nominal ?? item?.paidNominal);
+  const billingRemainingNominal = toNumber(item?.billing_remaining_nominal ?? item?.billingRemainingNominal ?? rawBilling?.remaining_payment ?? rawBilling?.remainingPayment);
   const topLevelHistories = findNested(item, 'do_invoice_billing_histories', 'doInvoiceBillingHistories');
   if (billing && billing.histories.length === 0 && Array.isArray(topLevelHistories)) {
     billing.histories = topLevelHistories.map(mapBillingHistory);
     billing.doInvoiceBillingHistories = billing.histories;
     billing.totalPaymentCount = billing.totalPaymentCount || billing.histories.length;
+  }
+  if (billing) {
+    billing.grandTotal = rawBilling?.grand_total == null && rawBilling?.grandTotal == null ? nominal : billing.grandTotal;
+    billing.totalPaid = rawBilling?.total_paid == null && rawBilling?.totalPaid == null ? paidNominal : billing.totalPaid;
+    billing.remainingPayment = rawBilling?.remaining_payment == null && rawBilling?.remainingPayment == null ? billingRemainingNominal : billing.remainingPayment;
   }
 
   return {
@@ -356,9 +364,9 @@ const mapDoInvoice = (item: any): DoInvoice => {
     isAlreadyPrint: toBool(item?.is_already_print ?? item?.is_printed ?? item?.isAlreadyPrint),
     otherFee: toNumber(item?.other_fee ?? item?.otherFee),
     additionalFee: toNumber(item?.additional_fee ?? item?.additionalFee),
-    nominal: toNumber(item?.nominal),
-    paidNominal: toNumber(item?.paid_nominal ?? item?.paidNominal),
-    billingRemainingNominal: toNumber(item?.billing_remaining_nominal ?? item?.billingRemainingNominal ?? rawBilling?.remaining_payment ?? rawBilling?.remainingPayment),
+    nominal,
+    paidNominal,
+    billingRemainingNominal,
     isPaid: toBool(item?.is_paid ?? item?.isPaid ?? rawBilling?.is_paid ?? rawBilling?.isPaid),
     doInvoiceBilling: billing,
     billing,

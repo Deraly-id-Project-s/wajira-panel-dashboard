@@ -1,8 +1,16 @@
 import * as React from 'react';
 import type { DoInvoice } from '@/@types/do-invoice.types';
 import type { DocumentTemplate } from '@/@types/document-template.types';
+import { currenciesFormat } from '@/components/ui/currenciesFormat';
 import { getObjectStorageUrl } from '@/components/ui/storage-image';
-import { formatInvoiceDate, formatInvoiceMoney, htmlToPlainText } from './do-invoice.utils';
+import { formatDate } from '@/lib/utils/format';
+
+const htmlToPlainText = (value?: string | null) =>
+  (value ?? '')
+    .replace(/<br\s*\/?>/gi, '\n')
+    .replace(/<\/p>/gi, '\n')
+    .replace(/<[^>]*>/g, '')
+    .trim();
 
 interface DoInvoicePrintDocumentProps {
   invoice: DoInvoice;
@@ -43,7 +51,7 @@ export function DoInvoicePrintDocument({ invoice, template, fallbackBackground, 
               <header className="border-b-2 pb-2 text-slate-950" style={{ borderColor: tableColor }}>
                 <div className="flex items-start justify-between gap-5">
                   <div><p className="text-[7pt] font-semibold uppercase tracking-[0.16em] text-slate-500">Dokumen Tagihan</p><h1 className="mt-0.5 text-[13pt] font-bold uppercase tracking-[0.08em]">DO Invoice</h1><p className="text-[8pt] font-semibold uppercase text-slate-700">{companyName}</p></div>
-                  <dl className="grid min-w-[68mm] grid-cols-[22mm_1fr] gap-x-2 gap-y-0.5 text-[7pt]"><dt className="text-slate-500">Nomor</dt><dd>: {invoice.code}</dd><dt className="text-slate-500">Tanggal</dt><dd>: {formatInvoiceDate(invoice.date)}</dd><dt className="text-slate-500">Dicetak</dt><dd>: {formatInvoiceDate(printedAt.toISOString())}</dd></dl>
+                  <dl className="grid min-w-[68mm] grid-cols-[22mm_1fr] gap-x-2 gap-y-0.5 text-[7pt]"><dt className="text-slate-500">Nomor</dt><dd>: {invoice.code}</dd><dt className="text-slate-500">Tanggal</dt><dd>: {formatDate(invoice.date)}</dd><dt className="text-slate-500">Dicetak</dt><dd>: {formatDate(printedAt.toISOString())}</dd></dl>
                 </div>
                 {headerInformation ? <p className="mt-2 whitespace-pre-line text-[7pt] leading-snug text-slate-600">{headerInformation}</p> : null}
               </header>
@@ -54,8 +62,8 @@ export function DoInvoicePrintDocument({ invoice, template, fallbackBackground, 
                   <colgroup><col className="w-[6%]" /><col className="w-[14%]" /><col className="w-[18%]" /><col className="w-[22%]" /><col className="w-[18%]" /><col className="w-[22%]" /></colgroup>
                   <thead><tr className="text-white" style={{ backgroundColor: tableColor }}><th className="border border-white/30 p-1.5">No</th><th className="border border-white/30 p-1.5">Tanggal</th><th className="border border-white/30 p-1.5">No. DO</th><th className="border border-white/30 p-1.5">Driver / Armada</th><th className="border border-white/30 p-1.5">Tujuan</th><th className="border border-white/30 p-1.5 text-right">Nominal</th></tr></thead>
                   <tbody>
-                    {rows.map((row, index) => <tr key={row?.id ?? index} className={index % 2 ? 'bg-slate-50/80' : 'bg-white'}><td className="border border-slate-300 p-1.5 text-center">{pageIndex * ROWS_PER_PRINT_PAGE + index + 1}</td><td className="border border-slate-300 p-1.5">{formatInvoiceDate(row?.date)}</td><td className="border border-slate-300 p-1.5">{row?.noSuratDo || '-'}</td><td className="border border-slate-300 p-1.5">{row ? `${row.driver?.name || '-'} / ${row.vehicle?.registrationNumber || '-'}` : '-'}</td><td className="border border-slate-300 p-1.5">{row?.destination || '-'}</td><td className="border border-slate-300 p-1.5 text-right tabular-nums">{formatInvoiceMoney(row?.totalAmount)}</td></tr>)}
-                    {isLastPage ? <><tr><td colSpan={5} className="border border-slate-400 p-1.5 text-right">Biaya Lain</td><td className="border border-slate-400 p-1.5 text-right">{formatInvoiceMoney(invoice.otherFee)}</td></tr><tr><td colSpan={5} className="border border-slate-400 p-1.5 text-right">Biaya Tambahan</td><td className="border border-slate-400 p-1.5 text-right">{formatInvoiceMoney(invoice.additionalFee)}</td></tr><tr className="font-bold" style={{ backgroundColor: `${tableColor}14` }}><td colSpan={5} className="border border-slate-400 p-2 text-right uppercase">Grand Total</td><td className="border border-slate-400 p-2 text-right">{formatInvoiceMoney(invoice.nominal || invoice.billing?.grandTotal)}</td></tr></> : null}
+                    {rows.map((row, index) => <tr key={row?.id ?? index} className={index % 2 ? 'bg-slate-50/80' : 'bg-white'}><td className="border border-slate-300 p-1.5 text-center">{pageIndex * ROWS_PER_PRINT_PAGE + index + 1}</td><td className="border border-slate-300 p-1.5">{formatDate(row?.date)}</td><td className="border border-slate-300 p-1.5">{row?.noSuratDo || '-'}</td><td className="border border-slate-300 p-1.5">{row ? `${row.driver?.name || '-'} / ${row.vehicle?.registrationNumber || '-'}` : '-'}</td><td className="border border-slate-300 p-1.5">{row?.destination || '-'}</td><td className="border border-slate-300 p-1.5 text-right tabular-nums">{currenciesFormat('idr', row?.totalAmount)}</td></tr>)}
+                    {isLastPage ? <><tr><td colSpan={5} className="border border-slate-400 p-1.5 text-right">Biaya Lain</td><td className="border border-slate-400 p-1.5 text-right">{currenciesFormat('idr', invoice.otherFee)}</td></tr><tr><td colSpan={5} className="border border-slate-400 p-1.5 text-right">Biaya Tambahan</td><td className="border border-slate-400 p-1.5 text-right">{currenciesFormat('idr', invoice.additionalFee)}</td></tr><tr className="font-bold" style={{ backgroundColor: `${tableColor}14` }}><td colSpan={5} className="border border-slate-400 p-2 text-right uppercase">Grand Total</td><td className="border border-slate-400 p-2 text-right">{currenciesFormat('idr', invoice.nominal || invoice.billing?.grandTotal)}</td></tr></> : null}
                   </tbody>
                 </table>
               </div>

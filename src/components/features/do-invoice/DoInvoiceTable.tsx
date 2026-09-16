@@ -6,7 +6,10 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { CopyBox } from '@/components/ui/copy-box';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { formatInvoiceDate, formatInvoiceMoney } from './do-invoice.utils';
+import { useRouter } from 'next/router';
+import { ReferenceLink } from '@/components/ui/reference-link';
+import { currenciesFormat } from '@/components/ui/currenciesFormat';
+import { formatDate } from '@/lib/utils/format';
 
 interface DoInvoiceTableProps {
   data: DoInvoice[];
@@ -16,16 +19,22 @@ interface DoInvoiceTableProps {
 }
 
 export function DoInvoiceTable({ data, isLoading, detailHref, onDetail }: DoInvoiceTableProps) {
+  const router = useRouter();
+  const slug = router.query.slug as string;
+
   const columns = React.useMemo<ColumnDef<DoInvoice>[]>(() => [
     {
       header: 'KODE INVOICE', accessorKey: 'code', sortable: true,
       cell: (item) => <CopyBox text={item.code} href={detailHref(item)} />,
     },
-    { header: 'ORDER LIST', accessorKey: 'orderList.code', cell: (item) => item.orderList?.code || '-' },
-    { header: 'CUSTOMER', accessorKey: 'customer.name', cell: (item) => item.customer?.name || item.orderList?.customer?.name || '-' },
-    { header: 'TANGGAL', accessorKey: 'date', cell: (item) => formatInvoiceDate(item.date) },
-    { header: 'NOMINAL', accessorKey: 'nominal', alignment: 'right', cell: (item) => formatInvoiceMoney(item.nominal) },
-    { header: 'SISA TAGIHAN', accessorKey: 'billingRemainingNominal', alignment: 'right', cell: (item) => formatInvoiceMoney(item.billing?.remainingPayment ?? item.billingRemainingNominal) },
+    { header: 'ORDER LIST', accessorKey: 'orderList.code', cell: (item) => item.orderList?.code ? <CopyBox text={item.orderList?.code} /> : '-' },
+    {
+      header: 'CUSTOMER', accessorKey: 'customer.name', cell:
+        (item) => item.orderList?.customer ? <ReferenceLink href={`/dashboard/${slug}/master/customer?search=${item.orderList?.customer?.name}`}>{item.orderList?.customer?.name}</ReferenceLink> : '-'
+    },
+    { header: 'TANGGAL', accessorKey: 'date', cell: (item) => formatDate(item.date) },
+    { header: 'NOMINAL', accessorKey: 'nominal', alignment: 'right', cell: (item) => currenciesFormat('idr', item.nominal) },
+    { header: 'SISA TAGIHAN', accessorKey: 'billingRemainingNominal', alignment: 'right', cell: (item) => currenciesFormat('idr', item.billing?.remainingPayment ?? item.billingRemainingNominal) },
     {
       header: 'STATUS', accessorKey: 'isPaid', alignment: 'center',
       cell: (item) => <Badge variant="outline" className={item.isPaid ? 'border-emerald-200 bg-emerald-50 text-emerald-700' : 'border-amber-200 bg-amber-50 text-amber-700'}>{item.isPaid ? 'Lunas' : 'Belum Lunas'}</Badge>,
@@ -39,7 +48,7 @@ export function DoInvoiceTable({ data, isLoading, detailHref, onDetail }: DoInvo
         </DropdownMenu>
       ),
     },
-  ], [detailHref, onDetail]);
+  ], [detailHref, onDetail, slug]);
 
   return <BaseTable data={data} columns={columns} loading={isLoading} defaultSort={{ key: 'id', direction: 'desc' }} />;
 }
