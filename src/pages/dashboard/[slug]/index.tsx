@@ -314,7 +314,6 @@ export default function DashboardPage() {
             <DatePickerWithRange date={dateRangeState} onChange={setDateRangeState} className="shrink-0" />
             <Button
               variant="outline"
-              className="h-8 px-2.5 sm:h-9 sm:px-4 text-xs sm:text-sm bg-[#f8f9fa] shadow-sm text-gray-700 gap-1.5 sm:gap-2 shrink-0 hover:bg-slate-100"
               onClick={handleShowData}
               disabled={isLoadingDisplay}
             >
@@ -328,7 +327,6 @@ export default function DashboardPage() {
             </Button>
             <Button
               variant="outline"
-              className="h-8 px-2.5 sm:h-9 sm:px-4 text-xs sm:text-sm bg-[#f8f9fa] shadow-sm text-gray-700 gap-1.5 sm:gap-2 shrink-0 hover:bg-slate-100"
               onClick={handleRefreshCache}
               disabled={isRefreshingCache || isLoadingDisplay}
             >

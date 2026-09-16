@@ -25,6 +25,7 @@ import {
 } from '@/components/ui/alert-dialog';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { CollapsibleBox } from '@/components/ui/collapsible-box';
 import { Card, CardContent } from '@/components/ui/card';
 import { LoadingState } from '@/components/ui/loading-state';
 import { PageHeader } from '@/components/ui/page-header';
@@ -210,27 +211,19 @@ export default function KasBonDetailPage() {
 
         <KasBonDetailCards data={data} billing={billing} />
         {billing ? (
-          <Card className="border-slate-200 shadow-sm">
-            <CardContent className="space-y-6 p-5 sm:p-6">
-              <div className="flex items-start gap-3">
-                <div className="rounded-md bg-orange-100 p-2 text-orange-700">
-                  <History className="h-5 w-5" />
-                </div>
-                <div>
-                  <h2 className="text-base font-semibold text-slate-950">Riwayat Pembayaran</h2>
-                  <p className="mt-0.5 text-xs text-slate-500">Daftar transaksi pembayaran untuk kas bon ini</p>
-                </div>
-              </div>
-              <div className="border-t border-slate-100 pt-5">
-                <KasBonPaymentHistoryTable
-                  histories={billing.histories}
-                  onDelete={handleDeletePaymentHistory}
-                  isDeleting={deletePayment.isPending}
-                  canDelete={canEdit}
-                />
-              </div>
-            </CardContent>
-          </Card>
+          <CollapsibleBox
+            title="Riwayat Pembayaran"
+            description="Daftar transaksi pembayaran untuk kas bon ini"
+            icon={History}
+            defaultExpanded
+          >
+            <KasBonPaymentHistoryTable
+              histories={billing.histories}
+              onDelete={handleDeletePaymentHistory}
+              isDeleting={deletePayment.isPending}
+              canDelete={canEdit}
+            />
+          </CollapsibleBox>
         ) : null}
       </div>
 

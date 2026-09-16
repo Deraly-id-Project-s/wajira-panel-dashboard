@@ -11,7 +11,7 @@ import type {
   DriverCashAdvanceBilling,
 } from '@/@types/driver-cash-advance.types';
 import { Badge } from '@/components/ui/badge';
-import { Card, CardContent } from '@/components/ui/card';
+import { CollapsibleBox } from '@/components/ui/collapsible-box';
 import { currenciesFormat } from '@/components/ui/currenciesFormat';
 import { formatKasBonDate } from './kas-bon.utils';
 
@@ -42,20 +42,14 @@ interface DetailSectionProps {
 
 function DetailSection({ title, description, icon: Icon, children }: DetailSectionProps) {
   return (
-    <Card className="border-slate-200 shadow-sm">
-      <CardContent className="space-y-6 p-5 sm:p-6">
-        <div className="flex items-start gap-3">
-          <div className="rounded-md bg-orange-100 p-2 text-orange-700">
-            <Icon className="h-5 w-5" />
-          </div>
-          <div>
-            <h2 className="text-base font-semibold text-slate-950">{title}</h2>
-            <p className="mt-0.5 text-xs text-slate-500">{description}</p>
-          </div>
-        </div>
-        {children}
-      </CardContent>
-    </Card>
+    <CollapsibleBox
+      title={title}
+      description={description}
+      icon={Icon}
+      defaultExpanded
+    >
+      {children}
+    </CollapsibleBox>
   );
 }
 

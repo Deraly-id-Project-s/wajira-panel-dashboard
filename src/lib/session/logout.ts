@@ -3,6 +3,7 @@ import { removeAccessToken } from '@/lib/auth/token';
 import { clearCompanyScopedQueries } from '@/lib/session/query-cache';
 import { clearStoredCompanyId, clearStoredPermissions } from '@/lib/session/storage';
 import { clearCachedUserCompanies } from '@/services/company.service';
+import { clearCachedPreferences } from '@/services/preference.service';
 import { AuthService } from '@/features/auth/services/auth.service';
 
 export const performClientLogout = (queryClient: QueryClient): void => {
@@ -10,6 +11,7 @@ export const performClientLogout = (queryClient: QueryClient): void => {
   clearStoredCompanyId();
   clearStoredPermissions();
   clearCachedUserCompanies();
+  clearCachedPreferences();
   AuthService.clearCachedProfile();
   queryClient.removeQueries({ queryKey: ['auth', 'dashboard-permissions'] });
   queryClient.removeQueries({ queryKey: ['auth', 'permissions'] });

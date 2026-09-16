@@ -194,7 +194,6 @@ export default function KasBonPage() {
                     setSearchInput('');
                     updateQuery({ search: undefined, page: 1 });
                   }}
-                  className="h-9 rounded-md border-slate-200 bg-white px-3 text-xs text-slate-700 hover:bg-slate-50"
                 >
                   Reset
                 </Button>
@@ -204,7 +203,7 @@ export default function KasBonPage() {
                   Memperbarui data...
                 </span>
               )}
-              <Button type="button" onClick={handleAdd} disabled={!canCreate} className="btn-primary!">
+              <Button type="button" onClick={handleAdd} disabled={!canCreate} variant="default">
                 <Plus className="mr-2 h-4 w-4" />
                 Tambah Data
               </Button>
@@ -247,9 +246,8 @@ export default function KasBonPage() {
         companyName={getCompanyName(resolvedCompanyId)}
         periodLabel={
           startDate
-            ? `${dateRange?.from ? format(dateRange.from, 'dd MMM yyyy') : '-'}${
-                endDate && endDate !== startDate && dateRange?.to ? ` – ${format(dateRange.to, 'dd MMM yyyy')}` : ''
-              }`
+            ? `${dateRange?.from ? format(dateRange.from, 'dd MMM yyyy') : '-'}${endDate && endDate !== startDate && dateRange?.to ? ` – ${format(dateRange.to, 'dd MMM yyyy')}` : ''
+            }`
             : 'Semua Periode'
         }
         reportPage={page}

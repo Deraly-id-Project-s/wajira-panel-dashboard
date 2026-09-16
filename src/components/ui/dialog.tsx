@@ -42,7 +42,7 @@ const DialogContent = React.forwardRef<
     showCloseButton?: boolean;
     closeOnInteractOutside?: boolean;
   }
->(({ className, children, showCloseButton = true, closeOnInteractOutside = true, onInteractOutside, ...props }, ref) => {
+>(({ className, children, showCloseButton = true, closeOnInteractOutside = false, onInteractOutside, onPointerDownOutside, ...props }, ref) => {
   React.useEffect(() => {
     return () => {
       document.body.style.pointerEvents = 'auto';
@@ -57,6 +57,10 @@ const DialogContent = React.forwardRef<
         data-slot="dialog-content"
         onInteractOutside={(event) => {
           onInteractOutside?.(event);
+          if (!closeOnInteractOutside) event.preventDefault();
+        }}
+        onPointerDownOutside={(event) => {
+          onPointerDownOutside?.(event);
           if (!closeOnInteractOutside) event.preventDefault();
         }}
         className={cn(
