@@ -213,7 +213,7 @@ export default function ExpeditionClaimReportsPage() {
         );
       },
     }
-  ], [page, perPage, slug]);
+  ], [slug]);
 
   return (
     <DashboardLayout>

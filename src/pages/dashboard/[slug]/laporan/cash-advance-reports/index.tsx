@@ -181,7 +181,7 @@ export default function CashAdvanceReportsPage() {
         );
       },
     }
-  ], [page, perPage, slugParam]);
+  ], [slugParam]);
 
   return (
     <DashboardLayout>

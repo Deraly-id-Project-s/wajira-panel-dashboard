@@ -168,7 +168,7 @@ export default function OrderListReportsPage() {
       alignment: 'right',
       cell: (item) => <span className="text-red-600 whitespace-nowrap tabular-nums text-sm">{currenciesFormat('idr', item.invoice_remaining_nominal || 0)}</span>,
     }
-  ], [page, perPage, slugParam]);
+  ], [slugParam]);
 
   return (
     <DashboardLayout>

@@ -176,7 +176,7 @@ export default function LaporanSuratJalanPage() {
         )
       ),
     },
-  ], [page, perPage, slugParam]);
+  ], [slugParam]);
 
   return (
     <DashboardLayout>

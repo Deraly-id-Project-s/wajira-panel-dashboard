@@ -166,7 +166,7 @@ export default function LaporanInvoicePage() {
         );
       },
     }
-  ], [page, perPage, slugParam]);
+  ], [slugParam]);
 
   return (
     <DashboardLayout>
