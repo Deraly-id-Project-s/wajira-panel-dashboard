@@ -9,7 +9,7 @@ import { Button } from '@/components/ui/button';
 import { DatePickerWithRange } from '@/components/ui/date-range-picker';
 import { DateRange } from 'react-day-picker';
 import { format } from 'date-fns';
-import { useExpeditionReportFeature } from '@/hooks/report/useReportFeatures';
+import { useOrderListReportFeature } from '@/hooks/report/useReportFeatures';
 import { useCompany } from '@/contexts/CompanyContext';
 import { resolveCompanyId, getLetterheadByCompanyId, getCompanyName } from '@/lib/print-letterhead';
 import { PrintLetterPage } from '@/components/common/PrintLetterPage';
@@ -21,12 +21,12 @@ import { getObjectStorageUrl } from '@/components/ui/storage-image';
 import { useReportTemplatePrint } from '@/hooks/useReportTemplatePrint';
 import { ReportTemplatePrintDialog } from '@/components/ui/report-template-print-dialog';
 import { ReportFilterBar } from '@/components/common/ReportFilterBar';
-import { ReportDateFilters, ReportExpeditionItem } from '@/@types/report-feature.types';
+import { ReportDateFilters, ReportOrderListItem } from '@/@types/report-feature.types';
 import { currenciesFormat } from '@/components/ui/currenciesFormat';
 import { ReferenceLink } from '@/components/ui/reference-link';
 import { CopyBox } from '@/components/ui/copy-box';
 
-export default function LaporanSuratJalanPage() {
+export default function OrderListReportsPage() {
   const router = useRouter();
   const { companyId } = useCompany();
   const slugParam = router.query.slug;
@@ -73,7 +73,7 @@ export default function LaporanSuratJalanPage() {
   }, [dateRange]);
 
   // Fetch report data
-  const { data, pagination, isLoading, isError, error } = useExpeditionReportFeature({
+  const { data, pagination, isLoading, isError, error } = useOrderListReportFeature({
     page,
     per_page: perPage,
     search: debouncedSearch,
@@ -86,25 +86,15 @@ export default function LaporanSuratJalanPage() {
     templatePrint.openPrintDialog();
   };
 
-  const columns: ColumnDef<ReportExpeditionItem>[] = useMemo(() => [
-    {
-      header: 'KODE SURAT JALAN',
-      accessorKey: 'do_expedition_code',
-      sortable: true,
-      cell: (item) => item.do_expedition_code ? (
-        <CopyBox
-          text={item.do_expedition_code}
-          href={`/dashboard/${slugParam}/do-ekspedisi/detail/${item.id || item.do_expedition_code}`}
-        />
-      ) : '-',
-    },
+  const columns: ColumnDef<ReportOrderListItem>[] = useMemo(() => [
     {
       header: 'KODE ORDER',
       accessorKey: 'order_list_code',
+      sortable: true,
       cell: (item) => item.order_list_code ? (
         <CopyBox
           text={item.order_list_code}
-          href={`/dashboard/${slugParam}/administrasi/order-list/detail/${item.order_list_id || item.order_list_code}`}
+          href={`/dashboard/${slugParam}/administrasi/order-list/detail/${item.id || item.order_list_code}`}
         />
       ) : '-',
     },
@@ -118,36 +108,9 @@ export default function LaporanSuratJalanPage() {
       ) : '-',
     },
     {
-      header: 'NO POLISI',
-      accessorKey: 'vehicle_registration_number',
-      cell: (item) => item.vehicle_registration_number ? (
-        <ReferenceLink href={`/dashboard/${slugParam}/data-kendaraan?search=${item.vehicle_registration_number}`}>
-          {item.vehicle_registration_number}
-        </ReferenceLink>
-      ) : '-',
-    },
-    {
-      header: 'TIPE ARMADA',
-      accessorKey: 'vehicle_type',
-      cell: (item) => <span className="text-slate-600 uppercase">{item.vehicle_type || '-'}</span>,
-    },
-    {
-      header: 'DRIVER',
-      accessorKey: 'driver_name',
-      cell: (item) => item.driver_name ? (
-        <ReferenceLink href={`/dashboard/${slugParam}/master/driver?search=${item.driver_name}`}>
-          {item.driver_name}
-        </ReferenceLink>
-      ) : '-',
-    },
-    {
-      header: 'TUJUAN KIRIM',
-      accessorKey: 'delivery_destination',
-      cell: (item) => <span className="text-slate-600">{item.delivery_destination || '-'}</span>,
-    },
-    {
       header: 'STATUS',
       accessorKey: 'status',
+      alignment: 'center',
       cell: (item) => (
         <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-blue-50 text-blue-700 border border-blue-200">
           {item.status || '-'}
@@ -155,40 +118,69 @@ export default function LaporanSuratJalanPage() {
       ),
     },
     {
-      header: 'TOTAL NOMINAL',
-      accessorKey: 'uj_nominal_after_claim',
-      alignment: 'right',
-      cell: (item) => <span className="tabular-nums font-semibold">{currenciesFormat('idr', item.uj_nominal_after_claim || 0)}</span>,
+      header: 'DESKRIPSI',
+      accessorKey: 'description',
+      cell: (item) => <span className="text-slate-600 truncate max-w-[200px] block">{item.description || '-'}</span>,
     },
     {
-      header: 'STATUS PEMBAYARAN',
-      accessorKey: 'uj_payment_status',
+      header: 'TOTAL TARIF',
+      accessorKey: 'total_tarif',
       alignment: 'center',
-      cell: (item) => (
-        item.is_paid ? (
-          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-green-50 text-green-700 border border-green-200">
-            {item.uj_payment_status || 'Lunas'}
-          </span>
-        ) : (
-          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-red-50 text-red-700 border border-red-200">
-            {item.uj_payment_status || 'Belum Lunas'}
-          </span>
-        )
-      ),
+      cell: (item) => <span className="tabular-nums font-semibold">{item.total_tarif || 0}</span>,
     },
+    {
+      header: 'TOTAL DO',
+      accessorKey: 'total_expedition',
+      alignment: 'center',
+      cell: (item) => <span className="tabular-nums font-semibold">{item.total_expedition || 0}</span>,
+    },
+    {
+      header: 'DO SELESAI',
+      accessorKey: 'total_done_expedition',
+      alignment: 'center',
+      cell: (item) => <span className="tabular-nums text-green-600 font-medium">{item.total_done_expedition || 0}</span>,
+    },
+    {
+      header: 'DO PROSES',
+      accessorKey: 'total_process_expedition',
+      alignment: 'center',
+      cell: (item) => <span className="tabular-nums text-amber-600 font-medium">{item.total_process_expedition || 0}</span>,
+    },
+    {
+      header: 'ARMADA',
+      accessorKey: 'vehicles_text',
+      cell: (item) => <span className="text-slate-600 text-xs truncate max-w-[150px] block" title={item.vehicles_text || ''}>{item.vehicles_text || '-'}</span>,
+    },
+    {
+      header: 'DRIVER',
+      accessorKey: 'drivers_text',
+      cell: (item) => <span className="text-slate-600 text-xs truncate max-w-[150px] block" title={item.drivers_text || ''}>{item.drivers_text || '-'}</span>,
+    },
+    {
+      header: 'NOMINAL INVOICE',
+      accessorKey: 'invoice_nominal',
+      alignment: 'right',
+      cell: (item) => <span className="font-semibold text-gray-900 whitespace-nowrap tabular-nums text-sm">{currenciesFormat('idr', item.invoice_nominal || 0)}</span>,
+    },
+    {
+      header: 'SISA INVOICE',
+      accessorKey: 'invoice_remaining_nominal',
+      alignment: 'right',
+      cell: (item) => <span className="text-red-600 whitespace-nowrap tabular-nums text-sm">{currenciesFormat('idr', item.invoice_remaining_nominal || 0)}</span>,
+    }
   ], [page, perPage, slugParam]);
 
   return (
     <DashboardLayout>
       <Head>
-        <title>Laporan Ekspedisi - Wajira Dashboard</title>
+        <title>Laporan Order List - Wajira Dashboard</title>
       </Head>
       <div className="space-y-6">
         {/* Header */}
         <div className="no-print">
           <PageHeader
-            title="Laporan Ekspedisi"
-            subtitle="Laporan aktivitas pengiriman logistik / DO ekspedisi"
+            title="Laporan Order List"
+            subtitle="Laporan rekap data Order List"
             actions={
               <Button onClick={handlePrint} variant="outline" className="w-full sm:w-auto" disabled={isLoading}>
                 <Printer className="h-4 w-4 mr-2" />
@@ -202,7 +194,7 @@ export default function LaporanSuratJalanPage() {
         <SearchPagination
           searchValue={searchTerm}
           onSearchChange={setSearchTerm}
-          searchPlaceholder="Cari data ekspedisi..."
+          searchPlaceholder="Cari order list..."
           searchAriaLabel="Cari data"
           filters={
             <div className="flex flex-wrap items-center gap-2">
@@ -219,7 +211,7 @@ export default function LaporanSuratJalanPage() {
           perPage={pagination.perPage}
           total={pagination.total}
           lastPage={pagination.lastPage}
-          perPageOptions={[25, 50, 100]}
+          perPageOptions={[10, 25, 50, 100]}
           onPageChange={setPage}
           onPerPageChange={setPerPage}
         >
@@ -236,7 +228,7 @@ export default function LaporanSuratJalanPage() {
             <>
               {/* Print Letter Wrapping Container */}
               <PrintLetterPage
-                id="laporan-ekspedisi-print"
+                id="laporan-order-list-print"
                 className="laporan-penerimaan-print-area"
                 letterheadSrc={templateBackground}
               >
@@ -247,7 +239,7 @@ export default function LaporanSuratJalanPage() {
                   {/* Cover Letter Heading - Visible only in Print */}
                   <div className="hidden print:flex flex-col items-center justify-center text-center space-y-1 mb-8 w-full">
                     <h2 className="text-[13px] font-bold uppercase text-gray-900 tracking-wide">
-                      Laporan Ekspedisi
+                      Laporan Order List
                     </h2>
                     <p className="text-[13px] font-bold text-gray-900 tracking-wide">
                       {getCompanyName(resolvedCompanyId)}
@@ -284,7 +276,7 @@ export default function LaporanSuratJalanPage() {
           onTemplateChange={templatePrint.setSelectedTemplateId}
           onPrint={templatePrint.printWithSelectedTemplate}
           isPreparingPrint={templatePrint.isPreparingPrint}
-          reportName="laporan ekspedisi"
+          reportName="laporan order list"
         />
       </div>
     </DashboardLayout>

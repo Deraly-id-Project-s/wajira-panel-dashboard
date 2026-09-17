@@ -107,8 +107,11 @@ const FEATURE_MAP: Record<string, { path: string; label?: string; group?: string
   'receipt-reports': { path: '/laporan/laporan-penerimaan', label: 'Laporan Penerimaan' },
   'dispatch-reports': { path: '/laporan/laporan-pengiriman', label: 'Laporan Pengiriman' },
   'inventory-reports': { path: '/laporan/laporan-stock', label: 'Laporan Warehouse' },
-  'expedition-reports': { path: '/laporan/laporan-surat-jalan', label: 'Laporan Surat Jalan' },
+  'expedition-reports': { path: '/laporan/laporan-surat-jalan', label: 'Laporan Ekspedisi' },
   'invoice-reports': { path: '/laporan/laporan-invoice', label: 'Laporan Invoice' },
+  'order-list-reports': { path: '/laporan/order-list-reports', label: 'Laporan Order List' },
+  'cash-advance-reports': { path: '/laporan/cash-advance-reports', label: 'Laporan Kas Bon' },
+  'expedition-claim-reports': { path: '/laporan/expedition-claim-reports', label: 'Laporan Klaim Ekspedisi' },
   'maintenance-reports': { path: '/laporan/laporan-ritase-armada', label: 'Laporan Ritase Armada/Maintenance' },
   'vehicle-usage-reports': { path: '/laporan/laporan-ritase-armada', label: 'Laporan Pemakaian Kendaraan' },
   'perlengkapan-reports': { path: '/laporan/laporan-stock-perlengkapan', label: 'Laporan Persediaan Barang' },
@@ -173,7 +176,18 @@ const REPORT_MENU_ORDER = [
   'Laporan Buku Besar',
   'Laporan Neraca Lajur',
   'Laporan Laba Rugi',
+  'Laporan Neraca',
   'Laporan Pembelian',
+  'Laporan Penjualan',
+  'Laporan Penerimaan',
+  'Laporan Pengiriman',
+  'Laporan Warehouse',
+  'Laporan Ekspedisi',
+  'Laporan Invoice',
+  'Laporan Order List',
+  'Laporan Kas Bon',
+  'Laporan Klaim Ekspedisi',
+  'Laporan Pemakaian Kendaraan',
 ];
 
 const sortReportMenuItems = (items: MenuItem[]) => {
@@ -227,6 +241,43 @@ const ensureBalanceColumnReportMenu = (items: MenuItem[], slug: string) => {
     label: 'Laporan Neraca Lajur',
     href: reportHref,
   });
+};
+
+const ensureExpeditionReportMenus = (
+  items: MenuItem[],
+  slug: string,
+  features: { slug: string }[],
+  permissionSet: Set<string>,
+) => {
+  const hasExpeditionAccess =
+    features.some((f) => f.slug === 'expedition-reports' || f.slug === 'do-expedition') ||
+    permissionSet.has('expedition-reports:list') ||
+    permissionSet.has('expedition-report:list') ||
+    permissionSet.has('feature:expedition-reports');
+
+  if (!hasExpeditionAccess) return;
+
+  const expeditionMenuItems: { label: string; path: string }[] = [
+    { label: 'Laporan Ekspedisi', path: '/laporan/laporan-surat-jalan' },
+    { label: 'Laporan Invoice', path: '/laporan/laporan-invoice' },
+    { label: 'Laporan Order List', path: '/laporan/order-list-reports' },
+    { label: 'Laporan Kas Bon', path: '/laporan/cash-advance-reports' },
+    { label: 'Laporan Klaim Ekspedisi', path: '/laporan/expedition-claim-reports' },
+  ];
+
+  for (const report of expeditionMenuItems) {
+    const href = resolvePath(report.path, slug);
+    const existingIndex = items.findIndex((item) => item.href === href || item.label === report.label);
+    if (existingIndex < 0) {
+      items.push({
+        label: report.label,
+        href,
+      });
+    } else {
+      items[existingIndex].label = report.label;
+      items[existingIndex].href = href;
+    }
+  }
 };
 
 const hasModuleAccess = (item: SidebarModuleItem, permissionSet: Set<string>) => {
@@ -366,6 +417,7 @@ export function buildDynamicMenus(sidebarData: SidebarModuleItem[], permissions:
         ensureJournalReportMenu(children, slug);
         ensureLedgerReportMenu(children, slug);
         ensureBalanceColumnReportMenu(children, slug);
+        ensureExpeditionReportMenus(children, slug, item.features, permissionSet);
         sortReportMenuItems(children);
       }
 

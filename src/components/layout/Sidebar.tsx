@@ -158,6 +158,33 @@ const ensureReportFallbackSidebarMenus = (menus: MenuItem[], slug: string): Menu
       });
     }
 
+    const hasExpedition = menu.children.some(
+      (child) =>
+        child.label === 'Laporan Ekspedisi' ||
+        child.label === 'Laporan Surat Jalan' ||
+        child.href === (slug ? `/dashboard/${slug}/laporan/laporan-surat-jalan` : '/laporan/laporan-surat-jalan')
+    );
+
+    if (hasExpedition) {
+      const expeditionMenuItems = [
+        { label: 'Laporan Ekspedisi', href: slug ? `/dashboard/${slug}/laporan/laporan-surat-jalan` : '/laporan/laporan-surat-jalan' },
+        { label: 'Laporan Invoice', href: slug ? `/dashboard/${slug}/laporan/laporan-invoice` : '/laporan/laporan-invoice' },
+        { label: 'Laporan Order List', href: slug ? `/dashboard/${slug}/laporan/order-list-reports` : '/laporan/order-list-reports' },
+        { label: 'Laporan Kas Bon', href: slug ? `/dashboard/${slug}/laporan/cash-advance-reports` : '/laporan/cash-advance-reports' },
+        { label: 'Laporan Klaim Ekspedisi', href: slug ? `/dashboard/${slug}/laporan/expedition-claim-reports` : '/laporan/expedition-claim-reports' },
+      ];
+
+      for (const report of expeditionMenuItems) {
+        const existingIndex = children.findIndex((c) => c.href === report.href || c.label === report.label);
+        if (existingIndex < 0) {
+          children.push(report);
+        } else {
+          children[existingIndex].label = report.label;
+          children[existingIndex].href = report.href;
+        }
+      }
+    }
+
     return {
       ...menu,
       children,

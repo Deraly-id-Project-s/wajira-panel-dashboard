@@ -9,7 +9,7 @@ import { Button } from '@/components/ui/button';
 import { DatePickerWithRange } from '@/components/ui/date-range-picker';
 import { DateRange } from 'react-day-picker';
 import { format } from 'date-fns';
-import { useExpeditionReportFeature } from '@/hooks/report/useReportFeatures';
+import { useExpeditionClaimReportFeature } from '@/hooks/report/useReportFeatures';
 import { useCompany } from '@/contexts/CompanyContext';
 import { resolveCompanyId, getLetterheadByCompanyId, getCompanyName } from '@/lib/print-letterhead';
 import { PrintLetterPage } from '@/components/common/PrintLetterPage';
@@ -21,17 +21,17 @@ import { getObjectStorageUrl } from '@/components/ui/storage-image';
 import { useReportTemplatePrint } from '@/hooks/useReportTemplatePrint';
 import { ReportTemplatePrintDialog } from '@/components/ui/report-template-print-dialog';
 import { ReportFilterBar } from '@/components/common/ReportFilterBar';
-import { ReportDateFilters, ReportExpeditionItem } from '@/@types/report-feature.types';
+import { ReportDateFilters, ReportExpeditionClaimItem } from '@/@types/report-feature.types';
 import { currenciesFormat } from '@/components/ui/currenciesFormat';
 import { ReferenceLink } from '@/components/ui/reference-link';
 import { CopyBox } from '@/components/ui/copy-box';
 
-export default function LaporanSuratJalanPage() {
+export default function ExpeditionClaimReportsPage() {
   const router = useRouter();
   const { companyId } = useCompany();
-  const slugParam = router.query.slug;
+  const slug = router.query.slug;
 
-  const resolvedCompanyId = resolveCompanyId(slugParam, companyId) || 4;
+  const resolvedCompanyId = resolveCompanyId(slug, companyId) || 4;
   const selectedPrintBackground = getLetterheadByCompanyId(resolvedCompanyId);
   const templatePrint = useReportTemplatePrint(selectedPrintBackground);
   const templateBackground = templatePrint.selectedTemplate?.documentTemplate
@@ -50,6 +50,7 @@ export default function LaporanSuratJalanPage() {
   const [orderSort, setOrderSort] = useState<'asc' | 'desc'>('desc');
   const [dateRange, setDateRangeState] = useState<DateRange | undefined>(undefined);
   const [dateFilters, setDateFilters] = useState<ReportDateFilters>({});
+
 
   // Debounce search query
   useEffect(() => {
@@ -73,7 +74,7 @@ export default function LaporanSuratJalanPage() {
   }, [dateRange]);
 
   // Fetch report data
-  const { data, pagination, isLoading, isError, error } = useExpeditionReportFeature({
+  const { data, pagination, isLoading, isError, error } = useExpeditionClaimReportFeature({
     page,
     per_page: perPage,
     search: debouncedSearch,
@@ -86,109 +87,145 @@ export default function LaporanSuratJalanPage() {
     templatePrint.openPrintDialog();
   };
 
-  const columns: ColumnDef<ReportExpeditionItem>[] = useMemo(() => [
+  const columns: ColumnDef<ReportExpeditionClaimItem>[] = useMemo(() => [
     {
-      header: 'KODE SURAT JALAN',
-      accessorKey: 'do_expedition_code',
-      sortable: true,
-      cell: (item) => item.do_expedition_code ? (
-        <CopyBox
-          text={item.do_expedition_code}
-          href={`/dashboard/${slugParam}/do-ekspedisi/detail/${item.id || item.do_expedition_code}`}
-        />
-      ) : '-',
-    },
-    {
-      header: 'KODE ORDER',
-      accessorKey: 'order_list_code',
-      cell: (item) => item.order_list_code ? (
-        <CopyBox
-          text={item.order_list_code}
-          href={`/dashboard/${slugParam}/administrasi/order-list/detail/${item.order_list_id || item.order_list_code}`}
-        />
-      ) : '-',
-    },
-    {
-      header: 'CUSTOMER',
-      accessorKey: 'customer_name',
-      cell: (item) => item.customer_name ? (
-        <ReferenceLink href={`/dashboard/${slugParam}/master/customer?search=${item.customer_name}`}>
-          {item.customer_name}
-        </ReferenceLink>
-      ) : '-',
-    },
-    {
-      header: 'NO POLISI',
-      accessorKey: 'vehicle_registration_number',
-      cell: (item) => item.vehicle_registration_number ? (
-        <ReferenceLink href={`/dashboard/${slugParam}/data-kendaraan?search=${item.vehicle_registration_number}`}>
-          {item.vehicle_registration_number}
-        </ReferenceLink>
-      ) : '-',
-    },
-    {
-      header: 'TIPE ARMADA',
-      accessorKey: 'vehicle_type',
-      cell: (item) => <span className="text-slate-600 uppercase">{item.vehicle_type || '-'}</span>,
+      header: 'TANGGAL KLAIM',
+      accessorKey: 'claim_date',
+      cell: (item) => <span className="text-slate-600 whitespace-nowrap text-sm">{item.claim_date ? formatDate(item.claim_date) : '-'}</span>,
     },
     {
       header: 'DRIVER',
       accessorKey: 'driver_name',
-      cell: (item) => item.driver_name ? (
-        <ReferenceLink href={`/dashboard/${slugParam}/master/driver?search=${item.driver_name}`}>
+      cell: (item) => item.driver_name ?
+        <ReferenceLink href={`/dashboard/${slug}/master/driver?search=${item.driver_name}`}>
           {item.driver_name}
         </ReferenceLink>
-      ) : '-',
+        : '-',
     },
     {
-      header: 'TUJUAN KIRIM',
-      accessorKey: 'delivery_destination',
-      cell: (item) => <span className="text-slate-600">{item.delivery_destination || '-'}</span>,
+      header: 'SUBJEK KLAIM',
+      accessorKey: 'claim_subject',
+      cell: (item) => <span className="text-slate-600 whitespace-nowrap text-sm font-medium">{item.claim_subject || '-'}</span>,
     },
     {
-      header: 'STATUS',
-      accessorKey: 'status',
+      header: 'DO SUMBER',
+      accessorKey: 'source_do_expedition_code',
       cell: (item) => (
-        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-blue-50 text-blue-700 border border-blue-200">
-          {item.status || '-'}
-        </span>
+        <div className="space-y-1">
+          {item.source_do_expedition_code ? (
+            <CopyBox
+              text={item.source_do_expedition_code}
+              href={`/dashboard/${slug}/do-ekspedisi/detail/${item.source_do_expedition_id || item.source_do_expedition_code}`}
+            />
+          ) : (
+            <span className="font-mono text-xs text-slate-400 block">-</span>
+          )}
+          {item.source_vehicle_registration_number ? (
+            <div>
+              <ReferenceLink href={`/dashboard/${slug}/data-kendaraan?search=${item.source_vehicle_registration_number}`}>
+                {item.source_vehicle_registration_number}
+              </ReferenceLink>
+            </div>
+          ) : (
+            <span className="text-xs text-slate-400 block">-</span>
+          )}
+        </div>
       ),
     },
     {
-      header: 'TOTAL NOMINAL',
+      header: 'DO TARGET',
+      accessorKey: 'target_do_expedition_code',
+      cell: (item) => (
+        <div className="space-y-1">
+          {item.target_do_expedition_code ? (
+            <CopyBox
+              text={item.target_do_expedition_code}
+              href={`/dashboard/${slug}/do-ekspedisi/detail/${item.target_do_expedition_id || item.target_do_expedition_code}`}
+            />
+          ) : (
+            <span className="font-mono text-xs text-slate-400 block">-</span>
+          )}
+          {item.target_vehicle_registration_number ? (
+            <div>
+              <ReferenceLink href={`/dashboard/${slug}/data-kendaraan?search=${item.target_vehicle_registration_number}`}>
+                {item.target_vehicle_registration_number}
+              </ReferenceLink>
+            </div>
+          ) : (
+            <span className="text-xs text-slate-400 block">-</span>
+          )}
+        </div>
+      ),
+    },
+    {
+      header: 'NOMINAL KLAIM',
+      accessorKey: 'claim_nominal',
+      alignment: 'right',
+      cell: (item) => <span className="font-semibold text-orange-600 whitespace-nowrap tabular-nums text-sm">{currenciesFormat('idr', item.claim_nominal || 0)}</span>,
+    },
+    {
+      header: 'SISA KLAIM',
+      accessorKey: 'claim_remaining_nominal',
+      alignment: 'right',
+      cell: (item) => <span className="text-red-600 font-semibold whitespace-nowrap tabular-nums text-sm">{currenciesFormat('idr', item.claim_remaining_nominal || 0)}</span>,
+    },
+    {
+      header: 'NOMINAL DIAAPLIKASIKAN',
+      accessorKey: 'applied_nominal',
+      alignment: 'right',
+      cell: (item) => <span className="text-blue-600 whitespace-nowrap tabular-nums text-sm">{currenciesFormat('idr', item.applied_nominal || 0)}</span>,
+    },
+    {
+      header: 'UJ SEBELUM KLAIM',
+      accessorKey: 'uj_nominal_before_claim',
+      alignment: 'right',
+      cell: (item) => <span className="text-slate-500 whitespace-nowrap tabular-nums text-sm line-through">{currenciesFormat('idr', item.uj_nominal_before_claim || 0)}</span>,
+    },
+    {
+      header: 'UJ SETELAH KLAIM',
       accessorKey: 'uj_nominal_after_claim',
       alignment: 'right',
-      cell: (item) => <span className="tabular-nums font-semibold">{currenciesFormat('idr', item.uj_nominal_after_claim || 0)}</span>,
+      cell: (item) => <span className="font-semibold text-green-700 whitespace-nowrap tabular-nums text-sm">{currenciesFormat('idr', item.uj_nominal_after_claim || 0)}</span>,
     },
     {
-      header: 'STATUS PEMBAYARAN',
+      header: 'STATUS KLAIM',
+      accessorKey: 'claim_status',
+      alignment: 'center',
+      cell: (item) => {
+        const bg = item.claim_status === 'Sudah Diklaim' || item.claim_remaining_nominal === 0 ? 'bg-blue-50 text-blue-700 border-blue-200' : 'bg-slate-50 text-slate-700 border-slate-200';
+        return (
+          <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold border ${bg}`}>
+            {item.claim_status || '-'}
+          </span>
+        );
+      },
+    },
+    {
+      header: 'PEMBAYARAN UJ',
       accessorKey: 'uj_payment_status',
       alignment: 'center',
-      cell: (item) => (
-        item.is_paid ? (
-          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-green-50 text-green-700 border border-green-200">
-            {item.uj_payment_status || 'Lunas'}
+      cell: (item) => {
+        const bg = item.is_paid ? 'bg-green-50 text-green-700 border-green-200' : 'bg-red-50 text-red-700 border-red-200';
+        return (
+          <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold border ${bg}`}>
+            {item.uj_payment_status || (item.is_paid ? 'Lunas' : 'Belum Lunas')}
           </span>
-        ) : (
-          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-red-50 text-red-700 border border-red-200">
-            {item.uj_payment_status || 'Belum Lunas'}
-          </span>
-        )
-      ),
-    },
-  ], [page, perPage, slugParam]);
+        );
+      },
+    }
+  ], [page, perPage, slug]);
 
   return (
     <DashboardLayout>
       <Head>
-        <title>Laporan Ekspedisi - Wajira Dashboard</title>
+        <title>Laporan Klaim Ekspedisi - Wajira Dashboard</title>
       </Head>
       <div className="space-y-6">
         {/* Header */}
         <div className="no-print">
           <PageHeader
-            title="Laporan Ekspedisi"
-            subtitle="Laporan aktivitas pengiriman logistik / DO ekspedisi"
+            title="Laporan Klaim Ekspedisi"
+            subtitle="Laporan rekap klaim dan potongan DO ekspedisi driver"
             actions={
               <Button onClick={handlePrint} variant="outline" className="w-full sm:w-auto" disabled={isLoading}>
                 <Printer className="h-4 w-4 mr-2" />
@@ -202,7 +239,7 @@ export default function LaporanSuratJalanPage() {
         <SearchPagination
           searchValue={searchTerm}
           onSearchChange={setSearchTerm}
-          searchPlaceholder="Cari data ekspedisi..."
+          searchPlaceholder="Cari klaim ekspedisi..."
           searchAriaLabel="Cari data"
           filters={
             <div className="flex flex-wrap items-center gap-2">
@@ -219,7 +256,7 @@ export default function LaporanSuratJalanPage() {
           perPage={pagination.perPage}
           total={pagination.total}
           lastPage={pagination.lastPage}
-          perPageOptions={[25, 50, 100]}
+          perPageOptions={[10, 25, 50, 100]}
           onPageChange={setPage}
           onPerPageChange={setPerPage}
         >
@@ -236,7 +273,7 @@ export default function LaporanSuratJalanPage() {
             <>
               {/* Print Letter Wrapping Container */}
               <PrintLetterPage
-                id="laporan-ekspedisi-print"
+                id="laporan-expedition-claim-print"
                 className="laporan-penerimaan-print-area"
                 letterheadSrc={templateBackground}
               >
@@ -247,7 +284,7 @@ export default function LaporanSuratJalanPage() {
                   {/* Cover Letter Heading - Visible only in Print */}
                   <div className="hidden print:flex flex-col items-center justify-center text-center space-y-1 mb-8 w-full">
                     <h2 className="text-[13px] font-bold uppercase text-gray-900 tracking-wide">
-                      Laporan Ekspedisi
+                      Laporan Klaim Ekspedisi
                     </h2>
                     <p className="text-[13px] font-bold text-gray-900 tracking-wide">
                       {getCompanyName(resolvedCompanyId)}
@@ -284,7 +321,7 @@ export default function LaporanSuratJalanPage() {
           onTemplateChange={templatePrint.setSelectedTemplateId}
           onPrint={templatePrint.printWithSelectedTemplate}
           isPreparingPrint={templatePrint.isPreparingPrint}
-          reportName="laporan ekspedisi"
+          reportName="laporan klaim ekspedisi"
         />
       </div>
     </DashboardLayout>
