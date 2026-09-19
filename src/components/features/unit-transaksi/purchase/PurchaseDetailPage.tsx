@@ -324,7 +324,10 @@ export default function PurchaseDetailPage() {
           }
           actions={
             <>
-              <Button disabled={isRefunded || !canEdit} variant="default" onClick={() => router.push(`/dashboard/${slug}/transaksi/pembelian-unit/${purchase.id}/payment`)}>
+              <Button
+                disabled={isRefunded || !canEdit}
+                variant="default"
+                onClick={() => router.push(`/dashboard/${slug}/transaksi/pembelian-unit/${purchase.id}/payment`)}>
                 <CreditCard className="mr-2 h-4 w-4" />
                 {isPaid ? 'Sudah Dibayar' : 'Bayar'}
               </Button>

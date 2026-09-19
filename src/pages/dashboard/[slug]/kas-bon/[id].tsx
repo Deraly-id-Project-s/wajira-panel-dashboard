@@ -5,9 +5,11 @@ import { CheckCircle2, CreditCard, History, Printer } from 'lucide-react';
 import { useRouter } from 'next/router';
 import { toast } from 'sonner';
 import type {
+  DriverCashAdvanceApprovalPayload,
   DriverCashAdvanceBillingHistory,
   DriverCashAdvanceBillingHistoryPayload,
 } from '@/@types/driver-cash-advance.types';
+import { KasBonApprovalDialog } from '@/components/features/kas-bon/KasBonApprovalDialog';
 import { KasBonDetailCards } from '@/components/features/kas-bon/KasBonDetailCards';
 import { KasBonDetailPrintDocument } from '@/components/features/kas-bon/KasBonDetailPrintDocument';
 import { KasBonPaymentDialog } from '@/components/features/kas-bon/KasBonPaymentDialog';
@@ -37,6 +39,7 @@ import {
 } from '@/components/ui/tooltip';
 import { useCompany } from '@/contexts/CompanyContext';
 import {
+  useApproveDriverCashAdvance,
   useCreateDriverCashAdvanceBillingHistory,
   useDeleteDriverCashAdvanceBillingHistory,
   useDriverCashAdvanceBillingDetail,
@@ -66,10 +69,31 @@ export default function KasBonDetailPage() {
   const updateStatus = useUpdateDriverCashAdvanceBillingStatus();
   const createPayment = useCreateDriverCashAdvanceBillingHistory();
   const deletePayment = useDeleteDriverCashAdvanceBillingHistory();
+  const approveMutation = useApproveDriverCashAdvance();
   const [confirmOpen, setConfirmOpen] = React.useState(false);
   const [paymentOpen, setPaymentOpen] = React.useState(false);
+  const [approvalOpen, setApprovalOpen] = React.useState(false);
 
   const backToList = () => void router.push(`/dashboard/${slug}/kas-bon`);
+
+  const handleApprove = async (payload: DriverCashAdvanceApprovalPayload) => {
+    if (!detailQuery.data) return;
+    try {
+      await approveMutation.mutateAsync({
+        id: detailQuery.data.id,
+        payload,
+      });
+      toast.success(
+        payload.is_approve
+          ? 'Kas bon berhasil disetujui'
+          : 'Kas bon berhasil ditolak',
+      );
+      setApprovalOpen(false);
+      await Promise.all([detailQuery.refetch(), billingQuery.refetch()]);
+    } catch (error: any) {
+      toast.error(getApiErrorMessage(error));
+    }
+  };
 
   const handleMarkPaid = async () => {
     const currentBilling = billingQuery.data ?? detailQuery.data?.billings[0];
@@ -163,7 +187,6 @@ export default function KasBonDetailPage() {
               >
                 {Boolean(data.is_driver_request ?? data.isDriverRequest) ? 'Pengajuan Driver' : 'Input Kantor'}
               </Badge>
-              <span className="text-xs text-slate-500">Ditambahkan {formatKasBonDate(data.createdAt)}</span>
             </div>
           }
           onBack={backToList}
@@ -175,24 +198,30 @@ export default function KasBonDetailPage() {
                 className="border-slate-200 font-medium text-slate-700 hover:bg-slate-50"
                 onClick={templatePrint.openPrintDialog}
               >
-                <Printer className="h-4 w-4" />
-                Print Kas Bon
+                Print
               </Button>
               <Button
                 type="button"
-                className="min-w-[120px] bg-orange-600 font-medium text-white hover:bg-orange-700"
+                variant="default"
+                disabled={!canEdit || isApproved}
+                onClick={() => setApprovalOpen(true)}
+              >
+                Approve
+              </Button>
+              <Button
+                type="button"
+                variant="default"
                 disabled={paymentActionsUnavailable || remainingPayment === 0}
                 onClick={() => setPaymentOpen(true)}
               >
-                <CreditCard className="h-4 w-4" />
-                {isPaid ? 'Sudah Dibayar' : 'Bayar'}
+                Bayar
               </Button>
               <Tooltip>
                 <TooltipTrigger asChild>
                   <span className="inline-block">
                     <Button
                       type="button"
-                      variant="default"
+                      variant="success"
                       disabled={!canMarkPaid || updateStatus.isPending}
                       onClick={() => setConfirmOpen(true)}
                     >
@@ -243,6 +272,14 @@ export default function KasBonDetailPage() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <KasBonApprovalDialog
+        open={approvalOpen}
+        onOpenChange={setApprovalOpen}
+        item={data}
+        onConfirm={handleApprove}
+        isApproving={approveMutation.isPending}
+      />
 
       {billing ? (
         <KasBonPaymentDialog

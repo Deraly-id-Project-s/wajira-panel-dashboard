@@ -51,7 +51,7 @@ export function ReportFilterBar({ filters, onFilterChange }: ReportFilterBarProp
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
-        <Button variant="outline" className="h-10 border-slate-300">
+        <Button variant="outline">
           <Filter className="mr-2 h-4 w-4" />
           Filter Tanggal
           {activeFilterCount > 0 && (

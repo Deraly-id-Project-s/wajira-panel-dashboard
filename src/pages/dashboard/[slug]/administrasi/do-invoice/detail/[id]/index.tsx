@@ -435,7 +435,7 @@ export default function DoInvoiceDetailPage() {
               </Button>
               <Button
                 type="button"
-                className="min-w-[120px] bg-orange-600 font-medium text-white hover:bg-orange-700"
+                variant="default"
                 disabled={!canAddPayment}
                 onClick={handleOpenCreatePayment}
               >
@@ -446,7 +446,7 @@ export default function DoInvoiceDetailPage() {
                 <TooltipTrigger asChild>
                   <Button
                     type="button"
-                    variant="default"
+                    variant="success"
                     disabled={!canMarkPaid || updateBilling.isPending}
                     onClick={() => setPaidConfirmOpen(true)}
                   >
