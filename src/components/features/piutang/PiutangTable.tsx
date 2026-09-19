@@ -176,7 +176,7 @@ export default function PiutangTable({ data }: Props) {
           Showing {paginatedData.length > 0 ? startIndex + 1 : 0}-{endIndex} of {totalItems} data
         </div>
         <div className="flex gap-2">
-          <Button variant="outline" size="sm" disabled={currentPage === 1} onClick={() => handlePageChange(currentPage - 1)}>
+          <Button variant="outline" disabled={currentPage === 1} onClick={() => handlePageChange(currentPage - 1)}>
             Previous
           </Button>
 
@@ -193,7 +193,7 @@ export default function PiutangTable({ data }: Props) {
             </Button>
           ))}
 
-          <Button variant="outline" size="sm" disabled={currentPage === totalPages || totalPages === 0} onClick={() => handlePageChange(currentPage + 1)}>
+          <Button variant="outline" disabled={currentPage === totalPages || totalPages === 0} onClick={() => handlePageChange(currentPage + 1)}>
             Next
           </Button>
         </div>

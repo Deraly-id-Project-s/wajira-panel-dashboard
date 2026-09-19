@@ -115,7 +115,7 @@ export default function HutangPaymentTable({
 
                 <div className="flex gap-2">
                     <Button variant="ghost" size="sm" disabled>Previous</Button>
-                    <Button variant="outline" size="sm">1</Button>
+                    <Button variant="outline">1</Button>
                     <Button variant="ghost" size="sm">2</Button>
                     <Button variant="ghost" size="sm">3</Button>
                     <Button variant="ghost" size="sm">4</Button>

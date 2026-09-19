@@ -456,12 +456,12 @@ export default function KasHarianDetailPage() {
                 <div><CardTitle>Bukti Pembayaran Utama</CardTitle><CardDescription className="mt-1">Unggah dokumen pendukung transaksi</CardDescription></div>
                 {proofUrl ? (
                   isImageProof(cashFlowDetail.payment_proof) || isImageProof(proofUrl) ? (
-                    <Button variant="outline" size="sm" onClick={() => setPreviewUrl(proofUrl)} type="button">
+                    <Button variant="outline" onClick={() => setPreviewUrl(proofUrl)} type="button">
                       <ExternalLink className="mr-2 h-4 w-4" />
                       Preview Bukti
                     </Button>
                   ) : (
-                    <Button variant="outline" size="sm" asChild>
+                    <Button variant="outline" asChild>
                       <a href={proofUrl} target="_blank" rel="noreferrer"><ExternalLink className="mr-2 h-4 w-4" />Lihat Bukti</a>
                     </Button>
                   )

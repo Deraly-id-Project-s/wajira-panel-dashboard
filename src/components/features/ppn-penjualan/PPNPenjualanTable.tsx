@@ -328,7 +328,7 @@ export default function PPNPenjualanTable({
         <div className="rounded-md border border-red-200 bg-red-50 p-4 text-center">
           <p className="text-sm text-red-600 mb-2">{errorMessage ?? 'Gagal memuat data PPN penjualan'}</p>
           {onRetry && (
-            <Button type="button" variant="outline" size="sm" onClick={onRetry}>
+            <Button type="button" variant="outline" onClick={onRetry}>
               Retry
             </Button>
           )}

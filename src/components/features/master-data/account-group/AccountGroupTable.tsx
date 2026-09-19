@@ -93,7 +93,6 @@ export const AccountGroupTable = ({ data, isLoading = false, onEdit, onDelete, c
                 disabled={!canEdit}
                 className="rounded-md px-3 py-2 text-sm text-slate-900 focus:bg-slate-50 cursor-pointer"
               >
-                <Pencil className="mr-2 h-4 w-4" />
                 Edit
               </DropdownMenuItem>
               <DropdownMenuItem
@@ -104,7 +103,6 @@ export const AccountGroupTable = ({ data, isLoading = false, onEdit, onDelete, c
                 className="rounded-md px-3 py-2 text-sm text-red-600 focus:bg-red-50 focus:text-red-600 cursor-pointer"
                 disabled={item.is_lock || !canDelete}
               >
-                <Trash className="mr-2 h-4 w-4" />
                 Hapus
               </DropdownMenuItem>
             </DropdownMenuContent>

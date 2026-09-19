@@ -7,8 +7,31 @@ import { Dialog as DialogPrimitive } from 'radix-ui';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 
-function Dialog({ ...props }: React.ComponentProps<typeof DialogPrimitive.Root>) {
-  return <DialogPrimitive.Root data-slot="dialog" {...props} />;
+export function closeAllDropdowns() {
+  if (typeof document === 'undefined') return;
+
+  // Close open dropdown triggers
+  const openTriggers = document.querySelectorAll<HTMLElement>(
+    '[data-slot="dropdown-menu-trigger"][aria-expanded="true"], [data-radix-dropdown-menu-trigger][aria-expanded="true"], button[aria-haspopup="menu"][aria-expanded="true"]'
+  );
+  openTriggers.forEach((trigger) => {
+    trigger.click();
+  });
+
+  // Notify any active dismissable layers
+  document.dispatchEvent(
+    new PointerEvent('pointerdown', { bubbles: true, cancelable: true })
+  );
+}
+
+function Dialog({ open, onOpenChange, ...props }: React.ComponentProps<typeof DialogPrimitive.Root>) {
+  React.useEffect(() => {
+    if (open) {
+      closeAllDropdowns();
+    }
+  }, [open]);
+
+  return <DialogPrimitive.Root data-slot="dialog" open={open} onOpenChange={onOpenChange} {...props} />;
 }
 
 function DialogTrigger({ ...props }: React.ComponentProps<typeof DialogPrimitive.Trigger>) {
@@ -30,7 +53,7 @@ const DialogOverlay = React.forwardRef<
   <DialogPrimitive.Overlay
     ref={ref}
     data-slot="dialog-overlay"
-    className={cn('data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:hidden fixed inset-0 z-100 bg-primary/50', className)}
+    className={cn('data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:hidden fixed inset-0 z-[10000] bg-primary/50', className)}
     {...props}
   />
 ));
@@ -44,6 +67,7 @@ const DialogContent = React.forwardRef<
   }
 >(({ className, children, showCloseButton = true, closeOnInteractOutside = false, onInteractOutside, onPointerDownOutside, ...props }, ref) => {
   React.useEffect(() => {
+    closeAllDropdowns();
     return () => {
       document.body.style.pointerEvents = 'auto';
     };
@@ -64,7 +88,7 @@ const DialogContent = React.forwardRef<
           if (!closeOnInteractOutside) event.preventDefault();
         }}
         className={cn(
-          'bg-background data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[state=closed]:hidden fixed top-[50%] left-[50%] z-100 grid w-full max-w-[calc(100%-2rem)] translate-x-[-50%] translate-y-[-50%] gap-4 rounded-md border p-6 shadow-lg duration-200 outline-none sm:max-w-lg',
+          'bg-background data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[state=closed]:hidden fixed top-[50%] left-[50%] z-[10000] grid w-full max-w-[calc(100%-2rem)] translate-x-[-50%] translate-y-[-50%] gap-4 rounded-md border p-6 shadow-lg duration-200 outline-none sm:max-w-lg',
           className,
         )}
         {...props}

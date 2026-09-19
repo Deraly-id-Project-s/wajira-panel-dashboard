@@ -169,7 +169,7 @@ export default function UJDriverTable({
             Lunas
           </Badge>
         ) : (
-          <Button type="button" variant="outline" size="sm" onClick={() => onPay(item)}>
+          <Button type="button" variant="outline" onClick={() => onPay(item)}>
             Bayar
           </Button>
         );
@@ -183,7 +183,7 @@ export default function UJDriverTable({
         <div className="rounded-md border border-red-200 bg-red-50 p-4 text-center">
           <p className="text-sm text-red-600 mb-2">{errorMessage ?? 'Gagal memuat data'}</p>
           {onRetry && (
-            <Button type="button" variant="outline" size="sm" onClick={onRetry}>
+            <Button type="button" variant="outline" onClick={onRetry}>
               Retry
             </Button>
           )}

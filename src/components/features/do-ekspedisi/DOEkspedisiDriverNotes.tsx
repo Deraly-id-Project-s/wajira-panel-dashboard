@@ -49,7 +49,7 @@ function RelatedSection({ title, description, icon, onAdd, children, addDisabled
           </div>
           {helper && <p className="ml-12 mt-1 text-xs text-slate-500">{helper}</p>}
         </div>
-        <Button size="sm" onClick={onAdd} disabled={addDisabled} className="w-full sm:w-auto">
+        <Button onClick={onAdd} disabled={addDisabled} className="w-full sm:w-auto">
           <Plus className="mr-2 h-4 w-4" />
           {addLabel}
         </Button>

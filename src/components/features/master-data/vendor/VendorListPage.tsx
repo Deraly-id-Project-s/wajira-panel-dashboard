@@ -157,13 +157,13 @@ export const VendorListPage = () => {
                                     Reset
                                 </Button>
                             )}
-                            <Button onClick={handleExport} disabled={exportMutation.isPending} variant="outline" size="sm">
+                            <Button onClick={handleExport} disabled={exportMutation.isPending} variant="outline">
                                 <Download className="h-4 w-4 mr-2" />
                                 {exportMutation.isPending ? 'Exporting...' : 'Export'}
                             </Button>
                             {canCreate && (
                                 <>
-                                    <Button onClick={() => setOpenImport(true)} variant="outline" size="sm">
+                                    <Button onClick={() => setOpenImport(true)} variant="outline">
                                         <Upload className="h-4 w-4 mr-2" />
                                         Import
                                     </Button>

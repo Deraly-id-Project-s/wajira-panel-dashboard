@@ -132,7 +132,7 @@ export default function PembayaranHutangTable({ data, meta, loading, error, sear
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <p>{error}</p>
             {onRetry && (
-              <Button variant="outline" size="sm" onClick={onRetry}>
+              <Button variant="outline" onClick={onRetry}>
                 Coba Lagi
               </Button>
             )}

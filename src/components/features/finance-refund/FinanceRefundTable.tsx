@@ -61,7 +61,7 @@ const DeleteFinanceRefundAction = ({ item, transactionType }: { item: FinanceRef
               </label>
             </div>
             <div className="flex justify-end gap-2 pt-2">
-              <Button size="sm" variant="outline" onClick={() => setIsOpen(false)} className="h-7 text-[11px] sm:text-xs px-2 sm:px-3">Batal</Button>
+              <Button variant="outline" onClick={() => setIsOpen(false)} className="h-7 text-[11px] sm:text-xs px-2 sm:px-3">Batal</Button>
               <Button
                 size="sm"
                 className="h-7 text-[11px] sm:text-xs bg-red-600 hover:bg-red-700 px-2 sm:px-3 text-white"

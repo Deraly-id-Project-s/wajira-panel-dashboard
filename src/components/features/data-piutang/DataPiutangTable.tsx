@@ -107,7 +107,7 @@ export default function DataPiutangTable({ data, meta, loading, error, search, p
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <p>{error}</p>
             {onRetry && (
-              <Button variant="outline" size="sm" onClick={onRetry}>
+              <Button variant="outline" onClick={onRetry}>
                 Coba Lagi
               </Button>
             )}

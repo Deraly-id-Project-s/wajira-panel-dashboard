@@ -114,7 +114,7 @@ export function ReportFilterBar({ filters, onFilterChange }: ReportFilterBarProp
             <Button variant="ghost" size="sm" onClick={clearFilters} className="text-slate-500 hover:text-slate-900">
               <X className="mr-2 h-4 w-4" /> Reset
             </Button>
-            <Button size="sm" onClick={applyFilters}>
+            <Button onClick={applyFilters}>
               Terapkan Filter
             </Button>
           </div>

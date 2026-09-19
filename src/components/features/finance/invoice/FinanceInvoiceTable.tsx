@@ -34,17 +34,17 @@ const getKasMasukAmount = (item: DoInvoice) => {
 };
 
 // Component for cells that require the orderListDetail data
-const OrderListDetailCell = ({ 
-  item, 
-  render 
-}: { 
-  item: DoInvoice; 
+const OrderListDetailCell = ({
+  item,
+  render
+}: {
+  item: DoInvoice;
   render: (detail: any, isLoading: boolean, firstExp: any, orderList: any) => React.ReactNode;
 }) => {
   const { data: orderListDetail, isLoading: isLoadingDetail } = useOrderListDetail(item.orderList?.id ?? null);
   const firstExp = item.expeditions?.[0];
   const orderList = item.orderList ?? firstExp?.orderList;
-  
+
   return <>{render(orderListDetail, isLoadingDetail, firstExp, orderList)}</>;
 };
 
@@ -93,12 +93,12 @@ export default function FinanceInvoiceTable({
       sortable: true,
       alignment: 'left',
       cell: (item) => (
-        <OrderListDetailCell 
-          item={item} 
+        <OrderListDetailCell
+          item={item}
           render={(detail, loading, firstExp, orderList) => {
             if (loading) return <Skeleton className="h-4 w-20" />;
             return firstExp?.vehicle?.registrationNumber ?? item.vehicle?.registrationNumber ?? detail?.vehicles?.[0]?.registrationNumber ?? '-';
-          }} 
+          }}
         />
       ),
     },
@@ -108,12 +108,12 @@ export default function FinanceInvoiceTable({
       sortable: true,
       alignment: 'left',
       cell: (item) => (
-        <OrderListDetailCell 
-          item={item} 
+        <OrderListDetailCell
+          item={item}
           render={(detail, loading, firstExp, orderList) => {
             if (loading) return <Skeleton className="h-4 w-16" />;
             return firstExp?.vehicle?.type ?? item.vehicle?.type ?? orderList?.vehicleType ?? detail?.vehicleType ?? '-';
-          }} 
+          }}
         />
       ),
     },
@@ -133,12 +133,12 @@ export default function FinanceInvoiceTable({
       sortable: true,
       alignment: 'left',
       cell: (item) => (
-        <OrderListDetailCell 
-          item={item} 
+        <OrderListDetailCell
+          item={item}
           render={(detail, loading, firstExp, orderList) => {
             if (loading) return <Skeleton className="h-4 w-20" />;
             return firstExp?.tarif?.loadingIn ?? orderList?.loadingIn ?? detail?.loadingIn ?? '-';
-          }} 
+          }}
         />
       ),
     },
@@ -148,12 +148,12 @@ export default function FinanceInvoiceTable({
       sortable: true,
       alignment: 'left',
       cell: (item) => (
-        <OrderListDetailCell 
-          item={item} 
+        <OrderListDetailCell
+          item={item}
           render={(detail, loading, firstExp, orderList) => {
             if (loading) return <Skeleton className="h-4 w-24" />;
             return orderList?.doDeliveryDestination ?? firstExp?.destination ?? detail?.tarifs?.[0]?.deliveryDestination ?? '-';
-          }} 
+          }}
         />
       ),
     },
@@ -163,12 +163,12 @@ export default function FinanceInvoiceTable({
       sortable: true,
       alignment: 'left',
       cell: (item) => (
-        <OrderListDetailCell 
-          item={item} 
+        <OrderListDetailCell
+          item={item}
           render={(detail, loading, firstExp, orderList) => {
             if (loading) return <Skeleton className="h-4 w-20" />;
             return firstExp?.tarif?.loadingOut ?? orderList?.loadingOut ?? detail?.loadingOut ?? '-';
-          }} 
+          }}
         />
       ),
     },
@@ -178,13 +178,13 @@ export default function FinanceInvoiceTable({
       sortable: true,
       alignment: 'right',
       cell: (item) => (
-        <OrderListDetailCell 
-          item={item} 
+        <OrderListDetailCell
+          item={item}
           render={(detail, loading, firstExp, orderList) => {
             if (loading) return <Skeleton className="h-4 w-24 ml-auto" />;
             const invoiceEkspedisi = firstExp?.invoiceExpedition ?? orderList?.billInvoice ?? detail?.billInvoice ?? 0;
             return <span className="font-medium text-slate-900">{formatCurrency(invoiceEkspedisi)}</span>;
-          }} 
+          }}
         />
       ),
     },
@@ -223,7 +223,7 @@ export default function FinanceInvoiceTable({
             Lunas
           </Badge>
         ) : (
-          <Button type="button" variant="outline" size="sm" onClick={() => onPay(item)}>
+          <Button type="button" variant="outline" onClick={() => onPay(item)}>
             Bayar
           </Button>
         );
@@ -237,7 +237,7 @@ export default function FinanceInvoiceTable({
         <div className="rounded-md border border-red-200 bg-red-50 p-4 text-center">
           <p className="text-sm text-red-600 mb-2">{errorMessage ?? 'Gagal memuat data invoice'}</p>
           {onRetry && (
-            <Button type="button" variant="outline" size="sm" onClick={onRetry}>
+            <Button type="button" variant="outline" onClick={onRetry}>
               Retry
             </Button>
           )}

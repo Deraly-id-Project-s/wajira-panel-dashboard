@@ -196,7 +196,7 @@ export default function HutangDetailPage() {
                                 Showing {filteredRows.length > 0 ? startIndex : 0}-{endIndex} of {filteredRows.length} data
                             </div>
                             <div className="flex flex-wrap gap-2">
-                                <Button variant="outline" size="sm" disabled={safeCurrentPage <= 1} onClick={() => setCurrentPage((value) => Math.max(1, value - 1))}>
+                                <Button variant="outline" disabled={safeCurrentPage <= 1} onClick={() => setCurrentPage((value) => Math.max(1, value - 1))}>
                                     <ChevronLeft className="mr-1 h-4 w-4" />
                                     Previous
                                 </Button>
@@ -214,7 +214,7 @@ export default function HutangDetailPage() {
                                     </Button>
                                 ))}
 
-                                <Button variant="outline" size="sm" disabled={safeCurrentPage >= totalPages || totalPages === 0} onClick={() => setCurrentPage((value) => Math.min(totalPages, value + 1))}>
+                                <Button variant="outline" disabled={safeCurrentPage >= totalPages || totalPages === 0} onClick={() => setCurrentPage((value) => Math.min(totalPages, value + 1))}>
                                     Next
                                     <ChevronRight className="ml-1 h-4 w-4" />
                                 </Button>

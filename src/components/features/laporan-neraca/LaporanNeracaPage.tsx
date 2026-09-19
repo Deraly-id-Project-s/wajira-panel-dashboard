@@ -474,7 +474,7 @@ function CashManagement({
           <h3 className="text-sm font-semibold text-slate-900">Kas dan Setara Kas</h3>
           <p className="mt-1 text-xs text-slate-500">Nominal cash manual untuk laporan neraca.</p>
         </div>
-        <Button type="button" variant="outline" size="sm" onClick={onAdd}>
+        <Button type="button" variant="outline" onClick={onAdd}>
           <Plus className="h-4 w-4" />
           Tambah Kas
         </Button>

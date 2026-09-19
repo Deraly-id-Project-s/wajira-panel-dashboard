@@ -58,7 +58,7 @@ function RelatedSection({
           </div>
         </div>
         {onAdd && (
-          <Button size="sm" onClick={onAdd} disabled={addDisabled} className="w-full sm:w-auto">
+          <Button onClick={onAdd} disabled={addDisabled} className="w-full sm:w-auto">
             <Plus className="mr-2 h-4 w-4" />
             {addLabel}
           </Button>

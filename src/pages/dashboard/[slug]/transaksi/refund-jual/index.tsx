@@ -41,14 +41,14 @@ const DeleteFinanceRefundAction = ({ item, transactionType }: { item: UnitTransa
             </DropdownMenuItem>
           </div>
         </TooltipTrigger>
-        <TooltipContent 
-          side="top" 
-          align="center" 
+        <TooltipContent
+          side="top"
+          align="center"
           sideOffset={10}
           collisionPadding={10}
-          className="w-[280px] sm:w-[320px] max-w-[calc(100vw-2rem)] bg-white text-slate-800 p-3 sm:p-4 shadow-2xl border border-slate-200 z-[9999] pointer-events-auto break-words whitespace-normal" 
+          className="w-[280px] sm:w-[320px] max-w-[calc(100vw-2rem)] bg-white text-slate-800 p-3 sm:p-4 shadow-2xl border border-slate-200 z-[9999] pointer-events-auto break-words whitespace-normal"
           onPointerDownOutside={() => setIsOpen(false)}
-          onMouseLeave={() => {}}
+          onMouseLeave={() => { }}
         >
           <div className="space-y-3">
             <p className="text-sm font-medium">Konfirmasi Hapus</p>
@@ -65,7 +65,7 @@ const DeleteFinanceRefundAction = ({ item, transactionType }: { item: UnitTransa
               </label>
             </div>
             <div className="flex justify-end gap-2 pt-2">
-              <Button size="sm" variant="outline" onClick={() => setIsOpen(false)} className="h-7 text-[11px] sm:text-xs px-2 sm:px-3">Batal</Button>
+              <Button variant="outline" onClick={() => setIsOpen(false)} className="h-7 text-[11px] sm:text-xs px-2 sm:px-3">Batal</Button>
               <Button
                 size="sm"
                 className="h-7 text-[11px] sm:text-xs bg-red-600 hover:bg-red-700 px-2 sm:px-3 text-white"

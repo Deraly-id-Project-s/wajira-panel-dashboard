@@ -1,5 +1,5 @@
 import { CustomerOverview, ProductOverview } from '@/@types/dashboard';
-import { Card } from '@/components/ui/card';
+import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { currenciesFormat } from '@/components/ui/currenciesFormat';
 import { ReferenceLink } from '@/components/ui/reference-link';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -93,44 +93,48 @@ export function CustomerOverviewCard({ data, isLoading }: CustomerOverviewCardPr
   };
 
   return (
-    <Card className="rounded-md border border-slate-200 bg-white p-7 shadow-sm">
-      <h3 className="mb-8 text-center text-[17px] font-bold text-slate-900">Overview Customer</h3>
-      <div className="mb-8 grid grid-cols-3 gap-4 items-start">
-        <StatItem label="Jumlah Customer" value={data.totalCustomers.toString()} />
-        <StatItem
-          label="Total Pendapatan"
-          value={currenciesFormat('idr', data.totalRevenue.idr)}
-          value2={currenciesFormat('usd', data.totalRevenue.usd)}
-        />
-        <StatItem label="Rata-rata pendapatan dari customer" value={data.averageRevenue.toString()} />
-      </div>
+    <Card className="rounded-md border border-slate-200 bg-white shadow-sm">
+      <CardHeader>
+        <CardTitle className="text-center text-[17px] font-bold text-slate-900">Overview Customer</CardTitle>
+      </CardHeader>
+      <CardContent className="p-7 space-y-6">
+        <div className="grid grid-cols-3 gap-4 items-start">
+          <StatItem label="Jumlah Customer" value={data.totalCustomers.toString()} />
+          <StatItem
+            label="Total Pendapatan"
+            value={currenciesFormat('idr', data.totalRevenue.idr)}
+            value2={currenciesFormat('usd', data.totalRevenue.usd)}
+          />
+          <StatItem label="Rata-rata pendapatan dari customer" value={data.averageRevenue.toString()} />
+        </div>
 
-      <div className="overflow-x-auto rounded-md border-none">
-        <Table>
-          <TableHeader className="bg-[#f8f9fa]">
-            <TableRow className="border-none hover:bg-transparent">
-              <TableHead className="h-10 text-[13px] font-medium text-slate-700">Nama Customer</TableHead>
-              <TableHead
-                className="h-10 text-right text-[13px] font-medium text-slate-700 cursor-pointer select-none transition-colors hover:text-slate-900"
-                onClick={toggleSort}
-              >
-                <div className="flex items-center justify-end gap-2">
-                  Pemasukan
-                  <ArrowUpDown className={`h-3 w-3 ${sortOrder !== null ? 'text-slate-700' : 'text-slate-300'}`} />
-                </div>
-              </TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {sortedCustomers.map((customer, idx) => (
-              <TableRow key={`${customer.name}-${idx}`} className="border-b border-slate-50 last:border-none hover:bg-slate-50/50">
-                <TableCell className="py-[14px] text-[13px] font-medium text-slate-800"><ReferenceLink href={`/dashboard/${slug}/customers?search=${customer.name}`}>{customer.name}</ReferenceLink></TableCell>
-                <TableCell className="py-[14px] text-right text-[13px] text-slate-700">{currenciesFormat('idr', customer.revenue)}</TableCell>
+        <div className="overflow-x-auto rounded-md border-none">
+          <Table>
+            <TableHeader className="bg-[#f8f9fa]">
+              <TableRow className="border-none hover:bg-transparent">
+                <TableHead className="h-10 text-[13px] font-medium text-slate-700">Nama Customer</TableHead>
+                <TableHead
+                  className="h-10 text-right text-[13px] font-medium text-slate-700 cursor-pointer select-none transition-colors hover:text-slate-900"
+                  onClick={toggleSort}
+                >
+                  <div className="flex items-center justify-end gap-2">
+                    Pemasukan
+                    <ArrowUpDown className={`h-3 w-3 ${sortOrder !== null ? 'text-slate-700' : 'text-slate-300'}`} />
+                  </div>
+                </TableHead>
               </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </div>
+            </TableHeader>
+            <TableBody>
+              {sortedCustomers.map((customer, idx) => (
+                <TableRow key={`${customer.name}-${idx}`} className="border-b border-slate-50 last:border-none hover:bg-slate-50/50">
+                  <TableCell className="py-[14px] text-[13px] font-medium text-slate-800"><ReferenceLink href={`/dashboard/${slug}/customers?search=${customer.name}`}>{customer.name}</ReferenceLink></TableCell>
+                  <TableCell className="py-[14px] text-right text-[13px] text-slate-700">{currenciesFormat('idr', customer.revenue)}</TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </div>
+      </CardContent>
     </Card>
   );
 }
@@ -171,12 +175,13 @@ export function ProductOverviewCard({ data, isLoading }: ProductOverviewCardProp
   };
 
   return (
-    <Card className="rounded-md border border-slate-200 bg-white p-7 shadow-sm h-full flex flex-col justify-between">
-      <div>
-        <h3 className="mb-6 text-center text-[17px] font-bold text-slate-900">Overview Produk</h3>
-
+    <Card className="rounded-md border border-slate-200 bg-white shadow-sm h-full flex flex-col justify-between">
+      <CardHeader>
+        <CardTitle className="text-center text-[17px] font-bold text-slate-900">Overview Produk</CardTitle>
+      </CardHeader>
+      <CardContent className="p-7 space-y-6">
         {/* Donut Chart Component */}
-        <div className="mb-6 flex flex-col items-center justify-center">
+        <div className="flex flex-col items-center justify-center">
           {donutData.length > 0 ? (
             <>
               <div className="relative h-[180px] w-full max-w-[240px]">
@@ -230,7 +235,7 @@ export function ProductOverviewCard({ data, isLoading }: ProductOverviewCardProp
         </div>
 
         {/* Statistics Grid */}
-        <div className="mb-6 grid grid-cols-2 gap-4 items-start border-t border-slate-100 pt-6">
+        <div className="grid grid-cols-2 gap-4 items-start border-t border-slate-100 pt-6">
           <StatItem label="Jumlah Jenis Produk" value={data.totalProducts.toString()} />
           <StatItem label="Total Produk Terjual" value={data.totalSold.toLocaleString('id-ID')} />
         </div>
@@ -264,7 +269,7 @@ export function ProductOverviewCard({ data, isLoading }: ProductOverviewCardProp
             </TableBody>
           </Table>
         </div>
-      </div>
+      </CardContent>
     </Card>
   );
 }
