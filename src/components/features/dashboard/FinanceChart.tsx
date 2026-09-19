@@ -1,9 +1,10 @@
 import { useMemo, useState } from 'react';
-import { Card } from '@/components/ui/card';
+import { CollapsibleBox } from '@/components/ui/collapsible-box';
 import { LineChart, Line, ResponsiveContainer, Tooltip, XAxis, YAxis, CartesianGrid } from 'recharts';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import type { FinanceSeriesPoint, FinanceSeriesValues } from '@/@types/dashboard';
 import { formatCompactNumber } from '@/lib/utils/format';
+import { TrendingUp } from 'lucide-react';
 
 interface FinanceChartProps {
   data: FinanceSeriesPoint[];
@@ -18,10 +19,6 @@ const SERIES_META = [
   { key: 'bcaIdr', label: 'BCA IDR', color: '#ECB45B' },
   { key: 'cash', label: 'CASH IDR', color: '#1C3A58' },
 ] as const;
-
-const MONTH_ORDER = ['jan', 'feb', 'mar', 'apr', 'may', 'jun', 'jul', 'aug', 'sep', 'oct', 'nov', 'dec'];
-
-const monthLabel = (month: string) => month.slice(0, 3);
 
 const tooltipFormatter = (value: number) => new Intl.NumberFormat('id-ID').format(value);
 
@@ -66,21 +63,17 @@ function CustomTooltip({ active, payload }: any) {
   );
 }
 
-function SkeletonChart() {
+function SkeletonChart({ actions }: { actions?: React.ReactNode }) {
   return (
-    <Card className="rounded-md border border-slate-200 bg-white p-6 shadow-sm">
-      <div className="mb-4 flex items-center justify-between">
-        <div>
-          <p className="text-sm font-semibold text-slate-900">Grafik</p>
-          <p className="text-xs text-slate-500">Memvisualisasikan pemasukan vs pengeluaran</p>
-        </div>
-        <div className="flex gap-2">
-          <div className="h-10 w-36 animate-pulse rounded-md bg-slate-100" />
-          <div className="h-10 w-36 animate-pulse rounded-md bg-slate-100" />
-        </div>
-      </div>
+    <CollapsibleBox
+      title="Grafik Arus Kas"
+      description="Memvisualisasikan pemasukan vs pengeluaran"
+      icon={TrendingUp}
+      defaultExpanded
+      actions={actions}
+    >
       <div className="h-80 animate-pulse rounded-md bg-slate-100" />
-    </Card>
+    </CollapsibleBox>
   );
 }
 
@@ -100,61 +93,70 @@ export function FinanceChart({ data, isLoading }: FinanceChartProps) {
     });
   }, [data, mode, transactionType]);
 
-  if (isLoading) return <SkeletonChart />;
+  const filterActions = (
+    <div className="flex flex-wrap items-center gap-3">
+      {/* Filter 1: Mode (Pemasukan / Pengeluaran) */}
+      <div className="flex items-center gap-2">
+        <span className="text-xs sm:text-sm font-medium text-slate-600">Tampilkan</span>
+        <Select value={mode} onValueChange={(val: ChartMode) => setMode(val)}>
+          <SelectTrigger className="w-32 sm:w-40 h-9 text-xs sm:text-sm">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="income">Pemasukan</SelectItem>
+            <SelectItem value="expense">Pengeluaran</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+
+      {/* Filter 2: Transaction Type (Penjualan / Pembelian) */}
+      <div className="flex items-center gap-2">
+        <span className="text-xs sm:text-sm font-medium text-slate-600">Tipe</span>
+        <Select value={transactionType} onValueChange={(val: TransactionType) => setTransactionType(val)}>
+          <SelectTrigger className="w-32 sm:w-40 h-9 text-xs sm:text-sm">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="sales">Penjualan</SelectItem>
+            <SelectItem value="purchase">Pembelian</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+    </div>
+  );
+
+  if (isLoading) return <SkeletonChart actions={filterActions} />;
+
   if (!data?.length) {
     return (
-      <Card className="rounded-md border border-slate-200 bg-white p-6 shadow-sm flex flex-col items-center justify-center min-h-[300px]">
-        <div className="flex h-12 w-12 items-center justify-center rounded-full bg-slate-100 mb-4">
-          <svg className="h-6 w-6 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-          </svg>
+      <CollapsibleBox
+        title="Grafik Arus Kas"
+        description="Pilih tipe arus kas untuk melihat trennya."
+        icon={TrendingUp}
+        defaultExpanded
+        actions={filterActions}
+      >
+        <div className="flex flex-col items-center justify-center py-12">
+          <div className="flex h-12 w-12 items-center justify-center rounded-full bg-slate-100 mb-4">
+            <svg className="h-6 w-6 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+            </svg>
+          </div>
+          <p className="font-medium text-slate-900 text-lg">Belum ada data grafik</p>
+          <p className="text-sm mt-1 text-slate-500">Tidak ada data untuk periode ini</p>
         </div>
-        <p className="font-medium text-slate-900 text-lg">Belum ada data grafik</p>
-        <p className="text-sm mt-1 text-slate-500">Tidak ada data untuk periode ini</p>
-      </Card>
+      </CollapsibleBox>
     );
   }
 
   return (
-    <Card className="rounded-md border border-slate-200 bg-white p-6 shadow-sm">
-      <div className="mb-4 flex flex-wrap items-center justify-between gap-4">
-        <div className="space-y-1">
-          <p className="text-base font-semibold text-slate-900">Grafik</p>
-          <p className="text-sm text-slate-500">Pilih tipe arus kas untuk melihat trennya.</p>
-        </div>
-
-        {/* Filter Controls */}
-        <div className="flex flex-wrap items-center gap-3">
-          {/* Filter 1: Mode (Pemasukan / Pengeluaran) */}
-          <div className="flex flex-col sm:flex-row items-center gap-2 w-full sm:w-auto">
-            <span className="text-sm font-medium text-slate-600">Tampilkan</span>
-            <Select value={mode} onValueChange={(val: ChartMode) => setMode(val)}>
-              <SelectTrigger className="w-40">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="income">Pemasukan</SelectItem>
-                <SelectItem value="expense">Pengeluaran</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
-          {/* Filter 2: Transaction Type (Penjualan / Pembelian) */}
-          <div className="flex flex-col sm:flex-row items-center gap-2 w-full sm:w-auto">
-            <span className="text-sm font-medium text-slate-600">Tipe</span>
-            <Select value={transactionType} onValueChange={(val: TransactionType) => setTransactionType(val)}>
-              <SelectTrigger className="w-40">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="sales">Penjualan</SelectItem>
-                <SelectItem value="purchase">Pembelian</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-        </div>
-      </div>
-
+    <CollapsibleBox
+      title="Grafik Arus Kas"
+      description="Pilih tipe arus kas untuk melihat trennya."
+      icon={TrendingUp}
+      defaultExpanded
+      actions={filterActions}
+    >
       <div className="h-96">
         <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={320}>
           <LineChart data={chartData} margin={{ top: 10, right: 20, left: 0, bottom: 10 }}>
@@ -184,6 +186,6 @@ export function FinanceChart({ data, isLoading }: FinanceChartProps) {
           </div>
         ))}
       </div>
-    </Card>
+    </CollapsibleBox>
   );
 }

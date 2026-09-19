@@ -29,10 +29,14 @@ interface LeafletRuntime {
   tileLayer: (
     url: string,
     options: Record<string, unknown>,
-  ) => { addTo: (map: LeafletMapInstance) => void };
+  ) => { addTo: (map: LeafletMapInstance) => void; remove: () => void };
 }
 
 const DEFAULT_CENTER: [number, number] = [-6.2, 106.816666];
+const DEFAULT_TILE_LAYER = {
+  url: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+  attribution: '&copy; OpenStreetMap contributors',
+};
 
 export const parseMapCoordinate = (value: MapCoordinateValue): MapCoordinate | null => {
   if (!value) return null;
@@ -73,6 +77,13 @@ interface ShowMapLeafletProps {
   className?: string;
   zoom?: number;
   ariaLabel?: string;
+  tileLayerUrl?: string;
+  tileLayerAttribution?: string;
+  markerClassName?: string;
+  markerHtml?: string;
+  markerIconAnchor?: [number, number];
+  markerIconSize?: [number, number];
+  recenterKey?: string | number;
 }
 
 export function ShowMapLeaflet({
@@ -81,10 +92,18 @@ export function ShowMapLeaflet({
   className,
   zoom = 15,
   ariaLabel = 'Peta lokasi',
+  tileLayerUrl = DEFAULT_TILE_LAYER.url,
+  tileLayerAttribution = DEFAULT_TILE_LAYER.attribution,
+  markerClassName = 'leaflet-coordinate-marker',
+  markerHtml = '<span aria-hidden="true"></span>',
+  markerIconAnchor = [10, 10],
+  markerIconSize = [20, 20],
+  recenterKey,
 }: ShowMapLeafletProps) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<LeafletMapInstance | null>(null);
   const markerRef = useRef<LeafletMarkerInstance | null>(null);
+  const tileLayerRef = useRef<{ addTo: (map: LeafletMapInstance) => void; remove: () => void } | null>(null);
   const leafletRef = useRef<LeafletRuntime | null>(null);
   const onCoordinateChangeRef = useRef(onCoordinateChange);
   const [mapLoadError, setMapLoadError] = useState(false);
@@ -122,10 +141,11 @@ export function ShowMapLeaflet({
           scrollWheelZoom: true,
         });
 
-        leaflet.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-          attribution: '&copy; OpenStreetMap contributors',
+        tileLayerRef.current = leaflet.tileLayer(tileLayerUrl, {
+          attribution: tileLayerAttribution,
           maxZoom: 19,
-        }).addTo(map);
+        });
+        tileLayerRef.current.addTo(map);
 
         map.on('click', (event) => onCoordinateChangeRef.current?.(event.latlng));
         mapRef.current = map;
@@ -133,10 +153,10 @@ export function ShowMapLeaflet({
         if (initialCoordinate) {
           markerRef.current = leaflet.marker([initialCoordinate.lat, initialCoordinate.lng], {
             icon: leaflet.divIcon({
-              className: 'leaflet-coordinate-marker',
-              html: '<span aria-hidden="true"></span>',
-              iconAnchor: [10, 10],
-              iconSize: [20, 20],
+              className: markerClassName,
+              html: markerHtml,
+              iconAnchor: markerIconAnchor,
+              iconSize: markerIconSize,
             }),
           }).addTo(map);
         }
@@ -159,6 +179,8 @@ export function ShowMapLeaflet({
       resizeObserver?.disconnect();
       markerRef.current?.remove();
       markerRef.current = null;
+      tileLayerRef.current?.remove();
+      tileLayerRef.current = null;
       mapRef.current?.off();
       mapRef.current?.remove();
       mapRef.current = null;
@@ -167,6 +189,19 @@ export function ShowMapLeaflet({
     // Coordinate updates are handled by the effect below; this only reruns for an explicit retry.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [loadAttempt]);
+
+  useEffect(() => {
+    const map = mapRef.current;
+    const leaflet = leafletRef.current;
+    if (!map || !leaflet) return;
+
+    tileLayerRef.current?.remove();
+    tileLayerRef.current = leaflet.tileLayer(tileLayerUrl, {
+      attribution: tileLayerAttribution,
+      maxZoom: 19,
+    });
+    tileLayerRef.current.addTo(map);
+  }, [tileLayerAttribution, tileLayerUrl]);
 
   useEffect(() => {
     const map = mapRef.current;
@@ -189,13 +224,19 @@ export function ShowMapLeaflet({
 
     markerRef.current = leaflet.marker(position, {
       icon: leaflet.divIcon({
-        className: 'leaflet-coordinate-marker',
-        html: '<span aria-hidden="true"></span>',
-        iconAnchor: [10, 10],
-        iconSize: [20, 20],
+        className: markerClassName,
+        html: markerHtml,
+        iconAnchor: markerIconAnchor,
+        iconSize: markerIconSize,
       }),
     }).addTo(map);
-  }, [coordinateLat, coordinateLng, zoom]);
+  }, [coordinateLat, coordinateLng, markerClassName, markerHtml, markerIconAnchor, markerIconSize, zoom]);
+
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map || coordinateLat === undefined || coordinateLng === undefined) return;
+    map.setView([coordinateLat, coordinateLng], zoom);
+  }, [coordinateLat, coordinateLng, recenterKey, zoom]);
 
   return (
     <div className={cn('relative h-64 w-full overflow-hidden rounded-md border border-slate-200 bg-slate-100', className)}>

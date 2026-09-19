@@ -28,6 +28,7 @@ import type {
   DoEkspedisiDocumentationListResponse,
   DoEkspedisiClaimPayload,
   DoEkspedisiClaimDocumentationPayload,
+  DoEkspedisiExpeditionTrack,
 } from '@/@types/do-ekspedisi.types';
 import type { PaginationParams } from '@/@types/pagination.types';
 import { apiClient } from '@/lib/api/client';
@@ -107,6 +108,25 @@ const mapDriver = (item: any): DoEkspedisiDriver => ({
   name: item?.name ?? '',
   phone: item?.phone ?? null,
 });
+
+const mapExpeditionTrack = (item: any): DoEkspedisiExpeditionTrack | null => {
+  if (!item || typeof item !== 'object') return null;
+
+  return {
+    doExpeditionId: Number(item?.do_expedition_id ?? item?.do_expeditions_id ?? 0),
+    driverId: Number(item?.driver_id ?? 0),
+    traccarDeviceId: Number(item?.traccar_device_id ?? 0),
+    traccarUniqueId: toText(item?.traccar_unique_id),
+    isActive: Boolean(item?.is_active),
+    lastLatitude: item?.last_latitude == null ? null : Number(item.last_latitude),
+    lastLongitude: item?.last_longitude == null ? null : Number(item.last_longitude),
+    lastSpeed: item?.last_speed == null ? null : Number(item.last_speed),
+    lastCourse: item?.last_course == null ? null : Number(item.last_course),
+    lastAccuracy: item?.last_accuracy == null ? null : Number(item.last_accuracy),
+    lastAltitude: item?.last_altitude == null ? null : Number(item.last_altitude),
+    lastPositionAt: item?.last_position_at ?? null,
+  };
+};
 
 const mapCustomer = (item: any): DoEkspedisiCustomer => ({
   id: Number(item?.id ?? 0),
@@ -353,6 +373,7 @@ const mapDoEkspedisi = (item: any): DoEkspedisi => {
     expeditionClaims: (item?.expedition_claims ?? []).map(mapClaim),
     driverExpeditionClaims: (item?.driver_expedition_claims ?? []).map(mapClaimApplication),
     driverCashAdvanceClaims: (item?.driver_cash_advance_claims ?? []).map(mapDriverCashAdvanceClaim),
+    expeditionTrack: mapExpeditionTrack(item?.expedition_track ?? item?.expeditionTrack),
   };
 };
 

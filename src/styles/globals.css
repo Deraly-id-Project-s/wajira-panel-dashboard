@@ -51,8 +51,18 @@
   --font-geist-mono: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
 }
 
+@utility hero-box {
+  background-image: linear-gradient(to right, #ed333b 0%, #fb923c 50%, #dc2626 100%);
+  background-size: 200% auto;
+  transition: background-position 5s ease-in-out, opacity 5s ease-in-out, box-shadow 5s ease-in-out;
+  @apply relative overflow-hidden rounded-md border border-slate-200 opacity-90 hover:opacity-100 hover:bg-right px-6 py-5 shadow-sm sm:px-8;
+}
+
 @utility btn-primary {
-  @apply bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 opacity-90 hover:opacity-100 w-full sm:w-auto text-white font-medium shadow-sm transition-all disabled:from-slate-200 disabled:to-slate-300 disabled:text-slate-800 disabled:opacity-50 disabled:cursor-not-allowed disabled:pointer-events-none disabled:shadow-none;
+  background-image: linear-gradient(to right, #ed333b 0%, #fb923c 50%, #dc2626 100%);
+  background-size: 200% auto;
+  transition: background-position 5s ease-in-out, opacity 5s ease-in-out, box-shadow 5s ease-in-out, transform 150ms ease-in-out;
+  @apply w-full sm:w-auto text-white font-medium shadow-sm opacity-90 hover:opacity-100 hover:bg-right hover:shadow-md active:scale-[0.99] disabled:bg-none disabled:bg-slate-200 disabled:text-slate-800 disabled:opacity-50 disabled:cursor-not-allowed disabled:pointer-events-none disabled:shadow-none;
 }
 
 @utility btn-success {
@@ -64,15 +74,15 @@
 }
 
 @utility btn-outline {
-  @apply border border-slate-200 bg-white bg-none w-full sm:w-auto text-slate-700 hover:bg-slate-50 hover:text-slate-900 hover:bg-none font-medium transition-all duration-200 shadow-sm disabled:bg-slate-50 disabled:text-slate-400 disabled:border-slate-100 disabled:cursor-not-allowed disabled:pointer-events-none disabled:shadow-none;
+  @apply border border-slate-200 bg-white bg-none w-full sm:w-auto text-slate-700 hover:bg-slate-50 hover:text-slate-900 hover:bg-none font-medium transition-all duration-300 shadow-sm disabled:bg-slate-50 disabled:text-slate-400 disabled:border-slate-100 disabled:cursor-not-allowed disabled:pointer-events-none disabled:shadow-none;
 }
 
 @utility btn-outline-secondary {
-  @apply border border-slate-200 bg-white w-full sm:w-auto text-slate-700 hover:bg-slate-50 hover:text-slate-900 font-medium transition-all duration-200 shadow-sm disabled:opacity-50 disabled:cursor-not-allowed disabled:pointer-events-none disabled:shadow-none;
+  @apply border border-slate-200 bg-white w-full sm:w-auto text-slate-700 hover:bg-slate-50 hover:text-slate-900 font-medium transition-all duration-300 shadow-sm disabled:opacity-50 disabled:cursor-not-allowed disabled:pointer-events-none disabled:shadow-none;
 }
 
 @utility sidebar-menu-primary {
-  @apply bg-gradient-to-r from-orange-500 to-red-500 text-white font-medium shadow-xs shadow-orange-500/20 transition-all duration-200;
+  @apply bg-gradient-to-r to-orange-400 from-[#ed333b] text-white font-medium shadow-xs shadow-orange-500/20 transition-all duration-200;
 }
 
 @theme inline {
@@ -142,6 +152,29 @@ body {
   border-radius: 9999px;
   background: #ea580c;
   box-shadow: 0 1px 5px rgb(15 23 42 / 45%);
+}
+
+.leaflet-vehicle-marker {
+  background: transparent;
+  border: 0;
+}
+
+.leaflet-vehicle-marker span {
+  display: flex;
+  width: 40px;
+  height: 40px;
+  align-items: center;
+  justify-content: center;
+  border: 3px solid #fff;
+  border-radius: 9999px;
+  background: #ea580c;
+  color: #fff;
+  box-shadow: 0 10px 24px rgb(15 23 42 / 28%);
+}
+
+.leaflet-vehicle-marker svg {
+  width: 22px;
+  height: 22px;
 }
 
 .dark {

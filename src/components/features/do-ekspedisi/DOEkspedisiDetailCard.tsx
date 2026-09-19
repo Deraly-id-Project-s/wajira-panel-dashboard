@@ -13,6 +13,7 @@ import { useUpdateDoEkspedisi } from '@/hooks/useDoEkspedisi';
 import { toast } from 'sonner';
 import { getApiErrorMessage } from '@/utils/apiErrorHandler';
 import { CollapsibleBox } from '@/components/ui/collapsible-box';
+import { DOEkspedisiRealtimeTracking } from './DOEkspedisiRealtimeTracking';
 
 interface DOEkspedisiDetailCardProps {
   data: DoEkspedisi;
@@ -285,6 +286,8 @@ export function DOEkspedisiDetailCard({ data }: DOEkspedisiDetailCardProps) {
         </div>
       </CollapsibleBox>
 
+      <DOEkspedisiRealtimeTracking data={data} />
+
       <ExpeditionDateOverview data={data} onEditTarget={() => setTargetDialogOpen(true)} />
 
       <DateTimeRangeDialog
@@ -388,4 +391,3 @@ export function DOEkspedisiDetailCard({ data }: DOEkspedisiDetailCardProps) {
     </div>
   );
 }
-

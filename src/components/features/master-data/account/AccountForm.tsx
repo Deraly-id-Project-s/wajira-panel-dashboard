@@ -213,7 +213,13 @@ export const AccountForm = ({
             <FormItem className="space-y-1.5">
               <FormLabel className="text-xs font-semibold text-slate-700">Deskripsi</FormLabel>
               <FormControl>
-                <Textarea placeholder="Tulis deskripsi di sini" className="min-h-[72px] resize-none rounded-md border-slate-200 bg-white px-3 py-2 text-sm shadow-none focus-visible:ring-slate-300" rows={3} {...field} />
+                <Textarea
+                  placeholder="Tulis deskripsi di sini"
+                  className="min-h-[72px] resize-none rounded-md border-slate-200 bg-white px-3 py-2 text-sm shadow-none focus-visible:ring-slate-300"
+                  rows={3}
+                  {...field}
+                  value={field.value ?? ''}
+                />
               </FormControl>
               <FormMessage className="text-xs" />
             </FormItem>

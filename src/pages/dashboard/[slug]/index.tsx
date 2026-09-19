@@ -337,7 +337,7 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        <Card className="relative overflow-hidden rounded-md border border-slate-200 bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 opacity-90 hover:opacity-100 px-6 py-5 shadow-sm sm:px-8">
+        <Card className="hero-box">
           <div className="absolute -right-12 -top-16 h-40 w-40 rounded-full border-[24px] border-yellow-200/60" />
           <div className="absolute -bottom-4 right-20 h-10 w-10 rounded-full bg-yellow-300/50" />
           <div className="relative flex flex-row items-center gap-5">

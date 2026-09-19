@@ -15,6 +15,21 @@ export interface DoEkspedisiDriver {
   phone?: string | null;
 }
 
+export interface DoEkspedisiExpeditionTrack {
+  doExpeditionId: number;
+  driverId: number;
+  traccarDeviceId: number;
+  traccarUniqueId: string;
+  isActive: boolean;
+  lastLatitude: number | null;
+  lastLongitude: number | null;
+  lastSpeed: number | null;
+  lastCourse: number | null;
+  lastAccuracy: number | null;
+  lastAltitude: number | null;
+  lastPositionAt: string | null;
+}
+
 export interface DoEkspedisiOrderList {
   id: number;
   uuid?: string;
@@ -144,6 +159,7 @@ export interface DoEkspedisi {
   expeditionClaims: DoEkspedisiClaim[];
   driverExpeditionClaims: DoEkspedisiClaimApplication[];
   driverCashAdvanceClaims: DriverCashAdvanceClaim[];
+  expeditionTrack?: DoEkspedisiExpeditionTrack | null;
 }
 
 export interface DoEkspedisiDriverNote {
