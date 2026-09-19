@@ -19,6 +19,7 @@ interface AccountApiModel {
   name: string;
   description?: string | null;
   type?: 'credit' | 'debet' | 'debit';
+  pos_code?: string | null;
   category?: string;
   is_active?: boolean | number;
   is_lock?: boolean | number;
@@ -36,6 +37,8 @@ const mapAccount = (payload: AccountApiModel): Account => ({
   group: payload.account_group?.group_code ?? payload.account_group_name ?? payload.account_group?.name,
   category: payload.category ?? undefined,
   type: payload.type === 'debit' ? 'debet' : payload.type, // normalize to debet
+  pos_code: payload.pos_code ?? null,
+  posCode: payload.pos_code ?? null,
   cashFlow: undefined,
   description: payload.description ?? null,
   isActive: payload.is_active === undefined ? true : payload.is_active === true || payload.is_active === 1,
@@ -104,12 +107,14 @@ export const getAccountById = async (id: number | string): Promise<AccountDetail
 export const createAccount = async (payload: AccountPayload): Promise<Account> => {
   try {
     const type = payload.type === 'debit' ? 'debet' : (payload.type ?? 'debet');
+    const posCode = payload.pos_code ?? payload.posCode;
     const body = new FormData();
     body.append('account_group_id', String(payload.accountGroupId));
     body.append('code', payload.code);
     body.append('name', payload.name);
     if (payload.description !== undefined && payload.description !== null) body.append('description', payload.description);
     body.append('type', type);
+    if (posCode !== undefined && posCode !== null && posCode !== '') body.append('pos_code', posCode);
     if (payload.category) body.append('category', payload.category);
     if (payload.is_lock !== undefined) body.append('is_lock', payload.is_lock ? '1' : '0');
 
@@ -128,6 +133,7 @@ export const createAccount = async (payload: AccountPayload): Promise<Account> =
 export const updateAccount = async (id: number | string, payload: AccountUpdatePayload): Promise<Account> => {
   try {
     const type = payload.type === 'debit' ? 'debet' : (payload.type ?? 'debet');
+    const posCode = payload.pos_code !== undefined ? payload.pos_code : payload.posCode;
 
     const body = new URLSearchParams();
     if (payload.accountGroupId !== undefined) body.append('account_group_id', String(payload.accountGroupId));
@@ -135,6 +141,7 @@ export const updateAccount = async (id: number | string, payload: AccountUpdateP
     if (payload.name !== undefined) body.append('name', payload.name);
     if (payload.description !== undefined && payload.description !== null) body.append('description', payload.description);
     if (payload.type !== undefined) body.append('type', type);
+    if (posCode !== undefined) body.append('pos_code', posCode ?? '');
     if (payload.category !== undefined && payload.category !== null) body.append('category', payload.category);
     if (payload.is_lock !== undefined) body.append('is_lock', payload.is_lock ? '1' : '0');
 

@@ -10,7 +10,7 @@ import type { AccountFormValues } from '@/scheme/account-master.schema';
 import type { UseFormReturn } from 'react-hook-form';
 import { SearchableSelect } from '@/components/features/vehicle-data/SearchableSelect';
 import { CreateAccountGroupDialog } from '@/components/features/account/CreateAccountGroupDialog';
-import { ACCOUNT_CATEGORY_OPTIONS } from '@/lib/account';
+import { ACCOUNT_CATEGORY_OPTIONS, ACCOUNT_TYPE_OPTIONS } from '@/lib/account';
 import { Plus } from 'lucide-react';
 import RequiredMark from '@/components/ui/required-mark';
 import { cn } from '@/lib/utils';
@@ -129,12 +129,64 @@ export const AccountForm = ({
 
           <FormField
             control={form.control}
+            name="type"
+            render={({ field }) => (
+              <FormItem className="space-y-1.5">
+                <FormLabel className="text-xs font-semibold text-slate-700">Tipe Akun<RequiredMark /></FormLabel>
+                <FormControl>
+                  <Select
+                    value={field.value ?? 'debet'}
+                    onValueChange={(val) => field.onChange(val)}
+                    disabled={lockRestricted}
+                  >
+                    <SelectTrigger className={cn("h-10 rounded-md border-slate-200 px-3 text-sm shadow-none focus:ring-slate-300 bg-white", lockRestricted && "pointer-events-none opacity-60 bg-slate-50 cursor-not-allowed")} tabIndex={lockRestricted ? -1 : undefined}>
+                      <SelectValue placeholder="Pilih Tipe Akun" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {ACCOUNT_TYPE_OPTIONS.map((option) => (
+                        <SelectItem key={option.value} value={option.value} className="text-sm">
+                          {option.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </FormControl>
+                <FormMessage className="text-xs" />
+              </FormItem>
+            )}
+          />
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <FormField
+            control={form.control}
+            name="pos_code"
+            render={({ field }) => (
+              <FormItem className="space-y-1.5">
+                <FormLabel className="text-xs font-semibold text-slate-700">Kode Pos</FormLabel>
+                <FormControl>
+                  <Input
+                    readOnly={lockRestricted}
+                    placeholder="Masukkan kode pos (opsional)"
+                    maxLength={50}
+                    className={cn("h-10 rounded-md border-slate-200 px-3 text-sm shadow-none focus-visible:ring-slate-300 bg-white", lockRestricted && "bg-slate-50 text-slate-500 cursor-not-allowed")}
+                    value={field.value ?? ''}
+                    onChange={(e) => field.onChange(e.target.value || null)}
+                  />
+                </FormControl>
+                <FormMessage className="text-xs" />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
             name="category"
             render={({ field }) => (
               <FormItem className="space-y-1.5">
                 <FormLabel className="text-xs font-semibold text-slate-700">Kategori Laporan</FormLabel>
                 <FormControl>
-                  <Select value={field.value ?? ''} onValueChange={(val) => field.onChange(val === 'none' ? undefined : val)} disabled={lockRestricted}>
+                  <Select value={field.value ?? 'none'} onValueChange={(val) => field.onChange(val === 'none' ? null : val)} disabled={lockRestricted}>
                     <SelectTrigger className={cn("h-10 rounded-md border-slate-200 px-3 text-sm shadow-none focus:ring-slate-300 bg-white", lockRestricted && "pointer-events-none opacity-60 bg-slate-50 cursor-not-allowed")} tabIndex={lockRestricted ? -1 : undefined}>
                       <SelectValue placeholder="Pilih Kategori Laporan (Opsional)" />
                     </SelectTrigger>

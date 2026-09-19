@@ -25,8 +25,10 @@ export interface Account {
   createdAt?: string;
   updatedAt?: string;
 
-  // Backend type field (credit/debit)
+  // Backend type field (credit/debit/debet)
   type?: AccountTypeValue;
+  pos_code?: string | null;
+  posCode?: string | null;
 
   // Legacy fields (soft-deprecated)
   group?: string;
@@ -46,7 +48,9 @@ export interface AccountPayload {
   code: string;
   name: string;
   description?: string | null;
-  type?: AccountTypeValue;
+  type: AccountTypeValue;
+  pos_code?: string | null;
+  posCode?: string | null;
   category?: AccountCategory | null;
   is_lock?: boolean;
 }

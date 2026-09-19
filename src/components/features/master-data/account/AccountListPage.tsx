@@ -289,11 +289,13 @@ export const AccountListPage = () => {
       return;
     }
 
-    const headers = ['Kode Akun', 'Nama Akun', 'Grup Akun', 'Kategori Akun', 'Deskripsi'];
+    const headers = ['Kode Akun', 'Nama Akun', 'Grup Akun', 'Tipe Akun', 'Kode Pos', 'Kategori Akun', 'Deskripsi'];
     const rows = accountRows.map((account) => [
       account.code,
       account.name,
       account.accountGroupCode ?? '-',
+      account.type === 'credit' ? 'Kredit' : 'Debet',
+      account.pos_code ?? account.posCode ?? '-',
       ACCOUNT_CATEGORY_OPTIONS.find((item) => item.value === account.category)?.label ?? account.category ?? '-',
       account.description ?? '-',
     ]);

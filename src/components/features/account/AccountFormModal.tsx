@@ -9,11 +9,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import type { UseFormReturn } from 'react-hook-form';
 import type { AccountFormValues } from '@/scheme/account-master.schema';
 import type { AccountGroup } from '@/@types/account-group.types';
-import { ACCOUNT_CATEGORY_OPTIONS } from '@/lib/account';
+import { ACCOUNT_CATEGORY_OPTIONS, ACCOUNT_TYPE_OPTIONS } from '@/lib/account';
 import { cn } from '@/lib/utils';
 import { SearchableSelect } from '@/components/features/vehicle-data/SearchableSelect';
 import { CreateAccountGroupDialog } from './CreateAccountGroupDialog';
-import { Plus, Search } from 'lucide-react';
+import { Plus } from 'lucide-react';
 
 interface AccountFormModalProps {
   open: boolean;
@@ -117,18 +117,34 @@ export function AccountFormModal({
 
             <FormField
               control={form.control}
-              name="category"
+              name="name"
               render={({ field }) => (
                 <FormItem className="space-y-1.5">
-                  <FormLabel className="text-xs font-semibold text-slate-700">Kategori Laporan</FormLabel>
+                  <FormLabel className="text-xs font-semibold text-slate-700">Nama Akun<RequiredMark /></FormLabel>
                   <FormControl>
-                    <Select value={field.value ?? ''} onValueChange={(val) => field.onChange(val === 'none' ? undefined : val)}>
+                    <Input placeholder="Masukkan nama akun" className="h-10 rounded-md border-slate-200 px-3 text-sm shadow-none focus-visible:ring-slate-300 bg-white" {...field} />
+                  </FormControl>
+                  <FormMessage className="text-xs" />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="type"
+              render={({ field }) => (
+                <FormItem className="space-y-1.5">
+                  <FormLabel className="text-xs font-semibold text-slate-700">Tipe Akun<RequiredMark /></FormLabel>
+                  <FormControl>
+                    <Select
+                      value={field.value ?? 'debet'}
+                      onValueChange={(val) => field.onChange(val)}
+                    >
                       <SelectTrigger className="h-10 rounded-md border-slate-200 px-3 text-sm shadow-none focus:ring-slate-300 bg-white">
-                        <SelectValue placeholder="Pilih Kategori Laporan (Opsional)" />
+                        <SelectValue placeholder="Pilih Tipe Akun" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="none" className="text-sm text-slate-500">Pilih Kategori Laporan (Opsional)</SelectItem>
-                        {ACCOUNT_CATEGORY_OPTIONS.map((option) => (
+                        {ACCOUNT_TYPE_OPTIONS.map((option) => (
                           <SelectItem key={option.value} value={option.value} className="text-sm">
                             {option.label}
                           </SelectItem>
@@ -143,12 +159,44 @@ export function AccountFormModal({
 
             <FormField
               control={form.control}
-              name="name"
+              name="pos_code"
               render={({ field }) => (
                 <FormItem className="space-y-1.5">
-                  <FormLabel className="text-xs font-semibold text-slate-700">Nama Akun<RequiredMark /></FormLabel>
+                  <FormLabel className="text-xs font-semibold text-slate-700">Kode Pos</FormLabel>
                   <FormControl>
-                    <Input placeholder="Masukkan nama akun" className="h-10 rounded-md border-slate-200 px-3 text-sm shadow-none focus-visible:ring-slate-300 bg-white" {...field} />
+                    <Input
+                      placeholder="Masukkan kode pos (opsional)"
+                      maxLength={50}
+                      className="h-10 rounded-md border-slate-200 px-3 text-sm shadow-none focus-visible:ring-slate-300 bg-white"
+                      value={field.value ?? ''}
+                      onChange={(e) => field.onChange(e.target.value || null)}
+                    />
+                  </FormControl>
+                  <FormMessage className="text-xs" />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="category"
+              render={({ field }) => (
+                <FormItem className="space-y-1.5">
+                  <FormLabel className="text-xs font-semibold text-slate-700">Kategori Laporan</FormLabel>
+                  <FormControl>
+                    <Select value={field.value ?? 'none'} onValueChange={(val) => field.onChange(val === 'none' ? null : val)}>
+                      <SelectTrigger className="h-10 rounded-md border-slate-200 px-3 text-sm shadow-none focus:ring-slate-300 bg-white">
+                        <SelectValue placeholder="Pilih Kategori Laporan (Opsional)" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="none" className="text-sm text-slate-500">Pilih Kategori Laporan (Opsional)</SelectItem>
+                        {ACCOUNT_CATEGORY_OPTIONS.map((option) => (
+                          <SelectItem key={option.value} value={option.value} className="text-sm">
+                            {option.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   </FormControl>
                   <FormMessage className="text-xs" />
                 </FormItem>
