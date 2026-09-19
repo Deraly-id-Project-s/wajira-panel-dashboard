@@ -2,9 +2,10 @@ export interface Transaction {
   id: string;
   uuid?: string;
   companyId: string;
-  unitTransactionId?: string | number | null;
+  unitTransactionId?: number | string | null;
   date: string; // transaction_date
-  name: string; // kept for UI, mapped from description
+  name: string;
+  description?: string;
 
   debitUSD: number;
   creditUSD: number;
@@ -15,17 +16,17 @@ export interface Transaction {
   debitCash: number;
   creditCash: number;
 
-  description?: string;
+  transactionProof?: File | string | null;
 
   createdAt?: string;
   updatedAt?: string;
 }
 
 export interface CreateTransactionRequest {
-  companyId: string;
-  unitTransactionId?: string | number | null;
+  companyId: string | number;
+  unitTransactionId?: number | string | null;
   date: string;
-  name?: string;
+  name: string;
   description?: string;
   debitUSD?: number;
   creditUSD?: number;
@@ -33,6 +34,7 @@ export interface CreateTransactionRequest {
   creditIDR?: number;
   debitCash?: number;
   creditCash?: number;
+  transactionProof?: File | string | null;
 }
 
 export interface TransactionAudit {

@@ -138,13 +138,12 @@ export const BrandListPage = () => {
                                         setSearchInput('');
                                         updateQuery({ search: undefined, page: 1 });
                                     }}
-                                    className="rounded-md border-slate-200 text-slate-700 bg-white hover:bg-slate-50 cursor-pointer h-9 text-xs px-3"
                                 >
                                     Reset
                                 </Button>
                             )}
                             {canCreate && (
-                                <Button onClick={handleAdd} className="btn-primary!">
+                                <Button variant="default" onClick={handleAdd}>
                                     <Plus className="h-4 w-4" />
                                     Tambah Merk
                                 </Button>

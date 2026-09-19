@@ -1,6 +1,7 @@
 import { Button } from "@/components/ui/button"
 
 import { Input } from "@/components/ui/input"
+import { InputDate } from "@/components/ui/input-date"
 import { MoneyInput } from "@/components/ui/money-input"
 import { Label } from "@/components/ui/label"
 import { Save } from "lucide-react"
@@ -124,8 +125,7 @@ export function PaymentForm({ salesData, onSubmit, onCancel }: Props) {
 
                             <div className="grid grid-cols-3 items-center gap-4">
                                 <Label className="col-span-1">Tanggal</Label>
-                                <Input
-                                    type="date"
+                                <InputDate
                                     className="col-span-2"
                                     value={tanggalBayar}
                                     onChange={(e) => setTanggalBayar(e.target.value)}

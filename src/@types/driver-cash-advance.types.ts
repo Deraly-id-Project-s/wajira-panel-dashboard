@@ -86,6 +86,21 @@ export interface DriverCashAdvance {
   remainingPayment?: number;
   is_paid?: boolean;
   isPaid?: boolean;
+  is_driver_request?: boolean;
+  isDriverRequest?: boolean;
+}
+
+export interface DriverCashAdvanceClaim {
+  id: number;
+  uuid?: string | null;
+  doExpeditionId: number;
+  driverCashAdvanceId: number;
+  driverId: number;
+  nominal: number;
+  type: 'cash' | 'transfer';
+  date: string;
+  cashAdvance?: DriverCashAdvance | null;
+  driver?: DriverCashAdvanceDriver | null;
 }
 
 export interface DriverCashAdvancePayload {
@@ -100,6 +115,7 @@ export interface DriverCashAdvancePayload {
 export interface DriverCashAdvanceApprovalPayload {
   is_approve: boolean;
   approve_date: string;
+  approve_nominal?: number;
 }
 
 export interface DriverCashAdvanceBillingHistoryPayload {
@@ -107,10 +123,11 @@ export interface DriverCashAdvanceBillingHistoryPayload {
   bca_payment_amount: number;
   bca_payment_usd_amount: number;
   cash_payment_amount: number;
-  bca_payment_usd_original_amount?: number | null;
-  bca_payment_usd_exchange_amount?: number | null;
   payment_at: string;
   note?: string | null;
+  payment_proof?: File | null;
+  bca_payment_usd_original_amount?: number | null;
+  bca_payment_usd_exchange_amount?: number | null;
 }
 
 export interface DriverCashAdvanceBillingStatusPayload {
@@ -118,8 +135,26 @@ export interface DriverCashAdvanceBillingStatusPayload {
   is_paid: boolean;
 }
 
+export interface ApplyDriverCashAdvancePayload {
+  driver_cash_advance_id: number;
+  do_expedition_id: number;
+  nominal: number;
+  type: 'cash' | 'transfer';
+  date: string;
+}
+
+export interface UpdateDriverCashAdvanceClaimPayload {
+  driver_cash_advance_id: number;
+  nominal: number;
+  type: 'cash' | 'transfer';
+  date: string;
+}
+
 export interface DriverCashAdvanceListParams extends PaginationParams {
   company_id?: number | string;
+  driver_id?: number | string;
+  is_claim?: boolean;
+  is_approve?: boolean;
   start_date?: string | null;
   end_date?: string | null;
 }

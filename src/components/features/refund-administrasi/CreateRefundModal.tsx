@@ -8,6 +8,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
+import { InputDate } from '@/components/ui/input-date';
 import { Label } from '@/components/ui/label';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { formatCurrency } from '@/lib/utils/currency';
@@ -135,7 +136,7 @@ export default function CreateRefundModal({ open, onClose, transactionId }: Crea
           <div className="grid gap-4 md:grid-cols-2">
             <div className="space-y-2">
               <Label htmlFor="refund_date">Tanggal Refund</Label>
-              <Input id="refund_date" type="date" {...register('refund_date')} />
+              <Controller control={control} name="refund_date" render={({ field }) => <InputDate id="refund_date" {...field} />} />
               {errors.refund_date ? <p className="text-sm text-red-600">{errors.refund_date.message}</p> : null}
             </div>
 

@@ -11,6 +11,7 @@ import { useCreatePurchase } from '@/hooks/usePurchase';
 import { useCompany } from '@/contexts/CompanyContext';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
+import { InputDate } from '@/components/ui/input-date';
 import { type UnitTransactionFormValues } from '@/scheme/unit-transaction.schema';
 import { CreatePurchaseRequest } from '@/@types/purchase.types';
 import { SupplierCombobox } from '@/components/features/supplier/SupplierCombobox';
@@ -215,8 +216,7 @@ export default function CreatePurchasePage() {
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <div className="space-y-2">
                   <Label className="text-sm font-medium">Tanggal</Label>
-                  <Input
-                    type="date"
+                  <InputDate
                     value={tanggal}
                     onChange={(e) => setTanggal(e.target.value)}
                     className="bg-transparent"

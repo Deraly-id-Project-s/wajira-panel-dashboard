@@ -98,18 +98,18 @@ export function SearchPagination({
                     </div>
                 </div>
 
-                {actions ? <div className="flex items-center flex-col sm:flex-row w-full sm:w-auto justify-end gap-2">{actions}</div> : null}
+                {actions ? <div className="flex flex-col sm:flex-row items-stretch sm:items-center w-full sm:w-auto justify-end gap-2 [&>*]:w-full sm:[&>*]:w-auto">{actions}</div> : null}
             </div>
 
             {children}
 
             {total > 0 && (
                 <nav
-                    className="flex flex-col gap-4 py-2 text-sm text-slate-500 no-print lg:flex-row lg:items-center lg:justify-between"
+                    className="flex flex-col items-center justify-center gap-4 py-2 text-sm text-slate-500 no-print sm:flex-row sm:items-center sm:justify-between"
                     aria-label="Navigasi halaman"
                 >
-                    <p>Showing {startItem}-{endItem} of {total} data</p>
-                    <div className="flex flex-wrap items-center justify-end gap-1 text-slate-800">
+                    <p className="text-center sm:text-left">Showing {startItem}-{endItem} of {total} data</p>
+                    <div className="flex flex-wrap items-center justify-center gap-1 text-slate-800">
                         <Button
                             type="button"
                             variant="ghost"

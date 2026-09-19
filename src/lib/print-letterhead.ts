@@ -33,3 +33,12 @@ export function getLetterheadByCompanyId(companyId: number | null): string {
   if (!companyId) return '';
   return COMPANY_LETTERHEAD_MAP[companyId] || '';
 }
+
+export function getCompanyName(companyId?: number | null): string {
+  if (companyId === 1) return 'PT WAJIRA JAGRATARA MORINDO';
+  if (companyId === 2) return 'PT WAJIRA INTERNASIONAL';
+  if (companyId === 3) return 'PT WAJIRA YANOTAMA';
+  if (companyId === 4) return 'PT WAJIRA TRANSINDO';
+  if (companyId === 5) return 'PT ADHIYASA GRADASTA';
+  return 'PT WAJIRA JAGRATARA';
+}

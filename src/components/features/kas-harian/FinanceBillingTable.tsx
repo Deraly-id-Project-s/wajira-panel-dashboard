@@ -10,6 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { InputDate } from '@/components/ui/input-date';
 import { Textarea } from '@/components/ui/textarea';
 import { cn } from '@/lib/utils';
 import BaseTable, { ColumnDef } from '@/components/ui/base-table';
@@ -438,7 +439,7 @@ export default function FinanceBillingTable({ financeBillings, cashFlowDetail, c
       <FormDialog
         open={isFormOpen}
         onOpenChange={(open: boolean) => { if (!open) closeForm(); }}
-        title={editingId ? 'Edit Pembayaran' : 'Tambah Pembayaran Baru'}
+        title={editingId ? 'Edit Pembayaran Finance' : 'Tambah Pembayaran Finance Baru'}
         onSubmit={(e: React.FormEvent) => { e.preventDefault(); void handleSubmitForm(); }}
         maxWidthClassName="sm:max-w-5xl"
         isSubmitting={isLoading}
@@ -538,8 +539,7 @@ export default function FinanceBillingTable({ financeBillings, cashFlowDetail, c
             {/* Tanggal Bayar */}
             <div className="space-y-2">
               <label className="text-sm font-medium text-slate-800">Tanggal Bayar</label>
-              <Input
-                type="date"
+              <InputDate
                 value={form.payment_at}
                 onChange={(e) => setForm((prev) => ({ ...prev, payment_at: e.target.value }))}
                 className="h-11"

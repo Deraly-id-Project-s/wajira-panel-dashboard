@@ -69,15 +69,15 @@ export function DataImportModal({ open, onOpenChange, entityName = 'Data', title
         >
             <div className="space-y-6">
                 {exampleData && (
-                    <CsvGuide 
-                        headers={exampleData.headers} 
-                        rows={displayRows} 
-                        guideNotes={guideNotes} 
+                    <CsvGuide
+                        headers={exampleData.headers}
+                        rows={displayRows}
+                        guideNotes={guideNotes}
                     />
                 )}
 
                 <label className={cn(
-                    "group relative flex cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed p-8 transition-all duration-300",
+                    "group relative flex cursor-pointer flex-col items-center justify-center rounded-md border-2 border-dashed p-8 transition-all duration-300",
                     file
                         ? "border-emerald-400 bg-emerald-50 hover:bg-emerald-100/50"
                         : "border-slate-300 bg-slate-50 hover:border-orange-400 hover:bg-orange-50/40"
@@ -108,7 +108,7 @@ export function DataImportModal({ open, onOpenChange, entityName = 'Data', title
                 </label>
 
                 {templateUrl && (
-                    <div className="flex items-center justify-between rounded-xl border border-orange-200/80 bg-orange-50/40 p-4 transition-colors hover:bg-orange-50/70">
+                    <div className="flex items-center justify-between rounded-md border border-orange-200/80 bg-orange-50/40 p-4 transition-colors hover:bg-orange-50/70">
                         <div className="flex items-center gap-3">
                             <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-orange-100 text-orange-600">
                                 <FileSpreadsheet className="h-5 w-5" />
@@ -118,10 +118,10 @@ export function DataImportModal({ open, onOpenChange, entityName = 'Data', title
                                 <p className="text-xs text-slate-500">Gunakan format ini agar import berhasil.</p>
                             </div>
                         </div>
-                        <a 
-                            href={templateUrl} 
-                            target="_blank" 
-                            rel="noopener noreferrer" 
+                        <a
+                            href={templateUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
                             className="inline-flex h-9 shrink-0 items-center justify-center rounded-md bg-white px-3 text-sm font-medium text-orange-600 shadow-sm border border-orange-200 hover:bg-orange-50 hover:text-orange-700 transition-colors"
                         >
                             <Download className="mr-2 h-4 w-4" /> Download

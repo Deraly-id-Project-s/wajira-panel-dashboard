@@ -15,18 +15,25 @@ import {
   Plus,
   Edit,
   Trash2,
+  Printer,
+  MoreVertical,
 } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { toast } from 'sonner';
 import { useRouter } from 'next/router';
-import BaseTable from '@/components/ui/base-table';
+import BaseTable, { type ColumnDef } from '@/components/ui/base-table';
+import { OrderListDetailPrintDocument } from './OrderListDetailPrintDocument';
+import { ReportTemplatePrintDialog } from '@/components/ui/report-template-print-dialog';
+import { useReportTemplatePrint } from '@/hooks/useReportTemplatePrint';
+import { getCompanyName, getLetterheadByCompanyId, resolveCompanyId } from '@/lib/print-letterhead';
 
 import type { OrderList, OrderListStatus, OrderListTarifItem, OrderListVehicleType } from '@/@types/order-list.types';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
+import { CollapsibleBox } from '@/components/ui/collapsible-box';
 import { PageHeader } from '@/components/ui/page-header';
 import { cn } from '@/lib/utils';
 import { ReferenceLink } from '@/components/ui/reference-link';
@@ -43,6 +50,17 @@ import {
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { FormDialog } from '@/components/ui/form-dialog';
 import { SearchableSelect } from '@/components/features/vehicle-data/SearchableSelect';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -101,6 +119,8 @@ interface OrderListDetailViewProps {
   onUpdateStatus?: (status: OrderListStatus) => void;
   canUpdateStatus?: boolean;
   isUpdatingStatus?: boolean;
+  onProcessInvoice?: () => void;
+  isProcessingInvoice?: boolean;
 }
 
 function formatDate(value?: string | null, includeTime = false) {
@@ -123,20 +143,6 @@ function Field({ label, value, icon: Icon }: { label: string; value: React.React
       <div className="flex min-w-0 items-start gap-2 text-sm font-semibold text-slate-950">
         {Icon ? <Icon className="mt-0.5 h-4 w-4 shrink-0 text-slate-400" /> : null}
         <div className="min-w-0 break-words">{value || '-'}</div>
-      </div>
-    </div>
-  );
-}
-
-function SectionHeading({ icon: Icon, title, description }: { icon: React.ElementType; title: string; description?: string }) {
-  return (
-    <div className="flex items-start gap-3">
-      <div className="rounded-md bg-orange-100 p-2 text-orange-700">
-        <Icon className="h-5 w-5" />
-      </div>
-      <div>
-        <h2 className="text-base font-semibold text-slate-950">{title}</h2>
-        {description ? <p className="mt-0.5 text-xs text-slate-500">{description}</p> : null}
       </div>
     </div>
   );
@@ -191,7 +197,7 @@ function CargoList({
       : [];
 
   const columns = React.useMemo(() => {
-    const cols = [
+    const cols: ColumnDef<any>[] = [
       {
         header: 'No',
         alignment: 'center' as const,
@@ -222,29 +228,37 @@ function CargoList({
       cols.push({
         header: 'Aksi',
         alignment: 'center' as const,
-        headerClassName: 'w-[100px] text-slate-500 font-semibold text-center',
+        sticky: 'right',
+        headerClassName: 'w-[80px] text-slate-500 font-semibold text-center',
         cell: (item: any) => (
-          <div className="flex items-center justify-center gap-1">
-            <Button
-              type="button"
-              variant="ghost"
-              size="icon"
-              disabled={!!item.isFallback}
-              onClick={() => onEditCargo?.(route, item)}
-              className="h-7 w-7 text-slate-500 hover:text-slate-700 hover:bg-slate-100 rounded-md cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed"
-            >
-              <Edit className="h-4.5 w-4.5" />
-            </Button>
-            <Button
-              type="button"
-              variant="ghost"
-              size="icon"
-              disabled={!!item.isFallback}
-              onClick={() => onDeleteCargo?.(route, item)}
-              className="h-7 w-7 text-red-500 hover:text-red-600 hover:bg-red-50 rounded-md cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed"
-            >
-              <Trash2 className="h-4.5 w-4.5" />
-            </Button>
+          <div className="flex justify-center">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="ghost"
+                  disabled={!!item.isFallback}
+                  className="h-8 w-8 p-0 rounded-full text-slate-600 hover:bg-slate-100 hover:text-slate-900 disabled:opacity-30 disabled:cursor-not-allowed"
+                >
+                  <MoreVertical className="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="min-w-[140px] rounded-md border-slate-200 p-1.5 shadow-lg">
+                <DropdownMenuItem
+                  disabled={!!item.isFallback}
+                  onClick={() => onEditCargo?.(route, item)}
+                  className="rounded-md px-3 py-2 text-sm text-slate-900 focus:bg-slate-50 cursor-pointer disabled:cursor-not-allowed"
+                >
+                  Edit
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  disabled={!!item.isFallback}
+                  onClick={() => onDeleteCargo?.(route, item)}
+                  className="rounded-md px-3 py-2 text-sm text-red-600 focus:bg-red-50 focus:text-red-600 cursor-pointer disabled:cursor-not-allowed"
+                >
+                  Hapus
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         ),
       });
@@ -279,10 +293,15 @@ export function OrderListDetailView({
   onUpdateStatus,
   canUpdateStatus = false,
   isUpdatingStatus = false,
+  onProcessInvoice,
+  isProcessingInvoice = false,
 }: OrderListDetailViewProps) {
   const router = useRouter();
   const slug = typeof router.query.slug === 'string' ? router.query.slug : '';
   const { companyId } = useCompany();
+  const resolvedCompanyId = resolveCompanyId(slug, companyId) || 1;
+  const selectedPrintBackground = getLetterheadByCompanyId(resolvedCompanyId);
+  const templatePrint = useReportTemplatePrint(selectedPrintBackground);
   const isDraft = data.status === 'draft';
 
   // Search states for selects
@@ -379,6 +398,12 @@ export function OrderListDetailView({
       ...tarifOptions,
     ];
   }, [tarifOptions, selectedRoute]);
+
+  const existingTarifIds = React.useMemo(() => {
+    return (data.tarifs ?? [])
+      .map((route) => String(route.tarifId || route.tarif?.id || ''))
+      .filter(Boolean);
+  }, [data.tarifs]);
 
   const mergedVehicleOptions = React.useMemo(() => {
     const currentList = vehicleOptions[watchedVehicleType] || [];
@@ -552,6 +577,11 @@ export function OrderListDetailView({
 
   const routes = data.tarifs ?? [];
   const expeditions = Array.isArray(data.expeditions) ? data.expeditions : [];
+  const isAllExpeditionsDraft =
+    expeditions.length === 0 ||
+    expeditions.every(
+      (exp: any) => !exp?.status || String(exp.status).toLowerCase() === 'draft'
+    );
   const totalCargo = routes.reduce(
     (total, route) => total + (route.tarifItems ?? []).reduce((sum, item) => sum + Number(item.qty ?? 0), 0),
     0,
@@ -583,27 +613,62 @@ export function OrderListDetailView({
           </div>
         )}
         actions={
-          canUpdateStatus ? (
-            data.status === 'draft' ? (
-              <Button
-                type="button"
-                disabled={isUpdatingStatus}
-                variant="default"
-                onClick={() => onUpdateStatus?.('deliver')}
-              >
-                {isUpdatingStatus ? 'Memproses...' : 'Proses Order List'}
-              </Button>
-            ) : data.status === 'deliver' ? (
-              <Button
-                type="button"
-                variant="outline"
-                disabled={isUpdatingStatus}
-                onClick={() => onUpdateStatus?.('draft')}
-              >
-                {isUpdatingStatus ? 'Memproses...' : 'Jadikan Draft'}
-              </Button>
-            ) : undefined
-          ) : undefined
+          <div className="flex items-center gap-2">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={templatePrint.openPrintDialog}
+            >
+              <Printer className="mr-2 h-4 w-4" />
+              Print
+            </Button>
+            <Button
+              type="button"
+              variant="default"
+              disabled={
+                !canUpdateStatus ||
+                data.status !== 'done' ||
+                data.isHasInvoice ||
+                !data.canMarkDone ||
+                isProcessingInvoice
+              }
+              loading={isProcessingInvoice}
+              onClick={onProcessInvoice}
+            >
+              <FileText className="mr-2 h-4 w-4" />
+              {data.isHasInvoice ? 'Invoice Sudah Dibuat' : 'Proses DO Invoice'}
+            </Button>
+            {canUpdateStatus ? (
+              data.status === 'draft' ? (
+                <Button
+                  type="button"
+                  disabled={isUpdatingStatus}
+                  variant="default"
+                  onClick={() => onUpdateStatus?.('deliver')}
+                >
+                  {isUpdatingStatus ? 'Memproses...' : 'Proses Order List'}
+                </Button>
+              ) : data.status === 'deliver' ? (
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <span className="inline-block">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        disabled={isUpdatingStatus || !isAllExpeditionsDraft}
+                        onClick={() => onUpdateStatus?.('draft')}
+                      >
+                        {isUpdatingStatus ? 'Memproses...' : 'Jadikan Draft'}
+                      </Button>
+                    </span>
+                  </TooltipTrigger>
+                  <TooltipContent side="bottom" className="max-w-xs text-center text-xs">
+                    DO ekspedisi harus draft untuk dapat membuatnya jadikan draft
+                  </TooltipContent>
+                </Tooltip>
+              ) : undefined
+            ) : undefined}
+          </div>
         }
       />
 
@@ -616,7 +681,7 @@ export function OrderListDetailView({
         ].map((item) => (
           <Card key={item.label} className="border-slate-200 shadow-sm">
             <CardContent className="flex items-center gap-4 p-5">
-              <div className="rounded-xl bg-orange-100 p-3 text-orange-700"><item.icon className="h-5 w-5" /></div>
+              <div className="rounded-md bg-orange-100 p-3 text-orange-700"><item.icon className="h-5 w-5" /></div>
               <div>
                 <p className="text-xs text-slate-500">{item.label}</p>
                 <p className="mt-1 font-bold text-slate-950">
@@ -628,10 +693,13 @@ export function OrderListDetailView({
         ))}
       </div>
 
-      <Card className="border-slate-200 shadow-sm">
-        <CardContent className="space-y-6 p-5 sm:p-6">
-          <SectionHeading icon={FileText} title="Informasi Order" description="Informasi customer dan rangkuman tujuan pengiriman" />
-          <div className="grid gap-5 border-t border-slate-100 pt-5 sm:grid-cols-2 lg:grid-cols-4">
+      <CollapsibleBox
+        title="Informasi Order"
+        description="Informasi customer dan rangkuman tujuan pengiriman"
+        defaultExpanded
+      >
+        <div className="space-y-6">
+          <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
             <Field
               label="Customer"
               value={
@@ -649,35 +717,38 @@ export function OrderListDetailView({
             <Field label="Tipe Armada" value={getOrderVehicleTypeLabel(data)} icon={Truck} />
             <Field label="DO Ekspedisi" value={`${expeditions.length} data`} icon={FileText} />
           </div>
-          <div className="grid gap-5 rounded-xl bg-orange-50 p-4 md:grid-cols-3">
+          <div className="grid gap-5 rounded-md bg-orange-50 p-4 md:grid-cols-3">
             <Field label="Lokasi Muat" value={data.loadingIn || '-'} icon={MapPin} />
             <Field label="Lokasi Bongkar" value={data.loadingOut || '-'} icon={MapPin} />
             <Field label="Tujuan Pengiriman" value={data.deliveryDestination || '-'} icon={MapPin} />
           </div>
           {data.note && (
-            <div className="rounded-xl border border-slate-100 bg-slate-50/50 p-4">
+            <div className="rounded-md border border-slate-100 bg-slate-50/50 p-4">
               <p className="text-xs font-medium uppercase tracking-wide text-slate-500 mb-1">Catatan / Keterangan</p>
               <p className="text-sm font-semibold text-slate-950">{data.note}</p>
             </div>
           )}
-        </CardContent>
-      </Card>
+        </div>
+      </CollapsibleBox>
 
-      <Card className="border-slate-200 shadow-sm">
-        <CardContent className="space-y-5 p-5 sm:p-6">
-          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-            <SectionHeading icon={Route} title="Rute, Armada & Muatan" description="Data berasal dari setiap DO order list tarif" />
-            {isDraft && (
+      <CollapsibleBox
+        title="Rute, Armada & Muatan"
+        description="Data berasal dari setiap DO order list tarif"
+        defaultExpanded
+      >
+        <div className="space-y-5">
+          {isDraft && (
+            <div className="flex justify-end">
               <Button
                 type="button"
                 onClick={handleOpenAddRoute}
-                className="bg-[#1f3b5b] hover:bg-[#19314b] text-white rounded-md flex items-center gap-1.5 cursor-pointer shadow-sm text-sm"
+                variant="default"
               >
                 <Plus className="h-4 w-4" />
                 Tambah Rute
               </Button>
-            )}
-          </div>
+            </div>
+          )}
 
           {routes.length ? (
             <div className="space-y-5">
@@ -686,7 +757,7 @@ export function OrderListDetailView({
                 const cargoCount = route.tarifItems?.length ?? (route.loadContent ? 1 : 0);
 
                 return (
-                  <div key={route.uuid || route.id || index} className="overflow-hidden rounded-xl border border-slate-200">
+                  <div key={route.uuid || route.id || index} className="overflow-hidden rounded-md border border-slate-200">
                     <div className="flex flex-col gap-3 border-b border-orange-200 bg-orange-50 px-4 py-4 sm:flex-row sm:items-center sm:justify-between">
                       <div className="flex items-center gap-3">
                         <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-orange-300 text-sm font-bold text-orange-950">{index + 1}</span>
@@ -798,43 +869,45 @@ export function OrderListDetailView({
               })}
             </div>
           ) : (
-            <div className="rounded-xl border border-dashed border-slate-200 px-6 py-10 text-center text-sm text-slate-500">
+            <div className="rounded-md border border-dashed border-slate-200 px-6 py-10 text-center text-sm text-slate-500">
               Belum ada data rute dan tarif pada order ini.
             </div>
           )}
-        </CardContent>
-      </Card>
+        </div>
+      </CollapsibleBox>
 
-      <Card className="border-slate-200 shadow-sm">
-        <CardContent className="space-y-5 p-5 sm:p-6">
-          <SectionHeading icon={Wallet} title="Ringkasan Invoice" description="Nominal Invoice dari DO order list" />
-          <div className="space-y-3 border-t border-slate-100 pt-5">
-            <CurrencyRow label="Invoice Ekspedisi" value={data.billInvoice} />
-            <CurrencyRow label="PPN" value={data.ppn} />
-            <CurrencyRow label="PPh" value={data.pph} />
-            <CurrencyRow label="Total Tagihan" value={totalBilling} emphasized />
-          </div>
-        </CardContent>
-      </Card>
+      <CollapsibleBox
+        title="Ringkasan Invoice"
+        description="Nominal Invoice dari DO order list"
+        defaultExpanded
+      >
+        <div className="space-y-3">
+          <CurrencyRow label="Invoice Ekspedisi" value={data.billInvoice} />
+          <CurrencyRow label="PPN" value={data.ppn} />
+          <CurrencyRow label="PPh" value={data.pph} />
+          <CurrencyRow label="Total Tagihan" value={totalBilling} emphasized />
+        </div>
+      </CollapsibleBox>
 
-      <Card className="border-slate-200 shadow-sm">
-        <CardContent className="space-y-5 p-5 sm:p-6">
-          <SectionHeading icon={Truck} title="Ringkasan Biaya per Armada" description="Nilai agregat yang dikirim oleh API detail order list" />
-          <div className="grid gap-4 border-t border-slate-100 pt-5 md:grid-cols-3">
-            {[
-              { label: 'Towing', uj: data.ujTowing, invoice: data.invTowing },
-              { label: 'CDD', uj: data.ujCdd, invoice: data.invCdd },
-              { label: 'Fuso', uj: data.ujFuso, invoice: data.invFuso },
-            ].map((item) => (
-              <div key={item.label} className="space-y-3 rounded-xl border border-slate-200 bg-slate-50/60 p-4">
-                <p className="text-sm font-bold uppercase text-slate-900">{item.label}</p>
-                <CurrencyRow label="UJ Driver" value={item.uj} />
-                <CurrencyRow label="Invoice" value={item.invoice} />
-              </div>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
+      <CollapsibleBox
+        title="Ringkasan Biaya per Armada"
+        description="Nilai agregat yang dikirim oleh API detail order list"
+        defaultExpanded
+      >
+        <div className="grid gap-4 md:grid-cols-3">
+          {[
+            { label: 'Towing', uj: data.ujTowing, invoice: data.invTowing },
+            { label: 'CDD', uj: data.ujCdd, invoice: data.invCdd },
+            { label: 'Fuso', uj: data.ujFuso, invoice: data.invFuso },
+          ].map((item) => (
+            <div key={item.label} className="space-y-3 rounded-md border border-slate-200 bg-slate-50/60 p-4">
+              <p className="text-sm font-bold uppercase text-slate-900">{item.label}</p>
+              <CurrencyRow label="UJ Driver" value={item.uj} />
+              <CurrencyRow label="Invoice" value={item.invoice} />
+            </div>
+          ))}
+        </div>
+      </CollapsibleBox>
 
       {/* ── dialog forms ── */}
       {isDraft && (
@@ -860,6 +933,7 @@ export function OrderListDetailView({
                         value={field.value}
                         onChange={field.onChange}
                         options={mergedTarifOptions}
+                        disabledValues={existingTarifIds.filter((id) => id !== field.value)}
                         placeholder="Pilih tarif"
                         searchPlaceholder="Cari tarif..."
                         loading={tarifQuery.isLoading}
@@ -997,7 +1071,7 @@ export function OrderListDetailView({
 
           {/* Delete Route Confirmation Dialog */}
           <AlertDialog open={deleteRouteTarget !== null} onOpenChange={(open) => !open && setDeleteRouteTarget(null)}>
-            <AlertDialogContent className="rounded-xl border-slate-200">
+            <AlertDialogContent className="rounded-md border-slate-200">
               <AlertDialogHeader>
                 <AlertDialogTitle>Konfirmasi Hapus Rute</AlertDialogTitle>
                 <AlertDialogDescription>
@@ -1019,7 +1093,7 @@ export function OrderListDetailView({
 
           {/* Delete Cargo Confirmation Dialog */}
           <AlertDialog open={deleteCargoTarget !== null} onOpenChange={(open) => !open && setDeleteCargoTarget(null)}>
-            <AlertDialogContent className="rounded-xl border-slate-200">
+            <AlertDialogContent className="rounded-md border-slate-200">
               <AlertDialogHeader>
                 <AlertDialogTitle>Konfirmasi Hapus Muatan</AlertDialogTitle>
                 <AlertDialogDescription>
@@ -1040,6 +1114,24 @@ export function OrderListDetailView({
           </AlertDialog>
         </>
       )}
+
+      <OrderListDetailPrintDocument
+        data={data}
+        template={templatePrint.selectedTemplate}
+        fallbackBackground={selectedPrintBackground}
+        companyName={getCompanyName(resolvedCompanyId)}
+        printedAt={templatePrint.printedAt}
+      />
+
+      <ReportTemplatePrintDialog
+        open={templatePrint.isDialogOpen}
+        onOpenChange={templatePrint.setIsDialogOpen}
+        selectedTemplateId={templatePrint.selectedTemplateId}
+        onTemplateChange={templatePrint.setSelectedTemplateId}
+        onPrint={templatePrint.printWithSelectedTemplate}
+        isPreparingPrint={templatePrint.isPreparingPrint}
+        reportName="order ekspedisi"
+      />
     </div>
   );
 }

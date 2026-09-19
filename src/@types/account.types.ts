@@ -48,7 +48,10 @@ export interface AccountPayload {
   description?: string | null;
   type?: AccountTypeValue;
   category?: AccountCategory | null;
+  is_lock?: boolean;
 }
+
+export type AccountUpdatePayload = Partial<AccountPayload>;
 
 export interface AccountListResponse extends PaginatedResult<Account> {}
 

@@ -327,7 +327,7 @@ export default function PengeluaranUnitDetailTable({ data, isRefundActivity, act
 
           <div className="space-y-6 my-4 overflow-x-scroll">
             {/* Selected Vehicles Table */}
-            <div className="border border-slate-200 rounded-xl overflow-hidden shadow-sm bg-white">
+            <div className="border border-slate-200 rounded-md overflow-hidden shadow-sm bg-white">
               <div className="max-h-60 overflow-y-auto overflow-x-scroll">
                 <table className="w-full text-sm text-left border-collapse">
                   <thead className="bg-[#f8f9fa] text-slate-600 uppercase text-xs font-semibold border-b border-slate-200 sticky top-0 z-10">

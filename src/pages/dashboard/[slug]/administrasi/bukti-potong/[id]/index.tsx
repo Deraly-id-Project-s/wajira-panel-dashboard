@@ -62,7 +62,7 @@ export default function BuktiPotongDetailPage() {
                 onClick={() => router.push(typeof slug === 'string' ? `/dashboard/${slug}/administrasi/bukti-potong` : '/dashboard')}
                 variant="ghost"
                 size="icon"
-                className="h-10 w-10 rounded-xl border border-slate-200 hover:bg-slate-50 cursor-pointer"
+                className="h-10 w-10 rounded-md border border-slate-200 hover:bg-slate-50 cursor-pointer"
               >
                 <ArrowLeft className="h-5 w-5 text-slate-700" />
               </Button>
@@ -187,7 +187,7 @@ export default function BuktiPotongDetailPage() {
             <Button
               type="button"
               variant="outline"
-              className="h-11 rounded-xl border-slate-200 bg-white px-8 text-slate-700 hover:bg-slate-50 transition-colors"
+              className="h-11 rounded-md border-slate-200 bg-white px-8 text-slate-700 hover:bg-slate-50 transition-colors"
               onClick={() => router.back()}
             >
               Kembali ke Daftar Bukti Potong

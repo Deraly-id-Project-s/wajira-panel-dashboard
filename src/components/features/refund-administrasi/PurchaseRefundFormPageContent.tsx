@@ -7,6 +7,7 @@ import { ArrowLeft, Search, Plus, Save, ChevronRight } from 'lucide-react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { InputDate } from '@/components/ui/input-date';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -295,8 +296,7 @@ export default function PurchaseRefundFormPageContent({ mode, refundId }: Purcha
               {/* Date Input */}
               <div className="space-y-2">
                 <Label>Tanggal Refund</Label>
-                <Input
-                  type="date"
+                <InputDate
                   value={form.watch('refund_date')}
                   onChange={(e) => form.setValue('refund_date', e.target.value)}
                 />

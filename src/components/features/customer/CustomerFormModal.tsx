@@ -6,6 +6,7 @@ import RequiredMark from '@/components/ui/required-mark';
 import { Textarea } from '@/components/ui/textarea';
 import type { UseFormReturn } from 'react-hook-form';
 import { ReferenceLink } from '@/components/ui/reference-link';
+import { LeafletCoordinateInput } from '@/components/ui/leaflet-coordinate-input';
 
 interface CustomerFormModalProps {
   open: boolean;
@@ -162,6 +163,23 @@ export function CustomerFormModal({
                   className={`bg-white ${form.formState.errors.map_link ? 'border-red-500' : ''}`}
                 />
               </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <FormField
+          control={form.control}
+          name="map_coordinat"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel className="text-sm font-medium text-gray-700">Koordinat Lokasi</FormLabel>
+              <LeafletCoordinateInput
+                id="customer-map-coordinate"
+                value={field.value}
+                onChange={field.onChange}
+                disabled={isSubmitting}
+              />
               <FormMessage />
             </FormItem>
           )}

@@ -523,7 +523,7 @@ export default function UnitPurchaseDetailPage() {
                 </div>
 
                 <div className={cn(
-                  "flex items-center gap-4 px-4 py-2.5 rounded-xl border",
+                  "flex items-center gap-4 px-4 py-2.5 rounded-md border",
                   details.length >= qty
                     ? "bg-emerald-50/50 border-emerald-100"
                     : "bg-blue-50/50 border-blue-100"

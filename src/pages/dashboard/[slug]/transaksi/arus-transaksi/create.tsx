@@ -24,15 +24,17 @@ export default function CreateTransactionPage() {
     try {
       await createMutation.mutateAsync({
         companyId: safeCompanyId,
+        unitTransactionId: data.unitTransactionId ?? null,
         date: data.date,
         name: data.name,
-        description: data.description ?? data.name,
+        description: data.description ?? '',
         debitUSD: data.debitUSD ?? 0,
         creditUSD: data.creditUSD ?? 0,
         debitIDR: data.debitIDR ?? 0,
         creditIDR: data.creditIDR ?? 0,
         debitCash: data.debitCash ?? 0,
         creditCash: data.creditCash ?? 0,
+        transactionProof: data.transactionProof ?? null,
       });
 
       toast.success('Transaksi berhasil ditambahkan');

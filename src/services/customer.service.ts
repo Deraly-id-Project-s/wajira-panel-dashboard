@@ -20,6 +20,7 @@ interface CustomerApiModel {
   created_at?: string;
   updated_at?: string;
   map_link?: string | null;
+  map_coordinat?: string | null;
 }
 
 const mapCustomer = (payload: CustomerApiModel): Customer => ({
@@ -37,6 +38,7 @@ const mapCustomer = (payload: CustomerApiModel): Customer => ({
   createdAt: payload.created_at,
   updatedAt: payload.updated_at,
   map_link: payload.map_link ?? null,
+  mapCoordinat: payload.map_coordinat ?? null,
 });
 
 const normalizeCompanyId = (value: string | number | null | undefined) => {
@@ -136,6 +138,7 @@ const buildPayload = (payload: CustomerPayload, opts?: { asUpdate?: boolean }) =
   if (payload.map_link !== undefined && payload.map_link !== null && payload.map_link !== '') {
     body.append('map_link', payload.map_link);
   }
+  body.append('map_coordinat', payload.map_coordinat ?? '');
   return body;
 };
 

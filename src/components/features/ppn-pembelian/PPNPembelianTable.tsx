@@ -13,6 +13,7 @@ import { ReferenceLink } from '@/components/ui/reference-link';
 import { useRouter } from 'next/router';
 import { FormDialog } from '@/components/ui/form-dialog';
 import { Input } from '@/components/ui/input';
+import { InputDate } from '@/components/ui/input-date';
 import { useBulkUpdatePPNPembelian } from '@/hooks/usePPN';
 import { toast } from 'sonner';
 import { MoneyInput } from '@/components/ui/money-input';
@@ -372,7 +373,7 @@ export default function PPNPembelianTable({
       >
         <div className="space-y-6">
           {/* Selected Items Summary Table */}
-          <div className="border border-slate-200 rounded-xl overflow-hidden shadow-sm bg-white">
+          <div className="border border-slate-200 rounded-md overflow-hidden shadow-sm bg-white">
             <div className="max-h-52 overflow-y-auto overflow-x-auto">
               <table className="w-full text-sm text-left border-collapse">
                 <thead className="bg-[#f8f9fa] text-slate-600 uppercase text-xs font-semibold border-b border-slate-200 sticky top-0 z-10">
@@ -411,8 +412,7 @@ export default function PPNPembelianTable({
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-1.5">
               <label className="text-xs font-semibold text-slate-700">Tanggal FPM (fp_date)</label>
-              <Input
-                type="date"
+              <InputDate
                 value={fpDate}
                 onChange={(e) => setFpDate(e.target.value)}
                 className="bg-white border-slate-200 h-9 text-xs rounded-md"
@@ -421,8 +421,7 @@ export default function PPNPembelianTable({
 
             <div className="space-y-1.5">
               <label className="text-xs font-semibold text-slate-700">Masa NSFPM (nsfp_age)</label>
-              <Input
-                type="date"
+              <InputDate
                 value={nsfpAge}
                 onChange={(e) => setNsfpAge(e.target.value)}
                 className="bg-white border-slate-200 h-9 text-xs rounded-md"

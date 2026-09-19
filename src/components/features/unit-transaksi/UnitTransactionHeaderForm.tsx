@@ -6,6 +6,7 @@ import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { InputDate } from '@/components/ui/input-date';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Save } from 'lucide-react';
 import { SupplierCombobox } from '@/components/features/supplier/SupplierCombobox';
@@ -79,7 +80,7 @@ export function UnitTransactionHeaderForm({
               <FormItem>
                 <FormLabel className="text-sm font-medium">Tanggal</FormLabel>
                 <FormControl>
-                  <Input type="date" disabled={readOnly} {...field} />
+                  <InputDate disabled={readOnly} {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>

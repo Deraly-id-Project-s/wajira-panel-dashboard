@@ -17,6 +17,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import { FileInput } from '@/components/ui/file-input';
 import {
   Form,
   FormControl,
@@ -26,8 +27,10 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
+import { InputDate } from '@/components/ui/input-date';
 import { LoadingState } from '@/components/ui/loading-state';
 import { MoneyInput } from '@/components/ui/money-input';
+import RequiredMark from '@/components/ui/required-mark';
 import { Textarea } from '@/components/ui/textarea';
 
 const schema = z
@@ -35,10 +38,15 @@ const schema = z
     bcaIdr: z.number().min(0),
     bcaUsd: z.number().min(0),
     cashIdr: z.number().min(0),
-    usdOriginal: z.number().min(0),
-    usdExchange: z.number().min(0),
     paymentAt: z.string().min(1, 'Tanggal pembayaran wajib diisi.'),
     note: z.string().max(255, 'Catatan maksimal 255 karakter.'),
+    paymentProof: z
+      .any()
+      .nullable()
+      .refine(
+        (file) => !file || (file instanceof File && file.size <= 2 * 1024 * 1024),
+        'Ukuran file maksimal 2MB.',
+      ),
   })
   .superRefine((value, context) => {
     if (value.bcaIdr <= 0 && value.bcaUsd <= 0 && value.cashIdr <= 0) {
@@ -50,7 +58,14 @@ const schema = z
     }
   });
 
-type FormValues = z.infer<typeof schema>;
+interface FormValues {
+  bcaIdr: number;
+  bcaUsd: number;
+  cashIdr: number;
+  paymentAt: string;
+  note: string;
+  paymentProof: File | null;
+}
 
 interface KasBonPaymentDialogProps {
   open: boolean;
@@ -72,15 +87,14 @@ export function KasBonPaymentDialog({
   isSubmitting = false,
 }: KasBonPaymentDialogProps) {
   const form = useForm<FormValues>({
-    resolver: zodResolver(schema),
+    resolver: zodResolver(schema) as any,
     defaultValues: {
       bcaIdr: 0,
       bcaUsd: 0,
       cashIdr: 0,
-      usdOriginal: 0,
-      usdExchange: 0,
       paymentAt: new Date().toISOString().slice(0, 10),
       note: '',
+      paymentProof: null,
     },
   });
 
@@ -90,20 +104,25 @@ export function KasBonPaymentDialog({
         bcaIdr: 0,
         bcaUsd: 0,
         cashIdr: 0,
-        usdOriginal: 0,
-        usdExchange: 0,
         paymentAt: new Date().toISOString().slice(0, 10),
         note: '',
+        paymentProof: null,
       });
     }
   }, [open, form]);
 
-  const projectedPayment =
-    form.watch('bcaIdr') + form.watch('cashIdr') + form.watch('usdOriginal');
-  const remaining = Math.max(0, billing.remainingPayment - projectedPayment);
+  const cashIdr = form.watch('cashIdr');
+  const bcaIdr = form.watch('bcaIdr');
+  const projectedPayment = cashIdr + bcaIdr;
+  const maxPaymentAmount = Math.max(0, billing.remainingPayment);
+  const remaining = Math.max(0, maxPaymentAmount - projectedPayment);
+
+  const clampIdrPayment = (value: number, otherPayment: number) => (
+    Math.min(Math.max(0, value), Math.max(0, maxPaymentAmount - otherPayment))
+  );
 
   const handleSubmit = async (values: FormValues) => {
-    if (values.bcaIdr + values.cashIdr + values.usdOriginal > billing.remainingPayment) {
+    if (values.bcaIdr + values.cashIdr > maxPaymentAmount) {
       form.setError('cashIdr', {
         message: 'Total pembayaran IDR melebihi sisa tagihan.',
       });
@@ -113,13 +132,12 @@ export function KasBonPaymentDialog({
     try {
       await onSubmit({
         driver_cash_advance_billing_id: billing.id,
-        bca_payment_amount: values.bcaIdr,
-        bca_payment_usd_amount: values.bcaUsd,
-        cash_payment_amount: values.cashIdr,
-        bca_payment_usd_original_amount: values.bcaUsd > 0 ? values.usdOriginal : null,
-        bca_payment_usd_exchange_amount: values.bcaUsd > 0 ? values.usdExchange : null,
+        bca_payment_amount: Math.round(values.bcaIdr),
+        bca_payment_usd_amount: Math.round(values.bcaUsd),
+        cash_payment_amount: Math.round(values.cashIdr),
         payment_at: values.paymentAt,
         note: values.note.trim() || null,
+        payment_proof: values.paymentProof || null,
       });
     } catch {
       // Error handled by parent page
@@ -129,18 +147,13 @@ export function KasBonPaymentDialog({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
-        className="max-w-[calc(100%-2rem)] sm:max-w-2xl max-h-[90vh] overflow-hidden flex flex-col rounded-xl p-0"
+        className="max-w-[calc(100%-2rem)] sm:max-w-2xl max-h-[90vh] overflow-hidden flex flex-col rounded-md p-0"
         showCloseButton={!isSubmitting}
       >
         <DialogHeader className="p-6 pb-2 shrink-0">
           <DialogTitle className="text-lg font-semibold text-slate-900">
             Pembayaran Kas Bon
           </DialogTitle>
-          <DialogDescription className="text-sm text-slate-500">
-            {code ? <span className="font-semibold text-slate-700">{code}</span> : null}
-            {code && subject ? ' — ' : null}
-            {subject ? <span>{subject}</span> : null}
-          </DialogDescription>
         </DialogHeader>
 
         <Form {...form}>
@@ -176,16 +189,26 @@ export function KasBonPaymentDialog({
                 </div>
               </div>
 
+              <div className="rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800">
+                <div className="font-semibold">
+                  Maksimal nominal: {currenciesFormat('idr', maxPaymentAmount)}
+                </div>
+                <div className="mt-0.5 text-amber-700">
+                  Total tagihan {currenciesFormat('idr', billing.grandTotal)} - total terbayar {currenciesFormat('idr', billing.totalPaid)}.
+                </div>
+              </div>
+
               <div className="grid gap-4 sm:grid-cols-2">
                 <FormField
                   control={form.control}
                   name="paymentAt"
                   render={({ field }) => (
-                    <FormItem className="sm:col-span-2">
-                      <FormLabel>Tanggal Bayar</FormLabel>
+                    <FormItem className="space-y-2 sm:col-span-2">
+                      <FormLabel>
+                        Tanggal Bayar <RequiredMark />
+                      </FormLabel>
                       <FormControl>
-                        <Input
-                          type="date"
+                        <InputDate
                           {...field}
                           disabled={isSubmitting || billing.isPaid}
                         />
@@ -199,12 +222,12 @@ export function KasBonPaymentDialog({
                   control={form.control}
                   name="cashIdr"
                   render={({ field }) => (
-                    <FormItem>
+                    <FormItem className="space-y-2">
                       <FormLabel>Cash IDR</FormLabel>
                       <FormControl>
                         <MoneyInput
                           value={field.value}
-                          onChangeValue={field.onChange}
+                          onChangeValue={(value) => field.onChange(clampIdrPayment(value, bcaIdr))}
                           disabled={isSubmitting || billing.isPaid}
                         />
                       </FormControl>
@@ -217,12 +240,12 @@ export function KasBonPaymentDialog({
                   control={form.control}
                   name="bcaIdr"
                   render={({ field }) => (
-                    <FormItem>
+                    <FormItem className="space-y-2">
                       <FormLabel>BCA IDR</FormLabel>
                       <FormControl>
                         <MoneyInput
                           value={field.value}
-                          onChangeValue={field.onChange}
+                          onChangeValue={(value) => field.onChange(clampIdrPayment(value, cashIdr))}
                           disabled={isSubmitting || billing.isPaid}
                         />
                       </FormControl>
@@ -235,7 +258,7 @@ export function KasBonPaymentDialog({
                   control={form.control}
                   name="bcaUsd"
                   render={({ field }) => (
-                    <FormItem>
+                    <FormItem className="space-y-2 sm:col-span-2">
                       <FormLabel>BCA USD</FormLabel>
                       <FormControl>
                         <MoneyInput
@@ -252,32 +275,16 @@ export function KasBonPaymentDialog({
 
                 <FormField
                   control={form.control}
-                  name="usdOriginal"
+                  name="paymentProof"
                   render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Nilai Asli USD (IDR)</FormLabel>
+                    <FormItem className="space-y-2 sm:col-span-2">
+                      <FormLabel>Bukti Pembayaran</FormLabel>
                       <FormControl>
-                        <MoneyInput
+                        <FileInput
                           value={field.value}
-                          onChangeValue={field.onChange}
-                          disabled={isSubmitting || billing.isPaid}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="usdExchange"
-                  render={({ field }) => (
-                    <FormItem className="sm:col-span-2">
-                      <FormLabel>Kurs USD</FormLabel>
-                      <FormControl>
-                        <MoneyInput
-                          value={field.value}
-                          onChangeValue={field.onChange}
+                          onFileChange={field.onChange}
+                          accept="image/png,image/jpeg,image/jpg,application/pdf"
+                          helperText="Format PNG, JPG, PDF maksimal 2MB"
                           disabled={isSubmitting || billing.isPaid}
                         />
                       </FormControl>
@@ -290,7 +297,7 @@ export function KasBonPaymentDialog({
                   control={form.control}
                   name="note"
                   render={({ field }) => (
-                    <FormItem className="sm:col-span-2">
+                    <FormItem className="space-y-2 sm:col-span-2">
                       <FormLabel>Catatan</FormLabel>
                       <FormControl>
                         <Textarea
@@ -329,7 +336,6 @@ export function KasBonPaymentDialog({
                   />
                 ) : (
                   <>
-                    <CreditCard className="mr-2 h-4 w-4" />
                     {billing.isPaid ? 'Sudah Lunas' : 'Simpan Pembayaran'}
                   </>
                 )}

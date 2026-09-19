@@ -1,11 +1,15 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/router';
 import { toast } from 'sonner';
+import { Printer } from 'lucide-react';
 import type { DateRange } from 'react-day-picker';
+import { format } from 'date-fns';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { DOEkspedisiTable } from '@/components/features/do-ekspedisi/DOEkspedisiTable';
+import { DOEkspedisiTablePrintDocument } from '@/components/features/do-ekspedisi/DOEkspedisiTablePrintDocument';
 import { DeleteDOEkspedisiModal } from '@/components/features/do-ekspedisi/DeleteDOEkspedisiModal';
 import { Button } from '@/components/ui/button';
+import { ReportTemplatePrintDialog } from '@/components/ui/report-template-print-dialog';
 import { SearchPagination } from '@/components/ui/search-pagination';
 import { DatePickerWithRange } from '@/components/ui/date-range-picker';
 import type { DoEkspedisi } from '@/@types/do-ekspedisi.types';
@@ -13,14 +17,20 @@ import {
   useDeleteDoEkspedisi,
   useDoEkspedisis,
 } from '@/hooks/useDoEkspedisi';
-import { useProcessDoExpedition } from '@/hooks/useDoInvoice';
 import { PageHeader } from '@/components/ui/page-header';
 import { getApiErrorMessage } from '@/utils/apiErrorHandler';
+import { useCompany } from '@/contexts/CompanyContext';
 import { useQueryParamsTable } from '@/hooks/useQueryParamsTable';
+import { useReportTemplatePrint } from '@/hooks/useReportTemplatePrint';
+import { getCompanyName, getLetterheadByCompanyId, resolveCompanyId } from '@/lib/print-letterhead';
 
 export default function DOEkspedisiPage() {
   const router = useRouter();
   const { slug } = router.query;
+  const { companyId } = useCompany();
+  const resolvedCompanyId = resolveCompanyId(slug, companyId) || 1;
+  const selectedPrintBackground = getLetterheadByCompanyId(resolvedCompanyId);
+  const templatePrint = useReportTemplatePrint(selectedPrintBackground);
 
   const { page, perPage, search, setPage, setPerPage, setSearch, updateQuery } = useQueryParamsTable({
     defaultPerPage: 25,
@@ -54,9 +64,9 @@ export default function DOEkspedisiPage() {
     end_date: date?.to ? date.to.toISOString().split('T')[0] : undefined,
   });
   const deleteMutation = useDeleteDoEkspedisi();
-  const processExpeditionMutation = useProcessDoExpedition();
 
   const handleDelete = (item: DoEkspedisi) => {
+    if (!['draft', 'pending'].includes(String(item.status).toLowerCase())) return;
     setSelectedItem(item);
     setIsDeleteOpen(true);
   };
@@ -77,6 +87,7 @@ export default function DOEkspedisiPage() {
   const handleEditClick = useCallback(
     (item: DoEkspedisi) => {
       if (!slug) return;
+      if (String(item.status).toLowerCase() !== 'draft') return;
       router.push(`/dashboard/${slug}/do-ekspedisi/form/${item.id}`);
     },
     [slug, router],
@@ -91,17 +102,11 @@ export default function DOEkspedisiPage() {
   );
 
   const handlePrintClick = useCallback(
-    async (item: DoEkspedisi) => {
+    (item: DoEkspedisi) => {
       if (!slug) return;
-      try {
-        await processExpeditionMutation.mutateAsync({ id: item.id });
-      } catch (error: any) {
-        toast.error(getApiErrorMessage(error));
-        return;
-      }
-      router.push(`/dashboard/${slug}/do-ekspedisi/print/${item.id}`);
+      void router.push(`/dashboard/${slug}/do-ekspedisi/detail/${item.id}?print=1`);
     },
-    [processExpeditionMutation, slug, router],
+    [slug, router],
   );
 
   return (
@@ -110,6 +115,12 @@ export default function DOEkspedisiPage() {
         <PageHeader
           title="Data DO Ekspedisi"
           subtitle="Buat faktur dengan informasi penagihan yang diperlukan."
+          actions={
+            <Button onClick={templatePrint.openPrintDialog} variant="outline">
+              <Printer className="mr-2 h-4 w-4" />
+              Print
+            </Button>
+          }
         />
 
         <SearchPagination
@@ -166,6 +177,33 @@ export default function DOEkspedisiPage() {
         onConfirm={handleConfirmDelete}
         isDeleting={deleteMutation.isPending}
         itemName={selectedItem?.doCode}
+      />
+
+      <DOEkspedisiTablePrintDocument
+        data={listQuery.data?.data ?? []}
+        template={templatePrint.selectedTemplate}
+        fallbackBackground={selectedPrintBackground}
+        companyName={getCompanyName(resolvedCompanyId)}
+        periodLabel={
+          date?.from
+            ? `${format(date.from, 'dd MMM yyyy')}${
+                date.to && date.to !== date.from ? ` – ${format(date.to, 'dd MMM yyyy')}` : ''
+              }`
+            : 'Semua Periode'
+        }
+        reportPage={page}
+        reportTotal={listQuery.data?.meta.total ?? (listQuery.data?.data?.length || 0)}
+        printedAt={templatePrint.printedAt}
+      />
+
+      <ReportTemplatePrintDialog
+        open={templatePrint.isDialogOpen}
+        onOpenChange={templatePrint.setIsDialogOpen}
+        selectedTemplateId={templatePrint.selectedTemplateId}
+        onTemplateChange={templatePrint.setSelectedTemplateId}
+        onPrint={templatePrint.printWithSelectedTemplate}
+        isPreparingPrint={templatePrint.isPreparingPrint}
+        reportName="DO ekspedisi"
       />
     </DashboardLayout>
   );

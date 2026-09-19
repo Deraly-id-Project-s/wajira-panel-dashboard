@@ -1,21 +1,27 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type {
+  ApplyDriverCashAdvancePayload,
   DriverCashAdvanceApprovalPayload,
   DriverCashAdvanceBillingHistoryPayload,
   DriverCashAdvanceBillingStatusPayload,
   DriverCashAdvanceListParams,
   DriverCashAdvancePayload,
+  UpdateDriverCashAdvanceClaimPayload,
 } from '@/@types/driver-cash-advance.types';
 import {
+  applyDriverCashAdvance,
   approveDriverCashAdvance,
   createDriverCashAdvance,
+  deleteDriverCashAdvanceClaim,
   deleteDriverCashAdvance,
   getDriverCashAdvanceById,
   getDriverCashAdvances,
   getDriverCashAdvanceBillingById,
   createDriverCashAdvanceBillingHistory,
+  deleteDriverCashAdvanceBillingHistory,
   updateDriverCashAdvanceBillingStatus,
   updateDriverCashAdvance,
+  updateDriverCashAdvanceClaim,
 } from '@/services/driver-cash-advance.service';
 
 const DRIVER_CASH_ADVANCE_KEY = 'driver-cash-advance';
@@ -55,6 +61,17 @@ export function useCreateDriverCashAdvanceBillingHistory() {
     onSuccess: (_, payload) => {
       queryClient.invalidateQueries({ queryKey: driverCashAdvanceKeys.all });
       queryClient.invalidateQueries({ queryKey: driverCashAdvanceKeys.billing(payload.driver_cash_advance_billing_id) });
+    },
+  });
+}
+
+export function useDeleteDriverCashAdvanceBillingHistory() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (id: string | number) => deleteDriverCashAdvanceBillingHistory(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: driverCashAdvanceKeys.all });
     },
   });
 }
@@ -123,6 +140,46 @@ export function useApproveDriverCashAdvance() {
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: driverCashAdvanceKeys.all });
       queryClient.invalidateQueries({ queryKey: driverCashAdvanceKeys.detail(variables.id) });
+    },
+  });
+}
+
+export function useApplyDriverCashAdvance(expeditionId: string | number) {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (payload: ApplyDriverCashAdvancePayload) => applyDriverCashAdvance(payload),
+    onSuccess: (_, payload) => {
+      queryClient.invalidateQueries({ queryKey: driverCashAdvanceKeys.all });
+      queryClient.invalidateQueries({ queryKey: ['do-ekspedisi'] });
+      queryClient.invalidateQueries({ queryKey: ['do-ekspedisi', 'detail', String(expeditionId)] });
+    },
+  });
+}
+
+export function useUpdateDriverCashAdvanceClaim(expeditionId: string | number) {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ id, payload }: { id: string | number; payload: UpdateDriverCashAdvanceClaimPayload }) =>
+      updateDriverCashAdvanceClaim(id, payload),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: driverCashAdvanceKeys.all });
+      queryClient.invalidateQueries({ queryKey: ['do-ekspedisi'] });
+      queryClient.invalidateQueries({ queryKey: ['do-ekspedisi', 'detail', String(expeditionId)] });
+    },
+  });
+}
+
+export function useDeleteDriverCashAdvanceClaim(expeditionId: string | number) {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (id: string | number) => deleteDriverCashAdvanceClaim(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: driverCashAdvanceKeys.all });
+      queryClient.invalidateQueries({ queryKey: ['do-ekspedisi'] });
+      queryClient.invalidateQueries({ queryKey: ['do-ekspedisi', 'detail', String(expeditionId)] });
     },
   });
 }

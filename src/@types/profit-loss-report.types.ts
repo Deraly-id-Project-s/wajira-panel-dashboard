@@ -11,6 +11,7 @@ export interface ProfitLossTemplatePayload {
   gross_profit_account_ids: number[];
   opex_account_ids: number[];
   noix_account_ids: number[];
+  tax?: number | string | null;
 }
 
 export interface ProfitLossReportFilters {
@@ -56,6 +57,10 @@ export interface ProfitLossReportData {
   gross_profit?: ProfitLossReportSection | ProfitLossReportLine[] | number | string | null;
   opex?: ProfitLossReportSection | ProfitLossReportLine[];
   noix?: ProfitLossReportSection | ProfitLossReportLine[];
+  tax?: number | string | null;
+  tax_percentage?: number | string | null;
+  tax_amount?: number | string | null;
+  tax_amount_usd?: number | string | null;
   revenue_calc?: ProfitLossReportSection;
   cogs_calc?: ProfitLossReportSection;
   gross_calc?: ProfitLossReportSection;
@@ -74,6 +79,8 @@ export interface ProfitLossReportData {
   noix_account_ids?: number[];
   profit_loss_before_tax?: number | string | null;
   profit_loss_before_tax_usd?: number | string | null;
+  profit_loss_after_tax?: number | string | null;
+  profit_loss_after_tax_usd?: number | string | null;
   net_income?: number | string | null;
   net_income_usd?: number | string | null;
   net_profit?: number | string | null;

@@ -1,27 +1,35 @@
 import * as React from 'react';
 import { useRouter } from 'next/router';
 import { toast } from 'sonner';
-import { Plus } from 'lucide-react';
+import { Plus, Printer } from 'lucide-react';
 import type { OrderList, OrderListStatus } from '@/@types/order-list.types';
 import { OrderListDeleteDialog } from '@/components/features/order-list/OrderListDeleteDialog';
 import { OrderListTable } from '@/components/features/order-list/OrderListTable';
+import { OrderListTablePrintDocument } from '@/components/features/order-list/OrderListTablePrintDocument';
 import { OrderStatusConfirmDialog } from '@/components/features/order-list/OrderStatusConfirmDialog';
+import { ProcessDoInvoiceDialog } from '@/components/features/order-list/ProcessDoInvoiceDialog';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
-import { useOrderLists, useDeleteOrderList, useUpdateOrderListState } from '@/hooks/useOrderList';
+import { useOrderLists, useDeleteOrderList, useProcessOrderListInvoice, useUpdateOrderListState } from '@/hooks/useOrderList';
 import { usePermissionGuard } from '@/hooks/usePermissionGuard';
 import { PageHeader } from '@/components/ui/page-header';
 import { Button } from '@/components/ui/button';
+import { ReportTemplatePrintDialog } from '@/components/ui/report-template-print-dialog';
 import { SearchPagination } from '@/components/ui/search-pagination';
 import { DatePickerWithRange } from '@/components/ui/date-range-picker';
 import type { DateRange } from 'react-day-picker';
 import { format } from 'date-fns';
 import { useCompany } from '@/contexts/CompanyContext';
 import { useQueryParamsTable } from '@/hooks/useQueryParamsTable';
+import { useReportTemplatePrint } from '@/hooks/useReportTemplatePrint';
+import { getCompanyName, getLetterheadByCompanyId, resolveCompanyId } from '@/lib/print-letterhead';
 
 export default function OrderListPage() {
   const router = useRouter();
   const slug = typeof router.query.slug === 'string' ? router.query.slug : '';
   const { companyId } = useCompany();
+  const resolvedCompanyId = resolveCompanyId(slug, companyId) || 1;
+  const selectedPrintBackground = getLetterheadByCompanyId(resolvedCompanyId);
+  const templatePrint = useReportTemplatePrint(selectedPrintBackground);
 
   const { hasPermission } = usePermissionGuard();
   const canCreate = hasPermission('transaction:create');
@@ -37,6 +45,7 @@ export default function OrderListPage() {
   const [selectedItem, setSelectedItem] = React.useState<OrderList | null>(null);
   const [statusConfirmOpen, setStatusConfirmOpen] = React.useState(false);
   const [statusUpdateData, setStatusUpdateData] = React.useState<{ item: OrderList; newStatus: OrderListStatus } | null>(null);
+  const [invoiceTarget, setInvoiceTarget] = React.useState<OrderList | null>(null);
 
   React.useEffect(() => {
     const timeout = window.setTimeout(() => {
@@ -68,7 +77,10 @@ export default function OrderListPage() {
   const listQuery = useOrderLists(listQueryParams);
   const deleteMutation = useDeleteOrderList();
   const updateMutation = useUpdateOrderListState();
+  const processInvoiceMutation = useProcessOrderListInvoice();
   const tableData = listQuery.data?.data ?? [];
+
+  console.log(tableData);
 
   const handleDelete = React.useCallback(async () => {
     if (!selectedItem) return;
@@ -140,6 +152,21 @@ export default function OrderListPage() {
     [],
   );
 
+  const handleProcessInvoice = React.useCallback(async () => {
+    if (!invoiceTarget) return;
+    try {
+      const result = await processInvoiceMutation.mutateAsync(invoiceTarget.id);
+      toast.success('DO invoice dan billing berhasil dibuat');
+      setInvoiceTarget(null);
+      const invoiceId = result.invoice.uuid || result.invoice.id;
+      if (invoiceId) {
+        void router.push(`/dashboard/${slug}/administrasi/do-invoice/detail/${encodeURIComponent(String(invoiceId))}`);
+      }
+    } catch (error: any) {
+      toast.error(error.message || 'Gagal memproses DO invoice');
+    }
+  }, [invoiceTarget, processInvoiceMutation, router, slug]);
+
   const showTableSkeleton = !listQuery.data;
 
   return (
@@ -148,6 +175,12 @@ export default function OrderListPage() {
         <PageHeader
           title="Order List"
           subtitle="Lihat dan kelola pesanan pelanggan dengan mudah"
+          actions={
+            <Button onClick={templatePrint.openPrintDialog} variant="outline">
+              <Printer className="mr-2 h-4 w-4" />
+              Print
+            </Button>
+          }
         />
 
         <SearchPagination
@@ -172,7 +205,7 @@ export default function OrderListPage() {
             />
           }
           actions={
-            <div className="flex flex-wrap items-center gap-2">
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full sm:w-auto [&>*]:w-full sm:[&>*]:w-auto">
               {search && (
                 <Button
                   type="button"
@@ -188,7 +221,7 @@ export default function OrderListPage() {
                 </Button>
               )}
               {listQuery.isFetching && (
-                <span className="text-xs font-medium text-slate-400 animate-pulse">
+                <span className="text-xs font-medium text-slate-400 animate-pulse text-center">
                   Memperbarui data...
                 </span>
               )}
@@ -211,6 +244,11 @@ export default function OrderListPage() {
             onEdit={handleEdit}
             onDelete={handleDeleteClick}
             onUpdateStatus={handleUpdateStatus}
+            onProcessInvoice={(item) => {
+              if (item.isHasInvoice || !item.canMarkDone || item.status !== 'done') return;
+              setInvoiceTarget(item);
+            }}
+            processingInvoiceId={processInvoiceMutation.isPending ? invoiceTarget?.id : null}
             canEdit={canEdit}
             canDelete={canDelete}
           />
@@ -232,6 +270,40 @@ export default function OrderListPage() {
         isUpdating={updateMutation.isPending}
         itemName={statusUpdateData?.item.code}
         newStatus={statusUpdateData?.newStatus}
+      />
+
+      <ProcessDoInvoiceDialog
+        open={invoiceTarget !== null}
+        onOpenChange={(open) => !open && setInvoiceTarget(null)}
+        onConfirm={handleProcessInvoice}
+        isProcessing={processInvoiceMutation.isPending}
+        orderCode={invoiceTarget?.code}
+      />
+
+      <OrderListTablePrintDocument
+        data={tableData}
+        template={templatePrint.selectedTemplate}
+        fallbackBackground={selectedPrintBackground}
+        companyName={getCompanyName(resolvedCompanyId)}
+        periodLabel={
+          startDate
+            ? `${dateRange?.from ? format(dateRange.from, 'dd MMM yyyy') : '-'}${endDate && endDate !== startDate && dateRange?.to ? ` – ${format(dateRange.to, 'dd MMM yyyy')}` : ''
+            }`
+            : 'Semua Periode'
+        }
+        reportPage={page}
+        reportTotal={listQuery.data?.meta.total ?? tableData.length}
+        printedAt={templatePrint.printedAt}
+      />
+
+      <ReportTemplatePrintDialog
+        open={templatePrint.isDialogOpen}
+        onOpenChange={templatePrint.setIsDialogOpen}
+        selectedTemplateId={templatePrint.selectedTemplateId}
+        onTemplateChange={templatePrint.setSelectedTemplateId}
+        onPrint={templatePrint.printWithSelectedTemplate}
+        isPreparingPrint={templatePrint.isPreparingPrint}
+        reportName="order list"
       />
     </DashboardLayout>
   );

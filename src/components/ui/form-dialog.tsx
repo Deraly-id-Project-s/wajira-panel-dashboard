@@ -44,7 +44,7 @@ export function FormDialog({
       <DialogContent
         onPointerDownOutside={(e) => e.preventDefault()}
         className={cn(
-          "w-full max-h-[90vh] overflow-hidden flex flex-col rounded-xl border-0 bg-white p-0 shadow-2xl",
+          "w-full max-h-[90vh] overflow-hidden flex flex-col rounded-md border-0 bg-white p-0 shadow-2xl",
           maxWidthClassName
         )}
       >

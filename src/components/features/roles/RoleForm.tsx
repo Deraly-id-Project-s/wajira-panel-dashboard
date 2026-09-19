@@ -274,7 +274,7 @@ export function RoleForm({ id }: RoleFormProps) {
                 const isAllPermsInModuleChecked = matchingPerms.length > 0 && matchingPerms.every((p) => selectedPerms.includes(p.name));
 
                 return (
-                  <div key={mod.id} className="space-y-6 rounded-xl border border-gray-200 bg-gray-50/50 p-4 sm:p-6">
+                  <div key={mod.id} className="space-y-6 rounded-md border border-gray-200 bg-gray-50/50 p-4 sm:p-6">
                     {/* Module Header Group Box */}
                     <div className="border-b pb-3">
                       <h3 className="text-base font-bold text-gray-900 uppercase tracking-wider">
@@ -308,7 +308,7 @@ export function RoleForm({ id }: RoleFormProps) {
                             return (
                               <div
                                 key={feature.id}
-                                className={`flex flex-col justify-between p-4 rounded-xl border transition-all h-full ${isChecked
+                                className={`flex flex-col justify-between p-4 rounded-md border transition-all h-full ${isChecked
                                   ? 'border-orange-600 bg-orange-50/10 shadow-sm'
                                   : 'border-gray-200 bg-white hover:border-gray-300 hover:bg-gray-50/30'
                                   }`}

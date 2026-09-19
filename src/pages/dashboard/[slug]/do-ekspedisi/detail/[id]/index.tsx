@@ -1,22 +1,25 @@
 import React from 'react';
-import { AlertTriangle, CheckCircle2, Pencil, Play, Printer } from 'lucide-react';
+import { AlertTriangle, Pencil, Printer, Truck } from 'lucide-react';
 import { useRouter } from 'next/router';
 import { toast } from 'sonner';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { DOEkspedisiDetailCard } from '@/components/features/do-ekspedisi/DOEkspedisiDetailCard';
-// import { DOEkspedisiDetailTable } from '@/components/features/do-ekspedisi/DOEkspedisiDetailTable';
+import { DOEkspedisiPrintDocument } from '@/components/features/do-ekspedisi/DOEkspedisiPrintDocument';
 import { DeleteDOEkspedisiModal } from '@/components/features/do-ekspedisi/DeleteDOEkspedisiModal';
 import type { DoEkspedisiItem } from '@/@types/do-ekspedisi.types';
 import { useDeleteDoEkspedisiItem, useDoEkspedisiDetail, useUpdateDoEkspedisi, useUpdateDoExpeditionStatus } from '@/hooks/useDoEkspedisi';
-import { useProcessDoExpedition } from '@/hooks/useDoInvoice';
 import { getApiErrorMessage } from '@/utils/apiErrorHandler';
 import { LoadingState } from '@/components/ui/loading-state';
 import { PageHeader } from '@/components/ui/page-header';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { ReportTemplatePrintDialog } from '@/components/ui/report-template-print-dialog';
 import { cn } from '@/lib/utils';
 import { formatDate } from '@/lib/utils/format';
 import { DOEkspedisiRelatedData } from '@/components/features/do-ekspedisi/DOEkspedisiRelatedData';
+import { useCompany } from '@/contexts/CompanyContext';
+import { useReportTemplatePrint } from '@/hooks/useReportTemplatePrint';
+import { getCompanyName, getLetterheadByCompanyId, resolveCompanyId } from '@/lib/print-letterhead';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import {
   AlertDialog,
@@ -68,13 +71,17 @@ const getDoStatusLabel = (status: string) => {
 export default function DetailDOEkspedisiPage() {
   const router = useRouter();
   const { slug, id } = router.query;
+  const { companyId } = useCompany();
+  const resolvedCompanyId = resolveCompanyId(slug, companyId) || 1;
+  const selectedPrintBackground = getLetterheadByCompanyId(resolvedCompanyId);
+  const templatePrint = useReportTemplatePrint(selectedPrintBackground);
 
   const [selectedItem, setSelectedItem] = React.useState<DoEkspedisiItem | null>(null);
   const [deleteOpen, setDeleteOpen] = React.useState(false);
   const [statusConfirmOpen, setStatusConfirmOpen] = React.useState(false);
+  const autoPrintOpenedRef = React.useRef(false);
 
   const detailQuery = useDoEkspedisiDetail(id ? String(id) : null);
-  const processExpeditionMutation = useProcessDoExpedition();
   const updateMutation = useUpdateDoEkspedisi();
   const updateStatusMutation = useUpdateDoExpeditionStatus();
   const deleteItemMutation = useDeleteDoEkspedisiItem();
@@ -160,6 +167,21 @@ export default function DetailDOEkspedisiPage() {
     }
   }, [detailQuery.isError, detailQuery.error]);
 
+  React.useEffect(() => {
+    if (
+      !router.isReady
+      || router.query.print !== '1'
+      || !detailQuery.data
+      || autoPrintOpenedRef.current
+    ) return;
+
+    autoPrintOpenedRef.current = true;
+    templatePrint.openPrintDialog();
+    if (slug && id) {
+      void router.replace(`/dashboard/${slug}/do-ekspedisi/detail/${id}`, undefined, { shallow: true });
+    }
+  }, [detailQuery.data, id, router, slug, templatePrint]);
+
   if (detailQuery.isLoading) {
     return (
       <DashboardLayout>
@@ -234,7 +256,7 @@ export default function DetailDOEkspedisiPage() {
                 onClick={() => setStatusConfirmOpen(true)}
                 className="bg-orange-600 hover:bg-orange-700 text-white min-w-[120px] cursor-pointer font-medium"
               >
-                <Play className="h-4 w-4" />
+                <Truck className="h-4 w-4" />
                 {updateStatusMutation.isPending ? 'Memproses...' : 'Serahkan ke Driver'}
               </Button>
             ) : detailQuery.data?.status === 'pending' ? (
@@ -245,31 +267,21 @@ export default function DetailDOEkspedisiPage() {
               </>
             ) : null}
 
-            {detailQuery.data?.status === 'draft' && (
-              <Button
-                variant="outline"
-                onClick={() => slug && id && void router.push(`/dashboard/${slug}/do-ekspedisi/form/${id}`)}
-                className="border-slate-200 text-slate-700 hover:bg-slate-50 font-medium"
-              >
-                <Pencil className="h-4 w-4" />
-                Edit
-              </Button>
-            )}
             <Button
-              onClick={async () => {
-                if (!id || !slug) return;
-                try {
-                  await processExpeditionMutation.mutateAsync({ id: Number(id) });
-                  router.push(`/dashboard/${slug}/do-ekspedisi/print/${id}`);
-                } catch (error: any) {
-                  toast.error(getApiErrorMessage(error));
-                }
-              }}
-              disabled={processExpeditionMutation.isPending || detailQuery.data.status === 'draft' || !detailQuery.data.driverId || !detailQuery.data.vehicleId}
-              className="btn-primary-orange!"
+              variant="outline"
+              disabled={detailQuery.data?.status !== 'draft'}
+              onClick={() => slug && id && void router.push(`/dashboard/${slug}/do-ekspedisi/form/${id}`)}
+              className="border-slate-200 text-slate-700 hover:bg-slate-50 font-medium"
+            >
+              <Pencil className="h-4 w-4" />
+              Edit
+            </Button>
+            <Button
+              onClick={templatePrint.openPrintDialog}
+              variant="outline"
             >
               <Printer className="h-4 w-4" />
-              {processExpeditionMutation.isPending ? 'Menyiapkan...' : 'Print DO'}
+              Print
             </Button>
           </>,
         )}
@@ -403,6 +415,26 @@ export default function DetailDOEkspedisiPage() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {detailQuery.data && (
+        <DOEkspedisiPrintDocument
+          data={detailQuery.data}
+          template={templatePrint.selectedTemplate}
+          fallbackBackground={selectedPrintBackground}
+          companyName={getCompanyName(resolvedCompanyId)}
+          printedAt={templatePrint.printedAt}
+        />
+      )}
+
+      <ReportTemplatePrintDialog
+        open={templatePrint.isDialogOpen}
+        onOpenChange={templatePrint.setIsDialogOpen}
+        selectedTemplateId={templatePrint.selectedTemplateId}
+        onTemplateChange={templatePrint.setSelectedTemplateId}
+        onPrint={templatePrint.printWithSelectedTemplate}
+        isPreparingPrint={templatePrint.isPreparingPrint}
+        reportName="DO ekspedisi"
+      />
     </DashboardLayout>
   );
 }

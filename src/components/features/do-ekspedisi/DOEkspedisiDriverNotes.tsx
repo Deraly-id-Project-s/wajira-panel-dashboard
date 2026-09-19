@@ -1,10 +1,12 @@
 import React from 'react';
-import { FileText, MoreVertical, Plus, Pencil, Trash2 } from 'lucide-react';
+import { FileText, MoreVertical, Plus } from 'lucide-react';
 import { toast } from 'sonner';
 import BaseTable, { type ColumnDef } from '@/components/ui/base-table';
 import { FormDialog } from '@/components/ui/form-dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { InputDate } from '@/components/ui/input-date';
+import { InputDateTime } from '@/components/ui/input-date-time';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { FileInput } from '@/components/ui/file-input';
@@ -13,6 +15,7 @@ import { formatDate } from '@/lib/utils/format';
 import { useDoDetailResourceMutation } from '@/hooks/useDoEkspedisi';
 import type { DoEkspedisi, DoEkspedisiDriverNote } from '@/@types/do-ekspedisi.types';
 import { ImagePreview } from '@/components/ui/image-preview';
+import { TextTruncate } from '@/components/ui/text-truncate';
 
 interface DOEkspedisiDriverNotesProps {
   data: DoEkspedisi;
@@ -22,14 +25,20 @@ interface DOEkspedisiDriverNotesProps {
 const field = (label: string, value: string, placeholder: string | null, onChange: (value: string) => void, type = 'text', required = true) => (
   <div className="space-y-1">
     <Label>{label}{required && <span className="text-red-500"> *</span>}</Label>
-    <Input required={required} type={type} value={value} onChange={(e) => onChange(e.target.value)} placeholder={placeholder ?? ''} className="mt-2" />
+    {type === 'datetime-local' ? (
+      <InputDateTime value={value} onChange={(e) => onChange(e.target.value)} className="mt-2" />
+    ) : type === 'date' ? (
+      <InputDate value={value} onChange={(e) => onChange(e.target.value)} className="mt-2" />
+    ) : (
+      <Input required={required} type={type} value={value} onChange={(e) => onChange(e.target.value)} placeholder={placeholder ?? ''} className="mt-2" />
+    )}
   </div>
 );
 
-function RelatedSection({ title, description, icon, onAdd, children, addDisabled = false, addLabel = 'Tambah', helper }: { title: string; description: string | null, icon: React.ReactNode; onAdd: () => void; children: React.ReactNode; addDisabled?: boolean; addLabel?: string; helper?: string }) {
+function RelatedSection({ title, description, icon, onAdd, children, addDisabled = false, addLabel = 'Tambah Catatan', helper }: { title: string; description: string | null, icon: React.ReactNode; onAdd: () => void; children: React.ReactNode; addDisabled?: boolean; addLabel?: string; helper?: string }) {
   return (
-    <section className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
-      <div className="mb-4 flex items-start justify-between gap-3">
+    <section className="rounded-md border border-slate-200 bg-white p-5 shadow-sm">
+      <div className="mb-4 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
         <div>
           <div className="flex items-center gap-3">
             <div className="rounded-md bg-orange-100 p-2 text-orange-700">{icon}</div>
@@ -40,7 +49,7 @@ function RelatedSection({ title, description, icon, onAdd, children, addDisabled
           </div>
           {helper && <p className="ml-12 mt-1 text-xs text-slate-500">{helper}</p>}
         </div>
-        <Button size="sm" onClick={onAdd} disabled={addDisabled}>
+        <Button size="sm" onClick={onAdd} disabled={addDisabled} className="w-full sm:w-auto">
           <Plus className="mr-2 h-4 w-4" />
           {addLabel}
         </Button>
@@ -141,18 +150,17 @@ export function DOEkspedisiDriverNotes({ data, onRefresh }: DOEkspedisiDriverNot
   }, [bucketUrl, bucketName]);
 
   const columns: ColumnDef<DoEkspedisiDriverNote>[] = [
-    { header: 'No', cell: (_, i) => i + 1 },
-    { header: 'Tanggal Efektif', cell: (x) => x.effectiveDate ? formatDate(x.effectiveDate) : '-' },
-    { header: 'Subject', cell: (x) => x.subject },
-    { header: 'Deskripsi', cell: (x) => x.description },
+    { header: 'Tanggal Efektif', cell: (item) => item.effectiveDate ? formatDate(item.effectiveDate) : '-' },
+    { header: 'Subjek', cell: (item) => item.subject || '-' },
+    { header: 'Deskripsi', cell: (item) => <TextTruncate text={item.description || '-'} maxLength={25} /> },
     {
       header: 'Gambar',
-      cell: (x) => x.image ? (
+      cell: (item) => item.image ? (
         <Button
           type="button"
           variant="link"
           className="p-0 h-auto font-semibold text-orange-600 hover:text-orange-700 cursor-pointer"
-          onClick={() => setPreviewUrl(getImageUrl(x.image))}
+          onClick={() => setPreviewUrl(getImageUrl(item.image))}
         >
           Lihat Gambar
         </Button>
@@ -161,9 +169,10 @@ export function DOEkspedisiDriverNotes({ data, onRefresh }: DOEkspedisiDriverNot
       )
     },
     {
-      header: '',
-      alignment: 'right',
-      cell: (x) => (
+      header: 'Aksi',
+      alignment: 'center',
+      sticky: 'right',
+      cell: (item) => (
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" size="icon">
@@ -171,12 +180,10 @@ export function DOEkspedisiDriverNotes({ data, onRefresh }: DOEkspedisiDriverNot
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
-            <DropdownMenuItem onClick={() => openEdit(x)} disabled={data?.status !== 'draft'}>
-              <Pencil className="mr-2 h-4 w-4" />
+            <DropdownMenuItem onClick={() => openEdit(item)} disabled={data?.status !== 'draft'}>
               Edit
             </DropdownMenuItem>
-            <DropdownMenuItem className="text-red-600" onClick={() => void handleDelete(x)} disabled={data?.status !== 'draft'}>
-              <Trash2 className="mr-2 h-4 w-4" />
+            <DropdownMenuItem className="text-red-600" onClick={() => void handleDelete(item)} disabled={data?.status !== 'draft'}>
               Hapus
             </DropdownMenuItem>
           </DropdownMenuContent>

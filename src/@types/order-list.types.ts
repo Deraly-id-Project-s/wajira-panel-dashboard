@@ -75,6 +75,8 @@ export interface OrderList {
   code: string;
   customerId: number;
   status: OrderListStatus;
+  isHasInvoice: boolean;
+  canMarkDone: boolean;
   vehicleType?: OrderListVehicleType | null;
   billInvoice: number;
   ppn: number;
@@ -96,6 +98,16 @@ export interface OrderList {
   expeditions: unknown[];
   createdAt?: string;
   updatedAt?: string;
+}
+
+export interface ProcessOrderListInvoiceResponse {
+  doOrderList: OrderList;
+  invoice: {
+    id: number;
+    uuid?: string;
+    code: string;
+    nominal: number;
+  };
 }
 
 export interface OrderListListParams extends PaginationParams {

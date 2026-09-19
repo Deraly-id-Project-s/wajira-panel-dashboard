@@ -3,6 +3,7 @@ import { useForm, Controller } from 'react-hook-form';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { InputDate } from '@/components/ui/input-date';
 import { Label } from '@/components/ui/label';
 import { MoneyInput } from '@/components/ui/money-input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -198,16 +199,19 @@ export function FinanceAssetForm({
                             <Label htmlFor="purchase_date" className="text-sm font-medium text-slate-700">
                                 Tanggal Beli <span className="text-red-500">*</span>
                             </Label>
-                            <div className="relative">
-                                <Calendar className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
-                                <Input
-                                    id="purchase_date"
-                                    type="date"
-                                    {...register('purchase_date', { required: 'Tanggal beli wajib diisi' })}
-                                    disabled={isSaving}
-                                    className="h-11 border-slate-200 bg-white pl-10 text-sm shadow-sm"
-                                />
-                            </div>
+                            <Controller
+                                control={control}
+                                name="purchase_date"
+                                rules={{ required: 'Tanggal beli wajib diisi' }}
+                                render={({ field }) => (
+                                    <InputDate
+                                        id="purchase_date"
+                                        {...field}
+                                        disabled={isSaving}
+                                        className="h-11 border-slate-200 bg-white text-sm shadow-sm"
+                                    />
+                                )}
+                            />
                         </div>
 
                         <div className="space-y-2">

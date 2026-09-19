@@ -9,14 +9,14 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { SearchPagination } from '@/components/ui/search-pagination';
-import { useAccounts, useDeleteAccount, useUpdateAccount, useBulkUpdateAccounts } from '@/hooks/useAccount';
+import { useAccounts, useDeleteAccount, useBulkUpdateAccounts } from '@/hooks/useAccount';
 import { useAccountGroups } from '@/hooks/useAccountGroup';
 import { useQueryParamsTable } from '@/hooks/useQueryParamsTable';
 import { useCompany } from '@/contexts/CompanyContext';
 import { usePermissionGuard } from '@/hooks/usePermissionGuard';
 import type { Account } from '@/@types/account.types';
 import type { AccountGroup } from '@/@types/account-group.types';
-import { ACCOUNT_CATEGORY_OPTIONS, getAccountTypeFromCategory } from '@/lib/account';
+import { ACCOUNT_CATEGORY_OPTIONS } from '@/lib/account';
 import { ApiResponseError } from '@/lib/api/response';
 import { toast } from 'sonner';
 import { CircleAlert, Download, PencilLine, Plus, Upload } from 'lucide-react';
@@ -34,12 +34,13 @@ const initialBulkFormValues: BulkFormValues = {
 
 export const AccountListPage = () => {
   const { companyId, isLoading: isLoadingCompany } = useCompany();
-  const { hasPermission } = usePermissionGuard();
+  const { hasPermission, canManageMasterDataLock } = usePermissionGuard();
   const canCreate = hasPermission('master-data:create');
   const canEdit = hasPermission('master-data:edit');
   const canDelete = hasPermission('master-data:delete');
-  const { page, perPage, search, setPage, setPerPage, setSearch, updateQuery } = useQueryParamsTable({ defaultPerPage: 25 });
+  const { page, perPage, search, getParam, setPage, setPerPage, setSearch, updateQuery } = useQueryParamsTable({ defaultPerPage: 25 });
   const [searchInput, setSearchInput] = useState(search);
+  const accountGroupId = getParam('account_group_id', '');
 
   useEffect(() => {
     const timeout = window.setTimeout(() => {
@@ -50,10 +51,19 @@ export const AccountListPage = () => {
     return () => window.clearTimeout(timeout);
   }, [searchInput, search, setSearch]);
 
+  const { data: filterGroupsData, isLoading: isLoadingFilterGroups } = useAccountGroups({
+    page: 1,
+    perPage: 500,
+    company_id: companyId ?? undefined,
+    enabled: !isLoadingCompany && !!companyId,
+  });
+  const filterAccountGroups = useMemo(() => filterGroupsData?.data ?? [], [filterGroupsData?.data]);
+
   const { data, isLoading, isError, isFetching } = useAccounts({
     page,
     perPage,
     search,
+    account_group_id: accountGroupId || undefined,
     company_id: companyId ?? undefined,
     enabled: !isLoadingCompany && !!companyId,
   });
@@ -214,6 +224,12 @@ export const AccountListPage = () => {
       return;
     }
 
+    const selectedRows = accountRows.filter((account) => selectedIds.has(String(account.id)));
+    if (!canManageMasterDataLock && selectedRows.some((account) => account.is_lock)) {
+      toast.error('Akun terkunci hanya bisa diperbarui lewat form edit deskripsi');
+      return;
+    }
+
     resetBulkForm();
     setOpenBulkUpdate(true);
   };
@@ -308,6 +324,31 @@ export const AccountListPage = () => {
           onSearchChange={setSearchInput}
           searchPlaceholder="Search here"
           searchAriaLabel="Cari akun"
+          filters={
+            <div className="w-full sm:w-[220px]">
+              <Select
+                value={accountGroupId || 'all'}
+                onValueChange={(val) => {
+                  updateQuery({
+                    account_group_id: val === 'all' ? undefined : val,
+                    page: 1,
+                  });
+                }}
+              >
+                <SelectTrigger className="h-9 w-full rounded-md border-slate-200 bg-white text-sm shadow-none cursor-pointer" aria-label="Filter Grup Akun">
+                  <SelectValue placeholder={isLoadingFilterGroups ? 'Memuat grup...' : 'Semua Grup Akun'} />
+                </SelectTrigger>
+                <SelectContent showSearch searchPlaceholder="Cari grup akun...">
+                  <SelectItem value="all">Semua Grup Akun</SelectItem>
+                  {filterAccountGroups.map((group) => (
+                    <SelectItem key={group.id} value={String(group.id)}>
+                      {group.code ? `${group.code} - ${group.name}` : group.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          }
           page={page}
           perPage={perPage}
           total={data?.meta.total}
@@ -316,30 +357,29 @@ export const AccountListPage = () => {
           onPerPageChange={setPerPage}
           actions={
             <>
-              {search && (
+              {(search || accountGroupId) && (
                 <Button
                   variant="outline"
                   size="sm"
                   onClick={() => {
                     setSearchInput('');
-                    updateQuery({ search: undefined, page: 1 });
+                    updateQuery({ search: undefined, account_group_id: undefined, page: 1 });
                   }}
-                  className="rounded-md border-slate-200 text-slate-700 bg-white hover:bg-slate-50 cursor-pointer h-9 text-xs px-3"
                 >
                   Reset
                 </Button>
               )}
-              <Button onClick={handleExport} variant="outline" className="h-9 text-xs px-3 rounded-md border-slate-200 text-slate-700 bg-white hover:bg-slate-50 cursor-pointer">
+              <Button onClick={handleExport} variant="outline" size="sm">
                 <Download className="h-4 w-4 mr-2" />
                 Export
               </Button>
               {canCreate && (
                 <>
-                  <Button onClick={() => setOpenImport(true)} variant="outline" className="h-9 text-xs px-3 rounded-md border-slate-200 text-slate-700 bg-white hover:bg-slate-50 cursor-pointer">
+                  <Button onClick={() => setOpenImport(true)} variant="outline" size="sm">
                     <Upload className="h-4 w-4 mr-2" />
                     Import
                   </Button>
-                  <Button onClick={handleAdd} className="btn-primary!">
+                  <Button variant="default" onClick={handleAdd}>
                     <Plus className="h-4 w-4 mr-2" />
                     Tambah Data
                   </Button>
@@ -350,7 +390,7 @@ export const AccountListPage = () => {
         >
           {selectedIds.size > 0 && (
             <div className="flex flex-wrap items-center gap-3">
-              <Button variant="outline" className="h-10 rounded-md border-gray-200 px-4 text-sm font-medium text-slate-800 shadow-none hover:bg-slate-50" onClick={handleOpenBulkUpdate}>
+              <Button variant="outline" size="lg" onClick={handleOpenBulkUpdate}>
                 <PencilLine className="mr-1.5 h-4 w-4" />
                 Update
               </Button>
@@ -371,6 +411,7 @@ export const AccountListPage = () => {
               isLoading={isLoading || isFetching}
               canEdit={canEdit}
               canDelete={canDelete}
+              canManageLock={canManageMasterDataLock}
               selectedIds={selectedIds}
               onToggleAll={toggleAll}
               onToggleRow={toggleRow}
@@ -460,10 +501,10 @@ export const AccountListPage = () => {
             </div>
 
             <div className="mt-8 flex flex-col gap-3">
-              <Button className="h-14 rounded-md bg-[#1F3B5B] text-lg font-semibold text-white hover:bg-[#1B3450]" onClick={handleBulkUpdateRequest}>
+              <Button variant="default" size="lg" onClick={handleBulkUpdateRequest}>
                 Simpan
               </Button>
-              <Button variant="outline" className="h-14 rounded-md border-slate-200 text-lg font-semibold text-slate-950 shadow-none hover:bg-slate-50" onClick={() => setOpenBulkUpdate(false)}>
+              <Button variant="outline" size="lg" onClick={() => setOpenBulkUpdate(false)}>
                 Batal
               </Button>
             </div>

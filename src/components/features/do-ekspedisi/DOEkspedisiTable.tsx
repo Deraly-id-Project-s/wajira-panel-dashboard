@@ -216,8 +216,12 @@ export const DOEkspedisiTable = React.memo(function DOEkspedisiTable({
         header: 'Aksi',
         alignment: 'center',
         sticky: 'right',
-        cell: (item) => (
-          <div className="flex justify-center">
+        cell: (item) => {
+          const canEdit = String(item.status).toLowerCase() === 'draft';
+          const canDelete = String(item.status).toLowerCase() === 'draft';
+
+          return (
+            <div className="flex justify-center">
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" className="h-8 w-8 p-0 rounded-full text-slate-600 hover:bg-slate-100 hover:text-slate-900">
@@ -225,7 +229,7 @@ export const DOEkspedisiTable = React.memo(function DOEkspedisiTable({
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="min-w-[150px] rounded-md border-slate-200 p-1.5 shadow-lg">
-                <DropdownMenuItem onClick={() => onEdit(item)} className="rounded-md px-3 py-2 text-sm text-slate-900 focus:bg-slate-50 cursor-pointer">
+                <DropdownMenuItem disabled={!canEdit} onClick={() => canEdit && onEdit(item)} className="rounded-md px-3 py-2 text-sm text-slate-900 focus:bg-slate-50 cursor-pointer disabled:cursor-not-allowed">
                   Edit
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => onDetail(item)} className="rounded-md px-3 py-2 text-sm text-slate-900 focus:bg-slate-50 cursor-pointer">
@@ -234,13 +238,14 @@ export const DOEkspedisiTable = React.memo(function DOEkspedisiTable({
                 <DropdownMenuItem onClick={() => onPrint(item)} className="rounded-md px-3 py-2 text-sm text-slate-900 focus:bg-slate-50 cursor-pointer">
                   Print
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => onDelete(item)} className="rounded-md px-3 py-2 text-sm text-red-600 focus:bg-red-50 focus:text-red-600 cursor-pointer">
+                <DropdownMenuItem disabled={!canDelete} onClick={() => canDelete && onDelete(item)} className="rounded-md px-3 py-2 text-sm text-red-600 focus:bg-red-50 focus:text-red-600 cursor-pointer disabled:cursor-not-allowed">
                   Hapus
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
-          </div>
-        ),
+            </div>
+          );
+        },
       },
     ],
     [onDelete, onDetail, onEdit, onPrint, slug],

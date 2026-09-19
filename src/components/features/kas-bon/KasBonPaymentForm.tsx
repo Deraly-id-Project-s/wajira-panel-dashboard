@@ -1,3 +1,4 @@
+import * as React from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { CreditCard } from 'lucide-react';
 import { useForm } from 'react-hook-form';
@@ -5,10 +6,13 @@ import { z } from 'zod';
 import type { DriverCashAdvanceBilling, DriverCashAdvanceBillingHistoryPayload } from '@/@types/driver-cash-advance.types';
 import { Button } from '@/components/ui/button';
 import { currenciesFormat } from '@/components/ui/currenciesFormat';
+import { FileInput } from '@/components/ui/file-input';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
+import { InputDate } from '@/components/ui/input-date';
 import { MoneyInput } from '@/components/ui/money-input';
 import { LoadingState } from '@/components/ui/loading-state';
+import RequiredMark from '@/components/ui/required-mark';
 import { Textarea } from '@/components/ui/textarea';
 import { KasBonPaymentHistoryTable } from './KasBonPaymentHistoryTable';
 
@@ -16,17 +20,29 @@ const schema = z.object({
   bcaIdr: z.number().min(0),
   bcaUsd: z.number().min(0),
   cashIdr: z.number().min(0),
-  usdOriginal: z.number().min(0),
-  usdExchange: z.number().min(0),
   paymentAt: z.string().min(1, 'Tanggal pembayaran wajib diisi.'),
   note: z.string().max(255, 'Catatan maksimal 255 karakter.'),
+  paymentProof: z
+    .any()
+    .nullable()
+    .refine(
+      (file) => !file || (file instanceof File && file.size <= 2 * 1024 * 1024),
+      'Ukuran file maksimal 2MB.',
+    ),
 }).superRefine((value, context) => {
   if (value.bcaIdr <= 0 && value.bcaUsd <= 0 && value.cashIdr <= 0) {
     context.addIssue({ code: 'custom', path: ['cashIdr'], message: 'Isi minimal satu nominal pembayaran.' });
   }
 });
 
-type FormValues = z.infer<typeof schema>;
+interface FormValues {
+  bcaIdr: number;
+  bcaUsd: number;
+  cashIdr: number;
+  paymentAt: string;
+  note: string;
+  paymentProof: File | null;
+}
 
 interface KasBonPaymentFormProps {
   billing: DriverCashAdvanceBilling;
@@ -37,38 +53,43 @@ interface KasBonPaymentFormProps {
 
 export function KasBonPaymentForm({ billing, onSubmit, onCancel, isSubmitting = false }: KasBonPaymentFormProps) {
   const form = useForm<FormValues>({
-    resolver: zodResolver(schema),
+    resolver: zodResolver(schema) as any,
     defaultValues: {
       bcaIdr: 0,
       bcaUsd: 0,
       cashIdr: 0,
-      usdOriginal: 0,
-      usdExchange: 0,
       paymentAt: new Date().toISOString().slice(0, 10),
       note: '',
+      paymentProof: null,
     },
   });
 
-  const projectedPayment = form.watch('bcaIdr') + form.watch('cashIdr') + form.watch('usdOriginal');
+  const projectedPayment = form.watch('bcaIdr') + form.watch('cashIdr');
   const remaining = Math.max(0, billing.remainingPayment - projectedPayment);
 
   const handleSubmit = async (values: FormValues) => {
-    if (values.bcaIdr + values.cashIdr + values.usdOriginal > billing.remainingPayment) {
+    if (values.bcaIdr + values.cashIdr > billing.remainingPayment) {
       form.setError('cashIdr', { message: 'Total pembayaran IDR melebihi sisa tagihan.' });
       return;
     }
     try {
       await onSubmit({
         driver_cash_advance_billing_id: billing.id,
-        bca_payment_amount: values.bcaIdr,
-        bca_payment_usd_amount: values.bcaUsd,
-        cash_payment_amount: values.cashIdr,
-        bca_payment_usd_original_amount: values.bcaUsd > 0 ? values.usdOriginal : null,
-        bca_payment_usd_exchange_amount: values.bcaUsd > 0 ? values.usdExchange : null,
+        bca_payment_amount: Math.round(values.bcaIdr),
+        bca_payment_usd_amount: Math.round(values.bcaUsd),
+        cash_payment_amount: Math.round(values.cashIdr),
         payment_at: values.paymentAt,
         note: values.note.trim() || null,
+        payment_proof: values.paymentProof || null,
       });
-      form.reset({ ...form.getValues(), bcaIdr: 0, bcaUsd: 0, cashIdr: 0, usdOriginal: 0, usdExchange: 0, note: '' });
+      form.reset({
+        bcaIdr: 0,
+        bcaUsd: 0,
+        cashIdr: 0,
+        paymentAt: new Date().toISOString().slice(0, 10),
+        note: '',
+        paymentProof: null,
+      });
     } catch {
       // Pesan error ditampilkan oleh page agar komponen form tetap reusable.
     }
@@ -83,14 +104,81 @@ export function KasBonPaymentForm({ billing, onSubmit, onCancel, isSubmitting = 
           <div className="space-y-1"><p className="text-xs uppercase text-slate-500">Sisa Setelah Input</p><p className="font-semibold text-rose-700">{currenciesFormat('idr', remaining)}</p></div>
         </div>
 
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          <FormField control={form.control} name="paymentAt" render={({ field }) => <FormItem><FormLabel>Tanggal Bayar</FormLabel><FormControl><Input type="date" {...field} disabled={isSubmitting || billing.isPaid} /></FormControl><FormMessage /></FormItem>} />
-          <FormField control={form.control} name="cashIdr" render={({ field }) => <FormItem><FormLabel>Cash IDR</FormLabel><FormControl><MoneyInput value={field.value} onChangeValue={field.onChange} disabled={isSubmitting || billing.isPaid} /></FormControl><FormMessage /></FormItem>} />
-          <FormField control={form.control} name="bcaIdr" render={({ field }) => <FormItem><FormLabel>BCA IDR</FormLabel><FormControl><MoneyInput value={field.value} onChangeValue={field.onChange} disabled={isSubmitting || billing.isPaid} /></FormControl><FormMessage /></FormItem>} />
-          <FormField control={form.control} name="bcaUsd" render={({ field }) => <FormItem><FormLabel>BCA USD</FormLabel><FormControl><MoneyInput currency="USD" value={field.value} onChangeValue={field.onChange} disabled={isSubmitting || billing.isPaid} /></FormControl><FormMessage /></FormItem>} />
-          <FormField control={form.control} name="usdOriginal" render={({ field }) => <FormItem><FormLabel>Nilai Asli USD (IDR)</FormLabel><FormControl><MoneyInput value={field.value} onChangeValue={field.onChange} disabled={isSubmitting || billing.isPaid} /></FormControl><FormMessage /></FormItem>} />
-          <FormField control={form.control} name="usdExchange" render={({ field }) => <FormItem><FormLabel>Kurs USD</FormLabel><FormControl><MoneyInput value={field.value} onChangeValue={field.onChange} disabled={isSubmitting || billing.isPaid} /></FormControl><FormMessage /></FormItem>} />
-          <FormField control={form.control} name="note" render={({ field }) => <FormItem className="sm:col-span-2 lg:col-span-3"><FormLabel>Catatan</FormLabel><FormControl><Textarea rows={3} placeholder="Catatan pembayaran (opsional)" {...field} disabled={isSubmitting || billing.isPaid} /></FormControl><FormMessage /></FormItem>} />
+        <div className="grid gap-4 sm:grid-cols-2">
+          <FormField
+            control={form.control}
+            name="paymentAt"
+            render={({ field }) => (
+              <FormItem className="space-y-2 sm:col-span-2">
+                <FormLabel>Tanggal Bayar <RequiredMark /></FormLabel>
+                <FormControl><InputDate {...field} disabled={isSubmitting || billing.isPaid} /></FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="cashIdr"
+            render={({ field }) => (
+              <FormItem className="space-y-2">
+                <FormLabel>Cash IDR</FormLabel>
+                <FormControl><MoneyInput value={field.value} onChangeValue={field.onChange} disabled={isSubmitting || billing.isPaid} /></FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="bcaIdr"
+            render={({ field }) => (
+              <FormItem className="space-y-2">
+                <FormLabel>BCA IDR</FormLabel>
+                <FormControl><MoneyInput value={field.value} onChangeValue={field.onChange} disabled={isSubmitting || billing.isPaid} /></FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="bcaUsd"
+            render={({ field }) => (
+              <FormItem className="space-y-2 sm:col-span-2">
+                <FormLabel>BCA USD</FormLabel>
+                <FormControl><MoneyInput currency="USD" value={field.value} onChangeValue={field.onChange} disabled={isSubmitting || billing.isPaid} /></FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="paymentProof"
+            render={({ field }) => (
+              <FormItem className="space-y-2 sm:col-span-2">
+                <FormLabel>Bukti Pembayaran</FormLabel>
+                <FormControl>
+                  <FileInput
+                    value={field.value}
+                    onFileChange={field.onChange}
+                    accept="image/png,image/jpeg,image/jpg,application/pdf"
+                    helperText="Format PNG, JPG, PDF maksimal 2MB"
+                    disabled={isSubmitting || billing.isPaid}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="note"
+            render={({ field }) => (
+              <FormItem className="space-y-2 sm:col-span-2">
+                <FormLabel>Catatan</FormLabel>
+                <FormControl><Textarea rows={3} placeholder="Catatan pembayaran (opsional)" {...field} disabled={isSubmitting || billing.isPaid} /></FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
         </div>
 
         <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">

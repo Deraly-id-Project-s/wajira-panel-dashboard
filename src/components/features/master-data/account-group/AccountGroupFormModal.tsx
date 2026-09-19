@@ -13,6 +13,8 @@ interface AccountGroupFormModalProps {
     description: string;
     isSubmitting?: boolean;
     submitLabel?: string;
+    disableGroupCode?: boolean;
+    showLockField?: boolean;
 }
 
 export const AccountGroupFormModal = ({
@@ -24,6 +26,8 @@ export const AccountGroupFormModal = ({
     description,
     isSubmitting = false,
     submitLabel = 'Simpan',
+    disableGroupCode = false,
+    showLockField = false,
 }: AccountGroupFormModalProps) => {
     return (
         <Form {...form}>
@@ -36,7 +40,7 @@ export const AccountGroupFormModal = ({
                 submitLabel={submitLabel}
                 isSubmitting={isSubmitting}
             >
-                <AccountGroupForm form={form} />
+                <AccountGroupForm form={form} disableGroupCode={disableGroupCode} showLockField={showLockField} />
             </FormDialog>
         </Form>
     );

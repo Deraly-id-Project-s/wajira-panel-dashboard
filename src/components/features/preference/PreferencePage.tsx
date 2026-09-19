@@ -1,9 +1,8 @@
 import { useMemo, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Edit, RefreshCw, SlidersHorizontal } from 'lucide-react';
+import { Edit, RefreshCw } from 'lucide-react';
 import { toast } from 'sonner';
 import BaseTable, { ColumnDef } from '@/components/ui/base-table';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -20,6 +19,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { PageHeader } from '@/components/ui/page-header';
 import { useCompany } from '@/contexts/CompanyContext';
 import {
+  clearCachedPreferences,
   getPreferences,
   PreferenceItem,
   PreferenceValue,
@@ -206,7 +206,10 @@ export function PreferencePage() {
           <Button
             type="button"
             variant="outline"
-            onClick={() => void refetch()}
+            onClick={() => {
+              if (companyId) clearCachedPreferences(companyId);
+              void refetch();
+            }}
             disabled={isRefetching || !companyId}
           >
             <RefreshCw className={isRefetching ? 'animate-spin' : undefined} />

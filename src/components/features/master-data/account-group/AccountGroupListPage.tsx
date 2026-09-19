@@ -45,7 +45,7 @@ export const AccountGroupListPage = () => {
   const deleteMutation = useDeleteAccountGroup(companyId ?? undefined);
 
 
-  const { hasPermission } = usePermissionGuard();
+  const { hasPermission, canManageMasterDataLock } = usePermissionGuard();
   const canCreate = hasPermission('master-data:create');
   const canEdit = hasPermission('master-data:edit');
   const canDelete = hasPermission('master-data:delete');
@@ -86,6 +86,7 @@ export const AccountGroupListPage = () => {
     form.reset({
       group_code: '',
       description: '',
+      is_lock: false,
     });
     setOpenForm(true);
   };
@@ -95,6 +96,7 @@ export const AccountGroupListPage = () => {
     form.reset({
       group_code: item.code,
       description: item.description ?? '',
+      is_lock: !!item.is_lock,
     });
     setOpenForm(true);
   };
@@ -105,17 +107,30 @@ export const AccountGroupListPage = () => {
       return;
     }
 
-    const payload = {
-      ...values,
-      company_id: companyId,
-    };
-
     try {
       if (editing) {
-        await updateMutation.mutateAsync({ id: editing.id, payload });
+        const isDescriptionOnlyUpdate = Boolean(editing.is_lock && !canManageMasterDataLock);
+        const updatePayload = {
+          company_id: companyId,
+          ...(isDescriptionOnlyUpdate
+            ? { description: values.description }
+            : {
+              group_code: values.group_code,
+              description: values.description,
+              ...(canManageMasterDataLock ? { is_lock: !!values.is_lock } : {}),
+            }),
+        };
+
+        await updateMutation.mutateAsync({ id: editing.id, payload: updatePayload });
         toast.success('Grup akun berhasil diperbarui');
       } else {
-        await createMutation.mutateAsync(payload);
+        const createPayload = {
+          company_id: companyId,
+          group_code: values.group_code,
+          description: values.description,
+        };
+
+        await createMutation.mutateAsync(createPayload);
         toast.success('Grup akun berhasil dibuat');
       }
       setOpenForm(false);
@@ -162,18 +177,17 @@ export const AccountGroupListPage = () => {
                     setSearchInput('');
                     updateQuery({ search: undefined, page: 1 });
                   }}
-                  className="rounded-md border-slate-200 text-slate-700 bg-white hover:bg-slate-50 cursor-pointer h-9 text-xs px-3"
                 >
                   Reset
                 </Button>
               )}
               {canCreate && (
                 <>
-                  <Button onClick={() => setOpenImport(true)} variant="outline" className="h-9 text-xs px-3 rounded-md border-slate-200 text-slate-700 bg-white hover:bg-slate-50 cursor-pointer">
+                  <Button onClick={() => setOpenImport(true)} variant="outline" size="sm">
                     <Upload className="h-4 w-4 mr-2" />
                     Import
                   </Button>
-                  <Button onClick={handleAdd} className="btn-primary!">
+                  <Button variant="default" onClick={handleAdd}>
                     <Plus className="h-4 w-4 mr-2" />
                     Tambah Data
                   </Button>
@@ -206,6 +220,8 @@ export const AccountGroupListPage = () => {
         description={editing ? 'Perbarui informasi grup akun' : 'Buat grup akun baru untuk mengelompokkan akun'}
         isSubmitting={createMutation.isPending || updateMutation.isPending}
         submitLabel={editing ? 'Perbarui' : 'Simpan'}
+        disableGroupCode={Boolean(editing?.is_lock && !canManageMasterDataLock)}
+        showLockField={Boolean(editing && canManageMasterDataLock)}
       />
 
       <AccountGroupImportModal

@@ -28,11 +28,11 @@ export const CustomerListPage = () => {
                     actions={
                         canCreate && (
                             <>
-                                <Button onClick={() => setOpenImport(true)} variant="outline" className="w-full sm:w-auto">
+                                <Button onClick={() => setOpenImport(true)} variant="outline">
                                     <Upload className="h-4 w-4" />
                                     Import
                                 </Button>
-                                <Button className="btn-primary!">
+                                <Button variant="default">
                                     <Plus className="h-4 w-4" />
                                     Tambah
                                 </Button>

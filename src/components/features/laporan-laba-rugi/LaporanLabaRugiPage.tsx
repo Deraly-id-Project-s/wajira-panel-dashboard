@@ -21,6 +21,8 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { currenciesFormat } from '@/components/ui/currenciesFormat';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { SearchableSelect } from '@/components/features/vehicle-data/SearchableSelect';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { useCompany } from '@/contexts/CompanyContext';
 import { useAccounts } from '@/hooks/useAccount';
 import { useProfitLossReport, useUpdateProfitLossTemplate } from '@/hooks/report/useProfitLossReport';
@@ -60,6 +62,7 @@ const DEFAULT_TEMPLATE: ProfitLossTemplatePayload = {
   gross_profit_account_ids: [],
   opex_account_ids: [],
   noix_account_ids: [190],
+  tax: 0,
 };
 
 const EMPTY_REPORT_DATA: ProfitLossReportData = {};
@@ -83,8 +86,8 @@ const REPORT_SECTIONS: ReportSectionConfig[] = [
   },
   {
     key: 'cogs',
-    title: 'Harga Pokok Penjualan',
-    description: 'Akun biaya langsung pembentuk HPP.',
+    title: 'Beban Pokok Usaha',
+    description: 'Akun beban pokok usaha.',
     templateKey: 'cogs_account_ids',
     dataKey: 'cogs_calc',
     tone: 'negative',
@@ -92,15 +95,16 @@ const REPORT_SECTIONS: ReportSectionConfig[] = [
   },
   {
     key: 'grossProfit',
-    title: 'Laba Kotor',
-    description: 'Akun penyesuaian laba kotor bila dibutuhkan.',
+    title: 'Laba Kotor Usaha',
+    description: 'Akun penyesuaian laba kotor usaha.',
     templateKey: 'gross_profit_account_ids',
     dataKey: 'gross_calc',
     tone: 'neutral',
+    expectedType: 'debet',
   },
   {
     key: 'opex',
-    title: 'Biaya Operasional',
+    title: 'Beban Operasional',
     description: 'Akun beban operasional.',
     templateKey: 'opex_account_ids',
     dataKey: 'opex_calc',
@@ -110,10 +114,11 @@ const REPORT_SECTIONS: ReportSectionConfig[] = [
   {
     key: 'noix',
     title: 'Pendapatan/Beban Non Operasional',
-    description: 'Akun di luar aktivitas operasional inti.',
+    description: 'Akun di luar aktivitas operasional/diluar usaha.',
     templateKey: 'noix_account_ids',
     dataKey: 'noix_calc',
     tone: 'neutral',
+    expectedType: 'debet',
   },
 ];
 
@@ -395,6 +400,7 @@ export default function LaporanLabaRugiPage() {
   const [templateState, setTemplateState] = useState<Record<ProfitLossTemplateKey, number[]>>(
     buildTemplateState,
   );
+  const [taxInput, setTaxInput] = useState<string>('0');
   const [isExporting, setIsExporting] = useState(false);
   const [searchInput, setSearchInput] = useState('');
   const [dateRange, setDateRange] = useState<DateRange | undefined>();
@@ -428,7 +434,10 @@ export default function LaporanLabaRugiPage() {
   const reportData = reportQuery.data?.data ?? EMPTY_REPORT_DATA;
   useEffect(() => {
     if (!reportQuery.data?.data) return;
-    setTemplateState(buildTemplateStateFromReport(reportQuery.data.data));
+    const data = reportQuery.data.data;
+    setTemplateState(buildTemplateStateFromReport(data));
+    const rawTax = data.tax ?? data.tax_percentage ?? data.template?.tax ?? 0;
+    setTaxInput(String(rawTax ?? 0));
   }, [reportQuery.data?.data]);
 
   const normalizedSections = useMemo(() => {
@@ -457,24 +466,42 @@ export default function LaporanLabaRugiPage() {
     ?? reportData.net_income_usd
     ?? reportData.net_profit_usd
     ?? reportData.profit_loss_usd;
-  const calculatedNetIncome = explicitNetIncome !== undefined && explicitNetIncome !== null ? toNumber(explicitNetIncome) : (
+
+  const profitBeforeTax = explicitNetIncome !== undefined && explicitNetIncome !== null ? toNumber(explicitNetIncome) : (
     normalizedSections.revenue.total
     - normalizedSections.cogs.total
     - normalizedSections.opex.total
     + normalizedSections.noix.total
   );
+
+  const profitBeforeTaxUsd = explicitNetIncomeUsd !== undefined && explicitNetIncomeUsd !== null ? toNumber(explicitNetIncomeUsd) : (
+    normalizedSections.revenue.totalUsd
+    - normalizedSections.cogs.totalUsd
+    - normalizedSections.opex.totalUsd
+    + normalizedSections.noix.totalUsd
+  );
+
   const grossProfitTotal = reportData.gross_calc !== undefined && reportData.gross_calc !== null
     ? normalizedSections.grossProfit.total
     : normalizedSections.revenue.total - normalizedSections.cogs.total;
   const grossProfitUsdTotal = reportData.gross_calc !== undefined && reportData.gross_calc !== null
     ? normalizedSections.grossProfit.totalUsd
     : normalizedSections.revenue.totalUsd - normalizedSections.cogs.totalUsd;
-  const calculatedNetIncomeUsd = explicitNetIncomeUsd !== undefined && explicitNetIncomeUsd !== null
-    ? toNumber(explicitNetIncomeUsd)
-    : normalizedSections.revenue.totalUsd
-    - normalizedSections.cogs.totalUsd
-    - normalizedSections.opex.totalUsd
-    + normalizedSections.noix.totalUsd;
+
+  const taxPercentage = toNumber(taxInput);
+  const taxAmount = reportData.tax_amount !== undefined && reportData.tax_amount !== null
+    ? toNumber(reportData.tax_amount)
+    : (profitBeforeTax > 0 ? profitBeforeTax * (taxPercentage / 100) : 0);
+  const taxAmountUsd = reportData.tax_amount_usd !== undefined && reportData.tax_amount_usd !== null
+    ? toNumber(reportData.tax_amount_usd)
+    : (profitBeforeTaxUsd > 0 ? profitBeforeTaxUsd * (taxPercentage / 100) : 0);
+
+  const profitAfterTax = reportData.profit_loss_after_tax !== undefined && reportData.profit_loss_after_tax !== null
+    ? toNumber(reportData.profit_loss_after_tax)
+    : (profitBeforeTax - taxAmount);
+  const profitAfterTaxUsd = reportData.profit_loss_after_tax_usd !== undefined && reportData.profit_loss_after_tax_usd !== null
+    ? toNumber(reportData.profit_loss_after_tax_usd)
+    : (profitBeforeTaxUsd - taxAmountUsd);
 
   const printSections = useMemo<ProfitLossPrintSection[]>(() => [
     {
@@ -525,6 +552,7 @@ export default function LaporanLabaRugiPage() {
       gross_profit_account_ids: uniqueNumbers(templateState.gross_profit_account_ids),
       opex_account_ids: uniqueNumbers(templateState.opex_account_ids),
       noix_account_ids: uniqueNumbers(templateState.noix_account_ids),
+      tax: taxInput !== '' ? toNumber(taxInput) : 0,
     };
 
     try {
@@ -636,7 +664,7 @@ export default function LaporanLabaRugiPage() {
           </Button>
         </div>
 
-        <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+        <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
           <div className="rounded-md border border-slate-200 bg-white p-4">
             <p className="text-xs font-semibold uppercase text-slate-500">Pendapatan</p>
             <AmountSummary
@@ -662,11 +690,19 @@ export default function LaporanLabaRugiPage() {
             />
           </div>
           <div className="rounded-md border border-slate-200 bg-white p-4">
-            <p className="text-xs font-semibold uppercase text-slate-500">Laba Bersih</p>
+            <p className="text-xs font-semibold uppercase text-slate-500">Laba Sebelum Pajak</p>
             <AmountSummary
-              idrValue={calculatedNetIncome}
-              usdValue={calculatedNetIncomeUsd}
-              className={cn('mt-2 [&>p:first-child]:text-xl', calculatedNetIncome < 0 ? 'text-rose-700' : 'text-slate-900')}
+              idrValue={profitBeforeTax}
+              usdValue={profitBeforeTaxUsd}
+              className={cn('mt-2 [&>p:first-child]:text-xl', profitBeforeTax < 0 ? 'text-rose-700' : 'text-slate-900')}
+            />
+          </div>
+          <div className="rounded-md border border-slate-200 bg-white p-4">
+            <p className="text-xs font-semibold uppercase text-slate-500">Laba Setelah Pajak</p>
+            <AmountSummary
+              idrValue={profitAfterTax}
+              usdValue={profitAfterTaxUsd}
+              className={cn('mt-2 [&>p:first-child]:text-xl', profitAfterTax < 0 ? 'text-rose-700' : 'text-emerald-700')}
             />
           </div>
         </div>
@@ -701,6 +737,72 @@ export default function LaporanLabaRugiPage() {
           </div>
         )}
 
+        {/* Form Tax & Perhitungan Laba Rugi Bersih (Bagian Bawah) */}
+        <section className="rounded-md border border-slate-200 bg-white p-5 space-y-4">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-slate-100 pb-4">
+            <div>
+              <h2 className="text-base font-semibold text-slate-900">Perhitungan Pajak & Laba Rugi Bersih</h2>
+              <p className="text-sm text-slate-500">
+                Atur persentase pajak (menerima masukan bilangan desimal) untuk menyesuaikan nominal Laba / (Rugi) Bersih Setelah Pajak.
+              </p>
+            </div>
+            <div className="flex items-center gap-3">
+              <Label htmlFor="tax-input-field" className="text-sm font-medium text-slate-700 whitespace-nowrap">
+                Pajak (%):
+              </Label>
+              <div className="relative w-36">
+                <Input
+                  id="tax-input-field"
+                  type="number"
+                  step="any"
+                  min="0"
+                  max="100"
+                  value={taxInput}
+                  onChange={(e) => setTaxInput(e.target.value)}
+                  placeholder="0"
+                  className="pr-8 text-right font-semibold"
+                />
+                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm font-semibold text-slate-400">%</span>
+              </div>
+            </div>
+          </div>
+
+          <div className="grid gap-4 md:grid-cols-3">
+            <div className="rounded-lg border border-slate-200 bg-slate-50/60 p-4">
+              <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+                Laba / (Rugi) Bersih Sebelum Pajak
+              </p>
+              <AmountSummary
+                idrValue={profitBeforeTax}
+                usdValue={profitBeforeTaxUsd}
+                className={cn('mt-2 [&>p:first-child]:text-xl', profitBeforeTax < 0 ? 'text-rose-700' : 'text-slate-900')}
+              />
+            </div>
+
+            <div className="rounded-lg border border-amber-200/80 bg-amber-50/50 p-4">
+              <p className="text-xs font-semibold uppercase tracking-wide text-amber-900">
+                Beban Pajak ({taxPercentage}%)
+              </p>
+              <AmountSummary
+                idrValue={taxAmount}
+                usdValue={taxAmountUsd}
+                className="mt-2 text-amber-800 [&>p:first-child]:text-xl"
+              />
+            </div>
+
+            <div className="rounded-lg border border-emerald-200 bg-emerald-50/60 p-4">
+              <p className="text-xs font-semibold uppercase tracking-wide text-emerald-900">
+                Laba / (Rugi) Bersih Setelah Pajak
+              </p>
+              <AmountSummary
+                idrValue={profitAfterTax}
+                usdValue={profitAfterTaxUsd}
+                className={cn('mt-2 [&>p:first-child]:text-xl', profitAfterTax < 0 ? 'text-rose-700' : 'text-emerald-800')}
+              />
+            </div>
+          </div>
+        </section>
+
         <LaporanLabaRugiPrintDocument
           template={templatePrint.selectedTemplate}
           fallbackBackground={selectedPrintBackground}
@@ -709,8 +811,13 @@ export default function LaporanLabaRugiPage() {
           sections={printSections}
           grossProfit={grossProfitTotal}
           grossProfitUsd={grossProfitUsdTotal}
-          netIncome={calculatedNetIncome}
-          netIncomeUsd={calculatedNetIncomeUsd}
+          profitBeforeTax={profitBeforeTax}
+          profitBeforeTaxUsd={profitBeforeTaxUsd}
+          taxPercentage={taxPercentage}
+          taxAmount={taxAmount}
+          taxAmountUsd={taxAmountUsd}
+          profitAfterTax={profitAfterTax}
+          profitAfterTaxUsd={profitAfterTaxUsd}
           printedAt={templatePrint.printedAt}
         />
 

@@ -108,7 +108,7 @@ export const UnitTypePriceVersionTable = ({
                 <MoreVertical className="h-4 w-4" />
               </button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="min-w-[150px] rounded-xl border-slate-200 p-1.5 shadow-lg">
+            <DropdownMenuContent align="end" className="min-w-[150px] rounded-md border-slate-200 p-1.5 shadow-lg">
               <DropdownMenuItem
                 onClick={() => onEdit(item)}
                 disabled={!canEdit || item.is_lock === 1 || item.is_lock === true}

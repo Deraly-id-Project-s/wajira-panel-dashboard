@@ -58,15 +58,17 @@ export default function EditTransactionPage() {
         id: id as string,
         payload: {
           companyId: safeCompanyId,
+          unitTransactionId: values.unitTransactionId ?? null,
           date: values.date,
           name: values.name,
-          description: values.description ?? values.name,
+          description: values.description ?? '',
           debitUSD: values.debitUSD ?? 0,
           creditUSD: values.creditUSD ?? 0,
           debitIDR: values.debitIDR ?? 0,
           creditIDR: values.creditIDR ?? 0,
           debitCash: values.debitCash ?? 0,
           creditCash: values.creditCash ?? 0,
+          transactionProof: values.transactionProof ?? null,
         },
       });
       toast.success('Transaksi berhasil diperbarui');

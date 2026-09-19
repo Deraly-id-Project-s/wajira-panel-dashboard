@@ -1,4 +1,5 @@
 import type { PaginatedResult } from './pagination.types';
+import type { DriverCashAdvanceClaim } from './driver-cash-advance.types';
 
 export interface DoEkspedisiVehicle {
   id: number;
@@ -132,6 +133,7 @@ export interface DoEkspedisi {
   ujNominal: number;
   ujNominalBeforeClaim: number;
   claimDeductionNominal: number;
+  cashAdvanceDeductionNominal: number;
   startDate?: string | null;
   endDate?: string | null;
   doOrderListTarifId: number;
@@ -141,6 +143,7 @@ export interface DoEkspedisi {
   expeditionExpenses: DoEkspedisiExpense[];
   expeditionClaims: DoEkspedisiClaim[];
   driverExpeditionClaims: DoEkspedisiClaimApplication[];
+  driverCashAdvanceClaims: DriverCashAdvanceClaim[];
 }
 
 export interface DoEkspedisiDriverNote {
@@ -179,6 +182,20 @@ export interface DoEkspedisiClaim {
   documentations: DoEkspedisiClaimDocumentation[];
 }
 
+export interface DoEkspedisiClaimPayload {
+  do_expeditions_id: number | string;
+  driver_id: number | string;
+  subject: string;
+  description: string;
+  claim_nominal: number | string;
+}
+
+export interface DoEkspedisiClaimDocumentationPayload {
+  do_expedition_claim_id: number | string;
+  caption?: string | null;
+  image: File;
+}
+
 export interface DoEkspedisiClaimApplication {
   id: number;
   uuid?: string;
@@ -194,7 +211,11 @@ export interface DoEkspedisiClaimApplication {
 export interface ApplyExpeditionClaimPayload {
   do_expedition_claim_id: number;
   do_expedition_id: number;
-  driver_id: number;
+  nominal: number;
+  type: 'cash' | 'transfer';
+}
+
+export interface UpdateExpeditionClaimApplicationPayload {
   nominal: number;
   type: 'cash' | 'transfer';
   date: string;
@@ -304,4 +325,3 @@ export interface DoEkspedisiDocumentationListParams {
 }
 
 export type DoEkspedisiDocumentationListResponse = PaginatedResult<DoEkspedisiDocumentation>;
-

@@ -83,7 +83,7 @@ export const WarehouseSubBlockTable = ({
                 <MoreVertical className="h-4 w-4" />
               </button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="min-w-[150px] rounded-xl border-slate-200 p-1.5 shadow-lg">
+            <DropdownMenuContent align="end" className="min-w-[150px] rounded-md border-slate-200 p-1.5 shadow-lg">
               <DropdownMenuItem
                 onClick={() => onMakeDefault(item)}
                 disabled={String(item.is_default) === '1' || String(item.is_default) === 'true' || item.is_default === true && !canEdit}

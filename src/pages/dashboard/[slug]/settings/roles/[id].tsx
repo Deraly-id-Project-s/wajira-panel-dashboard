@@ -274,7 +274,7 @@ export default function RoleDetailPage() {
               ) : (
                 <div className="space-y-6">
                   {modulesWithAccess.map((mod) => (
-                    <div key={mod.id} className="border border-slate-100 rounded-xl bg-slate-50/25 p-6 space-y-4">
+                    <div key={mod.id} className="border border-slate-100 rounded-md bg-slate-50/25 p-6 space-y-4">
                       {/* Module Title */}
                       <div className="border-b border-slate-100 pb-2">
                         <h4 className="text-sm font-bold text-slate-800 uppercase tracking-wider">{mod.name}</h4>

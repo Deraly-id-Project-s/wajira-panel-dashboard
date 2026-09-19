@@ -110,8 +110,8 @@ function EditAssetInnerForm({ initialData, onClose, onSave }: InnerProps) {
             </div>
 
             <div className="flex flex-col space-y-2 pt-2">
-                <Button type="submit" className="btn-primary!">Simpan</Button>
-                <Button type="button" variant="outline" className="w-full" onClick={onClose}>Batal</Button>
+                <Button type="submit" variant="default">Simpan</Button>
+                <Button type="button" variant="outline" onClick={onClose}>Batal</Button>
             </div>
         </form>
     );

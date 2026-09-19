@@ -92,16 +92,15 @@ export function ImportAssetModal({ isOpen, onClose, onImport, isUploading = fals
                     </div>
 
                     <div className="flex flex-col space-y-2 pt-4">
-                        <Button onClick={handleImport} disabled={!selectedFile || isUploading} variant="outline" className="w-full sm:w-auto">
-                            {isUploading ? 'Mengunggah...' : 'Import Data'}
-                        </Button>
-                        <Button 
-                            type="button" 
-                            variant="outline" 
-                            className="w-full" 
-                            onClick={handleClose}
-                            disabled={isUploading}
-                        >
+<Button onClick={handleImport} disabled={!selectedFile || isUploading} variant="outline">
+                        {isUploading ? 'Mengunggah...' : 'Import Data'}
+                    </Button>
+                    <Button 
+                        type="button" 
+                        variant="outline" 
+                        onClick={handleClose}
+                        disabled={isUploading}
+                    >
                             Batal
                         </Button>
                     </div>

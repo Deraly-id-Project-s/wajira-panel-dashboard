@@ -1,19 +1,30 @@
 import React from 'react';
-import { WalletCards, Plus } from 'lucide-react';
+import { WalletCards, Plus, MoreVertical } from 'lucide-react';
 import { toast } from 'sonner';
 import BaseTable, { type ColumnDef } from '@/components/ui/base-table';
 import { FormDialog } from '@/components/ui/form-dialog';
 import { Button } from '@/components/ui/button';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Input } from '@/components/ui/input';
+import { InputDate } from '@/components/ui/input-date';
+import { InputDateTime } from '@/components/ui/input-date-time';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { MoneyInput } from '@/components/ui/money-input';
+import { SearchableSelect } from '@/components/features/vehicle-data/SearchableSelect';
 import { formatCurrency } from '@/lib/utils/currency';
 import { formatDate } from '@/lib/utils/format';
-import { useApplyExpeditionClaim, useAvailableExpeditionClaims } from '@/hooks/useDoEkspedisi';
+import {
+  useApplyExpeditionClaim,
+  useAvailableExpeditionClaims,
+  useDeleteExpeditionClaimApplication,
+  useUpdateExpeditionClaimApplication,
+} from '@/hooks/useDoEkspedisi';
 import { getApiErrorMessage } from '@/utils/apiErrorHandler';
-import type { DoEkspedisi, DoEkspedisiClaimApplication } from '@/@types/do-ekspedisi.types';
+import type { DoEkspedisi, DoEkspedisiClaim, DoEkspedisiClaimApplication } from '@/@types/do-ekspedisi.types';
+import { CopyBox } from '@/components/ui/copy-box';
+import { useRouter } from 'next/router';
 
 interface DOEkspedisiClaimApplicationsProps {
   data: DoEkspedisi;
@@ -23,7 +34,13 @@ interface DOEkspedisiClaimApplicationsProps {
 const field = (label: string, value: string, placeholder: string, onChange: (value: string) => void, type = 'text', required = true) => (
   <div className="space-y-1">
     <Label>{label}{required && <span className="text-red-500"> *</span>}</Label>
-    <Input required={required} type={type} value={value} onChange={(e) => onChange(e.target.value)} placeholder={placeholder} className="mt-2" />
+    {type === 'datetime-local' ? (
+      <InputDateTime value={value} onChange={(e) => onChange(e.target.value)} className="mt-2" />
+    ) : type === 'date' ? (
+      <InputDate value={value} onChange={(e) => onChange(e.target.value)} className="mt-2" />
+    ) : (
+      <Input required={required} type={type} value={value} onChange={(e) => onChange(e.target.value)} placeholder={placeholder} className="mt-2" />
+    )}
   </div>
 );
 
@@ -47,8 +64,8 @@ function RelatedSection({
   children: React.ReactNode;
 }) {
   return (
-    <section className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
-      <div className="mb-4 flex items-start justify-between gap-3">
+    <section className="rounded-md border border-slate-200 bg-white p-5 shadow-sm">
+      <div className="mb-4 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
         <div>
           <div className="flex items-center gap-3">
             <div className="rounded-md bg-orange-100 p-2 text-orange-700">{icon}</div>
@@ -60,7 +77,7 @@ function RelatedSection({
           {helper && <p className="ml-12 mt-1 text-xs text-slate-500">{helper}</p>}
         </div>
         {onAdd && (
-          <Button size="sm" onClick={onAdd} disabled={addDisabled}>
+          <Button size="sm" onClick={onAdd} disabled={addDisabled} className="w-full sm:w-auto">
             <Plus className="mr-2 h-4 w-4" />
             {addLabel}
           </Button>
@@ -73,6 +90,7 @@ function RelatedSection({
 
 export function DOEkspedisiClaimApplications({ data, onRefresh }: DOEkspedisiClaimApplicationsProps) {
   const [applyOpen, setApplyOpen] = React.useState(false);
+  const [editingApplication, setEditingApplication] = React.useState<DoEkspedisiClaimApplication | null>(null);
   const [applyForm, setApplyForm] = React.useState({
     claimId: '',
     nominal: '' as string | number,
@@ -80,35 +98,107 @@ export function DOEkspedisiClaimApplications({ data, onRefresh }: DOEkspedisiCla
     date: new Date().toISOString().slice(0, 16),
   });
 
-  const canManageClaims = data.status === 'done' && Boolean(data.driverId);
+  const canManageClaims = ['draft', 'pending'].includes(String(data.status).toLowerCase()) && Boolean(data.driverId);
   const canApplyClaims = canManageClaims && data.ujNominal > 0;
   const availableClaims = useAvailableExpeditionClaims(data.driverId, canManageClaims && applyOpen);
   const applyClaim = useApplyExpeditionClaim(data.id);
+  const updateClaim = useUpdateExpeditionClaimApplication(data.id);
+  const deleteClaim = useDeleteExpeditionClaimApplication(data.id);
 
-  const selectedAvailableClaim = availableClaims.data?.find((item) => String(item.id) === applyForm.claimId);
+  const router = useRouter();
+  const slug = typeof router.query.slug === 'string' ? router.query.slug : '';
+
+  const usedClaimIds = React.useMemo(
+    () => new Set((data.driverExpeditionClaims ?? []).map((item) => String(item.doExpeditionClaimId))),
+    [data.driverExpeditionClaims],
+  );
+  const claimOptions = React.useMemo(() => {
+    const optionsById = new Map<number, DoEkspedisiClaim>();
+
+    (availableClaims.data ?? []).forEach((item) => optionsById.set(item.id, item));
+    (data.driverExpeditionClaims ?? []).forEach((item) => {
+      if (item.claim) optionsById.set(item.claim.id, item.claim);
+    });
+
+    return Array.from(optionsById.values());
+  }, [availableClaims.data, data.driverExpeditionClaims]);
+  const claimSelectOptions = React.useMemo(
+    () => claimOptions.map((item) => ({
+      value: String(item.id),
+      label: item.sourceExpeditionCode || `Ekspedisi #${item.doExpeditionsId}`,
+      subtitle: `${item.subject} · Sisa ${formatCurrency(item.remainingNominal)}`,
+    })),
+    [claimOptions],
+  );
+  const selectedAvailableClaim = claimOptions.find((item) => String(item.id) === applyForm.claimId);
+
+  const resetForm = () => {
+    setEditingApplication(null);
+    setApplyForm({ claimId: '', nominal: '', type: 'cash', date: new Date().toISOString().slice(0, 16) });
+  };
+
+  const openCreate = () => {
+    resetForm();
+    setApplyOpen(true);
+  };
+
+  const openEdit = (item: DoEkspedisiClaimApplication) => {
+    setEditingApplication(item);
+    setApplyForm({
+      claimId: String(item.doExpeditionClaimId),
+      nominal: item.nominal,
+      type: item.type,
+      date: item.date ? item.date.slice(0, 16) : new Date().toISOString().slice(0, 16),
+    });
+    setApplyOpen(true);
+  };
 
   const submitClaimApplication = async (event: React.FormEvent) => {
     event.preventDefault();
-    if (!data.driverId || !applyForm.claimId) return;
+    if (!data.driverId || (!editingApplication && !applyForm.claimId)) return;
+    if (!editingApplication && usedClaimIds.has(applyForm.claimId)) {
+      toast.error('Claim ini sudah ditambahkan ke DO Ekspedisi.');
+      return;
+    }
 
     const nominal = Number(applyForm.nominal);
-    if (!selectedAvailableClaim || nominal < 1 || nominal > selectedAvailableClaim.remainingNominal || nominal > data.ujNominal) {
+    const maxAvailableNominal = editingApplication
+      ? (editingApplication.claim?.remainingNominal ?? 0) + editingApplication.nominal
+      : selectedAvailableClaim?.remainingNominal ?? 0;
+    if (nominal < 1 || nominal > maxAvailableNominal || nominal > (data.ujNominal + (editingApplication?.nominal ?? 0))) {
       toast.error('Nominal potongan harus lebih dari 0 dan tidak boleh melebihi sisa claim atau sisa UJ.');
       return;
     }
 
     try {
-      await applyClaim.mutateAsync({
-        do_expedition_claim_id: Number(applyForm.claimId),
-        do_expedition_id: data.id,
-        driver_id: data.driverId,
-        nominal,
-        type: applyForm.type,
-        date: applyForm.date,
-      });
-      toast.success('Claim berhasil dipotong dari UJ driver');
+      if (editingApplication) {
+        await updateClaim.mutateAsync({
+          id: editingApplication.id,
+          payload: { nominal, type: applyForm.type, date: applyForm.date },
+        });
+        toast.success('Potongan claim berhasil diperbarui');
+      } else {
+        await applyClaim.mutateAsync({
+          do_expedition_claim_id: Number(applyForm.claimId),
+          do_expedition_id: data.id,
+          nominal,
+          type: applyForm.type,
+        });
+        toast.success('Claim berhasil dipotong dari UJ driver');
+      }
       setApplyOpen(false);
-      setApplyForm({ claimId: '', nominal: '', type: 'cash', date: new Date().toISOString().slice(0, 16) });
+      resetForm();
+      onRefresh?.();
+    } catch (error) {
+      toast.error(getApiErrorMessage(error));
+    }
+  };
+
+  const handleDelete = async (item: DoEkspedisiClaimApplication) => {
+    if (!window.confirm('Hapus potongan claim ini?')) return;
+    try {
+      await deleteClaim.mutateAsync(item.id);
+      toast.success('Potongan claim berhasil dihapus');
       onRefresh?.();
     } catch (error) {
       toast.error(getApiErrorMessage(error));
@@ -116,22 +206,45 @@ export function DOEkspedisiClaimApplications({ data, onRefresh }: DOEkspedisiCla
   };
 
   const columns: ColumnDef<DoEkspedisiClaimApplication>[] = [
-    { header: 'No', cell: (_, i) => i + 1 },
     {
       header: 'Sumber Claim',
-      cell: (x) => (
+      cell: (item) => (
         <div>
-          <p className="font-medium text-slate-900">{x.claim?.sourceExpeditionCode || '-'}</p>
-          <p className="text-xs text-slate-500">{x.claim?.subject || '-'}</p>
+          <div className="flex items-center gap-2">
+            {item.claim?.sourceExpeditionCode && <CopyBox text={item.claim?.sourceExpeditionCode} href={item.claim?.sourceExpeditionCode ? `/dashboard/${slug}/do-ekspedisi/detail/${item.claim.doExpeditionsId}` : undefined} />}
+          </div>
         </div>
       ),
     },
-    { header: 'Tanggal', cell: (x) => x.date ? formatDate(x.date) : '-' },
-    { header: 'Metode', cell: (x) => <Badge variant="outline" className="capitalize">{x.type}</Badge> },
+    { header: 'Alasan Claim', cell: (item) => item.claim?.subject || '-' },
+    { header: 'Tanggal', cell: (item) => item.date ? formatDate(item.date) : '-' },
+    { header: 'Metode', cell: (item) => <Badge variant="outline" className="capitalize">{item.type}</Badge> },
     {
       header: 'Potongan UJ',
       alignment: 'right',
-      cell: (x) => <span className="font-semibold text-rose-700">-{formatCurrency(x.nominal)}</span>,
+      cell: (item) => <span className="font-semibold text-rose-700">-{formatCurrency(item.nominal)}</span>,
+    },
+    {
+      header: 'Aksi',
+      alignment: 'center',
+      sticky: 'right',
+      cell: (item) => (
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="ghost" size="icon">
+              <MoreVertical className="h-4 w-4" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuItem onClick={() => openEdit(item)} disabled={!canApplyClaims}>
+              Edit
+            </DropdownMenuItem>
+            <DropdownMenuItem className="text-red-600" onClick={() => void handleDelete(item)} disabled={!canApplyClaims}>
+              Hapus
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      ),
     },
   ];
 
@@ -141,7 +254,7 @@ export function DOEkspedisiClaimApplications({ data, onRefresh }: DOEkspedisiCla
         title="Potongan Claim pada UJ"
         icon={<WalletCards />}
         description={'Claim dari ekspedisi mana pun milik driver yang sama dapat digunakan sebagai potongan UJ.'}
-        onAdd={() => setApplyOpen(true)}
+        onAdd={openCreate}
         addLabel="Terapkan Claim"
         addDisabled={!canApplyClaims}
       >
@@ -155,41 +268,42 @@ export function DOEkspedisiClaimApplications({ data, onRefresh }: DOEkspedisiCla
 
       <FormDialog
         open={applyOpen}
-        onOpenChange={setApplyOpen}
-        title="Terapkan Claim ke UJ"
+        onOpenChange={(open) => {
+          setApplyOpen(open);
+          if (!open) resetForm();
+        }}
+        title={editingApplication ? 'Edit Potongan Claim' : 'Terapkan Claim ke UJ'}
         description="Pilih tagihan driver yang akan dipotong dari uang jalan ekspedisi ini."
         onSubmit={submitClaimApplication}
-        submitLabel="Terapkan Claim"
-        isSubmitting={applyClaim.isPending}
+        submitLabel={editingApplication ? 'Simpan Perubahan' : 'Terapkan Claim'}
+        isSubmitting={applyClaim.isPending || updateClaim.isPending}
         maxWidthClassName="max-w-lg"
       >
-        <div className="space-y-1">
-          <Label>Claim *</Label>
-          <Select
-            value={applyForm.claimId}
-            onValueChange={(claimId) => {
-              const selected = availableClaims.data?.find((item) => String(item.id) === claimId);
-              setApplyForm((old) => ({
-                ...old,
-                claimId,
-                nominal: selected ? String(Math.min(selected.remainingNominal, data.ujNominal)) : '',
-              }));
-            }}
-          >
-            <SelectTrigger>
-              <SelectValue placeholder={availableClaims.isLoading ? 'Memuat claim...' : 'Pilih claim driver'} />
-            </SelectTrigger>
-            <SelectContent>
-              {availableClaims.data?.map((item) => (
-                <SelectItem key={item.id} value={String(item.id)}>
-                  {item.sourceExpeditionCode || `Ekspedisi #${item.doExpeditionsId}`} · {item.subject} · Sisa {formatCurrency(item.remainingNominal)}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-        {availableClaims.isSuccess && availableClaims.data?.length === 0 && (
-          <p className="rounded-md bg-slate-50 p-3 text-sm text-slate-600">Tidak ada claim outstanding untuk driver ini.</p>
+        {!editingApplication && (
+          <>
+            <div className="space-y-1">
+              <Label>Claim *</Label>
+              <SearchableSelect
+                value={applyForm.claimId}
+                onChange={(claimId) => {
+                  const selected = claimOptions.find((item) => String(item.id) === claimId);
+                  setApplyForm((old) => ({
+                    ...old,
+                    claimId,
+                    nominal: selected ? String(Math.min(selected.remainingNominal, data.ujNominal)) : '',
+                  }));
+                }}
+                options={claimSelectOptions}
+                placeholder="Pilih claim driver"
+                searchPlaceholder="Cari claim..."
+                loading={availableClaims.isLoading}
+                disabledValues={Array.from(usedClaimIds)}
+              />
+            </div>
+            {availableClaims.isSuccess && availableClaims.data?.length === 0 && (
+              <p className="rounded-md bg-slate-50 p-3 text-sm text-slate-600">Tidak ada claim outstanding untuk driver ini.</p>
+            )}
+          </>
         )}
         {selectedAvailableClaim && (
           <div className="rounded-md border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900">
@@ -219,7 +333,7 @@ export function DOEkspedisiClaimApplications({ data, onRefresh }: DOEkspedisiCla
             </SelectContent>
           </Select>
         </div>
-        {field('Tanggal', applyForm.date, 'Pilih tanggal penerapan claim', (date) => setApplyForm((old) => ({ ...old, date })), 'datetime-local')}
+        {editingApplication && field('Tanggal', applyForm.date, 'Pilih tanggal penerapan claim', (date) => setApplyForm((old) => ({ ...old, date })), 'datetime-local')}
       </FormDialog>
     </>
   );

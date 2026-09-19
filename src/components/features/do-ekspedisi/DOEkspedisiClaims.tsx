@@ -1,49 +1,58 @@
 import React from 'react';
-import { ShieldAlert, MoreVertical, Plus, Pencil, Trash2, AlertTriangle } from 'lucide-react';
+import {
+  AlertTriangle,
+  Eye,
+  FileImage,
+  FileText,
+  MoreVertical,
+  Plus,
+  ShieldAlert,
+  Trash2,
+} from 'lucide-react';
+import { useRouter } from 'next/router';
 import { toast } from 'sonner';
+import type {
+  DoEkspedisi,
+  DoEkspedisiClaim,
+  DoEkspedisiClaimDocumentation,
+} from '@/@types/do-ekspedisi.types';
 import BaseTable, { type ColumnDef } from '@/components/ui/base-table';
-import { FormDialog } from '@/components/ui/form-dialog';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import { Label } from '@/components/ui/label';
-import { FileInput } from '@/components/ui/file-input';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { MoneyInput } from '@/components/ui/money-input';
-import { formatCurrency } from '@/lib/utils/currency';
-import { useDoDetailResourceMutation } from '@/hooks/useDoEkspedisi';
-import type { DoEkspedisi, DoEkspedisiClaim, DoEkspedisiClaimDocumentation } from '@/@types/do-ekspedisi.types';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-
-const CLAIM_DOCUMENT_MAX_SIZE = 10 * 1024 * 1024;
-const CLAIM_DOCUMENT_ACCEPT = '.pdf,.img,.png,.jpg,.jpeg,application/pdf,image/png,image/jpeg';
-const CLAIM_DOCUMENT_ALLOWED_TYPES = new Set(['application/pdf', 'image/png', 'image/jpeg']);
-const CLAIM_DOCUMENT_ALLOWED_EXTENSIONS = new Set(['pdf', 'img', 'png', 'jpg', 'jpeg']);
-
-interface ClaimDocumentationForm {
-  key: number;
-  caption: string;
-  file: File | null;
-}
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import {
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { FileInput } from '@/components/ui/file-input';
+import { ImagePreview } from '@/components/ui/image-preview';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Progress } from '@/components/ui/progress';
+import { getObjectStorageUrl, StorageImage } from '@/components/ui/storage-image';
+import { TextTruncate } from '@/components/ui/text-truncate';
+import { useCreateExpeditionClaimDocumentation, useDoDetailResourceMutation } from '@/hooks/useDoEkspedisi';
+import { formatCurrency } from '@/lib/utils/currency';
+import { getApiErrorMessage } from '@/utils/apiErrorHandler';
+import { CLAIM_DOCUMENT_ACCEPT, validateClaimDocument } from './DOEkspedisiClaimForm';
 
 interface DOEkspedisiClaimsProps {
   data: DoEkspedisi;
   onRefresh?: () => void;
 }
 
-const field = (label: string, value: string, placeholder: string, onChange: (value: string) => void, type = 'text', required = true) => (
-  <div className="space-y-2">
-    <Label>{label}{required && <span className="text-red-500"> *</span>}</Label>
-    <Input required={required} type={type} value={value} onChange={(e) => onChange(e.target.value)} placeholder={placeholder} />
-  </div>
-);
-
 function RelatedSection({
   title,
   description,
   icon,
   onAdd,
-  addLabel = 'Tambah',
+  addLabel = 'Tambah Claim',
   addDisabled = false,
   helper,
   children,
@@ -82,321 +91,195 @@ function RelatedSection({
   );
 }
 
+function ClaimMetric({ label, value, tone = 'default' }: { label: string; value: string; tone?: 'default' | 'danger' | 'success' }) {
+  const valueClassName = tone === 'danger'
+    ? 'text-rose-700'
+    : tone === 'success'
+      ? 'text-emerald-700'
+      : 'text-slate-950';
+
+  return (
+    <div className="rounded-md border border-slate-200 bg-slate-50/70 p-4">
+      <p className="text-xs font-medium uppercase tracking-wide text-slate-500">{label}</p>
+      <p className={`mt-1 text-base font-semibold tabular-nums ${valueClassName}`}>{value}</p>
+    </div>
+  );
+}
+
 export function DOEkspedisiClaims({ data, onRefresh }: DOEkspedisiClaimsProps) {
-  const [isClaimOpen, setIsClaimOpen] = React.useState(false);
-  const [editingClaim, setEditingClaim] = React.useState<DoEkspedisiClaim | null>(null);
-  const documentationKeyRef = React.useRef(0);
-  const [claimForm, setClaimForm] = React.useState({
-    subject: '',
-    description: '',
-    claim_nominal: '' as string | number,
-  });
-  const [claimDocumentationForms, setClaimDocumentationForms] = React.useState<ClaimDocumentationForm[]>([]);
-
-  const [docClaim, setDocClaim] = React.useState<DoEkspedisiClaim | null>(null);
-  const [isDocOpen, setIsDocOpen] = React.useState(false);
-  const [editingDoc, setEditingDoc] = React.useState<DoEkspedisiClaimDocumentation | null>(null);
-  const [docForm, setDocForm] = React.useState({
-    caption: '',
-    image: null as File | null,
-  });
-
+  const router = useRouter();
+  const { slug } = router.query;
   const claimMutations = useDoDetailResourceMutation('claim', data.id);
-  const docMutations = useDoDetailResourceMutation('documentation', data.id);
-
+  const documentationMutations = useDoDetailResourceMutation('documentation', data.id);
+  const createDocumentation = useCreateExpeditionClaimDocumentation(data.id);
   const canManageClaims = data.status === 'done' && Boolean(data.driverId);
-  const busy = claimMutations.create.isPending || claimMutations.update.isPending || docMutations.create.isPending || docMutations.update.isPending;
 
-  const createEmptyDocumentationForm = React.useCallback((): ClaimDocumentationForm => {
-    documentationKeyRef.current += 1;
-    return {
-      key: documentationKeyRef.current,
-      caption: '',
-      file: null,
-    };
+  const [detailDialogOpen, setDetailDialogOpen] = React.useState(false);
+  const [selectedClaimId, setSelectedClaimId] = React.useState<number | null>(null);
+  const [documentationFormOpen, setDocumentationFormOpen] = React.useState(false);
+  const [documentationFile, setDocumentationFile] = React.useState<File | null>(null);
+  const [documentationCaption, setDocumentationCaption] = React.useState('');
+  const [previewUrl, setPreviewUrl] = React.useState<string | null>(null);
+  const [deleteClaimTarget, setDeleteClaimTarget] = React.useState<DoEkspedisiClaim | null>(null);
+  const [deleteDocTarget, setDeleteDocTarget] = React.useState<DoEkspedisiClaimDocumentation | null>(null);
+
+  const selectedClaim = React.useMemo(
+    () => (data.expeditionClaims ?? []).find((claim) => claim.id === selectedClaimId) ?? null,
+    [data.expeditionClaims, selectedClaimId],
+  );
+
+  const resetDocumentationForm = React.useCallback(() => {
+    setDocumentationFormOpen(false);
+    setDocumentationFile(null);
+    setDocumentationCaption('');
   }, []);
 
+  const openClaimDetail = (item: DoEkspedisiClaim) => {
+    setSelectedClaimId(item.id);
+    setDetailDialogOpen(true);
+  };
+
+  const handleDetailDialogChange = (open: boolean) => {
+    setDetailDialogOpen(open);
+    if (!open) {
+      setSelectedClaimId(null);
+      setPreviewUrl(null);
+      resetDocumentationForm();
+    }
+  };
+
   const openCreateClaim = () => {
-    setEditingClaim(null);
-    setClaimForm({
-      subject: '',
-      description: '',
-      claim_nominal: '',
-    });
-    setClaimDocumentationForms([createEmptyDocumentationForm()]);
-    setIsClaimOpen(true);
+    if (!slug) return;
+    void router.push(`/dashboard/${slug}/do-ekspedisi/detail/${data.id}/claim/create`);
   };
 
-  const openEditClaim = (item: DoEkspedisiClaim) => {
-    setEditingClaim(item);
-    setClaimForm({
-      subject: item.subject ?? '',
-      description: item.description ?? '',
-      claim_nominal: String(item.claimNominal ?? ''),
-    });
-    setClaimDocumentationForms([]);
-    setIsClaimOpen(true);
-  };
-
-  const isAllowedClaimDocument = (file: File) => {
-    const extension = file.name.split('.').pop()?.toLowerCase() ?? '';
-    return CLAIM_DOCUMENT_ALLOWED_TYPES.has(file.type) || CLAIM_DOCUMENT_ALLOWED_EXTENSIONS.has(extension);
-  };
-
-  const validateClaimDocument = (file: File) => {
-    if (file.size > CLAIM_DOCUMENT_MAX_SIZE) {
-      toast.error('Ukuran file maksimal 10MB');
-      return false;
-    }
-
-    if (!isAllowedClaimDocument(file)) {
-      toast.error('Format file harus PDF, IMG, PNG, JPG, atau JPEG');
-      return false;
-    }
-
-    return true;
-  };
-
-  const addClaimDocumentationForm = () => {
-    setClaimDocumentationForms((old) => [...old, createEmptyDocumentationForm()]);
-  };
-
-  const removeClaimDocumentationForm = (key: number) => {
-    setClaimDocumentationForms((old) => old.filter((item) => item.key !== key));
-  };
-
-  const updateClaimDocumentationForm = (key: number, patch: Partial<Omit<ClaimDocumentationForm, 'key'>>) => {
-    setClaimDocumentationForms((old) => old.map((item) => (item.key === key ? { ...item, ...patch } : item)));
-  };
-
-  const handleClaimDocumentationFileChange = (key: number, file: File | null) => {
-    if (!file) {
-      updateClaimDocumentationForm(key, { file: null });
-      return;
-    }
-
-    if (!validateClaimDocument(file)) {
-      updateClaimDocumentationForm(key, { file: null });
-      return;
-    }
-
-    updateClaimDocumentationForm(key, { file });
-  };
-
-  const saveClaim = async (event: React.FormEvent) => {
-    event.preventDefault();
-    const filledDocumentationForms = claimDocumentationForms.filter((item) => item.caption.trim() || item.file);
-    const incompleteDocumentationForm = filledDocumentationForms.find((item) => !item.caption.trim() || !item.file);
-
-    if (incompleteDocumentationForm) {
-      toast.error('Subjek dokumentasi dan file wajib diisi untuk setiap dokumentasi');
-      return;
-    }
-
-    if (filledDocumentationForms.some((item) => item.file && !validateClaimDocument(item.file))) return;
-
+  const confirmDeleteClaim = async () => {
+    if (!deleteClaimTarget) return;
     try {
-      const payload = new FormData();
-      payload.append('subject', claimForm.subject);
-      payload.append('description', claimForm.description);
-      payload.append('claim_nominal', String(Number(claimForm.claim_nominal)));
-      payload.append('do_expeditions_id', String(data.id));
-      payload.append('driver_id', String(Number(data.driverId)));
-
-      let savedClaim: any;
-      if (editingClaim) {
-        savedClaim = await claimMutations.update.mutateAsync({ id: editingClaim.id, payload });
-      } else {
-        savedClaim = await claimMutations.create.mutateAsync(payload);
-      }
-
-      const claimId = savedClaim?.id ?? savedClaim?.data?.id ?? editingClaim?.id;
-      if (!claimId && filledDocumentationForms.length > 0) {
-        throw new Error('ID claim tidak ditemukan untuk menyimpan dokumentasi');
-      }
-
-      for (const documentation of filledDocumentationForms) {
-        const fd = new FormData();
-        fd.append('do_expedition_claim_id', String(claimId));
-        fd.append('caption', documentation.caption.trim());
-        fd.append('file', documentation.file as File);
-        await docMutations.create.mutateAsync(fd);
-      }
-
-      toast.success('Claim berhasil disimpan');
-      setIsClaimOpen(false);
-      setClaimDocumentationForms([]);
-      onRefresh?.();
-    } catch (error: any) {
-      toast.error(error?.message || 'Gagal menyimpan claim');
-    }
-  };
-
-  const handleDeleteClaim = async (item: DoEkspedisiClaim) => {
-    if (!window.confirm('Hapus claim ini?')) return;
-    try {
-      await claimMutations.remove.mutateAsync(item.id);
+      await claimMutations.remove.mutateAsync(deleteClaimTarget.id);
       toast.success('Claim berhasil dihapus');
+      if (selectedClaimId === deleteClaimTarget.id) {
+        setSelectedClaimId(null);
+        setDetailDialogOpen(false);
+      }
+      setDeleteClaimTarget(null);
       onRefresh?.();
-    } catch (error: any) {
-      toast.error(error?.message || 'Gagal menghapus claim');
+    } catch (error) {
+      toast.error(getApiErrorMessage(error));
     }
   };
 
-  const openCreateDoc = () => {
-    setEditingDoc(null);
-    setDocForm({ caption: '', image: null });
-    setIsDocOpen(true);
-  };
-
-  const openEditDoc = (item: DoEkspedisiClaimDocumentation) => {
-    setEditingDoc(item);
-    setDocForm({ caption: item.caption ?? '', image: null });
-    setIsDocOpen(true);
-  };
-
-  const handleDocFileChange = (file: File | null) => {
-    if (!file) {
-      setDocForm((old) => ({ ...old, image: null }));
+  const handleDocumentationFileChange = (file: File | null) => {
+    if (file && !validateClaimDocument(file)) {
+      setDocumentationFile(null);
       return;
     }
-
-    if (!validateClaimDocument(file)) {
-      setDocForm((old) => ({ ...old, image: null }));
-      return;
-    }
-
-    setDocForm((old) => ({ ...old, image: file }));
+    setDocumentationFile(file);
+    setDocumentationFormOpen(Boolean(file));
   };
 
-  const saveDoc = async (event: React.FormEvent) => {
+  const handleAddDocumentation = async (event: React.FormEvent) => {
     event.preventDefault();
-    if (!docClaim) return;
-    if (docForm.image && !validateClaimDocument(docForm.image)) return;
+    if (!selectedClaim || !documentationFile) {
+      toast.error('Foto dokumentasi wajib dipilih.');
+      return;
+    }
+    if (!validateClaimDocument(documentationFile)) return;
+
     try {
-      const fd = new FormData();
-      fd.append('do_expedition_claim_id', String(docClaim.id));
-      fd.append('caption', docForm.caption);
-      if (docForm.image) fd.append('file', docForm.image);
-
-      if (editingDoc) {
-        await docMutations.update.mutateAsync({ id: editingDoc.id, payload: fd });
-      } else {
-        await docMutations.create.mutateAsync(fd);
-      }
-      toast.success('Dokumentasi berhasil disimpan');
-      setIsDocOpen(false);
-
-      // Update local docClaim object reference by finding it in data.expeditionClaims
-      if (onRefresh) onRefresh();
-    } catch (error: any) {
-      toast.error(error?.message || 'Gagal menyimpan dokumentasi');
+      await createDocumentation.mutateAsync({
+        do_expedition_claim_id: selectedClaim.id,
+        caption: documentationCaption.trim() || null,
+        image: documentationFile,
+      });
+      toast.success('Dokumentasi claim berhasil ditambahkan.');
+      resetDocumentationForm();
+      onRefresh?.();
+    } catch (error) {
+      toast.error(getApiErrorMessage(error));
     }
   };
 
-  // Sync state if data updates
-  React.useEffect(() => {
-    if (docClaim) {
-      const updated = data.expeditionClaims?.find((c) => c.id === docClaim.id);
-      if (updated) {
-        setDocClaim(updated);
-      }
-    }
-  }, [data.expeditionClaims, docClaim]);
-
-  const handleDeleteDoc = async (item: DoEkspedisiClaimDocumentation) => {
-    if (!window.confirm('Hapus dokumentasi ini?')) return;
+  const confirmDeleteDocumentation = async () => {
+    if (!deleteDocTarget) return;
     try {
-      await docMutations.remove.mutateAsync(item.id);
-      toast.success('Dokumentasi berhasil dihapus');
-      if (onRefresh) onRefresh();
-    } catch (error: any) {
-      toast.error(error?.message || 'Gagal menghapus dokumentasi');
+      await documentationMutations.remove.mutateAsync(deleteDocTarget.id);
+      toast.success('Dokumentasi claim berhasil dihapus.');
+      setDeleteDocTarget(null);
+      onRefresh?.();
+    } catch (error) {
+      toast.error(getApiErrorMessage(error));
     }
   };
 
   const claimColumns: ColumnDef<DoEkspedisiClaim>[] = [
-    { header: 'No', cell: (_, i) => i + 1 },
-    { header: 'Subject', cell: (x) => x.subject },
-    { header: 'Deskripsi', cell: (x) => x.description },
-    { header: 'Claim', alignment: 'right', cell: (x) => formatCurrency(x.claimNominal) },
-    { header: 'Terpakai', alignment: 'right', cell: (x) => formatCurrency(x.appliedNominal) },
-    { header: 'Sisa', alignment: 'right', cell: (x) => formatCurrency(x.remainingNominal) },
+    { header: 'Subjek Klaim', cell: (item) => <span className="font-medium text-slate-900">{item.subject || '-'}</span> },
+    { header: 'Deskripsi', cell: (item) => <TextTruncate text={item.description || '-'} maxLength={25} /> },
+    { header: 'Nominal Claim', alignment: 'right', cell: (item) => formatCurrency(item.claimNominal) },
+    { header: 'Terpakai', alignment: 'right', cell: (item) => formatCurrency(item.appliedNominal) },
+    { header: 'Nominal Sisa', alignment: 'right', cell: (item) => formatCurrency(item.remainingNominal) },
     {
       header: 'Dokumentasi',
-      cell: (x) => (
-        <Button variant="link" className="p-0 font-semibold text-orange-600 hover:text-orange-700" onClick={() => setDocClaim(x)}>
-          {x.documentations?.length ?? 0} file
-        </Button>
-      ),
+      alignment: 'center',
+      cell: (item) => {
+        const documentationCount = item.documentations?.length ?? 0;
+        return (
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            className="h-8 gap-1.5 text-xs text-slate-700 hover:bg-slate-50"
+            onClick={() => openClaimDetail(item)}
+          >
+            <FileText className="h-3.5 w-3.5 text-slate-500" />
+            <span>{documentationCount} Dokumentasi</span>
+          </Button>
+        );
+      },
     },
     {
-      header: '',
-      alignment: 'right',
-      cell: (x) => (
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="icon">
-              <MoreVertical className="h-4 w-4" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuItem onClick={() => openEditClaim(x)}>
-              <Pencil className="mr-2 h-4 w-4" />
-              Edit
-            </DropdownMenuItem>
-            {Number(x.appliedNominal) === 0 && (
-              <DropdownMenuItem className="text-red-600" onClick={() => void handleDeleteClaim(x)}>
-                <Trash2 className="mr-2 h-4 w-4" />
-                Hapus
+      header: 'Aksi',
+      sticky: 'right',
+      alignment: 'center',
+      cell: (item) => (
+        <div className="flex justify-center">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" className="h-8 w-8 p-0 rounded-full text-slate-600 hover:bg-slate-100 hover:text-slate-900" aria-label={`Aksi claim ${item.subject}`}>
+                <MoreVertical className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="min-w-[140px] rounded-md border-slate-200 p-1.5 shadow-lg">
+              <DropdownMenuItem onClick={() => openClaimDetail(item)} className="rounded-md px-3 py-2 text-sm text-slate-900 focus:bg-slate-50 cursor-pointer">
+                Detail
               </DropdownMenuItem>
-            )}
-          </DropdownMenuContent>
-        </DropdownMenu>
+              {Number(item.appliedNominal) === 0 && (
+                <DropdownMenuItem className="rounded-md px-3 py-2 text-sm text-red-600 focus:bg-red-50 focus:text-red-600 cursor-pointer" onClick={() => setDeleteClaimTarget(item)}>
+                  Hapus
+                </DropdownMenuItem>
+              )}
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
       ),
     },
   ];
 
-  const docColumns: ColumnDef<DoEkspedisiClaimDocumentation>[] = [
-    { header: 'No', cell: (_, i) => i + 1 },
-    { header: 'Caption', cell: (x) => x.caption },
-    { header: 'File', cell: (x) => x.image || '-' },
-    {
-      header: '',
-      alignment: 'right',
-      cell: (x) => (
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="icon">
-              <MoreVertical className="h-4 w-4" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuItem onClick={() => openEditDoc(x)}>
-              <Pencil className="mr-2 h-4 w-4" />
-              Edit
-            </DropdownMenuItem>
-            <DropdownMenuItem className="text-red-600" onClick={() => void handleDeleteDoc(x)}>
-              <Trash2 className="mr-2 h-4 w-4" />
-              Hapus
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      ),
-    },
-  ];
+  const usagePercentage = selectedClaim?.claimNominal
+    ? Math.min(100, Math.max(0, (selectedClaim.appliedNominal / selectedClaim.claimNominal) * 100))
+    : 0;
 
   return (
     <>
       <RelatedSection
         title="Driver Claim"
-        description="Data claim driver"
         icon={<ShieldAlert />}
         onAdd={openCreateClaim}
         addDisabled={!canManageClaims}
+        description="Daftar klaim driver dan bukti dokumentasi pada ekspedisi ini."
         helper={!canManageClaims ? 'Claim baru hanya dapat dibuat setelah ekspedisi selesai.' : undefined}
       >
-        {data?.status !== 'done' && (
+        {data.status !== 'done' && (
           <Alert variant="warning" className="mb-2">
             <AlertTriangle />
             <AlertTitle>Claim driver belum dapat dikelola</AlertTitle>
@@ -413,159 +296,214 @@ export function DOEkspedisiClaims({ data, onRefresh }: DOEkspedisiClaimsProps) {
         />
       </RelatedSection>
 
-      {/* Claim Create/Edit Dialog */}
-      <FormDialog
-        open={isClaimOpen}
-        onOpenChange={(open) => {
-          if (!open) {
-            setIsClaimOpen(false);
-            setClaimDocumentationForms([]);
-          }
-        }}
-        title={editingClaim ? 'Edit Driver Claim' : 'Driver Claim'}
-        description="Lengkapi data transaksi perjalanan"
-        onSubmit={saveClaim}
-        isSubmitting={busy}
-        maxWidthClassName="max-w-2xl"
-      >
-        <div className="space-y-2">
-          <Label>Driver</Label>
-          <Input value={data.driver?.name || `Driver #${data.driverId ?? '-'}`} disabled />
-        </div>
-        {field('Subject', claimForm.subject, 'Subjek klaim', (v) => setClaimForm((old) => ({ ...old, subject: v })))}
-        <div className="space-y-2">
-          <Label>Deskripsi *</Label>
-          <Textarea required value={claimForm.description} onChange={(e) => setClaimForm((old) => ({ ...old, description: e.target.value }))} placeholder="Deskripsi perihal klaim supir" />
-        </div>
-        <div className="space-y-2">
-          <Label>Nominal Claim *</Label>
-          <MoneyInput
-            value={claimForm.claim_nominal === '' ? null : Number(claimForm.claim_nominal)}
-            onChangeValue={(val) => setClaimForm((old) => ({ ...old, claim_nominal: val }))}
-            placeholder="Nominal klaim supir"
-            required
-          />
-        </div>
-
-        <div className="space-y-3 rounded-md border border-slate-200 p-4">
-          <div className="flex items-center justify-between gap-3">
-            <div>
-              <Label>Dokumentasi Claim</Label>
-              <p className="mt-1 text-xs text-slate-500">Tambahkan subjek dokumentasi dan file pendukung claim.</p>
+      <Dialog open={detailDialogOpen} onOpenChange={handleDetailDialogChange}>
+        <DialogContent className="grid max-h-[90vh] max-w-5xl grid-rows-[auto_minmax(0,1fr)_auto] gap-0 overflow-hidden p-0">
+          <DialogHeader className="border-b border-slate-200 px-5 py-5 pr-12 sm:px-6">
+            <div className="flex flex-wrap items-center gap-2">
+              <DialogTitle>Detail Driver Claim</DialogTitle>
+              <Badge variant="outline" className="border-orange-200 bg-orange-50 text-orange-700">
+                {selectedClaim?.documentations?.length ?? 0} dokumentasi
+              </Badge>
             </div>
-            <Button type="button" variant="outline" size="sm" onClick={addClaimDocumentationForm}>
-              <Plus className="mr-2 h-4 w-4" />
-              Tambah
-            </Button>
-          </div>
+            <DialogDescription>
+              Informasi claim dan bukti dokumentasi untuk {data.driver?.name || 'driver'}.
+            </DialogDescription>
+          </DialogHeader>
 
-          {editingClaim && (editingClaim.documentations?.length ?? 0) > 0 && (
-            <div className="rounded-md bg-slate-50 p-3">
-              <p className="mb-2 text-xs font-semibold uppercase text-slate-500">Dokumentasi tersimpan</p>
-              <div className="space-y-1.5">
-                {editingClaim.documentations.map((item) => (
-                  <div key={item.id} className="flex items-center justify-between gap-3 rounded border border-slate-200 bg-white px-3 py-2 text-sm">
-                    <span className="font-medium text-slate-700">{item.caption || '-'}</span>
-                    <span className="max-w-[220px] truncate text-xs text-slate-500">{item.image || '-'}</span>
+          <div className="overflow-y-auto px-5 py-5 sm:px-6">
+            {selectedClaim ? (
+              <div className="space-y-6">
+                <section className="space-y-4">
+                  <div>
+                    <p className="text-xs font-medium uppercase tracking-wide text-slate-500">Subjek Claim</p>
+                    <h3 className="mt-1 text-lg font-semibold text-slate-950">{selectedClaim.subject || '-'}</h3>
+                    <p className="mt-2 whitespace-pre-wrap text-sm leading-relaxed text-slate-600">{selectedClaim.description || '-'}</p>
                   </div>
-                ))}
-              </div>
-            </div>
-          )}
 
-          {claimDocumentationForms.length === 0 ? (
-            <div className="rounded-md border border-dashed border-slate-200 px-4 py-5 text-center text-sm text-slate-500">
-              Belum ada dokumentasi baru.
-            </div>
-          ) : (
-            <div className="space-y-3">
-              {claimDocumentationForms.map((documentation, index) => (
-                <div key={documentation.key} className="grid gap-3 rounded-md border border-slate-200 p-3 md:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto] md:items-start">
-                  <div className="space-y-2">
-                    <Label>Subjek Dokumentasi</Label>
-                    <Input
-                      value={documentation.caption}
-                      onChange={(event) => updateClaimDocumentationForm(documentation.key, { caption: event.target.value })}
-                      placeholder={`Subjek dokumentasi ${index + 1}`}
-                    />
+                  <div className="grid gap-3 sm:grid-cols-3">
+                    <ClaimMetric label="Nominal Claim" value={formatCurrency(selectedClaim.claimNominal)} />
+                    <ClaimMetric label="Sudah Terpakai" value={formatCurrency(selectedClaim.appliedNominal)} tone="danger" />
+                    <ClaimMetric label="Nominal Sisa" value={formatCurrency(selectedClaim.remainingNominal)} tone="success" />
                   </div>
-                  <div className="space-y-2">
-                    <Label>File Dokumentasi</Label>
+
+                  <div className="rounded-md border border-slate-200 p-4">
+                    <div className="mb-2 flex items-center justify-between gap-3 text-xs">
+                      <span className="font-medium text-slate-600">Penggunaan nominal claim</span>
+                      <span className="font-semibold text-slate-900">{Math.round(usagePercentage)}%</span>
+                    </div>
+                    <Progress value={usagePercentage} />
+                  </div>
+                </section>
+
+                <section className="space-y-4 border-t border-slate-200 pt-5">
+                  <div className="flex flex-col gap-1 sm:flex-row sm:items-end sm:justify-between">
+                    <div>
+                      <h3 className="font-semibold text-slate-950">Dokumentasi Claim</h3>
+                      <p className="text-xs text-slate-500">Klik foto untuk melihat ukuran penuh atau gunakan kartu plus untuk menambah bukti baru.</p>
+                    </div>
+                    <span className="text-xs text-slate-500">PNG/JPG, maksimal 10MB</span>
+                  </div>
+
+                  <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
                     <FileInput
-                      name={`claim_documentation_${documentation.key}`}
+                      name="claim_documentation_picker"
                       accept={CLAIM_DOCUMENT_ACCEPT}
-                      value={documentation.file}
-                      onFileChange={(file) => handleClaimDocumentationFileChange(documentation.key, file)}
-                      helperText="Format PDF, IMG, PNG, JPG, atau JPEG maksimal 10MB"
+                      value={documentationFile}
+                      onFileChange={handleDocumentationFileChange}
+                      helperText="Format PNG, JPG, atau JPEG maksimal 10MB"
+                      disabled={!canManageClaims || createDocumentation.isPending}
+                      className="h-full"
+                      triggerClassName="group min-h-52 h-full border-2 border-orange-200 bg-orange-50/50 p-5 hover:border-orange-400 hover:bg-orange-50 focus-visible:ring-orange-500"
+                      triggerContent={(
+                        <>
+                          <span className="flex h-16 w-16 items-center justify-center rounded-full bg-orange-100 text-orange-700 transition group-hover:scale-105 group-hover:bg-orange-200">
+                            <Plus className="h-9 w-9" />
+                          </span>
+                          <span className="mt-4 font-semibold text-slate-900">Tambah Dokumentasi</span>
+                          <span className="mt-1 text-xs text-slate-500">Klik untuk memilih foto</span>
+                        </>
+                      )}
                     />
+
+                    {(selectedClaim.documentations ?? []).map((documentation, index) => {
+                      const imageUrl = getObjectStorageUrl(documentation.image);
+                      const caption = documentation.caption || `Dokumentasi ${index + 1}`;
+
+                      return (
+                        <article key={documentation.id} className="group overflow-hidden rounded-md border border-slate-200 bg-white shadow-sm">
+                          <button
+                            type="button"
+                            className="relative flex h-40 w-full items-center justify-center overflow-hidden bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-500 focus-visible:ring-inset disabled:cursor-default"
+                            onClick={() => imageUrl && setPreviewUrl(imageUrl)}
+                            disabled={!imageUrl}
+                            aria-label={imageUrl ? `Lihat ${caption}` : `${caption} tidak memiliki gambar`}
+                          >
+                            {imageUrl ? (
+                              <>
+                                <StorageImage src={documentation.image} alt={caption} className="h-full w-full object-cover transition duration-300 group-hover:scale-105" />
+                                <span className="absolute inset-0 flex items-center justify-center bg-slate-950/0 text-white opacity-0 transition group-hover:bg-slate-950/30 group-hover:opacity-100">
+                                  <Eye className="h-6 w-6" />
+                                </span>
+                              </>
+                            ) : (
+                              <FileImage className="h-10 w-10 text-slate-400" />
+                            )}
+                          </button>
+                          <div className="flex items-start justify-between gap-3 p-3">
+                            <div className="min-w-0">
+                              <p className="line-clamp-2 text-sm font-medium text-slate-800">{caption}</p>
+                              <p className="mt-1 text-xs text-slate-400">Dokumentasi #{index + 1}</p>
+                            </div>
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="icon"
+                              className="h-8 w-8 shrink-0 text-rose-600 hover:bg-rose-50 hover:text-rose-700"
+                              disabled={!canManageClaims || documentationMutations.remove.isPending}
+                              onClick={() => setDeleteDocTarget(documentation)}
+                              aria-label={`Hapus ${caption}`}
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </article>
+                      );
+                    })}
                   </div>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon"
-                    className="text-red-600 hover:bg-red-50 hover:text-red-700 md:mt-8"
-                    onClick={() => removeClaimDocumentationForm(documentation.key)}
-                    aria-label={`Hapus dokumentasi ${index + 1}`}
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-      </FormDialog>
 
-      {/* Documentation List Dialog */}
-      <FormDialog
-        open={Boolean(docClaim)}
-        onOpenChange={(open) => !open && setDocClaim(null)}
-        title="Dokumentasi Claim"
-        description="Lampiran kerusakan atau kehilangan barang"
-        onSubmit={(e) => { e.preventDefault(); }}
-        submitLabel="Tutup"
-        cancelLabel="Tutup"
-        maxWidthClassName="max-w-3xl"
-      >
-        <div className="space-y-4">
-          <div className="flex justify-end">
-            <Button type="button" onClick={openCreateDoc}>
-              <Plus className="mr-2 h-4 w-4" />
-              Tambah Dokumentasi
-            </Button>
+                  {documentationFormOpen && (
+                    <form onSubmit={handleAddDocumentation} className="rounded-md border border-orange-200 bg-orange-50/40 p-4 sm:p-5">
+                      <div className="mb-4">
+                        <h4 className="font-semibold text-slate-950">Dokumentasi Baru</h4>
+                        <p className="text-xs text-slate-500">Pilih satu foto, lalu tambahkan caption bila diperlukan.</p>
+                      </div>
+                      <div className="grid gap-4 md:grid-cols-[minmax(0,0.8fr)_minmax(0,1.2fr)]">
+                        <div className="space-y-2">
+                          <Label>Foto Terpilih</Label>
+                          <div className="flex min-h-10 items-center gap-3 rounded-md border border-slate-200 bg-white px-3 py-2">
+                            <FileImage className="h-5 w-5 shrink-0 text-orange-600" />
+                            <span className="min-w-0 truncate text-sm font-medium text-slate-700">{documentationFile?.name || '-'}</span>
+                          </div>
+                          <p className="text-xs text-slate-500">Klik kembali kartu plus jika ingin mengganti foto.</p>
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="claim-documentation-caption">Caption</Label>
+                          <Input
+                            id="claim-documentation-caption"
+                            value={documentationCaption}
+                            onChange={(event) => setDocumentationCaption(event.target.value)}
+                            placeholder="Contoh: Kondisi barang saat diterima"
+                            disabled={createDocumentation.isPending}
+                          />
+                          <p className="text-xs text-slate-500">Caption bersifat opsional.</p>
+                        </div>
+                      </div>
+                      <div className="mt-4 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+                        <Button type="button" variant="outline" onClick={resetDocumentationForm} disabled={createDocumentation.isPending}>
+                          Batal
+                        </Button>
+                        <Button type="submit" disabled={!documentationFile || createDocumentation.isPending}>
+                          {createDocumentation.isPending ? 'Mengupload...' : 'Simpan Dokumentasi'}
+                        </Button>
+                      </div>
+                    </form>
+                  )}
+                </section>
+              </div>
+            ) : (
+              <div className="flex min-h-64 items-center justify-center text-sm text-slate-500">Data claim tidak ditemukan.</div>
+            )}
           </div>
-          <BaseTable
-            data={docClaim?.documentations ?? []}
-            columns={docColumns}
-            containerClassName="rounded-md border"
-            headerRowClassName="bg-orange-50"
-          />
-        </div>
-      </FormDialog>
 
-      {/* Documentation Create/Edit Dialog */}
-      <FormDialog
-        open={isDocOpen}
-        onOpenChange={(open) => !open && setIsDocOpen(false)}
-        title="Dokumentasi Claim"
-        description="Lengkapi data transaksi perjalanan"
-        onSubmit={saveDoc}
-        isSubmitting={busy}
-        maxWidthClassName="max-w-lg"
-      >
-        <div className="space-y-2">
-          <Label>Gambar {!editingDoc && <span className="text-red-500">*</span>}</Label>
-          <FileInput
-            name="file"
-            required={!editingDoc}
-            accept={CLAIM_DOCUMENT_ACCEPT}
-            value={docForm.image}
-            onFileChange={handleDocFileChange}
-            helperText="Format PDF, IMG, PNG, JPG, atau JPEG maksimal 10MB"
-          />
-        </div>
-        {field('Caption', docForm.caption, 'Keterangan dokumentasi gambar', (v) => setDocForm((old) => ({ ...old, caption: v })))}
-      </FormDialog>
+          <DialogFooter className="border-t border-slate-200 bg-slate-50/70 px-5 py-4 sm:px-6">
+            <DialogClose asChild>
+              <Button type="button" variant="outline">Tutup</Button>
+            </DialogClose>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Confirmation Dialog Hapus Claim */}
+      <Dialog open={deleteClaimTarget !== null} onOpenChange={(open) => !open && setDeleteClaimTarget(null)}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Konfirmasi Hapus Claim</DialogTitle>
+            <DialogDescription>
+              Apakah Anda yakin ingin menghapus claim &quot;{deleteClaimTarget?.subject || 'ini'}&quot;? Tindakan ini tidak dapat dibatalkan.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="mt-4 sm:justify-end gap-2">
+            <Button type="button" variant="outline" onClick={() => setDeleteClaimTarget(null)} disabled={claimMutations.remove.isPending}>
+              Batal
+            </Button>
+            <Button type="button" variant="destructive" onClick={() => void confirmDeleteClaim()} disabled={claimMutations.remove.isPending}>
+              {claimMutations.remove.isPending ? 'Menghapus...' : 'Hapus'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Confirmation Dialog Hapus Dokumentasi */}
+      <Dialog open={deleteDocTarget !== null} onOpenChange={(open) => !open && setDeleteDocTarget(null)}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Konfirmasi Hapus Dokumentasi</DialogTitle>
+            <DialogDescription>
+              Apakah Anda yakin ingin menghapus dokumentasi claim ini? Tindakan ini tidak dapat dibatalkan.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="mt-4 sm:justify-end gap-2">
+            <Button type="button" variant="outline" onClick={() => setDeleteDocTarget(null)} disabled={documentationMutations.remove.isPending}>
+              Batal
+            </Button>
+            <Button type="button" variant="destructive" onClick={() => void confirmDeleteDocumentation()} disabled={documentationMutations.remove.isPending}>
+              {documentationMutations.remove.isPending ? 'Menghapus...' : 'Hapus'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <ImagePreview open={previewUrl !== null} onClose={() => setPreviewUrl(null)} src={previewUrl} />
     </>
   );
 }

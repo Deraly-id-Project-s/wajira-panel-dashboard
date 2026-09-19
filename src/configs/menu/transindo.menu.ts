@@ -83,8 +83,8 @@ export const getTransindoMenus = (slug: string): MenuItem[] => {
           href: base('/kas-bon'),
         },
         {
-          label: 'Create Invoice',
-          href: base('/administrasi/create-invoice'),
+          label: 'DO Invoice',
+          href: base('/administrasi/do-invoice'),
         },
         {
           label: 'Bukti Potong',

@@ -11,7 +11,7 @@ import type { UseFormReturn } from 'react-hook-form';
 import { SearchableSelect } from '@/components/features/vehicle-data/SearchableSelect';
 import { CreateAccountGroupDialog } from '@/components/features/account/CreateAccountGroupDialog';
 import { ACCOUNT_CATEGORY_OPTIONS } from '@/lib/account';
-import { Plus, Search } from 'lucide-react';
+import { Plus } from 'lucide-react';
 import RequiredMark from '@/components/ui/required-mark';
 import { cn } from '@/lib/utils';
 
@@ -27,6 +27,8 @@ interface AccountFormProps {
   onLoadMoreGroups?: () => void;
   hasMoreGroups?: boolean;
   isLock?: boolean;
+  canManageLock?: boolean;
+  showLockField?: boolean;
 }
 
 export const AccountForm = ({
@@ -41,8 +43,11 @@ export const AccountForm = ({
   onLoadMoreGroups,
   hasMoreGroups = false,
   isLock = false,
+  canManageLock = false,
+  showLockField = false,
 }: AccountFormProps) => {
   const [openCreateGroup, setOpenCreateGroup] = useState(false);
+  const lockRestricted = isLock && !canManageLock;
 
   const groupOptions = useMemo(
     () =>
@@ -65,7 +70,7 @@ export const AccountForm = ({
               <FormItem className="space-y-1.5">
                 <FormLabel className="text-xs font-semibold text-slate-700">Kode Akun<RequiredMark /></FormLabel>
                 <FormControl>
-                  <Input readOnly={isLock} placeholder="Masukkan kode akun" className={cn("h-10 rounded-md border-slate-200 px-3 text-sm shadow-none focus-visible:ring-slate-300 bg-white", isLock && "bg-slate-50 text-slate-500 cursor-not-allowed")} {...field} />
+                  <Input readOnly={lockRestricted} placeholder="Masukkan kode akun" className={cn("h-10 rounded-md border-slate-200 px-3 text-sm shadow-none focus-visible:ring-slate-300 bg-white", lockRestricted && "bg-slate-50 text-slate-500 cursor-not-allowed")} {...field} />
                 </FormControl>
                 <FormMessage className="text-xs" />
               </FormItem>
@@ -88,6 +93,7 @@ export const AccountForm = ({
                         placeholder={isLoadingGroups ? 'Memuat...' : 'Select an item'}
                         searchPlaceholder="Cari grup akun..."
                         emptyText="Grup akun tidak ditemukan."
+                        disabled={lockRestricted}
                         loading={isLoadingGroups}
                         onSearchChange={onGroupSearchChange}
                         onLoadMore={onLoadMoreGroups}
@@ -95,7 +101,7 @@ export const AccountForm = ({
                         className="h-10 rounded-md border-slate-200 px-3 text-sm shadow-none focus-visible:ring-slate-300 bg-white"
                       />
                     </div>
-                    <Button type="button" onClick={() => setOpenCreateGroup(true)} className="btn-primary!">
+                    <Button type="button" variant="default" size="icon" onClick={() => setOpenCreateGroup(true)} disabled={lockRestricted}>
                       <Plus className="h-4 w-4" />
                     </Button>
                   </div>
@@ -114,7 +120,7 @@ export const AccountForm = ({
               <FormItem className="space-y-1.5">
                 <FormLabel className="text-xs font-semibold text-slate-700">Nama Akun<RequiredMark /></FormLabel>
                 <FormControl>
-                  <Input readOnly={isLock} placeholder="Masukkan nama akun" className={cn("h-10 rounded-md border-slate-200 px-3 text-sm shadow-none focus-visible:ring-slate-300 bg-white", isLock && "bg-slate-50 text-slate-500 cursor-not-allowed")} {...field} />
+                  <Input readOnly={lockRestricted} placeholder="Masukkan nama akun" className={cn("h-10 rounded-md border-slate-200 px-3 text-sm shadow-none focus-visible:ring-slate-300 bg-white", lockRestricted && "bg-slate-50 text-slate-500 cursor-not-allowed")} {...field} />
                 </FormControl>
                 <FormMessage className="text-xs" />
               </FormItem>
@@ -128,8 +134,8 @@ export const AccountForm = ({
               <FormItem className="space-y-1.5">
                 <FormLabel className="text-xs font-semibold text-slate-700">Kategori Laporan</FormLabel>
                 <FormControl>
-                  <Select value={field.value ?? ''} onValueChange={(val) => field.onChange(val === 'none' ? undefined : val)}>
-                    <SelectTrigger className={cn("h-10 rounded-md border-slate-200 px-3 text-sm shadow-none focus:ring-slate-300 bg-white", isLock && "pointer-events-none opacity-60 bg-slate-50 cursor-not-allowed")} tabIndex={isLock ? -1 : undefined}>
+                  <Select value={field.value ?? ''} onValueChange={(val) => field.onChange(val === 'none' ? undefined : val)} disabled={lockRestricted}>
+                    <SelectTrigger className={cn("h-10 rounded-md border-slate-200 px-3 text-sm shadow-none focus:ring-slate-300 bg-white", lockRestricted && "pointer-events-none opacity-60 bg-slate-50 cursor-not-allowed")} tabIndex={lockRestricted ? -1 : undefined}>
                       <SelectValue placeholder="Pilih Kategori Laporan (Opsional)" />
                     </SelectTrigger>
                     <SelectContent>
@@ -155,34 +161,37 @@ export const AccountForm = ({
             <FormItem className="space-y-1.5">
               <FormLabel className="text-xs font-semibold text-slate-700">Deskripsi</FormLabel>
               <FormControl>
-                <Textarea readOnly={isLock} placeholder="Tulis deskripsi di sini" className={cn("min-h-[72px] resize-none rounded-md border-slate-200 px-3 py-2 text-sm shadow-none focus-visible:ring-slate-300 bg-white", isLock && "bg-slate-50 text-slate-500 cursor-not-allowed")} rows={3} {...field} />
+                <Textarea placeholder="Tulis deskripsi di sini" className="min-h-[72px] resize-none rounded-md border-slate-200 bg-white px-3 py-2 text-sm shadow-none focus-visible:ring-slate-300" rows={3} {...field} />
               </FormControl>
               <FormMessage className="text-xs" />
             </FormItem>
           )}
         />
 
-        <FormField
-          control={form.control}
-          name="isActive"
-          render={({ field }) => (
-            <FormItem className="flex items-center justify-between rounded-md border p-4">
-              <div>
-                <FormLabel>Status</FormLabel>
-                <p className="text-sm text-muted-foreground">Aktifkan akun untuk dapat digunakan</p>
-              </div>
-              <FormControl>
-                <Switch checked={!!field.value} onCheckedChange={field.onChange} className={cn(isLock && "pointer-events-none opacity-60")} tabIndex={isLock ? -1 : undefined} />
-              </FormControl>
-            </FormItem>
-          )}
-        />
+
+        {showLockField && (
+          <FormField
+            control={form.control}
+            name="is_lock"
+            render={({ field }) => (
+              <FormItem className="flex items-center justify-between rounded-md border p-4">
+                <div>
+                  <FormLabel>Lock Data</FormLabel>
+                  <p className="text-sm text-muted-foreground">Kunci akun agar hanya user tertentu yang bisa mengubah semua field</p>
+                </div>
+                <FormControl>
+                  <Switch checked={!!field.value} onCheckedChange={field.onChange} />
+                </FormControl>
+              </FormItem>
+            )}
+          />
+        )}
 
         <div className="flex justify-end gap-3 pt-3">
-          <Button type="button" variant="ghost" onClick={onCancel} disabled={isSubmitting}>
+          <Button type="button" variant="outline" onClick={onCancel} disabled={isSubmitting}>
             Batal
           </Button>
-          <Button type="submit" className="bg-[#1F3B5B] hover:bg-[#1B3450]" disabled={isSubmitting}>
+          <Button type="submit" variant="default" disabled={isSubmitting}>
             {isSubmitting ? 'Menyimpan...' : submitLabel}
           </Button>
         </div>

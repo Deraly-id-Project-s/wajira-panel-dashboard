@@ -139,7 +139,7 @@ export const AccountTable = ({ data, meta, search, page, perPage, isLoading = fa
             <DropdownMenuContent align="end" className="min-w-[150px] rounded-md border-slate-200 p-1.5 shadow-lg">
               <DropdownMenuItem
                 onClick={() => onEdit(item)}
-                disabled={item.is_lock || !canEdit}
+                disabled={!canEdit}
                 className="rounded-md px-3 py-2 text-sm text-slate-900 focus:bg-slate-50 cursor-pointer"
               >
                 <Pencil className="mr-2 h-4 w-4" />
@@ -181,7 +181,7 @@ export const AccountTable = ({ data, meta, search, page, perPage, isLoading = fa
       }}
       onPageChange={onPageChange}
       headerActions={
-        <Button onClick={onAdd} className="btn-primary!">
+        <Button onClick={onAdd} variant="default">
           <Plus className="mr-2 h-4 w-4" />
           Tambah Data
         </Button>

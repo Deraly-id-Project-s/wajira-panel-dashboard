@@ -2,7 +2,6 @@ import React from 'react';
 import { format } from 'date-fns';
 import { CalendarClock, CalendarDays, CheckCircle2, CircleUserRound, ClipboardList, Clock3, MapPin, Pencil, ReceiptText, Truck, WalletCards } from 'lucide-react';
 import type { DoEkspedisi, DoEkspedisiOrderTarifItem } from '@/@types/do-ekspedisi.types';
-import { Card, CardContent } from '@/components/ui/card';
 import BaseTable, { type ColumnDef } from '@/components/ui/base-table';
 import { useRouter } from 'next/router';
 import { ReferenceLink } from '@/components/ui/reference-link';
@@ -13,6 +12,7 @@ import { DateTimeRangeDialog } from '@/components/ui/date-time-range-dialog';
 import { useUpdateDoEkspedisi } from '@/hooks/useDoEkspedisi';
 import { toast } from 'sonner';
 import { getApiErrorMessage } from '@/utils/apiErrorHandler';
+import { CollapsibleBox } from '@/components/ui/collapsible-box';
 
 interface DOEkspedisiDetailCardProps {
   data: DoEkspedisi;
@@ -30,36 +30,26 @@ function DetailField({ label, value, icon: Icon }: { label: string; value: React
   );
 }
 
-function Section({ title, description, icon: Icon, children }: { title: string; description: string; icon: React.ElementType; children: React.ReactNode }) {
-  return (
-    <Card className="border-slate-200 shadow-sm">
-      <CardContent className="space-y-6 p-5 sm:p-6">
-        <div className="flex items-start gap-3">
-          <div className="rounded-md bg-orange-100 p-2 text-orange-700"><Icon className="h-5 w-5" /></div>
-          <div>
-            <h2 className="text-base font-semibold text-slate-950">{title}</h2>
-            <p className="mt-0.5 text-xs text-slate-500">{description}</p>
-          </div>
-        </div>
-        {children}
-      </CardContent>
-    </Card>
-  );
-}
+const parseDateString = (value?: string | null) => {
+  if (!value) return null;
+  const str = value.includes(' ') && !value.includes('T') ? value.replace(' ', 'T') : value;
+  const date = new Date(str);
+  return Number.isNaN(date.getTime()) ? null : date;
+};
 
 const formatDateTime = (value?: string | null) => {
   if (!value) return '-';
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return value;
+  const date = parseDateString(value);
+  if (!date) return value;
   return format(date, 'dd/MM/yyyy HH:mm');
 };
 
 const getDurationLabel = (start?: string | null, end?: string | null) => {
   if (!start || !end) return '-';
 
-  const startDate = new Date(start);
-  const endDate = new Date(end);
-  if (Number.isNaN(startDate.getTime()) || Number.isNaN(endDate.getTime())) return '-';
+  const startDate = parseDateString(start);
+  const endDate = parseDateString(end);
+  if (!startDate || !endDate) return '-';
 
   const diffInMinutes = Math.max(0, Math.round((endDate.getTime() - startDate.getTime()) / (1000 * 60)));
   const days = Math.floor(diffInMinutes / 1440);
@@ -147,9 +137,11 @@ function TimelineDateCard({
 }
 
 function ExpeditionDateOverview({ data, onEditTarget }: { data: DoEkspedisi; onEditTarget: () => void }) {
+  const canEdit = String(data.status).toLowerCase() === 'draft';
+
   return (
-    <Section title="Informasi Waktu Ekspedisi" description="Target waktu dan proses pengiriman ekspedisi" icon={CalendarDays}>
-      <div className="grid grid-cols-1 gap-4 border-t border-slate-100 pt-5 xl:grid-cols-2">
+    <CollapsibleBox title="Informasi Waktu Ekspedisi" description="Target waktu dan proses pengiriman ekspedisi" icon={CalendarDays} defaultExpanded>
+      <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
         <TimelineDateCard
           title="Target Jadwal Ekspedisi"
           description="Target waktu pengiriman yang ditentukan oleh admin sebelum DO diproses."
@@ -158,7 +150,7 @@ function ExpeditionDateOverview({ data, onEditTarget }: { data: DoEkspedisi; onE
           startDate={data.targetStartDate}
           endDate={data.targetEndDate}
           tone="admin"
-          onEdit={onEditTarget}
+          onEdit={canEdit ? onEditTarget : undefined}
         />
         <TimelineDateCard
           title="Waktu Aktual Diproses"
@@ -170,7 +162,7 @@ function ExpeditionDateOverview({ data, onEditTarget }: { data: DoEkspedisi; onE
           tone="process"
         />
       </div>
-    </Section>
+    </CollapsibleBox>
   );
 }
 
@@ -210,8 +202,8 @@ export function DOEkspedisiDetailCard({ data }: DOEkspedisiDetailCardProps) {
       await updateMutation.mutateAsync({
         id: data.id,
         payload: {
-          target_start_date: start.toISOString(),
-          target_end_date: end.toISOString(),
+          target_start_date: format(start, 'yyyy-MM-dd HH:mm:ss'),
+          target_end_date: format(end, 'yyyy-MM-dd HH:mm:ss'),
         },
       });
       toast.success('Target jadwal ekspedisi berhasil diperbarui.');
@@ -248,11 +240,12 @@ export function DOEkspedisiDetailCard({ data }: DOEkspedisiDetailCardProps) {
 
   return (
     <div className="space-y-6">
-      <Section title="Detail Driver" description="Informasi kendaraan dan penanggung jawab pengiriman" icon={Truck}>
-        <div className="grid grid-cols-1 gap-x-12 gap-y-6 border-t border-slate-100 pt-5 md:grid-cols-3">
+      <CollapsibleBox title="Detail Driver" description="Informasi kendaraan dan penanggung jawab pengiriman" icon={Truck} defaultExpanded>
+        <div className="grid grid-cols-1 gap-x-12 gap-y-6 md:grid-cols-3">
           <DetailField label="Kode DO" value={data.doCode || '-'} icon={ClipboardList} />
           <DetailField label="UJ Awal" value={formatCurrency(data.ujNominalBeforeClaim)} icon={WalletCards} />
           <DetailField label="Potongan Claim" value={<span className="text-rose-700">-{formatCurrency(data.claimDeductionNominal)}</span>} icon={ReceiptText} />
+          <DetailField label="Potongan Kas Bon" value={<span className="text-rose-700">-{formatCurrency(data.cashAdvanceDeductionNominal)}</span>} icon={WalletCards} />
           <DetailField label="UJ Diterima Driver" value={<span className="text-emerald-700">{formatCurrency(data.ujNominal)}</span>} icon={WalletCards} />
           <DetailField
             label="Nama Driver"
@@ -290,7 +283,7 @@ export function DOEkspedisiDetailCard({ data }: DOEkspedisiDetailCardProps) {
             </div>
           </div>
         </div>
-      </Section>
+      </CollapsibleBox>
 
       <ExpeditionDateOverview data={data} onEditTarget={() => setTargetDialogOpen(true)} />
 
@@ -307,8 +300,8 @@ export function DOEkspedisiDetailCard({ data }: DOEkspedisiDetailCardProps) {
         isSubmitting={updateMutation.isPending}
       />
 
-      <Section title="Informasi Customer" description="Identitas customer dan rincian rute pengiriman" icon={ClipboardList}>
-        <div className="grid grid-cols-1 gap-x-12 gap-y-6 border-t border-slate-100 pt-5 md:grid-cols-3">
+      <CollapsibleBox title="Informasi Customer" description="Identitas customer dan rincian rute pengiriman" icon={ClipboardList} defaultExpanded>
+        <div className="grid grid-cols-1 gap-x-12 gap-y-6 md:grid-cols-3">
           <DetailField
             label="Nama Customer"
             value={
@@ -360,7 +353,7 @@ export function DOEkspedisiDetailCard({ data }: DOEkspedisiDetailCardProps) {
                 : [];
 
             return (
-              <div key={`${item.id}-${index}`} className="overflow-hidden rounded-xl border border-slate-200">
+              <div key={`${item.id}-${index}`} className="overflow-hidden rounded-md border border-slate-200">
                 <div className="flex items-center gap-3 border-b border-orange-200 bg-orange-50 px-4 py-3">
                   <span className="flex h-8 w-8 items-center justify-center rounded-full bg-orange-300 text-sm font-bold text-orange-950">{index + 1}</span>
                   <div className="text-sm font-semibold text-slate-950">Detail Order #{index + 1}</div>
@@ -391,7 +384,8 @@ export function DOEkspedisiDetailCard({ data }: DOEkspedisiDetailCardProps) {
             );
           })}
         </div>
-      </Section>
+      </CollapsibleBox>
     </div>
   );
 }
+

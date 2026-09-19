@@ -4,6 +4,7 @@ import type { WithholdingTaxItem, WithholdingTaxPayload } from '@/@types/withhol
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
+import { InputDate } from '@/components/ui/input-date';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -322,8 +323,7 @@ export default function WithholdingTaxFormModal({ isOpen, onClose, item, company
               </div>
               <div className="space-y-2">
                 <Label>Tanggal Pembayaran <span className="text-red-500">*</span></Label>
-                <Input
-                  type="date"
+                <InputDate
                   value={paymentDate}
                   onChange={(e) => setPaymentDate(e.target.value)}
                   disabled={isPending}
