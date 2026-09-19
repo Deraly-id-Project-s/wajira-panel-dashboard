@@ -77,8 +77,8 @@ export function VehicleDocumentDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-[720px] rounded-[24px] border-0 p-0 shadow-2xl">
-        <div className="rounded-[24px] bg-white p-8">
+      <DialogContent className="max-w-[720px] rounded-md border-0 p-0 shadow-2xl">
+        <div className="rounded-md bg-white p-8">
           <DialogHeader className="mb-6 text-left">
             <DialogTitle className="text-[28px] font-semibold text-slate-900">{title}</DialogTitle>
             <DialogDescription className="text-sm text-slate-500">{descriptionText}</DialogDescription>

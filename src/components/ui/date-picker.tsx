@@ -42,7 +42,7 @@ export function DatePicker({
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
-        <Button type="button" id={id} variant={'outline'} className={cn('w-full justify-start overflow-hidden text-left font-normal', !dateValue && 'text-muted-foreground', className)} disabled={disabled}>
+        <Button type="button" id={id} variant={'outline'} className={cn('w-full sm:w-full justify-start overflow-hidden text-left font-normal', !dateValue && 'text-muted-foreground', className)} disabled={disabled}>
           <CalendarIcon className="mr-2 h-4 w-4 shrink-0" />
           <span className="min-w-0 truncate">{dateValue ? formatDateUI(dateValue) : placeholder}</span>
         </Button>

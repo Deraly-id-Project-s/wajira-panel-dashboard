@@ -7,18 +7,18 @@ import { Input } from '@/components/ui/input';
 import { MoneyInput } from '@/components/ui/money-input';
 import { formatCurrency } from '@/lib/utils/currency';
 import { Button } from '@/components/ui/button';
-import { Save, Plus, ChevronsUpDown, Check } from 'lucide-react';
+import { Save, Plus } from 'lucide-react';
 import { useTypeUnits } from '@/hooks/useTypeUnit';
 import type { TypeUnit } from '@/@types/type-unit.types';
 import { Label } from '@/components/ui/label';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
-import { cn } from '@/lib/utils';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useUnitFormula } from '@/hooks/useUnitFormula';
 import { useTaxDefault } from '@/hooks/useTax';
 import RequiredMark from '@/components/ui/required-mark';
 import { TypeUnitFormModal } from '@/components/features/type-unit/TypeUnitFormModal';
-import { unitTransactionSchema, type UnitTransactionFormValues } from '@/scheme/unit-transaction.schema';
+import { unitTransactionSchema } from '@/scheme/unit-transaction.schema';
+import type { UnitTransactionFormValues } from '@/types/unit-transaction.types';
 
 export interface UnitTransactionFormProps {
   type: 'purchase' | 'sales';
@@ -58,7 +58,6 @@ export function UnitTransactionForm({
   });
   const [openTypeModal, setOpenTypeModal] = useState(false);
   const [createdTypeUnit, setCreatedTypeUnit] = useState<TypeUnit | null>(null);
-  const [openTypeSelect, setOpenTypeSelect] = useState(false);
   const [isUsd, setIsUsd] = useState(Boolean(defaultValues?.priceUsd && Number(defaultValues.priceUsd) > 0));
 
   const [selectedDppTaxVersionId, setSelectedDppTaxVersionId] = useState<string | number | null>(defaultValues?.dppTaxVersionId ?? null);
@@ -138,7 +137,6 @@ export function UnitTransactionForm({
     if (preferredPrice !== undefined && preferredPrice !== null) {
       form.setValue('price', Number(preferredPrice), { shouldDirty: true });
     }
-    setOpenTypeSelect(false);
   };
 
   const handleFormSubmit = (values: UnitTransactionFormValues) => {
@@ -163,12 +161,6 @@ export function UnitTransactionForm({
             : form.handleSubmit(handleFormSubmit)}
           className="space-y-8"
         >
-          <div>
-            <h2 className="text-xl font-semibold text-foreground tracking-tight">Informasi {type === 'purchase' ? 'Pembelian' : 'Penjualan'}</h2>
-            <p className="text-sm text-gray-500 mt-1">Kelola detail informasi {type === 'purchase' ? 'pembelian' : 'penjualan'} unit dan biaya-biaya terkait</p>
-            <div className="my-6 h-px bg-muted/60" />
-          </div>
-
           {typeof prependFields === 'function' ? prependFields(form) : prependFields}
 
           {!hideItemFields && (
@@ -181,59 +173,46 @@ export function UnitTransactionForm({
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel className="text-sm font-medium">Tipe Unit <RequiredMark /></FormLabel>
-                      <div className="flex items-center gap-2 w-full min-w-0">
-                        <Popover open={openTypeSelect} onOpenChange={setOpenTypeSelect}>
+                      <div className="grid w-full min-w-0 grid-cols-[minmax(0,1fr)_2.5rem] items-center gap-2">
+                        <Select
+                          value={field.value ? String(field.value) : undefined}
+                          onValueChange={(value) => {
+                            const selected = typeUnitOptions.find((option) => String(option.id) === value);
+                            if (selected) selectTypeUnit(selected);
+                          }}
+                          disabled={readOnly}
+                        >
                           <FormControl>
-                            <PopoverTrigger asChild>
-                              <button
-                                type="button"
-                                role="combobox"
-                                aria-expanded={openTypeSelect}
-                                aria-controls={`type-unit-${type}-combobox-list`}
-                                disabled={readOnly}
-                                className="flex h-10 w-full items-center justify-between rounded-md border border-input bg-transparent px-3 py-2 text-sm ring-offset-background disabled:cursor-not-allowed disabled:opacity-50 min-w-0"
-                              >
-                                <span className={cn('truncate', !field.value && 'text-muted-foreground')}>
-                                  {field.value ? typeUnitOptions.find((option) => String(option.id) === field.value)?.name ?? 'Pilih tipe unit' : 'Pilih tipe unit'}
-                                </span>
-                                <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                              </button>
-                            </PopoverTrigger>
+                            <SelectTrigger className="h-10 w-full min-w-0 overflow-hidden bg-transparent">
+                              <SelectValue maxLength={35} placeholder="Pilih tipe unit" />
+                            </SelectTrigger>
                           </FormControl>
-                          <PopoverContent className="w-[--radix-popover-trigger-width] p-0">
-                            <Command>
-                              <CommandInput placeholder="Cari tipe unit..." />
-                              <CommandList id={`type-unit-${type}-combobox-list`}>
-                                {typeUnitLoading && <div className="px-3 py-2 text-xs text-muted-foreground">Memuat tipe unit...</div>}
-                                {typeUnitError && (
-                                  <div className="px-3 py-2 text-xs text-destructive">
-                                    Gagal memuat tipe unit.{' '}
-                                    <button type="button" className="underline" onClick={() => refetchTypeUnits()}>
-                                      Coba lagi
-                                    </button>
-                                  </div>
-                                )}
-                                <CommandEmpty>Tipe unit tidak ditemukan.</CommandEmpty>
-                                <CommandGroup>
-                                  {typeUnitOptions.map((option) => (
-                                    <CommandItem
-                                      key={option.id}
-                                      value={`${option.name} ${option.code ?? ''} ${option.id}`}
-                                      disabled={excludedTypeUnitIds.includes(String(option.id))}
-                                      onSelect={() => !excludedTypeUnitIds.includes(String(option.id)) && selectTypeUnit(option)}
-                                    >
-                                      <Check className={cn('mr-2 h-4 w-4', field.value === String(option.id) ? 'opacity-100' : 'opacity-0')} />
-                                      <span className="truncate">{option.name}</span>
-                                      {excludedTypeUnitIds.includes(String(option.id)) && <span className="ml-auto text-xs text-muted-foreground">Sudah ditambahkan</span>}
-                                    </CommandItem>
-                                  ))}
-                                </CommandGroup>
-                              </CommandList>
-                            </Command>
-                          </PopoverContent>
-                        </Popover>
+                          <SelectContent showSearch searchPlaceholder="Cari tipe unit...">
+                            {typeUnitLoading && <div className="px-3 py-2 text-xs text-muted-foreground">Memuat tipe unit...</div>}
+                            {typeUnitError && (
+                              <div className="px-3 py-2 text-xs text-destructive">
+                                Gagal memuat tipe unit.{' '}
+                                <button type="button" className="underline" onClick={() => refetchTypeUnits()}>
+                                  Coba lagi
+                                </button>
+                              </div>
+                            )}
+                            {typeUnitOptions.map((option) => {
+                              const disabled = excludedTypeUnitIds.includes(String(option.id));
+
+                              return (
+                                <SelectItem key={option.id} value={String(option.id)} disabled={disabled} maxLength={40}>
+                                  <span className="flex w-full min-w-0 items-center gap-2">
+                                    <span className="truncate">{option.name}</span>
+                                    {disabled && <span className="ml-auto text-xs text-muted-foreground">Sudah ditambahkan</span>}
+                                  </span>
+                                </SelectItem>
+                              );
+                            })}
+                          </SelectContent>
+                        </Select>
                         {allowCreateTypeUnit && !readOnly && (
-                          <Button type="button" variant="outline" size="icon" aria-label="Tambah tipe unit" onClick={() => setOpenTypeModal(true)} className="h-10 w-10 shrink-0">
+                          <Button type="button" variant="default" size="icon" aria-label="Tambah tipe unit" onClick={() => setOpenTypeModal(true)}>
                             <Plus className="h-4 w-4" />
                           </Button>
                         )}
@@ -284,19 +263,19 @@ export function UnitTransactionForm({
 
               {/* USD Transaction Toggle */}
               <div className="flex items-center space-x-2 py-1">
-                <input autoComplete="off"
-                  type="checkbox"
+                <Checkbox
                   id={`${type}_is_usd`}
                   checked={isUsd}
-                  onChange={(e) => {
-                    setIsUsd(e.target.checked);
-                    if (!e.target.checked) {
+                  onCheckedChange={(checked) => {
+                    const nextValue = checked === true;
+                    setIsUsd(nextValue);
+                    if (!nextValue) {
                       form.setValue('priceUsd', 0);
                       form.setValue('pricePerUnitUsd', 0);
                     }
                   }}
                   disabled={readOnly}
-                  className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500 cursor-pointer"
+                  className="cursor-pointer"
                 />
                 <Label htmlFor={`${type}_is_usd`} className="text-sm font-medium cursor-pointer">
                   Transaksi USD (Gunakan mata uang asing USD)
@@ -449,16 +428,15 @@ export function UnitTransactionForm({
           )}
 
           <div className="flex justify-center items-center gap-6 pt-10">
-            <Button type="button" variant="ghost" onClick={onCancel} disabled={loading || cancelDisabled} className="text-muted-foreground font-medium hover:text-foreground">
+            <Button type="button" variant="outline" onClick={onCancel} disabled={loading || cancelDisabled}>
               Batal
             </Button>
             {!readOnly && (
-              <Button type="submit" disabled={loading || submitDisabled} className="bg-[#1e293b] hover:bg-[#0f172a] text-white font-medium min-w-[120px] rounded-md">
+              <Button type="submit" disabled={loading || submitDisabled} variant="default">
                 {loading ? (
                   'Menyimpan...'
                 ) : (
                   <>
-                    <Save className="mr-2 h-4 w-4" />
                     Simpan
                   </>
                 )}

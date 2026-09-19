@@ -341,7 +341,7 @@ export function SalesTable({
                 className="rounded-md px-3 py-2 text-sm text-slate-900 focus:bg-slate-50 cursor-pointer"
                 onClick={() => router.push(slug ? `/dashboard/${slug}/transaksi/penjualan-unit/${item.id}` : `/transaksi/penjualan-unit/${item.id}`)}
               >
-                <Eye className="mr-2 h-4 w-4" /> Detail
+                Detail
               </DropdownMenuItem>
               {canEdit && (
                 <>
@@ -350,14 +350,14 @@ export function SalesTable({
                     className="rounded-md px-3 py-2 text-sm text-slate-900 focus:bg-slate-50 cursor-pointer"
                     onClick={() => router.push(slug ? `/dashboard/${slug}/transaksi/penjualan-unit/edit/${item.id}` : `/transaksi/penjualan-unit/edit/${item.id}`)}
                   >
-                    <Pencil className="mr-2 h-4 w-4" /> Edit
+                    Edit
                   </DropdownMenuItem>
                   <DropdownMenuItem
                     className="rounded-md px-3 py-2 text-sm text-slate-900 focus:bg-slate-50 cursor-pointer"
                     onClick={() => router.push(slug ? `/dashboard/${slug}/transaksi/penjualan-unit/${item.id}/refund` : `/transaksi/penjualan-unit/${item.id}/refund`)}
                     disabled={isRefunded(item) || !canEdit}
                   >
-                    <RotateCcw className="mr-2 h-4 w-4" /> Refund Jual
+                    Refund Jual
                   </DropdownMenuItem>
                   <DropdownMenuItem
                     className="rounded-md px-3 py-2 text-sm text-slate-900 focus:bg-slate-50 cursor-pointer"
@@ -365,7 +365,7 @@ export function SalesTable({
                     title={!item.documentTemplateId ? 'Document template belum dipilih.' : undefined}
                     onClick={() => item.documentTemplateId && window.open(slug ? `/dashboard/${slug}/transaksi/penjualan-unit/print/${item.id}` : `/transaksi/penjualan-unit/print/${item.id}`, '_blank')}
                   >
-                    <Printer className="mr-2 h-4 w-4" /> Print
+                    Print
                   </DropdownMenuItem>
                 </>
               )}
@@ -384,7 +384,7 @@ export function SalesTable({
                     item.isPaid && "opacity-50 cursor-not-allowed hover:bg-transparent hover:text-red-600 focus:bg-transparent"
                   )}
                 >
-                  <Trash2 className="mr-2 h-4 w-4" /> Hapus
+                  Hapus
                 </DropdownMenuItem>
               )}
             </DropdownMenuContent>
@@ -403,7 +403,7 @@ export function SalesTable({
           <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-slate-400" />
           <Input
             type="text"
-            placeholder="Search No. Rangka / No. Mesin..."
+            placeholder="Search No Transaksi, supplier, nominal..."
             className="pl-8 bg-white h-9 border-slate-300"
             value={localSearch}
             onChange={(e) => handleSearch(e.target.value)}
@@ -413,7 +413,7 @@ export function SalesTable({
         <Button
           type="button"
           variant="outline"
-          className="border-slate-300 bg-white hover:bg-slate-50 text-slate-700 h-9 font-medium rounded-md shadow-none px-4 whitespace-nowrap"
+          tooltip="gunakan fitur ini untuk mencari data detail tipe unit berdasarkan No. Rangka, No. Mesin, Warna"
           onClick={() => setIsVehicleSearchOpen(true)}
         >
           Cari Data Kendaraan

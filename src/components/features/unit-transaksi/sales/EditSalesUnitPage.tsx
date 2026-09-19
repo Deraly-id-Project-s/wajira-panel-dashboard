@@ -7,7 +7,7 @@ import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { Card, CardContent } from '@/components/ui/card';
 import { ArrowLeft } from 'lucide-react';
 import { UnitTransactionForm } from '@/components/features/unit-transaksi/UnitTransactionForm';
-import { type UnitTransactionFormValues } from '@/components/features/unit-transaksi/unit-transaction.schema';
+import type { UnitTransactionFormValues } from '@/types/unit-transaction.types';
 import { toast } from 'sonner';
 import { useSalesUnitItems, useUpdateUnitItem } from '@/hooks/useUnitTransactionItem';
 import { useSalesDetail } from '@/hooks/useSales';

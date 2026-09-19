@@ -12,6 +12,8 @@ const buttonVariants = cva(
     variants: {
       variant: {
         default: "btn-primary w-full sm:w-auto",
+        success: "btn-success w-full sm:w-auto",
+        error: "btn-error w-full sm:w-auto",
         destructive:
           "bg-destructive text-white hover:bg-destructive/90 focus-visible:ring-destructive/20 dark:focus-visible:ring-destructive/40 dark:bg-destructive/60 w-full sm:w-auto",
         outline:

@@ -1,16 +1,16 @@
-import { Check, ChevronsUpDown, Plus } from 'lucide-react';
+import { Check, ChevronsUpDown } from 'lucide-react';
 import { useState } from 'react';
 import type { UseFormReturn } from 'react-hook-form';
 import type { Brand } from '@/@types/brand.types';
 import { useBrands } from '@/hooks/useBrand';
 import { cn } from '@/lib/utils';
 import type { TypeUnitFormValues } from '@/scheme/type-unit.schema';
-import { Button } from '@/components/ui/button';
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
 import { FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { MoneyInput } from '@/components/ui/money-input';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { SelectAdd } from '@/components/ui/select-add';
 import RequiredMark from '@/components/ui/required-mark';
 import { CreateBrandDialog } from './CreateBrandDialog';
 
@@ -45,7 +45,12 @@ export function TypeUnitFormFields({ form, disabled = false }: TypeUnitFormField
         <FormField control={form.control} name="brandId" render={({ field }) => (
           <FormItem className="flex flex-col min-w-0">
             <FormLabel className="text-sm font-medium">Merk<RequiredMark /></FormLabel>
-            <div className="flex items-center gap-2 w-full min-w-0">
+            <SelectAdd
+              onAdd={() => setCreateBrandOpen(true)}
+              addDisabled={disabled}
+              addLabel="Tambah merk"
+              addVariant="outline"
+            >
               <Popover open={brandOpen} onOpenChange={(open) => { setBrandOpen(open); if (!open) setSearch(''); }}>
                 <PopoverTrigger asChild>
                   <button
@@ -79,19 +84,7 @@ export function TypeUnitFormFields({ form, disabled = false }: TypeUnitFormField
                   </Command>
                 </PopoverContent>
               </Popover>
-              <Button
-                type="button"
-                variant="outline"
-                size="icon"
-                className="h-10 w-10 shrink-0"
-                disabled={disabled}
-                aria-label="Tambah merk"
-                onClick={() => setCreateBrandOpen(true)}
-              >
-                <Plus className="h-4 w-4" />
-                <span className="sr-only">Tambah merk</span>
-              </Button>
-            </div>
+            </SelectAdd>
             <FormMessage />
           </FormItem>
         )} />

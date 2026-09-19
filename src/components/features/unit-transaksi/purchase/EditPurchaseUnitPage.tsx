@@ -12,7 +12,7 @@ import {
   useUpdateUnitItem,
 } from '@/hooks/useUnitTransactionItem';
 import { toast } from 'sonner';
-import { type UnitTransactionFormValues } from '@/scheme/unit-transaction.schema';
+import type { UnitTransactionFormValues } from '@/types/unit-transaction.types';
 import { LoadingState } from '@/components/ui/loading-state';
 
 const parseApiError = (err: any): string => {

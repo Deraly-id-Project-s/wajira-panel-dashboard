@@ -1,7 +1,7 @@
 import { Card, CardContent } from "@/components/ui/card"
 
 import { FileText } from "lucide-react"
-import { InvoiceInfo } from "./invoice.types"
+import type { InvoiceInfo } from "@/types/unit-transaction-invoice.types"
 
 /**
  * Invoice Info Card - EXACT sesuai Figma

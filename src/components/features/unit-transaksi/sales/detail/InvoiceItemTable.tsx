@@ -8,7 +8,7 @@ import BaseTable, { ColumnDef } from '@/components/ui/base-table';
 import { MoreVertical } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { formatCurrency } from '@/lib/utils/currency';
-import type { InvoiceItem } from './invoice.types';
+import type { InvoiceItem } from '@/types/unit-transaction-invoice.types';
 
 export function InvoiceItemTable({ items }: { items: InvoiceItem[] }) {
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());

@@ -33,6 +33,7 @@ import { formatDate } from '@/lib/utils/format';
 import { LoadingState } from '@/components/ui/loading-state';
 import { UnitTypeDetailTable } from '@/components/features/unit-transaksi/UnitTypeDetailTable';
 import { useDocumentTemplate } from '@/hooks/useDocumentTemplate';
+import { CollapsibleBox } from '@/components/ui/collapsible-box';
 
 const readApiError = (error: any): string => {
   const details = error?.details ?? error?.response?.data?.errors;
@@ -311,11 +312,11 @@ export default function PurchaseDetailPage() {
               <span>Kode Beli:</span>
               <span className="inline-flex items-center gap-1.5 font-semibold text-orange-600 hover:text-orange-700">{purchase.code}</span>
               {isPaid ? (
-                <Badge variant="outline" className="border-emerald-200 bg-emerald-50 text-emerald-700 font-semibold">
+                <Badge variant="outline">
                   Lunas
                 </Badge>
               ) : (
-                <Badge variant="outline" className="border-rose-200 bg-rose-50 text-rose-700 font-semibold">
+                <Badge variant="outline">
                   Belum Lunas
                 </Badge>
               )}
@@ -323,23 +324,21 @@ export default function PurchaseDetailPage() {
           }
           actions={
             <>
-              <Button disabled={isRefunded || !canEdit} className="bg-emerald-500 hover:bg-emerald-600 text-white disabled:cursor-not-allowed disabled:opacity-50 w-full sm:w-auto" onClick={() => router.push(`/dashboard/${slug}/transaksi/pembelian-unit/${purchase.id}/payment`)}>
+              <Button disabled={isRefunded || !canEdit} variant="default" onClick={() => router.push(`/dashboard/${slug}/transaksi/pembelian-unit/${purchase.id}/payment`)}>
                 <CreditCard className="mr-2 h-4 w-4" />
                 {isPaid ? 'Sudah Dibayar' : 'Bayar'}
               </Button>
               <Button
                 type="button"
-                variant="outline"
+                variant="success"
                 disabled={!canEdit || isPaid || isRefunded || updateBillingIsPaid.isPending || purchase?.unit_transaction_billing == null}
-                className="border-blue-600 text-blue-600 hover:bg-blue-50 disabled:cursor-not-allowed disabled:opacity-50 w-full sm:w-auto"
                 onClick={() => setIsMarkAsPaidDialogOpen(true)}
               >
                 <CheckCircle2 className="mr-2 h-4 w-4" />
                 {isPaid ? 'Sudah Lunas' : 'Tandai Lunas'}
               </Button>
               <Button
-                variant="outline"
-                className="bg-white hover:bg-gray-50 border-gray-200 w-full sm:w-auto"
+                variant="default"
                 disabled={!canReceive || !canEdit}
                 onClick={() => setIsReceiveDialogOpen(true)}
               >
@@ -347,7 +346,6 @@ export default function PurchaseDetailPage() {
               </Button>
               <Button
                 variant="outline"
-                className="w-full sm:w-auto"
                 disabled={!canEdit}
                 onClick={() => router.push(`/dashboard/${slug}/transaksi/pembelian-unit/edit/${purchase?.id}`)}>
                 <Edit className="mr-2 h-4 w-4" />
@@ -392,17 +390,14 @@ export default function PurchaseDetailPage() {
         <UnitTypeDetailTable transactionId={purchase.id} />
 
         <div className="space-y-3">
-          <div>
-            <h2 className="text-sm font-semibold text-slate-900">History Pembayaran</h2>
-            <p className="text-xs text-muted-foreground">Rincian lengkap unit yang dibeli</p>
-          </div>
-
-          <BaseTable
-            data={resolvedBillingHistories}
-            columns={historyColumns}
-            loading={historyLoading}
-            headerRowClassName="bg-green-100"
-          />
+          <CollapsibleBox title="History Pembayaran" description="Rincian lengkap unit yang dibeli">
+            <BaseTable
+              data={resolvedBillingHistories}
+              columns={historyColumns}
+              loading={historyLoading}
+              headerRowClassName="bg-green-100"
+            />
+          </CollapsibleBox>
         </div>
       </div>
 

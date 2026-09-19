@@ -8,6 +8,7 @@ import { cn } from '@/lib/utils';
 import { CopyBox } from '@/components/ui/copy-box';
 import { ReferenceLink } from '@/components/ui/reference-link';
 import { useRouter } from 'next/router';
+import { CollapsibleBox } from '@/components/ui/collapsible-box';
 
 const stockStateConfig: Record<string, { label: string; className: string }> = {
   draft: { label: 'Draft', className: 'border-slate-200 bg-slate-50 text-slate-600' },
@@ -125,12 +126,7 @@ export function UnitTypeDetailTable({ transactionId }: UnitTypeDetailTableProps)
   );
 
   return (
-    <div className="overflow-hidden rounded-md border bg-white">
-      <div className="border-b px-6 py-5">
-        <h3 className="text-xl font-semibold">Detail Unit Tipe</h3>
-        <p className="text-sm text-muted-foreground">Rincian identitas dan status setiap unit pada transaksi</p>
-      </div>
-
+    <CollapsibleBox title="Detail Unit Tipe" description="Rincian identitas dan status setiap unit pada transaksi">
       <div className="p-6">
         <BaseTable
           data={data?.data ?? []}
@@ -140,6 +136,6 @@ export function UnitTypeDetailTable({ transactionId }: UnitTypeDetailTableProps)
           onPageChange={setPage}
         />
       </div>
-    </div>
+    </CollapsibleBox>
   );
 }

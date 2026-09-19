@@ -1,7 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 
 import { Wallet, Trash, Upload, CheckCircle2 } from 'lucide-react';
-import { cn } from '@/lib/utils';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -9,6 +8,7 @@ import { UnitBilling, UnitBillingHistory } from '@/@types/unit-billing.types';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { InputDate } from '@/components/ui/input-date';
+import { FileInput } from '@/components/ui/file-input';
 import { MoneyInput } from '@/components/ui/money-input';
 import { currenciesFormat } from '@/components/ui/currenciesFormat';
 import { TextTruncate } from '@/components/ui/text-truncate';
@@ -453,14 +453,13 @@ export function UnitTransactionPaymentForm({
                                             <FormItem className="flex-1 space-y-2">
                                                 <FormLabel className="text-sm font-medium">Bukti Pembayaran (Opsional)</FormLabel>
                                                 <FormControl>
-                                                    <label className={cn(
-                                                        "block cursor-pointer rounded-md border border-dashed px-4 py-6 text-center text-sm transition-all duration-200",
-                                                        isDisabled && "opacity-60 cursor-not-allowed pointer-events-none",
-                                                        file
-                                                            ? "border-emerald-300 bg-emerald-50/50 text-emerald-700 hover:border-emerald-400 hover:bg-emerald-50"
-                                                            : "border-slate-300 bg-slate-50 text-slate-600 hover:border-slate-400 hover:bg-slate-100"
-                                                    )}>
-                                                        {file ? (
+                                                    <FileInput
+                                                        value={file ?? null}
+                                                        disabled={isDisabled}
+                                                        onFileChange={(fileObj) => onChange(fileObj ?? undefined)}
+                                                        helperText="Klik untuk mencari file"
+                                                        triggerClassName={file ? "border-emerald-300 bg-emerald-50/50 text-emerald-700 hover:border-emerald-400 hover:bg-emerald-50" : undefined}
+                                                        triggerContent={file ? (
                                                             <>
                                                                 <CheckCircle2 className="mx-auto mb-2 h-7 w-7 text-emerald-500 animate-in zoom-in duration-200" />
                                                                 <span className="block font-semibold text-emerald-700 max-w-[250px] mx-auto truncate">{file.name}</span>
@@ -473,16 +472,7 @@ export function UnitTransactionPaymentForm({
                                                                 <span className="mt-1 block text-xs text-slate-500">Klik untuk mencari file</span>
                                                             </>
                                                         )}
-                                                        <input autoComplete="off"
-                                                            type="file"
-                                                            disabled={isDisabled}
-                                                            onChange={(e) => {
-                                                                const fileObj = e.target.files?.[0];
-                                                                if (fileObj) onChange(fileObj);
-                                                            }}
-                                                            className="hidden"
-                                                        />
-                                                    </label>
+                                                    />
                                                 </FormControl>
                                                 <FormMessage />
                                             </FormItem>

@@ -33,6 +33,7 @@ import { TextTruncate } from '@/components/ui/text-truncate';
 import { UnitTypeDetailTable } from '@/components/features/unit-transaksi/UnitTypeDetailTable';
 import { useDocumentTemplate } from '@/hooks/useDocumentTemplate';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { CollapsibleBox } from '@/components/ui/collapsible-box';
 
 export default function SalesDetailPage() {
   const router = useRouter();
@@ -337,23 +338,21 @@ export default function SalesDetailPage() {
           }
           actions={
             <>
-              <Button disabled={isRefunded || !canCreate} className="bg-emerald-500 hover:bg-emerald-600 text-white disabled:cursor-not-allowed disabled:opacity-50" onClick={handlePayment}>
+              <Button disabled={isRefunded || !canCreate} variant="default" onClick={handlePayment}>
                 <CreditCard className="mr-2 h-4 w-4" />
                 {isPaid ? 'Sudah Dibayar' : 'Bayar'}
               </Button>
               <Button
                 type="button"
-                variant="outline"
+                variant="success"
                 disabled={isPaid || isRefunded || updateBillingIsPaid.isPending || sales?.unit_transaction_billing == null || !canCreate}
-                className="border-blue-600 text-blue-600 hover:bg-blue-50 disabled:cursor-not-allowed disabled:opacity-50"
                 onClick={() => setIsMarkAsPaidDialogOpen(true)}
               >
                 <CheckCircle2 className="mr-2 h-4 w-4" />
                 {isPaid ? 'Sudah Lunas' : 'Tandai Lunas'}
               </Button>
               <Button
-                variant="outline"
-                className="bg-white hover:bg-gray-50 border-gray-200"
+                variant="default"
                 disabled={!canDeliver || !canCreate}
                 onClick={() => setIsDeliveryDialogOpen(true)}
               >
@@ -398,16 +397,13 @@ export default function SalesDetailPage() {
         <UnitTypeDetailTable transactionId={sales.id} />
 
         <div className="space-y-3">
-          <div>
-            <h2 className="text-sm font-semibold text-slate-900">History Pembayaran</h2>
-            <p className="text-xs text-muted-foreground">Rincian lengkap unit yang terjual</p>
-          </div>
-
-          <BaseTable
-            data={resolvedBillingHistories}
-            columns={historyColumns}
-            loading={historyLoading}
-          />
+          <CollapsibleBox title="History Pembayaran" description="Rincian lengkap unit yang terjual">
+            <BaseTable
+              data={resolvedBillingHistories}
+              columns={historyColumns}
+              loading={historyLoading}
+            />
+          </CollapsibleBox>
         </div>
       </div>
 

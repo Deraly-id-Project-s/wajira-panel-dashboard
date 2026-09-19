@@ -127,7 +127,7 @@ export const InputDate = React.forwardRef<HTMLInputElement, InputDateProps>(
               variant="outline"
               disabled={disabled || readOnly}
               className={cn(
-                'w-full justify-start text-left font-normal h-9 px-3',
+                'w-full sm:w-full justify-start text-left font-normal h-9 px-3',
                 !dateValue && 'text-muted-foreground',
                 className
               )}

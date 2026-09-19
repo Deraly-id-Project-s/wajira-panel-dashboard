@@ -85,7 +85,7 @@ export function BBNBillFormDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent showCloseButton={false} className="max-w-[420px] rounded-[24px] border border-slate-200 p-6 bg-white shadow-lg">
+      <DialogContent showCloseButton={false} className="max-w-[420px] rounded-md border border-slate-200 p-6 bg-white shadow-lg">
         <div>
           <DialogHeader className="mb-5">
             <DialogTitle className="text-[18px] font-bold text-slate-900">
@@ -190,7 +190,7 @@ export function BBNBillPaymentDialog({ open, onOpenChange, onSubmit, isSubmittin
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent showCloseButton={false} className="max-w-[420px] rounded-[24px] border border-slate-200 p-6 bg-white shadow-lg">
+      <DialogContent showCloseButton={false} className="max-w-[420px] rounded-md border border-slate-200 p-6 bg-white shadow-lg">
         <div>
           <DialogHeader className="mb-5">
             <DialogTitle className="text-[18px] font-bold text-slate-900">Tambah Data Tagihan</DialogTitle>

@@ -1,7 +1,7 @@
 import { Card, CardContent } from "@/components/ui/card"
 
 import { DollarSign } from "lucide-react"
-import { InvoicePayment } from "./invoice.types"
+import type { InvoicePayment } from "@/types/unit-transaction-invoice.types"
 import { formatCurrency } from "@/lib/utils/currency"
 
 /**

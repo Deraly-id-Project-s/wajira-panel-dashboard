@@ -55,6 +55,14 @@
   @apply bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 opacity-90 hover:opacity-100 w-full sm:w-auto text-white font-medium shadow-sm transition-all disabled:from-slate-200 disabled:to-slate-300 disabled:text-slate-800 disabled:opacity-50 disabled:cursor-not-allowed disabled:pointer-events-none disabled:shadow-none;
 }
 
+@utility btn-success {
+  @apply bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 opacity-90 hover:opacity-100 w-full sm:w-auto text-white font-medium shadow-sm transition-all disabled:from-slate-200 disabled:to-slate-300 disabled:text-slate-800 disabled:opacity-50 disabled:cursor-not-allowed disabled:pointer-events-none disabled:shadow-none;
+}
+
+@utility btn-error {
+  @apply bg-gradient-to-r from-rose-500 to-red-600 hover:from-rose-600 hover:to-red-700 opacity-90 hover:opacity-100 w-full sm:w-auto text-white font-medium shadow-sm transition-all disabled:from-slate-200 disabled:to-slate-300 disabled:text-slate-800 disabled:opacity-50 disabled:cursor-not-allowed disabled:pointer-events-none disabled:shadow-none;
+}
+
 @utility btn-outline {
   @apply border border-slate-200 bg-white bg-none w-full sm:w-auto text-slate-700 hover:bg-slate-50 hover:text-slate-900 hover:bg-none font-medium transition-all duration-200 shadow-sm disabled:bg-slate-50 disabled:text-slate-400 disabled:border-slate-100 disabled:cursor-not-allowed disabled:pointer-events-none disabled:shadow-none;
 }

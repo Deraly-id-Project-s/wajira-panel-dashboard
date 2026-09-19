@@ -72,15 +72,15 @@ export function UnitTransactionHeaderForm({
         </div>
 
         {/* Form fields */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
           <FormField
             control={form.control}
             name="date"
             render={({ field }) => (
-              <FormItem>
+              <FormItem className="min-w-0 w-full">
                 <FormLabel className="text-sm font-medium">Tanggal</FormLabel>
                 <FormControl>
-                  <InputDate disabled={readOnly} {...field} />
+                  <InputDate disabled={readOnly} className="h-10 w-full min-w-0" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -91,7 +91,7 @@ export function UnitTransactionHeaderForm({
             control={form.control}
             name="personId"
             render={({ field }) => (
-              <FormItem className="flex flex-col min-w-0">
+              <FormItem className="flex min-w-0 w-full flex-col">
                 <FormLabel className="text-sm font-medium">
                   {type === 'purchase' ? 'Supplier' : 'Customer'}
                 </FormLabel>
@@ -133,7 +133,7 @@ export function UnitTransactionHeaderForm({
             control={form.control}
             name="personAddress"
             render={({ field }) => (
-              <FormItem>
+              <FormItem className="min-w-0 w-full">
                 <FormLabel className="text-sm font-medium">Alamat</FormLabel>
                 <FormControl>
                   <Input
@@ -153,7 +153,7 @@ export function UnitTransactionHeaderForm({
             control={form.control}
             name="personNpwp"
             render={({ field }) => (
-              <FormItem>
+              <FormItem className="min-w-0 w-full">
                 <FormLabel className="text-sm font-medium">NPWP</FormLabel>
                 <FormControl>
                   <Input
@@ -173,7 +173,7 @@ export function UnitTransactionHeaderForm({
             control={form.control}
             name="documentTemplateId"
             render={({ field }) => (
-              <FormItem>
+              <FormItem className="min-w-0 w-full">
                 <FormLabel className="text-sm font-medium">
                   Document Template <span className="font-normal text-muted-foreground">(Opsional)</span>
                 </FormLabel>

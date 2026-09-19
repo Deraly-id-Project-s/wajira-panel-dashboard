@@ -12,6 +12,7 @@ import { useTypeUnits } from '@/hooks/useTypeUnit';
 import { toast } from 'sonner';
 import { ReferenceLink } from '@/components/ui/reference-link';
 import BaseTable, { ColumnDef } from '@/components/ui/base-table';
+import { CollapsibleBox } from '@/components/ui/collapsible-box';
 
 interface Props {
   lineItems: SalesLineItem[];
@@ -174,18 +175,18 @@ export function SalesUnitTable({ lineItems, salesId, onAddUnit, canCreate, canEd
           <DropdownMenuContent align="end">
             {!isPaid && (
               <DropdownMenuItem onClick={() => router.push(`${basePath}/${salesId}/unit/${item.id}/edit`)} disabled={!canEdit && isPaid}>
-                <Pencil className="mr-2 h-4 w-4" /> Edit
+                Edit
               </DropdownMenuItem>
             )}
             <DropdownMenuItem onClick={() => router.push(`${basePath}/${salesId}/unit/${item.id}`)}>
-              <Eye className="mr-2 h-4 w-4" /> Detail
+              Detail
             </DropdownMenuItem>
             {!isPaid && (<DropdownMenuItem
               className="text-red-600 focus:bg-red-50 focus:text-red-600"
               onClick={() => !isPaid && setDeleteId(item.id)}
               disabled={!canDelete && isPaid}
             >
-              <Trash2 className="mr-2 h-4 w-4" /> Hapus
+              Hapus
             </DropdownMenuItem>
             )}
           </DropdownMenuContent>
@@ -196,12 +197,7 @@ export function SalesUnitTable({ lineItems, salesId, onAddUnit, canCreate, canEd
 
   return (
     <div className="space-y-4">
-      <div className="rounded-md border bg-white overflow-hidden">
-        <div className="border-b px-6 py-5">
-          <h3 className="text-xl font-semibold">Detail Penjualan Unit</h3>
-          <p className="text-sm text-muted-foreground">Rincian lengkap unit yang dijual</p>
-        </div>
-
+      <CollapsibleBox title="Detail Penjualan Unit" description="Rincian lengkap unit yang dijual">
         <div className="p-6">
           <BaseTable
             data={pagedData}
@@ -250,7 +246,7 @@ export function SalesUnitTable({ lineItems, salesId, onAddUnit, canCreate, canEd
             }
           />
         </div>
-      </div>
+      </CollapsibleBox>
 
       {/* Delete single */}
       <AlertDialog open={!!deleteId} onOpenChange={(open) => !open && setDeleteId(null)}>

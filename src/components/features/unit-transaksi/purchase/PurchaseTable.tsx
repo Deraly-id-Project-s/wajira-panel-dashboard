@@ -320,15 +320,15 @@ export default function PurchaseTable({
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
               <DropdownMenuItem onClick={() => router.push(`/dashboard/${slug}/transaksi/pembelian-unit/${item.id}`)}>
-                <Eye className="mr-2 h-4 w-4" /> Detail
+                Detail
               </DropdownMenuItem>
               {canEdit && (
                 <>
                   <DropdownMenuItem onClick={() => router.push(`/dashboard/${slug}/transaksi/pembelian-unit/${item.id}/edit`)}>
-                    <Pencil className="mr-2 h-4 w-4" /> Edit
+                    Edit
                   </DropdownMenuItem>
                   <DropdownMenuItem onClick={() => router.push(`/dashboard/${slug}/transaksi/refund-beli?unit_transaction_id=${item.id}`)}>
-                    <RotateCcw className="mr-2 h-4 w-4" /> Refund Beli
+                    Refund Beli
                   </DropdownMenuItem>
                   <TooltipProvider>
                     <Tooltip>
@@ -338,7 +338,7 @@ export default function PurchaseTable({
                             disabled={!item.documentTemplateId}
                             onClick={() => item.documentTemplateId && window.open(`/dashboard/${slug}/transaksi/pembelian-unit/print/${item.id}`, '_blank')}
                           >
-                            <Printer className="mr-2 h-4 w-4" /> Print
+                            Print
                           </DropdownMenuItem>
                         </span>
                       </TooltipTrigger>
@@ -362,7 +362,7 @@ export default function PurchaseTable({
                     onDelete(item.id);
                   }}
                 >
-                  <Trash2 className="mr-2 h-4 w-4" /> Hapus
+                  Hapus
                 </DropdownMenuItem>
               )}
             </DropdownMenuContent>
@@ -381,7 +381,7 @@ export default function PurchaseTable({
           <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-slate-400" />
           <Input
             type="text"
-            placeholder="Search No. Rangka / No. Mesin..."
+            placeholder="Search No Transaksi, supplier, nominal..."
             className="pl-8 bg-white h-9 border-slate-300"
             value={localSearch}
             onChange={(e) => handleSearch(e.target.value)}
@@ -390,8 +390,8 @@ export default function PurchaseTable({
 
         <Button
           type="button"
+          tooltip="gunakan fitur ini untuk mencari data detail tipe unit berdasarkan No. Rangka, No. Mesin, Warna"
           variant="outline"
-          className="border-slate-300 bg-white hover:bg-slate-50 text-slate-700 h-9 font-medium rounded-md shadow-none px-4 whitespace-nowrap"
           onClick={() => setIsVehicleSearchOpen(true)}
         >
           Cari Data Kendaraan

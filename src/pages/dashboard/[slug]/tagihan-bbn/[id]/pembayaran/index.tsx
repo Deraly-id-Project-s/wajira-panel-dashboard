@@ -51,7 +51,7 @@ function SummaryField({ label, value }: { label: string; value: string }) {
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <Card className="rounded-[24px] border border-slate-200 bg-white p-5 shadow-sm">
+    <Card className="rounded-md border border-slate-200 bg-white p-5 shadow-sm">
       <div className="mb-5 border-b border-slate-100 pb-4 text-[20px] font-semibold text-slate-900">{title}</div>
       {children}
     </Card>

@@ -8,7 +8,7 @@ import { UnitTransactionForm } from '@/components/features/unit-transaksi/UnitTr
 import { usePurchaseById, useUpdateUnitTransactionDocumentTemplate } from '@/hooks/useUnitTransaction';
 import { useCreateUnitItem, usePurchaseUnitItems } from '@/hooks/useUnitTransactionItem';
 import { Card, CardContent } from '@/components/ui/card';
-import { type UnitTransactionFormValues } from '@/scheme/unit-transaction.schema';
+import type { UnitTransactionFormValues } from '@/types/unit-transaction.types';
 import { useMemo } from 'react';
 import { LoadingState } from '@/components/ui/loading-state';
 import { PageHeader } from '@/components/ui/page-header';

@@ -2,7 +2,7 @@ import React, { useState, useMemo } from 'react';
 
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { UnitTransactionForm } from '@/components/features/unit-transaksi/UnitTransactionForm';
-import { type UnitTransactionFormValues } from '@/scheme/unit-transaction.schema';
+import type { UnitTransactionFormValues } from '@/types/unit-transaction.types';
 import { toast } from 'sonner';
 import { useCreateSales } from '@/hooks/useSales';
 import { useCustomers } from '@/hooks/useCustomer';

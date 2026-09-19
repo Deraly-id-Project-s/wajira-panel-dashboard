@@ -19,5 +19,3 @@ export const unitTransactionSchema = z.object({
   dppTotal: z.number().min(0).optional(),
   ppnTotal: z.number().min(0).optional(),
 });
-
-export type UnitTransactionFormValues = z.infer<typeof unitTransactionSchema>;

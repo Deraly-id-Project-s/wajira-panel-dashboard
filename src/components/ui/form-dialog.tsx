@@ -63,7 +63,7 @@ export function FormDialog({
           <div className="flex items-center flex-col sm:flex-row w-full sm:w-auto justify-end gap-2 px-6 py-5">
             <Button
               type="button"
-              variant={"outline"}
+              variant="outline"
               onClick={handleCancel}
               disabled={isSubmitting}
             >
@@ -72,7 +72,7 @@ export function FormDialog({
             <Button
               type="submit"
               disabled={isSubmitting}
-              className="btn-primary!"
+              variant="default"
             >
               {isSubmitting ? (
                 "Menyimpan..."

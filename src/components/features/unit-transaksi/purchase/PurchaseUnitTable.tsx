@@ -14,6 +14,7 @@ import { useUnitItemDetailsByTransactionId } from '@/hooks/useUnitItemDetail';
 import { currenciesFormat } from '@/components/ui/currenciesFormat';
 import { ReferenceLink } from '@/components/ui/reference-link';
 import BaseTable, { ColumnDef } from '@/components/ui/base-table';
+import { CollapsibleBox } from '@/components/ui/collapsible-box';
 
 interface Props {
   purchaseId: string;
@@ -162,17 +163,17 @@ export default function PurchaseUnitTable({ purchaseId, slug, isPaid, canEdit, c
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
             <DropdownMenuItem onClick={() => !isPaid && handleEdit(item.id)} disabled={!canEdit || isPaid}>
-              <Pencil className="mr-2 h-4 w-4" /> Edit
+              Edit
             </DropdownMenuItem>
             <DropdownMenuItem onClick={() => handleDetail(item.id)}>
-              <Eye className="mr-2 h-4 w-4" /> Detail / Kelola Unit
+              Detail / Kelola Unit
             </DropdownMenuItem>
             <DropdownMenuItem
               className="text-red-600 focus:text-red-600 focus:bg-red-50"
               onClick={() => !isPaid && setUnitToDelete(item.id)}
               disabled={!canDelete || isPaid}
             >
-              <Trash2 className="mr-2 h-4 w-4" /> Hapus
+              Hapus
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
@@ -206,56 +207,52 @@ export default function PurchaseUnitTable({ purchaseId, slug, isPaid, canEdit, c
       ) : null}
 
       <div className="rounded-md border bg-white overflow-hidden">
-        {/* Header */}
-        <div className="border-b px-6 py-5">
-          <h3 className="text-xl font-semibold">Detail Pembelian Unit</h3>
-          <p className="text-sm text-muted-foreground">Rincian lengkap unit yang dibeli</p>
-        </div>
-
-        <div className="p-6">
-          <BaseTable
-            data={pagedData}
-            columns={columns}
-            loading={isLoading || isError}
-            showCheckbox
-            selectedIds={selectedIds}
-            onSelectedIdsChange={setSelectedIds}
-            showLimitChange
-            perPage={perPage}
-            onPerPageChange={(val) => {
-              setPerPage(val);
-              setCurrentPage(1);
-            }}
-            meta={{
-              currentPage,
-              perPage,
-              lastPage: totalPages,
-              total: items.length,
-            }}
-            onPageChange={setCurrentPage}
-            headerActions={
-              <div className="flex flex-col sm:flex-row items-center gap-2 w-full sm:w-auto">
-                <Button
-                  size="sm"
-                  variant="destructive"
-                  className="w-full sm:w-auto"
-                  disabled={selectedIds.size === 0 || bulkDeleteMutation.isPending && isPaid || !canDelete}
-                  onClick={() => !isPaid && setBulkDeleteOpen(true)}
-                >
-                  <Trash2 className="h-4 w-4 mr-2" />
-                  Bulk Delete ({selectedIds.size})
-                </Button>
-                <Button
-                  onClick={() => !isPaid && router.push(`/dashboard/${slug}/transaksi/pembelian-unit/${purchaseId}/create-unit`)}
-                  className="btn-primary!"
-                  disabled={isPaid || !canEdit}>
-                  <Plus className="h-4 w-4 mr-2" />
-                  Tambah Data Unit
-                </Button>
-              </div>
-            }
-          />
-        </div>
+        <CollapsibleBox title="Detail Pembelian Unit" description='Rincian lengkap unit yang dibeli'>
+          <div className="p-6">
+            <BaseTable
+              data={pagedData}
+              columns={columns}
+              loading={isLoading || isError}
+              showCheckbox
+              selectedIds={selectedIds}
+              onSelectedIdsChange={setSelectedIds}
+              showLimitChange
+              perPage={perPage}
+              onPerPageChange={(val) => {
+                setPerPage(val);
+                setCurrentPage(1);
+              }}
+              meta={{
+                currentPage,
+                perPage,
+                lastPage: totalPages,
+                total: items.length,
+              }}
+              onPageChange={setCurrentPage}
+              headerActions={
+                <div className="flex flex-col sm:flex-row items-center gap-2 w-full sm:w-auto">
+                  <Button
+                    size="sm"
+                    variant="destructive"
+                    className="w-full sm:w-auto"
+                    disabled={selectedIds.size === 0 || bulkDeleteMutation.isPending && isPaid || !canDelete}
+                    onClick={() => !isPaid && setBulkDeleteOpen(true)}
+                  >
+                    <Trash2 className="h-4 w-4 mr-2" />
+                    Bulk Delete ({selectedIds.size})
+                  </Button>
+                  <Button
+                    onClick={() => !isPaid && router.push(`/dashboard/${slug}/transaksi/pembelian-unit/${purchaseId}/create-unit`)}
+                    className="btn-primary!"
+                    disabled={isPaid || !canEdit}>
+                    <Plus className="h-4 w-4 mr-2" />
+                    Tambah Data Unit
+                  </Button>
+                </div>
+              }
+            />
+          </div>
+        </CollapsibleBox>
       </div>
 
       {/* Delete single */}

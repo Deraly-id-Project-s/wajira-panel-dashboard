@@ -101,7 +101,7 @@ export default function EditBBNBillPage() {
             </div>
           </div>
 
-          <Card className="rounded-[24px] border border-slate-200 bg-white p-6 shadow-sm">
+          <Card className="rounded-md border border-slate-200 bg-white p-6 shadow-sm">
             <form
               onSubmit={form.handleSubmit(async (values) => {
                 if (!id) return;

@@ -7,7 +7,7 @@ import { DashboardLayout } from "@/components/layout/DashboardLayout"
 import { UnitTransactionForm } from "@/components/features/unit-transaksi/UnitTransactionForm"
 import { useAddPurchaseUnit } from "@/hooks/usePurchase"
 import { usePurchaseById, useUpdateUnitTransactionDocumentTemplate } from "@/hooks/useUnitTransaction"
-import type { UnitTransactionFormValues } from "@/scheme/unit-transaction.schema"
+import type { UnitTransactionFormValues } from "@/types/unit-transaction.types"
 
 export default function AddPurchaseUnitPage() {
     const router = useRouter()

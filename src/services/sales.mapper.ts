@@ -1,5 +1,5 @@
 import { SalesItem, SalesLineItem } from '@/components/features/unit-transaksi/sales/sales.data';
-import type { UnitTransactionFormValues } from '@/scheme/unit-transaction.schema';
+import type { UnitTransactionFormValues } from '@/types/unit-transaction.types';
 import { UnitTransaction } from '@/@types/unit-transaction.types';
 
 export type SalesApiModel = {

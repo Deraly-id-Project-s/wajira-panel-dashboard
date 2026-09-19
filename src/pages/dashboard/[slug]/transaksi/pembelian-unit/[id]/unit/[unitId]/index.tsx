@@ -577,11 +577,11 @@ export default function UnitPurchaseDetailPage() {
                     )}
                     {canCreate && (
                       <>
-                        <Button onClick={() => setOpenImport(true)} disabled={qty === details.length} variant="outline" className="w-full sm:w-auto font-medium shadow-sm">
+                        <Button onClick={() => setOpenImport(true)} disabled={qty === details.length} variant="outline">
                           <Upload className="h-4 w-4 mr-2" />
                           Import
                         </Button>
-                        <Button onClick={openCreateForm} disabled={qty === details.length || !qty} className="btn-primary-orange!">
+                        <Button onClick={openCreateForm} disabled={qty === details.length || !qty} variant="default">
                           <Plus className="h-4 w-4 mr-2" />
                           Tambah Detail Unit
                         </Button>

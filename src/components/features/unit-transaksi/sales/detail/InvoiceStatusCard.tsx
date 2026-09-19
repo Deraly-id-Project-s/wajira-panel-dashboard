@@ -4,7 +4,7 @@ import { Progress } from "@/components/ui/progress"
 import { CreditCard } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { formatCurrency } from "@/lib/utils/currency"
-import { InvoiceStatus } from "./invoice.types"
+import type { InvoiceStatus } from "@/types/unit-transaction-invoice.types"
 
 /**
  * Invoice Status Card - EXACT sesuai Figma
