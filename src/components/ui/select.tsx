@@ -19,11 +19,15 @@ const SelectTrigger = React.forwardRef<
   React.ComponentPropsWithoutRef<typeof SelectPrimitive.Trigger> & {
     size?: 'sm' | 'default';
   }
->(({ className, size = 'default', children, ...props }, ref) => (
+>(({ className, size = 'default', children, onClick, ...props }, ref) => (
   <SelectPrimitive.Trigger
     ref={ref}
     data-size={size}
     className={cn('flex w-full items-center justify-between rounded-md border bg-background px-3 py-2 text-sm shadow-sm', 'focus:outline-none focus:ring-2 focus:ring-ring', size === 'sm' ? 'h-8' : 'h-9', className)}
+    onClick={(e) => {
+      e.stopPropagation();
+      onClick?.(e);
+    }}
     {...props}
   >
     {children}
@@ -122,7 +126,7 @@ const SelectContent = React.forwardRef<
         ref={ref}
         position={position}
         className={cn(
-          'relative z-[9999] max-w-[calc(100vw-1rem)] min-w-[8rem] overflow-hidden rounded-md border bg-popover text-popover-foreground shadow-md',
+          'relative z-[10050] max-w-[calc(100vw-1rem)] min-w-[8rem] overflow-hidden rounded-md border bg-popover text-popover-foreground shadow-md',
           'data-[state=open]:animate-in data-[state=closed]:animate-out',
           'data-[side=bottom]:slide-in-from-top-2',
           'data-[side=top]:slide-in-from-bottom-2',

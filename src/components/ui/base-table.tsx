@@ -489,7 +489,8 @@ export default function BaseTable<T>({
                         headerRowClassName
                       ),
                       isStickyRight && cn(
-                        'sticky right-0 z-10 border-l border-slate-200 shadow-[-4px_0_6px_-4px_rgba(0,0,0,0.05)] w-[80px] min-w-[80px] max-w-[80px]',
+                        'sticky right-0 z-10 border-l border-slate-200 shadow-[-4px_0_6px_-4px_rgba(0,0,0,0.05)]',
+                        !col.headerClassName?.includes('w-') && 'w-[80px] min-w-[80px] max-w-[80px]',
                         headerRowClassName
                       ),
                       textAlignment,
@@ -586,10 +587,13 @@ export default function BaseTable<T>({
                     onClick={() => onRowClick?.(item)}
                   >
                     {showCheckbox && (
-                      <TableCell className={cn(
-                        "sticky left-0 z-10 w-[44px] min-w-[44px] max-w-[44px] border-r border-slate-200 px-3 py-3 text-center shadow-[4px_0_6px_-4px_rgba(0,0,0,0.05)] sm:w-[50px] sm:min-w-[50px] sm:max-w-[50px] sm:px-4 sm:py-4",
-                        markClasses.cell
-                      )}>
+                      <TableCell
+                        className={cn(
+                          "sticky left-0 z-10 w-[44px] min-w-[44px] max-w-[44px] border-r border-slate-200 px-3 py-3 text-center shadow-[4px_0_6px_-4px_rgba(0,0,0,0.05)] sm:w-[50px] sm:min-w-[50px] sm:max-w-[50px] sm:px-4 sm:py-4",
+                          markClasses.cell
+                        )}
+                        onClick={(e) => e.stopPropagation()}
+                      >
                         <Checkbox
                           checked={selectedIds?.has(getRowIdInternal(item)) ?? false}
                           onCheckedChange={(checked) => handleToggleOne(getRowIdInternal(item), Boolean(checked))}
@@ -614,17 +618,25 @@ export default function BaseTable<T>({
                         <TableCell
                           key={col.id || colIdx}
                           className={cn(
-                      'px-2.5 py-2.5 text-[11px] text-slate-700 transition-colors print:px-2 print:py-2 print:text-[10px] sm:px-4 sm:py-4 sm:text-sm',
+                            'px-2.5 py-2.5 text-[11px] text-slate-700 transition-colors print:px-2 print:py-2 print:text-[10px] sm:px-4 sm:py-4 sm:text-sm',
                             isStickyLeft && cn(
                               'sticky z-10 border-r border-slate-200',
                               isLastStickyLeft && 'shadow-[4px_0_6px_-4px_rgba(0,0,0,0.05)]'
                             ),
-                            isStickyRight && 'sticky right-0 z-10 border-l border-slate-200 shadow-[-4px_0_6px_-4px_rgba(0,0,0,0.05)] w-[80px] min-w-[80px] max-w-[80px]',
+                            isStickyRight && cn(
+                              'sticky right-0 z-10 border-l border-slate-200 shadow-[-4px_0_6px_-4px_rgba(0,0,0,0.05)]',
+                              !col.className?.includes('w-') && 'w-[80px] min-w-[80px] max-w-[80px]'
+                            ),
                             markClasses.cell,
                             textAlignment,
                             col.className
                           )}
                           style={isStickyLeft ? { left: leftOffset } : undefined}
+                          onClick={(e) => {
+                            if (isStickyRight) {
+                              e.stopPropagation();
+                            }
+                          }}
                         >
                           {col.cell
                             ? col.cell(item, rowIdx)
