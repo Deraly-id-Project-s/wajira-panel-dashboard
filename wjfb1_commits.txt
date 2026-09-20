@@ -1,6 +1,0 @@
-﻿9502523 Merge branch 'main' of https://github.com/Deraly-id-Project-s/wajira-panel-dashboard into WJFB1
-626b58b update: update transaction cash trigger button state
-9fa4479 feat: implement landing page components including navbar, bento features, FAQ, and hero section
-e964378 update: update landing page design
-c997419 feat: implement tax management system with CRUD operations for tax versions and rates
-8a592e8 feat: implement landing page components including navbar, bento features, FAQ, and hero section
