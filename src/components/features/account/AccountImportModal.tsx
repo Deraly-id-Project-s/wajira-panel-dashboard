@@ -2,6 +2,8 @@
 
 import { DataImportModal } from '../master-data/DataImportModal';
 import { useImportAccount } from '@/hooks/useAccount';
+import { useCompany } from '@/contexts/CompanyContext';
+import { getStoredCompanyId } from '@/lib/session/storage';
 
 interface Props {
     open: boolean;
@@ -11,9 +13,11 @@ interface Props {
 
 export function AccountImportModal({ open, onOpenChange, companyId }: Props) {
     const mutation = useImportAccount();
+    const { companyId: sessionCompanyId } = useCompany();
+    const effectiveCompanyId = String(sessionCompanyId || getStoredCompanyId() || companyId || '');
 
     const handleImport = async (file: File) => {
-        await mutation.mutateAsync({ companyId, file });
+        await mutation.mutateAsync({ companyId: effectiveCompanyId, file });
     };
 
     return (

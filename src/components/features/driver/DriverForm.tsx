@@ -10,6 +10,8 @@ import { Switch } from '@/components/ui/switch';
 import RequiredMark from '@/components/ui/required-mark';
 import type { Driver, DriverPayload } from '@/@types/driver.types';
 import { LeafletCoordinateInput } from '@/components/ui/leaflet-coordinate-input';
+import { useCompany } from '@/contexts/CompanyContext';
+import { getStoredCompanyId } from '@/lib/session/storage';
 
 type DriverFormValues = {
   name: string;
@@ -50,6 +52,8 @@ const emptyValues: DriverFormValues = {
 };
 
 export function DriverForm({ initialData, companyId, isSubmitting = false, onSubmit, onCancel }: DriverFormProps) {
+  const { companyId: sessionCompanyId } = useCompany();
+  const effectiveCompanyId = String(sessionCompanyId || getStoredCompanyId() || companyId || '');
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmation, setShowConfirmation] = useState(false);
   const form = useForm<DriverFormValues>({ defaultValues: emptyValues });

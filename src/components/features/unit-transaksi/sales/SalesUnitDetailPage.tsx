@@ -26,6 +26,8 @@ import { useStockUnits, useAssignUnitItemSales, useDispatchStockLifecycle } from
 import { useUpdateUnitTransactionState } from '@/hooks/useUnitTransaction';
 import { useTypeUnit } from '@/hooks/useTypeUnit';
 import { LoadingState } from '@/components/ui/loading-state';
+import { useCompany } from '@/contexts/CompanyContext';
+import { getStoredCompanyId } from '@/lib/session/storage';
 
 const readApiError = (error: any): string => {
   const statusCode = error?.statusCode ?? error?.response?.status;
@@ -82,6 +84,7 @@ export default function SalesUnitDetailPage() {
   } = useSalesDetail(salesId);
 
   const fallbackUnitItemFromSales = useMemo(() => {
+    console.log(salesData?.raw)
     const rows = salesData?.raw?.unit_transaction_items ?? [];
     const hit = rows.find((item) => String(item?.id ?? '') === String(selectedUnitId ?? ''));
     if (!hit) return null;
@@ -109,7 +112,8 @@ export default function SalesUnitDetailPage() {
     };
   }, [salesData?.raw?.unit_transaction_items, selectedUnitId, salesId]);
 
-  const companyId = String((salesData?.raw as any)?.company_id ?? '1');
+  const { companyId: sessionCompanyId } = useCompany();
+  const companyId = String(sessionCompanyId || getStoredCompanyId() || (salesData?.raw as any)?.company_id || '1');
   const fallbackUnitTypeId = String(fallbackUnitItemFromSales?.unit_type_id ?? selectedUnitId ?? '');
 
   const {

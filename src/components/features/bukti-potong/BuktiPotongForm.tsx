@@ -13,6 +13,8 @@ import { MoneyInput } from '@/components/ui/money-input';
 import RequiredMark from '@/components/ui/required-mark';
 import { Separator } from '@/components/ui/separator';
 import { LoadingState } from '@/components/ui/loading-state';
+import { useCompany } from '@/contexts/CompanyContext';
+import { getStoredCompanyId } from '@/lib/session/storage';
 
 interface Props {
   item: WithholdingTaxItem | null;
@@ -23,6 +25,8 @@ interface Props {
 }
 
 export default function BuktiPotongForm({ item, companyId, onSuccess: onFinish, onCancel, submitLabel }: Props) {
+  const { companyId: sessionCompanyId } = useCompany();
+  const effectiveCompanyId = String(sessionCompanyId || getStoredCompanyId() || companyId || '');
   const [source, setSource] = useState<'internal' | 'external'>('internal');
   const [cashId, setCashId] = useState<string>('');
   const [unitTransactionId, setUnitTransactionId] = useState<string>('');
@@ -34,7 +38,7 @@ export default function BuktiPotongForm({ item, companyId, onSuccess: onFinish, 
   const [paymentAmountStr, setPaymentAmountStr] = useState('');
   const [paymentDate, setPaymentDate] = useState('');
 
-  const { data: kasData, isLoading: isLoadingKas } = useKas(companyId);
+  const { data: kasData, isLoading: isLoadingKas } = useKas(effectiveCompanyId);
 
   const { mutate: createItem, isPending: isCreating } = useCreateWithholdingTax();
   const { mutate: updateItem, isPending: isUpdating } = useUpdateWithholdingTax();
@@ -127,7 +131,7 @@ export default function BuktiPotongForm({ item, companyId, onSuccess: onFinish, 
     }
 
     const payload: WithholdingTaxPayload = {
-      company_id: companyId,
+      company_id: effectiveCompanyId,
       source,
       no_invoice: noInvoice,
       withholding_number: withholdingNumber,

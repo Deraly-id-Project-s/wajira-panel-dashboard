@@ -27,6 +27,7 @@ import { UnitTypePriceVersionForm } from '@/components/features/type-unit/UnitTy
 import type { UnitTypePriceVersion, UnitTypePriceVersionFormValues } from '@/@types/unit-type-price-version.types';
 import { toast } from 'sonner';
 import { usePermissionGuard } from '@/hooks/usePermissionGuard';
+import { CollapsibleBox } from '@/components/ui/collapsible-box';
 
 const statusConfig: Record<string, { label: string; className: string }> = {
   normal: { label: 'Normal', className: 'border-emerald-200 bg-emerald-50 text-emerald-700 font-semibold' },
@@ -364,14 +365,7 @@ export default function TypeUnitDetailPage() {
         </Card>
 
         {/* STOCK TABLE COMPONENT */}
-        <div className="rounded-md border border-slate-200 bg-white p-6 shadow-sm space-y-4">
-          <div className="flex flex-col gap-1 md:flex-row md:items-center md:justify-between border-b pb-4">
-            <div>
-              <h3 className="text-lg font-bold text-slate-900">Daftar Unit Barang</h3>
-              <p className="text-sm text-slate-500 text-muted-foreground">Status ketersediaan detail unit tipe</p>
-            </div>
-          </div>
-
+        <CollapsibleBox title="Daftar Unit Barang" description="Status ketersediaan detail unit tipe">
           {/* FILTERS */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 bg-slate-50 p-4 rounded-md">
             <div className="space-y-1">
@@ -446,15 +440,10 @@ export default function TypeUnitDetailPage() {
             }}
             onPageChange={setPage}
           />
-        </div>
+        </CollapsibleBox>
 
         {/* PRICE VERSIONING TABLE COMPONENT */}
-        <div className="rounded-md border border-slate-200 bg-white p-6 shadow-sm space-y-4">
-          <div className="border-b pb-4">
-            <h3 className="text-lg font-bold text-slate-900">Riwayat Versi Harga</h3>
-            <p className="text-sm text-slate-500 text-muted-foreground">Kelola riwayat harga beli & harga jual untuk tipe unit ini</p>
-          </div>
-
+        <CollapsibleBox title="Riwayat Versi Harga" description="Kelola riwayat harga beli & harga jual untuk tipe unit ini">
           <SearchPagination
             searchValue={priceSearch}
             onSearchChange={setPriceSearch}
@@ -484,7 +473,7 @@ export default function TypeUnitDetailPage() {
               canDelete={canDelete}
             />
           </SearchPagination>
-        </div>
+        </CollapsibleBox>
       </div>
 
       <UnitTypePriceVersionForm
@@ -494,6 +483,6 @@ export default function TypeUnitDetailPage() {
         onSubmit={handlePriceSubmit}
         isSubmitting={createPriceMutation.isPending || updatePriceMutation.isPending}
       />
-    </DashboardLayout>
+    </DashboardLayout >
   );
 }
