@@ -10,7 +10,7 @@ import { Badge } from '@/components/ui/badge';
 import { formatDate } from '@/lib/utils/format';
 import { useSparepartTransaction, useCreateSparepartTransactionBillingHistory, useUpdateSparepartTransactionBillingHistory, useDeleteSparepartTransactionBillingHistory, useUpdateSparepartTransactionBillingPaymentStatus } from '@/hooks/useSparepartTransaction';
 import { Button } from '@/components/ui/button';
-import { CheckCircle, Eye, Edit, Trash2, Plus, MoreVertical, CreditCard, Info } from 'lucide-react';
+import { CheckCircle, Eye, Edit, Trash2, Plus, MoreVertical, CreditCard, Info, Warehouse } from 'lucide-react';
 import { PaymentModal } from '@/components/features/sparepart-transaction/PaymentModal';
 import DeletePaymentDialog from '@/components/features/sparepart-transaction/DeletePaymentDialog';
 import BaseTable, { ColumnDef } from '@/components/ui/base-table';
@@ -275,6 +275,7 @@ export default function DetailPurchaseSparepartPage() {
                 disabled={!canEdit || !canProcessGoods || createWarehouseActivityMutation.isPending}
                 onClick={() => setProcessDialogOpen(true)}
               >
+                <Warehouse className="mr-2 h-4 w-4" />
                 {createWarehouseActivityMutation.isPending ? 'Memproses...' : isProcessed ? 'Sudah Diproses' : 'Proses Barang'}
               </Button>
               <Button

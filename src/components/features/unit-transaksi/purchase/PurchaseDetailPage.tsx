@@ -16,7 +16,7 @@ import { usePurchaseUnitItems } from '@/hooks/useUnitTransactionItem';
 import { useTypeUnits } from '@/hooks/useTypeUnit';
 import { unitItemDetailService } from '@/services/unitItemDetail.service';
 import { warehouseActivityService } from '@/services/warehouseActivity.service';
-import { CreditCard, AlertTriangle, CheckCircle2, Info, Edit } from 'lucide-react';
+import { CreditCard, AlertTriangle, CheckCircle2, Info, Edit, Warehouse } from 'lucide-react';
 import { toast } from 'sonner';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { usePermissionGuard } from '@/hooks/usePermissionGuard';
@@ -345,6 +345,7 @@ export default function PurchaseDetailPage() {
                 disabled={!canReceive || !canEdit}
                 onClick={() => setIsReceiveDialogOpen(true)}
               >
+                <Warehouse className="mr-2 h-4 w-4" />
                 {receiveButtonText}
               </Button>
               <Button

@@ -228,21 +228,10 @@ export function UnitTransactionPaymentForm({
                 header: 'Keterangan',
                 cell: (item) => <TextTruncate text={item.note || '-'} maxLength={10} />,
             },
-            {
-                header: 'Bukti',
-                cell: (item) =>
-                    item.payment_proof ? (
-                        <a href={item.payment_proof} target="_blank" rel="noreferrer" className="text-blue-600 hover:underline">
-                            Lihat
-                        </a>
-                    ) : (
-                        '-'
-                    ),
-            },
             ...(onDeleteHistory
                 ? [
                     {
-                        header: '',
+                        header: 'Aksi',
                         alignment: 'center' as const,
                         sticky: 'right' as const,
                         cell: (item: UnitBillingHistory) => (
@@ -442,42 +431,6 @@ export function UnitTransactionPaymentForm({
                                             <FormMessage />
                                         </FormItem>
                                     )}
-                                />
-                                <FormField
-                                    control={form.control}
-                                    name="paymentProof"
-                                    render={({ field: { value, onChange, ...field } }) => {
-                                        const file = value as File | undefined;
-                                        const isDisabled = billing && billingRemaining === 0 || isPaidAndValid;
-                                        return (
-                                            <FormItem className="flex-1 space-y-2">
-                                                <FormLabel className="text-sm font-medium">Bukti Pembayaran (Opsional)</FormLabel>
-                                                <FormControl>
-                                                    <FileInput
-                                                        value={file ?? null}
-                                                        disabled={isDisabled}
-                                                        onFileChange={(fileObj) => onChange(fileObj ?? undefined)}
-                                                        helperText="Klik untuk mencari file"
-                                                        triggerClassName={file ? "border-emerald-300 bg-emerald-50/50 text-emerald-700 hover:border-emerald-400 hover:bg-emerald-50" : undefined}
-                                                        triggerContent={file ? (
-                                                            <>
-                                                                <CheckCircle2 className="mx-auto mb-2 h-7 w-7 text-emerald-500 animate-in zoom-in duration-200" />
-                                                                <span className="block font-semibold text-emerald-700 max-w-[250px] mx-auto truncate">{file.name}</span>
-                                                                <span className="mt-1 block text-xs text-emerald-600">Klik untuk mengganti file</span>
-                                                            </>
-                                                        ) : (
-                                                            <>
-                                                                <Upload className="mx-auto mb-2 h-7 w-7 text-slate-400" />
-                                                                <span className="block font-medium">Pilih file bukti</span>
-                                                                <span className="mt-1 block text-xs text-slate-500">Klik untuk mencari file</span>
-                                                            </>
-                                                        )}
-                                                    />
-                                                </FormControl>
-                                                <FormMessage />
-                                            </FormItem>
-                                        );
-                                    }}
                                 />
                             </div>
                         </div>

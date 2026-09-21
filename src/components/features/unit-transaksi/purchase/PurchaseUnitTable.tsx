@@ -232,9 +232,7 @@ export default function PurchaseUnitTable({ purchaseId, slug, isPaid, canEdit, c
               headerActions={
                 <div className="flex flex-col sm:flex-row items-center gap-2 w-full sm:w-auto">
                   <Button
-                    size="sm"
-                    variant="destructive"
-                    className="w-full sm:w-auto"
+                    variant="error"
                     disabled={selectedIds.size === 0 || bulkDeleteMutation.isPending && isPaid || !canDelete}
                     onClick={() => !isPaid && setBulkDeleteOpen(true)}
                   >

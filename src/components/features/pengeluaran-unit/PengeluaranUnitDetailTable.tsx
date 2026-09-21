@@ -262,6 +262,70 @@ export default function PengeluaranUnitDetailTable({ data, isRefundActivity, act
     [slug, isRefundActivity]
   );
 
+  const selectedRows = useMemo(
+    () => rows.filter((row) => selected.includes(row.id)),
+    [rows, selected]
+  );
+
+  const modalColumns = useMemo<ColumnDef<any>[]>(
+    () => [
+      {
+        header: 'Kode Jual',
+        accessorKey: 'salesCode',
+        sortable: true,
+        alignment: 'left',
+        cell: (item) => <CopyBox text={item.salesCode ?? '-'} />,
+      },
+      {
+        header: 'Tipe Unit',
+        accessorKey: 'unitTypeName',
+        sortable: true,
+        alignment: 'left',
+        cell: (item) => (
+          <ReferenceLink href={`/dashboard/${slug}/master/type-unit?search=${item.unitTypeName}`}>
+            {item.unitTypeName}
+          </ReferenceLink>
+        ),
+      },
+      {
+        header: 'Warna',
+        accessorKey: 'color',
+        sortable: true,
+        alignment: 'left',
+        cell: (item) => item.color || '-',
+      },
+      {
+        header: 'Nomor Mesin',
+        accessorKey: 'machineNumber',
+        sortable: true,
+        alignment: 'left',
+        cell: (item) => <CopyBox text={item.machineNumber || ''} />,
+      },
+      {
+        header: 'Nomor Rangka',
+        accessorKey: 'chassisNumber',
+        sortable: true,
+        alignment: 'left',
+        cell: (item) => <CopyBox text={item.chassisNumber || ''} />,
+      },
+      {
+        header: 'Sub Blok',
+        accessorKey: 'warehouseSubBlock',
+        sortable: true,
+        alignment: 'center',
+        cell: (item) =>
+          item.warehouseSubBlock ? (
+            <CopyBox text={item.warehouseSubBlock} />
+          ) : (
+            <Badge variant="outline" className="font-semibold bg-white">
+              Belum Ditambahkan
+            </Badge>
+          ),
+      },
+    ],
+    [slug]
+  );
+
   return (
     <div className="space-y-4">
       <BaseTable
@@ -327,42 +391,11 @@ export default function PengeluaranUnitDetailTable({ data, isRefundActivity, act
 
           <div className="space-y-6 my-4 overflow-x-scroll">
             {/* Selected Vehicles Table */}
-            <div className="border border-slate-200 rounded-md overflow-hidden shadow-sm bg-white">
-              <div className="max-h-60 overflow-y-auto overflow-x-scroll">
-                <table className="w-full text-sm text-left border-collapse">
-                  <thead className="bg-[#f8f9fa] text-slate-600 uppercase text-xs font-semibold border-b border-slate-200 sticky top-0 z-10">
-                    <tr>
-                      <th className="px-4 py-3">Kode Jual</th>
-                      <th className="px-4 py-3">Tipe Unit</th>
-                      <th className="px-4 py-3">Warna</th>
-                      <th className="px-4 py-3">No Mesin</th>
-                      <th className="px-4 py-3">No Rangka</th>
-                      <th className="px-4 py-3">Sub Blok</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-100">
-                    {rows.filter((row) => selected.includes(row.id)).map((row) => (
-                      <tr key={row.id} className="hover:bg-slate-50/50 transition-colors">
-                        <td className="px-4 py-3 font-medium text-slate-900">
-                          <CopyBox text={row.salesCode ?? "-"} />
-                        </td>
-                        <td className="px-4 py-3 text-slate-600">
-                          <ReferenceLink href={`/dashboard/${slug}/master?search=${row?.unitTypeName}`}>
-                            {row.unitTypeName}
-                          </ReferenceLink>
-                        </td>
-                        <td className="px-4 py-3 text-slate-600">{row.color || '-'}</td>
-                        <td className="px-4 py-3 text-slate-500 font-mono text-xs"><CopyBox text={row.machineNumber || ''} /></td>
-                        <td className="px-4 py-3 text-slate-500 font-mono text-xs"><CopyBox text={row.chassisNumber || ''} /></td>
-                        <td className="px-4 py-3 text-slate-500 font-mono text-xs">
-                          {row.warehouseSubBlock ? <CopyBox text={row.warehouseSubBlock} /> : <Badge variant='outline' className={`font-semibold bg-white`}>Belum Ditambahkan</Badge>}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </div>
+            <BaseTable
+              data={selectedRows}
+              columns={modalColumns}
+              containerClassName="max-h-60 overflow-y-auto"
+            />
 
             {/* Inputs Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -405,13 +438,13 @@ export default function PengeluaranUnitDetailTable({ data, isRefundActivity, act
           </div>
 
           <DialogFooter className="gap-2 sm:gap-0 border-t pt-4">
-            <Button variant="outline" className="rounded-md" onClick={() => setIsOpenProcessModal(false)}>
+            <Button variant="outline" className="mr-2" onClick={() => setIsOpenProcessModal(false)}>
               Batal
             </Button>
             <Button
               onClick={handleSubmitProcess}
               disabled={bulkUpdateMutation.isPending}
-              className="bg-primary text-primary-foreground hover:bg-primary/90 rounded-md px-5"
+              variant="default"
             >
               {bulkUpdateMutation.isPending ? 'Memproses...' : 'Proses Data'}
             </Button>

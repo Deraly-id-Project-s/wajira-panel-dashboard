@@ -14,6 +14,8 @@ interface StockPickerTableProps {
   selectedIds: Set<number>;
   unitType?: TypeUnit;
   isPaid?: boolean;
+  currentTransactionId?: string | number;
+  isSelectionLocked?: boolean;
   onToggleOne: (id: number, checked: boolean) => void;
   onToggleAllPage: (checked: boolean) => void;
   currentPage: number;
@@ -88,9 +90,21 @@ const renderStockState = (state: string) => {
   );
 };
 
+const getReservationTransactionCode = (item: WarehouseStockUnit) => {
+  return item.unit_transaction_item_sales?.unit_transaction_item?.unit_transaction?.code ?? null;
+};
+
+const getReservationTransactionId = (item: WarehouseStockUnit) => {
+  return item.unit_transaction_item_sales?.unit_transaction_item?.unit_transaction_id
+    ?? item.unit_transaction_item_sales?.unit_transaction_item?.unit_transaction?.id
+    ?? null;
+};
+
 export function StockPickerTable({
   units,
   selectedIds,
+  currentTransactionId,
+  isSelectionLocked,
   onToggleOne,
   currentPage,
   perPage,
@@ -107,7 +121,7 @@ export function StockPickerTable({
     if (!query) return units;
 
     return units.filter((item) => {
-      return [item.color, item.machine_number, item.chassis_number].some((field) => String(field ?? '').toLowerCase().includes(query));
+      return [item.color, item.machine_number, item.chassis_number, getReservationTransactionCode(item)].some((field) => String(field ?? '').toLowerCase().includes(query));
     });
   }, [units, searchValue]);
 
@@ -122,13 +136,25 @@ export function StockPickerTable({
   }, [selectedIds]);
 
   const isLimitReached = requiredQty !== undefined && requiredQty > 0 && selectedIds.size >= requiredQty;
+  const isReservedByCurrentTransaction = useCallback((item: WarehouseStockUnit) => {
+    const reservationTransactionId = getReservationTransactionId(item);
+    return reservationTransactionId != null && String(reservationTransactionId) === String(currentTransactionId ?? '');
+  }, [currentTransactionId]);
 
   const isCheckboxDisabled = useCallback((item: WarehouseStockUnit) => {
+    if (isSelectionLocked) {
+      return true;
+    }
+
+    if (item.is_reserved && !isReservedByCurrentTransaction(item)) {
+      return true;
+    }
+
     if (isLimitReached && !selectedIds.has(item.id)) {
       return true;
     }
     return false;
-  }, [isLimitReached, selectedIds]);
+  }, [isLimitReached, isReservedByCurrentTransaction, isSelectionLocked, selectedIds]);
 
   const handleSelectedIdsChange = useCallback((ids: Set<string>) => {
     const numIds = new Set<number>(Array.from(ids).map(Number));
@@ -136,6 +162,7 @@ export function StockPickerTable({
 
     const added = Array.from(numIds).filter((id) => !selectedIds.has(id));
     const removed = Array.from(allPageIds).filter((id) => selectedIds.has(id) && !numIds.has(id));
+    const rowById = new Map(pagedRows.map((row) => [row.id, row]));
 
     if (removed.length > 0) {
       removed.forEach((id) => onToggleOne(id, false));
@@ -144,6 +171,11 @@ export function StockPickerTable({
     if (added.length > 0) {
       let currentSelectedSize = selectedIds.size - removed.length;
       for (const id of added) {
+        const row = rowById.get(id);
+        if (!row || isCheckboxDisabled(row)) {
+          continue;
+        }
+
         if (requiredQty !== undefined && requiredQty > 0 && currentSelectedSize >= requiredQty) {
           break;
         }
@@ -151,7 +183,7 @@ export function StockPickerTable({
         currentSelectedSize++;
       }
     }
-  }, [pagedRows, selectedIds, onToggleOne, requiredQty]);
+  }, [pagedRows, selectedIds, onToggleOne, requiredQty, isCheckboxDisabled]);
 
   const columns = useMemo<ColumnDef<WarehouseStockUnit>[]>(() => [
     {
@@ -231,6 +263,34 @@ export function StockPickerTable({
           </Badge>
         );
       }
+    },
+    {
+      header: 'Status Reservasi',
+      accessorKey: 'is_reserved',
+      sortable: true,
+      alignment: 'center' as const,
+      tooltip: 'Kode transaksi yang sedang mereservasi unit',
+      cell: (item) => {
+        const transactionCode = getReservationTransactionCode(item);
+
+        if (transactionCode) {
+          return <CopyBox text={transactionCode} />;
+        }
+
+        if (item.is_reserved) {
+          return (
+            <Badge variant="outline" className="border-amber-200 bg-amber-50 font-semibold text-amber-700">
+              Reservasi
+            </Badge>
+          );
+        }
+
+        return (
+          <Badge variant="outline" className="border-slate-200 bg-slate-50 font-semibold text-slate-600">
+            Tidak Reservasi
+          </Badge>
+        );
+      },
     },
   ], []);
 

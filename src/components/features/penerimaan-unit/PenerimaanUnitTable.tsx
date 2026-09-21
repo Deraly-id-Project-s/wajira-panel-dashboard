@@ -270,14 +270,14 @@ export default function PenerimaanUnitTable({
             </div>
           </div>
 
-          <DialogFooter className="gap-2 sm:gap-0 border-t pt-4">
-            <Button variant="outline" className="rounded-md" onClick={() => setEditingActivity(null)}>
+          <DialogFooter className="gap-2 sm:gap-0 border-t pt-4 flex justify-end w-full">
+            <Button variant="outline" className="mr-2" onClick={() => setEditingActivity(null)}>
               Batal
             </Button>
             <Button
               onClick={handleUpdateState}
               disabled={updateStateMutation.isPending}
-              className="bg-primary text-primary-foreground hover:bg-primary/90 rounded-md px-5"
+              variant="default"
             >
               {updateStateMutation.isPending ? 'Menyimpan...' : 'Simpan'}
             </Button>

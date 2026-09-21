@@ -223,9 +223,7 @@ export function SalesUnitTable({ lineItems, salesId, onAddUnit, canCreate, canEd
               <div className="flex flex-col sm:flex-row items-center gap-2 w-full sm:w-auto">
                 {canDelete && (
                   <Button
-                    size="sm"
-                    className="w-full sm:w-auto"
-                    variant="destructive"
+                    variant="error"
                     disabled={selectedIds.size === 0 || bulkDeleteMutation.isPending || isPaid || !canCreate}
                     onClick={() => !isPaid ? setIsBulkDeleteOpen(true) : undefined}
                   >

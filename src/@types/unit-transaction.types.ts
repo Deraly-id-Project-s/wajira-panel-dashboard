@@ -375,6 +375,21 @@ export interface WarehouseStockUnit {
   status?: string | undefined;
   warehouse_sub_block?: WarehouseSubBlock;
   stock_state?: string | null;
+  is_reserved?: boolean;
+  unit_transaction_item_sales?: {
+    id?: number | string;
+    unit_transaction_item_id?: number | string;
+    unit_transaction_item_detail_id?: number | string;
+    unit_transaction_item?: {
+      id?: number | string;
+      unit_transaction_id?: number | string;
+      unit_transaction?: {
+        id?: number | string;
+        code?: string | null;
+        type?: string | null;
+      } | null;
+    } | null;
+  } | null;
 }
 
 export interface UnitTransactionItemSalesAssignment {

@@ -49,7 +49,6 @@ export function TypeUnitFormFields({ form, disabled = false }: TypeUnitFormField
               onAdd={() => setCreateBrandOpen(true)}
               addDisabled={disabled}
               addLabel="Tambah merk"
-              addVariant="outline"
             >
               <Popover open={brandOpen} onOpenChange={(open) => { setBrandOpen(open); if (!open) setSearch(''); }}>
                 <PopoverTrigger asChild>

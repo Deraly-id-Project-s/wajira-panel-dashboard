@@ -63,6 +63,19 @@ const toNumberId = (value: unknown): number => {
   return Number.isFinite(normalized) ? normalized : 0;
 };
 
+const toBoolean = (value: unknown): boolean => {
+  if (typeof value === 'boolean') return value;
+  if (typeof value === 'number') return value === 1;
+  if (typeof value === 'string') return value === '1' || value.toLowerCase() === 'true';
+  return false;
+};
+
+const getReservationTransactionId = (item: WarehouseStockUnit) => {
+  return item.unit_transaction_item_sales?.unit_transaction_item?.unit_transaction_id
+    ?? item.unit_transaction_item_sales?.unit_transaction_item?.unit_transaction?.id
+    ?? null;
+};
+
 export default function SalesUnitDetailPage() {
   const router = useRouter();
   const { id, unitId, slug } = router.query;
@@ -84,7 +97,6 @@ export default function SalesUnitDetailPage() {
   } = useSalesDetail(salesId);
 
   const fallbackUnitItemFromSales = useMemo(() => {
-    console.log(salesData?.raw)
     const rows = salesData?.raw?.unit_transaction_items ?? [];
     const hit = rows.find((item) => String(item?.id ?? '') === String(selectedUnitId ?? ''));
     if (!hit) return null;
@@ -103,6 +115,8 @@ export default function SalesUnitDetailPage() {
         status: String(detail?.status ?? ''),
         warehouse_sub_block: detail?.warehouse_sub_block,
         stock_state: detail?.stock_state ?? null,
+        is_reserved: detail?.is_reserved === true || detail?.is_reserved === 1 || detail?.is_reserved === '1',
+        unit_transaction_item_sales: detail?.unit_transaction_item_sales ?? null,
       })),
       unit_transaction_item_sales: (hit.unit_transaction_item_sales ?? []).map((item: any) => ({
         id: Number(item?.id ?? 0),
@@ -170,6 +184,8 @@ export default function SalesUnitDetailPage() {
       status: String(detail?.status ?? ''),
       warehouse_sub_block: detail?.warehouse_sub_block,
       stock_state: detail?.stock_state ?? null,
+      is_reserved: detail?.is_reserved === true || detail?.is_reserved === 1 || detail?.is_reserved === '1',
+      unit_transaction_item_sales: detail?.unit_transaction_item_sales ?? null,
     }));
 
     const detailLookup = new Map<number, WarehouseStockUnit>();
@@ -193,6 +209,8 @@ export default function SalesUnitDetailPage() {
           status: '',
           warehouse_sub_block: undefined,
           stock_state: null,
+          is_reserved: false,
+          unit_transaction_item_sales: null,
         },
       );
 
@@ -258,8 +276,28 @@ export default function SalesUnitDetailPage() {
   const slugValue = Array.isArray(slug) ? slug[0] : slug || '';
   const salesPath = slugValue ? `/dashboard/${slugValue}/transaksi/penjualan-unit` : '/transaksi/penjualan-unit';
   const hasRequiredRouteParams = Boolean(salesId && selectedUnitId);
+  const isStockSelectionLocked = Boolean(salesData?.raw?.warehouse_activity) || toBoolean((salesData?.raw as any)?.has_warehouse_activity);
+  const isReservedByOtherTransaction = (item?: WarehouseStockUnit) => {
+    if (!item?.is_reserved) return false;
+
+    const reservationTransactionId = getReservationTransactionId(item);
+    if (reservationTransactionId == null) return true;
+
+    return String(reservationTransactionId) !== String(salesId ?? '');
+  };
 
   const toggleOne = (stockId: number, checked: boolean) => {
+    if (isStockSelectionLocked) {
+      toast.error('Unit tidak dapat diubah karena transaksi sudah diproses barang');
+      return;
+    }
+
+    const target = pickerRows.find((item) => item.id === stockId);
+    if (checked && isReservedByOtherTransaction(target)) {
+      toast.error('Stock yang sudah reservasi tidak dapat dipilih');
+      return;
+    }
+
     if (checked && selectedIds.size >= requiredQty) {
       toast.error(`Maksimal ${requiredQty} unit yang dapat dipilih`);
       return;
@@ -276,6 +314,11 @@ export default function SalesUnitDetailPage() {
   };
 
   const toggleAllPage = (checked: boolean) => {
+    if (isStockSelectionLocked) {
+      toast.error('Unit tidak dapat diubah karena transaksi sudah diproses barang');
+      return;
+    }
+
     if (checked && selectedIds.size >= requiredQty) {
       toast.error(`Maksimal ${requiredQty} unit yang dapat dipilih`);
       return;
@@ -299,7 +342,7 @@ export default function SalesUnitDetailPage() {
       if (checked) {
         let remaining = requiredQty - next.size;
         pageRows.forEach((item) => {
-          if (!next.has(item.id) && remaining > 0) {
+          if (!isReservedByOtherTransaction(item) && !next.has(item.id) && remaining > 0) {
             next.add(item.id);
             remaining--;
           }
@@ -316,6 +359,12 @@ export default function SalesUnitDetailPage() {
   };
 
   const handleAssignStock = async () => {
+    if (isStockSelectionLocked) {
+      toast.error('Unit tidak dapat diubah karena transaksi sudah diproses barang');
+      setIsAssignDialogOpen(false);
+      return;
+    }
+
     if (!selectedUnitId) {
       toast.error('Unit transaction item tidak valid');
       setIsAssignDialogOpen(false);
@@ -329,6 +378,13 @@ export default function SalesUnitDetailPage() {
     }
 
     const ids = Array.from(selectedIds);
+    const hasReservedSelection = ids.some((stockId) => pickerRows.some((item) => item.id === stockId && isReservedByOtherTransaction(item)));
+    if (hasReservedSelection) {
+      toast.error('Stock yang sudah reservasi tidak dapat dipilih');
+      setIsAssignDialogOpen(false);
+      return;
+    }
+
     if (ids.length === 0) {
       toast.error('Pilih minimal 1 stock unit');
       setIsAssignDialogOpen(false);
@@ -458,7 +514,7 @@ export default function SalesUnitDetailPage() {
                   </div>
                 </div>
                 <div className={cn(
-                  "flex items-center justify-center h-10 w-10 rounded-full",
+                  "flex items-center justify-center h-10 w-10 rounded-md",
                   selectedCount >= requiredQty ? "bg-emerald-100 text-emerald-600" : "bg-blue-100 text-blue-600"
                 )}>
                   {selectedCount >= requiredQty ? <CheckCircle2 className="h-5 w-5" /> : <ListTodoIcon className="h-5 w-5" />}
@@ -472,6 +528,8 @@ export default function SalesUnitDetailPage() {
               requiredQty={requiredQty}
               unitType={unitTypeData}
               isPaid={isPaid}
+              currentTransactionId={salesId}
+              isSelectionLocked={isStockSelectionLocked}
               onToggleOne={toggleOne}
               onToggleAllPage={toggleAllPage}
               currentPage={currentPage}
@@ -485,7 +543,7 @@ export default function SalesUnitDetailPage() {
                 <Button
                   size="sm"
                   className="bg-primary text-primary-foreground hover:bg-primary/90"
-                  disabled={!canAssignStock || isSelectionMatchingSaved || assignMutation.isPending || dispatchMutation.isPending || updateStateMutation.isPending || isPaid}
+                  disabled={!canAssignStock || isSelectionMatchingSaved || assignMutation.isPending || dispatchMutation.isPending || updateStateMutation.isPending || isPaid || isStockSelectionLocked}
                   onClick={() => setIsAssignDialogOpen(true)}
                 >
                   {assignMutation.isPending ? 'Menyimpan...' : `Unit Terjual (${selectedCount}/${requiredQty})`}
