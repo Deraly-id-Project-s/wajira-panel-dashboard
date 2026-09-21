@@ -365,7 +365,7 @@ export default function FinanceBillingTable({ financeBillings, cashFlowDetail, c
       <div className="flex flex-col items-stretch gap-3 border-b border-slate-100 pb-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <div className="flex items-center gap-3 flex-wrap">
-            <h3 className="text-lg font-semibold text-slate-900">Rincian Pembayaran</h3>
+            <h3 className="text-lg font-semibold text-slate-900">Jurnal</h3>
             <div className="flex items-center gap-1.5 bg-slate-50 border border-slate-200 rounded-md px-2 py-0.5 text-xs text-slate-600 font-medium">
               {(cashFlowDetail.unit_transaction_billing_id || cashFlowDetail.goods_transaction_billing_id || cashFlowDetail.unit_transaction_billing || cashFlowDetail.goods_transaction_billing) ? (
                 <TooltipProvider>
@@ -389,7 +389,7 @@ export default function FinanceBillingTable({ financeBillings, cashFlowDetail, c
         {!disabled && (
           <Button type="button" onClick={openAddForm} variant="default" disabled={isFullyPaid} className="w-full sm:w-auto">
             <Plus className="mr-1.5 h-4 w-4" />
-            Tambah Pembayaran
+            Tambah Jurnal
           </Button>
         )}
       </div>
@@ -439,7 +439,7 @@ export default function FinanceBillingTable({ financeBillings, cashFlowDetail, c
       <FormDialog
         open={isFormOpen}
         onOpenChange={(open: boolean) => { if (!open) closeForm(); }}
-        title={editingId ? 'Edit Pembayaran Finance' : 'Tambah Pembayaran Finance Baru'}
+        title={editingId ? 'Edit Jurnal' : 'Tambah Jurnal Baru'}
         onSubmit={(e: React.FormEvent) => { e.preventDefault(); void handleSubmitForm(); }}
         maxWidthClassName="sm:max-w-5xl"
         isSubmitting={isLoading}
@@ -566,7 +566,7 @@ export default function FinanceBillingTable({ financeBillings, cashFlowDetail, c
       <AlertDialog open={Boolean(deleteTarget)} onOpenChange={(open) => { if (!open) setDeleteTarget(null); }}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Hapus Pembayaran?</AlertDialogTitle>
+            <AlertDialogTitle>Hapus Jurnal?</AlertDialogTitle>
             <AlertDialogDescription>
               Anda yakin ingin menghapus pembayaran sebesar{' '}
               <span className="font-semibold">{deleteTarget ? currenciesFormat(deleteTarget.cash?.code?.toLowerCase().endsWith('_usd') ? 'usd' : 'idr', deleteTarget.amount) : ''}</span>?

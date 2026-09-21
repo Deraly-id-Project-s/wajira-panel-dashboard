@@ -324,7 +324,7 @@ export default function KasHarianDetailPage() {
                 disabled={(remainingPayment !== 0 && !cashFlowDetail.is_valid) || isStatusUpdating}
                 loading={isStatusUpdating}
               >
-                {isMarkedPaid ? 'Tandai Belum Lunas' : 'Tandai Lunas'}
+                {isMarkedPaid ? 'Batal Posting Jurnal' : 'Posting Jurnal'}
               </Button>
             </>
           }
