@@ -6,6 +6,7 @@ import { toast } from 'sonner';
 import { Check, ChevronsUpDown } from 'lucide-react';
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
+import { InputDate } from '@/components/ui/input-date';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -124,7 +125,7 @@ export default function PenerimaanUnitFormDialog({ open, onClose }: Props) {
 
           <div className="space-y-2 text-sm">
             <label className="text-gray-700">Tanggal Penerimaan</label>
-            <Input type="date" value={form.tanggal} onChange={(e) => setForm({ ...form, tanggal: e.target.value })} />
+            <InputDate value={form.tanggal} onChange={(e) => setForm({ ...form, tanggal: e.target.value })} />
           </div>
 
           <div className="space-y-2 text-sm">

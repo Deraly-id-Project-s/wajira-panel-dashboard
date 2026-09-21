@@ -7,6 +7,9 @@ import axios, { AxiosError, InternalAxiosRequestConfig } from 'axios';
 import { ApiError } from '@/@types/api';
 import { getAccessToken, removeAccessToken } from '@/lib/auth/token';
 import { clearStoredCompanyId, clearStoredPermissions } from '@/lib/session/storage';
+import { clearCachedUserCompanies } from '@/services/company.service';
+import { clearCachedPreferences } from '@/services/preference.service';
+import { AuthService } from '@/features/auth/services/auth.service';
 
 // Default to hawk-dev backend to match master-data environment; override via NEXT_PUBLIC_API_URL when needed.
 const apiBaseUrl = process.env.NEXT_PUBLIC_API_URL ?? 'https://wajirabackend.hawk-dev.com';
@@ -59,6 +62,9 @@ apiClient.interceptors.response.use(
           removeAccessToken();
           clearStoredCompanyId();
           clearStoredPermissions();
+          clearCachedUserCompanies();
+          clearCachedPreferences();
+          AuthService.clearCachedProfile();
           window.location.href = '/login';
         }
       }

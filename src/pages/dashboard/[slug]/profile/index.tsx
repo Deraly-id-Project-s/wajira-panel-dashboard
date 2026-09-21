@@ -1,62 +1,60 @@
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
+import { AtSign, Camera, Mail, Save, Shield, UserCircle } from 'lucide-react';
+import { toast } from 'sonner';
+
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
-
-    Upload,
-    Mail,
-    Shield
-} from 'lucide-react';
-import { useAuthMe } from '@/features/auth/hooks/use-auth-me';
-import { AuthService } from '@/features/auth/services/auth.service';
-import { toast } from 'sonner';
+    Card,
+    CardContent,
+    CardDescription,
+    CardHeader,
+    CardTitle,
+} from '@/components/ui/card';
+import { FileInput } from '@/components/ui/file-input';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { LoadingState } from '@/components/ui/loading-state';
 import { ParsedImage } from '@/components/ui/parsed-image';
-import { getParsedImageUrl } from '@/lib/utils/image';
-
+import { useAuthMe } from '@/features/auth/hooks/use-auth-me';
+import { AuthService } from '@/features/auth/services/auth.service';
 
 export default function ProfilePage() {
     const { data: profileData, isLoading, refetch } = useAuthMe();
     const user = profileData?.data;
 
     const [isSubmitting, setIsSubmitting] = useState(false);
-
-    // Form State (firstname, lastname and username are editable as per update API body)
     const [formData, setFormData] = useState({
         firstname: '',
         lastname: '',
         username: '',
     });
-
-    // Avatar upload states
     const [avatarFile, setAvatarFile] = useState<File | null>(null);
     const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
 
     useEffect(() => {
-        if (user) {
-            setFormData({
-                firstname: user.firstname || '',
-                lastname: user.lastname || '',
-                username: user.username || '',
-            });
-            // Reset local avatar selection when user data changes/reloads
-            setAvatarFile(null);
-            setAvatarPreview(null);
-        }
+        if (!user) return;
+
+        setFormData({
+            firstname: user.firstname || '',
+            lastname: user.lastname || '',
+            username: user.username || '',
+        });
+        setAvatarFile(null);
+        setAvatarPreview(null);
     }, [user]);
 
-    // Clean up object URL to prevent memory leaks
     useEffect(() => {
         return () => {
-            if (avatarPreview) {
+            if (avatarPreview?.startsWith('blob:')) {
                 URL.revokeObjectURL(avatarPreview);
             }
         };
     }, [avatarPreview]);
 
-    const initials = (user?.name || [user?.firstname, user?.lastname].filter(Boolean).join(' ') || '-')
+    const displayName = user?.name || [formData.firstname, formData.lastname].filter(Boolean).join(' ') || 'Pengguna';
+    const initials = displayName
         .split(' ')
         .filter(Boolean)
         .map((part) => part[0])
@@ -68,8 +66,22 @@ export default function ProfilePage() {
         ? user.roles[0].name.charAt(0).toUpperCase() + user.roles[0].name.slice(1)
         : 'User';
 
-    const handleSave = async (e: React.FormEvent) => {
-        e.preventDefault();
+    const handleAvatarChange = (file: File | null) => {
+        if (file && file.size > 2 * 1024 * 1024) {
+            toast.error('Ukuran file gambar maksimal 2MB');
+            return;
+        }
+
+        if (avatarPreview?.startsWith('blob:')) {
+            URL.revokeObjectURL(avatarPreview);
+        }
+
+        setAvatarFile(file);
+        setAvatarPreview(file ? URL.createObjectURL(file) : null);
+    };
+
+    const handleSave = async (event: React.FormEvent) => {
+        event.preventDefault();
         if (!user?.id) return;
 
         if (!formData.firstname.trim()) {
@@ -83,17 +95,15 @@ export default function ProfilePage() {
 
         setIsSubmitting(true);
         try {
-            const updateData = {
+            await AuthService.updateProfile(user.id, {
                 name: [formData.firstname.trim(), formData.lastname.trim()].filter(Boolean).join(' '),
                 firstname: formData.firstname.trim(),
                 lastname: formData.lastname.trim(),
                 username: formData.username.trim(),
                 avatar: avatarFile,
-            };
-
-            await AuthService.updateProfile(user.id, updateData);
+            });
             toast.success('Profil berhasil diperbarui!');
-            refetch(); // Refresh the profile data
+            refetch();
         } catch (error: any) {
             toast.error(error.message || 'Gagal memperbarui profil');
         } finally {
@@ -112,169 +122,167 @@ export default function ProfilePage() {
     return (
         <DashboardLayout>
             <div className="space-y-6">
-                <div>
-                    <h1 className="text-2xl font-semibold text-slate-900">Profil Saya</h1>
-                    <p className="text-sm text-muted-foreground">Kelola dan perbarui detail informasi profil Anda.</p>
-                </div>
-
-                <form onSubmit={handleSave} className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
-                    {/* LEFT COLUMN: Foto Profil */}
-                    <div className="lg:col-span-1">
-                        <div className="rounded-md border border-slate-200 bg-white p-6 shadow-sm space-y-6">
-                            <div className="border-b border-slate-100 pb-4">
-                                <h2 className="text-base font-semibold text-slate-900">Foto Profil</h2>
-                                <p className="text-xs text-muted-foreground mt-0.5">Unggah foto profil terbaru Anda.</p>
-                            </div>
-
-                            <div className="flex flex-col items-center">
-                                {(avatarPreview || user?.avatar) ? (
-                                    <div className="mb-5 flex justify-center">
-                                        <ParsedImage
-                                            src={avatarPreview || user?.avatar}
-                                            alt="Avatar"
-                                            className="h-28 w-28 rounded-full object-cover border-4 border-slate-200 shadow-sm"
-                                        />
-                                    </div>
-                                ) : (
-                                    <div className="mb-5 flex justify-center">
-                                        <div className="flex h-28 w-28 items-center justify-center rounded-full border-4 border-slate-200 bg-slate-100 text-3xl font-bold text-slate-800 shadow-sm">
-                                            {initials}
-                                        </div>
-                                    </div>
-                                )}
-
-                                {/* Drag/Click File Uploader Box */}
-                                {/* file upload component */}
-                                <label className="flex w-full cursor-pointer flex-col items-center justify-center rounded-md border border-dashed border-slate-200 bg-slate-50 px-5 py-5 text-center hover:bg-slate-100/70 transition">
-                                    <Upload className="mb-2 h-6 w-6 text-slate-500" />
-                                    <span className="text-sm font-medium text-slate-700">
-                                        {avatarFile ? avatarFile.name : 'Klik untuk upload gambar'}
-                                    </span>
-                                    <span className="mt-1 text-xs text-slate-400">Format PNG, JPG maksimal 2MB</span>
-                                    <input autoComplete="off"
-                                        type="file"
-                                        accept="image/*"
-                                        className="hidden"
-                                        onChange={(event) => {
-                                            const file = event.target.files?.[0] ?? null;
-                                            if (file && file.size > 2 * 1024 * 1024) {
-                                                toast.error('Ukuran file gambar maksimal 2MB');
-                                                event.target.value = ''; // Reset input element value
-                                                return;
-                                            }
-                                            setAvatarFile(file);
-                                            if (file) {
-                                                setAvatarPreview(URL.createObjectURL(file));
-                                            } else {
-                                                setAvatarPreview(null);
-                                            }
-                                        }}
-                                    />
-                                </label>
-                            </div>
+                <div className="flex flex-col gap-4 rounded-md border border-slate-200 bg-white px-5 py-5 shadow-sm md:flex-row md:items-center md:justify-between">
+                    <div className="flex items-center gap-4">
+                        <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-md bg-[#1e3a5f]/10 text-[#1e3a5f]">
+                            <UserCircle className="h-7 w-7" />
+                        </div>
+                        <div className="space-y-1">
+                            <h1 className="text-2xl font-semibold text-slate-900">Profil Saya</h1>
+                            <p className="text-sm text-muted-foreground">Kelola identitas pengguna dan foto profil akun.</p>
                         </div>
                     </div>
+                    <Badge variant="outline" className="w-fit border-[#1e3a5f]/20 bg-[#1e3a5f]/5 px-3 py-1 text-[#1e3a5f]">
+                        {roleName}
+                    </Badge>
+                </div>
 
-                    {/* RIGHT COLUMN: Detail Pribadi & Informasi Akun */}
-                    <div className="lg:col-span-2 space-y-6">
-                        {/* Card 2: Detail Pribadi */}
-                        <div className="rounded-md border border-slate-200 bg-white p-6 shadow-sm space-y-6">
-                            <div className="border-b border-slate-100 pb-4">
-                                <h2 className="text-base font-semibold text-slate-900">Detail Pribadi</h2>
-                                <p className="text-xs text-muted-foreground mt-0.5">Informasi nama dan identitas Anda.</p>
-                            </div>
-
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                <div className="space-y-2">
-                                    <Label htmlFor="firstname" className="text-sm font-medium text-slate-700">
-                                        Nama Depan <span className="text-rose-500">*</span>
-                                    </Label>
-                                    <Input
-                                        id="firstname"
-                                        placeholder="Masukkan nama depan"
-                                        value={formData.firstname}
-                                        onChange={(e) => setFormData({ ...formData, firstname: e.target.value })}
-                                        disabled={isSubmitting}
-                                        className="bg-white border-slate-200 text-sm shadow-sm h-11 focus-visible:ring-slate-400 rounded-md"
-                                    />
-                                </div>
-
-                                <div className="space-y-2">
-                                    <Label htmlFor="lastname" className="text-sm font-medium text-slate-700">
-                                        Nama Belakang
-                                    </Label>
-                                    <Input
-                                        id="lastname"
-                                        placeholder="Masukkan nama belakang"
-                                        value={formData.lastname}
-                                        onChange={(e) => setFormData({ ...formData, lastname: e.target.value })}
-                                        disabled={isSubmitting}
-                                        className="bg-white border-slate-200 text-sm shadow-sm h-11 focus-visible:ring-slate-400 rounded-md"
-                                    />
-                                </div>
-
-                                <div className="space-y-2 sm:col-span-2">
-                                    <Label htmlFor="username" className="text-sm font-medium text-slate-700">
-                                        Username <span className="text-rose-500">*</span>
-                                    </Label>
-                                    <Input
-                                        id="username"
-                                        placeholder="Masukkan username"
-                                        value={formData.username}
-                                        onChange={(e) => setFormData({ ...formData, username: e.target.value })}
-                                        disabled={isSubmitting}
-                                        className="bg-white border-slate-200 text-sm shadow-sm h-11 focus-visible:ring-slate-400 rounded-md"
-                                    />
-                                </div>
-                            </div>
-                        </div>
-
-                        {/* Card 3: Informasi Akun */}
-                        <div className="rounded-md border border-slate-200 bg-white p-6 shadow-sm space-y-6">
-                            <div className="border-b border-slate-100 pb-4">
-                                <h2 className="text-base font-semibold text-slate-900">Informasi Akun</h2>
-                                <p className="text-xs text-muted-foreground mt-0.5">Detail sistem dan hak akses akun Anda.</p>
-                            </div>
-
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                <div className="space-y-2">
-                                    <Label htmlFor="email" className="text-sm font-medium text-slate-700">
-                                        Alamat Email
-                                    </Label>
-                                    <div className="relative">
-                                        <Input
-                                            id="email"
-                                            value={user?.email || '-'}
-                                            disabled
-                                            className="bg-slate-50 border-slate-200 text-slate-500 text-sm shadow-sm h-11 cursor-not-allowed pl-10 rounded-md"
+                <form onSubmit={handleSave} className="grid grid-cols-1 items-start gap-6 lg:grid-cols-3">
+                    <Card className="overflow-hidden rounded-md border-slate-200 shadow-sm lg:col-span-1">
+                        <CardHeader className="border-b border-slate-100 bg-slate-50/60 px-5 py-4">
+                            <CardTitle className="flex items-center gap-2 text-base text-slate-900">
+                                <Camera className="h-4 w-4 text-[#1e3a5f]" />
+                                Foto Profil
+                            </CardTitle>
+                            <CardDescription>Unggah foto terbaru untuk akun Anda.</CardDescription>
+                        </CardHeader>
+                        <CardContent className="space-y-5 px-5 py-5">
+                            <div className="flex flex-col items-center gap-3">
+                                <div className="relative">
+                                    {avatarPreview || user?.avatar ? (
+                                        <ParsedImage
+                                            src={avatarPreview || user?.avatar}
+                                            alt="Foto profil"
+                                            className="h-32 w-32 rounded-full border-4 border-white bg-slate-100 object-cover shadow-md ring-1 ring-slate-200"
+                                            referrerPolicy="no-referrer"
                                         />
-                                        <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+                                    ) : (
+                                        <div className="flex h-32 w-32 items-center justify-center rounded-full border-4 border-white bg-[#1e3a5f]/10 text-3xl font-semibold text-[#1e3a5f] shadow-md ring-1 ring-slate-200">
+                                            {initials}
+                                        </div>
+                                    )}
+                                    <div className="absolute bottom-1 right-1 flex h-9 w-9 items-center justify-center rounded-full border-2 border-white bg-[#1e3a5f] text-white shadow-sm">
+                                        <Camera className="h-4 w-4" />
                                     </div>
                                 </div>
-
-                                <div className="space-y-2">
-                                    <Label htmlFor="role" className="text-sm font-medium text-slate-700">
-                                        Hak Akses / Role
-                                    </Label>
-                                    <div className="relative">
-                                        <Input
-                                            id="role"
-                                            value={roleName}
-                                            disabled
-                                            className="bg-slate-50 border-slate-200 text-slate-500 text-sm shadow-sm h-11 cursor-not-allowed pl-10 rounded-md"
-                                        />
-                                        <Shield className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
-                                    </div>
+                                <div className="max-w-full text-center">
+                                    <p className="truncate text-sm font-semibold text-slate-900">{displayName}</p>
+                                    <p className="truncate text-xs text-muted-foreground">{user?.email || '-'}</p>
                                 </div>
                             </div>
-                        </div>
 
-                        {/* Submit Button */}
-                        <div className="flex justify-end pt-2">
+                            <FileInput
+                                id="avatar"
+                                accept="image/jpeg,image/png,image/webp"
+                                value={avatarFile}
+                                onFileChange={handleAvatarChange}
+                                disabled={isSubmitting}
+                                helperText="JPG, PNG, atau WebP maksimal 2 MB"
+                            />
+                        </CardContent>
+                    </Card>
+
+                    <div className="space-y-6 lg:col-span-2">
+                        <Card className="overflow-hidden rounded-md border-slate-200 shadow-sm">
+                            <CardHeader className="border-b border-slate-100 bg-slate-50/60 px-5 py-4">
+                                <CardTitle className="text-base text-slate-900">Detail Pribadi</CardTitle>
+                                <CardDescription>Perbarui nama dan username yang tampil di sistem.</CardDescription>
+                            </CardHeader>
+                            <CardContent className="px-5 py-5">
+                                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                                    <div className="space-y-2">
+                                        <Label htmlFor="firstname" className="text-sm font-medium text-slate-700">
+                                            Nama Depan <span className="text-rose-500">*</span>
+                                        </Label>
+                                        <Input
+                                            id="firstname"
+                                            placeholder="Masukkan nama depan"
+                                            value={formData.firstname}
+                                            onChange={(event) => setFormData({ ...formData, firstname: event.target.value })}
+                                            disabled={isSubmitting}
+                                            className="h-11 bg-white text-sm"
+                                        />
+                                    </div>
+
+                                    <div className="space-y-2">
+                                        <Label htmlFor="lastname" className="text-sm font-medium text-slate-700">
+                                            Nama Belakang
+                                        </Label>
+                                        <Input
+                                            id="lastname"
+                                            placeholder="Masukkan nama belakang"
+                                            value={formData.lastname}
+                                            onChange={(event) => setFormData({ ...formData, lastname: event.target.value })}
+                                            disabled={isSubmitting}
+                                            className="h-11 bg-white text-sm"
+                                        />
+                                    </div>
+
+                                    <div className="space-y-2 sm:col-span-2">
+                                        <Label htmlFor="username" className="text-sm font-medium text-slate-700">
+                                            Username <span className="text-rose-500">*</span>
+                                        </Label>
+                                        <div className="relative">
+                                            <AtSign className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                                            <Input
+                                                id="username"
+                                                placeholder="Masukkan username"
+                                                value={formData.username}
+                                                onChange={(event) => setFormData({ ...formData, username: event.target.value })}
+                                                disabled={isSubmitting}
+                                                className="h-11 bg-white pl-10 text-sm"
+                                            />
+                                        </div>
+                                    </div>
+                                </div>
+                            </CardContent>
+                        </Card>
+
+                        <Card className="overflow-hidden rounded-md border-slate-200 shadow-sm">
+                            <CardHeader className="border-b border-slate-100 bg-slate-50/60 px-5 py-4">
+                                <CardTitle className="text-base text-slate-900">Informasi Akun</CardTitle>
+                                <CardDescription>Data akun yang dikelola oleh sistem.</CardDescription>
+                            </CardHeader>
+                            <CardContent className="px-5 py-5">
+                                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                                    <div className="space-y-2">
+                                        <Label htmlFor="email" className="text-sm font-medium text-slate-700">
+                                            Alamat Email
+                                        </Label>
+                                        <div className="relative">
+                                            <Mail className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                                            <Input
+                                                id="email"
+                                                value={user?.email || '-'}
+                                                disabled
+                                                className="h-11 cursor-not-allowed bg-slate-50 pl-10 text-sm text-slate-500"
+                                            />
+                                        </div>
+                                    </div>
+
+                                    <div className="space-y-2">
+                                        <Label htmlFor="role" className="text-sm font-medium text-slate-700">
+                                            Hak Akses / Role
+                                        </Label>
+                                        <div className="relative">
+                                            <Shield className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                                            <Input
+                                                id="role"
+                                                value={roleName}
+                                                disabled
+                                                className="h-11 cursor-not-allowed bg-slate-50 pl-10 text-sm text-slate-500"
+                                            />
+                                        </div>
+                                    </div>
+                                </div>
+                            </CardContent>
+                        </Card>
+
+                        <div className="flex justify-end">
                             <Button
                                 type="submit"
                                 disabled={isSubmitting}
-                                className="bg-[#1e3a5f] hover:bg-[#152e4d] text-white min-w-[140px] h-11 shadow-sm px-6 rounded-md cursor-pointer font-medium"
+                                className="h-11 min-w-[168px] cursor-pointer rounded-md px-6 btn-primary-orange!"
                             >
                                 {isSubmitting ? (
                                     <>
@@ -282,7 +290,10 @@ export default function ProfilePage() {
                                         Menyimpan...
                                     </>
                                 ) : (
-                                    'Simpan Perubahan'
+                                    <>
+                                        <Save className="h-4 w-4" />
+                                        Simpan Perubahan
+                                    </>
                                 )}
                             </Button>
                         </div>

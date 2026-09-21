@@ -172,7 +172,7 @@ export default function VehicleFleetDetailPage() {
             {ARMADA_EQUIPMENT_FIELDS.map((field) => {
               const qty = armada?.equipment[field];
               return (
-                <div key={field} className="flex items-center justify-between p-3 rounded-lg border border-gray-100 bg-gray-50/50">
+                <div key={field} className="flex items-center justify-between p-3 rounded-md border border-gray-100 bg-gray-50/50">
                   <span className="text-sm font-medium text-gray-700">{equipmentLabels[field]}</span>
                   <span className="inline-flex items-center justify-center bg-gray-200 text-gray-800 font-bold text-xs px-2.5 py-1 rounded-full min-w-[32px]">
                     {qty != null ? qty : 0}
@@ -184,7 +184,7 @@ export default function VehicleFleetDetailPage() {
         </Card>
 
         <div className="flex items-center justify-center pt-2 pb-8">
-          <Button onClick={handleBack} className="w-[150px] bg-[#1e3a5f] hover:bg-[#152e4d]">
+          <Button onClick={handleBack} className="w-[150px] btn-primary-orange!">
             Kembali
           </Button>
         </div>

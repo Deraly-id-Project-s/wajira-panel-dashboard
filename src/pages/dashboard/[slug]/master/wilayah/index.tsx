@@ -1,13 +1,17 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
+import { Download, Plus, Upload } from 'lucide-react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { PageHeader } from '@/components/ui/page-header';
+import { Button } from '@/components/ui/button';
+import { SearchPagination } from '@/components/ui/search-pagination';
 import { RegionTable } from '@/components/features/region/RegionTable';
 import { RegionFormModal, RegionFormData } from '@/components/features/region/RegionFormModal';
 import { EditRegionModal } from '@/components/features/region/EditRegionModal';
 import { DeleteRegionModal } from '@/components/features/region/DeleteRegionModal';
 import { ImportRegionModal } from '@/components/features/region/ImportRegionModal';
 import { toast } from 'sonner';
-import { useRegions, useCreateRegion, useUpdateRegion, useDeleteRegion, useImportRegion, useExportRegion } from '@/hooks/useRegion';
+import { useRegions, useCreateRegion, useUpdateRegion, useDeleteRegion, useExportRegion } from '@/hooks/useRegion';
+import { useQueryParamsTable } from '@/hooks/useQueryParamsTable';
 import type { Region } from '@/@types/region.types';
 import { usePermissionGuard } from '@/hooks/usePermissionGuard';
 
@@ -18,16 +22,23 @@ export default function RegionPage() {
   const canDelete = hasPermission('master-data:delete');
 
   // Table state
-  const [search, setSearch] = useState('');
-  const [page, setPage] = useState(1);
-  const [perPage, setPerPage] = useState(25);
+  const { page, perPage, search, setPage, setPerPage, setSearch, updateQuery } = useQueryParamsTable({ defaultPerPage: 25 });
+  const [searchInput, setSearchInput] = useState(search);
+
+  useEffect(() => {
+    const timeout = window.setTimeout(() => {
+      if (search !== searchInput.trim()) {
+        setSearch(searchInput.trim());
+      }
+    }, 400);
+    return () => window.clearTimeout(timeout);
+  }, [searchInput, search, setSearch]);
 
   const { data: regionsData } = useRegions({ page, perPage, search });
   
   const createMutation = useCreateRegion();
   const updateMutation = useUpdateRegion();
   const deleteMutation = useDeleteRegion();
-  const importMutation = useImportRegion();
   const exportMutation = useExportRegion();
 
   // Modals state
@@ -88,16 +99,7 @@ export default function RegionPage() {
     }
   };
 
-  const handleImport = async (file: File) => {
-    if (!canCreate) return;
-    try {
-      await importMutation.mutateAsync({ file });
-      toast.success('Import data wilayah berhasil');
-      setIsImportOpen(false);
-    } catch (error: any) {
-      toast.error(error.message || 'Import data wilayah gagal');
-    }
-  };
+
 
   const handleExport = async () => {
     try {
@@ -110,6 +112,7 @@ export default function RegionPage() {
 
   const regionsList = (regionsData as any)?.data || [];
   const totalRegions = (regionsData as any)?.meta?.total || (regionsData as any)?.total || 0;
+  const lastPageRegions = (regionsData as any)?.meta?.lastPage || (regionsData as any)?.last_page || 1;
 
   return (
     <DashboardLayout>
@@ -120,32 +123,60 @@ export default function RegionPage() {
           subtitle="Kelola data wilayah dengan mudah"
         />
 
-        {/* Content */}
-        <RegionTable
-          regions={regionsList}
-          search={search}
-          onSearchChange={(v) => {
-            setSearch(v);
-            setPage(1);
-          }}
+        {/* Search, Actions & Table */}
+        <SearchPagination
+          searchValue={searchInput}
+          onSearchChange={setSearchInput}
+          searchPlaceholder="Search here"
+          searchAriaLabel="Cari wilayah"
           page={page}
           perPage={perPage}
-          totalData={totalRegions}
+          total={totalRegions}
+          lastPage={lastPageRegions}
           onPageChange={setPage}
-          onPerPageChange={(v) => {
-            setPerPage(v);
-            setPage(1);
-          }}
-          onAdd={handleAddClick}
-          onImport={canCreate ? () => setIsImportOpen(true) : undefined}
-          onExport={handleExport}
-          isExporting={exportMutation.isPending}
-          onEdit={handleEditClick}
-          onDelete={handleDeleteClick}
-          canCreate={canCreate}
-          canEdit={canEdit}
-          canDelete={canDelete}
-        />
+          onPerPageChange={setPerPage}
+          actions={
+            <>
+              {search && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    setSearchInput('');
+                    updateQuery({ search: undefined, page: 1 });
+                  }}
+                  className="rounded-md border-slate-200 text-slate-700 bg-white hover:bg-slate-50 cursor-pointer h-9 text-xs px-3"
+                >
+                  Reset
+                </Button>
+              )}
+              <Button onClick={handleExport} disabled={exportMutation.isPending} variant="outline" className="h-9 text-xs px-3 rounded-md border-slate-200 text-slate-700 bg-white hover:bg-slate-50 cursor-pointer">
+                <Download className="h-4 w-4 mr-2" />
+                {exportMutation.isPending ? 'Exporting...' : 'Export'}
+              </Button>
+              {canCreate && (
+                <>
+                  <Button onClick={() => setIsImportOpen(true)} variant="outline" className="h-9 text-xs px-3 rounded-md border-slate-200 text-slate-700 bg-white hover:bg-slate-50 cursor-pointer">
+                    <Upload className="h-4 w-4 mr-2" />
+                    Import
+                  </Button>
+                  <Button onClick={handleAddClick} className="btn-primary!">
+                    <Plus className="h-4 w-4 mr-2" />
+                    Tambah Data
+                  </Button>
+                </>
+              )}
+            </>
+          }
+        >
+          <RegionTable
+            regions={regionsList}
+            onEdit={handleEditClick}
+            onDelete={handleDeleteClick}
+            canEdit={canEdit}
+            canDelete={canDelete}
+          />
+        </SearchPagination>
 
       </div>
 
@@ -176,10 +207,8 @@ export default function RegionPage() {
       />
 
       <ImportRegionModal
-        isOpen={isImportOpen}
-        onClose={() => setIsImportOpen(false)}
-        onImport={handleImport}
-        isUploading={importMutation.isPending}
+        open={isImportOpen}
+        onOpenChange={setIsImportOpen}
       />
     </DashboardLayout>
   );

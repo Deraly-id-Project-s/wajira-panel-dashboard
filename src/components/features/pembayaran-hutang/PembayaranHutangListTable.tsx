@@ -69,7 +69,7 @@ export default function PembayaranHutangListTable({ data }: Props) {
             cell: (item) => {
                 const proofUrl = item.payment_proof;
                 return proofUrl ? (
-                    <Button variant="outline" size="sm" asChild>
+                    <Button variant="outline" asChild>
                         <a href={proofUrl} target="_blank" rel="noreferrer">
                             <ExternalLink className="mr-2 h-4 w-4" />
                             Lihat Bukti

@@ -4,31 +4,21 @@ import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { Badge } from '@/components/ui/badge';
-import { CheckCircle2, Lock, MoreVertical, Pencil, Plus, Trash } from 'lucide-react';
+import { CheckCircle2, Lock, MoreVertical, Pencil, Trash } from 'lucide-react';
 import { currenciesFormat } from '@/components/ui/currenciesFormat';
-import type { PaginationMeta } from '@/@types/pagination.types';
 import type { TarifPriceVersion } from '@/@types/tarif-price-version.types';
 import { formatDate } from '@/lib/utils/format';
 
 interface Props {
   data: TarifPriceVersion[];
-  meta?: PaginationMeta;
-  search: string;
-  page: number;
-  perPage: number;
   isLoading?: boolean;
-  onSearchChange: (value: string) => void;
-  onAdd: () => void;
   onEdit: (version: TarifPriceVersion) => void;
   onDelete: (version: TarifPriceVersion) => void;
-  onPageChange: (page: number) => void;
-  onPerPageChange: (perPage: number) => void;
-  canCreate: boolean;
   canEdit: boolean;
   canDelete: boolean;
 }
 
-export function TarifPriceVersionTable({ data, meta, search, page, perPage, isLoading, onSearchChange, onAdd, onEdit, onDelete, onPageChange, onPerPageChange, canCreate, canEdit, canDelete }: Props) {
+export function TarifPriceVersionTable({ data, isLoading, onEdit, onDelete, canEdit, canDelete }: Props) {
   const columns = useMemo<ColumnDef<TarifPriceVersion>[]>(() => [
     { header: 'NAMA VERSI', accessorKey: 'name', sortable: true, cell: (item) => <div className="flex items-center gap-1.5"><span className="font-semibold text-sm text-gray-900">{item.name}</span>{item.is_lock === 1 || item.is_lock === true ? <Tooltip><TooltipTrigger asChild><span className="inline-flex cursor-help p-0.5"><Lock className="h-3.5 w-3.5 text-slate-400" /></span></TooltipTrigger><TooltipContent>Versi tarif ini terkunci.</TooltipContent></Tooltip> : null}</div> },
     { header: 'UJ TOWING', accessorKey: 'uj_towing', sortable: true, cell: (item) => currenciesFormat('idr', item.uj_towing) },
@@ -59,8 +49,5 @@ export function TarifPriceVersionTable({ data, meta, search, page, perPage, isLo
       </DropdownMenu>
     },
   ], [onDelete, onEdit, canEdit, canDelete]);
-  return <BaseTable data={data} columns={columns} loading={isLoading} searchPlaceholder="Cari versi tarif..." search={search} onSearchChange={onSearchChange} showLimitChange perPage={perPage} onPerPageChange={onPerPageChange} defaultSort={{ key: 'id', direction: 'desc' }} meta={{ currentPage: page, perPage, lastPage: meta?.lastPage ?? 1, total: meta?.total ?? data.length }} onPageChange={onPageChange} headerActions={<Button onClick={onAdd} disabled={!canCreate} className="button-theme-1!">
-    <Plus className="mr-2 h-4 w-4" />
-    Tambah Versi
-  </Button>} />;
+  return <BaseTable data={data} columns={columns} loading={isLoading} defaultSort={{ key: 'id', direction: 'desc' }} />;
 }

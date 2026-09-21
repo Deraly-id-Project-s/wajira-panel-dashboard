@@ -32,6 +32,8 @@ export const unitTransactionItemSalesService = {
       status: String(detail.status ?? ''),
       warehouse_sub_block: detail.warehouse_sub_block,
       stock_state: detail.stock_state ?? null,
+      is_reserved: detail.is_reserved === true || detail.is_reserved === 1 || detail.is_reserved === '1',
+      unit_transaction_item_sales: detail.unit_transaction_item_sales ?? null,
     }));
   },
 

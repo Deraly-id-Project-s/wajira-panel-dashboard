@@ -1,46 +1,23 @@
 import { useMemo } from 'react';
 import BaseTable, { ColumnDef } from '@/components/ui/base-table';
-import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { Upload } from 'lucide-react';
 import type { Dealer } from '@/@types/dealer.types';
+import { TextTruncate } from '@/components/ui/text-truncate';
 
 interface DealerTableProps {
     dealers: Dealer[];
-    search: string;
-    onSearchChange: (value: string) => void;
-    page: number;
-    perPage: number;
-    totalData: number;
-    onPageChange: (page: number) => void;
-    onPerPageChange: (perPage: number) => void;
-    onAdd: () => void;
-    onImport?: () => void;
-    onExport?: () => void;
+    isLoading?: boolean;
     onEdit: (dealer: Dealer) => void;
     onDelete: (dealer: Dealer) => void;
-    isExporting?: boolean;
-    canCreate: boolean;
     canEdit: boolean;
     canDelete: boolean;
 }
 
 export function DealerTable({
     dealers,
-    search,
-    onSearchChange,
-    page,
-    perPage,
-    totalData,
-    onPageChange,
-    onPerPageChange,
-    onAdd,
-    onImport,
-    onExport,
+    isLoading = false,
     onEdit,
     onDelete,
-    isExporting = false,
-    canCreate,
     canEdit,
     canDelete,
 }: DealerTableProps) {
@@ -59,7 +36,7 @@ export function DealerTable({
             {
                 header: 'ALAMAT',
                 accessorKey: 'alamat',
-                cell: (item) => <span className="line-clamp-2">{item.alamat || '-'}</span>,
+                cell: (item) => <TextTruncate text={item.alamat || '-'} maxLength={48} className="block max-w-[260px] truncate" />,
             },
             {
                 header: 'PIC',
@@ -83,10 +60,10 @@ export function DealerTable({
                             </button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end" className="min-w-[150px] rounded-md border-slate-200 p-1.5 shadow-lg">
-                            <DropdownMenuItem onClick={() => onEdit(item)} disabled={!canEdit} className="rounded-lg px-3 py-2 text-sm text-slate-900 focus:bg-slate-50 cursor-pointer">
+                            <DropdownMenuItem onClick={() => onEdit(item)} disabled={!canEdit} className="rounded-md px-3 py-2 text-sm text-slate-900 focus:bg-slate-50 cursor-pointer">
                                 Edit
                             </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => onDelete(item)} disabled={!canDelete} className="rounded-lg px-3 py-2 text-sm text-red-600 focus:bg-red-50 focus:text-red-600 cursor-pointer">
+                            <DropdownMenuItem onClick={() => onDelete(item)} disabled={!canDelete} className="rounded-md px-3 py-2 text-sm text-red-600 focus:bg-red-50 focus:text-red-600 cursor-pointer">
                                 Hapus
                             </DropdownMenuItem>
                         </DropdownMenuContent>
@@ -101,43 +78,7 @@ export function DealerTable({
         <BaseTable
             data={dealers}
             columns={columns}
-            searchPlaceholder="Search here"
-            search={search}
-            onSearchChange={onSearchChange}
-            showLimitChange
-            perPage={perPage}
-            onPerPageChange={onPerPageChange}
-            meta={{
-                currentPage: page,
-                perPage,
-                lastPage: Math.ceil(totalData / perPage) || 1,
-                total: totalData,
-            }}
-            onPageChange={onPageChange}
-            headerActions={
-                <div className="flex flex-wrap items-center gap-2">
-                    {onExport && (
-                        <Button onClick={onExport} disabled={isExporting} variant="outline" className="w-full sm:w-auto">
-                            <Upload className="h-4 w-4 mr-2" />
-                            {isExporting ? 'Exporting...' : 'Export'}
-                        </Button>
-                    )}
-                    {canCreate && (
-                        <>
-                            {onImport && (
-                                <Button onClick={onImport} variant="outline" className="w-full sm:w-auto">
-                                    <Upload className="h-4 w-4 mr-2" />
-                                    Import
-                                </Button>
-                            )}
-                            <Button onClick={onAdd} className="w-full sm:w-auto bg-[#1e3a5f] hover:bg-[#152e4d]">
-                                <svg className="h-4 w-4 mr-2" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14" /><path d="M12 5v14" /></svg>
-                                Tambah
-                            </Button>
-                        </>
-                    )}
-                </div>
-            }
+            loading={isLoading}
         />
     );
 }

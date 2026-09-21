@@ -10,14 +10,14 @@ import { Badge } from '@/components/ui/badge';
 
 interface FinanceAssetTableProps {
     assets: FinanceAsset[];
-    search: string;
-    onSearchChange: (value: string) => void;
-    page: number;
-    perPage: number;
-    totalData: number;
-    onPageChange: (page: number) => void;
-    onPerPageChange: (perPage: number) => void;
-    onExport: () => void;
+    search?: string;
+    onSearchChange?: (value: string) => void;
+    page?: number;
+    perPage?: number;
+    totalData?: number;
+    onPageChange?: (page: number) => void;
+    onPerPageChange?: (perPage: number) => void;
+    onExport?: () => void;
     isExporting?: boolean;
     onAdd?: () => void;
     onEdit: (asset: FinanceAsset) => void;
@@ -30,9 +30,9 @@ export function FinanceAssetTable({
     assets,
     search,
     onSearchChange,
-    page,
-    perPage,
-    totalData,
+    page = 1,
+    perPage = 25,
+    totalData = 0,
     onPageChange,
     onPerPageChange,
     onExport,
@@ -44,6 +44,7 @@ export function FinanceAssetTable({
     isLoading = false,
 }: FinanceAssetTableProps) {
     const totalPages = Math.max(1, Math.ceil(totalData / perPage));
+    const hasPagination = typeof onPageChange === 'function';
 
     const columns = useMemo<ColumnDef<FinanceAsset>[]>(
         () => [
@@ -201,7 +202,7 @@ export function FinanceAssetTable({
                     {isExporting ? 'Exporting...' : 'Export'}
                 </Button>
                 {onAdd && (
-                    <Button onClick={onAdd} className="w-full sm:w-auto bg-[#1e3a5f] hover:bg-[#152e4d]">
+                    <Button onClick={onAdd} className="btn-primary!">
                         <Plus className="h-4 w-4 mr-2" />
                         Tambah
                     </Button>
@@ -218,16 +219,16 @@ export function FinanceAssetTable({
             loading={isLoading}
             search={search}
             onSearchChange={onSearchChange}
-            showLimitChange={true}
+            showLimitChange={Boolean(onPerPageChange)}
             perPage={perPage}
             onPerPageChange={onPerPageChange}
-            headerActions={headerActions}
-            meta={{
+            headerActions={onExport || onAdd ? headerActions : undefined}
+            meta={hasPagination ? {
                 currentPage: page,
                 perPage,
                 lastPage: totalPages,
                 total: totalData,
-            }}
+            } : undefined}
             onPageChange={onPageChange}
         />
     );

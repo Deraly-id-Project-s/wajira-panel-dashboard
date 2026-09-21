@@ -12,6 +12,16 @@ import { Badge } from '@/components/ui/badge';
 import { unitTransactionService } from '@/services/unitTransaction.service';
 import { toast } from 'sonner';
 import { LoadingState } from '@/components/ui/loading-state';
+import { cn } from '@/lib/utils';
+
+const stockStateConfig: Record<string, { label: string; className: string }> = {
+  draft: { label: 'Draft', className: 'border-slate-200 bg-slate-50 text-slate-600' },
+  cancel: { label: 'Batal', className: 'border-rose-200 bg-rose-50 text-rose-700' },
+  prepare: { label: 'Disiapkan', className: 'border-amber-200 bg-amber-50 text-amber-700' },
+  purchase_order: { label: 'Purchase Order', className: 'border-blue-200 bg-blue-50 text-blue-700' },
+  in_transit: { label: 'Dalam Perjalanan', className: 'border-indigo-200 bg-indigo-50 text-indigo-700' },
+  receipt: { label: 'Diterima', className: 'border-emerald-200 bg-emerald-50 text-emerald-700' },
+};
 
 interface Props {
   open: boolean;
@@ -27,6 +37,7 @@ interface VehicleDetailItem {
   in_stock: boolean;
   is_forecast: boolean;
   status: string;
+  stock_state?: string;
   unit_transaction_item?: {
     unit_transaction?: {
       id: number;
@@ -110,7 +121,7 @@ export default function SearchVehicleModal({ open, onOpenChange, type }: Props) 
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-4xl max-h-[85vh] overflow-y-auto w-full rounded-[24px]">
+      <DialogContent className="sm:max-w-4xl max-h-[85vh] overflow-y-auto w-full rounded-md">
         <DialogHeader>
           <DialogTitle className="text-xl font-bold text-slate-900">Cari Data Kendaraan</DialogTitle>
         </DialogHeader>
@@ -154,9 +165,10 @@ export default function SearchVehicleModal({ open, onOpenChange, type }: Props) 
 
             <Button
               type="button"
+              className="mt-5"
               onClick={() => void handleSearch(1)}
               disabled={loading}
-              className="bg-indigo-600 hover:bg-indigo-700 text-white font-medium px-6 h-11 mt-6 rounded-md w-full sm:w-auto shadow-none"
+              variant="default"
             >
               {loading ? <LoadingState variant="inline" text={null} /> : 'Cari'}
             </Button>
@@ -171,26 +183,33 @@ export default function SearchVehicleModal({ open, onOpenChange, type }: Props) 
                   <TableHead className="text-xs font-bold uppercase text-slate-500 py-3.5">No. Rangka</TableHead>
                   <TableHead className="text-xs font-bold uppercase text-slate-500 py-3.5">No. Mesin</TableHead>
                   <TableHead className="text-xs font-bold uppercase text-slate-500 py-3.5">Warna</TableHead>
-                  <TableHead className="text-xs font-bold uppercase text-slate-500 py-3.5 text-center">Status</TableHead>
                   <TableHead className="text-xs font-bold uppercase text-slate-500 py-3.5 text-center">Stok</TableHead>
+                  <TableHead className="text-xs font-bold uppercase text-slate-500 py-3.5 text-center">Kondisi</TableHead>
+                  <TableHead className="text-xs font-bold uppercase text-slate-500 py-3.5 text-center">Posisi Stok</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {loading ? (
                   <TableRow>
-                    <TableCell colSpan={6} className="h-48 text-center text-slate-500">
+                    <TableCell colSpan={7} className="h-48 text-center text-slate-500">
                       <LoadingState variant="section" text="Mencari data..." />
                     </TableCell>
                   </TableRow>
                 ) : results.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={6} className="h-48 text-center text-slate-400 text-sm">
+                    <TableCell colSpan={7} className="h-48 text-center text-slate-400 text-sm">
                       Silakan masukkan kata kunci dan cari
                     </TableCell>
                   </TableRow>
                 ) : (
                   results.map((item) => {
                     const trans = item.unit_transaction_item?.unit_transaction;
+                    const state = item.stock_state || trans?.stock_state || 'draft';
+                    const stockConfig = stockStateConfig[state] ?? {
+                      label: state.replace(/_/g, ' '),
+                      className: 'border-slate-200 bg-slate-50 text-slate-700',
+                    };
+
                     return (
                       <TableRow
                         key={item.id}
@@ -201,38 +220,39 @@ export default function SearchVehicleModal({ open, onOpenChange, type }: Props) 
                           {trans?.code || '-'}
                         </TableCell>
                         <TableCell className="font-medium text-slate-700 py-3.5">
-                          {item.chassis_number}
+                          {item.chassis_number || '-'}
                         </TableCell>
                         <TableCell className="text-slate-600 py-3.5">
-                          {item.machine_number}
+                          {item.machine_number || '-'}
                         </TableCell>
                         <TableCell className="text-slate-600 py-3.5">
                           <span className="inline-block px-2 py-0.5 text-xs font-semibold bg-slate-100 text-slate-700 rounded-md uppercase">
-                            {item.color}
+                            {item.color || '-'}
                           </span>
                         </TableCell>
                         <TableCell className="text-center py-3.5">
                           <Badge
                             variant="outline"
                             className={
-                              item.status === 'normal'
-                                ? 'border-emerald-200 bg-emerald-50 text-emerald-800'
-                                : 'border-amber-200 bg-amber-50 text-amber-800'
+                              item.in_stock
+                                ? 'border-emerald-200 bg-emerald-50 text-emerald-700 font-semibold'
+                                : 'border-rose-200 bg-rose-50 text-rose-700 font-semibold'
                             }
                           >
-                            {item.status || 'normal'}
+                            {item.in_stock ? 'Tersedia' : 'Tidak Tersedia'}
                           </Badge>
                         </TableCell>
                         <TableCell className="text-center py-3.5">
                           <Badge
                             variant="outline"
-                            className={
-                              item.in_stock
-                                ? 'border-teal-200 bg-teal-50 text-teal-800'
-                                : 'border-rose-200 bg-rose-50 text-rose-800'
-                            }
+                            className="capitalize border-slate-200 bg-slate-50 text-slate-700 font-semibold"
                           >
-                            {item.in_stock ? 'Tersedia' : 'Keluar'}
+                            {item.status?.replace(/_/g, ' ') || '-'}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="text-center py-3.5">
+                          <Badge variant="outline" className={cn('capitalize font-semibold', stockConfig.className)}>
+                            {stockConfig.label}
                           </Badge>
                         </TableCell>
                       </TableRow>

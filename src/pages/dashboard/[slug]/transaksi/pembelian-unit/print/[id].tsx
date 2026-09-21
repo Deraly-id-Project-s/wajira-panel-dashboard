@@ -7,7 +7,7 @@ import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { useCompany } from '@/contexts/CompanyContext';
 import { getLetterheadByCompanyId, resolveCompanyId } from '@/lib/print-letterhead';
 import { usePurchaseById, useUnitTransactionTypeDetails } from '@/hooks/useUnitTransaction';
-import PurchasePrintDocument from '@/components/features/purchase/PurchasePrintDocument';
+import PurchasePrintDocument from '@/components/features/unit-transaksi/purchase/PurchasePrintDocument';
 import { Button } from '@/components/ui/button';
 import { LoadingState } from '@/components/ui/loading-state';
 import { useDocumentTemplate } from '@/hooks/useDocumentTemplate';

@@ -1,5 +1,5 @@
-import { SalesItem, SalesLineItem } from '@/components/features/sales/sales.data';
-import type { UnitTransactionFormValues } from '@/components/features/unit-transaction/unit-transaction.schema';
+import { SalesItem, SalesLineItem } from '@/components/features/unit-transaksi/sales/sales.data';
+import type { UnitTransactionFormValues } from '@/types/unit-transaction.types';
 import { UnitTransaction } from '@/@types/unit-transaction.types';
 
 export type SalesApiModel = {
@@ -106,6 +106,8 @@ export type SalesApiModel = {
     created_at?: string;
   }>;
   is_unit_type_detail_valid?: boolean | string | number;
+  unit_transaction_price_usd_total?: string | number;
+  unit_transaction_price_usd_total_actual?: string | number;
 };
 
 export type SalesListUI = {
@@ -344,6 +346,8 @@ export const mapSalesDetailToUI = (item: SalesApiModel): SalesItem => {
     units: [],
     price_usd: item.unit_transaction_items?.[0]?.price_usd ? toNumber(item.unit_transaction_items[0].price_usd) : undefined,
     price_per_unit_usd: item.unit_transaction_items?.[0]?.price_per_unit_usd ? toNumber(item.unit_transaction_items[0].price_per_unit_usd) : undefined,
+    unit_transaction_price_usd_total: item.unit_transaction_price_usd_total ? toNumber(item.unit_transaction_price_usd_total) : undefined,
+    unit_transaction_price_usd_total_actual: item.unit_transaction_price_usd_total_actual ? toNumber(item.unit_transaction_price_usd_total_actual) : undefined,
     documentTemplateId: item.document_template_id != null ? String(item.document_template_id) : item.document_template?.id != null ? String(item.document_template.id) : item.document_template?.uuid ?? null,
   };
 };

@@ -67,13 +67,13 @@ export function GoodsIssueEquipmentDetailTable({
               <DropdownMenuContent align="end" className="w-36 rounded-md border-slate-200 p-1.5 shadow-lg">
                 <DropdownMenuItem
                   onClick={() => onEdit(item)}
-                  className="cursor-pointer rounded-lg px-3 py-2 text-sm text-slate-900 focus:bg-slate-50"
+                  className="cursor-pointer rounded-md px-3 py-2 text-sm text-slate-900 focus:bg-slate-50"
                 >
                   Edit
                 </DropdownMenuItem>
                 <DropdownMenuItem
                   onClick={() => onDelete(item)}
-                  className="cursor-pointer rounded-lg px-3 py-2 text-sm text-red-600 focus:bg-red-50 focus:text-red-600"
+                  className="cursor-pointer rounded-md px-3 py-2 text-sm text-red-600 focus:bg-red-50 focus:text-red-600"
                 >
                   Hapus
                 </DropdownMenuItem>

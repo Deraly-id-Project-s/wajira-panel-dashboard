@@ -13,7 +13,7 @@ interface SectionCardProps {
 
 export function SectionCard({ title, children }: SectionCardProps) {
     return (
-        <Card className="rounded-md">
+        <Card className="rounded-md py-5">
             <CardHeader className="pb-4">
                 <CardTitle className="text-base font-semibold">
                     {title}

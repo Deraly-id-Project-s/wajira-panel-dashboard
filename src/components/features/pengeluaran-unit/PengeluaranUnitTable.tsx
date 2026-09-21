@@ -4,7 +4,6 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import BaseTable, { ColumnDef } from '@/components/ui/base-table';
 import { WarehouseActivity } from '@/@types/warehouse.types';
-import { PaginationMeta } from '@/@types/pagination.types';
 import { MoreVertical, Pencil } from 'lucide-react';
 import {
   DropdownMenu,
@@ -40,22 +39,9 @@ import { toast } from 'sonner';
 
 interface Props {
   data: WarehouseActivity[];
-  meta: PaginationMeta;
-  search: string;
-  perPage: number;
-  page: number;
   isLoading: boolean;
-  isError: boolean;
-  errorMessage?: string;
-  onSearchChange: (value: string) => void;
-  onPerPageChange: (value: number) => void;
-  onPageChange: (value: number) => void;
-  onRetry: () => void;
-  startDate?: string | null;
-  endDate?: string | null;
   canEdit: boolean;
   canDelete: boolean;
-  onDateRangeChange?: (start: string | null, end: string | null) => void;
 }
 
 const formatDate = (value: string): string => {
@@ -67,19 +53,9 @@ const formatDate = (value: string): string => {
 
 export default function PengeluaranUnitTable({
   data,
-  meta,
-  search,
-  perPage,
-  page,
   isLoading,
-  onSearchChange,
-  onPerPageChange,
-  onPageChange,
-  startDate,
-  endDate,
   canEdit,
   canDelete,
-  onDateRangeChange,
 }: Props) {
   const router = useRouter();
   const slugValue = Array.isArray(router.query.slug) ? router.query.slug[0] : router.query.slug;
@@ -228,14 +204,14 @@ export default function PengeluaranUnitTable({
           <DropdownMenuContent align="end" className="min-w-[150px] rounded-md border-slate-200 p-1.5 shadow-lg">
             <DropdownMenuItem
               onClick={() => navigateToDetail(item.id)}
-              className="rounded-lg px-3 py-2 text-sm text-slate-900 focus:bg-slate-50 cursor-pointer"
+              className="rounded-md px-3 py-2 text-sm text-slate-900 focus:bg-slate-50 cursor-pointer"
             >
               Detail
             </DropdownMenuItem>
             <DropdownMenuItem
               disabled={!canEdit}
               onClick={() => handleOpenStateDialog(item.id, item.state || 'draft', item.state_note)}
-              className="rounded-lg px-3 py-2 text-sm text-slate-900 focus:bg-slate-50 cursor-pointer"
+              className="rounded-md px-3 py-2 text-sm text-slate-900 focus:bg-slate-50 cursor-pointer"
             >
               Ubah Status
             </DropdownMenuItem>
@@ -251,17 +227,6 @@ export default function PengeluaranUnitTable({
         data={data}
         columns={columns}
         loading={isLoading}
-        search={search}
-        onSearchChange={onSearchChange}
-        showLimitChange
-        perPage={perPage}
-        onPerPageChange={onPerPageChange}
-        meta={meta}
-        onPageChange={onPageChange}
-        addDateRangePicker={true}
-        startDate={startDate}
-        endDate={endDate}
-        onDateRangeChange={onDateRangeChange}
       />
 
       {/* DIALOG UPDATE STATUS */}
@@ -281,26 +246,26 @@ export default function PengeluaranUnitTable({
                 value={selectedState}
                 onValueChange={(val) => setSelectedState(val as 'draft' | 'process' | 'done')}
               >
-                <SelectTrigger className="w-full bg-white border-slate-200 h-10 rounded-lg">
+                <SelectTrigger className="w-full bg-white border-slate-200 h-10 rounded-md">
                   <SelectValue placeholder="Pilih status" />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="draft">
                     <div className="flex flex-col text-left py-1">
                       <span className="font-medium text-slate-800 text-sm">Draft (Draf)</span>
-                      <span className="text-[11px] text-slate-500 font-normal">Dokumen baru dibuat dan belum diproses</span>
+                      <span className="hidden text-[11px] font-normal text-slate-500 sm:block">Dokumen baru dibuat dan belum diproses</span>
                     </div>
                   </SelectItem>
                   <SelectItem value="process">
                     <div className="flex flex-col text-left py-1">
                       <span className="font-medium text-slate-800 text-sm">Process (Proses)</span>
-                      <span className="text-[11px] text-slate-500 font-normal">Sedang dalam proses pengerjaan/pengeluaran barang</span>
+                      <span className="hidden text-[11px] font-normal text-slate-500 sm:block">Sedang dalam proses pengerjaan/pengeluaran barang</span>
                     </div>
                   </SelectItem>
                   <SelectItem value="done">
                     <div className="flex flex-col text-left py-1">
                       <span className="font-medium text-slate-800 text-sm">Done (Selesai)</span>
-                      <span className="text-[11px] text-slate-500 font-normal">Aktivitas pengeluaran unit telah selesai dilakukan</span>
+                      <span className="hidden text-[11px] font-normal text-slate-500 sm:block">Aktivitas pengeluaran unit telah selesai dilakukan</span>
                     </div>
                   </SelectItem>
                 </SelectContent>
@@ -313,19 +278,19 @@ export default function PengeluaranUnitTable({
                 placeholder="Masukkan catatan perubahan status..."
                 value={stateNote}
                 onChange={(e) => setStateNote(e.target.value)}
-                className="w-full min-h-[80px] bg-white border-slate-200 rounded-lg p-2 text-sm focus:outline-none"
+                className="w-full min-h-[80px] bg-white border-slate-200 rounded-md p-2 text-sm focus:outline-none"
               />
             </div>
           </div>
 
           <DialogFooter className="gap-2 sm:gap-0 border-t pt-4">
-            <Button variant="outline" className="rounded-lg" onClick={() => setEditingActivity(null)}>
+            <Button variant="outline" className="rounded-md" onClick={() => setEditingActivity(null)}>
               Batal
             </Button>
             <Button
               onClick={handleUpdateState}
               disabled={updateStateMutation.isPending}
-              className="bg-primary text-primary-foreground hover:bg-primary/90 rounded-lg px-5"
+              className="bg-primary text-primary-foreground hover:bg-primary/90 rounded-md px-5"
             >
               {updateStateMutation.isPending ? 'Menyimpan...' : 'Simpan'}
             </Button>

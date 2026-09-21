@@ -454,13 +454,13 @@ export default function UnitPurchaseDetailPage() {
                   <span className="font-semibold text-slate-900">{currenciesFormat('idr', totalHpp)}</span>
                 </div>
                 {unitItem?.price_usd ? (
-                  <div className="flex items-center justify-between text-sm text-amber-800 bg-amber-50/50 px-2.5 py-1.5 rounded-lg border border-amber-100 mt-2">
+                  <div className="flex items-center justify-between text-sm text-amber-800 bg-amber-50/50 px-2.5 py-1.5 rounded-md border border-amber-100 mt-2">
                     <span className="font-medium">Total Harga (USD)</span>
                     <span className="font-bold">{currenciesFormat('usd', Number(unitItem.price_usd))}</span>
                   </div>
                 ) : null}
                 {unitItem?.price_per_unit_usd ? (
-                  <div className="flex items-center justify-between text-sm text-amber-800 bg-amber-50/50 px-2.5 py-1.5 rounded-lg border border-amber-100">
+                  <div className="flex items-center justify-between text-sm text-amber-800 bg-amber-50/50 px-2.5 py-1.5 rounded-md border border-amber-100">
                     <span className="font-medium">Harga Satuan (USD)</span>
                     <span className="font-bold">{currenciesFormat('usd', Number(unitItem.price_per_unit_usd))}</span>
                   </div>
@@ -523,7 +523,7 @@ export default function UnitPurchaseDetailPage() {
                 </div>
 
                 <div className={cn(
-                  "flex items-center gap-4 px-4 py-2.5 rounded-xl border",
+                  "flex items-center gap-4 px-4 py-2.5 rounded-md border",
                   details.length >= qty
                     ? "bg-emerald-50/50 border-emerald-100"
                     : "bg-blue-50/50 border-blue-100"
@@ -577,11 +577,11 @@ export default function UnitPurchaseDetailPage() {
                     )}
                     {canCreate && (
                       <>
-                        <Button onClick={() => setOpenImport(true)} disabled={qty === details.length} variant="outline" className="w-full sm:w-auto font-medium shadow-sm">
+                        <Button onClick={() => setOpenImport(true)} disabled={qty === details.length} variant="outline">
                           <Upload className="h-4 w-4 mr-2" />
                           Import
                         </Button>
-                        <Button onClick={openCreateForm} disabled={qty === details.length || !qty} className="w-full sm:w-auto font-medium bg-[#1e3a5f] hover:bg-[#152e4d] shadow-sm text-white">
+                        <Button onClick={openCreateForm} disabled={qty === details.length || !qty} variant="default">
                           <Plus className="h-4 w-4 mr-2" />
                           Tambah Detail Unit
                         </Button>

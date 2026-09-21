@@ -85,7 +85,7 @@ export function BBNBillFormDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent showCloseButton={false} className="max-w-[420px] rounded-[24px] border border-slate-200 p-6 bg-white shadow-lg">
+      <DialogContent showCloseButton={false} className="max-w-[420px] rounded-md border border-slate-200 p-6 bg-white shadow-lg">
         <div>
           <DialogHeader className="mb-5">
             <DialogTitle className="text-[18px] font-bold text-slate-900">
@@ -148,7 +148,7 @@ export function BBNBillFormDialog({
             </div>
 
             <div className="flex flex-col gap-3 pt-3">
-              <Button type="submit" disabled={isSubmitting} className="h-11 w-full rounded-md bg-[#1f4163] text-sm font-medium text-white hover:bg-[#183552]">
+              <Button type="submit" disabled={isSubmitting} className="h-11 rounded-md text-sm btn-primary!">
                 {isSubmitting ? 'Menyimpan...' : 'Simpan'}
               </Button>
               <Button type="button" variant="outline" onClick={() => onOpenChange(false)} className="h-11 w-full rounded-md border-slate-200 text-sm font-medium text-slate-700 bg-white">
@@ -190,7 +190,7 @@ export function BBNBillPaymentDialog({ open, onOpenChange, onSubmit, isSubmittin
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent showCloseButton={false} className="max-w-[420px] rounded-[24px] border border-slate-200 p-6 bg-white shadow-lg">
+      <DialogContent showCloseButton={false} className="max-w-[420px] rounded-md border border-slate-200 p-6 bg-white shadow-lg">
         <div>
           <DialogHeader className="mb-5">
             <DialogTitle className="text-[18px] font-bold text-slate-900">Tambah Data Tagihan</DialogTitle>
@@ -264,7 +264,7 @@ export function BBNBillPaymentDialog({ open, onOpenChange, onSubmit, isSubmittin
             </div>
 
             <div className="flex flex-col gap-3 pt-3">
-              <Button type="submit" disabled={isSubmitting} className="h-11 w-full rounded-md bg-[#1f4163] text-sm font-medium text-white hover:bg-[#183552]">
+              <Button type="submit" disabled={isSubmitting} className="h-11 rounded-md text-sm btn-primary!">
                 {isSubmitting ? 'Menyimpan...' : 'Simpan'}
               </Button>
               <Button type="button" variant="outline" onClick={() => onOpenChange(false)} className="h-11 w-full rounded-md border-slate-200 text-sm font-medium text-slate-700 bg-white">

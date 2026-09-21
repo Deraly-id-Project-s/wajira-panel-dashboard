@@ -6,23 +6,22 @@ import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { PageHeader } from '@/components/ui/page-header';
 import { AccountGroupTable } from './AccountGroupTable';
 import { AccountGroupFormModal } from './AccountGroupFormModal';
-import { useAccountGroups, useDeleteAccountGroup, useCreateAccountGroup, useUpdateAccountGroup, useImportAccountGroup } from '@/hooks/useAccountGroup';
+import { useAccountGroups, useDeleteAccountGroup, useCreateAccountGroup, useUpdateAccountGroup } from '@/hooks/useAccountGroup';
 import { useQueryParamsTable } from '@/hooks/useQueryParamsTable';
 import type { AccountGroup } from '@/@types/account-group.types';
 import { accountGroupSchema, type AccountGroupFormValues } from '@/scheme/account-group.schema';
 import { toast } from 'sonner';
 import { ApiResponseError, ApiValidationError } from '@/lib/api/response';
 import { useCompany } from '@/contexts/CompanyContext';
-import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
+import { SearchPagination } from '@/components/ui/search-pagination';
 import { usePermissionGuard } from '@/hooks/usePermissionGuard';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Download, Plus, Search, Upload } from 'lucide-react';
-import { DataImportModal } from '@/components/features/master-data/DataImportModal';
+import { Plus, Upload } from 'lucide-react';
+import { AccountGroupImportModal } from '@/components/features/master-data/account-group/AccountGroupImportModal';
 
 export const AccountGroupListPage = () => {
   const { companyId } = useCompany();
-  const { page, perPage, search, setPage, setPerPage, setSearch } = useQueryParamsTable({ defaultPerPage: 25 });
+  const { page, perPage, search, setPage, setPerPage, setSearch, updateQuery } = useQueryParamsTable({ defaultPerPage: 25 });
   const [searchInput, setSearchInput] = useState(search);
 
   useEffect(() => {
@@ -44,9 +43,9 @@ export const AccountGroupListPage = () => {
   const createMutation = useCreateAccountGroup();
   const updateMutation = useUpdateAccountGroup();
   const deleteMutation = useDeleteAccountGroup(companyId ?? undefined);
-  const importMutation = useImportAccountGroup();
 
-  const { hasPermission } = usePermissionGuard();
+
+  const { hasPermission, canManageMasterDataLock } = usePermissionGuard();
   const canCreate = hasPermission('master-data:create');
   const canEdit = hasPermission('master-data:edit');
   const canDelete = hasPermission('master-data:delete');
@@ -64,10 +63,7 @@ export const AccountGroupListPage = () => {
     },
   });
 
-  const handleImport = async (file: File) => {
-    if (!companyId) return;
-    await importMutation.mutateAsync({ companyId, file });
-  };
+
 
   const handleDelete = async () => {
     if (!selectedToDelete) return;
@@ -90,6 +86,7 @@ export const AccountGroupListPage = () => {
     form.reset({
       group_code: '',
       description: '',
+      is_lock: false,
     });
     setOpenForm(true);
   };
@@ -99,6 +96,7 @@ export const AccountGroupListPage = () => {
     form.reset({
       group_code: item.code,
       description: item.description ?? '',
+      is_lock: !!item.is_lock,
     });
     setOpenForm(true);
   };
@@ -109,17 +107,30 @@ export const AccountGroupListPage = () => {
       return;
     }
 
-    const payload = {
-      ...values,
-      company_id: companyId,
-    };
-
     try {
       if (editing) {
-        await updateMutation.mutateAsync({ id: editing.id, payload });
+        const isDescriptionOnlyUpdate = Boolean(editing.is_lock && !canManageMasterDataLock);
+        const updatePayload = {
+          company_id: companyId,
+          ...(isDescriptionOnlyUpdate
+            ? { description: values.description }
+            : {
+              group_code: values.group_code,
+              description: values.description,
+              ...(canManageMasterDataLock ? { is_lock: !!values.is_lock } : {}),
+            }),
+        };
+
+        await updateMutation.mutateAsync({ id: editing.id, payload: updatePayload });
         toast.success('Grup akun berhasil diperbarui');
       } else {
-        await createMutation.mutateAsync(payload);
+        const createPayload = {
+          company_id: companyId,
+          group_code: values.group_code,
+          description: values.description,
+        };
+
+        await createMutation.mutateAsync(createPayload);
         toast.success('Grup akun berhasil dibuat');
       }
       setOpenForm(false);
@@ -145,68 +156,59 @@ export const AccountGroupListPage = () => {
           subtitle="Kelola grup akun untuk mengatur akun transaksi"
         />
 
-        <div className="space-y-4">
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-            {/* LEFT: Search + Show */}
-            <div className="flex items-center gap-4 w-full sm:w-auto">
-              <div className="relative w-full sm:w-[300px]">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-                <Input
-                  placeholder="Search here"
-                  value={searchInput}
-                  onChange={(e) => setSearchInput(e.target.value)}
-                  className="pl-9 bg-white"
-                />
-              </div>
-              <div className="flex items-center gap-2 text-sm text-slate-500 whitespace-nowrap">
-                <span>Show</span>
-                <Select value={String(perPage)} onValueChange={(val) => { setPerPage(Number(val)); setPage(1); }}>
-                  <SelectTrigger className="w-[70px] bg-white">
-                    <SelectValue placeholder="25" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="25">25</SelectItem>
-                    <SelectItem value="50">50</SelectItem>
-                    <SelectItem value="100">100</SelectItem>
-                  </SelectContent>
-                </Select>
-                <span>Page</span>
-              </div>
-            </div>
-            <div className="flex flex-col sm:flex-row items-center gap-2 w-full sm:w-auto">
+        <SearchPagination
+          searchValue={searchInput}
+          onSearchChange={setSearchInput}
+          searchPlaceholder="Search here"
+          searchAriaLabel="Cari grup akun"
+          page={page}
+          perPage={perPage}
+          total={data?.meta.total}
+          lastPage={data?.meta.lastPage}
+          onPageChange={setPage}
+          onPerPageChange={setPerPage}
+          actions={
+            <>
+              {search && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    setSearchInput('');
+                    updateQuery({ search: undefined, page: 1 });
+                  }}
+                >
+                  Reset
+                </Button>
+              )}
               {canCreate && (
                 <>
-                  <Button onClick={() => setOpenImport(true)} variant="outline" className="w-full sm:w-auto">
-                    <Download className="h-4 w-4 mr-2" />
+                  <Button onClick={() => setOpenImport(true)} variant="outline">
+                    <Upload className="h-4 w-4 mr-2" />
                     Import
                   </Button>
-                  <Button onClick={handleAdd} className="w-full sm:w-auto bg-[#1e3a5f] hover:bg-[#152e4d]">
+                  <Button variant="default" onClick={handleAdd}>
                     <Plus className="h-4 w-4 mr-2" />
                     Tambah Data
                   </Button>
                 </>
               )}
-            </div>
-          </div>
-
+            </>
+          }
+        >
           {isError ? (
             <div className="text-center text-red-600">Gagal memuat data grup akun</div>
           ) : (
             <AccountGroupTable
               data={data?.data ?? []}
-              meta={data?.meta}
-              page={page}
               canEdit={canEdit}
               canDelete={canDelete}
-              perPage={perPage}
               isLoading={isLoading || isFetching}
               onEdit={handleEdit}
               onDelete={setSelectedToDelete}
-              onPageChange={setPage}
-              onPerPageChange={setPerPage}
             />
           )}
-        </div>
+        </SearchPagination>
       </div>
 
       <AccountGroupFormModal
@@ -218,15 +220,13 @@ export const AccountGroupListPage = () => {
         description={editing ? 'Perbarui informasi grup akun' : 'Buat grup akun baru untuk mengelompokkan akun'}
         isSubmitting={createMutation.isPending || updateMutation.isPending}
         submitLabel={editing ? 'Perbarui' : 'Simpan'}
+        disableGroupCode={Boolean(editing?.is_lock && !canManageMasterDataLock)}
+        showLockField={Boolean(editing && canManageMasterDataLock)}
       />
 
-      <DataImportModal
+      <AccountGroupImportModal
         open={openImport}
         onOpenChange={setOpenImport}
-        title="Import Grup Akun"
-        description="Pilih file excel (.xlsx, .xls) untuk mengimport data grup akun."
-        onImport={handleImport}
-        isPending={importMutation.isPending}
       />
 
       <AlertDialog open={!!selectedToDelete} onOpenChange={(open) => !open && setSelectedToDelete(null)}>

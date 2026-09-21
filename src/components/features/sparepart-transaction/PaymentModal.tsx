@@ -5,6 +5,7 @@ import { z } from 'zod';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
+import { InputDate } from '@/components/ui/input-date';
 import { MoneyInput } from '@/components/ui/money-input';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
@@ -92,7 +93,7 @@ export function PaymentModal({ open, onClose, onSubmit, defaultValues, loading, 
         <DialogHeader>
           <DialogTitle>{defaultValues ? 'Edit Riwayat Pembayaran' : 'Tambah Riwayat Pembayaran'}</DialogTitle>
         </DialogHeader>
-        <div className="bg-rose-50 border border-rose-100 rounded-lg p-3 text-sm flex justify-between items-center text-rose-800 font-semibold my-2">
+        <div className="bg-rose-50 border border-rose-100 rounded-md p-3 text-sm flex justify-between items-center text-rose-800 font-semibold my-2">
           <span>Kurang Bayar (Sisa Tagihan):</span>
           <span>{currenciesFormat('idr', remainingPayment)}</span>
         </div>
@@ -101,7 +102,7 @@ export function PaymentModal({ open, onClose, onSubmit, defaultValues, loading, 
             <FormField control={form.control} name="payment_at" render={({ field }) => (
               <FormItem>
                 <FormLabel>Tanggal Transaksi Pembayaran</FormLabel>
-                <FormControl><Input type="date" {...field} /></FormControl>
+                <FormControl><InputDate {...field} /></FormControl>
                 <FormMessage />
               </FormItem>
             )} />
@@ -153,7 +154,7 @@ export function PaymentModal({ open, onClose, onSubmit, defaultValues, loading, 
             <div className="flex justify-end gap-3 pt-4 border-t">
               <Button type="button" variant="ghost" onClick={onClose} disabled={loading}>Batal</Button>
               <Button type="submit" className="bg-[#1e293b] text-white" disabled={loading}>
-                 <Save className="w-4 h-4 mr-2" /> Simpan
+                <Save className="w-4 h-4 mr-2" /> Simpan
               </Button>
             </div>
           </form>

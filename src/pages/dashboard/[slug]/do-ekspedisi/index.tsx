@@ -1,53 +1,58 @@
-import React, { useEffect, useState, useCallback, useMemo } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/router';
 import { toast } from 'sonner';
+import { Printer } from 'lucide-react';
+import type { DateRange } from 'react-day-picker';
+import { format } from 'date-fns';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { DOEkspedisiTable } from '@/components/features/do-ekspedisi/DOEkspedisiTable';
+import { DOEkspedisiTablePrintDocument } from '@/components/features/do-ekspedisi/DOEkspedisiTablePrintDocument';
 import { DeleteDOEkspedisiModal } from '@/components/features/do-ekspedisi/DeleteDOEkspedisiModal';
-import { DOEkspedisiEditDialog, type DOEkspedisiEditValues } from '@/components/features/do-ekspedisi/DOEkspedisiEditDialog';
+import { Button } from '@/components/ui/button';
+import { ReportTemplatePrintDialog } from '@/components/ui/report-template-print-dialog';
+import { SearchPagination } from '@/components/ui/search-pagination';
+import { DatePickerWithRange } from '@/components/ui/date-range-picker';
 import type { DoEkspedisi } from '@/@types/do-ekspedisi.types';
-import { useDebouncedValue } from '@/hooks/useDebouncedValue';
 import {
   useDeleteDoEkspedisi,
-  useDoEkspedisiDriverLookup,
   useDoEkspedisis,
-  useDoEkspedisiVehicleLookup,
-  useNextDoEkspedisiCode,
-  useUpdateDoEkspedisi,
 } from '@/hooks/useDoEkspedisi';
-import { useProcessDoExpedition } from '@/hooks/useDoInvoice';
 import { PageHeader } from '@/components/ui/page-header';
 import { getApiErrorMessage } from '@/utils/apiErrorHandler';
-
-const toApiDate = (value?: Date) => {
-  if (!value) return '';
-  const year = value.getFullYear();
-  const month = String(value.getMonth() + 1).padStart(2, '0');
-  const day = String(value.getDate()).padStart(2, '0');
-  return `${year}-${month}-${day}`;
-};
+import { useCompany } from '@/contexts/CompanyContext';
+import { useQueryParamsTable } from '@/hooks/useQueryParamsTable';
+import { useReportTemplatePrint } from '@/hooks/useReportTemplatePrint';
+import { getCompanyName, getLetterheadByCompanyId, resolveCompanyId } from '@/lib/print-letterhead';
 
 export default function DOEkspedisiPage() {
   const router = useRouter();
   const { slug } = router.query;
+  const { companyId } = useCompany();
+  const resolvedCompanyId = resolveCompanyId(slug, companyId) || 1;
+  const selectedPrintBackground = getLetterheadByCompanyId(resolvedCompanyId);
+  const templatePrint = useReportTemplatePrint(selectedPrintBackground);
 
-  const [searchInput, setSearchInput] = useState('');
-  const [search, setSearch] = useState('');
-  const [page, setPage] = useState(1);
-  const [perPage, setPerPage] = useState(25);
+  const { page, perPage, search, setPage, setPerPage, setSearch, updateQuery } = useQueryParamsTable({
+    defaultPerPage: 25,
+  });
+  const [searchInput, setSearchInput] = useState(search);
+  const [date, setDate] = useState<DateRange | undefined>();
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
-  const [isEditOpen, setIsEditOpen] = useState(false);
   const [selectedItem, setSelectedItem] = useState<DoEkspedisi | null>(null);
-  const [vehicleSearch, setVehicleSearch] = useState('');
-  const [driverSearch, setDriverSearch] = useState('');
-  const debouncedSearch = useDebouncedValue(searchInput, 400);
-  const debouncedVehicleSearch = useDebouncedValue(vehicleSearch, 300);
-  const debouncedDriverSearch = useDebouncedValue(driverSearch, 300);
 
   useEffect(() => {
-    setSearch(debouncedSearch);
+    const timeout = window.setTimeout(() => {
+      if (search !== searchInput.trim()) {
+        setSearch(searchInput.trim());
+      }
+    }, 400);
+    return () => window.clearTimeout(timeout);
+  }, [searchInput, search, setSearch]);
+
+  const handleDateChange = (next?: DateRange) => {
+    setDate(next);
     setPage(1);
-  }, [debouncedSearch, setPage, setSearch]);
+  };
 
   const listQuery = useDoEkspedisis({
     page,
@@ -55,15 +60,13 @@ export default function DOEkspedisiPage() {
     search,
     order_by: 'created_at',
     order_sort: 'desc',
+    start_date: date?.from ? date.from.toISOString().split('T')[0] : undefined,
+    end_date: date?.to ? date.to.toISOString().split('T')[0] : undefined,
   });
   const deleteMutation = useDeleteDoEkspedisi();
-  const updateMutation = useUpdateDoEkspedisi();
-  const processExpeditionMutation = useProcessDoExpedition();
-  const nextCodeQuery = useNextDoEkspedisiCode(isEditOpen);
-  const vehicleLookup = useDoEkspedisiVehicleLookup(debouncedVehicleSearch, isEditOpen);
-  const driverLookup = useDoEkspedisiDriverLookup(debouncedDriverSearch, isEditOpen);
 
   const handleDelete = (item: DoEkspedisi) => {
+    if (!['draft', 'pending'].includes(String(item.status).toLowerCase())) return;
     setSelectedItem(item);
     setIsDeleteOpen(true);
   };
@@ -81,34 +84,13 @@ export default function DOEkspedisiPage() {
     }
   };
 
-  const handleEditSubmit = async (values: DOEkspedisiEditValues) => {
-    if (!selectedItem) return;
-
-    try {
-      await updateMutation.mutateAsync({
-        id: selectedItem.id,
-        payload: {
-          date: toApiDate(values.date),
-          vehicle_id: values.vehicleId,
-          driver_id: values.driverId,
-          driver_note: values.driverNote,
-        },
-      });
-      toast.success('Data DO Ekspedisi berhasil diperbarui');
-      setIsEditOpen(false);
-      setSelectedItem(null);
-    } catch (error: any) {
-      toast.error(getApiErrorMessage(error));
-    }
-  };
-
-  // Memoized callbacks untuk mencegah infinite re-renders
   const handleEditClick = useCallback(
     (item: DoEkspedisi) => {
-      setSelectedItem(item);
-      setIsEditOpen(true);
+      if (!slug) return;
+      if (String(item.status).toLowerCase() !== 'draft') return;
+      router.push(`/dashboard/${slug}/do-ekspedisi/form/${item.id}`);
     },
-    [],
+    [slug, router],
   );
 
   const handleDetailClick = useCallback(
@@ -120,33 +102,11 @@ export default function DOEkspedisiPage() {
   );
 
   const handlePrintClick = useCallback(
-    async (item: DoEkspedisi) => {
+    (item: DoEkspedisi) => {
       if (!slug) return;
-      try {
-        await processExpeditionMutation.mutateAsync({ id: item.id });
-      } catch (error: any) {
-        toast.error(getApiErrorMessage(error));
-        return;
-      }
-      router.push(`/dashboard/${slug}/do-ekspedisi/print/${item.id}`);
+      void router.push(`/dashboard/${slug}/do-ekspedisi/detail/${item.id}?print=1`);
     },
-    [processExpeditionMutation, slug, router],
-  );
-
-  const handlePerPageChange = useCallback((value: number) => {
-    setPerPage(value);
-    setPage(1);
-  }, []);
-
-  // Memoized options untuk dialog
-  const vehicleOptions = useMemo(
-    () => (vehicleLookup.data ?? []).map((item) => ({ value: String(item.id), label: item.label, subtitle: item.subtitle })),
-    [vehicleLookup.data],
-  );
-
-  const driverOptions = useMemo(
-    () => (driverLookup.data ?? []).map((item) => ({ value: String(item.id), label: item.label, subtitle: item.subtitle })),
-    [driverLookup.data],
+    [slug, router],
   );
 
   return (
@@ -155,26 +115,60 @@ export default function DOEkspedisiPage() {
         <PageHeader
           title="Data DO Ekspedisi"
           subtitle="Buat faktur dengan informasi penagihan yang diperlukan."
+          actions={
+            <Button onClick={templatePrint.openPrintDialog} variant="outline">
+              <Printer className="mr-2 h-4 w-4" />
+              Print
+            </Button>
+          }
         />
 
-        <DOEkspedisiTable
-          data={listQuery.data?.data ?? []}
-          search={searchInput}
+        <SearchPagination
+          searchValue={searchInput}
+          onSearchChange={setSearchInput}
+          searchPlaceholder="Search here"
+          searchAriaLabel="Cari DO ekspedisi"
           page={page}
           perPage={perPage}
-          totalData={listQuery.data?.meta.total ?? 0}
-          totalPages={listQuery.data?.meta.lastPage ?? 1}
-          isLoading={listQuery.isLoading}
-          onSearchChange={setSearchInput}
+          total={listQuery.data?.meta.total}
+          lastPage={listQuery.data?.meta.lastPage}
           onPageChange={setPage}
-          onPerPageChange={handlePerPageChange}
-          onEdit={handleEditClick}
-          onDetail={handleDetailClick}
-          onDelete={handleDelete}
-          onPrint={(item) => {
-            void handlePrintClick(item);
-          }}
-        />
+          onPerPageChange={setPerPage}
+          filters={
+            <DatePickerWithRange
+              date={date}
+              onChange={handleDateChange}
+              placeholder="Pilih rentang tanggal"
+              className="w-full sm:w-[260px]"
+            />
+          }
+          actions={
+            search ? (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  setSearchInput('');
+                  updateQuery({ search: undefined, page: 1 });
+                }}
+                className="rounded-md border-slate-200 text-slate-700 bg-white hover:bg-slate-50 cursor-pointer h-9 text-xs px-3"
+              >
+                Reset
+              </Button>
+            ) : null
+          }
+        >
+          <DOEkspedisiTable
+            data={listQuery.data?.data ?? []}
+            isLoading={listQuery.isLoading}
+            onEdit={handleEditClick}
+            onDetail={handleDetailClick}
+            onDelete={handleDelete}
+            onPrint={(item) => {
+              void handlePrintClick(item);
+            }}
+          />
+        </SearchPagination>
       </div>
 
       <DeleteDOEkspedisiModal
@@ -185,22 +179,31 @@ export default function DOEkspedisiPage() {
         itemName={selectedItem?.doCode}
       />
 
-      <DOEkspedisiEditDialog
-        open={isEditOpen}
-        onOpenChange={(open) => {
-          setIsEditOpen(open);
-          if (!open) setSelectedItem(null);
-        }}
-        item={selectedItem}
-        nextCode={nextCodeQuery.data}
-        vehicleOptions={vehicleOptions}
-        driverOptions={driverOptions}
-        vehicleLoading={vehicleLookup.isLoading}
-        driverLoading={driverLookup.isLoading}
-        onVehicleSearch={setVehicleSearch}
-        onDriverSearch={setDriverSearch}
-        onSubmit={handleEditSubmit}
-        isSubmitting={updateMutation.isPending}
+      <DOEkspedisiTablePrintDocument
+        data={listQuery.data?.data ?? []}
+        template={templatePrint.selectedTemplate}
+        fallbackBackground={selectedPrintBackground}
+        companyName={getCompanyName(resolvedCompanyId)}
+        periodLabel={
+          date?.from
+            ? `${format(date.from, 'dd MMM yyyy')}${
+                date.to && date.to !== date.from ? ` – ${format(date.to, 'dd MMM yyyy')}` : ''
+              }`
+            : 'Semua Periode'
+        }
+        reportPage={page}
+        reportTotal={listQuery.data?.meta.total ?? (listQuery.data?.data?.length || 0)}
+        printedAt={templatePrint.printedAt}
+      />
+
+      <ReportTemplatePrintDialog
+        open={templatePrint.isDialogOpen}
+        onOpenChange={templatePrint.setIsDialogOpen}
+        selectedTemplateId={templatePrint.selectedTemplateId}
+        onTemplateChange={templatePrint.setSelectedTemplateId}
+        onPrint={templatePrint.printWithSelectedTemplate}
+        isPreparingPrint={templatePrint.isPreparingPrint}
+        reportName="DO ekspedisi"
       />
     </DashboardLayout>
   );

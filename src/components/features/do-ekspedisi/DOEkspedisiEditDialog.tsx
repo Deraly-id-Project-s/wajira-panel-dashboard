@@ -16,9 +16,9 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { doEkspedisiEditSchema, type DoEkspedisiEditSchema } from '@/schemas/do-ekspedisi.schema';
+import { doEkspedisiDialogSchema, type DoEkspedisiDialogSchema } from '@/schema/do-ekspedisi.schema';
 
-export interface DOEkspedisiEditValues extends DoEkspedisiEditSchema {}
+export interface DOEkspedisiEditValues extends DoEkspedisiDialogSchema { }
 
 interface DOEkspedisiEditDialogProps {
   open: boolean;
@@ -57,7 +57,7 @@ export function DOEkspedisiEditDialog({
     watch,
     formState: { errors },
   } = useForm<DOEkspedisiEditValues>({
-    resolver: zodResolver(doEkspedisiEditSchema),
+    resolver: zodResolver(doEkspedisiDialogSchema),
     defaultValues: {
       date: item?.date ? new Date(item.date) : undefined,
       vehicleId: item?.vehicleId ? String(item.vehicleId) : '',
@@ -108,7 +108,7 @@ export function DOEkspedisiEditDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[92vh] max-w-[384px] overflow-y-auto rounded-lg p-6" showCloseButton={false}>
+      <DialogContent className="max-h-[92vh] max-w-[384px] overflow-y-auto rounded-md p-6" showCloseButton={false}>
         <DialogHeader className="gap-1 text-left">
           <DialogTitle className="text-base font-semibold text-slate-950">Lengkapi DO Ekspedisi</DialogTitle>
           <DialogDescription>DO dibuat otomatis dari item order. Lengkapi armada, driver, dan tanggal keberangkatan.</DialogDescription>
@@ -117,12 +117,12 @@ export function DOEkspedisiEditDialog({
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           <div className="space-y-2">
             <Label>ID Order List</Label>
-            <Input readOnly value={item?.orderCode || '-'} className="h-9 rounded-lg border-slate-200 bg-white text-slate-500" />
+            <Input readOnly value={item?.orderCode || '-'} className="h-9 rounded-md border-slate-200 bg-white text-slate-500" />
           </div>
 
           <div className="space-y-2">
             <Label>Kode DO</Label>
-            <Input readOnly value={item?.doCode || nextCode || '-'} className="h-9 rounded-lg border-slate-200 bg-white text-slate-500" />
+            <Input readOnly value={item?.doCode || nextCode || '-'} className="h-9 rounded-md border-slate-200 bg-white text-slate-500" />
           </div>
 
           <div className="space-y-2">
@@ -136,7 +136,7 @@ export function DOEkspedisiEditDialog({
                   value={field.value}
                   onChange={field.onChange}
                   placeholder="Pick a date"
-                  className={`h-9 rounded-lg border-slate-200 ${errors.date ? 'border-red-500' : ''}`}
+                  className={`h-9 rounded-md border-slate-200 ${errors.date ? 'border-red-500' : ''}`}
                 />
               )}
             />
@@ -157,7 +157,7 @@ export function DOEkspedisiEditDialog({
                   searchPlaceholder="Cari driver..."
                   loading={driverLoading}
                   onSearchChange={onDriverSearch}
-                  className={`h-9 rounded-lg border-slate-200 ${errors.driverId ? 'border-red-500' : ''}`}
+                  className={`h-9 rounded-md border-slate-200 ${errors.driverId ? 'border-red-500' : ''}`}
                 />
               )}
             />
@@ -178,7 +178,7 @@ export function DOEkspedisiEditDialog({
                   searchPlaceholder="Cari nomor polisi..."
                   loading={vehicleLoading}
                   onSearchChange={onVehicleSearch}
-                  className={`h-9 rounded-lg border-slate-200 ${errors.vehicleId ? 'border-red-500' : ''}`}
+                  className={`h-9 rounded-md border-slate-200 ${errors.vehicleId ? 'border-red-500' : ''}`}
                 />
               )}
             />
@@ -186,18 +186,18 @@ export function DOEkspedisiEditDialog({
 
           <div className="space-y-2">
             <Label>Tipe Armada</Label>
-            <Input readOnly value={vehicleTypeDisplay} className="h-9 rounded-lg border-slate-200 bg-white text-slate-500" />
+            <Input readOnly value={vehicleTypeDisplay} className="h-9 rounded-md border-slate-200 bg-white text-slate-500" />
           </div>
 
           <div className="space-y-2">
             <Label>Atensi Driver</Label>
-            <Textarea rows={4} placeholder="Type your message here." className="rounded-lg border-slate-200" {...register('driverNote')} />
+            <Textarea rows={4} placeholder="Type your message here." className="rounded-md border-slate-200" {...register('driverNote')} />
           </div>
 
-          <Button type="submit" disabled={isSubmitting} className="h-9 w-full rounded-lg bg-[#1f4163] hover:bg-[#183552]">
+          <Button type="submit" disabled={isSubmitting} className="h-9 rounded-md btn-primary!">
             {isSubmitting ? 'Menyimpan...' : 'Simpan'}
           </Button>
-          <Button type="button" variant="outline" disabled={isSubmitting} onClick={() => onOpenChange(false)} className="h-9 w-full rounded-lg">
+          <Button type="button" variant="outline" disabled={isSubmitting} onClick={() => onOpenChange(false)} className="h-9 w-full rounded-md">
             Batal
           </Button>
         </form>

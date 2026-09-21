@@ -15,12 +15,12 @@ type Props = {
   meta: LiabilityListMeta | null;
   loading?: boolean;
   error?: string | null;
-  search: string;
-  perPage: number;
-  currentPage: number;
-  onSearchChange: (value: string) => void;
-  onPerPageChange: (value: number) => void;
-  onPageChange: (value: number) => void;
+  search?: string;
+  perPage?: number;
+  currentPage?: number;
+  onSearchChange?: (value: string) => void;
+  onPerPageChange?: (value: number) => void;
+  onPageChange?: (value: number) => void;
   onRetry?: () => void;
 };
 
@@ -28,7 +28,7 @@ export default function DataHutangTable({ data, meta, loading, error, search, pe
   const router = useRouter();
   const slug = typeof router.query.slug === 'string' ? router.query.slug : '';
 
-  const startIndex = meta?.from ?? (data.length > 0 ? (currentPage - 1) * perPage + 1 : 0);
+  const startIndex = meta?.from ?? (data.length > 0 ? ((currentPage ?? 1) - 1) * (perPage ?? 1) + 1 : 0);
 
   const columns: ColumnDef<LiabilityListItem>[] = [
     {
@@ -101,7 +101,7 @@ export default function DataHutangTable({ data, meta, loading, error, search, pe
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <p>{error}</p>
             {onRetry && (
-              <Button variant="outline" size="sm" onClick={onRetry}>
+              <Button variant="outline" onClick={onRetry}>
                 Coba Lagi
               </Button>
             )}
@@ -115,12 +115,12 @@ export default function DataHutangTable({ data, meta, loading, error, search, pe
         loading={loading}
         search={search}
         onSearchChange={onSearchChange}
-        showLimitChange={true}
+        showLimitChange={Boolean(onPerPageChange)}
         perPage={perPage}
         onPerPageChange={onPerPageChange}
         meta={meta ? {
-          currentPage: currentPage,
-          perPage: perPage,
+          currentPage: currentPage ?? 1,
+          perPage: perPage ?? 25,
           lastPage: meta.lastPage || 1,
           total: meta.total || data.length,
         } : undefined}

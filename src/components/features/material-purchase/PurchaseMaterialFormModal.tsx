@@ -171,7 +171,7 @@ export function PurchaseMaterialFormModal({
             ) : null}
 
             <div className="flex flex-col gap-4 pt-2">
-              <Button type="submit" disabled={isSubmitting} className="h-14 rounded-md bg-[#1f4163] text-[18px] font-medium hover:bg-[#183552]">
+              <Button type="submit" disabled={isSubmitting} className="h-14 rounded-md text-[18px] btn-primary!">
                 {isSubmitting ? 'Menyimpan...' : 'Simpan'}
               </Button>
               <Button type="button" variant="outline" onClick={() => onOpenChange(false)} className="h-14 rounded-md border-slate-300 text-[18px] font-medium">

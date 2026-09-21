@@ -2,6 +2,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
+import { InputDate } from '@/components/ui/input-date';
 import { MoneyInput } from '@/components/ui/money-input';
 import { Button } from '@/components/ui/button';
 import { Save } from 'lucide-react';
@@ -96,7 +97,7 @@ export function PurchaseSparepartForm({ defaultValues, onSubmit, onCancel, readO
           <FormField control={form.control} name="transaction_date" render={({ field }) => (
             <FormItem>
               <FormLabel>Tanggal Transaksi</FormLabel>
-              <FormControl><Input type="date" {...field} disabled={readOnly} /></FormControl>
+              <FormControl><InputDate {...field} disabled={readOnly} /></FormControl>
               <FormMessage />
             </FormItem>
           )} />
@@ -107,19 +108,20 @@ export function PurchaseSparepartForm({ defaultValues, onSubmit, onCancel, readO
               <Popover open={openSupplier} onOpenChange={setOpenSupplier}>
                 <FormControl>
                   <PopoverTrigger asChild>
-                    <button
+                    <Button
                       type="button"
+                      variant="outline"
                       role="combobox"
                       aria-controls="supplier-popover"
                       aria-expanded={openSupplier}
                       disabled={readOnly}
-                      className={cn("flex h-10 w-full items-center justify-between rounded-md border border-slate-300 bg-background px-3 py-2 text-sm ring-offset-background disabled:cursor-not-allowed disabled:opacity-50", !field.value && "text-muted-foreground")}
+                      className={cn("w-full justify-between font-normal", !field.value && "text-muted-foreground")}
                     >
                       <span className="truncate">
                         {field.value ? suppliers?.data?.find((s: any) => String(s.id) === String(field.value))?.name : "Pilih Supplier"}
                       </span>
                       <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                    </button>
+                    </Button>
                   </PopoverTrigger>
                 </FormControl>
                 <PopoverContent className="w-[--radix-popover-trigger-width] p-0" align="start">
@@ -157,13 +159,14 @@ export function PurchaseSparepartForm({ defaultValues, onSubmit, onCancel, readO
               <Popover open={openSparepart} onOpenChange={setOpenSparepart}>
                 <FormControl>
                   <PopoverTrigger asChild>
-                    <button
+                    <Button
                       type="button"
+                      variant="outline"
                       role="combobox"
                       aria-controls="sparepart-popover"
                       aria-expanded={openSparepart}
                       disabled={readOnly}
-                      className={cn("flex h-10 w-full items-center justify-between rounded-md border border-slate-300 bg-background px-3 py-2 text-sm ring-offset-background disabled:cursor-not-allowed disabled:opacity-50", !field.value && "text-muted-foreground")}
+                      className={cn("w-full justify-between font-normal", !field.value && "text-muted-foreground")}
                     >
                       <span className="truncate">
                         {field.value ? (() => {
@@ -172,7 +175,7 @@ export function PurchaseSparepartForm({ defaultValues, onSubmit, onCancel, readO
                         })() : "Pilih Sparepart"}
                       </span>
                       <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                    </button>
+                    </Button>
                   </PopoverTrigger>
                 </FormControl>
                 <PopoverContent className="w-[--radix-popover-trigger-width] p-0" align="start">
@@ -279,10 +282,10 @@ export function PurchaseSparepartForm({ defaultValues, onSubmit, onCancel, readO
         )} />
 
         <div className="flex justify-center items-center gap-4 pt-10">
-          <Button type="button" variant="outline" onClick={onCancel} disabled={form.formState.isSubmitting} className="min-w-[120px] h-10 border-slate-300">Batal</Button>
+          <Button type="button" variant="outline" onClick={onCancel} disabled={form.formState.isSubmitting}>Batal</Button>
           {!readOnly && (
-            <Button type="submit" disabled={form.formState.isSubmitting} className="min-w-[120px] h-10 bg-[#1e293b] hover:bg-[#0f172a] text-white">
-              {form.formState.isSubmitting ? 'Menyimpan...' : <><Save className="w-4 h-4 mr-2" /> Simpan</>}
+            <Button type="submit" variant="default" disabled={form.formState.isSubmitting}>
+              {form.formState.isSubmitting ? 'Menyimpan...' : 'Simpan'}
             </Button>
           )}
         </div>

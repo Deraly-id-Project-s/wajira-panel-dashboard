@@ -55,11 +55,10 @@ export default function RoleDetailPage() {
         header: 'Status',
         cell: (user) => (
           <span
-            className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold border ${
-              user.is_active === 1
-                ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
-                : 'bg-slate-50 text-slate-700 border-slate-200'
-            }`}
+            className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold border ${user.is_active === 1
+              ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+              : 'bg-slate-50 text-slate-700 border-slate-200'
+              }`}
           >
             {user.is_active === 1 ? 'Aktif' : 'Non-aktif'}
           </span>
@@ -176,7 +175,7 @@ export default function RoleDetailPage() {
 
   return (
     <DashboardLayout>
-      <div className="mx-auto p-6 space-y-6">
+      <div className="mx-auto space-y-6">
         {/* Header */}
         <PageHeader
           breadcrumbs={[
@@ -201,7 +200,7 @@ export default function RoleDetailPage() {
               {/* Card: Role Info Header */}
               <div className="bg-white rounded-md border p-6 shadow-sm space-y-4">
                 <div className="flex items-center gap-3">
-                  <div className="h-10 w-10 rounded-md bg-indigo-50 flex items-center justify-center text-indigo-600">
+                  <div className="h-10 w-10 rounded-md bg-orange-50 flex items-center justify-center text-orange-600">
                     <Shield size={20} />
                   </div>
                   <div>
@@ -224,7 +223,7 @@ export default function RoleDetailPage() {
                     <div className="space-y-1.5 w-full sm:flex-1">
                       <label className="text-xs font-semibold text-gray-700">Dispatch Peran (Tambah Pengguna)</label>
                       <Select value={selectedUserId} onValueChange={setSelectedUserId}>
-                        <SelectTrigger className="bg-white border-slate-200 h-10 rounded-lg text-sm shadow-none focus:ring-slate-300">
+                        <SelectTrigger className="bg-white border-slate-200 h-10 rounded-md text-sm shadow-none focus:ring-slate-300">
                           <SelectValue placeholder={isLoadingUsers ? 'Memuat pengguna...' : 'Pilih Pengguna'} />
                         </SelectTrigger>
                         <SelectContent className="max-h-60">
@@ -240,7 +239,7 @@ export default function RoleDetailPage() {
                         </SelectContent>
                       </Select>
                     </div>
-                    <Button onClick={handleDispatchRole} disabled={assignRoleMutation.isPending || !selectedUserId} className="w-full sm:w-auto bg-[#1e3a5f] hover:bg-[#152e4d]">
+                    <Button onClick={handleDispatchRole} disabled={assignRoleMutation.isPending || !selectedUserId} className="btn-primary-orange!">
                       <UserPlus size={16} />
                       Tambah
                     </Button>
@@ -275,7 +274,7 @@ export default function RoleDetailPage() {
               ) : (
                 <div className="space-y-6">
                   {modulesWithAccess.map((mod) => (
-                    <div key={mod.id} className="border border-slate-100 rounded-xl bg-slate-50/25 p-6 space-y-4">
+                    <div key={mod.id} className="border border-slate-100 rounded-md bg-slate-50/25 p-6 space-y-4">
                       {/* Module Title */}
                       <div className="border-b border-slate-100 pb-2">
                         <h4 className="text-sm font-bold text-slate-800 uppercase tracking-wider">{mod.name}</h4>
@@ -287,7 +286,7 @@ export default function RoleDetailPage() {
                           <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Fitur Aktif</span>
                           <div className="flex flex-wrap gap-2">
                             {mod.activeFeatures.map((feature) => (
-                              <span key={feature.id} className="inline-flex items-center px-3 py-1 rounded-lg text-xs font-semibold bg-indigo-50 text-indigo-700 border border-indigo-100 shadow-sm">
+                              <span key={feature.id} className="inline-flex items-center px-3 py-1 rounded-md text-xs font-semibold bg-orange-50 text-orange-700 border border-orange-100 shadow-sm">
                                 {feature.name}
                               </span>
                             ))}
@@ -301,8 +300,8 @@ export default function RoleDetailPage() {
                           <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Permissions</span>
                           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
                             {mod.activePerms.map((perm) => (
-                              <div key={perm.id} className="p-3 rounded-lg border border-slate-100 bg-white shadow-sm flex flex-col gap-1 min-w-0">
-                                <span className="font-mono text-xs font-bold text-indigo-950 truncate" title={perm.name}>{perm.name}</span>
+                              <div key={perm.id} className="p-3 rounded-md border border-slate-100 bg-white shadow-sm flex flex-col gap-1 min-w-0">
+                                <span className="font-mono text-xs font-bold text-orange-950 truncate" title={perm.name}>{perm.name}</span>
                                 <span className="text-[10px] text-slate-500 font-medium leading-normal line-clamp-2">{perm.description || 'Tidak ada deskripsi.'}</span>
                               </div>
                             ))}

@@ -1,7 +1,11 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
+import { Plus } from 'lucide-react';
 import { toast } from 'sonner';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
+import { PageHeader } from '@/components/ui/page-header';
+import { Button } from '@/components/ui/button';
+import { SearchPagination } from '@/components/ui/search-pagination';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { PurchaseMaterialFormModal } from '@/components/features/material-purchase/PurchaseMaterialFormModal';
 import { PurchaseMaterialTable } from '@/components/features/material-purchase/PurchaseMaterialTable';
@@ -15,7 +19,17 @@ import type { MaterialTransactionFormValues } from '@/scheme/material-transactio
 export default function SalesMaterialPage() {
   const router = useRouter();
   const slug = typeof router.query.slug === 'string' ? router.query.slug : '';
-  const { page, perPage, search, setPage, setPerPage, setSearch } = useQueryParamsTable({ defaultPerPage: 25 });
+  const { page, perPage, search, setPage, setPerPage, setSearch, updateQuery } = useQueryParamsTable({ defaultPerPage: 25 });
+  const [searchInput, setSearchInput] = useState(search);
+
+  useEffect(() => {
+    const timeout = window.setTimeout(() => {
+      if (search !== searchInput.trim()) {
+        setSearch(searchInput.trim());
+      }
+    }, 400);
+    return () => window.clearTimeout(timeout);
+  }, [searchInput, search, setSearch]);
 
   const query = useMaterialTransactions({ page, perPage, search, type: 'sales' });
   const warehousesQuery = useWarehouseOptions();
@@ -71,35 +85,67 @@ export default function SalesMaterialPage() {
 
   return (
     <DashboardLayout>
-      <PurchaseMaterialTable
-        slug={slug}
-        data={query.data?.data ?? []}
-        totalData={query.data?.meta.total ?? 0}
-        page={page}
-        perPage={perPage}
-        search={search}
-        isLoading={query.isLoading || query.isFetching}
-        onPageChange={setPage}
-        onPerPageChange={setPerPage}
-        onSearchChange={setSearch}
-        onAdd={() => {
-          setEditing(null);
-          setOpenForm(true);
-        }}
-        onEdit={(item) => {
-          setEditing(item);
-          setOpenForm(true);
-        }}
-        onDelete={setDeleteTarget}
-        title="Penjualan Material"
-        description="Kelola data penjualan material"
-        codeHeader="KODE JUAL"
-        dateHeader="TGL JUAL"
-        counterpartyHeader="CUSTOMER"
-        routeBasePath="penjualan-material"
-        loadingText="Memuat data penjualan material..."
-        emptyText="Tidak ada data penjualan material."
-      />
+      <div className="space-y-6">
+        <PageHeader
+          title="Penjualan Material"
+          subtitle="Kelola data penjualan material"
+        />
+
+        <SearchPagination
+          searchValue={searchInput}
+          onSearchChange={setSearchInput}
+          searchPlaceholder="Search here"
+          searchAriaLabel="Cari penjualan material"
+          page={page}
+          perPage={perPage}
+          total={query.data?.meta.total}
+          lastPage={query.data?.meta.lastPage}
+          onPageChange={setPage}
+          onPerPageChange={setPerPage}
+          actions={
+            <>
+              {search && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    setSearchInput('');
+                    updateQuery({ search: undefined, page: 1 });
+                  }}
+                  className="rounded-md border-slate-200 text-slate-700 bg-white hover:bg-slate-50 cursor-pointer h-9 text-xs px-3"
+                >
+                  Reset
+                </Button>
+              )}
+              <Button
+                onClick={() => {
+                  setEditing(null);
+                  setOpenForm(true);
+                }}
+                className="btn-primary!"
+              >
+                <Plus className="mr-2 h-4 w-4" />
+                Tambah Data
+              </Button>
+            </>
+          }
+        >
+          <PurchaseMaterialTable
+            slug={slug}
+            data={query.data?.data ?? []}
+            isLoading={query.isLoading || query.isFetching}
+            onEdit={(item) => {
+              setEditing(item);
+              setOpenForm(true);
+            }}
+            onDelete={setDeleteTarget}
+            codeHeader="KODE JUAL"
+            dateHeader="TGL JUAL"
+            counterpartyHeader="CUSTOMER"
+            routeBasePath="penjualan-material"
+          />
+        </SearchPagination>
+      </div>
 
       <PurchaseMaterialFormModal
         open={openForm}

@@ -44,7 +44,7 @@ export function FormDialog({
       <DialogContent
         onPointerDownOutside={(e) => e.preventDefault()}
         className={cn(
-          "w-full max-h-[90vh] overflow-hidden flex flex-col rounded-xl border-0 bg-white p-0 shadow-2xl",
+          "w-full max-h-[90vh] overflow-hidden flex flex-col rounded-md border-0 bg-white p-0 shadow-2xl",
           maxWidthClassName
         )}
       >
@@ -60,26 +60,24 @@ export function FormDialog({
             {children}
           </div>
 
-          <div className="shrink-0 flex justify-center items-center gap-6 px-6 py-4 border-t bg-gray-50/50">
+          <div className="flex items-center flex-col sm:flex-row w-full sm:w-auto justify-end gap-2 px-6 py-5">
             <Button
               type="button"
-              variant="ghost"
+              variant="outline"
               onClick={handleCancel}
               disabled={isSubmitting}
-              className="text-muted-foreground font-medium hover:text-foreground hover:bg-transparent"
             >
               {cancelLabel}
             </Button>
             <Button
               type="submit"
               disabled={isSubmitting}
-              className="button-theme-1!"
+              variant="default"
             >
               {isSubmitting ? (
                 "Menyimpan..."
               ) : (
                 <>
-                  <Save className="mr-2 h-4 w-4" />
                   {submitLabel}
                 </>
               )}

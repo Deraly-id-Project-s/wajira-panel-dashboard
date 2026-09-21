@@ -101,7 +101,7 @@ export default function EditBBNBillPage() {
             </div>
           </div>
 
-          <Card className="rounded-[24px] border border-slate-200 bg-white p-6 shadow-sm">
+          <Card className="rounded-md border border-slate-200 bg-white p-6 shadow-sm">
             <form
               onSubmit={form.handleSubmit(async (values) => {
                 if (!id) return;
@@ -162,7 +162,7 @@ export default function EditBBNBillPage() {
               </div>
 
               <div className="flex items-end justify-end">
-                <Button type="submit" disabled={updateMutation.isPending} className="rounded-md bg-[#1e3a5f] px-6 hover:bg-[#152e4d]">
+                <Button type="submit" disabled={updateMutation.isPending} className="rounded-md px-6 btn-primary-orange!">
                   <Save className="mr-2 h-4 w-4" />
                   {updateMutation.isPending ? 'Menyimpan...' : 'Simpan'}
                 </Button>

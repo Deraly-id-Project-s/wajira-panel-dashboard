@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/router';
 import { ArrowLeft, ChevronRight, Eye, MoreVertical, Pencil, Plus, Trash2 } from 'lucide-react';
 import type { UnitTransactionRefund } from '@/@types/refund.type';
@@ -9,6 +9,9 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { useDeleteRefund, useRefundList, useRefundTransactionDetail } from '@/hooks/useRefundAdministrasi';
 import { toast } from 'sonner';
 import BaseTable, { ColumnDef } from '@/components/ui/base-table';
+import { SearchPagination } from '@/components/ui/search-pagination';
+import { useQueryParamsTable } from '@/hooks/useQueryParamsTable';
+import { LoadingState } from '@/components/ui/loading-state';
 import { currenciesFormat } from '@/components/ui/currenciesFormat';
 import { CopyBox } from '@/components/ui/copy-box';
 import { usePermissionGuard } from '@/hooks/usePermissionGuard';
@@ -26,9 +29,17 @@ export default function SalesRefundPageContent({ transactionId }: { transactionI
   const [deletingRefund, setDeletingRefund] = useState<UnitTransactionRefund | null>(null);
   const deleteMutation = useDeleteRefund();
 
-  const [page, setPage] = useState(1);
-  const [perPage, setPerPage] = useState(25);
-  const [search, setSearch] = useState('');
+  const { page, perPage, search, setPage, setPerPage, setSearch } = useQueryParamsTable({ defaultPerPage: 25 });
+  const [searchInput, setSearchInput] = useState(search);
+
+  useEffect(() => {
+    const timeout = window.setTimeout(() => {
+      if (search !== searchInput.trim()) {
+        setSearch(searchInput.trim());
+      }
+    }, 400);
+    return () => window.clearTimeout(timeout);
+  }, [searchInput, search, setSearch]);
 
   const { hasPermission } = usePermissionGuard();
   const canCreate = hasPermission('transaction:create');
@@ -181,50 +192,39 @@ export default function SalesRefundPageContent({ transactionId }: { transactionI
           </div>
         </div>
 
-        <BaseTable
-          data={refundQuery.data?.data ?? []}
-          columns={columns}
-          loading={refundQuery.isLoading}
+        <SearchPagination
+          searchValue={searchInput}
+          onSearchChange={setSearchInput}
           searchPlaceholder="Cari kode refund..."
-          onSearchChange={(val) => {
-            setSearch(val);
-            setPage(1);
-          }}
-          showLimitChange
+          searchAriaLabel="Cari refund penjualan"
+          page={page}
           perPage={perPage}
-          onPerPageChange={(limit) => {
-            setPerPage(limit);
-            setPage(1);
-          }}
-          meta={
-            refundQuery.data?.meta
-              ? {
-                currentPage: refundQuery.data.meta.currentPage,
-                perPage: refundQuery.data.meta.perPage,
-                lastPage: refundQuery.data.meta.lastPage,
-                total: refundQuery.data.meta.total,
-              }
-              : undefined
-          }
-          headerActions={
-            <div className="flex flex-col gap-2 md:flex-row md:items-center justify-between">
-              <div className="flex flex-col sm:flex-row items-center gap-2 w-full sm:w-auto">
-                {canCreate && (
-                  <Button
-                    onClick={() => router.push(`/dashboard/${slug}/transaksi/penjualan-unit/${transactionId}/refund/create`)}
-                    className="w-full sm:w-auto bg-[#1e3a5f] hover:bg-[#152e4d]"
-                  >
-                    <Plus className="h-4 w-4 mr-2" />
-                    Tambah Data Data Refund Penjualan
-                  </Button>
-                )}
-              </div>
-            </div>
-          }
+          total={refundQuery.data?.meta?.total}
+          lastPage={refundQuery.data?.meta?.lastPage}
           onPageChange={setPage}
-        />
-
-
+          onPerPageChange={setPerPage}
+          actions={
+            canCreate && (
+              <Button
+                onClick={() => router.push(`/dashboard/${slug}/transaksi/penjualan-unit/${transactionId}/refund/create`)}
+                className="btn-primary!"
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                Tambah Data Data Refund Penjualan
+              </Button>
+            )
+          }
+        >
+          {refundQuery.isLoading ? (
+            <LoadingState variant="page" />
+          ) : (
+            <BaseTable
+              data={refundQuery.data?.data ?? []}
+              columns={columns}
+              loading={refundQuery.isLoading}
+            />
+          )}
+        </SearchPagination>
 
         <AlertDialog open={Boolean(deletingRefund)} onOpenChange={(open) => !open && setDeletingRefund(null)}>
           <AlertDialogContent>

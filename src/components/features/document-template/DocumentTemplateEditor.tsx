@@ -137,7 +137,7 @@ export function DocumentTemplateEditor({ initialData, isSubmitting, onSubmit, on
     extensions: [StarterKit],
     content: defaultHeader,
     immediatelyRender: false,
-    onUpdate: ({ editor: next }) => setValue('headerInformation', next.getHTML(), { shouldDirty: true, shouldValidate: true })
+    onUpdate: ({ editor: next }: { editor: Editor }) => setValue('headerInformation', next.getHTML(), { shouldDirty: true, shouldValidate: true })
   });
 
   useEffect(() => {
@@ -150,7 +150,7 @@ export function DocumentTemplateEditor({ initialData, isSubmitting, onSubmit, on
     extensions: [StarterKit],
     content: defaultFooter,
     immediatelyRender: false,
-    onUpdate: ({ editor: next }) => setValue('footerInformation', next.getHTML(), { shouldDirty: true, shouldValidate: true })
+    onUpdate: ({ editor: next }: { editor: Editor }) => setValue('footerInformation', next.getHTML(), { shouldDirty: true, shouldValidate: true })
   });
 
   useEffect(() => {

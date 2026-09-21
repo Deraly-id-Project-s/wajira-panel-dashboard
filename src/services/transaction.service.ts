@@ -10,6 +10,7 @@ type TransactionFlowApiModel = {
   company_id: number;
   unit_transaction_id: number | null;
   transaction_date: string;
+  name: string | null;
   description: string | null;
   bank_usd_debit: string | number | null;
   bank_usd_credit: string | number | null;
@@ -17,6 +18,7 @@ type TransactionFlowApiModel = {
   bank_idr_credit: string | number | null;
   cash_idr_debit: string | number | null;
   cash_idr_credit: string | number | null;
+  transaction_proof?: string | null;
   created_at?: string;
   updated_at?: string;
   unit_transaction?: unknown;
@@ -37,7 +39,7 @@ const mapTransaction = (item: TransactionFlowApiModel): Transaction => ({
   companyId: String(item.company_id),
   unitTransactionId: item.unit_transaction_id,
   date: item.transaction_date,
-  name: item.description ?? '',
+  name: item.name ?? '',
   description: item.description ?? '',
   debitUSD: Number(item.bank_usd_debit || 0),
   creditUSD: Number(item.bank_usd_credit || 0),
@@ -45,17 +47,20 @@ const mapTransaction = (item: TransactionFlowApiModel): Transaction => ({
   creditIDR: Number(item.bank_idr_credit || 0),
   debitCash: Number(item.cash_idr_debit || 0),
   creditCash: Number(item.cash_idr_credit || 0),
+  transactionProof: item.transaction_proof ?? null,
   createdAt: item.created_at,
   updatedAt: item.updated_at,
 });
 
-export const getTransactions = async (companyId: string, page = 1, limit = 25, search = '') => {
+export const getTransactions = async (companyId: string, page = 1, limit = 25, search = '', startDate?: string, endDate?: string) => {
   const response = await apiClient.get<PaginatedResponse>(basePath, {
     params: {
       company_id: companyId,
       page,
       perPage: limit,
       description: search || undefined,
+      start_date: startDate || undefined,
+      end_date: endDate || undefined,
     },
   });
 
@@ -76,31 +81,62 @@ export const getTransactionById = async (id: string): Promise<Transaction> => {
   return mapTransaction(data);
 };
 
-const buildPayload = (payload: Partial<CreateTransactionRequest>) => {
+const buildPayload = (payload: Partial<CreateTransactionRequest>, isUpdate = false) => {
+  const isFile = typeof window !== 'undefined' && payload.transactionProof instanceof File;
+
+  if (isFile) {
+    const formData = new FormData();
+    if (isUpdate) {
+      formData.append('_method', 'PUT');
+    }
+    if (payload.companyId !== undefined) formData.append('company_id', String(payload.companyId));
+    if (payload.unitTransactionId) formData.append('unit_transaction_id', String(payload.unitTransactionId));
+    if (payload.date !== undefined) formData.append('transaction_date', payload.date);
+    if (payload.name !== undefined) formData.append('name', payload.name);
+    if (payload.description !== undefined) formData.append('description', payload.description ?? '');
+    if (payload.debitUSD !== undefined) formData.append('bank_usd_debit', String(payload.debitUSD ?? 0));
+    if (payload.creditUSD !== undefined) formData.append('bank_usd_credit', String(payload.creditUSD ?? 0));
+    if (payload.debitIDR !== undefined) formData.append('bank_idr_debit', String(payload.debitIDR ?? 0));
+    if (payload.creditIDR !== undefined) formData.append('bank_idr_credit', String(payload.creditIDR ?? 0));
+    if (payload.debitCash !== undefined) formData.append('cash_idr_debit', String(payload.debitCash ?? 0));
+    if (payload.creditCash !== undefined) formData.append('cash_idr_credit', String(payload.creditCash ?? 0));
+    if (payload.transactionProof instanceof File) {
+      formData.append('transaction_proof', payload.transactionProof);
+    }
+    return formData;
+  }
+
   const body: Record<string, any> = {};
-  if (payload.companyId !== undefined) body.company_id = payload.companyId;
-  if (payload.unitTransactionId !== undefined) body.unit_transaction_id = payload.unitTransactionId ?? null;
+  if (payload.companyId !== undefined) body.company_id = Number(payload.companyId);
+  if (payload.unitTransactionId !== undefined) body.unit_transaction_id = payload.unitTransactionId ? Number(payload.unitTransactionId) : null;
   if (payload.date !== undefined) body.transaction_date = payload.date;
-  if (payload.description !== undefined || payload.name !== undefined) body.description = payload.description ?? payload.name ?? '';
+  if (payload.name !== undefined) body.name = payload.name;
+  if (payload.description !== undefined) body.description = payload.description;
   if (payload.debitUSD !== undefined) body.bank_usd_debit = payload.debitUSD ?? 0;
   if (payload.creditUSD !== undefined) body.bank_usd_credit = payload.creditUSD ?? 0;
   if (payload.debitIDR !== undefined) body.bank_idr_debit = payload.debitIDR ?? 0;
   if (payload.creditIDR !== undefined) body.bank_idr_credit = payload.creditIDR ?? 0;
   if (payload.debitCash !== undefined) body.cash_idr_debit = payload.debitCash ?? 0;
   if (payload.creditCash !== undefined) body.cash_idr_credit = payload.creditCash ?? 0;
+  if (typeof payload.transactionProof === 'string') body.transaction_proof = payload.transactionProof;
   return body;
 };
 
 export const createTransaction = async (payload: CreateTransactionRequest): Promise<Transaction> => {
-  const response = await apiClient.post<ItemResponse>(basePath, buildPayload(payload));
-  const data = ensureSuccess(response.data);
-  return mapTransaction(data);
+  const data = buildPayload(payload, false);
+  const response = await apiClient.post<ItemResponse>(basePath, data);
+  const result = ensureSuccess(response.data);
+  return mapTransaction(result);
 };
 
 export const updateTransaction = async (id: string, payload: Partial<CreateTransactionRequest>): Promise<Transaction> => {
-  const response = await apiClient.put<ItemResponse>(`${basePath}/${id}`, buildPayload(payload));
-  const data = ensureSuccess(response.data);
-  return mapTransaction(data);
+  const data = buildPayload(payload, true);
+  const isFormData = typeof window !== 'undefined' && data instanceof FormData;
+  const response = isFormData
+    ? await apiClient.post<ItemResponse>(`${basePath}/${id}`, data)
+    : await apiClient.put<ItemResponse>(`${basePath}/${id}`, data);
+  const result = ensureSuccess(response.data);
+  return mapTransaction(result);
 };
 
 export const deleteTransaction = async (id: string): Promise<void> => {

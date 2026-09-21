@@ -4,6 +4,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
+import { InputDate } from '@/components/ui/input-date';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { MoneyInput } from '@/components/ui/money-input';
@@ -28,8 +29,8 @@ export function TarifPriceVersionForm({ open, onOpenChange, initialData, onSubmi
         </FormControl>
           <FormMessage />
         </FormItem>} />)}</div><div className="grid grid-cols-2 gap-4">
-          <FormField control={form.control} name="effective_from" render={({ field }) => <FormItem><FormLabel>Berlaku Dari</FormLabel><FormControl><Input type="date" disabled={isSubmitting} {...field} value={field.value ?? ''} /></FormControl><FormMessage /></FormItem>} />
-          <FormField control={form.control} name="effective_until" render={({ field }) => <FormItem><FormLabel>Berlaku Sampai</FormLabel><FormControl><Input type="date" disabled={isSubmitting} {...field} value={field.value ?? ''} /></FormControl><FormMessage /></FormItem>} /></div><FormField control={form.control} name="is_default" render={({ field }) => <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3">
+          <FormField control={form.control} name="effective_from" render={({ field }) => <FormItem><FormLabel>Berlaku Dari</FormLabel><FormControl><InputDate disabled={isSubmitting} {...field} value={field.value ?? ''} /></FormControl><FormMessage /></FormItem>} />
+          <FormField control={form.control} name="effective_until" render={({ field }) => <FormItem><FormLabel>Berlaku Sampai</FormLabel><FormControl><InputDate disabled={isSubmitting} {...field} value={field.value ?? ''} /></FormControl><FormMessage /></FormItem>} /></div><FormField control={form.control} name="is_default" render={({ field }) => <FormItem className="flex flex-row items-center justify-between rounded-md border p-3">
             <div>
               <FormLabel>Jadikan Default</FormLabel><FormDescription>Gunakan versi ini sebagai tarif utama.</FormDescription></div><FormControl><Switch checked={field.value} onCheckedChange={field.onChange} disabled={isSubmitting || locked} /></FormControl></FormItem>} /><DialogFooter><Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={isSubmitting}>Batal</Button><Button type="submit" disabled={isSubmitting}>{isSubmitting && <LoadingState variant="inline" text={null} />}Simpan</Button></DialogFooter></form></Form></DialogContent>
   </Dialog>;

@@ -53,18 +53,19 @@ export default function TransactionFormPage({ mode }: Props) {
   }, [mode, transactionId]);
 
   const handleSubmit = async (values: TransactionFormValues) => {
-    const description = values.description?.trim() || values.name.trim();
     const payload = {
       companyId: safeCompanyId,
+      unitTransactionId: values.unitTransactionId ?? null,
       date: values.date,
       name: values.name.trim(),
-      description,
+      description: values.description?.trim() ?? '',
       debitUSD: values.debitUSD ?? 0,
       creditUSD: values.creditUSD ?? 0,
       debitIDR: values.debitIDR ?? 0,
       creditIDR: values.creditIDR ?? 0,
       debitCash: values.debitCash ?? 0,
       creditCash: values.creditCash ?? 0,
+      transactionProof: values.transactionProof ?? null,
     };
 
     try {
@@ -119,6 +120,7 @@ export default function TransactionFormPage({ mode }: Props) {
               defaultValues={isEdit && transaction ? {
                 date: transaction.date,
                 name: transaction.name,
+                unitTransactionId: transaction.unitTransactionId,
                 debitUSD: transaction.debitUSD,
                 creditUSD: transaction.creditUSD,
                 debitIDR: transaction.debitIDR,
@@ -126,11 +128,12 @@ export default function TransactionFormPage({ mode }: Props) {
                 debitCash: transaction.debitCash,
                 creditCash: transaction.creditCash,
                 description: transaction.description ?? '',
+                transactionProof: transaction.transactionProof ?? '',
               } : undefined}
               onSubmit={handleSubmit}
               onCancel={() => void router.push(basePath)}
               isBusy={isBusy}
-              submitLabel={isEdit ? 'Simpan Perubahan' : 'Simpan Transaksi'}
+              submitLabel={isEdit ? 'Perbahrui' : 'Simpan'}
             />
           </CardContent>
         </Card>

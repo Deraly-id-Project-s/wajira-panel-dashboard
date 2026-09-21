@@ -59,7 +59,7 @@ export function MultiSelect({
           <ChevronDown className="h-4 w-4 opacity-50 shrink-0" />
         </button>
       </PopoverTrigger>
-      <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-1 z-[9999] bg-white border border-slate-200" align="start">
+      <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-1 z-[10050] bg-white border border-slate-200" align="start">
         <div className="max-h-60 overflow-y-auto space-y-1">
           {options.map((option) => {
             const isSelected = value.includes(option.value);

@@ -1,30 +1,20 @@
 import { useMemo } from 'react';
 import BaseTable, { ColumnDef } from '@/components/ui/base-table';
-import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
-import { MoreVertical, Pencil, Plus, Trash, Lock, Play, Eye } from 'lucide-react';
+import { MoreVertical, Lock } from 'lucide-react';
 import type { Tax } from '@/services/tax.service';
-import type { PaginationMeta } from '@/@types/pagination.types';
 import { CopyBox } from '@/components/ui/copy-box';
 
 interface TaxTableProps {
   data: Tax[];
-  meta?: PaginationMeta;
-  search: string;
-  page: number;
-  perPage: number;
   isLoading?: boolean;
-  onSearchChange: (value: string) => void;
-  onAdd: () => void;
   onEdit: (tax: Tax) => void;
   onDelete: (tax: Tax) => void;
   onViewDetail: (tax: Tax) => void;
-  onPageChange: (page: number) => void;
-  onPerPageChange: (perPage: number) => void;
 }
 
-export const TaxTable = ({ data, meta, search, page, perPage, isLoading = false, onSearchChange, onAdd, onEdit, onDelete, onViewDetail, onPageChange, onPerPageChange }: TaxTableProps) => {
+export const TaxTable = ({ data, isLoading = false, onEdit, onDelete, onViewDetail }: TaxTableProps) => {
   const columns = useMemo<ColumnDef<Tax>[]>(
     () => [
       {
@@ -72,28 +62,25 @@ export const TaxTable = ({ data, meta, search, page, perPage, isLoading = false,
                 <MoreVertical className="h-4 w-4" />
               </button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="min-w-[150px] rounded-xl border-slate-200 p-1.5 shadow-lg">
+            <DropdownMenuContent align="end" className="min-w-[150px] rounded-md border-slate-200 p-1.5 shadow-lg">
               <DropdownMenuItem
                 onClick={() => onViewDetail(item)}
-                className="rounded-lg px-3 py-2 text-sm text-slate-900 focus:bg-slate-50 cursor-pointer"
+                className="rounded-md px-3 py-2 text-sm text-slate-900 focus:bg-slate-50 cursor-pointer"
               >
-                <Eye className="mr-2 h-4 w-4" />
                 Lihat Detail
               </DropdownMenuItem>
               <DropdownMenuItem
                 onClick={() => onEdit(item)}
                 disabled={item.is_lock === 1 || item.is_lock === true}
-                className="rounded-lg px-3 py-2 text-sm text-slate-900 focus:bg-slate-50 cursor-pointer"
+                className="rounded-md px-3 py-2 text-sm text-slate-900 focus:bg-slate-50 cursor-pointer"
               >
-                <Pencil className="mr-2 h-4 w-4" />
                 Edit
               </DropdownMenuItem>
               <DropdownMenuItem
                 onClick={() => onDelete(item)}
-                className="rounded-lg px-3 py-2 text-sm text-red-600 focus:bg-red-50 focus:text-red-600 cursor-pointer"
+                className="rounded-md px-3 py-2 text-sm text-red-600 focus:bg-red-50 focus:text-red-600 cursor-pointer"
                 disabled={item.is_lock === 1 || item.is_lock === true}
               >
-                <Trash className="mr-2 h-4 w-4" />
                 Hapus
               </DropdownMenuItem>
             </DropdownMenuContent>
@@ -109,26 +96,7 @@ export const TaxTable = ({ data, meta, search, page, perPage, isLoading = false,
       data={data}
       columns={columns}
       loading={isLoading}
-      searchPlaceholder="Cari pajak"
-      search={search}
-      onSearchChange={onSearchChange}
-      showLimitChange
-      perPage={perPage}
-      onPerPageChange={onPerPageChange}
       defaultSort={{ key: 'id', direction: 'desc' }}
-      meta={{
-        currentPage: page,
-        perPage,
-        lastPage: meta?.lastPage ?? 1,
-        total: meta?.total ?? data.length,
-      }}
-      onPageChange={onPageChange}
-      headerActions={
-        <Button onClick={onAdd} className="w-full sm:w-auto bg-[#1e3a5f] hover:bg-[#152e4d]">
-          <Plus className="mr-2 h-4 w-4" />
-          Tambah Data
-        </Button>
-      }
     />
   );
 };

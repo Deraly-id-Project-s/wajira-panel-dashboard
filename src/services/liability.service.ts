@@ -153,8 +153,22 @@ const buildFormData = (payload: CreateLiabilityPaymentPayload): FormData => {
   return formData;
 };
 
+type LiabilityListQueryParams = {
+  company_id?: string | number;
+  page?: number;
+  per_page?: number;
+  search?: string;
+  start_date?: string;
+  end_date?: string;
+};
+
+const withDateRange = (params: { start_date?: string; end_date?: string }) => ({
+  ...(params.start_date ? { start_date: params.start_date } : {}),
+  ...(params.end_date ? { end_date: params.end_date } : {}),
+});
+
 export const liabilityService = {
-  async getAllReceivables(params: { company_id?: string | number; page?: number; per_page?: number; search?: string } = {}): Promise<{
+  async getAllReceivables(params: LiabilityListQueryParams = {}): Promise<{
     data: LiabilityListItem[];
     meta: { currentPage: number; perPage: number; total: number; lastPage: number; from: number | null; to: number | null };
   }> {
@@ -165,6 +179,7 @@ export const liabilityService = {
         page: params.page ?? 1,
         per_page: params.per_page ?? 10,
         ...(params.search ? { search: params.search } : {}),
+        ...withDateRange(params),
       },
     });
 
@@ -184,7 +199,7 @@ export const liabilityService = {
     };
   },
 
-  async getAllLiabilities(params: { company_id?: string | number; page?: number; per_page?: number; search?: string } = {}): Promise<{
+  async getAllLiabilities(params: LiabilityListQueryParams = {}): Promise<{
     data: LiabilityListItem[];
     meta: { currentPage: number; perPage: number; total: number; lastPage: number; from: number | null; to: number | null };
   }> {
@@ -195,6 +210,7 @@ export const liabilityService = {
         page: params.page ?? 1,
         per_page: params.per_page ?? 10,
         ...(params.search ? { search: params.search } : {}),
+        ...withDateRange(params),
       },
     });
 
@@ -214,7 +230,7 @@ export const liabilityService = {
     };
   },
 
-  async getList(params: { type?: 'purchase' | 'sales'; company_id?: string | number; page?: number; per_page?: number; search?: string } = {}): Promise<{
+  async getList(params: LiabilityListQueryParams & { type?: 'purchase' | 'sales' } = {}): Promise<{
     data: LiabilityListItem[];
     meta: { currentPage: number; perPage: number; total: number; lastPage: number; from: number | null; to: number | null };
   }> {
@@ -226,6 +242,7 @@ export const liabilityService = {
         page: params.page ?? 1,
         per_page: params.per_page ?? 10,
         ...(params.search ? { search: params.search } : {}),
+        ...withDateRange(params),
       },
     });
 

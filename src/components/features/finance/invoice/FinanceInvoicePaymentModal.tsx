@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Search } from 'lucide-react';
-import type { DoInvoice, CreateFinanceInvoicePaymentPayload } from '@/@types/create-invoice.types';
+import type { DoInvoice, CreateFinanceInvoicePaymentPayload } from '@/@types/do-invoice.types';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
@@ -102,7 +102,7 @@ export default function FinanceInvoicePaymentModal({ isOpen, onClose, item, comp
 
   const firstExp = item.expeditions?.[0];
   const invoiceEkspedisi = firstExp?.invoiceExpedition ?? 0;
-  const additionalFee = (item.additional_fee ?? 0) + (item.other_fee ?? 0);
+  const additionalFee = (item.additionalFee ?? 0) + (item.otherFee ?? 0);
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>

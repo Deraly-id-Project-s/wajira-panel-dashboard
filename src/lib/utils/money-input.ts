@@ -5,8 +5,9 @@ function normalizeUsdString(value: string): string {
   return cleaned.replace(/,/g, '');
 }
 
-export function formatMoneyInput(value: string | number, currency: 'IDR' | 'USD' = 'IDR') {
-  if (currency === 'USD') {
+export function formatMoneyInput(value: string | number, currency: 'IDR' | 'USD' | string = 'IDR') {
+  const isUsd = String(currency ?? 'IDR').toUpperCase() === 'USD';
+  if (isUsd) {
     const normalized = normalizeUsdString(String(value));
     if (!normalized) return '';
 
@@ -36,9 +37,10 @@ export function formatMoneyInput(value: string | number, currency: 'IDR' | 'USD'
   return 'Rp. ' + strVal.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
 }
 
-export function parseMoneyInput(value: string | number, currency: 'IDR' | 'USD' = 'IDR'): number {
+export function parseMoneyInput(value: string | number, currency: 'IDR' | 'USD' | string = 'IDR'): number {
   if (typeof value === 'number') return Number.isFinite(value) ? value : 0;
-  if (currency === 'USD') {
+  const isUsd = String(currency ?? 'IDR').toUpperCase() === 'USD';
+  if (isUsd) {
     const normalized = normalizeUsdString(String(value));
     if (!normalized || normalized === '.') return 0;
     const amount = Number(normalized);

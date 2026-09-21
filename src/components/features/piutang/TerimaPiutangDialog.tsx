@@ -88,7 +88,7 @@ export default function TerimaPiutangDialog({ open, onClose, onSubmit }: Props) 
                         <SelectValue placeholder="Pilih Kas Masuk" />
                       </SelectTrigger>
                     </FormControl>
-                    <SelectContent className="z-[9999]">
+                    <SelectContent>
                       <SelectItem value="BCA IDR">BCA IDR</SelectItem>
                       <SelectItem value="MANDIRI IDR">MANDIRI IDR</SelectItem>
                       <SelectItem value="KAS BESAR">KAS BESAR</SelectItem>

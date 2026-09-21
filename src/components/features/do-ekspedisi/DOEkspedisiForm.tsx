@@ -91,7 +91,7 @@ export function DOEkspedisiForm({
   const router = useRouter();
   const primaryDestination = initialItem?.destinations?.[0];
   const secondaryDestinations = initialItem?.destinations?.slice(1) ?? [];
-  
+
   const formMethods = useForm<DOEkspedisiFormData>({
     defaultValues: {
       date: initialExpedition?.date ? new Date(initialExpedition.date) : undefined,
@@ -184,7 +184,7 @@ export function DOEkspedisiForm({
     <Form {...formMethods}>
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
         {/* Card 1: Informasi Utama */}
-        <div className="rounded-xl border border-slate-200 bg-white p-5 md:p-8 shadow-sm space-y-6">
+        <div className="rounded-md border border-slate-200 bg-white p-5 md:p-8 shadow-sm space-y-6">
           <div>
             <h2 className="text-lg font-semibold text-foreground tracking-tight">Informasi Utama</h2>
             <p className="text-sm text-gray-500 mt-1">Identitas pengiriman, armada, dan pengemudi yang bertugas</p>
@@ -275,7 +275,7 @@ export function DOEkspedisiForm({
         </div>
 
         {/* Card 2: Detail Lokasi & Rute */}
-        <div className="rounded-xl border border-slate-200 bg-white p-5 md:p-8 shadow-sm space-y-6">
+        <div className="rounded-md border border-slate-200 bg-white p-5 md:p-8 shadow-sm space-y-6">
           <div>
             <h2 className="text-lg font-semibold text-foreground tracking-tight">Detail Lokasi & Rute</h2>
             <p className="text-sm text-gray-500 mt-1">Informasi titik bongkar muat dan alamat tujuan detail</p>
@@ -398,7 +398,7 @@ export function DOEkspedisiForm({
               {fields.length > 0 ? (
                 <div className="space-y-4">
                   {fields.map((fieldItem, index) => (
-                    <div key={fieldItem.id} className="rounded-xl border border-slate-200 bg-[#F8FAFC] p-5 space-y-4">
+                    <div key={fieldItem.id} className="rounded-md border border-slate-200 bg-[#F8FAFC] p-5 space-y-4">
                       <div className="flex items-center justify-between gap-3 border-b border-slate-100 pb-2">
                         <p className="text-sm font-semibold text-slate-800">Tujuan #{index + 2}</p>
                         <Button type="button" variant="ghost" className="h-8 px-2 text-red-600 hover:text-red-700 cursor-pointer" onClick={() => remove(index)}>
@@ -459,7 +459,7 @@ export function DOEkspedisiForm({
                   ))}
                 </div>
               ) : (
-                <div className="rounded-xl border border-dashed border-[#D7DEE7] bg-[#F8FAFC] px-4 py-5 text-center text-sm text-slate-500">
+                <div className="rounded-md border border-dashed border-[#D7DEE7] bg-[#F8FAFC] px-4 py-5 text-center text-sm text-slate-500">
                   Belum ada destinasi tambahan.
                 </div>
               )}
@@ -468,7 +468,7 @@ export function DOEkspedisiForm({
         </div>
 
         {/* Card 3: Informasi Biaya */}
-        <div className="rounded-xl border border-slate-200 bg-white p-5 md:p-8 shadow-sm space-y-6">
+        <div className="rounded-md border border-slate-200 bg-white p-5 md:p-8 shadow-sm space-y-6">
           <div>
             <h2 className="text-lg font-semibold text-foreground tracking-tight">Informasi Biaya</h2>
             <p className="text-sm text-gray-500 mt-1">Rincian uang jalan supir, nominal tagihan invoice, dan asuransi perpajakan</p>

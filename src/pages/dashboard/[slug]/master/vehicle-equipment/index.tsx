@@ -1,10 +1,14 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
+import { Plus } from 'lucide-react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { PageHeader } from '@/components/ui/page-header';
+import { Button } from '@/components/ui/button';
+import { SearchPagination } from '@/components/ui/search-pagination';
 import { VehicleEquipmentTable } from '@/components/features/vehicle-equipment/VehicleEquipmentTable';
 import { VehicleEquipmentFormModal } from '@/components/features/vehicle-equipment/VehicleEquipmentFormModal';
 import { DeleteVehicleEquipmentModal } from '@/components/features/vehicle-equipment/DeleteVehicleEquipmentModal';
 import { useVehicleEquipments, useCreateVehicleEquipment, useUpdateVehicleEquipment, useDeleteVehicleEquipment } from '@/hooks/useVehicleEquipment';
+import { useQueryParamsTable } from '@/hooks/useQueryParamsTable';
 import { Card } from '@/components/ui/card';
 import { toast } from 'sonner';
 import type { VehicleEquipment } from '@/@types/vehicle-equipment.types';
@@ -17,9 +21,17 @@ export default function VehicleEquipmentPage() {
     const canDelete = hasPermission('master-data:delete');
 
     // Table state
-    const [search, setSearch] = useState('');
-    const [page, setPage] = useState(1);
-    const [perPage, setPerPage] = useState(25); // Standard default show 10 entries as in mockup
+    const { page, perPage, search, setPage, setPerPage, setSearch, updateQuery } = useQueryParamsTable({ defaultPerPage: 25 });
+    const [searchInput, setSearchInput] = useState(search);
+
+    useEffect(() => {
+        const timeout = window.setTimeout(() => {
+            if (search !== searchInput.trim()) {
+                setSearch(searchInput.trim());
+            }
+        }, 400);
+        return () => window.clearTimeout(timeout);
+    }, [searchInput, search, setSearch]);
 
     // React query operations
     const { data: listData, isLoading, isError } = useVehicleEquipments({ page, perPage, search });
@@ -97,43 +109,57 @@ export default function VehicleEquipmentPage() {
                     subtitle="Kelola data perlengkapan dengan mudah"
                 />
 
-                {/* Loading / Error States */}
-                {isLoading ? (
-                    <Card className="rounded-md border border-gray-200 bg-white p-12 shadow-none">
-                        <div className="flex flex-col items-center justify-center space-y-3">
-                            <div className="h-8 w-8 animate-spin rounded-full border-4 border-slate-200 border-t-[#15305B]"></div>
-                            <p className="text-sm font-semibold text-gray-500">Memuat data perlengkapan...</p>
-                        </div>
-                    </Card>
-                ) : isError ? (
-                    <Card className="rounded-md border border-red-100 bg-red-50/50 p-12 text-center shadow-none">
-                        <p className="text-sm font-semibold text-red-600">Gagal memuat data perlengkapan</p>
-                    </Card>
-                ) : (
-                    /* Main Table component */
-                    <VehicleEquipmentTable
-                        equipments={equipmentsList}
-                        search={search}
-                        onSearchChange={(v) => {
-                            setSearch(v);
-                            setPage(1);
-                        }}
-                        page={page}
-                        perPage={perPage}
-                        totalData={totalEquipments}
-                        onPageChange={setPage}
-                        onPerPageChange={(v) => {
-                            setPerPage(v);
-                            setPage(1);
-                        }}
-                        onAdd={handleAddClick}
-                        onEdit={handleEditClick}
-                        onDelete={handleDeleteClick}
-                        canCreate={canCreate}
-                        canEdit={canEdit}
-                        canDelete={canDelete}
-                    />
-                )}
+                {/* Search, Actions & Table */}
+                <SearchPagination
+                    searchValue={searchInput}
+                    onSearchChange={setSearchInput}
+                    searchPlaceholder="Search here"
+                    searchAriaLabel="Cari perlengkapan"
+                    page={page}
+                    perPage={perPage}
+                    total={totalEquipments}
+                    lastPage={listData?.meta?.lastPage ?? 1}
+                    onPageChange={setPage}
+                    onPerPageChange={setPerPage}
+                    actions={
+                        <>
+                            {search && (
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => {
+                                        setSearchInput('');
+                                        updateQuery({ search: undefined, page: 1 });
+                                    }}
+                                    className="rounded-md border-slate-200 text-slate-700 bg-white hover:bg-slate-50 cursor-pointer h-9 text-xs px-3"
+                                >
+                                    Reset
+                                </Button>
+                            )}
+                            {canCreate && (
+                                <Button onClick={handleAddClick} className="btn-primary!">
+                                    <Plus className="h-4 w-4 mr-2" />
+                                    Tambah
+                                </Button>
+                            )}
+                        </>
+                    }
+                >
+                    {isError ? (
+                        <Card className="rounded-md border border-red-100 bg-red-50/50 p-12 text-center shadow-none">
+                            <p className="text-sm font-semibold text-red-600">Gagal memuat data perlengkapan</p>
+                        </Card>
+                    ) : (
+                        <VehicleEquipmentTable
+                            equipments={equipmentsList}
+                            isLoading={isLoading}
+                            onEdit={handleEditClick}
+                            onDelete={handleDeleteClick}
+                            canEdit={canEdit}
+                            canDelete={canDelete}
+                        />
+                    )}
+                </SearchPagination>
             </div>
 
             {/* Modals Form and Deletion */}

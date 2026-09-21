@@ -8,22 +8,15 @@ import BaseTable, { ColumnDef } from '@/components/ui/base-table';
 import { CopyBox } from '@/components/ui/copy-box';
 import { currenciesFormat } from '@/components/ui/currenciesFormat';
 import { formatDate } from '@/lib/utils/format';
-import { cn } from '@/lib/utils';
-import type { PaginationMeta } from '@/@types/pagination.types';
 import type { SparepartTransactionRefund } from '@/@types/sparepart-refund.types';
 
 interface Props {
   data: SparepartTransactionRefund[];
-  meta?: PaginationMeta;
   loading?: boolean;
-  search?: string;
-  onSearchChange?: (value: string) => void;
-  onPageChange?: (page: number) => void;
-  onPerPageChange?: (value: number) => void;
   onDelete?: (id: string) => void;
 }
 
-export default function SparepartRefundTable({ data, meta, loading, search, onSearchChange, onPageChange, onPerPageChange, onDelete }: Props) {
+export default function SparepartRefundTable({ data, loading, onDelete }: Props) {
   const router = useRouter();
   const slug = typeof router.query.slug === 'string' ? router.query.slug : '';
   const columns = useMemo<ColumnDef<SparepartTransactionRefund>[]>(() => [
@@ -48,5 +41,5 @@ export default function SparepartRefundTable({ data, meta, loading, search, onSe
     },
   ], [onDelete, router, slug]);
 
-  return <BaseTable data={data} columns={columns} loading={loading} search={search} onSearchChange={onSearchChange} searchPlaceholder="Cari kode refund..." showLimitChange perPage={meta?.perPage ?? 25} onPerPageChange={onPerPageChange} meta={meta} onPageChange={onPageChange} />;
+  return <BaseTable data={data} columns={columns} loading={loading} />;
 }

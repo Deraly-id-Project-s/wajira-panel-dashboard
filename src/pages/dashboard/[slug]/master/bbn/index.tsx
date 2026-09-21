@@ -5,10 +5,14 @@ import { PageHeader } from '@/components/ui/page-header';
 import { BBNTable } from '@/components/features/bbn/BBNTable';
 import { DeleteBBNModal } from '@/components/features/bbn/DeleteBBNModal';
 import { DataImportModal } from '@/components/features/master-data/DataImportModal';
+import { Button } from '@/components/ui/button';
+import { SearchPagination } from '@/components/ui/search-pagination';
+import { Download, Plus, Upload } from 'lucide-react';
 import { toast } from 'sonner';
 import { useBBNs, useDeleteBBN, useImportBBN, useExportBBN } from '@/hooks/useBBN';
 import type { BBN } from '@/@types/bbn.types';
 import { usePermissionGuard } from '@/hooks/usePermissionGuard';
+import { useQueryParamsTable } from '@/hooks/useQueryParamsTable';
 
 export default function BBNPage() {
   const router = useRouter();
@@ -19,20 +23,20 @@ export default function BBNPage() {
   const canEdit = hasPermission('master-data:edit');
   const canDelete = hasPermission('master-data:delete');
 
-  // Table state
-  const [searchInput, setSearchInput] = useState('');  // immediate input value (for display)
-  const [search, setSearch] = useState('');            // debounced value (sent to API)
-  const [page, setPage] = useState(1);
-  const [perPage, setPerPage] = useState(25);
+  const { page, perPage, search, setPage, setPerPage, setSearch, updateQuery } = useQueryParamsTable({
+    defaultPerPage: 25,
+  });
+  const [searchInput, setSearchInput] = useState(search);
 
   // Live search debounce — wait 400ms after user stops typing before firing API request
   useEffect(() => {
     const timer = setTimeout(() => {
-      setSearch(searchInput);
-      setPage(1); // reset to page 1 on new search
+      if (search !== searchInput.trim()) {
+        setSearch(searchInput.trim());
+      }
     }, 400);
     return () => clearTimeout(timer);
-  }, [searchInput]);
+  }, [searchInput, search, setSearch]);
 
   const { data: bbnData, isLoading } = useBBNs({ page, perPage, search });
   
@@ -97,7 +101,6 @@ export default function BBNPage() {
   };
 
   const bbnList = bbnData?.data || [];
-  const totalBBNs = bbnData?.meta?.total || 0;
 
   return (
     <DashboardLayout>
@@ -109,29 +112,61 @@ export default function BBNPage() {
         />
 
         {/* Content */}
-        <BBNTable
-          bbns={bbnList}
-          search={searchInput}
-          onSearchChange={(v) => setSearchInput(v)}
-          isLoading={isLoading}
+        <SearchPagination
+          searchValue={searchInput}
+          onSearchChange={setSearchInput}
+          searchPlaceholder="Search here"
+          searchAriaLabel="Cari biaya BBN"
           page={page}
           perPage={perPage}
-          totalData={totalBBNs}
+          total={bbnData?.meta?.total}
+          lastPage={bbnData?.meta?.lastPage}
           onPageChange={setPage}
-          onPerPageChange={(v) => {
-            setPerPage(v);
-            setPage(1);
-          }}
-          onAdd={handleAddClick}
-          onImport={canCreate ? () => setIsImportOpen(true) : undefined}
-          onExport={handleExport}
-          onEdit={handleEditClick}
-          onDelete={handleDeleteClick}
-          isExporting={exportMutation.isPending}
-          canCreate={canCreate}
-          canEdit={canEdit}
-          canDelete={canDelete}
-        />
+          onPerPageChange={setPerPage}
+          actions={
+            <>
+              {search && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    setSearchInput('');
+                    updateQuery({ search: undefined, page: 1 });
+                  }}
+                  className="rounded-md border-slate-200 text-slate-700 bg-white hover:bg-slate-50 cursor-pointer h-9 text-xs px-3"
+                >
+                  Reset
+                </Button>
+              )}
+              <Button onClick={handleExport} disabled={exportMutation.isPending} variant="outline" className="h-9 text-xs px-3 rounded-md border-slate-200 text-slate-700 bg-white hover:bg-slate-50 cursor-pointer">
+                <Download className="h-4 w-4 mr-2" />
+                {exportMutation.isPending ? 'Exporting...' : 'Export'}
+              </Button>
+              {canCreate && (
+                <>
+                  <Button onClick={() => setIsImportOpen(true)} variant="outline" className="h-9 text-xs px-3 rounded-md border-slate-200 text-slate-700 bg-white hover:bg-slate-50 cursor-pointer">
+                    <Upload className="h-4 w-4 mr-2" />
+                    Import
+                  </Button>
+                  <Button onClick={handleAddClick} className="btn-primary!">
+                    <Plus className="h-4 w-4 mr-2" />
+                    Tambah
+                  </Button>
+                </>
+              )}
+            </>
+          }
+        >
+          <BBNTable
+            bbns={bbnList}
+            isLoading={isLoading}
+            onEdit={handleEditClick}
+            onDelete={handleDeleteClick}
+            canEdit={canEdit}
+            canDelete={canDelete}
+          />
+        </SearchPagination>
+
 
       </div>
 

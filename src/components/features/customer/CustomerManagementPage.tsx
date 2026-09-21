@@ -1,15 +1,17 @@
-import { useDeferredValue, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import type { Customer as ApiCustomer } from '@/@types/customer.types';
-import { DataImportModal } from '@/components/features/master-data/DataImportModal';
 import { CustomerFormModal } from '@/components/features/customer/CustomerFormModal';
+import { CustomerImportModal } from '@/components/features/customer/CustomerImportModal';
 import { CustomerTable } from '@/components/features/customer/CustomerTable';
 import { DeleteCustomerModal } from '@/components/features/customer/DeleteCustomerModal';
-import { Card } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { SearchPagination } from '@/components/ui/search-pagination';
 import { useCompany } from '@/contexts/CompanyContext';
+import { Download, Plus, Upload } from 'lucide-react';
 import { useQueryParamsTable } from '@/hooks/useQueryParamsTable';
-import { useCreateCustomer, useCustomers, useDeleteCustomer, useExportCustomer, useImportCustomer, useUpdateCustomer } from '@/hooks/useCustomer';
+import { useCreateCustomer, useCustomers, useDeleteCustomer, useExportCustomer, useUpdateCustomer } from '@/hooks/useCustomer';
 import { ApiResponseError, ApiValidationError } from '@/lib/api/response';
 import { customerSchema, type CustomerFormValues } from '@/scheme/customer.schema';
 import { getCustomerById } from '@/services/customer.service';
@@ -23,6 +25,7 @@ const defaultCustomerValues: CustomerFormValues = {
   pic: '',
   phone: '',
   map_link: '',
+  map_coordinat: null,
 };
 
 const normalizeCompanyId = (value: string | number | null | undefined) => {
@@ -57,13 +60,22 @@ export function CustomerManagementPage() {
   const canEdit = hasPermission('master-data:edit');
   const canDelete = hasPermission('master-data:delete');
 
-  const { page, perPage, search, setPage, setPerPage, setSearch } = useQueryParamsTable({ defaultPerPage: 25 });
-  const deferredSearch = useDeferredValue(search);
+  const { page, perPage, search, setPage, setPerPage, setSearch, updateQuery } = useQueryParamsTable({ defaultPerPage: 25 });
+  const [searchInput, setSearchInput] = useState(search);
+
+  useEffect(() => {
+    const timeout = window.setTimeout(() => {
+      if (search !== searchInput.trim()) {
+        setSearch(searchInput.trim());
+      }
+    }, 400);
+    return () => window.clearTimeout(timeout);
+  }, [searchInput, search, setSearch]);
 
   const { data, isLoading, isFetching, isError } = useCustomers({
     page,
     perPage,
-    search: deferredSearch || undefined,
+    search,
     company_id: companyId ?? undefined,
     enabled: !isLoadingCompany && !!companyId,
   });
@@ -76,7 +88,7 @@ export function CustomerManagementPage() {
   const createCustomer = useCreateCustomer();
   const updateCustomer = useUpdateCustomer();
   const deleteCustomer = useDeleteCustomer();
-  const importCustomer = useImportCustomer();
+
   const exportCustomer = useExportCustomer();
 
   const [isFormOpen, setIsFormOpen] = useState(false);
@@ -117,6 +129,7 @@ export function CustomerManagementPage() {
         pic: detail.pic ?? '',
         phone: detail.phone ?? '',
         map_link: detail.map_link ?? '',
+        map_coordinat: detail.mapCoordinat ?? null,
       });
       setIsFormOpen(true);
     } catch (error) {
@@ -183,14 +196,7 @@ export function CustomerManagementPage() {
     }
   };
 
-  const handleImport = async (file: File) => {
-    if (!canCreate) return;
-    if (!companyId) {
-      throw new Error('Company ID tidak ditemukan');
-    }
 
-    await importCustomer.mutateAsync({ companyId, file });
-  };
 
   const handleExport = async () => {
     try {
@@ -206,14 +212,6 @@ export function CustomerManagementPage() {
     }
   };
 
-  if (isError) {
-    return (
-      <Card className="rounded-md border border-[#E4E4E7] p-6 shadow-none">
-        <div className="text-center text-[15px] text-[#DC2626]">Gagal memuat data customer</div>
-      </Card>
-    );
-  }
-
   return (
     <>
       <div className="space-y-6">
@@ -224,28 +222,72 @@ export function CustomerManagementPage() {
           </div>
         </div>
 
-        <CustomerTable
-          customers={customers}
-          isLoading={isLoadingCompany || isLoading || isFetching || !!loadingDetailId}
-          search={search}
+        <SearchPagination
+          searchValue={searchInput}
+          onSearchChange={setSearchInput}
+          searchPlaceholder="Search here"
+          searchAriaLabel="Cari customer"
           page={page}
           perPage={perPage}
-          totalData={data?.meta.total ?? customers.length}
-          totalPages={data?.meta.lastPage ?? 1}
-          onSearchChange={setSearch}
+          total={data?.meta.total}
+          lastPage={data?.meta.lastPage}
           onPageChange={setPage}
           onPerPageChange={setPerPage}
-          onAdd={handleAdd}
-          onEdit={handleEdit}
-          onDelete={setDeleteTarget}
-          onImport={() => setIsImportOpen(true)}
-          onExport={handleExport}
-          isExporting={exportCustomer.isPending}
-          canCreate={canCreate}
-          canEdit={canEdit}
-          canDelete={canDelete}
-        />
+          actions={
+            <>
+              {search && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    setSearchInput('');
+                    updateQuery({ search: undefined, page: 1 });
+                  }}
+                  className="rounded-md border-slate-200 text-slate-700 bg-white hover:bg-slate-50 cursor-pointer h-9 text-xs px-3"
+                >
+                  Reset
+                </Button>
+              )}
+              <Button onClick={handleExport} disabled={exportCustomer.isPending} variant="outline" className="h-9 text-xs px-3 rounded-md border-slate-200 text-slate-700 bg-white hover:bg-slate-50 cursor-pointer">
+                <Download className="h-4 w-4 mr-2" />
+                {exportCustomer.isPending ? 'Exporting...' : 'Export'}
+              </Button>
+              {canCreate && (
+                <>
+                  <Button onClick={() => setIsImportOpen(true)} variant="outline" className="h-9 text-xs px-3 rounded-md border-slate-200 text-slate-700 bg-white hover:bg-slate-50 cursor-pointer">
+                    <Upload className="h-4 w-4 mr-2" />
+                    Import
+                  </Button>
+                  <Button onClick={handleAdd} className="btn-primary!">
+                    <Plus className="h-4 w-4 mr-2" />
+                    Tambah Data
+                  </Button>
+                </>
+              )}
+            </>
+          }
+        >
+          {isError ? (
+            <div className="rounded-3xl border border-red-200 bg-red-50 px-6 py-5 text-base text-red-600">
+              Gagal memuat data customer.
+            </div>
+          ) : (
+            <CustomerTable
+              customers={customers}
+              isLoading={isLoadingCompany || isLoading || isFetching || !!loadingDetailId}
+              onEdit={handleEdit}
+              onDelete={setDeleteTarget}
+              canEdit={canEdit}
+              canDelete={canDelete}
+            />
+          )}
+        </SearchPagination>
       </div>
+
+      <CustomerImportModal
+        open={isImportOpen}
+        onOpenChange={setIsImportOpen}
+      />
 
       <CustomerFormModal
         open={isFormOpen}
@@ -275,16 +317,6 @@ export function CustomerManagementPage() {
         customerName={deleteTarget?.name ?? null}
         onConfirm={handleConfirmDelete}
         isDeleting={deleteCustomer.isPending}
-      />
-
-      <DataImportModal
-        open={isImportOpen}
-        onOpenChange={setIsImportOpen}
-        title="Import Data Customer"
-        description="Unggah file .xlsx, .xls, atau .csv untuk mengimport data customer."
-        onImport={handleImport}
-        isPending={importCustomer.isPending}
-        accept=".xlsx,.xls,.csv,text/csv"
       />
     </>
   );

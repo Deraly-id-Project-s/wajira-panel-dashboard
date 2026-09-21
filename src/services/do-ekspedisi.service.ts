@@ -1,6 +1,7 @@
 import type {
   DoEkspedisi,
   ApplyExpeditionClaimPayload,
+  UpdateExpeditionClaimApplicationPayload,
   DoEkspedisiCustomer,
   DoEkspedisiClaim,
   DoEkspedisiClaimApplication,
@@ -22,10 +23,17 @@ import type {
   DoEkspedisiOrderTarifLoadItem,
   DoEkspedisiVehicle,
   LookupOption,
+  DoEkspedisiDocumentation,
+  DoEkspedisiDocumentationListParams,
+  DoEkspedisiDocumentationListResponse,
+  DoEkspedisiClaimPayload,
+  DoEkspedisiClaimDocumentationPayload,
+  DoEkspedisiExpeditionTrack,
 } from '@/@types/do-ekspedisi.types';
 import type { PaginationParams } from '@/@types/pagination.types';
 import { apiClient } from '@/lib/api/client';
 import { ApiResponseError, ApiValidationError, ensureSuccess, type LaravelApiResponse, toPaginatedResult } from '@/lib/api/response';
+import { mapDriverCashAdvanceClaim } from './driver-cash-advance.service';
 
 const expeditionBasePath = '/wapi/transaction/do-expedition';
 const expeditionItemBasePath = '/wapi/transaction/do-expedition-item';
@@ -35,8 +43,9 @@ const vehicleLookupPath = '/wapi/master-data/vehicle-fleet';
 const driverLookupPath = '/wapi/master-data/driver';
 export const driverNotePath = '/wapi/transaction/driver-note';
 export const expeditionExpensePath = '/wapi/transaction/expedition-expense';
-export const expeditionClaimPath = '/wapi/transaction/expedition-claim';
-export const claimDocumentationPath = '/wapi/transaction/expedition-claim-documentation';
+export const expeditionClaimPath = '/wapi/transaction/do-expedition-claim';
+export const claimDocumentationPath = '/wapi/transaction/do-expedition-claim-documentation';
+export const expeditionDocumentationBasePath = '/wapi/transaction/do-expedition-documentation';
 
 const toNumber = (value: unknown) => {
   if (value == null || value === '') return 0;
@@ -100,6 +109,25 @@ const mapDriver = (item: any): DoEkspedisiDriver => ({
   phone: item?.phone ?? null,
 });
 
+const mapExpeditionTrack = (item: any): DoEkspedisiExpeditionTrack | null => {
+  if (!item || typeof item !== 'object') return null;
+
+  return {
+    doExpeditionId: Number(item?.do_expedition_id ?? item?.do_expeditions_id ?? 0),
+    driverId: Number(item?.driver_id ?? 0),
+    traccarDeviceId: Number(item?.traccar_device_id ?? 0),
+    traccarUniqueId: toText(item?.traccar_unique_id),
+    isActive: Boolean(item?.is_active),
+    lastLatitude: item?.last_latitude == null ? null : Number(item.last_latitude),
+    lastLongitude: item?.last_longitude == null ? null : Number(item.last_longitude),
+    lastSpeed: item?.last_speed == null ? null : Number(item.last_speed),
+    lastCourse: item?.last_course == null ? null : Number(item.last_course),
+    lastAccuracy: item?.last_accuracy == null ? null : Number(item.last_accuracy),
+    lastAltitude: item?.last_altitude == null ? null : Number(item.last_altitude),
+    lastPositionAt: item?.last_position_at ?? null,
+  };
+};
+
 const mapCustomer = (item: any): DoEkspedisiCustomer => ({
   id: Number(item?.id ?? 0),
   uuid: item?.uuid,
@@ -114,6 +142,18 @@ const mapClaimDocumentation = (item: any): DoEkspedisiClaimDocumentation => ({
   id: Number(item?.id ?? 0), uuid: item?.uuid,
   doExpeditionClaimId: Number(item?.do_expedition_claim_id ?? item?.expedition_claim_id ?? 0),
   image: item?.image ?? null, caption: item?.caption ?? '',
+});
+
+const mapDoEkspedisiDocumentation = (item: any): DoEkspedisiDocumentation => ({
+  id: Number(item?.id ?? 0),
+  uuid: item?.uuid,
+  doExpeditionId: Number(item?.do_expedition_id ?? item?.do_expeditions_id ?? 0),
+  documentationPosition: item?.documentation_position ?? '',
+  subject: item?.subject ?? '',
+  description: item?.description ?? null,
+  image: item?.image ?? null,
+  createdAt: item?.created_at,
+  updatedAt: item?.updated_at,
 });
 
 const mapDriverNote = (item: any): DoEkspedisiDriverNote => ({
@@ -141,6 +181,22 @@ const mapClaim = (item: any): DoEkspedisiClaim => ({
   documentations: (item?.documentations ?? item?.expedition_claim_documentations ?? []).map(mapClaimDocumentation),
 });
 
+const buildClaimPayload = (payload: DoEkspedisiClaimPayload) => ({
+  do_expeditions_id: payload.do_expeditions_id,
+  driver_id: payload.driver_id,
+  subject: payload.subject,
+  description: payload.description,
+  claim_nominal: payload.claim_nominal,
+});
+
+const buildClaimDocumentationPayload = (payload: DoEkspedisiClaimDocumentationPayload) => {
+  const formData = new FormData();
+  formData.append('do_expedition_claim_id', String(payload.do_expedition_claim_id));
+  if (payload.caption != null) formData.append('caption', payload.caption);
+  formData.append('image', payload.image);
+  return formData;
+};
+
 const mapClaimApplication = (item: any): DoEkspedisiClaimApplication => ({
   id: Number(item?.id ?? 0),
   uuid: item?.uuid,
@@ -157,11 +213,11 @@ const mapDoOrderTarifItem = (entry: any, parent?: any) => {
   const pivot = entry?.pivot ?? entry;
   const tarifItems = Array.isArray(entry?.do_order_list_tarif_items)
     ? entry.do_order_list_tarif_items.map((item: any): DoEkspedisiOrderTarifLoadItem => ({
-        id: Number(item?.id ?? 0),
-        uuid: item?.uuid,
-        loadContent: toText(item?.load_content, item?.muatan, item?.loadContent),
-        qty: toNumber(item?.qty),
-      }))
+      id: Number(item?.id ?? 0),
+      uuid: item?.uuid,
+      loadContent: toText(item?.load_content, item?.muatan, item?.loadContent),
+      qty: toNumber(item?.qty),
+    }))
     : [];
   const primaryTarifItem = tarifItems[0];
 
@@ -278,7 +334,7 @@ const mapDoEkspedisi = (item: any): DoEkspedisi => {
   const rawVehicle = item?.vehicle ?? orderListTarif?.vehicle;
   const rawDriver = item?.driver ?? orderListTarif?.driver;
   const rawOrderList = item?.do_order_list ?? item?.do_orderlist ?? item?.order_list ?? orderListTarif?.doOrderList ?? orderListTarif?.do_order_list;
-  
+
   return {
     id: Number(item?.id ?? 0),
     uuid: item?.uuid,
@@ -306,12 +362,18 @@ const mapDoEkspedisi = (item: any): DoEkspedisi => {
     ujNominal: toNumber(item?.uj_nominal ?? item?.ujNominal),
     ujNominalBeforeClaim: toNumber(item?.uj_nominal_before_claim ?? item?.uj_nominal ?? item?.ujNominal),
     claimDeductionNominal: toNumber(item?.claim_deduction_nominal),
+    cashAdvanceDeductionNominal: toNumber(item?.cash_advance_deduction_nominal),
     startDate: item?.start_date ?? null,
     endDate: item?.end_date ?? null,
+    doOrderListTarifId: Number(item?.do_order_list_tarif_id ?? item?.doOrderListTarifId ?? 0),
+    targetStartDate: item?.target_start_date ?? item?.targetStartDate ?? null,
+    targetEndDate: item?.target_end_date ?? item?.targetEndDate ?? null,
     driverNotes: (item?.driver_notes ?? []).map(mapDriverNote),
     expeditionExpenses: (item?.expedition_expenses ?? []).map(mapExpense),
     expeditionClaims: (item?.expedition_claims ?? []).map(mapClaim),
     driverExpeditionClaims: (item?.driver_expedition_claims ?? []).map(mapClaimApplication),
+    driverCashAdvanceClaims: (item?.driver_cash_advance_claims ?? []).map(mapDriverCashAdvanceClaim),
+    expeditionTrack: mapExpeditionTrack(item?.expedition_track ?? item?.expeditionTrack),
   };
 };
 
@@ -361,9 +423,9 @@ const enrichVehiclesWithType = async (items: DoEkspedisi[]): Promise<DoEkspedisi
 const buildMainPayload = (payload: DoEkspedisiPayload, asUpdate = false) => {
   if (!asUpdate) {
     const formData = new FormData();
-    formData.append('date', payload.date);
-    formData.append('vehicle_id', String(payload.vehicle_id));
-    formData.append('driver_id', String(payload.driver_id));
+    if (payload.date != null) formData.append('date', payload.date);
+    if (payload.vehicle_id != null) formData.append('vehicle_id', String(payload.vehicle_id));
+    if (payload.driver_id != null) formData.append('driver_id', String(payload.driver_id));
     if (payload.driver_note != null) {
       formData.append('driver_note', payload.driver_note);
       formData.append('note', payload.driver_note);
@@ -371,13 +433,25 @@ const buildMainPayload = (payload: DoEkspedisiPayload, asUpdate = false) => {
     if (payload.status != null) {
       formData.append('status', payload.status);
     }
+    if (payload.do_order_list_tarif_id != null) {
+      formData.append('do_order_list_tarif_id', String(payload.do_order_list_tarif_id));
+    }
+    if (payload.uj_nominal != null) {
+      formData.append('uj_nominal', String(payload.uj_nominal));
+    }
+    if (payload.target_start_date !== undefined) {
+      formData.append('target_start_date', payload.target_start_date ?? '');
+    }
+    if (payload.target_end_date !== undefined) {
+      formData.append('target_end_date', payload.target_end_date ?? '');
+    }
     return formData;
   }
 
   const params = new URLSearchParams();
-  params.append('date', payload.date);
-  params.append('vehicle_id', String(payload.vehicle_id));
-  params.append('driver_id', String(payload.driver_id));
+  if (payload.date != null) params.append('date', payload.date);
+  if (payload.vehicle_id != null) params.append('vehicle_id', String(payload.vehicle_id));
+  if (payload.driver_id != null) params.append('driver_id', String(payload.driver_id));
   if (payload.driver_note != null) {
     params.append('driver_note', payload.driver_note);
     params.append('note', payload.driver_note);
@@ -390,6 +464,18 @@ const buildMainPayload = (payload: DoEkspedisiPayload, asUpdate = false) => {
   }
   if (payload.end_date !== undefined) {
     params.append('end_date', payload.end_date ?? '');
+  }
+  if (payload.do_order_list_tarif_id != null) {
+    params.append('do_order_list_tarif_id', String(payload.do_order_list_tarif_id));
+  }
+  if (payload.uj_nominal != null) {
+    params.append('uj_nominal', String(payload.uj_nominal));
+  }
+  if (payload.target_start_date !== undefined) {
+    params.append('target_start_date', payload.target_start_date ?? '');
+  }
+  if (payload.target_end_date !== undefined) {
+    params.append('target_end_date', payload.target_end_date ?? '');
   }
   return params;
 };
@@ -457,6 +543,8 @@ export const getDoEkspedisis = async (
       page: params.page ?? 1,
       per_page: params.perPage ?? 10,
       do_order_list_id: params.do_order_list_id,
+      start_date: params.start_date || undefined,
+      end_date: params.end_date || undefined,
     },
   });
 
@@ -740,9 +828,35 @@ export const deleteDoDetailResource = async (resource: DetailResource, id: strin
   ensureSuccess(response.data);
 };
 
+export const getExpeditionClaimById = async (id: string | number): Promise<DoEkspedisiClaim> => {
+  const response = await apiClient.get<LaravelApiResponse<any>>(`${expeditionClaimPath}/${id}`);
+  return mapClaim(ensureSuccess(response.data));
+};
+
+export const createExpeditionClaim = async (payload: DoEkspedisiClaimPayload): Promise<DoEkspedisiClaim> => {
+  const response = await apiClient.post<LaravelApiResponse<any>>(expeditionClaimPath, buildClaimPayload(payload));
+  return mapClaim(ensureSuccess(response.data));
+};
+
+export const updateExpeditionClaim = async (id: string | number, payload: DoEkspedisiClaimPayload): Promise<DoEkspedisiClaim> => {
+  const response = await apiClient.put<LaravelApiResponse<any>>(`${expeditionClaimPath}/${id}`, buildClaimPayload(payload));
+  return mapClaim(ensureSuccess(response.data));
+};
+
+export const createExpeditionClaimDocumentation = async (
+  payload: DoEkspedisiClaimDocumentationPayload,
+): Promise<DoEkspedisiClaimDocumentation> => {
+  const response = await apiClient.post<LaravelApiResponse<any>>(
+    claimDocumentationPath,
+    buildClaimDocumentationPayload(payload),
+    { headers: { 'Content-Type': 'multipart/form-data' } },
+  );
+  return mapClaimDocumentation(ensureSuccess(response.data));
+};
+
 export const getAvailableExpeditionClaims = async (driverId: number): Promise<DoEkspedisiClaim[]> => {
   const response = await apiClient.get<LaravelApiResponse<any>>(expeditionClaimPath, {
-    params: { driver_id: driverId, page: 1, per_page: 100 },
+    params: { driver_id: driverId, is_claim: false, page: 1, per_page: 100 },
   });
   const normalized = normalizePagination(ensureSuccess(response.data));
 
@@ -750,6 +864,63 @@ export const getAvailableExpeditionClaims = async (driverId: number): Promise<Do
 };
 
 export const applyExpeditionClaim = async (payload: ApplyExpeditionClaimPayload): Promise<DoEkspedisiClaimApplication> => {
-  const response = await apiClient.post<LaravelApiResponse<any>>(`${expeditionClaimPath}/apply`, payload);
+  const response = await apiClient.post<LaravelApiResponse<any>>(
+    `${expeditionBasePath}/${payload.do_expedition_id}/assign-expedition-claim`,
+    {
+      do_expedition_claim_id: payload.do_expedition_claim_id,
+      nominal: payload.nominal,
+      type: payload.type,
+    },
+  );
   return mapClaimApplication(ensureSuccess(response.data));
+};
+
+export const updateExpeditionClaimApplication = async (
+  id: string | number,
+  payload: UpdateExpeditionClaimApplicationPayload,
+): Promise<DoEkspedisiClaimApplication> => {
+  const response = await apiClient.put<LaravelApiResponse<any>>(
+    `/wapi/transaction/driver-do-expedition-claim/${id}`,
+    payload,
+  );
+  return mapClaimApplication(ensureSuccess(response.data));
+};
+
+export const deleteExpeditionClaimApplication = async (id: string | number): Promise<void> => {
+  const response = await apiClient.delete<LaravelApiResponse<null>>(`/wapi/transaction/driver-do-expedition-claim/${id}`);
+  if (!response.data.status) {
+    throw new ApiResponseError(response.data.message ?? 'Gagal menghapus potongan claim');
+  }
+};
+
+export const updateDoExpeditionStatus = async (id: string | number, status: string): Promise<DoEkspedisi> => {
+  const response = await apiClient.put<LaravelApiResponse<any>>(
+    `${expeditionBasePath}/${id}/update-status`,
+    { status },
+  );
+  return mapDoEkspedisi(ensureSuccess(response.data));
+};
+
+export const getDoEkspedisiDocumentations = async (
+  params: PaginationParams & DoEkspedisiDocumentationListParams,
+): Promise<DoEkspedisiDocumentationListResponse> => {
+  const response = await apiClient.get<LaravelApiResponse<any>>(expeditionDocumentationBasePath, {
+    params: {
+      do_expedition_id: params.do_expedition_id,
+      documentation_position: params.documentation_position,
+      subject: params.subject,
+      description: params.description,
+      uuid: params.uuid,
+      search: params.search?.trim() || undefined,
+      page: params.page ?? 1,
+      per_page: params.perPage ?? 10,
+      order_by: params.order_by ?? 'created_at',
+      order_sort: params.order_sort ?? 'desc',
+    },
+  });
+
+  const payload = ensureSuccess(response.data);
+  const normalized = normalizePagination(payload);
+
+  return toPaginatedResult(normalized, mapDoEkspedisiDocumentation);
 };

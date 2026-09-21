@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { Plus, MoreVertical, Upload } from 'lucide-react';
+import { MoreVertical } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import type { Region } from '@/@types/region.types';
@@ -7,40 +7,18 @@ import BaseTable, { ColumnDef } from '@/components/ui/base-table';
 
 interface RegionTableProps {
     regions: Region[];
-    search: string;
-    onSearchChange: (value: string) => void;
-    page: number;
-    perPage: number;
-    totalData: number;
-    onPageChange: (page: number) => void;
-    onPerPageChange: (perPage: number) => void;
-    onAdd: () => void;
-    onImport?: () => void;
-    onExport?: () => void;
+    isLoading?: boolean;
     onEdit: (region: Region) => void;
     onDelete: (region: Region) => void;
-    isExporting?: boolean;
-    canCreate: boolean;
     canEdit: boolean;
     canDelete: boolean;
 }
 
 export function RegionTable({
     regions,
-    search,
-    onSearchChange,
-    page,
-    perPage,
-    totalData,
-    onPageChange,
-    onPerPageChange,
-    onAdd,
-    onImport,
-    onExport,
+    isLoading = false,
     onEdit,
     onDelete,
-    isExporting = false,
-    canCreate,
     canEdit,
     canDelete,
 }: RegionTableProps) {
@@ -82,14 +60,14 @@ export function RegionTable({
                             <DropdownMenuItem
                                 onClick={() => onEdit(item)}
                                 disabled={!canEdit}
-                                className="rounded-lg px-3 py-2 text-sm text-slate-900 focus:bg-slate-50 cursor-pointer"
+                                className="rounded-md px-3 py-2 text-sm text-slate-900 focus:bg-slate-50 cursor-pointer"
                             >
                                 Edit
                             </DropdownMenuItem>
                             <DropdownMenuItem
                                 onClick={() => onDelete(item)}
                                 disabled={!canDelete}
-                                className="rounded-lg px-3 py-2 text-sm text-red-600 focus:bg-red-50 focus:text-red-600 cursor-pointer"
+                                className="rounded-md px-3 py-2 text-sm text-red-600 focus:bg-red-50 focus:text-red-600 cursor-pointer"
                             >
                                 Hapus
                             </DropdownMenuItem>
@@ -101,51 +79,11 @@ export function RegionTable({
         [canEdit, canDelete, onEdit, onDelete]
     );
 
-    const headerActions = useMemo(
-        () => (
-            <div className="flex flex-wrap items-center gap-2">
-                {onExport && (
-                    <Button onClick={onExport} disabled={isExporting} variant="outline" className="w-full sm:w-auto">
-                        <Upload className="h-4 w-4 mr-2" />
-                        {isExporting ? 'Exporting...' : 'Export'}
-                    </Button>
-                )}
-                {canCreate && (
-                    <>
-                        {onImport && (
-                            <Button onClick={onImport} variant="outline" className="w-full sm:w-auto">
-                                <Upload className="h-4 w-4 mr-2" />
-                                Import
-                            </Button>
-                        )}
-                        <Button onClick={onAdd} className="w-full sm:w-auto bg-[#1e3a5f] hover:bg-[#152e4d]">
-                            <Plus className="h-4 w-4 mr-2" />
-                            Tambah Data
-                        </Button>
-                    </>
-                )}
-            </div>
-        ),
-        [onExport, isExporting, canCreate, onImport, onAdd]
-    );
-
     return (
         <BaseTable
             data={regions}
             columns={columns}
-            search={search}
-            onSearchChange={onSearchChange}
-            showLimitChange={true}
-            perPage={perPage}
-            onPerPageChange={onPerPageChange}
-            meta={{
-                currentPage: page,
-                perPage: perPage,
-                lastPage: Math.max(1, Math.ceil(totalData / perPage)),
-                total: totalData,
-            }}
-            onPageChange={onPageChange}
-            headerActions={headerActions}
+            loading={isLoading}
         />
     );
 }

@@ -1,34 +1,32 @@
 import { useEffect, useMemo, useState } from 'react';
-import { ArrowLeft, Search } from 'lucide-react';
 import type { WithholdingTaxItem, WithholdingTaxPayload } from '@/@types/withholding-tax.types';
 import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
+import { InputDate } from '@/components/ui/input-date';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Skeleton } from '@/components/ui/skeleton';
 import { SearchableSelect, type SearchableSelectOption } from '@/components/features/vehicle-data/SearchableSelect';
-import { useCreateWithholdingTax, useUpdateWithholdingTax, useWithholdingTaxDetail } from '@/hooks/useWithholdingTax';
+import { useCreateWithholdingTax, useUpdateWithholdingTax } from '@/hooks/useWithholdingTax';
 import { useKas } from '@/hooks/useKas';
-import { formatCurrency } from '@/lib/utils/currency';
 import { toast } from 'sonner';
 import { MoneyInput } from '@/components/ui/money-input';
 import RequiredMark from '@/components/ui/required-mark';
-import { useRouter } from 'next/router';
+import { Separator } from '@/components/ui/separator';
+import { LoadingState } from '@/components/ui/loading-state';
+import { useCompany } from '@/contexts/CompanyContext';
+import { getStoredCompanyId } from '@/lib/session/storage';
 
 interface Props {
   item: WithholdingTaxItem | null;
   companyId: string | number;
   onSuccess: () => void;
   onCancel: () => void;
+  submitLabel?: string;
 }
 
-const parseCurrencyIDR = (value: string): number => {
-  const numericString = value.replace(/[^0-9]/g, '');
-  return numericString ? parseInt(numericString, 10) : 0;
-};
-
-export default function BuktiPotongForm({ item, companyId, onSuccess: onFinish, onCancel }: Props) {
+export default function BuktiPotongForm({ item, companyId, onSuccess: onFinish, onCancel, submitLabel }: Props) {
+  const { companyId: sessionCompanyId } = useCompany();
+  const effectiveCompanyId = String(sessionCompanyId || getStoredCompanyId() || companyId || '');
   const [source, setSource] = useState<'internal' | 'external'>('internal');
   const [cashId, setCashId] = useState<string>('');
   const [unitTransactionId, setUnitTransactionId] = useState<string>('');
@@ -40,7 +38,7 @@ export default function BuktiPotongForm({ item, companyId, onSuccess: onFinish, 
   const [paymentAmountStr, setPaymentAmountStr] = useState('');
   const [paymentDate, setPaymentDate] = useState('');
 
-  const { data: kasData, isLoading: isLoadingKas } = useKas(companyId);
+  const { data: kasData, isLoading: isLoadingKas } = useKas(effectiveCompanyId);
 
   const { mutate: createItem, isPending: isCreating } = useCreateWithholdingTax();
   const { mutate: updateItem, isPending: isUpdating } = useUpdateWithholdingTax();
@@ -51,12 +49,20 @@ export default function BuktiPotongForm({ item, companyId, onSuccess: onFinish, 
     if (!kasData?.data) return [];
     return kasData.data.map((kas: any) => ({
       value: String(kas.id),
-      label: `${kas.code} - ${kas.cash_name || kas.description || ''}`,
+      label: `${kas.code} - ${kas.cash_name || kas.description || ''}${kas.currency_type ? ` (${String(kas.currency_type).toUpperCase()})` : ''}`,
       subtitle: kas.type,
     }));
   }, [kasData]);
 
-  const router = useRouter();
+  const selectedKas = useMemo(() => {
+    if (!kasData?.data || !cashId) return null;
+    return kasData.data.find((kas: any) => String(kas.id) === String(cashId)) || null;
+  }, [kasData, cashId]);
+
+  const activeCurrency: 'IDR' | 'USD' = useMemo(() => {
+    const curr = String(selectedKas?.currency_type ?? 'idr').toLowerCase();
+    return curr === 'usd' ? 'USD' : 'IDR';
+  }, [selectedKas]);
 
   useEffect(() => {
     if (item) {
@@ -66,15 +72,14 @@ export default function BuktiPotongForm({ item, companyId, onSuccess: onFinish, 
       setNoInvoice(item.no_invoice || '');
       setWithholdingNumber(item.withholding_number || '');
       setWithholdingAge(item.withholding_age ? String(item.withholding_age) : '');
-      setPphAmountStr(item.pph_amount ? formatCurrency(item.pph_amount) : '');
+      setPphAmountStr(item.pph_amount !== undefined && item.pph_amount !== null ? String(item.pph_amount) : '');
       setPphDescription(item.pph_description || '');
-      setPaymentAmountStr(item.payment_amount ? formatCurrency(item.payment_amount) : '');
-      // format date for input type="date"
+      setPaymentAmountStr(item.payment_amount !== undefined && item.payment_amount !== null ? String(item.payment_amount) : '');
       if (item.payment_date) {
         try {
           const dateObj = new Date(item.payment_date);
           setPaymentDate(dateObj.toISOString().split('T')[0]);
-        } catch (e) {
+        } catch {
           setPaymentDate(item.payment_date);
         }
       } else {
@@ -94,15 +99,6 @@ export default function BuktiPotongForm({ item, companyId, onSuccess: onFinish, 
     }
   }, [item]);
 
-  const handleCurrencyChange = (setter: (val: string) => void) => (e: React.ChangeEvent<HTMLInputElement>) => {
-    const rawValue = parseCurrencyIDR(e.target.value);
-    if (rawValue === 0 && e.target.value !== '') {
-      setter(e.target.value.replace(/[^0-9Rp. ]/g, ''));
-    } else {
-      setter(formatCurrency(rawValue));
-    }
-  };
-
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -121,8 +117,8 @@ export default function BuktiPotongForm({ item, companyId, onSuccess: onFinish, 
       return;
     }
 
-    const rawPph = parseCurrencyIDR(pphAmountStr);
-    const rawPayment = parseCurrencyIDR(paymentAmountStr);
+    const rawPph = Number(pphAmountStr) || 0;
+    const rawPayment = Number(paymentAmountStr) || 0;
 
     if (rawPayment <= 0) {
       toast.error('Jumlah pembayaran wajib diisi.');
@@ -135,7 +131,7 @@ export default function BuktiPotongForm({ item, companyId, onSuccess: onFinish, 
     }
 
     const payload: WithholdingTaxPayload = {
-      company_id: companyId,
+      company_id: effectiveCompanyId,
       source,
       no_invoice: noInvoice,
       withholding_number: withholdingNumber,
@@ -168,7 +164,6 @@ export default function BuktiPotongForm({ item, companyId, onSuccess: onFinish, 
     const onError = (error: unknown) => {
       let message = 'Terjadi kesalahan saat menyimpan data.';
 
-      // Handle ApiValidationError specifically
       if (error && typeof error === 'object' && 'fieldErrors' in error) {
         const fieldErrors = (error as any).fieldErrors;
         if (fieldErrors && typeof fieldErrors === 'object') {
@@ -191,9 +186,17 @@ export default function BuktiPotongForm({ item, companyId, onSuccess: onFinish, 
     }
   };
 
+  const defaultSubmitText = item ? 'Perbarui' : 'Simpan';
+  const resolvedSubmitLabel = submitLabel || defaultSubmitText;
+
   return (
     <form onSubmit={handleSubmit} className="space-y-8">
-      <div className="space-y-6">
+      {/* Section 1: Informasi Sumber & Kas */}
+      <section className="space-y-5">
+        <div>
+          <h2 className="text-sm font-semibold uppercase tracking-wider text-slate-700">Informasi Sumber & Kas</h2>
+          <p className="mt-1 text-sm text-slate-500">Pilih sumber bukti potong dan rekening kas terkait.</p>
+        </div>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="space-y-2">
             <Label>Sumber Bukti Potong <RequiredMark /></Label>
@@ -202,7 +205,7 @@ export default function BuktiPotongForm({ item, companyId, onSuccess: onFinish, 
               onValueChange={(val: string) => setSource(val as 'internal' | 'external')}
               disabled={isPending}
             >
-              <SelectTrigger className="w-full bg-slate-50">
+              <SelectTrigger className="w-full bg-white">
                 <SelectValue placeholder="Pilih Source" />
               </SelectTrigger>
               <SelectContent>
@@ -217,19 +220,25 @@ export default function BuktiPotongForm({ item, companyId, onSuccess: onFinish, 
               value={cashId}
               onChange={setCashId}
               options={kasOptions}
-              placeholder="Select an item"
+              placeholder="Pilih rekening kas"
               searchPlaceholder="Cari Kas..."
               emptyText="Data tidak ditemukan"
               loading={isLoadingKas}
+              disabled={isPending}
             />
           </div>
         </div>
-      </div>
+      </section>
 
-      <div className="space-y-6">
-        <span className="text-md font-bold text-slate-900 mb-5">Detail Bukti Potong</span>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-5">
+      <Separator />
 
+      {/* Section 2: Identitas Bukti Potong */}
+      <section className="space-y-5">
+        <div>
+          <h2 className="text-sm font-semibold uppercase tracking-wider text-slate-700">Detail Bukti Potong</h2>
+          <p className="mt-1 text-sm text-slate-500">Masukkan nomor invoice, nomor bukti potong, dan masa pemotongan.</p>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <div className="space-y-2">
             <Label>Nomor Invoice <RequiredMark /></Label>
             <Input
@@ -263,15 +272,35 @@ export default function BuktiPotongForm({ item, companyId, onSuccess: onFinish, 
                 disabled={isPending}
                 className="bg-white pr-16"
               />
-              <span className="absolute right-3 text-sm text-slate-500 pointer-events-none select-none bg-slate-200 px-2 py-1 rounded-md">
+              <span className="absolute right-3 text-sm text-slate-500 pointer-events-none select-none bg-slate-100 px-2 py-1 rounded-md">
                 Bulan
               </span>
             </div>
           </div>
+        </div>
+      </section>
 
+      <Separator />
+
+      {/* Section 3: Rincian Keuangan & Pembayaran */}
+      <section className="space-y-5">
+        <div>
+          <h2 className="text-sm font-semibold uppercase tracking-wider text-slate-700">Rincian Nominal & Pembayaran</h2>
+          <p className="mt-1 text-sm text-slate-500">
+            Nominal mata uang ({activeCurrency}) disesuaikan secara otomatis berdasarkan rekening kas yang dipilih.
+          </p>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           <div className="space-y-2">
             <Label>Nominal PPH</Label>
-            <MoneyInput name="pph_amount" value={Number(pphAmountStr) || 0} onChangeValue={(val) => setPphAmountStr(val.toString())} onBlur={() => { }} disabled={isPending} />
+            <MoneyInput
+              name="pph_amount"
+              value={Number(pphAmountStr) || 0}
+              onChangeValue={(val) => setPphAmountStr(val.toString())}
+              disabled={isPending}
+              currency={activeCurrency}
+              placeholder={`0 (${activeCurrency})`}
+            />
           </div>
           <div className="space-y-2">
             <Label>Uang Muka PPH / Keterangan</Label>
@@ -283,15 +312,20 @@ export default function BuktiPotongForm({ item, companyId, onSuccess: onFinish, 
               className="bg-white"
             />
           </div>
-
           <div className="space-y-2">
             <Label>Jumlah Pembayaran <RequiredMark /></Label>
-            <MoneyInput name="payment_amount" value={Number(paymentAmountStr) || 0} onChangeValue={(val) => setPaymentAmountStr(val.toString())} onBlur={() => { }} disabled={isPending} />
+            <MoneyInput
+              name="payment_amount"
+              value={Number(paymentAmountStr) || 0}
+              onChangeValue={(val) => setPaymentAmountStr(val.toString())}
+              disabled={isPending}
+              currency={activeCurrency}
+              placeholder={`0 (${activeCurrency})`}
+            />
           </div>
           <div className="space-y-2">
             <Label>Tanggal Dibayar <RequiredMark /></Label>
-            <Input
-              type="date"
+            <InputDate
               value={paymentDate}
               onChange={(e) => setPaymentDate(e.target.value)}
               disabled={isPending}
@@ -300,14 +334,30 @@ export default function BuktiPotongForm({ item, companyId, onSuccess: onFinish, 
             />
           </div>
         </div>
-      </div>
+      </section>
 
-      <div className="flex justify-center items-center gap-4 pt-6 mt-8">
-        <Button type="button" variant="ghost" onClick={onCancel} disabled={isPending} className="w-[140px] text-base font-semibold">
+      {/* Action Buttons */}
+      <div className="flex flex-col-reverse sm:flex-row justify-end items-center gap-3 pt-6 border-t border-slate-100">
+        <Button
+          type="button"
+          variant="outline"
+          onClick={onCancel}
+          disabled={isPending}
+          className="w-full sm:w-auto"
+        >
           Batal
         </Button>
-        <Button type="submit" className="w-[140px] text-base font-semibold bg-[#1f4163] hover:bg-[#183552] text-white" disabled={isPending}>
-          {isPending ? 'Menyimpan...' : 'Simpan'}
+        <Button
+          type="submit"
+          variant="default"
+          disabled={isPending}
+          className="w-full sm:w-auto min-w-[120px]"
+        >
+          {isPending ? (
+            <LoadingState variant="inline" text="Menyimpan..." iconClassName="text-white" />
+          ) : (
+            resolvedSubmitLabel
+          )}
         </Button>
       </div>
     </form>

@@ -1,5 +1,6 @@
 import { LoadingState } from '@/components/ui/loading-state';
 import { useState } from "react"
+import { useRouter } from 'next/router';
 import { DashboardLayout } from "@/components/layout/DashboardLayout"
 import { PageHeader } from "@/components/ui/page-header"
 import { Card } from "@/components/ui/card"
@@ -13,6 +14,8 @@ import { Sparepart } from "@/@types/sparepart.types"
 import { usePermissionGuard } from "@/hooks/usePermissionGuard"
 
 export default function SparepartPage() {
+    const router = useRouter();
+    const slug = router.query.slug as string;
     const { companyId } = useCompany()
     // Defaulting to "1" if context is missing, but DashboardLayout guards this.
     const safeCompanyId = companyId || "1"
@@ -29,6 +32,11 @@ export default function SparepartPage() {
     const [openForm, setOpenForm] = useState(false)
     const [openDelete, setOpenDelete] = useState(false)
     const [openImport, setOpenImport] = useState(false)
+
+    const handleCreateClick = () => {
+        if (!canCreate) return;
+        router.push(`/dashboard/${slug}/master/sparepart/create`);
+    };
 
     const handleImport = async (file: File) => {
         if (!canCreate) return;
@@ -93,10 +101,7 @@ export default function SparepartPage() {
                                 setOpenDelete(true)
                             }
                         }}
-                        onAdd={canCreate ? () => {
-                            setSelected(null)
-                            setOpenForm(true)
-                        } : undefined}
+                        onAdd={canCreate ? handleCreateClick : undefined}
                         onImport={canCreate ? () => setOpenImport(true) : undefined}
                         canEdit={canEdit}
                         canDelete={canDelete}

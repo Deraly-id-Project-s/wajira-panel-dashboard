@@ -25,8 +25,9 @@ interface Props {
   onPay: (item: KasHarianListItem) => void;
   onEdit: (item: KasHarianListItem) => void;
   onDelete: (item: KasHarianListItem) => void;
+  onSyncPpnData?: (item: KasHarianListItem) => void;
   onToggleStatus?: (item: KasHarianListItem) => void;
-  onPageChange: (page: number) => void;
+  onPageChange?: (page: number) => void;
   canEdit?: boolean;
   canDelete?: boolean;
 }
@@ -35,6 +36,11 @@ const formatDate = (value: string) => {
   const parsed = new Date(value);
   return Number.isNaN(parsed.getTime()) ? value : format(parsed, 'dd MMM yyyy');
 };
+
+const hasUnitTransactionBilling = (item: KasHarianListItem) =>
+  item.unitTransactionBillingId !== undefined && item.unitTransactionBillingId !== null;
+
+const canSyncPpnData = (item: KasHarianListItem) => item.is_paid === true && item.isValid === true;
 
 export default function KasHarianTable({
   data,
@@ -48,6 +54,7 @@ export default function KasHarianTable({
   onPay,
   onEdit,
   onDelete,
+  onSyncPpnData,
   onToggleStatus,
   onPageChange,
   canEdit = true,
@@ -91,7 +98,7 @@ export default function KasHarianTable({
                       <Info className="h-4 w-4" />
                     </button>
                   </TooltipTrigger>
-                  <TooltipContent side="top" align="center" className="max-w-xs bg-slate-900 text-white rounded-lg p-2 text-xs shadow-md">
+                  <TooltipContent side="top" align="center" className="max-w-xs bg-slate-900 text-white rounded-md p-2 text-xs shadow-md">
                     Data Arus Transaksi Kas Harian ini terhubung dengan data Administrasi
                   </TooltipContent>
                 </Tooltip>
@@ -99,6 +106,22 @@ export default function KasHarianTable({
             ) : null}
             <CopyBox text={`${item.code || '-'}`} />
           </div>
+        ),
+      },
+      {
+        header: 'STATUS',
+        accessorKey: 'is_paid',
+        sortable: true,
+        alignment: 'center',
+        cell: (item) => (
+          <span className={cn(
+            "px-2.5 py-0.5 rounded-full text-xs font-semibold uppercase tracking-wider",
+            item.is_paid
+              ? "bg-green-50 text-green-700 border border-green-200"
+              : "bg-amber-50 text-amber-700 border border-amber-200"
+          )}>
+            {item.is_paid ? 'Lunas' : 'Belum Lunas'}
+          </span>
         ),
       },
       {
@@ -137,7 +160,7 @@ export default function KasHarianTable({
                       <CheckCircle className="h-4 w-4" />
                     </button>
                   </TooltipTrigger>
-                  <TooltipContent side="top" align="center" className="max-w-xs bg-slate-900 text-white rounded-lg p-2 text-xs shadow-md">
+                  <TooltipContent side="top" align="center" className="max-w-xs bg-slate-900 text-white rounded-md p-2 text-xs shadow-md">
                     Nominal telah disesuaikan
                   </TooltipContent>
                 </Tooltip>
@@ -162,7 +185,7 @@ export default function KasHarianTable({
                       <CheckCircle className="h-4 w-4" />
                     </button>
                   </TooltipTrigger>
-                  <TooltipContent side="top" align="center" className="max-w-xs bg-slate-900 text-white rounded-lg p-2 text-xs shadow-md">
+                  <TooltipContent side="top" align="center" className="max-w-xs bg-slate-900 text-white rounded-md p-2 text-xs shadow-md">
                     Nominal telah disesuaikan
                   </TooltipContent>
                 </Tooltip>
@@ -191,22 +214,6 @@ export default function KasHarianTable({
         ),
       },
       {
-        header: 'STATUS',
-        accessorKey: 'is_paid',
-        sortable: true,
-        alignment: 'center',
-        cell: (item) => (
-          <span className={cn(
-            "px-2.5 py-0.5 rounded-full text-xs font-semibold uppercase tracking-wider",
-            item.is_paid
-              ? "bg-green-50 text-green-700 border border-green-200"
-              : "bg-amber-50 text-amber-700 border border-amber-200"
-          )}>
-            {item.is_paid ? 'Lunas' : 'Belum Lunas'}
-          </span>
-        ),
-      },
-      {
         header: 'Aksi',
         alignment: 'center',
         sticky: 'right',
@@ -219,34 +226,51 @@ export default function KasHarianTable({
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="min-w-[150px] rounded-md border-slate-200 p-1.5 shadow-lg">
               {item.source === 'billing' ? (
-                <DropdownMenuItem onClick={() => onPay(item)} className="rounded-lg px-3 py-2 text-sm text-slate-900 focus:bg-slate-50 cursor-pointer">
+                <DropdownMenuItem onClick={() => onPay(item)} className="rounded-md px-3 py-2 text-sm text-slate-900 focus:bg-slate-50 cursor-pointer">
                   Bayar
                 </DropdownMenuItem>
               ) : (
-                <DropdownMenuItem onClick={() => onView(item)} className="rounded-lg px-3 py-2 text-sm text-slate-900 focus:bg-slate-50 cursor-pointer">
+                <DropdownMenuItem onClick={() => onView(item)} className="rounded-md px-3 py-2 text-sm text-slate-900 focus:bg-slate-50 cursor-pointer">
                   Detail
                 </DropdownMenuItem>
               )}
               {item.cashFlowId && canEdit ? (
-                <DropdownMenuItem onClick={() => onEdit(item)} className="rounded-lg px-3 py-2 text-sm text-slate-900 focus:bg-slate-50 cursor-pointer">
+                <DropdownMenuItem onClick={() => onEdit(item)} className="rounded-md px-3 py-2 text-sm text-slate-900 focus:bg-slate-50 cursor-pointer">
                   Edit
                 </DropdownMenuItem>
               ) : null}
               {item.cashFlowId && onToggleStatus ? (
                 <>
                   {item.isValid && !item.is_paid ? (
-                    <DropdownMenuItem onClick={() => onToggleStatus(item)} className="rounded-lg px-3 py-2 text-sm text-slate-900 focus:bg-slate-50 cursor-pointer font-medium" disabled={!item.isValid}>
+                    <DropdownMenuItem onClick={() => onToggleStatus(item)} className="rounded-md px-3 py-2 text-sm text-slate-900 focus:bg-slate-50 cursor-pointer font-medium" disabled={!item.isValid}>
                       Tandai Lunas
                     </DropdownMenuItem>
                   ) : (
-                    <DropdownMenuItem onClick={() => onToggleStatus(item)} className="rounded-lg px-3 py-2 text-sm text-slate-900 focus:bg-slate-50 cursor-pointer font-medium" disabled={!item.is_paid}>
+                    <DropdownMenuItem onClick={() => onToggleStatus(item)} className="rounded-md px-3 py-2 text-sm text-slate-900 focus:bg-slate-50 cursor-pointer font-medium" disabled={!item.is_paid}>
                       Tandai Belum Lunas
                     </DropdownMenuItem>
                   )}
                 </>
               ) : null}
+              {item.cashFlowId && onSyncPpnData ? (
+                <DropdownMenuItem
+                  onClick={() => {
+                    if (canSyncPpnData(item)) onSyncPpnData(item);
+                  }}
+                  className="rounded-md px-3 py-2 text-sm text-slate-900 focus:bg-slate-50 cursor-pointer font-medium"
+                  disabled={!canSyncPpnData(item)}
+                >
+                  Sinkronasi PPN
+                </DropdownMenuItem>
+              ) : null}
               {item.source === 'manual' && canDelete ? (
-                <DropdownMenuItem onClick={() => onDelete(item)} className="rounded-lg px-3 py-2 text-sm text-red-600 focus:bg-red-50 focus:text-red-600 cursor-pointer">
+                <DropdownMenuItem
+                  onClick={() => {
+                    if (!hasUnitTransactionBilling(item)) onDelete(item);
+                  }}
+                  className="rounded-md px-3 py-2 text-sm text-red-600 focus:bg-red-50 focus:text-red-600 cursor-pointer"
+                  disabled={hasUnitTransactionBilling(item)}
+                >
                   Hapus
                 </DropdownMenuItem>
               ) : null}
@@ -255,7 +279,7 @@ export default function KasHarianTable({
         ),
       },
     ],
-    [canDelete, canEdit, onPay, onView, onEdit, onToggleStatus, onDelete]
+    [canDelete, canEdit, onPay, onView, onEdit, onToggleStatus, onSyncPpnData, onDelete]
   );
 
   return (
@@ -264,7 +288,7 @@ export default function KasHarianTable({
         <div className="bg-red-50 border border-red-200 rounded-md p-6 text-center">
           <p className="text-sm text-red-600">{errorMessage ?? 'Gagal memuat data transaksi kas harian'}</p>
           {onRetry ? (
-            <Button type="button" variant="outline" size="sm" onClick={onRetry} className="mt-3">
+            <Button type="button" variant="outline" onClick={onRetry} className="mt-3">
               Retry
             </Button>
           ) : null}

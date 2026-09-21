@@ -7,20 +7,17 @@ import { format } from 'date-fns';
 
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { PageHeader } from '@/components/ui/page-header';
-import { Input } from '@/components/ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
 import { DatePickerWithRange } from '@/components/ui/date-range-picker';
 import { DateRange } from 'react-day-picker';
 import { isWithinInterval, parseISO, startOfDay, endOfDay } from 'date-fns';
 import { toast } from 'sonner';
+import { SearchPagination } from '@/components/ui/search-pagination';
 
 import { useAssetReport } from '@/hooks/report/useAssetReport';
 import { useCompany } from '@/contexts/CompanyContext';
 import { resolveCompanyId, getLetterheadByCompanyId } from '@/lib/print-letterhead';
 import { PrintLetterPage } from '@/components/common/PrintLetterPage';
-import { getVisiblePageNumbers } from '@/lib/api/pagination';
-import { cn } from '@/lib/utils';
 import { formatDate } from '@/lib/utils/format';
 import BaseTable, { ColumnDef } from '@/components/ui/base-table';
 import { CopyBox } from '@/components/ui/copy-box';
@@ -101,8 +98,6 @@ export default function LaporanAssetPage() {
       return isWithinInterval(tglBeli, { start: fromDate, end: toDate });
     });
   }, [data, dateRange]);
-
-  const visiblePages = getVisiblePageNumbers(pagination.lastPage, page, 5);
 
   const formatDateString = (value?: string | null) => {
     if (!value) return '-';
@@ -244,132 +239,69 @@ export default function LaporanAssetPage() {
           />
         </div>
 
-        {/* Filtering Block (Search and Show Page dropdown) */}
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-center justify-between no-print mb-5">
-          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 w-full sm:w-auto">
-            <div className="relative w-full sm:w-[300px]">
-              <Input
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                placeholder="Search Kode Aset, Nama..."
-                className="pl-9 bg-white rounded-md border-slate-200 shadow-sm"
-              />
-            </div>
-            
-            <div className="flex flex-col space-y-1 w-full sm:w-auto">
-              <div className="w-full sm:w-[260px]">
-                <DatePickerWithRange
-                  date={dateRange}
-                  onChange={setDateRange}
-                  className="rounded-md border-gray-200"
-                />
-              </div>
-            </div>
-
-            <div className="flex items-center gap-2 text-sm text-slate-500 whitespace-nowrap">
-              <span>Show</span>
-              <Select value={String(perPage)} onValueChange={(value) => { setPerPage(Number(value)); setPage(1); }}>
-                <SelectTrigger className="w-[80px] rounded-md border-slate-200 bg-white shadow-sm cursor-pointer">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem className="cursor-pointer" value="5">5</SelectItem>
-                  <SelectItem className="cursor-pointer" value="10">10</SelectItem>
-                  <SelectItem className="cursor-pointer" value="25">25</SelectItem>
-                  <SelectItem className="cursor-pointer" value="50">50</SelectItem>
-                  <SelectItem className="cursor-pointer" value="100">100</SelectItem>
-                </SelectContent>
-              </Select>
-              <span>Page</span>
-            </div>
-          </div>
-        </div>
-
         {/* Print Letter Wrapping Container */}
-        <PrintLetterPage
-          id="laporan-aset-print"
-          className="laporan-penerimaan-print-area"
-          letterheadSrc={selectedPrintBackground}
+        <SearchPagination
+          searchValue={searchTerm}
+          onSearchChange={setSearchTerm}
+          searchPlaceholder="Search here"
+          searchAriaLabel="Cari data"
+          filters={
+            <DatePickerWithRange
+              date={dateRange}
+              onChange={setDateRange}
+              placeholder="Pilih rentang tanggal"
+              className="w-full sm:w-[260px]"
+            />
+          }
+          page={page}
+          perPage={perPage}
+          total={pagination.total}
+          lastPage={pagination.lastPage}
+          perPageOptions={[5, 10, 25, 50, 100]}
+          onPageChange={setPage}
+          onPerPageChange={(value) => {
+            setPerPage(value);
+            setPage(1);
+          }}
         >
-          <div className="laporan-penerimaan-print-content print-letter-content">
-            {/* Cover Letter Heading - Visible only in Print */}
-            <div className="hidden print:flex flex-col items-center justify-center text-center space-y-1 mb-6 w-full">
-              <h2 className="text-[18px] font-bold uppercase text-gray-900 tracking-wide">
-                Laporan Aset
-              </h2>
-              <p className="text-[15px] font-bold text-gray-900 tracking-wide">
-                {getCompanyName(resolvedCompanyId)}
-              </p>
-              <p className="text-[12px] text-gray-600">
-                Tanggal Cetak: {formatDate(new Date())}
-              </p>
-            </div>
-
-            {/* Table Rendering */}
-            {isError ? (
-              <div className="flex flex-col justify-center items-center py-20 w-full bg-white rounded-md border border-red-100 text-center p-6 no-print">
-                <p className="text-red-600 font-semibold mb-1">Gagal memuat data laporan</p>
-                <p className="text-sm text-slate-500">{(error as any)?.message || 'Terjadi kesalahan pada server backend'}</p>
+          <PrintLetterPage
+            id="laporan-aset-print"
+            className="laporan-penerimaan-print-area"
+            letterheadSrc={selectedPrintBackground}
+          >
+            <div className="laporan-penerimaan-print-content print-letter-content">
+              {/* Cover Letter Heading - Visible only in Print */}
+              <div className="hidden print:flex flex-col items-center justify-center text-center space-y-1 mb-6 w-full">
+                <h2 className="text-[18px] font-bold uppercase text-gray-900 tracking-wide">
+                  Laporan Aset
+                </h2>
+                <p className="text-[15px] font-bold text-gray-900 tracking-wide">
+                  {getCompanyName(resolvedCompanyId)}
+                </p>
+                <p className="text-[12px] text-gray-600">
+                  Tanggal Cetak: {formatDate(new Date())}
+                </p>
               </div>
-            ) : (
-              <BaseTable
-                data={filteredData || []}
-                columns={columns}
-                loading={isLoading}
-                sortBy={sortBy}
-                sortDirection={sortOrder}
-                onSortChange={(key) => handleSort(key)}
-              />
-            )}
-          </div>
-        </PrintLetterPage>
 
-        {/* Pagination Footer */}
-        {!isLoading && !isError && pagination.total > 0 && (
-          <div className="flex flex-col gap-4 px-1 py-4 md:flex-row md:items-center md:justify-between no-print">
-            <div className="text-sm text-slate-500">
-              Showing {pagination.from}-{pagination.to} of {pagination.total} data
+              {/* Table Rendering */}
+              {isError ? (
+                <div className="flex flex-col justify-center items-center py-20 w-full bg-white rounded-md border border-red-100 text-center p-6 no-print">
+                  <p className="text-red-600 font-semibold mb-1">Gagal memuat data laporan</p>
+                  <p className="text-sm text-slate-500">{(error as any)?.message || 'Terjadi kesalahan pada server backend'}</p>
+                </div>
+              ) : (
+                <BaseTable
+                  data={filteredData || []}
+                  columns={columns}
+                  loading={isLoading}
+                  sortBy={sortBy}
+                  sortDirection={sortOrder}
+                  onSortChange={(key) => handleSort(key)}
+                />
+              )}
             </div>
-            <div className="flex items-center gap-1 text-sm text-slate-700">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setPage(page - 1)}
-                disabled={page <= 1}
-                className="rounded-md px-3 hover:bg-slate-100 font-semibold text-[13px] cursor-pointer"
-              >
-                Previous
-              </Button>
-              {visiblePages[0] > 1 && <span className="px-1.5 text-slate-400">...</span>}
-              {visiblePages.map((pageNumber) => (
-                <Button
-                  key={pageNumber}
-                  variant={pageNumber === page ? 'outline' : 'ghost'}
-                  size="sm"
-                  onClick={() => setPage(pageNumber)}
-                  className={cn(
-                    "h-9 min-w-9 rounded-md border-slate-200 text-[13px] font-semibold cursor-pointer",
-                    pageNumber === page
-                      ? "bg-white text-slate-900 shadow-[0_1px_3px_rgba(0,0,0,0.1)] border border-slate-200 hover:bg-slate-50"
-                      : "text-slate-600 hover:bg-slate-100"
-                  )}
-                >
-                  {pageNumber}
-                </Button>
-              ))}
-              {visiblePages[visiblePages.length - 1] < pagination.lastPage && <span className="px-1.5 text-slate-400">...</span>}
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setPage(page + 1)}
-                disabled={page >= pagination.lastPage}
-                className="rounded-md px-3 hover:bg-slate-100 font-semibold text-[13px] cursor-pointer"
-              >
-                Next
-              </Button>
-            </div>
-          </div>
-        )}
+          </PrintLetterPage>
+        </SearchPagination>
       </div>
     </DashboardLayout>
   );

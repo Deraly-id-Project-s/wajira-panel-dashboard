@@ -313,7 +313,7 @@ export default function BBNBillDetailPage() {
             </div>
           </div>
 
-          <Card className="rounded-[24px] border border-slate-200 bg-white p-5 shadow-sm space-y-5">
+          <Card className="rounded-md border border-slate-200 bg-white p-5 shadow-sm space-y-5">
             <div className="grid gap-5 grid-cols-1 md:grid-cols-2">
               <ReadonlyField label="Kode Ditlantas" value={detailQuery.data.ditlantasProcess?.code || '-'} />
               <ReadonlyField label="Nomor Tagihan" value={detailQuery.data.code || formatBillCode(detailQuery.data.id)} />
@@ -347,7 +347,6 @@ export default function BBNBillDetailPage() {
             perPage={perPage}
             onPerPageChange={(val) => {
               setPerPage(val);
-              setPage(1);
             }}
             meta={{
               currentPage: page,
@@ -374,7 +373,7 @@ export default function BBNBillDetailPage() {
             />
           </div>
 
-          <Card className="rounded-[24px] border border-slate-200 bg-white p-5 shadow-sm">
+          <Card className="rounded-md border border-slate-200 bg-white p-5 shadow-sm">
             <h3 className="text-lg font-semibold text-slate-900">Ringkasan Biaya Kendaraan</h3>
             <div className="mt-4 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
               <ReadonlyField label="Daftar BBN" value={formatCurrency(aggregatedFees.bbn)} />

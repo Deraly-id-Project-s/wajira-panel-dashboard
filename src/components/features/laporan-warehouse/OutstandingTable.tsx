@@ -6,6 +6,7 @@ import { useCompany } from '@/contexts/CompanyContext';
 import { useStockUnits } from '@/hooks/useStockUnit';
 import StockUnitTable from '@/components/features/stock-unit/StockUnitTable';
 import StockUnitFilterDropdown from '@/components/features/stock-unit/StockUnitFilterTabs';
+import { SearchPagination } from '@/components/ui/search-pagination';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { AlertCircle } from 'lucide-react';
 import type { StockStatus } from '@/@types/stock-unit.types';
@@ -34,6 +35,11 @@ export default function OutstandingTable({ type, perPage, onActionsChange }: Out
   const [stockState, setStockState] = useState<StockStatus | undefined>(undefined);
   const [inStock, setInStock] = useState<boolean | undefined>(undefined);
 
+  useEffect(() => {
+    setHookPerPage(perPage);
+    setHookPage(1);
+  }, [perPage]);
+
   const params = useMemo(() => ({
     page: hookPage,
     perPage: hookPerPage,
@@ -44,27 +50,6 @@ export default function OutstandingTable({ type, perPage, onActionsChange }: Out
   }), [hookPage, hookPerPage, search, stockState, inStock, type]);
 
   const { data: response, isLoading, isError } = useStockUnits(companyId, params);
-
-  console.log(response?.data);
-
-  // Pagination display states
-  const [tablePage, setTablePage] = useState(1);
-  const [tablePerPage, setTablePerPage] = useState(perPage || 25);
-  const [tableTotalData, setTableTotalData] = useState(0);
-
-  useEffect(() => {
-    if (response) {
-      setTablePage(response.meta?.currentPage || 1);
-      setTableTotalData(response.meta?.total || 0);
-    }
-  }, [response]);
-
-  useEffect(() => {
-    setHookPerPage(perPage);
-    setTablePerPage(perPage);
-    setHookPage(1);
-    setTablePage(1);
-  }, [perPage]);
 
   const rows = useMemo(() => response?.data || [], [response?.data]);
 
@@ -132,13 +117,18 @@ export default function OutstandingTable({ type, perPage, onActionsChange }: Out
           <p className="text-sm">Gagal memuat data outstanding</p>
         </div>
       ) : (
-        <StockUnitTable
-          data={rows}
-          isLoading={isLoading}
-          page={tablePage}
-          perPage={tablePerPage}
-          totalData={tableTotalData}
-          statusTabs={(
+        <SearchPagination
+          searchValue={search}
+          onSearchChange={setSearch}
+          searchPlaceholder="Search here"
+          searchAriaLabel="Cari unit outstanding"
+          page={hookPage}
+          perPage={hookPerPage}
+          total={response?.meta?.total}
+          lastPage={response?.meta?.lastPage}
+          onPageChange={setHookPage}
+          onPerPageChange={setHookPerPage}
+          actions={(
             <div className="flex flex-col sm:flex-row items-center gap-2 w-full sm:w-auto">
               <Select
                 value={inStock === undefined ? 'all' : inStock ? 'true' : 'false'}
@@ -146,10 +136,9 @@ export default function OutstandingTable({ type, perPage, onActionsChange }: Out
                   const nextInStock = val === 'all' ? undefined : val === 'true';
                   setInStock(nextInStock);
                   setHookPage(1);
-                  setTablePage(1);
                 }}
               >
-                <SelectTrigger className="h-10 w-[160px] border-gray-300 bg-white text-gray-900 rounded-lg shadow-sm">
+                <SelectTrigger className="h-10 w-[160px] border-gray-300 bg-white text-gray-900 rounded-md shadow-sm">
                   <SelectValue placeholder="Semua Ketersediaan" />
                 </SelectTrigger>
                 <SelectContent>
@@ -164,28 +153,16 @@ export default function OutstandingTable({ type, perPage, onActionsChange }: Out
                   const nextStatus = value === 'all' ? undefined : value;
                   setStockState(nextStatus);
                   setHookPage(1);
-                  setTablePage(1);
                 }}
               />
             </div>
           )}
-          onPageChange={(p) => {
-            setHookPage(p);
-            setTablePage(p);
-          }}
-          onPerPageChange={(pp) => {
-            setHookPerPage(pp);
-            setTablePerPage(pp);
-            setHookPage(1);
-            setTablePage(1);
-          }}
-          search={search}
-          onSearchChange={(v) => {
-            setSearch(v);
-            setHookPage(1);
-            setTablePage(1);
-          }}
-        />
+        >
+          <StockUnitTable
+            data={rows}
+            isLoading={isLoading}
+          />
+        </SearchPagination>
       )}
     </div>
   );

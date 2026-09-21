@@ -3,8 +3,8 @@
 import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
-import { SalesTable } from '@/components/features/sales/SalesTable';
-import DeleteSalesDialog from '@/components/features/sales/DeleteSalesDialog';
+import { SalesTable } from '@/components/features/unit-transaksi/sales/SalesTable';
+import DeleteUnitTransactionDialog from '@/components/features/unit-transaksi/DeleteUnitTransactionDialog';
 import { PageHeader } from '@/components/common/PageHeader';
 import { useDeleteSales, useSalesList } from '@/hooks/useSales';
 import { useQueryClient } from '@tanstack/react-query';
@@ -75,7 +75,6 @@ export default function SalesPage() {
           onPageChange={setPage}
           onPerPageChange={(value) => {
             setPerPage(value);
-            setPage(1);
           }}
           canEdit={canEdit}
           canDelete={canDelete}
@@ -92,7 +91,7 @@ export default function SalesPage() {
           }}
         />
 
-        <DeleteSalesDialog open={!!selectedId} onClose={() => setSelectedId(null)} onConfirm={handleDelete} loading={deleteMutation.isPending} />
+        <DeleteUnitTransactionDialog open={!!selectedId} onClose={() => setSelectedId(null)} onConfirm={handleDelete} loading={deleteMutation.isPending} />
       </div>
     </DashboardLayout>
   );

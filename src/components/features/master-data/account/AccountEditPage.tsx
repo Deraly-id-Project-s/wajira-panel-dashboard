@@ -13,13 +13,14 @@ import { useUpdateAccount } from '@/hooks/useAccount';
 import { useCompany } from '@/contexts/CompanyContext';
 import { ApiValidationError } from '@/lib/api/response';
 import { toast } from 'sonner';
-import { getAccountTypeFromCategory } from '@/lib/account';
 import type { AccountGroup } from '@/@types/account-group.types';
+import { usePermissionGuard } from '@/hooks/usePermissionGuard';
 
 export const AccountEditPage = () => {
   const router = useRouter();
   const id = router.query.id as string | undefined;
   const { companyId, isLoading: isLoadingCompany } = useCompany();
+  const { canManageMasterDataLock } = usePermissionGuard();
   const basePath = router.query.slug ? `/dashboard/${router.query.slug}/master/account` : '/master-data/account';
 
   const { data, isLoading, isError } = useAccount(id);
@@ -30,9 +31,12 @@ export const AccountEditPage = () => {
       accountGroupId: 0,
       code: '',
       name: '',
+      type: 'debet',
+      pos_code: '',
       description: '',
       category: undefined,
       isActive: true,
+      is_lock: false,
     } satisfies Partial<AccountFormValues>,
   });
 
@@ -84,9 +88,12 @@ export const AccountEditPage = () => {
         accountGroupId: Number(data.accountGroupId),
         code: data.code,
         name: data.name,
+        type: data.type === 'debit' ? 'debet' : (data.type ?? 'debet'),
+        pos_code: data.pos_code ?? data.posCode ?? '',
         description: data.description ?? '',
         category: (data.category as AccountFormValues['category']) ?? undefined,
         isActive: data.isActive,
+        is_lock: !!data.is_lock,
       });
     }
   }, [data, form]);
@@ -101,13 +108,20 @@ export const AccountEditPage = () => {
       if (field === 'code') return 'Kode akun wajib diisi.';
       if (field === 'name') return 'Nama akun wajib diisi.';
       if (field === 'account_group_id' || field === 'accountGroupId') return 'Grup akun wajib dipilih.';
+      if (field === 'type') return 'Tipe akun wajib dipilih.';
       if (field === 'category') return 'Kategori laporan wajib dipilih.';
       return 'Kolom ini wajib diisi.';
     }
-    if (msg.includes('invalid') || msg.includes('must be')) {
+    if (msg.includes('invalid') || msg.includes('must be') || msg.includes('in:')) {
+      if (field === 'type') return 'Tipe akun yang dipilih tidak valid (harus Debet atau Kredit).';
       if (field === 'category') return 'Kategori laporan yang dipilih tidak valid.';
       if (field === 'account_group_id' || field === 'accountGroupId') return 'Grup akun yang dipilih tidak valid.';
       return 'Nilai yang dimasukkan tidak valid.';
+    }
+    if (msg.includes('may not be greater than') || msg.includes('max')) {
+      if (field === 'code') return 'Kode akun maksimal 50 karakter.';
+      if (field === 'name') return 'Nama akun maksimal 255 karakter.';
+      if (field === 'pos_code') return 'Kode pos maksimal 50 karakter.';
     }
     return message;
   };
@@ -123,18 +137,25 @@ export const AccountEditPage = () => {
 
   const handleSubmit = async (values: AccountFormValues) => {
     if (!id) return;
+    const isDescriptionOnlyUpdate = Boolean(data?.is_lock && !canManageMasterDataLock);
     try {
       await updateMutation.mutateAsync({
         id,
-        payload: {
-          accountGroupId: values.accountGroupId,
-          code: values.code,
-          name: values.name,
-          description: values.description,
-          category: values.category,
-          type: getAccountTypeFromCategory(values.category),
-          // isActive: values.isActive,
-        },
+        payload: isDescriptionOnlyUpdate
+          ? {
+            description: values.description ? values.description.trim() : null,
+          }
+          : {
+            accountGroupId: values.accountGroupId,
+            code: values.code,
+            name: values.name,
+            type: values.type,
+            pos_code: values.pos_code ? values.pos_code.trim() : null,
+            description: values.description ? values.description.trim() : null,
+            category: values.category || null,
+            ...(canManageMasterDataLock ? { is_lock: !!values.is_lock } : {}),
+            // isActive: values.isActive,
+          },
       });
       toast.success('Akun berhasil diperbarui');
       router.push(basePath);
@@ -197,6 +218,8 @@ export const AccountEditPage = () => {
             onLoadMoreGroups={handleLoadMoreGroups}
             hasMoreGroups={hasMoreGroups}
             isLock={data?.is_lock}
+            canManageLock={canManageMasterDataLock}
+            showLockField={canManageMasterDataLock}
           />
         </Card>
       </div>

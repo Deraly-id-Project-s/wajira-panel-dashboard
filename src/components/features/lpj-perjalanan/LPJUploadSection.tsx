@@ -14,7 +14,7 @@ function UploadField({ title, value, onSelect, error }: UploadFieldProps) {
   return (
     <div className="space-y-2">
       <Label>{title}</Label>
-      <label className={`flex min-h-24 cursor-pointer items-center justify-center rounded-lg border px-4 py-6 text-center transition-colors ${error ? 'border-red-500' : 'border-gray-200 hover:border-gray-300'}`}>
+      <label className={`flex min-h-24 cursor-pointer items-center justify-center rounded-md border px-4 py-6 text-center transition-colors ${error ? 'border-red-500' : 'border-gray-200 hover:border-gray-300'}`}>
         <input autoComplete="off" type="file" accept="image/png,image/jpeg" className="hidden" onChange={(e) => onSelect(e.target.files?.[0] ?? null)} />
         <div className="space-y-1">
           <div className="mx-auto flex h-8 w-8 items-center justify-center rounded-full border border-gray-300">

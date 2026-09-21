@@ -15,15 +15,7 @@ import { currenciesFormat } from '@/components/ui/currenciesFormat';
 
 interface DOEkspedisiTableProps {
   data: DoEkspedisi[];
-  search: string;
-  page: number;
-  perPage: number;
-  totalData: number;
-  totalPages: number;
   isLoading?: boolean;
-  onSearchChange: (value: string) => void;
-  onPageChange: (page: number) => void;
-  onPerPageChange: (perPage: number) => void;
   onEdit: (item: DoEkspedisi) => void;
   onDetail: (item: DoEkspedisi) => void;
   onDelete: (item: DoEkspedisi) => void;
@@ -64,17 +56,35 @@ const getDoStatusLabel = (status: string) => {
   }
 };
 
+const getVehicleTypeBadgeClassName = (type: string) => {
+  switch (String(type).toLowerCase()) {
+    case 'towing':
+      return 'border-violet-200 bg-violet-50 text-violet-700';
+    case 'cdd':
+      return 'border-sky-200 bg-sky-50 text-sky-700';
+    case 'fuso':
+      return 'border-amber-200 bg-amber-50 text-amber-700';
+    default:
+      return 'border-slate-200 bg-slate-50 text-slate-700';
+  }
+};
+
+const getVehicleTypeLabel = (type: string) => {
+  switch (String(type).toLowerCase()) {
+    case 'towing':
+      return 'Towing';
+    case 'cdd':
+      return 'CDD';
+    case 'fuso':
+      return 'Fuso';
+    default:
+      return type?.toUpperCase() || '-';
+  }
+};
+
 export const DOEkspedisiTable = React.memo(function DOEkspedisiTable({
   data,
-  search,
-  page,
-  perPage,
-  totalData,
-  totalPages,
   isLoading = false,
-  onSearchChange,
-  onPageChange,
-  onPerPageChange,
   onEdit,
   onDetail,
   onDelete,
@@ -95,37 +105,7 @@ export const DOEkspedisiTable = React.memo(function DOEkspedisiTable({
       {
         header: 'Kode Order',
         alignment: 'center',
-        cell: (item) => item?.orderCode ? <CopyBox text={item?.orderCode} /> : '-',
-      },
-      {
-        header: 'Tanggal',
-        accessorKey: 'date',
-        alignment: 'center',
-        cell: (item) => (item?.date ? formatDate(item?.date) : '-'),
-      },
-      {
-        header: 'Nama Driver',
-        accessorKey: 'driver.name',
-        alignment: 'center',
-        cell: (item) => item?.driver ? <ReferenceLink href={`/dashboard/${slug}/master/driver?search=${item?.driver?.name}`}>{item?.driver?.name}</ReferenceLink> : '-',
-      },
-      {
-        header: 'No Polisi',
-        accessorKey: 'vehicle.registrationNumber',
-        alignment: 'center',
-        cell: (item) => item.vehicle?.registrationNumber || '-',
-      },
-      {
-        header: 'Tipe',
-        accessorKey: 'vehicle.type',
-        alignment: 'center',
-        cell: (item) => item.vehicle?.type || '-',
-      },
-      {
-        header: 'Uang Jalan',
-        accessorKey: 'ujNominal',
-        alignment: 'right',
-        cell: (item) => <span className="font-semibold text-slate-800">{currenciesFormat('idr', item.ujNominal)}</span>,
+        cell: (item) => item?.orderCode ? <CopyBox text={item?.orderCode} href={item.orderList?.id ? `/dashboard/${slug}/administrasi/order-list/detail/${item.orderList.id}` : undefined} /> : '-',
       },
       {
         header: 'Status',
@@ -138,11 +118,110 @@ export const DOEkspedisiTable = React.memo(function DOEkspedisiTable({
         ),
       },
       {
+        header: 'Nama Driver',
+        accessorKey: 'driver.name',
+        alignment: 'center',
+        cell: (item) => item?.driver ? <ReferenceLink target='_blank' href={`/dashboard/${slug}/master/driver/${item?.driver?.id}`}>{item?.driver?.name}</ReferenceLink> : '-',
+      },
+      {
+        header: 'No Polisi',
+        accessorKey: 'vehicle.registrationNumber',
+        alignment: 'center',
+        cell: (item) => item.vehicle?.registrationNumber ? <ReferenceLink target='_blank' href={`/dashboard/${slug}/master/armada?search=${item?.vehicle?.registrationNumber}`}>
+          {item.vehicle?.registrationNumber}
+        </ReferenceLink> : '-'
+      },
+      {
+        header: 'Tipe',
+        accessorKey: 'vehicle.type',
+        alignment: 'center',
+        cell: (item) => {
+          const type = item.vehicle?.type || '';
+          return (
+            <Badge variant="outline" className={cn('rounded-full px-2.5 py-0.5 text-xs', getVehicleTypeBadgeClassName(type))}>
+              {getVehicleTypeLabel(type)}
+            </Badge>
+          );
+        },
+      },
+      {
+        header: 'Waktu Ekspedisi',
+        alignment: 'center',
+        cell: (item) => {
+          if (!item.startDate && !item.endDate) return '-';
+          const fmt = (v: string | null | undefined) => {
+            if (!v) return null;
+            const d = new Date(v);
+            return isNaN(d.getTime()) ? null : d;
+          };
+          const start = fmt(item.startDate);
+          const end = fmt(item.endDate);
+          const fmtShort = (d: Date) => format(d, 'dd MMM yyyy');
+          const fmtTime = (d: Date) => format(d, 'HH:mm');
+
+          if (start && end && fmtShort(start) === fmtShort(end)) {
+            return (
+              <div className="flex flex-col text-xs leading-tight">
+                <span className="text-slate-800">{fmtShort(start)}</span>
+                <span className="text-slate-500">{fmtTime(start)} - {fmtTime(end)}</span>
+              </div>
+            );
+          }
+          return (
+            <div className="flex flex-col text-xs leading-tight">
+              {start && <span className="text-slate-800">{fmtShort(start)} {fmtTime(start)}</span>}
+              {end && <span className="text-slate-500">s/d {fmtShort(end)} {fmtTime(end)}</span>}
+            </div>
+          );
+        },
+      },
+      {
+        header: 'Target Waktu',
+        alignment: 'center',
+        cell: (item) => {
+          if (!item.targetStartDate && !item.targetEndDate) return '-';
+          const fmt = (v: string | null | undefined) => {
+            if (!v) return null;
+            const d = new Date(v);
+            return isNaN(d.getTime()) ? null : d;
+          };
+          const start = fmt(item.targetStartDate);
+          const end = fmt(item.targetEndDate);
+          const fmtShort = (d: Date) => format(d, 'dd MMM yyyy');
+          const fmtTime = (d: Date) => format(d, 'HH:mm');
+
+          if (start && end && fmtShort(start) === fmtShort(end)) {
+            return (
+              <div className="flex flex-col text-xs leading-tight">
+                <span className="text-slate-800">{fmtShort(start)}</span>
+                <span className="text-slate-500">{fmtTime(start)} - {fmtTime(end)}</span>
+              </div>
+            );
+          }
+          return (
+            <div className="flex flex-col text-xs leading-tight">
+              {start && <span className="text-slate-800">{fmtShort(start)} {fmtTime(start)}</span>}
+              {end && <span className="text-slate-500">s/d {fmtShort(end)} {fmtTime(end)}</span>}
+            </div>
+          );
+        },
+      },
+      {
+        header: 'Uang Jalan',
+        accessorKey: 'ujNominal',
+        alignment: 'right',
+        cell: (item) => <span className="font-semibold text-slate-800">{currenciesFormat('idr', item.ujNominal)}</span>,
+      },
+      {
         header: 'Aksi',
         alignment: 'center',
         sticky: 'right',
-        cell: (item) => (
-          <div className="flex justify-center">
+        cell: (item) => {
+          const canEdit = String(item.status).toLowerCase() === 'draft';
+          const canDelete = String(item.status).toLowerCase() === 'draft';
+
+          return (
+            <div className="flex justify-center">
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" className="h-8 w-8 p-0 rounded-full text-slate-600 hover:bg-slate-100 hover:text-slate-900">
@@ -150,26 +229,23 @@ export const DOEkspedisiTable = React.memo(function DOEkspedisiTable({
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="min-w-[150px] rounded-md border-slate-200 p-1.5 shadow-lg">
-                <DropdownMenuItem onClick={() => onEdit(item)} className="rounded-lg px-3 py-2 text-sm text-slate-900 focus:bg-slate-50 cursor-pointer">
-                  <Edit className="mr-2 h-4 w-4" />
+                <DropdownMenuItem disabled={!canEdit} onClick={() => canEdit && onEdit(item)} className="rounded-md px-3 py-2 text-sm text-slate-900 focus:bg-slate-50 cursor-pointer disabled:cursor-not-allowed">
                   Edit
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => onDetail(item)} className="rounded-lg px-3 py-2 text-sm text-slate-900 focus:bg-slate-50 cursor-pointer">
-                  <FileText className="mr-2 h-4 w-4" />
+                <DropdownMenuItem onClick={() => onDetail(item)} className="rounded-md px-3 py-2 text-sm text-slate-900 focus:bg-slate-50 cursor-pointer">
                   Detail
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => onPrint(item)} className="rounded-lg px-3 py-2 text-sm text-slate-900 focus:bg-slate-50 cursor-pointer">
-                  <Printer className="mr-2 h-4 w-4" />
+                <DropdownMenuItem onClick={() => onPrint(item)} className="rounded-md px-3 py-2 text-sm text-slate-900 focus:bg-slate-50 cursor-pointer">
                   Print
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => onDelete(item)} className="rounded-lg px-3 py-2 text-sm text-red-600 focus:bg-red-50 focus:text-red-600 cursor-pointer">
-                  <Trash2 className="mr-2 h-4 w-4" />
+                <DropdownMenuItem disabled={!canDelete} onClick={() => canDelete && onDelete(item)} className="rounded-md px-3 py-2 text-sm text-red-600 focus:bg-red-50 focus:text-red-600 cursor-pointer disabled:cursor-not-allowed">
                   Hapus
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
-          </div>
-        ),
+            </div>
+          );
+        },
       },
     ],
     [onDelete, onDetail, onEdit, onPrint, slug],
@@ -180,19 +256,6 @@ export const DOEkspedisiTable = React.memo(function DOEkspedisiTable({
       data={data}
       columns={columns}
       loading={isLoading}
-      searchPlaceholder="Search here"
-      search={search}
-      onSearchChange={onSearchChange}
-      showLimitChange
-      perPage={perPage}
-      onPerPageChange={onPerPageChange}
-      meta={{
-        currentPage: page,
-        perPage,
-        lastPage: totalPages,
-        total: totalData,
-      }}
-      onPageChange={onPageChange}
     />
   );
 });

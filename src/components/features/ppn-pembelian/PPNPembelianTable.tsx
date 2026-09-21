@@ -13,6 +13,7 @@ import { ReferenceLink } from '@/components/ui/reference-link';
 import { useRouter } from 'next/router';
 import { FormDialog } from '@/components/ui/form-dialog';
 import { Input } from '@/components/ui/input';
+import { InputDate } from '@/components/ui/input-date';
 import { useBulkUpdatePPNPembelian } from '@/hooks/usePPN';
 import { toast } from 'sonner';
 import { MoneyInput } from '@/components/ui/money-input';
@@ -46,6 +47,33 @@ const renderStatusBadge = (hasValue: boolean, readyLabel: string, emptyLabel: st
     {hasValue ? readyLabel : emptyLabel}
   </Badge>
 );
+
+const getPPNRowMark = (item: PPNPembelian) => {
+  const hasFp = Boolean(item.fp_date);
+  const hasNsfpAge = Boolean(item.nsfp_age);
+  const hasNsfpNumber = Boolean(item.nsfp_number && item.nsfp_number.trim() !== '');
+
+  if (hasFp && hasNsfpAge && hasNsfpNumber) {
+    return 'success';
+  }
+
+  if (item.nsfp_age) {
+    const date = new Date(item.nsfp_age);
+    if (!Number.isNaN(date.getTime())) {
+      const diffInMs = date.getTime() - Date.now();
+      const diffInDays = Math.ceil(diffInMs / (1000 * 60 * 60 * 24));
+
+      if (diffInDays < 0 || diffInDays <= 30) {
+        return 'alert';
+      }
+      if (diffInDays <= 90) {
+        return 'base';
+      }
+    }
+  }
+
+  return undefined;
+};
 
 export default function PPNPembelianTable({
   data,
@@ -294,7 +322,7 @@ export default function PPNPembelianTable({
         <div className="rounded-md border border-red-200 bg-red-50 p-4 text-center">
           <p className="text-sm text-red-600 mb-2">{errorMessage ?? 'Gagal memuat data PPN pembelian'}</p>
           {onRetry && (
-            <Button type="button" variant="outline" size="sm" onClick={onRetry}>
+            <Button type="button" variant="outline" onClick={onRetry}>
               Retry
             </Button>
           )}
@@ -319,13 +347,14 @@ export default function PPNPembelianTable({
           total: isTotalExact ? meta.total : (hasNextPage ? (meta.currentPage * meta.perPage) + 1 : meta.currentPage * meta.perPage),
         }}
         onPageChange={onPageChange}
+        getRowMark={getPPNRowMark}
         headerActions={
           <div className="flex flex-col sm:flex-row items-center gap-2 w-full sm:w-auto">
             <Button
               type="button"
               onClick={() => setIsOpenBulkModal(true)}
               disabled={selectedIds.size === 0}
-              className="bg-primary text-primary-foreground hover:bg-primary/90 h-9 px-3 text-xs gap-1.5 font-medium rounded-lg shadow-sm"
+              variant="default"
             >
               <Settings size={14} /> Update Data ({selectedIds.size})
             </Button>
@@ -344,7 +373,7 @@ export default function PPNPembelianTable({
       >
         <div className="space-y-6">
           {/* Selected Items Summary Table */}
-          <div className="border border-slate-200 rounded-xl overflow-hidden shadow-sm bg-white">
+          <div className="border border-slate-200 rounded-md overflow-hidden shadow-sm bg-white">
             <div className="max-h-52 overflow-y-auto overflow-x-auto">
               <table className="w-full text-sm text-left border-collapse">
                 <thead className="bg-[#f8f9fa] text-slate-600 uppercase text-xs font-semibold border-b border-slate-200 sticky top-0 z-10">
@@ -383,21 +412,19 @@ export default function PPNPembelianTable({
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-1.5">
               <label className="text-xs font-semibold text-slate-700">Tanggal FPM (fp_date)</label>
-              <Input
-                type="date"
+              <InputDate
                 value={fpDate}
                 onChange={(e) => setFpDate(e.target.value)}
-                className="bg-white border-slate-200 h-9 text-xs rounded-lg"
+                className="bg-white border-slate-200 h-9 text-xs rounded-md"
               />
             </div>
 
             <div className="space-y-1.5">
               <label className="text-xs font-semibold text-slate-700">Masa NSFPM (nsfp_age)</label>
-              <Input
-                type="date"
+              <InputDate
                 value={nsfpAge}
                 onChange={(e) => setNsfpAge(e.target.value)}
-                className="bg-white border-slate-200 h-9 text-xs rounded-lg"
+                className="bg-white border-slate-200 h-9 text-xs rounded-md"
               />
             </div>
 
@@ -408,7 +435,7 @@ export default function PPNPembelianTable({
                 placeholder="Jumlah NSFP"
                 value={nsfpAmount}
                 onChange={(e) => setNsfpAmount(e.target.value)}
-                className="bg-white border-slate-200 h-9 text-xs rounded-lg"
+                className="bg-white border-slate-200 h-9 text-xs rounded-md"
               />
             </div>
 
@@ -418,7 +445,7 @@ export default function PPNPembelianTable({
                 placeholder="Nominal Rupiah"
                 value={Number(amount) || 0}
                 onChangeValue={(value) => setAmount(value.toString())}
-                className="bg-white border-slate-200 h-9 text-xs rounded-lg"
+                className="bg-white border-slate-200 h-9 text-xs rounded-md"
               />
             </div>
 
@@ -429,7 +456,7 @@ export default function PPNPembelianTable({
                 placeholder="Contoh: FAP0012"
                 value={nsfpNumber}
                 onChange={(e) => setNsfpNumber(e.target.value)}
-                className="bg-white border-slate-200 h-9 text-xs rounded-lg"
+                className="bg-white border-slate-200 h-9 text-xs rounded-md"
               />
             </div>
           </div>

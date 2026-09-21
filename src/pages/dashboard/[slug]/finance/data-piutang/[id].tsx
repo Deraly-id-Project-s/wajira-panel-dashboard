@@ -161,7 +161,7 @@ export default function PiutangDetailPage() {
                             }
                             onBack={() => router.push(slug ? `/dashboard/${slug}/finance/data-piutang` : '/dashboard')}
                             actions={
-                                <Button onClick={() => setPaymentDialogOpen(true)} disabled={detail.billing_summary.is_paid || detail.billing_summary.remaining_payment <= 0 || detail.unit_transaction_billing.id <= 0} className="w-full sm:w-auto bg-[#1e3a5f] hover:bg-[#152e4d]">
+                                <Button onClick={() => setPaymentDialogOpen(true)} disabled={detail.billing_summary.is_paid || detail.billing_summary.remaining_payment <= 0 || detail.unit_transaction_billing.id <= 0} className="btn-primary-orange!">
                                     Tambah Penerimaan
                                 </Button>
                             }
@@ -170,7 +170,7 @@ export default function PiutangDetailPage() {
                         <div className="grid gap-4 lg:grid-cols-2">
                             <div className="rounded-md border border-gray-200 bg-white p-5 shadow-sm">
                                 <div className="mb-5 flex items-center gap-3">
-                                    <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-50 text-blue-600">
+                                    <span className="flex h-8 w-8 items-center justify-center rounded-md bg-blue-50 text-blue-600">
                                         <CreditCard className="h-4 w-4" />
                                     </span>
                                     <p className="text-sm font-medium text-gray-600">Informasi Piutang</p>
@@ -196,7 +196,7 @@ export default function PiutangDetailPage() {
 
                             <div className="rounded-md border border-gray-200 bg-white p-5 shadow-sm">
                                 <div className="mb-5 flex items-center gap-3">
-                                    <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-rose-50 text-rose-500">
+                                    <span className="flex h-8 w-8 items-center justify-center rounded-md bg-rose-50 text-rose-500">
                                         <CreditCard className="h-4 w-4" />
                                     </span>
                                     <p className="text-sm font-medium text-gray-600">Status Pembayaran</p>

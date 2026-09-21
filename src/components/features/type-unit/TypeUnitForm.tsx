@@ -25,11 +25,11 @@ export function TypeUnitForm({ form, onSubmit, onCancel, isSubmitting = false, s
         <TypeUnitFormFields form={form} disabled={isSubmitting} />
 
         <div className="flex justify-center items-center gap-6 pt-10">
-          <Button type="button" variant="ghost" onClick={onCancel} disabled={isSubmitting} className="text-muted-foreground font-medium hover:text-foreground">
+          <Button type="button" variant="outline" onClick={onCancel} disabled={isSubmitting}>
             Batal
           </Button>
-          <Button type="submit" disabled={isSubmitting} className="bg-[#1e293b] hover:bg-[#0f172a] text-white font-medium min-w-[120px] rounded-lg">
-            {isSubmitting ? 'Menyimpan...' : <><Save className="mr-2 h-4 w-4" />{submitLabel}</>}
+          <Button type="submit" variant="default" disabled={isSubmitting}>
+            {isSubmitting ? 'Menyimpan...' : <>{submitLabel}</>}
           </Button>
         </div>
       </form>

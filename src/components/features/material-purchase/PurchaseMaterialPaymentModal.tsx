@@ -186,7 +186,7 @@ export function PurchaseMaterialPaymentModal({
             </div>
 
             <div className="flex flex-col gap-3 pt-2">
-              <Button type="submit" disabled={isSubmitting} className="h-11 rounded-md bg-[#1f4163] text-[16px] font-medium hover:bg-[#183552]">
+              <Button type="submit" disabled={isSubmitting} className="h-11 rounded-md text-[16px] btn-primary!">
                 {isSubmitting ? 'Menyimpan...' : 'Simpan'}
               </Button>
               <Button type="button" variant="outline" onClick={() => onOpenChange(false)} className="h-11 rounded-md border-slate-300 text-[16px] font-medium">

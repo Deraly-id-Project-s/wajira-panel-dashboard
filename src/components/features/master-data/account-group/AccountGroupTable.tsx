@@ -4,25 +4,19 @@ import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuIte
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { MoreVertical, Pencil, Trash, Lock } from 'lucide-react';
 import type { AccountGroup } from '@/@types/account-group.types';
-import type { PaginationMeta } from '@/@types/pagination.types';
 import { Badge } from '@/components/ui/badge';
 import { CopyBox } from '@/components/ui/copy-box';
 
 interface AccountGroupTableProps {
   data: AccountGroup[];
-  meta?: PaginationMeta;
   isLoading?: boolean;
   onEdit: (accountGroup: AccountGroup) => void;
   onDelete: (accountGroup: AccountGroup) => void;
-  page: number;
-  perPage: number;
   canEdit: boolean;
   canDelete: boolean;
-  onPageChange: (page: number) => void;
-  onPerPageChange: (perPage: number) => void;
 }
 
-export const AccountGroupTable = ({ data, meta, isLoading = false, onEdit, onDelete, page, perPage, onPageChange, onPerPageChange, canEdit, canDelete }: AccountGroupTableProps) => {
+export const AccountGroupTable = ({ data, isLoading = false, onEdit, onDelete, canEdit, canDelete }: AccountGroupTableProps) => {
   const columns = useMemo<ColumnDef<AccountGroup>[]>(
     () => [
       {
@@ -96,10 +90,9 @@ export const AccountGroupTable = ({ data, meta, isLoading = false, onEdit, onDel
                   e.preventDefault();
                   onEdit(item);
                 }}
-                disabled={item.is_lock || !canEdit}
-                className="rounded-lg px-3 py-2 text-sm text-slate-900 focus:bg-slate-50 cursor-pointer"
+                disabled={!canEdit}
+                className="rounded-md px-3 py-2 text-sm text-slate-900 focus:bg-slate-50 cursor-pointer"
               >
-                <Pencil className="mr-2 h-4 w-4" />
                 Edit
               </DropdownMenuItem>
               <DropdownMenuItem
@@ -107,10 +100,9 @@ export const AccountGroupTable = ({ data, meta, isLoading = false, onEdit, onDel
                   e.preventDefault();
                   onDelete(item);
                 }}
-                className="rounded-lg px-3 py-2 text-sm text-red-600 focus:bg-red-50 focus:text-red-600 cursor-pointer"
+                className="rounded-md px-3 py-2 text-sm text-red-600 focus:bg-red-50 focus:text-red-600 cursor-pointer"
                 disabled={item.is_lock || !canDelete}
               >
-                <Trash className="mr-2 h-4 w-4" />
                 Hapus
               </DropdownMenuItem>
             </DropdownMenuContent>
@@ -127,13 +119,6 @@ export const AccountGroupTable = ({ data, meta, isLoading = false, onEdit, onDel
       columns={columns}
       loading={isLoading}
       defaultSort={{ key: 'code', direction: 'asc' }}
-      meta={{
-        currentPage: page,
-        perPage,
-        lastPage: meta?.lastPage ?? 1,
-        total: meta?.total ?? data.length,
-      }}
-      onPageChange={onPageChange}
     />
   );
 };

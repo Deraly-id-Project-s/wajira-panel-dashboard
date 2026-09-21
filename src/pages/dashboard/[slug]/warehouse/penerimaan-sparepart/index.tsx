@@ -6,11 +6,13 @@ import PenerimaanSparepartTable from '@/components/features/penerimaan-sparepart
 import { useWarehouseActivities } from '@/hooks/useWarehouseActivity';
 import { usePermissionGuard } from '@/hooks/usePermissionGuard';
 import { useCompany } from '@/contexts/CompanyContext';
+import { SearchPagination } from '@/components/ui/search-pagination';
+import { useQueryParamsTable } from '@/hooks/useQueryParamsTable';
+import { DatePickerWithRange } from '@/components/ui/date-range-picker';
+import type { DateRange } from 'react-day-picker';
 
 export default function PenerimaanSparepartPage() {
-  const [search, setSearch] = useState('');
-  const [currentPage, setCurrentPage] = useState(1);
-  const [perPage, setPerPage] = useState(25);
+  const { page, perPage, search, setPage, setPerPage, setSearch } = useQueryParamsTable({ defaultPerPage: 25 });
   const [startDate, setStartDate] = useState<string | null>(null);
   const [endDate, setEndDate] = useState<string | null>(null);
 
@@ -19,7 +21,7 @@ export default function PenerimaanSparepartPage() {
   const { data: activities, isLoading, isError, error, isFetching } = useWarehouseActivities({
     activityType: 'receipt',
     type: 'sparepart',
-    page: currentPage,
+    page,
     perPage,
     search: search || undefined,
     start_date: startDate,
@@ -31,11 +33,21 @@ export default function PenerimaanSparepartPage() {
   const canEdit = hasPermission('warehouse:edit') || hasPermission('warehouse:activity');
 
   const data = activities?.data ?? [];
-  const meta = activities?.meta ?? {
-    currentPage,
-    perPage,
-    lastPage: 1,
-    total: 0,
+
+  const dateRange = useMemo<DateRange | undefined>(() => {
+    if (!startDate && !endDate) return undefined;
+    return {
+      from: startDate ? new Date(startDate) : undefined,
+      to: endDate ? new Date(endDate) : undefined,
+    };
+  }, [startDate, endDate]);
+
+  const handleDateRangeChange = (range: DateRange | undefined) => {
+    const start = range?.from ? range.from.toISOString().slice(0, 10) : null;
+    const end = range?.to ? range.to.toISOString().slice(0, 10) : null;
+    setStartDate(start);
+    setEndDate(end);
+    setPage(1);
   };
 
   const apiErrorMessage = useMemo(() => {
@@ -55,30 +67,31 @@ export default function PenerimaanSparepartPage() {
           ) : isError ? (
             <div className="bg-white rounded-md border p-8 text-center text-red-500">{apiErrorMessage}</div>
           ) : (
-            <PenerimaanSparepartTable
-              data={data}
-              meta={meta}
-              isLoading={isLoading || isFetching}
-              search={search}
-              onSearchChange={(v) => {
-                setSearch(v);
-                setCurrentPage(1);
-              }}
+            <SearchPagination
+              searchValue={search}
+              onSearchChange={setSearch}
+              searchPlaceholder="Cari penerimaan..."
+              searchAriaLabel="Cari penerimaan sparepart"
+              page={page}
               perPage={perPage}
-              onPerPageChange={(pp) => {
-                setPerPage(pp);
-                setCurrentPage(1);
-              }}
-              canEdit={canEdit}
-              onPageChange={setCurrentPage}
-              startDate={startDate}
-              endDate={endDate}
-              onDateRangeChange={(start, end) => {
-                setStartDate(start);
-                setEndDate(end);
-                setCurrentPage(1);
-              }}
-            />
+              total={activities?.meta?.total}
+              lastPage={activities?.meta?.lastPage}
+              onPageChange={setPage}
+              onPerPageChange={setPerPage}
+              filters={(
+                <DatePickerWithRange
+                  date={dateRange}
+                  onChange={handleDateRangeChange}
+                  className="w-full sm:w-[260px]"
+                />
+              )}
+            >
+              <PenerimaanSparepartTable
+                data={data}
+                isLoading={isLoading || isFetching}
+                canEdit={canEdit}
+              />
+            </SearchPagination>
           )}
         </div>
       </div>

@@ -1,0 +1,101 @@
+import { useMemo } from 'react';
+import BaseTable, { ColumnDef } from '@/components/ui/base-table';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { MoreVertical, Pencil, Trash, Eye } from 'lucide-react';
+import { CopyBox } from '@/components/ui/copy-box';
+import type { WarehouseBlock } from '@/services/warehouseBlock.service';
+
+interface WarehouseBlockTableProps {
+  data: WarehouseBlock[];
+  isLoading?: boolean;
+  onEdit: (block: WarehouseBlock) => void;
+  onDelete: (block: WarehouseBlock) => void;
+  onViewDetail: (block: WarehouseBlock) => void;
+  canEdit: boolean;
+  canDelete: boolean;
+}
+
+export const WarehouseBlockTable = ({
+  data,
+  isLoading = false,
+  onEdit,
+  onDelete,
+  onViewDetail,
+  canEdit,
+  canDelete,
+}: WarehouseBlockTableProps) => {
+  const columns = useMemo<ColumnDef<WarehouseBlock>[]>(
+    () => [
+      {
+        header: 'NAMA BLOK',
+        accessorKey: 'name',
+        sortable: true,
+        cell: (item) => <CopyBox text={item.name} className="font-medium text-slate-900" />,
+      },
+      {
+        header: 'GUDANG UTAMA',
+        accessorKey: 'warehouse',
+        sortable: true,
+        cell: (item) => <span className="text-sm text-slate-600">{item.warehouse?.name || '-'}</span>,
+      },
+      {
+        header: 'DESKRIPSI',
+        accessorKey: 'description',
+        sortable: false,
+        cell: (item) => <span className="text-sm text-slate-600">{item.description || '-'}</span>,
+      },
+      {
+        header: 'JUMLAH SUB BLOK',
+        accessorKey: 'warehouse_sub_block_count',
+        sortable: false,
+        cell: (item) => <span className="text-sm text-slate-600">{item.warehouse_sub_block_count || '-'}</span>,
+      },
+      {
+        header: 'ACTION',
+        alignment: 'center',
+        sticky: 'right',
+        cell: (item) => (
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button className="inline-flex items-center justify-center h-8 w-8 p-0 rounded-full text-slate-600 hover:bg-slate-100 hover:text-slate-900">
+                <MoreVertical className="h-4 w-4" />
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="min-w-[150px] rounded-md border-slate-200 p-1.5 shadow-lg">
+              <DropdownMenuItem
+                onClick={() => onViewDetail(item)}
+                className="rounded-md px-3 py-2 text-sm text-slate-900 focus:bg-slate-50 cursor-pointer"
+              >
+                Lihat Detail
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={() => onEdit(item)}
+                disabled={!canEdit}
+                className="rounded-md px-3 py-2 text-sm text-slate-900 focus:bg-slate-50 cursor-pointer"
+              >
+                Edit
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={() => onDelete(item)}
+                disabled={!canDelete}
+                className="rounded-md px-3 py-2 text-sm text-red-600 focus:bg-red-50 focus:text-red-600 cursor-pointer"
+              >
+                Hapus
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        ),
+      },
+    ],
+    [onEdit, onDelete, onViewDetail, canEdit, canDelete],
+  );
+
+  return (
+    <BaseTable
+      data={data}
+      columns={columns}
+      loading={isLoading}
+      defaultSort={{ key: 'id', direction: 'desc' }}
+    />
+  );
+};

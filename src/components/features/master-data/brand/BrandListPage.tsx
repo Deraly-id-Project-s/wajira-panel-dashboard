@@ -4,10 +4,9 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { PageHeader } from '@/components/ui/page-header';
-import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Plus, Search } from 'lucide-react';
+import { SearchPagination } from '@/components/ui/search-pagination';
+import { Plus } from 'lucide-react';
 import { BrandTable } from './BrandTable';
 import { BrandFormModal } from './BrandFormModal';
 import { useBrands, useCreateBrand, useUpdateBrand, useDeleteBrand } from '@/hooks/useBrand';
@@ -19,7 +18,7 @@ import { toast } from 'sonner';
 import { ApiResponseError, ApiValidationError } from '@/lib/api/response';
 
 export const BrandListPage = () => {
-    const { page, perPage, search, setPage, setPerPage, setSearch } = useQueryParamsTable({ defaultPerPage: 25 });
+    const { page, perPage, search, setPage, setPerPage, setSearch, updateQuery } = useQueryParamsTable({ defaultPerPage: 25 });
     const [searchInput, setSearchInput] = useState(search);
 
     useEffect(() => {
@@ -116,39 +115,55 @@ export const BrandListPage = () => {
                 <PageHeader
                     title="Merk Unit Tipe"
                     subtitle="Kelola semua merk unit tipe"
-                    actions={
-                        canCreate && (
-                            <Button onClick={handleAdd} className="w-full sm:w-auto bg-[#1e3a5f] hover:bg-[#152e4d]">
-                                <Plus className="h-4 w-4" />
-                                Tambah Merk
-                            </Button>
-                        )
-                    }
                 />
 
-                <Card className="p-6">
+                <SearchPagination
+                    searchValue={searchInput}
+                    onSearchChange={setSearchInput}
+                    searchPlaceholder="Search here"
+                    searchAriaLabel="Cari merk"
+                    page={page}
+                    perPage={perPage}
+                    total={data?.meta.total}
+                    lastPage={data?.meta.lastPage}
+                    onPageChange={setPage}
+                    onPerPageChange={setPerPage}
+                    actions={
+                        <>
+                            {search && (
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => {
+                                        setSearchInput('');
+                                        updateQuery({ search: undefined, page: 1 });
+                                    }}
+                                >
+                                    Reset
+                                </Button>
+                            )}
+                            {canCreate && (
+                                <Button variant="default" onClick={handleAdd}>
+                                    <Plus className="h-4 w-4" />
+                                    Tambah Merk
+                                </Button>
+                            )}
+                        </>
+                    }
+                >
                     {isError ? (
                         <div className="py-10 text-center text-red-600">Gagal memuat data merk</div>
                     ) : (
                         <BrandTable
                             data={data?.data ?? []}
-                            meta={data?.meta}
-                            search={searchInput}
-                            onSearchChange={(v) => {
-                                setSearchInput(v);
-                            }}
-                            page={page}
                             canEdit={canEdit}
                             canDelete={canDelete}
-                            perPage={perPage}
                             isLoading={isLoading || isFetching}
                             onEdit={handleEdit}
                             onDelete={setSelectedToDelete}
-                            onPageChange={setPage}
-                            onPerPageChange={setPerPage}
                         />
                     )}
-                </Card>
+                </SearchPagination>
             </div>
 
             <BrandFormModal

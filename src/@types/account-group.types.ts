@@ -18,6 +18,11 @@ export interface AccountGroupPayload {
   company_id: string | number;
   group_code: string;
   description?: string | null;
+  is_lock?: boolean;
 }
+
+export type AccountGroupUpdatePayload = Partial<Omit<AccountGroupPayload, 'company_id'>> & {
+  company_id: string | number;
+};
 
 export interface AccountGroupListResponse extends PaginatedResult<AccountGroup> { }

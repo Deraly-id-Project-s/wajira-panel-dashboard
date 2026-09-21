@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { useMemo } from 'react';
-import { MoreVertical, Plus } from 'lucide-react';
+import { MoreVertical } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
@@ -10,25 +10,13 @@ import type { MaterialTransaction } from '@/@types/material-transaction.types';
 interface PurchaseMaterialTableProps {
   slug: string;
   data: MaterialTransaction[];
-  totalData: number;
-  page: number;
-  perPage: number;
-  search: string;
   isLoading?: boolean;
-  onPageChange: (value: number) => void;
-  onPerPageChange: (value: number) => void;
-  onSearchChange: (value: string) => void;
-  onAdd: () => void;
   onEdit: (item: MaterialTransaction) => void;
   onDelete: (item: MaterialTransaction) => void;
-  title?: string;
-  description?: string;
   codeHeader?: string;
   dateHeader?: string;
   counterpartyHeader?: string;
   routeBasePath?: string;
-  loadingText?: string;
-  emptyText?: string;
 }
 
 const formatDate = (value?: string) => {
@@ -60,19 +48,9 @@ const getPaymentStatusMeta = (item: MaterialTransaction) => {
 export function PurchaseMaterialTable({
   slug,
   data,
-  totalData,
-  page,
-  perPage,
-  search,
   isLoading = false,
-  onPageChange,
-  onPerPageChange,
-  onSearchChange,
-  onAdd,
   onEdit,
   onDelete,
-  title = 'Pembelian Material',
-  description = 'Kelola data pembelian material',
   codeHeader = 'KODE BELI',
   dateHeader = 'TGL TAGIHAN',
   counterpartyHeader = 'SUPPLIER',
@@ -147,36 +125,10 @@ export function PurchaseMaterialTable({
   );
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-[24px] font-semibold text-slate-900">{title}</h1>
-        <p className="mt-1 text-sm text-slate-500">{description}</p>
-      </div>
-
-      <BaseTable
-        data={data}
-        columns={columns}
-        loading={isLoading}
-        searchPlaceholder="Search here"
-        search={search}
-        onSearchChange={onSearchChange}
-        showLimitChange
-        perPage={perPage}
-        onPerPageChange={onPerPageChange}
-        meta={{
-          currentPage: page,
-          perPage,
-          lastPage: Math.max(1, Math.ceil((totalData || 0) / perPage)),
-          total: totalData,
-        }}
-        onPageChange={onPageChange}
-        headerActions={
-          <Button onClick={onAdd} className="w-full sm:w-auto bg-[#1e3a5f] hover:bg-[#152e4d]">
-            <Plus className="mr-2 h-4 w-4" />
-            Tambah Data
-          </Button>
-        }
-      />
-    </div>
+    <BaseTable
+      data={data}
+      columns={columns}
+      loading={isLoading}
+    />
   );
 }

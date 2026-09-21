@@ -3,17 +3,16 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/router';
 import Head from 'next/head';
-import { Search, Printer } from 'lucide-react';
+import { Printer } from 'lucide-react';
 import { format } from 'date-fns';
 import { id } from 'date-fns/locale';
 
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { PageHeader } from '@/components/ui/page-header';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Input } from '@/components/ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
 import BaseTable, { ColumnDef } from '@/components/ui/base-table';
+import { SearchPagination } from '@/components/ui/search-pagination';
 
 import { useJumlahPenyerahanReport } from '@/hooks/report/useJumlahPenyerahanReport';
 import { useCompany } from '@/contexts/CompanyContext';
@@ -153,9 +152,9 @@ export default function LPJumlahPenyerahanPage() {
       cell: (item) => <span className="text-slate-600 whitespace-nowrap">{formatDateString(item.process_date || item.stnk_registration_date || item.bpkb_registration_date)}</span>,
     },
     {
-      header: activeTab === 'stnk' ? 'TGL TERIMA STNK' : 
-              activeTab === 'bpkb' ? 'TGL TERIMA BPKB' : 
-              activeTab === 'skpd' ? 'TGL TERIMA SKPD' : 'TGL TERIMA TNKB',
+      header: activeTab === 'stnk' ? 'TGL TERIMA STNK' :
+        activeTab === 'bpkb' ? 'TGL TERIMA BPKB' :
+          activeTab === 'skpd' ? 'TGL TERIMA SKPD' : 'TGL TERIMA TNKB',
       id: 'tgl_terima',
       alignment: 'center',
       cell: (item) => {
@@ -205,96 +204,76 @@ export default function LPJumlahPenyerahanPage() {
           {/* Tab triggers wrapped to look like pills */}
           <div className="flex no-print">
             <TabsList className="flex h-auto p-1 bg-gray-50 border border-gray-100 rounded-md">
-              <TabsTrigger value="stnk" className="rounded-lg px-6 py-2.5 text-[14px] font-medium data-[state=active]:bg-white data-[state=active]:text-gray-900 data-[state=active]:shadow-sm cursor-pointer">
+              <TabsTrigger value="stnk" className="rounded-md px-6 py-2.5 text-[14px] font-medium data-[state=active]:bg-white data-[state=active]:text-gray-900 data-[state=active]:shadow-sm cursor-pointer">
                 LP Jumlah Penyerahan STNK
               </TabsTrigger>
-              <TabsTrigger value="bpkb" className="rounded-lg px-6 py-2.5 text-[14px] font-medium data-[state=active]:bg-white data-[state=active]:text-gray-900 data-[state=active]:shadow-sm cursor-pointer">
+              <TabsTrigger value="bpkb" className="rounded-md px-6 py-2.5 text-[14px] font-medium data-[state=active]:bg-white data-[state=active]:text-gray-900 data-[state=active]:shadow-sm cursor-pointer">
                 LP Jumlah Penyerahan BPKB
               </TabsTrigger>
-              <TabsTrigger value="skpd" className="rounded-lg px-6 py-2.5 text-[14px] font-medium data-[state=active]:bg-white data-[state=active]:text-gray-900 data-[state=active]:shadow-sm cursor-pointer">
+              <TabsTrigger value="skpd" className="rounded-md px-6 py-2.5 text-[14px] font-medium data-[state=active]:bg-white data-[state=active]:text-gray-900 data-[state=active]:shadow-sm cursor-pointer">
                 LP Jumlah Penyerahan SKPD
               </TabsTrigger>
-              <TabsTrigger value="tnkb" className="rounded-lg px-6 py-2.5 text-[14px] font-medium data-[state=active]:bg-white data-[state=active]:text-gray-900 data-[state=active]:shadow-sm cursor-pointer">
+              <TabsTrigger value="tnkb" className="rounded-md px-6 py-2.5 text-[14px] font-medium data-[state=active]:bg-white data-[state=active]:text-gray-900 data-[state=active]:shadow-sm cursor-pointer">
                 LP Jumlah Penyerahan TNKB
               </TabsTrigger>
             </TabsList>
           </div>
 
           <div className="space-y-4">
-            {/* Filtering Block (Search and Show Page dropdown) */}
-            <div className="flex flex-col sm:flex-row items-center justify-between gap-4 no-print">
-              <div className="flex items-center gap-4 w-full sm:w-auto">
-                <div className="relative w-full sm:w-[300px]">
-                  <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
-                  <Input
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    placeholder="Search here"
-                    className="pl-9 bg-white"
-                  />
-                </div>
-                <div className="flex items-center gap-2 text-sm text-slate-500 whitespace-nowrap">
-                  <span>Show</span>
-                  <Select value={String(perPage)} onValueChange={(value) => { setPerPage(Number(value)); setPage(1); }}>
-                    <SelectTrigger className="w-[70px] bg-white">
-                      <SelectValue placeholder="25" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="10">10</SelectItem>
-                      <SelectItem value="25">25</SelectItem>
-                      <SelectItem value="50">50</SelectItem>
-                      <SelectItem value="100">100</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <span>Page</span>
-                </div>
-              </div>
-            </div>
-
-            {/* Print Letter Wrapping Container */}
-            <PrintLetterPage
-              id="laporan-jumlah-penyerahan-print"
-              className="laporan-penerimaan-print-area"
-              letterheadSrc={selectedPrintBackground}
+            <SearchPagination
+              searchValue={searchTerm}
+              onSearchChange={setSearchTerm}
+              searchPlaceholder="Search here"
+              searchAriaLabel="Cari data"
+              page={page}
+              perPage={perPage}
+              total={pagination.total}
+              lastPage={pagination.lastPage}
+              perPageOptions={[10, 25, 50, 100]}
+              onPageChange={setPage}
+              onPerPageChange={(value) => {
+                setPerPage(value);
+                setPage(1);
+              }}
             >
-              <div className="laporan-penerimaan-print-content print-letter-content">
-                {/* Cover Letter Heading - Visible only in Print */}
-                <div className="hidden print:flex flex-col items-center justify-center text-center space-y-1 mb-6 w-full">
-                  <h2 className="text-[18px] font-bold uppercase text-gray-900 tracking-wide">
-                    Laporan Jumlah Penyerahan {activeTab.toUpperCase()}
-                  </h2>
-                  <p className="text-[15px] font-bold text-gray-900 tracking-wide">
-                    PT WAJIRA YANOTAMA
-                  </p>
-                  <p className="text-[12px] text-gray-600">
-                    Tanggal Cetak: {formatDate(new Date())}
-                  </p>
-                </div>
+              {/* Print Letter Wrapping Container */}
+              <PrintLetterPage
+                id="laporan-jumlah-penyerahan-print"
+                className="laporan-penerimaan-print-area"
+                letterheadSrc={selectedPrintBackground}
+              >
+                <div className="laporan-penerimaan-print-content print-letter-content">
+                  {/* Cover Letter Heading - Visible only in Print */}
+                  <div className="hidden print:flex flex-col items-center justify-center text-center space-y-1 mb-6 w-full">
+                    <h2 className="text-[18px] font-bold uppercase text-gray-900 tracking-wide">
+                      Laporan Jumlah Penyerahan {activeTab.toUpperCase()}
+                    </h2>
+                    <p className="text-[15px] font-bold text-gray-900 tracking-wide">
+                      PT WAJIRA YANOTAMA
+                    </p>
+                    <p className="text-[12px] text-gray-600">
+                      Tanggal Cetak: {formatDate(new Date())}
+                    </p>
+                  </div>
 
-                {/* Table Rendering */}
-                <div className="rounded-md border border-gray-200 bg-white overflow-x-auto shadow-none w-full">
-                  <BaseTable
-                    data={data}
-                    columns={columns}
-                    loading={isLoading}
-                    meta={{
-                      currentPage: page,
-                      perPage: perPage,
-                      lastPage: pagination.lastPage,
-                      total: pagination.total,
-                    }}
-                    onPageChange={setPage}
-                    sortBy={sortBy}
-                    sortDirection={sortOrder}
-                    onSortChange={(key, dir) => {
-                      setSortBy(key);
-                      setSortOrder(dir);
-                      setPage(1);
-                    }}
-                  />
+                  {/* Table Rendering */}
+                  <div className="rounded-md border border-gray-200 bg-white overflow-x-auto shadow-none w-full">
+                    <BaseTable
+                      data={data}
+                      columns={columns}
+                      loading={isLoading}
+                      sortBy={sortBy}
+                      sortDirection={sortOrder}
+                      onSortChange={(key, dir) => {
+                        setSortBy(key);
+                        setSortOrder(dir);
+                        setPage(1);
+                      }}
+                    />
+                  </div>
                 </div>
-              </div>
-            </PrintLetterPage>
+              </PrintLetterPage>
+            </SearchPagination>
           </div>
         </Tabs>
       </div>

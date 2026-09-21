@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { MoreVertical, Plus } from 'lucide-react';
+import { MoreVertical } from 'lucide-react';
 import type { BBNBill } from '@/@types/bbn-bill.types';
 import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
@@ -8,17 +8,8 @@ import { calculateOutstanding, formatBillCode, formatCurrency, formatShortDate }
 
 interface Props {
   items: BBNBill[];
-  search: string;
   isLoading?: boolean;
-  page: number;
-  perPage: number;
-  totalData: number;
-  onSearchChange: (value: string) => void;
-  onPageChange: (page: number) => void;
-  onPerPageChange: (value: number) => void;
-  onAdd: () => void;
   onDetail: (item: BBNBill) => void;
-  onEdit: (item: BBNBill) => void;
   onPay: (item: BBNBill) => void;
   onPrint: (item: BBNBill) => void;
   onDelete: (item: BBNBill) => void;
@@ -26,23 +17,12 @@ interface Props {
 
 export function BBNBillTable({
   items,
-  search,
   isLoading = false,
-  page,
-  perPage,
-  totalData,
-  onSearchChange,
-  onPageChange,
-  onPerPageChange,
-  onAdd,
   onDetail,
-  onEdit,
   onPay,
   onPrint,
   onDelete,
 }: Props) {
-  void onEdit;
-
   const columns = useMemo<ColumnDef<BBNBill>[]>(
     () => [
       {
@@ -110,16 +90,16 @@ export function BBNBillTable({
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-[160px] rounded-md bg-white shadow-md border border-slate-100 p-1.5">
-                <DropdownMenuItem onClick={() => onDetail(item)} className="cursor-pointer rounded-lg px-3 py-2 text-sm text-slate-700 hover:bg-slate-50">
+                <DropdownMenuItem onClick={() => onDetail(item)} className="cursor-pointer rounded-md px-3 py-2 text-sm text-slate-700 hover:bg-slate-50">
                   Detail
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => onPay(item)} className="cursor-pointer rounded-lg px-3 py-2 text-sm text-slate-700 hover:bg-slate-50">
+                <DropdownMenuItem onClick={() => onPay(item)} className="cursor-pointer rounded-md px-3 py-2 text-sm text-slate-700 hover:bg-slate-50">
                   Bayar Tagihan
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => onPrint(item)} className="cursor-pointer rounded-lg px-3 py-2 text-sm text-slate-700 hover:bg-slate-50">
+                <DropdownMenuItem onClick={() => onPrint(item)} className="cursor-pointer rounded-md px-3 py-2 text-sm text-slate-700 hover:bg-slate-50">
                   Print
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => onDelete(item)} className="cursor-pointer rounded-lg px-3 py-2 text-sm text-red-600 focus:text-red-600 hover:bg-slate-50">
+                <DropdownMenuItem onClick={() => onDelete(item)} className="cursor-pointer rounded-md px-3 py-2 text-sm text-red-600 focus:text-red-600 hover:bg-slate-50">
                   Hapus
                 </DropdownMenuItem>
               </DropdownMenuContent>
@@ -136,25 +116,6 @@ export function BBNBillTable({
       data={items}
       columns={columns}
       loading={isLoading}
-      searchPlaceholder="Search here"
-      search={search}
-      onSearchChange={onSearchChange}
-      showLimitChange
-      perPage={perPage}
-      onPerPageChange={onPerPageChange}
-      meta={{
-        currentPage: page,
-        perPage,
-        lastPage: Math.max(1, Math.ceil(totalData / perPage)),
-        total: totalData,
-      }}
-      onPageChange={onPageChange}
-      headerActions={
-        <Button onClick={onAdd} className="w-full sm:w-auto bg-[#1e3a5f] hover:bg-[#152e4d]">
-          <Plus className="mr-2 h-4 w-4" />
-          Tambah Data
-        </Button>
-      }
     />
   );
 }

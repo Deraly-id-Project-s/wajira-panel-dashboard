@@ -12,6 +12,7 @@ import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { MoneyInput } from '@/components/ui/money-input';
 import { Input } from '@/components/ui/input';
+import { InputDate } from '@/components/ui/input-date';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -295,8 +296,7 @@ export default function PurchaseRefundFormModal({
                   <FormItem>
                     <FormLabel className="text-sm font-medium">Tanggal Refund</FormLabel>
                     <FormControl>
-                      <Input
-                        type="date"
+                      <InputDate
                         readOnly={isDetail}
                         {...field}
                       />

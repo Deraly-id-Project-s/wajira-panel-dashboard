@@ -9,11 +9,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import type { UseFormReturn } from 'react-hook-form';
 import type { AccountFormValues } from '@/scheme/account-master.schema';
 import type { AccountGroup } from '@/@types/account-group.types';
-import { ACCOUNT_CATEGORY_OPTIONS } from '@/lib/account';
+import { ACCOUNT_CATEGORY_OPTIONS, ACCOUNT_TYPE_OPTIONS } from '@/lib/account';
 import { cn } from '@/lib/utils';
 import { SearchableSelect } from '@/components/features/vehicle-data/SearchableSelect';
 import { CreateAccountGroupDialog } from './CreateAccountGroupDialog';
-import { Plus, Search } from 'lucide-react';
+import { Plus } from 'lucide-react';
 
 interface AccountFormModalProps {
   open: boolean;
@@ -75,7 +75,7 @@ export function AccountFormModal({
                 <FormItem className="space-y-1.5">
                   <FormLabel className="text-xs font-semibold text-slate-700">Kode Akun<RequiredMark /></FormLabel>
                   <FormControl>
-                    <Input placeholder="Masukkan kode akun" className="h-10 rounded-lg border-slate-200 px-3 text-sm shadow-none focus-visible:ring-slate-300 bg-white" {...field} />
+                    <Input placeholder="Masukkan kode akun" className="h-10 rounded-md border-slate-200 px-3 text-sm shadow-none focus-visible:ring-slate-300 bg-white" {...field} />
                   </FormControl>
                   <FormMessage className="text-xs" />
                 </FormItem>
@@ -102,13 +102,75 @@ export function AccountFormModal({
                           onSearchChange={onGroupSearchChange}
                           onLoadMore={onLoadMoreGroups}
                           hasMore={hasMoreGroups}
-                          className="h-10 rounded-lg border-slate-200 px-3 text-sm shadow-none focus-visible:ring-slate-300 bg-white"
+                          className="h-10 rounded-md border-slate-200 px-3 text-sm shadow-none focus-visible:ring-slate-300 bg-white"
                         />
                       </div>
-                      <Button type="button" onClick={() => setOpenCreateGroup(true)} className="w-full sm:w-auto bg-[#1e3a5f] hover:bg-[#152e4d]">
+                      <Button type="button" onClick={() => setOpenCreateGroup(true)} className="btn-primary!">
                         <Plus className="h-4 w-4" />
                       </Button>
                     </div>
+                  </FormControl>
+                  <FormMessage className="text-xs" />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="name"
+              render={({ field }) => (
+                <FormItem className="space-y-1.5">
+                  <FormLabel className="text-xs font-semibold text-slate-700">Nama Akun<RequiredMark /></FormLabel>
+                  <FormControl>
+                    <Input placeholder="Masukkan nama akun" className="h-10 rounded-md border-slate-200 px-3 text-sm shadow-none focus-visible:ring-slate-300 bg-white" {...field} />
+                  </FormControl>
+                  <FormMessage className="text-xs" />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="type"
+              render={({ field }) => (
+                <FormItem className="space-y-1.5">
+                  <FormLabel className="text-xs font-semibold text-slate-700">Tipe Akun<RequiredMark /></FormLabel>
+                  <FormControl>
+                    <Select
+                      value={field.value ?? 'debet'}
+                      onValueChange={(val) => field.onChange(val)}
+                    >
+                      <SelectTrigger className="h-10 rounded-md border-slate-200 px-3 text-sm shadow-none focus:ring-slate-300 bg-white">
+                        <SelectValue placeholder="Pilih Tipe Akun" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {ACCOUNT_TYPE_OPTIONS.map((option) => (
+                          <SelectItem key={option.value} value={option.value} className="text-sm">
+                            {option.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </FormControl>
+                  <FormMessage className="text-xs" />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="pos_code"
+              render={({ field }) => (
+                <FormItem className="space-y-1.5">
+                  <FormLabel className="text-xs font-semibold text-slate-700">Kode Pos</FormLabel>
+                  <FormControl>
+                    <Input
+                      placeholder="Masukkan kode pos (opsional)"
+                      maxLength={50}
+                      className="h-10 rounded-md border-slate-200 px-3 text-sm shadow-none focus-visible:ring-slate-300 bg-white"
+                      value={field.value ?? ''}
+                      onChange={(e) => field.onChange(e.target.value || null)}
+                    />
                   </FormControl>
                   <FormMessage className="text-xs" />
                 </FormItem>
@@ -122,8 +184,8 @@ export function AccountFormModal({
                 <FormItem className="space-y-1.5">
                   <FormLabel className="text-xs font-semibold text-slate-700">Kategori Laporan</FormLabel>
                   <FormControl>
-                    <Select value={field.value ?? ''} onValueChange={(val) => field.onChange(val === 'none' ? undefined : val)}>
-                      <SelectTrigger className="h-10 rounded-lg border-slate-200 px-3 text-sm shadow-none focus:ring-slate-300 bg-white">
+                    <Select value={field.value ?? 'none'} onValueChange={(val) => field.onChange(val === 'none' ? null : val)}>
+                      <SelectTrigger className="h-10 rounded-md border-slate-200 px-3 text-sm shadow-none focus:ring-slate-300 bg-white">
                         <SelectValue placeholder="Pilih Kategori Laporan (Opsional)" />
                       </SelectTrigger>
                       <SelectContent>
@@ -143,26 +205,18 @@ export function AccountFormModal({
 
             <FormField
               control={form.control}
-              name="name"
-              render={({ field }) => (
-                <FormItem className="space-y-1.5">
-                  <FormLabel className="text-xs font-semibold text-slate-700">Nama Akun<RequiredMark /></FormLabel>
-                  <FormControl>
-                    <Input placeholder="Masukkan nama akun" className="h-10 rounded-lg border-slate-200 px-3 text-sm shadow-none focus-visible:ring-slate-300 bg-white" {...field} />
-                  </FormControl>
-                  <FormMessage className="text-xs" />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
               name="description"
               render={({ field }) => (
                 <FormItem className="space-y-1.5">
                   <FormLabel className="text-xs font-semibold text-slate-700">Deskripsi</FormLabel>
                   <FormControl>
-                    <Textarea placeholder="Tulis deskripsi di sini" className="min-h-[72px] resize-none rounded-lg border-slate-200 px-3 py-2 text-sm shadow-none focus-visible:ring-slate-300 bg-white" rows={3} {...field} />
+                    <Textarea
+                      placeholder="Tulis deskripsi di sini"
+                      className="min-h-[72px] resize-none rounded-md border-slate-200 px-3 py-2 text-sm shadow-none focus-visible:ring-slate-300 bg-white"
+                      rows={3}
+                      {...field}
+                      value={field.value ?? ''}
+                    />
                   </FormControl>
                   <FormMessage className="text-xs" />
                 </FormItem>
@@ -170,10 +224,10 @@ export function AccountFormModal({
             />
 
             <div className="flex flex-col gap-2 pt-3 flex-shrink-0">
-              <Button type="submit" className={cn('h-10 w-full rounded-lg bg-[#1F3B5B] text-sm font-semibold text-white hover:bg-[#1B3450]')} disabled={isSubmitting}>
+              <Button type="submit" className={cn('h-10 w-full rounded-md bg-[#1F3B5B] text-sm font-semibold text-white hover:bg-[#1B3450]')} disabled={isSubmitting}>
                 {isSubmitting ? 'Menyimpan...' : submitLabel}
               </Button>
-              <Button type="button" variant="outline" className="h-10 w-full rounded-lg border-slate-200 text-sm font-semibold text-slate-700 shadow-none hover:bg-slate-50" onClick={() => onOpenChange(false)}>
+              <Button type="button" variant="outline" className="h-10 w-full rounded-md border-slate-200 text-sm font-semibold text-slate-700 shadow-none hover:bg-slate-50" onClick={() => onOpenChange(false)}>
                 Batal
               </Button>
             </div>

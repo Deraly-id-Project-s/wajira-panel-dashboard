@@ -142,7 +142,7 @@ export default function BayarHutangDialog({
                                                 <SelectValue placeholder="Pilih Akun" />
                                             </SelectTrigger>
                                         </FormControl>
-                                        <SelectContent className="z-[9999]" >
+                                        <SelectContent>
                                             <SelectItem value="BCA">BCA (12345678)</SelectItem>
                                             <SelectItem value="MANDIRI">MANDIRI (87654321)</SelectItem>
                                             <SelectItem value="KAS">KAS BESAR</SelectItem>

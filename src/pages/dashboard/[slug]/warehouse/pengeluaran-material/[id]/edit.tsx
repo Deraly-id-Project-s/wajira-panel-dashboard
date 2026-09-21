@@ -270,7 +270,7 @@ export default function GoodsIssueEditPage() {
               <Button
                 type="submit"
                 disabled={updateIssueMutation.isPending}
-                className="h-10 rounded-[10px] bg-[#1f4163] px-5 text-[16px] hover:bg-[#183552]"
+                className="h-10 rounded-[10px] px-5 text-[16px] btn-primary-orange!"
               >
                 {updateIssueMutation.isPending ? 'Menyimpan...' : 'Simpan'}
               </Button>
@@ -361,7 +361,6 @@ export default function GoodsIssueEditPage() {
           perPage={perPage}
           onPerPageChange={(value) => {
             setPerPage(value);
-            setPage(1);
           }}
           meta={{
             currentPage: safePage,
@@ -377,7 +376,7 @@ export default function GoodsIssueEditPage() {
                   Hapus ({selectedIds.length})
                 </Button>
               )}
-              <Button onClick={() => { setEditingItem(null); setItemOpen(true); }} className="w-full sm:w-auto bg-[#1e3a5f] hover:bg-[#152e4d]">
+              <Button onClick={() => { setEditingItem(null); setItemOpen(true); }} className="btn-primary-orange!">
                 <Plus className="mr-2 h-4 w-4" />
                 Tambah Data
               </Button>

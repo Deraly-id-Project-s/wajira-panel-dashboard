@@ -213,7 +213,7 @@ export default function PengeluaranPerlengkapanEditPage() {
               <h2 className="text-[18px] font-semibold text-slate-900">Informasi Pengeluaran</h2>
               <Button
                 onClick={() => setHeaderOpen(true)}
-                className="h-10 rounded-[10px] bg-[#1f4163] px-5 text-[15px] font-medium hover:bg-[#183552]"
+                className="h-10 rounded-[10px] px-5 text-[15px] btn-primary-orange!"
               >
                 Edit Header
               </Button>
@@ -264,7 +264,6 @@ export default function PengeluaranPerlengkapanEditPage() {
                 value={String(perPage)}
                 onValueChange={(value) => {
                   setPerPage(Number(value));
-                  setPage(1);
                 }}
               >
                 <SelectTrigger className="h-11 w-[68px] rounded-md border-slate-200 bg-white shadow-none">
@@ -279,7 +278,7 @@ export default function PengeluaranPerlengkapanEditPage() {
               <span>Page</span>
             </div>
           </div>
-          <Button onClick={() => { setEditingItem(null); setItemOpen(true); }} className="w-full sm:w-auto bg-[#1e3a5f] hover:bg-[#152e4d]">
+          <Button onClick={() => { setEditingItem(null); setItemOpen(true); }} className="btn-primary-orange!">
             <Plus className="mr-2 h-4 w-4" /> Tambah Item
           </Button>
         </div>
@@ -293,7 +292,7 @@ export default function PengeluaranPerlengkapanEditPage() {
             variant="outline"
             onClick={() => setDeleteTarget({ id: 0 } as GoodsTransactionDetailEquipment)}
             disabled={selectedIds.length === 0}
-            className="border-red-300 text-red-600 hover:text-red-700 h-9 px-3 rounded-lg"
+            className="border-red-300 text-red-600 hover:text-red-700 h-9 px-3 rounded-md"
           >
             Hapus Terpilih
           </Button>
@@ -324,18 +323,18 @@ export default function PengeluaranPerlengkapanEditPage() {
           <div className="flex flex-col sm:flex-row items-center gap-2 w-full sm:w-auto">
             <Button
               variant="ghost"
-              className="h-9 px-3 rounded-lg"
+              className="h-9 px-3 rounded-md"
               onClick={() => setPage((current) => Math.max(1, current - 1))}
               disabled={safePage <= 1}
             >
               Previous
             </Button>
-            <Button variant="outline" className="h-9 w-9 rounded-lg border-slate-200 bg-white shadow-none font-semibold">
+            <Button variant="outline" className="h-9 w-9 rounded-md border-slate-200 bg-white shadow-none font-semibold">
               {safePage}
             </Button>
             <Button
               variant="ghost"
-              className="h-9 px-3 rounded-lg"
+              className="h-9 px-3 rounded-md"
               onClick={() => setPage((current) => Math.min(totalPages, current + 1))}
               disabled={safePage >= totalPages}
             >

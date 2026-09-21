@@ -1,4 +1,5 @@
 import type { PaginatedResult } from './pagination.types';
+import type { DriverCashAdvanceClaim } from './driver-cash-advance.types';
 
 export interface DoEkspedisiVehicle {
   id: number;
@@ -12,6 +13,21 @@ export interface DoEkspedisiDriver {
   uuid?: string;
   name: string;
   phone?: string | null;
+}
+
+export interface DoEkspedisiExpeditionTrack {
+  doExpeditionId: number;
+  driverId: number;
+  traccarDeviceId: number;
+  traccarUniqueId: string;
+  isActive: boolean;
+  lastLatitude: number | null;
+  lastLongitude: number | null;
+  lastSpeed: number | null;
+  lastCourse: number | null;
+  lastAccuracy: number | null;
+  lastAltitude: number | null;
+  lastPositionAt: string | null;
 }
 
 export interface DoEkspedisiOrderList {
@@ -132,12 +148,18 @@ export interface DoEkspedisi {
   ujNominal: number;
   ujNominalBeforeClaim: number;
   claimDeductionNominal: number;
+  cashAdvanceDeductionNominal: number;
   startDate?: string | null;
   endDate?: string | null;
+  doOrderListTarifId: number;
+  targetStartDate?: string | null;
+  targetEndDate?: string | null;
   driverNotes: DoEkspedisiDriverNote[];
   expeditionExpenses: DoEkspedisiExpense[];
   expeditionClaims: DoEkspedisiClaim[];
   driverExpeditionClaims: DoEkspedisiClaimApplication[];
+  driverCashAdvanceClaims: DriverCashAdvanceClaim[];
+  expeditionTrack?: DoEkspedisiExpeditionTrack | null;
 }
 
 export interface DoEkspedisiDriverNote {
@@ -176,6 +198,20 @@ export interface DoEkspedisiClaim {
   documentations: DoEkspedisiClaimDocumentation[];
 }
 
+export interface DoEkspedisiClaimPayload {
+  do_expeditions_id: number | string;
+  driver_id: number | string;
+  subject: string;
+  description: string;
+  claim_nominal: number | string;
+}
+
+export interface DoEkspedisiClaimDocumentationPayload {
+  do_expedition_claim_id: number | string;
+  caption?: string | null;
+  image: File;
+}
+
 export interface DoEkspedisiClaimApplication {
   id: number;
   uuid?: string;
@@ -191,7 +227,11 @@ export interface DoEkspedisiClaimApplication {
 export interface ApplyExpeditionClaimPayload {
   do_expedition_claim_id: number;
   do_expedition_id: number;
-  driver_id: number;
+  nominal: number;
+  type: 'cash' | 'transfer';
+}
+
+export interface UpdateExpeditionClaimApplicationPayload {
   nominal: number;
   type: 'cash' | 'transfer';
   date: string;
@@ -210,6 +250,8 @@ export interface DoEkspedisiListParams {
   order_by?: string;
   order_sort?: 'asc' | 'desc';
   do_order_list_id?: number | string;
+  start_date?: string;
+  end_date?: string;
 }
 
 export interface DoEkspedisiItemListParams {
@@ -230,13 +272,17 @@ export interface DoEkspedisiItemDestinationListParams {
 }
 
 export interface DoEkspedisiPayload {
-  date: string;
-  vehicle_id: string | number;
-  driver_id: string | number;
+  date?: string;
+  vehicle_id?: string | number;
+  driver_id?: string | number;
   driver_note?: string;
   status?: string;
   start_date?: string | null;
   end_date?: string | null;
+  do_order_list_tarif_id?: number;
+  uj_nominal?: number;
+  target_start_date?: string | null;
+  target_end_date?: string | null;
 }
 
 export interface DoEkspedisiItemPayload {
@@ -270,3 +316,28 @@ export interface LookupOption {
 export type DoEkspedisiListResponse = PaginatedResult<DoEkspedisi>;
 export type DoEkspedisiItemListResponse = PaginatedResult<DoEkspedisiItem>;
 export type DoEkspedisiItemDestinationListResponse = PaginatedResult<DoEkspedisiItemDestination>;
+
+export interface DoEkspedisiDocumentation {
+  id: number;
+  uuid?: string;
+  doExpeditionId: number;
+  documentationPosition: string;
+  subject: string;
+  description: string | null;
+  image: string | null;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface DoEkspedisiDocumentationListParams {
+  do_expedition_id?: number | string;
+  documentation_position?: string;
+  subject?: string;
+  description?: string;
+  uuid?: string;
+  search?: string;
+  order_by?: string;
+  order_sort?: 'asc' | 'desc';
+}
+
+export type DoEkspedisiDocumentationListResponse = PaginatedResult<DoEkspedisiDocumentation>;

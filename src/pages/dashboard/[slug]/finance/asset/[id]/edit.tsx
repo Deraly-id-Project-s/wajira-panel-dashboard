@@ -65,8 +65,8 @@ export default function FinanceAssetEditPage() {
                     <div className="space-y-6">
                         <Skeleton className="h-[400px] w-full rounded-md" />
                         <div className="flex justify-center gap-4">
-                            <Skeleton className="h-10 w-32 rounded-lg" />
-                            <Skeleton className="h-10 w-32 rounded-lg" />
+                            <Skeleton className="h-10 w-32 rounded-md" />
+                            <Skeleton className="h-10 w-32 rounded-md" />
                         </div>
                     </div>
                 ) : (

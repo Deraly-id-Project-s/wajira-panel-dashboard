@@ -143,8 +143,8 @@ export default function KasHarianForm({
       {onCancel ? (
         <div className="flex flex-col-reverse gap-3 border-t border-slate-200 pt-6 sm:flex-row sm:justify-end">
           <Button type="button" variant="outline" onClick={onCancel} disabled={isBusy}>Batal</Button>
-          <Button type="submit" className="bg-[#1e3a5f] text-white hover:bg-[#152e4d]" disabled={isBusy}>
-            {isBusy ? <LoadingState variant="inline" text="Menyimpan..." iconClassName="text-white" /> : <><Save className="mr-2 h-4 w-4" />{submitLabel}</>}
+          <Button type="submit" variant="default" disabled={isBusy}>
+            {isBusy ? <LoadingState variant="inline" text="Menyimpan..." iconClassName="text-white" /> : <>{submitLabel}</>}
           </Button>
         </div>
       ) : null}

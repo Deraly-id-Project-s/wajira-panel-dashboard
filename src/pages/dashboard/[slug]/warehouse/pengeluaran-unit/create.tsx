@@ -221,7 +221,6 @@ export default function CreatePengeluaranUnitPage() {
                 onSearchChange={setSearchInput}
                 onPerPageChange={(value) => {
                   setPerPage(value);
-                  setPage(1);
                 }}
                 onPageChange={setPage}
                 onSelectedIdsChange={setSelectedIds}
@@ -237,7 +236,7 @@ export default function CreatePengeluaranUnitPage() {
               <Button type="button" variant="ghost" className="px-6 font-medium text-gray-600 hover:bg-transparent hover:text-gray-900 text-sm" onClick={() => router.back()}>
                 Batal
               </Button>
-              <Button type="submit" disabled={createMutation.isPending || warehousesQuery.isLoading || suppliersQuery.isLoading} className="px-6 h-10 bg-[#1e3256] hover:bg-[#15233d] text-white font-medium rounded-lg shadow-sm gap-2">
+              <Button type="submit" disabled={createMutation.isPending || warehousesQuery.isLoading || suppliersQuery.isLoading} className="px-6 h-10 bg-[#1e3256] hover:bg-[#15233d] text-white font-medium rounded-md shadow-sm gap-2">
                 <Save size={16} /> {createMutation.isPending ? 'Menyimpan...' : 'Simpan'}
               </Button>
             </div>

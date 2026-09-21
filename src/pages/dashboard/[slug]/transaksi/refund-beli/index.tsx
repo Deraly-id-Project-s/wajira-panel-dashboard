@@ -223,7 +223,6 @@ export default function TransaksiRefundBeliPage() {
           perPage={perPage}
           onPerPageChange={(limit) => {
             setPerPage(limit);
-            setPage(1);
           }}
           meta={
             refundQuery.data?.meta
@@ -242,7 +241,7 @@ export default function TransaksiRefundBeliPage() {
                 {canCreate && (
                   <Button
                     onClick={() => router.push(`/dashboard/${slug}/transaksi/refund-beli/create?unit_transaction_id=${unitTransactionId || ''}`)}
-                    className="w-full sm:w-auto bg-[#1e3a5f] hover:bg-[#152e4d]"
+                    className="btn-primary-orange!"
                   >
                     <Plus className="h-4 w-4 mr-2" />
                     Tambah Data Data Refund Pembelian

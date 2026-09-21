@@ -3,8 +3,8 @@
 import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
-import PurchaseTable from '@/components/features/purchase/PurchaseTable';
-import DeletePurchaseDialog from '@/components/features/purchase/DeletePurchaseDialog';
+import PurchaseTable from '@/components/features/unit-transaksi/purchase/PurchaseTable';
+import DeleteUnitTransactionDialog from '@/components/features/unit-transaksi/DeleteUnitTransactionDialog';
 import { PageHeader } from '@/components/common/PageHeader';
 import { useDeletePurchase } from '@/hooks/usePurchase';
 import { useUnitTransactions } from '@/hooks/useUnitTransaction';
@@ -76,7 +76,6 @@ export default function PurchasePage() {
           onPageChange={setPage}
           onPerPageChange={(value) => {
             setPerPage(value);
-            setPage(1);
           }}
           canEdit={canEdit}
           canCreate={canCreate}
@@ -93,7 +92,7 @@ export default function PurchasePage() {
           }}
         />
 
-        <DeletePurchaseDialog open={!!selectedId} onClose={() => setSelectedId(null)} onConfirm={handleDelete} loading={deleteMutation.isPending} />
+        <DeleteUnitTransactionDialog open={!!selectedId} onClose={() => setSelectedId(null)} onConfirm={handleDelete} loading={deleteMutation.isPending} />
       </div>
     </DashboardLayout>
   );

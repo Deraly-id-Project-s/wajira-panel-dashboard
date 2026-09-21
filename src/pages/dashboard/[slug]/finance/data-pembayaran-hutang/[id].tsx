@@ -197,7 +197,7 @@ export default function PembayaranHutangDetailPage() {
                 Showing {filteredRows.length > 0 ? startIndex : 0}-{endIndex} of {filteredRows.length} data
               </div>
               <div className="flex flex-wrap gap-2">
-                <Button variant="outline" size="sm" disabled={safeCurrentPage <= 1} onClick={() => setCurrentPage((value) => Math.max(1, value - 1))}>
+                <Button variant="outline" disabled={safeCurrentPage <= 1} onClick={() => setCurrentPage((value) => Math.max(1, value - 1))}>
                   <ChevronLeft className="mr-1 h-4 w-4" />
                   Previous
                 </Button>
@@ -215,14 +215,14 @@ export default function PembayaranHutangDetailPage() {
                   </Button>
                 ))}
 
-                <Button variant="outline" size="sm" disabled={safeCurrentPage >= totalPages || totalPages === 0} onClick={() => setCurrentPage((value) => Math.min(totalPages, value + 1))}>
+                <Button variant="outline" disabled={safeCurrentPage >= totalPages || totalPages === 0} onClick={() => setCurrentPage((value) => Math.min(totalPages, value + 1))}>
                   Next
                   <ChevronRight className="ml-1 h-4 w-4" />
                 </Button>
               </div>
             </div>
 
-            <div className="rounded-lg border bg-gray-50 px-4 py-3 text-sm text-gray-600">
+            <div className="rounded-md border bg-gray-50 px-4 py-3 text-sm text-gray-600">
               Total unit transaksi: <span className="font-semibold text-gray-900">{detail.unit_transaction_items.length}</span> item, total qty{' '}
               <span className="font-semibold text-gray-900">{detail.unit_transaction_items.reduce((total, item) => total + item.qty_total, 0)}</span>.
             </div>

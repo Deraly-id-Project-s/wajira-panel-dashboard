@@ -9,6 +9,7 @@ import { toast } from 'sonner';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { InputDate } from '@/components/ui/input-date';
 import { Textarea } from '@/components/ui/textarea';
 import { useCreatePembayaranHutangPayment } from '@/hooks/usePembayaranHutang';
 import type { CreateLiabilityPaymentPayload } from '@/types/pembayaran-hutang.types';
@@ -280,7 +281,11 @@ export default function PembayaranHutangPaymentDialog({ open, onOpenChange, bill
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
             <div className="space-y-2">
               <label className="text-sm font-medium">Tanggal Bayar</label>
-              <Input type="date" {...form.register('payment_at')} disabled={isBusy} />
+              <Controller
+                control={form.control}
+                name="payment_at"
+                render={({ field }) => <InputDate {...field} disabled={isBusy} />}
+              />
             </div>
 
             <div className="space-y-2">
@@ -303,7 +308,7 @@ export default function PembayaranHutangPaymentDialog({ open, onOpenChange, bill
             <Textarea placeholder="Catatan pembayaran" {...form.register('note')} disabled={isBusy} />
           </div>
 
-          <div className="rounded-lg border bg-muted/40 px-4 py-3 text-sm text-muted-foreground">
+          <div className="rounded-md border bg-muted/40 px-4 py-3 text-sm text-muted-foreground">
             Sisa hutang saat ini: <span className="font-semibold text-foreground">Rp{remainingPayment.toLocaleString('id-ID')}</span>
           </div>
 

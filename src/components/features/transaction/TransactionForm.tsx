@@ -1,12 +1,11 @@
-'use client';
-
 import { format } from 'date-fns';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { ArrowDownLeft, ArrowUpRight, Banknote, Landmark, Save, WalletCards } from 'lucide-react';
 import { transactionSchema, type TransactionFormValues } from '@/scheme/transaction.schema';
 import { Button } from '@/components/ui/button';
-import { DatePicker } from '@/components/ui/date-picker';
+import { InputDate } from '@/components/ui/input-date';
+import { FileInput } from '@/components/ui/file-input';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { LoadingState } from '@/components/ui/loading-state';
@@ -25,6 +24,7 @@ interface Props {
 const emptyValues: TransactionFormValues = {
   date: new Date().toISOString().split('T')[0],
   name: '',
+  unitTransactionId: null,
   debitUSD: 0,
   creditUSD: 0,
   debitIDR: 0,
@@ -32,11 +32,12 @@ const emptyValues: TransactionFormValues = {
   debitCash: 0,
   creditCash: 0,
   description: '',
+  transactionProof: null,
 };
 
 type AmountField = 'debitUSD' | 'creditUSD' | 'debitIDR' | 'creditIDR' | 'debitCash' | 'creditCash';
 
-export default function TransactionForm({ defaultValues, onSubmit, onCancel, isBusy = false, submitLabel = 'Simpan Transaksi' }: Props) {
+export default function TransactionForm({ defaultValues, onSubmit, onCancel, isBusy = false, submitLabel = 'Simpan' }: Props) {
   const form = useForm<TransactionFormValues>({
     resolver: zodResolver(transactionSchema),
     defaultValues: { ...emptyValues, ...defaultValues },
@@ -74,7 +75,7 @@ export default function TransactionForm({ defaultValues, onSubmit, onCancel, isB
               <FormItem className="flex flex-col">
                 <FormLabel>Tanggal Transaksi</FormLabel>
                 <FormControl>
-                  <DatePicker value={field.value ? new Date(field.value) : null} onChange={(date) => field.onChange(date ? format(date, 'yyyy-MM-dd') : '')} disabled={isBusy} placeholder="Pilih tanggal transaksi" className="w-full" />
+                  <InputDate value={field.value} onChange={(e) => field.onChange(e.target.value)} disabled={isBusy} placeholder="Pilih tanggal transaksi" className="w-full" />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -136,21 +137,43 @@ export default function TransactionForm({ defaultValues, onSubmit, onCancel, isB
         <section className="space-y-5">
           <div>
             <h2 className="text-sm font-semibold uppercase tracking-wider text-slate-700">Informasi Tambahan</h2>
-            <p className="mt-1 text-sm text-slate-500">Tambahkan keterangan pendukung bila diperlukan.</p>
+            <p className="mt-1 text-sm text-slate-500">Tambahkan keterangan pendukung dan bukti transaksi bila ada.</p>
           </div>
-          <FormField control={form.control} name="description" render={({ field }) => (
-            <FormItem>
-              <FormLabel>Keterangan</FormLabel>
-              <FormControl><Textarea placeholder="Masukkan keterangan transaksi" className="min-h-28 resize-none" {...field} disabled={isBusy} /></FormControl>
-              <FormMessage />
-            </FormItem>
-          )} />
+          <div className="grid gap-5 md:grid-cols-2">
+            <FormField control={form.control} name="description" render={({ field }) => (
+              <FormItem className="md:col-span-2">
+                <FormLabel>Keterangan</FormLabel>
+                <FormControl><Textarea placeholder="Masukkan keterangan transaksi" className="min-h-24 resize-none" {...field} value={field.value ?? ''} disabled={isBusy} /></FormControl>
+                <FormMessage />
+              </FormItem>
+            )} />
+            <FormField control={form.control} name="transactionProof" render={({ field }) => (
+              <FormItem className="md:col-span-2">
+                <FormLabel>Bukti Transaksi (Payment Proof)</FormLabel>
+                <FormControl>
+                  <FileInput
+                    accept="image/jpeg,image/png,application/pdf"
+                    value={field.value instanceof File ? field.value : null}
+                    onFileChange={(file) => field.onChange(file)}
+                    helperText="Format JPG, PNG, atau PDF maksimal 2MB"
+                    disabled={isBusy}
+                  />
+                </FormControl>
+                {typeof field.value === 'string' && field.value ? (
+                  <p className="text-xs text-slate-500 mt-1">
+                    Bukti saat ini: <span className="font-medium text-slate-700">{field.value}</span>
+                  </p>
+                ) : null}
+                <FormMessage />
+              </FormItem>
+            )} />
+          </div>
         </section>
 
         <div className="flex flex-col-reverse gap-3 border-t border-slate-200 pt-6 sm:flex-row sm:justify-end">
           <Button type="button" variant="outline" onClick={onCancel} disabled={isBusy}>Batal</Button>
-          <Button type="submit" className="bg-[#1e3a5f] text-white hover:bg-[#152e4d]" disabled={isBusy}>
-            {isBusy ? <LoadingState variant="inline" text="Menyimpan..." iconClassName="text-white" /> : <><Save className="mr-2 h-4 w-4" />{submitLabel}</>}
+          <Button type="submit" className="btn-primary" disabled={isBusy}>
+            {isBusy ? <LoadingState variant="inline" text="Menyimpan..." iconClassName="text-white" /> : <>{submitLabel}</>}
           </Button>
         </div>
       </form>

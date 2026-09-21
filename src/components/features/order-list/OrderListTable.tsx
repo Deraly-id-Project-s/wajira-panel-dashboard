@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { Eye, FilePenLine, MoreVertical, Plus, Trash2 } from 'lucide-react';
+import { FileText, MoreVertical, RotateCcw, Truck } from 'lucide-react';
 import type { OrderList, OrderListStatus } from '@/@types/order-list.types';
 import { Button } from '@/components/ui/button';
 import {
@@ -24,50 +24,28 @@ import { currenciesFormat } from '@/components/ui/currenciesFormat';
 
 interface OrderListTableProps {
   data: OrderList[];
-  search: string;
-  page: number;
-  perPage: number;
-  totalData: number;
   isLoading?: boolean;
-  isRefetching?: boolean;
-  onSearchChange: (value: string) => void;
-  onPageChange: (value: number) => void;
-  onPerPageChange: (value: number) => void;
-  onAdd: () => void;
   onDetail: (item: OrderList) => void;
   onEdit: (item: OrderList) => void;
   onDelete: (item: OrderList) => void;
   onUpdateStatus?: (item: OrderList, newStatus: OrderListStatus) => void;
-  canCreate: boolean;
+  onProcessInvoice: (item: OrderList) => void;
+  processingInvoiceId?: number | null;
   canEdit: boolean;
   canDelete: boolean;
-  startDate?: string | null;
-  endDate?: string | null;
-  onDateRangeChange?: (start: string | null, end: string | null) => void;
 }
 
 export const OrderListTable = React.memo(function OrderListTable({
   data,
-  search,
-  page,
-  perPage,
-  totalData,
   isLoading = false,
-  isRefetching = false,
-  onSearchChange,
-  onPageChange,
-  onPerPageChange,
-  onAdd,
   onDetail,
   onEdit,
   onDelete,
   onUpdateStatus,
-  canCreate,
+  onProcessInvoice,
+  processingInvoiceId,
   canEdit,
   canDelete,
-  startDate,
-  endDate,
-  onDateRangeChange,
 }: OrderListTableProps) {
   const router = useRouter();
   const { slug } = router.query;
@@ -79,7 +57,7 @@ export const OrderListTable = React.memo(function OrderListTable({
         header: 'KODE ORDER',
         accessorKey: 'code',
         sortable: true,
-        cell: (item) => <CopyBox text={item.code || '-'} />
+        cell: (item) => <CopyBox text={item.code || '-'} href={`/dashboard/${slugStr}/administrasi/order-list/detail/${item.id}`} />
       },
       {
         header: 'STATUS',
@@ -99,20 +77,19 @@ export const OrderListTable = React.memo(function OrderListTable({
                 {getOrderStatusLabel(item.status)}
               </button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="center" className="w-[140px] rounded-xl border-slate-200 shadow-lg p-1">
+            <DropdownMenuContent align="center" className="w-[140px] rounded-md border-slate-200 shadow-lg p-1">
               <div className="px-2 py-1.5 text-xs font-semibold text-slate-500">Ubah Status</div>
               <DropdownMenuSeparator />
               {ORDER_LIST_STATUS_OPTIONS.map((option) => (
                 <DropdownMenuItem
                   key={option.value}
                   disabled={item.status === option.value}
-                  onSelect={(e) => {
-                    e.preventDefault();
+                  onSelect={() => {
                     if (item.status !== option.value && onUpdateStatus) {
                       onUpdateStatus(item, option.value);
                     }
                   }}
-                  className={cn('cursor-pointer rounded-lg px-2.5 py-2 text-xs font-medium', item.status === option.value && 'bg-slate-100 opacity-50')}
+                  className={cn('cursor-pointer rounded-md px-2.5 py-2 text-xs font-medium', item.status === option.value && 'bg-slate-100 opacity-50')}
                 >
                   {option.label}
                 </DropdownMenuItem>
@@ -126,6 +103,28 @@ export const OrderListTable = React.memo(function OrderListTable({
         accessorKey: 'customer.name',
         sortable: true,
         cell: (item) => item?.customer?.name ? <ReferenceLink href={`/dashboard/${slugStr}/master/customer?search=${item?.customer}`}>{item.customer?.name}</ReferenceLink> : '-',
+      },
+      {
+        header: 'DRIVER',
+        accessorKey: 'tarifs',
+        cell: (item) => {
+          const primaryTarif = getPrimaryTarifItem(item);
+          return (
+            <span className="text-sm text-gray-700">
+              {item.tarifs.length > 1 ? (
+                <span className="flex flex-col gap-0.5">
+                  {item.tarifs.map((t, idx) => (
+                    <span key={t.id || idx} className="block whitespace-nowrap text-xs text-left">
+                      {idx + 1}. {t.driver?.name || '-'}
+                    </span>
+                  ))}
+                </span>
+              ) : (
+                primaryTarif?.driver?.name || '-'
+              )}
+            </span>
+          );
+        },
       },
       {
         header: 'LOADING IN',
@@ -222,45 +221,80 @@ export const OrderListTable = React.memo(function OrderListTable({
                 <MoreVertical className="h-4 w-4 text-slate-600" />
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-[160px] rounded-xl border-slate-200 p-1.5 shadow-lg">
+            <DropdownMenuContent align="end" className="w-[170px] rounded-md border-slate-200 p-1.5 shadow-lg">
               <DropdownMenuItem
-                onSelect={(event) => {
-                  event.preventDefault();
+                onSelect={() => {
                   onDetail(item);
                 }}
-                className="cursor-pointer rounded-lg px-3 py-2 text-sm text-slate-900 focus:bg-slate-50"
+                className="cursor-pointer rounded-md px-3 py-2 text-sm text-slate-900 focus:bg-slate-50"
               >
-                <Eye className="mr-2 h-4 w-4" />
                 Detail
               </DropdownMenuItem>
               <DropdownMenuItem
-                onSelect={(event) => {
-                  event.preventDefault();
+                onSelect={() => {
                   onEdit(item);
                 }}
                 disabled={!canEdit || item?.status !== 'draft'}
-                className="cursor-pointer rounded-lg px-3 py-2 text-sm text-slate-900 focus:bg-slate-50"
+                className="cursor-pointer rounded-md px-3 py-2 text-sm text-slate-900 focus:bg-slate-50"
               >
-                <FilePenLine className="mr-2 h-4 w-4" />
                 Edit
               </DropdownMenuItem>
               <DropdownMenuItem
-                onSelect={(event) => {
-                  event.preventDefault();
+                onSelect={() => {
                   onDelete(item);
                 }}
                 disabled={!canDelete || item?.status !== 'draft'}
-                className="cursor-pointer rounded-lg px-3 py-2 text-sm text-red-600 focus:bg-red-50 focus:text-red-600"
+                className="cursor-pointer rounded-md px-3 py-2 text-sm text-red-600 focus:bg-red-50 focus:text-red-600"
               >
-                <Trash2 className="mr-2 h-4 w-4" />
                 Hapus
               </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              {item.status === 'draft' ? (
+                <DropdownMenuItem
+                  onSelect={() => {
+                    if (onUpdateStatus) onUpdateStatus(item, 'deliver');
+                  }}
+                  disabled={!canEdit}
+                  className="cursor-pointer rounded-md px-3 py-2 text-sm font-medium text-orange-700 focus:bg-orange-50 focus:text-orange-800"
+                >
+                  <Truck className="mr-2 h-4 w-4" />
+                  Proses DO Ekspedisi
+                </DropdownMenuItem>
+              ) : item.status === 'deliver' ? (
+                <DropdownMenuItem
+                  onSelect={() => {
+                    if (onUpdateStatus) onUpdateStatus(item, 'draft');
+                  }}
+                  disabled={!canEdit}
+                  className="cursor-pointer rounded-md px-3 py-2 text-sm font-medium text-slate-700 focus:bg-slate-50 focus:text-slate-900"
+                >
+                  <RotateCcw className="mr-2 h-4 w-4" />
+                  Jadikan Draft
+                </DropdownMenuItem>
+              ) : (
+                <DropdownMenuItem
+                  onSelect={() => {
+                    onProcessInvoice(item);
+                  }}
+                  disabled={
+                    !canEdit ||
+                    item.status !== 'done' ||
+                    item.isHasInvoice ||
+                    !item.canMarkDone ||
+                    processingInvoiceId === item.id
+                  }
+                  className="cursor-pointer rounded-md px-3 py-2 text-sm font-medium text-orange-700 focus:bg-orange-50 focus:text-orange-800"
+                >
+                  <FileText className="mr-2 h-4 w-4" />
+                  {item.isHasInvoice ? 'Invoice Sudah Dibuat' : 'Proses DO Invoice'}
+                </DropdownMenuItem>
+              )}
             </DropdownMenuContent>
           </DropdownMenu>
         ),
       },
     ],
-    [onDetail, onEdit, onDelete, onUpdateStatus, canEdit, canDelete, slugStr]
+    [onDetail, onEdit, onDelete, onUpdateStatus, onProcessInvoice, processingInvoiceId, canEdit, canDelete, slugStr]
   );
 
   return (
@@ -269,42 +303,7 @@ export const OrderListTable = React.memo(function OrderListTable({
         data={data}
         columns={columns}
         loading={isLoading}
-        searchPlaceholder="Cari order list..."
-        search={search}
-        onSearchChange={onSearchChange}
-        showLimitChange
-        perPage={perPage}
-        onPerPageChange={onPerPageChange}
         defaultSort={{ key: 'id', direction: 'desc' }}
-        meta={{
-          currentPage: page,
-          perPage: perPage,
-          lastPage: Math.max(1, Math.ceil(totalData / perPage)),
-          total: totalData,
-        }}
-        onPageChange={onPageChange}
-        addDateRangePicker
-        startDate={startDate}
-        endDate={endDate}
-        onDateRangeChange={onDateRangeChange}
-        headerActions={
-          <div className="flex flex-col sm:flex-row items-center gap-2 w-full sm:w-auto">
-            {isRefetching && (
-              <span className="text-xs font-medium text-slate-400 animate-pulse mr-2">
-                Memperbarui data...
-              </span>
-            )}
-            <Button
-              type="button"
-              onClick={onAdd}
-              disabled={!canCreate}
-              className="button-theme-1!"
-            >
-              <Plus className="h-4 w-4 mr-2" />
-              Tambah Data
-            </Button>
-          </div>
-        }
       />
     </div>
   );

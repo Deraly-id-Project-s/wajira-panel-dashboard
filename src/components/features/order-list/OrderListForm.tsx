@@ -131,7 +131,7 @@ const toItemDefaults = (order?: OrderList | null): OrderListFormItemValue[] => {
   return order.tarifs.map((item) => ({
     localId: createItemId(),
     id: item.id,
-    tarifId: item.tarifId ? String(item.tarifId) : '',
+    tarifId: item.tarifId ? String(item.tarifId) : item.tarif?.id ? String(item.tarif.id) : '',
     vehicleType: item.vehicleType ?? 'fuso',
     vehicleId: item.vehicleId ? String(item.vehicleId) : '',
     driverId: item.driverId ? String(item.driverId) : '',
@@ -266,12 +266,15 @@ export function OrderListForm({
   const defaultTarifOptions = React.useMemo<SearchableSelectOption[]>(() => {
     if (!initialData?.tarifs?.length) return [];
     return initialData.tarifs
-      .filter((item) => item.tarifId)
-      .map((item) => ({
-        value: String(item.tarifId),
-        label: [item.tarif?.loadingIn || item.loadingIn, item.tarif?.loadingOut || item.loadingOut].filter(Boolean).join(' - ') || `Tarif #${item.tarifId}`,
-        subtitle: item.tarif?.customer?.name,
-      }));
+      .filter((item) => item.tarifId || item.tarif?.id)
+      .map((item) => {
+        const id = item.tarifId || item.tarif?.id;
+        return {
+          value: String(id),
+          label: [item.tarif?.loadingIn || item.loadingIn, item.tarif?.loadingOut || item.loadingOut].filter(Boolean).join(' - ') || `Tarif #${id}`,
+          subtitle: item.tarif?.customer?.name,
+        };
+      });
   }, [initialData?.tarifs]);
 
   const localCustomerOptions = React.useMemo<SearchableSelectOption[]>(
@@ -343,10 +346,17 @@ export function OrderListForm({
   const watchedPph = useWatch({ control, name: 'pph' });
   const watchedUjDriver = useWatch({ control, name: 'ujDriver' });
   const selectedCustomer = mergedCustomerOptions.find((item) => item.value === customerId);
-  const selectedTarifIds = React.useMemo(
-    () => (watchedItems ?? []).map((item) => item?.tarifId).filter((value): value is string => Boolean(value)),
-    [watchedItems],
-  );
+  const selectedTarifIds = React.useMemo(() => {
+    const ids = new Set<string>();
+    (initialData?.tarifs ?? []).forEach((item) => {
+      const id = item.tarifId || item.tarif?.id;
+      if (id) ids.add(String(id));
+    });
+    (watchedItems ?? []).forEach((item) => {
+      if (item?.tarifId) ids.add(String(item.tarifId));
+    });
+    return Array.from(ids);
+  }, [initialData?.tarifs, watchedItems]);
 
   const appendCargoItem = React.useCallback(
     (itemIndex: number) => {
@@ -485,9 +495,9 @@ export function OrderListForm({
       <PageHeader
         breadcrumbs={[
           { label: 'Order List', onClick: () => router.push(`/dashboard/${slug}/administrasi/order-list`) },
-          { label: mode === 'create' ? 'Tambah Data Order' : 'Edit Data Order' }
+          { label: mode === 'create' ? 'Tambah Order List' : 'Edit Order List' }
         ]}
-        title={mode === 'create' ? 'Tambah Data Order' : 'Edit Data Order'}
+        title={mode === 'create' ? 'Tambah Data Order List' : 'Edit Data Order List'}
         subtitle={
           mode === 'create'
             ? 'Buat pesanan baru dan tentukan rute serta muatan terkait.'
@@ -501,7 +511,7 @@ export function OrderListForm({
           <input autoComplete="off" type="hidden" {...register('status')} />
 
           {/* ── Main form container matching UnitTransactionForm card style ── */}
-          <div className="rounded-xl border border-slate-200 bg-white p-5 md:p-8 shadow-sm space-y-8">
+          <div className="rounded-md border border-slate-200 bg-white p-5 md:p-8 shadow-sm space-y-8">
 
             {/* ── Section 1: Informasi Utama ── */}
             <div>
@@ -534,7 +544,7 @@ export function OrderListForm({
                       </div>
                       <Button
                         type="button"
-                        variant="outline"
+                        variant="default"
                         size="icon"
                         aria-label="Tambah customer"
                         onClick={() => {
@@ -592,7 +602,7 @@ export function OrderListForm({
                 return (
                   <div
                     key={field.id}
-                    className="rounded-xl border border-slate-200 bg-slate-50/20 p-5 md:p-6 space-y-6 relative hover:border-slate-300 transition-all duration-200"
+                    className="rounded-md border border-slate-200 bg-slate-50/20 p-5 md:p-6 space-y-6 relative hover:border-slate-300 transition-all duration-200"
                   >
                     <div className="flex items-center justify-between">
                       <span className="text-sm font-bold text-slate-900 px-3 py-1 bg-slate-100/80 rounded-md">
@@ -604,7 +614,7 @@ export function OrderListForm({
                           variant="ghost"
                           size="sm"
                           onClick={() => remove(index)}
-                          className="h-8 px-2 text-xs font-semibold text-red-500 hover:text-red-600 hover:bg-red-50 rounded-lg flex items-center gap-1.5"
+                          className="h-8 px-2 text-xs font-semibold text-red-500 hover:text-red-600 hover:bg-red-50 rounded-md flex items-center gap-1.5"
                         >
                           <Trash2 className="h-3.5 w-3.5" />
                           Hapus Rute
@@ -757,7 +767,7 @@ export function OrderListForm({
                     </div>
 
                     {tarif && (
-                      <div className="rounded-lg border border-dashed border-slate-200 bg-slate-50/50 px-4 py-2.5 text-xs text-slate-500 font-medium">
+                      <div className="rounded-md border border-dashed border-slate-200 bg-slate-50/50 px-4 py-2.5 text-xs text-slate-500 font-medium">
                         Rute Terpilih: {tarif.loadingIn || '-'} ke {tarif.loadingOut || '-'}
                       </div>
                     )}
@@ -831,9 +841,8 @@ export function OrderListForm({
 
                       <Button
                         type="button"
-                        variant="outline"
+                        variant="default"
                         onClick={() => appendCargoItem(index)}
-                        className="bg-white border-slate-200 hover:bg-slate-50/50"
                       >
                         <Plus className="h-4 w-4 mr-2" />
                         Tambah Muatan
@@ -846,7 +855,7 @@ export function OrderListForm({
 
             <Button
               type="button"
-              variant="outline"
+              variant="default"
               onClick={() => {
                 const currentVehicleType = watchedItems?.[0]?.vehicleType ?? 'fuso';
                 append({
@@ -863,7 +872,7 @@ export function OrderListForm({
                   expeditionInvoice: 0,
                 });
               }}
-              className="w-full border-slate-200 border-dashed hover:bg-slate-50"
+              className="w-full"
             >
               <Plus className="h-4 w-4 mr-2" />
               Tambah Rute Baru
@@ -960,36 +969,34 @@ export function OrderListForm({
               />
             </div>
 
-            <div className="rounded-xl border border-dashed border-slate-200 bg-slate-50/50 p-4 text-sm text-slate-600 font-medium">
+            <div className="rounded-md border border-dashed border-slate-200 bg-slate-50/50 p-4 text-sm text-slate-600 font-medium">
               Ringkasan biaya: UJ Driver {formatOrderCurrency(watchedUjDriver)} • Invoice {formatOrderCurrency(invoiceBill)} • PPN {formatOrderCurrency(watchedPpn)} • PPh {formatOrderCurrency(watchedPph)}
             </div>
-          </div>
 
-          {/* ── Form Actions ── */}
-          <div className="flex items-center justify-center gap-6 pt-4">
-            <Button
-              type="button"
-              variant="ghost"
-              onClick={onCancel}
-              disabled={isSubmitting}
-              className="text-muted-foreground font-medium hover:text-foreground"
-            >
-              Batal
-            </Button>
-            <Button
-              type="submit"
-              disabled={isSubmitting}
-              className="bg-[#1e293b] hover:bg-[#0f172a] text-white font-medium min-w-[120px] rounded-lg shadow-sm"
-            >
-              {isSubmitting ? (
-                'Menyimpan...'
-              ) : (
-                <>
-                  <Save className="mr-2 h-4 w-4" />
-                  Simpan
-                </>
-              )}
-            </Button>
+            {/* ── Form Actions ── */}
+            <div className="flex items-end justify-end gap-2 pt-4">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={onCancel}
+                disabled={isSubmitting}
+              >
+                Batal
+              </Button>
+              <Button
+                type="submit"
+                disabled={isSubmitting}
+                variant="default"
+              >
+                {isSubmitting ? (
+                  'Menyimpan...'
+                ) : (
+                  <>
+                    Simpan
+                  </>
+                )}
+              </Button>
+            </div>
           </div>
         </form>
       </Form>

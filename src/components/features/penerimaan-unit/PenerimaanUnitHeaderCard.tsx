@@ -41,7 +41,7 @@ function InlineEditField({
   };
 
   if (disabled) {
-    return <div className="py-2 text-gray-700 min-h-[40px] px-3 bg-gray-50/50 rounded-lg border border-transparent">{displayValue}</div>;
+    return <div className="py-2 text-gray-700 min-h-[40px] px-3 bg-gray-50/50 rounded-md border border-transparent">{displayValue}</div>;
   }
 
   if (isEditing) {
@@ -49,7 +49,7 @@ function InlineEditField({
   }
 
   return (
-    <div onDoubleClick={() => setIsEditing(true)} className="py-2 px-3 min-h-[40px] text-gray-700 rounded-lg border border-transparent hover:border-gray-200 hover:bg-gray-50/50 cursor-text transition-colors" title="Double click to edit">
+    <div onDoubleClick={() => setIsEditing(true)} className="py-2 px-3 min-h-[40px] text-gray-700 rounded-md border border-transparent hover:border-gray-200 hover:bg-gray-50/50 cursor-text transition-colors" title="Double click to edit">
       {displayValue || <span className="text-gray-400 italic">Empty - double click to add</span>}
     </div>
   );
@@ -79,7 +79,7 @@ export default function PenerimaanUnitHeaderCard({ data, onChange, onBlur, disab
         <div className="space-y-1">
           <label className={isCreate ? 'text-gray-900 font-medium tracking-tight' : 'text-black font-bold text-xs uppercase tracking-wider'}>No Pemesanan</label>
           {isCreate ? (
-            <Input value={data.noPenerimaan} disabled={true} readOnly className="bg-gray-50 text-gray-500 rounded-lg h-10 border-gray-200" />
+            <Input value={data.noPenerimaan} disabled={true} readOnly className="bg-gray-50 text-gray-500 rounded-md h-10 border-gray-200" />
           ) : (
             <InlineEditField value={data.noPenerimaan} displayValue={<span className="font-semibold">{data.noPenerimaan}</span>} onSave={() => { }} disabled={true} renderInput={() => null} />
           )}
@@ -88,7 +88,7 @@ export default function PenerimaanUnitHeaderCard({ data, onChange, onBlur, disab
         <div className="space-y-1">
           <label className={isCreate ? 'text-gray-900 font-medium tracking-tight' : 'text-black font-bold text-xs uppercase tracking-wider'}>Tanggal Terima</label>
           {isCreate ? (
-            <DatePicker value={parsedDate} onChange={(date) => onChange?.('tanggal', date)} disabled={disabled} placeholder="Pick a date" className="h-10 rounded-lg border-gray-200 text-gray-900" />
+            <DatePicker value={parsedDate} onChange={(date) => onChange?.('tanggal', date)} disabled={disabled} placeholder="Pick a date" className="h-10 rounded-md border-gray-200 text-gray-900" />
           ) : (
             <InlineEditField
               value={parsedDate}
@@ -106,7 +106,7 @@ export default function PenerimaanUnitHeaderCard({ data, onChange, onBlur, disab
                     }, 100);
                   }}
                   disabled={disabled}
-                  className="h-10 rounded-lg border-blue-500 ring-2 ring-blue-500/20 text-gray-900 shadow-sm"
+                  className="h-10 rounded-md border-blue-500 ring-2 ring-blue-500/20 text-gray-900 shadow-sm"
                 />
               )}
             />
@@ -116,7 +116,7 @@ export default function PenerimaanUnitHeaderCard({ data, onChange, onBlur, disab
         <div className="space-y-1">
           <label className={isCreate ? 'text-gray-900 font-medium tracking-tight' : 'text-black font-bold text text-xs uppercase tracking-wider'}>Supplier</label>
           {isCreate ? (
-            <Input value={data.supplier || ''} disabled={disabled} onChange={(e) => onChange?.('supplier', e.target.value)} placeholder="Masukkan nama supplier" className="bg-white text-gray-900 rounded-lg h-10 border-gray-200" />
+            <Input value={data.supplier || ''} disabled={disabled} onChange={(e) => onChange?.('supplier', e.target.value)} placeholder="Masukkan nama supplier" className="bg-white text-gray-900 rounded-md h-10 border-gray-200" />
           ) : (
             <InlineEditField
               value={data.supplier}
@@ -130,7 +130,7 @@ export default function PenerimaanUnitHeaderCard({ data, onChange, onBlur, disab
                   onChange={(e) => onChange?.('supplier', e.target.value)}
                   onBlur={onBlur}
                   onKeyDown={(e) => e.key === 'Enter' && onBlur()}
-                  className="bg-white text-gray-900 rounded-lg h-10 border-blue-500 ring-2 ring-blue-500/20 shadow-sm"
+                  className="bg-white text-gray-900 rounded-md h-10 border-blue-500 ring-2 ring-blue-500/20 shadow-sm"
                 />
               )}
             />
@@ -146,7 +146,7 @@ export default function PenerimaanUnitHeaderCard({ data, onChange, onBlur, disab
             disabled={disabled}
             onChange={(e) => onChange?.('keterangan', e.target.value)}
             placeholder="Type your message here."
-            className="bg-white text-gray-900 rounded-lg min-h-[100px] border-gray-200 resize-y"
+            className="bg-white text-gray-900 rounded-md min-h-[100px] border-gray-200 resize-y"
           />
         ) : (
           <InlineEditField
@@ -160,7 +160,7 @@ export default function PenerimaanUnitHeaderCard({ data, onChange, onBlur, disab
                 value={data.keterangan || ''}
                 onChange={(e) => onChange?.('keterangan', e.target.value)}
                 onBlur={onBlur}
-                className="bg-white text-gray-900 rounded-lg min-h-[100px] border-blue-500 ring-2 ring-blue-500/20 shadow-sm resize-y"
+                className="bg-white text-gray-900 rounded-md min-h-[100px] border-blue-500 ring-2 ring-blue-500/20 shadow-sm resize-y"
               />
             )}
           />

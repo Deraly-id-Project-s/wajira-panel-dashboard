@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import Head from 'next/head';
 import { Search } from 'lucide-react';
-import type { DoInvoice } from '@/@types/create-invoice.types';
+import type { DoInvoice } from '@/@types/do-invoice.types';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { PageHeader } from '@/components/ui/page-header';
 import { Button } from '@/components/ui/button';
@@ -54,7 +54,6 @@ export default function FinanceInvoicePage() {
 
   const handlePerPageChange = (value: string) => {
     setPerPage(Number(value));
-    setPage(1);
   };
 
   const handleSortChange = (key: string) => {

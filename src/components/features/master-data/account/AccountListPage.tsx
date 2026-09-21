@@ -6,20 +6,20 @@ import { AccountTable } from '@/components/features/account/AccountTable';
 import { AccountImportModal } from '@/components/features/account/AccountImportModal';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { useAccounts, useDeleteAccount, useUpdateAccount, useBulkUpdateAccounts } from '@/hooks/useAccount';
+import { SearchPagination } from '@/components/ui/search-pagination';
+import { useAccounts, useDeleteAccount, useBulkUpdateAccounts } from '@/hooks/useAccount';
 import { useAccountGroups } from '@/hooks/useAccountGroup';
 import { useQueryParamsTable } from '@/hooks/useQueryParamsTable';
 import { useCompany } from '@/contexts/CompanyContext';
 import { usePermissionGuard } from '@/hooks/usePermissionGuard';
 import type { Account } from '@/@types/account.types';
 import type { AccountGroup } from '@/@types/account-group.types';
-import { ACCOUNT_CATEGORY_OPTIONS, getAccountTypeFromCategory } from '@/lib/account';
+import { ACCOUNT_CATEGORY_OPTIONS } from '@/lib/account';
 import { ApiResponseError } from '@/lib/api/response';
 import { toast } from 'sonner';
-import { CircleAlert, Download, PencilLine, Plus, Search, Upload } from 'lucide-react';
+import { CircleAlert, Download, PencilLine, Plus, Upload } from 'lucide-react';
 import { SearchableSelect } from '@/components/features/vehicle-data/SearchableSelect';
 
 type BulkFormValues = {
@@ -34,21 +34,40 @@ const initialBulkFormValues: BulkFormValues = {
 
 export const AccountListPage = () => {
   const { companyId, isLoading: isLoadingCompany } = useCompany();
-  const { hasPermission } = usePermissionGuard();
+  const { hasPermission, canManageMasterDataLock } = usePermissionGuard();
   const canCreate = hasPermission('master-data:create');
   const canEdit = hasPermission('master-data:edit');
   const canDelete = hasPermission('master-data:delete');
-  const { page, perPage, search, setPage, setPerPage, setSearch } = useQueryParamsTable({ defaultPerPage: 25 });
+  const { page, perPage, search, getParam, setPage, setPerPage, setSearch, updateQuery } = useQueryParamsTable({ defaultPerPage: 25 });
+  const [searchInput, setSearchInput] = useState(search);
+  const accountGroupId = getParam('account_group_id', '');
+
+  useEffect(() => {
+    const timeout = window.setTimeout(() => {
+      if (search !== searchInput.trim()) {
+        setSearch(searchInput.trim());
+      }
+    }, 400);
+    return () => window.clearTimeout(timeout);
+  }, [searchInput, search, setSearch]);
+
+  const { data: filterGroupsData, isLoading: isLoadingFilterGroups } = useAccountGroups({
+    page: 1,
+    perPage: 500,
+    company_id: companyId ?? undefined,
+    enabled: !isLoadingCompany && !!companyId,
+  });
+  const filterAccountGroups = useMemo(() => filterGroupsData?.data ?? [], [filterGroupsData?.data]);
 
   const { data, isLoading, isError, isFetching } = useAccounts({
     page,
     perPage,
     search,
+    account_group_id: accountGroupId || undefined,
     company_id: companyId ?? undefined,
     enabled: !isLoadingCompany && !!companyId,
   });
 
-  const updateMutation = useUpdateAccount();
   const bulkUpdateMutation = useBulkUpdateAccounts();
   const deleteMutation = useDeleteAccount();
   const router = useRouter();
@@ -123,7 +142,6 @@ export const AccountListPage = () => {
   );
   const accounts = data?.data;
   const accountRows = accounts ?? [];
-  const totalAccounts = data?.meta.total ?? 0;
 
   useEffect(() => {
     const availableIds = new Set((accounts ?? []).map((item) => String(item.id)));
@@ -206,6 +224,12 @@ export const AccountListPage = () => {
       return;
     }
 
+    const selectedRows = accountRows.filter((account) => selectedIds.has(String(account.id)));
+    if (!canManageMasterDataLock && selectedRows.some((account) => account.is_lock)) {
+      toast.error('Akun terkunci hanya bisa diperbarui lewat form edit deskripsi');
+      return;
+    }
+
     resetBulkForm();
     setOpenBulkUpdate(true);
   };
@@ -265,11 +289,13 @@ export const AccountListPage = () => {
       return;
     }
 
-    const headers = ['Kode Akun', 'Nama Akun', 'Grup Akun', 'Kategori Akun', 'Deskripsi'];
+    const headers = ['Kode Akun', 'Nama Akun', 'Grup Akun', 'Tipe Akun', 'Kode Pos', 'Kategori Akun', 'Deskripsi'];
     const rows = accountRows.map((account) => [
       account.code,
       account.name,
       account.accountGroupCode ?? '-',
+      account.type === 'credit' ? 'Kredit' : 'Debet',
+      account.pos_code ?? account.posCode ?? '-',
       ACCOUNT_CATEGORY_OPTIONS.find((item) => item.value === account.category)?.label ?? account.category ?? '-',
       account.description ?? '-',
     ]);
@@ -295,63 +321,78 @@ export const AccountListPage = () => {
           subtitle="Kelola akun finance dengan mudah"
         />
 
-        <div className="space-y-4">
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-            <div className="flex items-center gap-4 w-full sm:w-auto">
-              <div className="relative w-full sm:w-[300px]">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-                <Input
-                  placeholder="Search here"
-                  value={search}
-                  onChange={(event) => setSearch(event.target.value)}
-                  className="pl-9 bg-white"
-                />
-              </div>
-
-              <div className="flex items-center gap-2 text-sm text-slate-500 whitespace-nowrap">
-                <span>Show</span>
-                <Select value={String(perPage)} onValueChange={(value) => {
-                  setPerPage(Number(value));
-                  setPage(1);
-                }}>
-                  <SelectTrigger className="w-[70px] bg-white">
-                    <SelectValue placeholder="25" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {[10, 25, 50, 100].map((option) => (
-                      <SelectItem key={option} value={String(option)}>
-                        {option}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <span>Page</span>
-              </div>
+        <SearchPagination
+          searchValue={searchInput}
+          onSearchChange={setSearchInput}
+          searchPlaceholder="Search here"
+          searchAriaLabel="Cari akun"
+          filters={
+            <div className="w-full sm:w-[220px]">
+              <Select
+                value={accountGroupId || 'all'}
+                onValueChange={(val) => {
+                  updateQuery({
+                    account_group_id: val === 'all' ? undefined : val,
+                    page: 1,
+                  });
+                }}
+              >
+                <SelectTrigger className="h-9 w-full rounded-md border-slate-200 bg-white text-sm shadow-none cursor-pointer" aria-label="Filter Grup Akun">
+                  <SelectValue placeholder={isLoadingFilterGroups ? 'Memuat grup...' : 'Semua Grup Akun'} />
+                </SelectTrigger>
+                <SelectContent showSearch searchPlaceholder="Cari grup akun...">
+                  <SelectItem value="all">Semua Grup Akun</SelectItem>
+                  {filterAccountGroups.map((group) => (
+                    <SelectItem key={group.id} value={String(group.id)}>
+                      {group.code ? `${group.code} - ${group.name}` : group.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
-
-            <div className="flex flex-col sm:flex-row items-center gap-2 w-full sm:w-auto">
-              <Button onClick={handleExport} variant="outline" className="w-full sm:w-auto">
-                <Upload className="h-4 w-4 mr-2" />
+          }
+          page={page}
+          perPage={perPage}
+          total={data?.meta.total}
+          lastPage={data?.meta.lastPage}
+          onPageChange={setPage}
+          onPerPageChange={setPerPage}
+          actions={
+            <>
+              {(search || accountGroupId) && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    setSearchInput('');
+                    updateQuery({ search: undefined, account_group_id: undefined, page: 1 });
+                  }}
+                >
+                  Reset
+                </Button>
+              )}
+              <Button onClick={handleExport} variant="outline">
+                <Download className="h-4 w-4 mr-2" />
                 Export
               </Button>
               {canCreate && (
                 <>
-                  <Button onClick={() => setOpenImport(true)} variant="outline" className="w-full sm:w-auto">
-                    <Download className="h-4 w-4 mr-2" />
+                  <Button onClick={() => setOpenImport(true)} variant="outline">
+                    <Upload className="h-4 w-4 mr-2" />
                     Import
                   </Button>
-                  <Button onClick={handleAdd} className="w-full sm:w-auto bg-[#1e3a5f] hover:bg-[#152e4d]">
+                  <Button variant="default" onClick={handleAdd}>
                     <Plus className="h-4 w-4 mr-2" />
                     Tambah Data
                   </Button>
                 </>
               )}
-            </div>
-          </div>
-
+            </>
+          }
+        >
           {selectedIds.size > 0 && (
             <div className="flex flex-wrap items-center gap-3">
-              <Button variant="outline" className="h-10 rounded-md border-gray-200 px-4 text-sm font-medium text-slate-800 shadow-none hover:bg-slate-50" onClick={handleOpenBulkUpdate}>
+              <Button variant="outline" size="lg" onClick={handleOpenBulkUpdate}>
                 <PencilLine className="mr-1.5 h-4 w-4" />
                 Update
               </Button>
@@ -369,21 +410,18 @@ export const AccountListPage = () => {
           ) : (
             <AccountTable
               data={accountRows}
-              total={totalAccounts}
               isLoading={isLoading || isFetching}
-              page={page}
               canEdit={canEdit}
               canDelete={canDelete}
-              perPage={perPage}
+              canManageLock={canManageMasterDataLock}
               selectedIds={selectedIds}
               onToggleAll={toggleAll}
               onToggleRow={toggleRow}
               onEdit={handleEdit}
               onDelete={setSelectedAccount}
-              onPageChange={setPage}
             />
           )}
-        </div>
+        </SearchPagination>
       </div>
 
       <AlertDialog open={!!selectedAccount} onOpenChange={(open) => !open && setSelectedAccount(null)}>
@@ -465,10 +503,10 @@ export const AccountListPage = () => {
             </div>
 
             <div className="mt-8 flex flex-col gap-3">
-              <Button className="h-14 rounded-md bg-[#1F3B5B] text-lg font-semibold text-white hover:bg-[#1B3450]" onClick={handleBulkUpdateRequest}>
+              <Button variant="default" size="lg" onClick={handleBulkUpdateRequest}>
                 Simpan
               </Button>
-              <Button variant="outline" className="h-14 rounded-md border-slate-200 text-lg font-semibold text-slate-950 shadow-none hover:bg-slate-50" onClick={() => setOpenBulkUpdate(false)}>
+              <Button variant="outline" size="lg" onClick={() => setOpenBulkUpdate(false)}>
                 Batal
               </Button>
             </div>

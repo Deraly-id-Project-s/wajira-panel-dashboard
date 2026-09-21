@@ -1,19 +1,53 @@
+const apiBaseUrl = process.env.NEXT_PUBLIC_API_URL ?? 'https://wajirabackend.hawk-dev.com';
+const objectBucketUrl = process.env.OBJECT_BUCKET_URL || '';
+const objectBucketName = process.env.OBJECT_BUKCET || 'wajirafs';
+
+function joinUrl(base: string, path: string) {
+  return `${base.replace(/\/+$/, '')}/${path.replace(/^\/+/, '')}`;
+}
+
+function normalizeObjectStorageUrl(url: string) {
+  if (!objectBucketUrl || !objectBucketName) return url;
+
+  try {
+    const parsedUrl = new URL(url);
+    const cleanBucket = objectBucketName.replace(/^\/+|\/+$/g, '');
+    const pathParts = parsedUrl.pathname.split('/').filter(Boolean);
+    const bucketIndex = pathParts.indexOf(cleanBucket);
+
+    if (bucketIndex === -1) return url;
+
+    return joinUrl(objectBucketUrl, pathParts.slice(bucketIndex).join('/'));
+  } catch {
+    return url;
+  }
+}
+
 /**
- * Helper to parse image URL from backend relative path or absolute URL.
- * Automatically prepends the base URL and '/storage/' prefix if missing.
+ * Resolves image values from the backend into browser-loadable URLs.
+ * Supports API /storage paths, object-storage bucket paths, and local previews.
  */
 export function getParsedImageUrl(path?: string | null): string {
   if (!path) return '';
-  if (path.startsWith('http://') || path.startsWith('https://') || path.startsWith('data:') || path.startsWith('blob:')) {
-    return path;
+
+  const trimmedPath = path.trim();
+  if (!trimmedPath) return '';
+
+  if (/^(data:|blob:)/i.test(trimmedPath)) return trimmedPath;
+  if (/^https?:\/\//i.test(trimmedPath)) return normalizeObjectStorageUrl(trimmedPath);
+
+  const cleanPath = trimmedPath.replace(/^\/+/, '');
+  const cleanBucket = objectBucketName.replace(/^\/+|\/+$/g, '');
+
+  if (cleanBucket && (cleanPath === cleanBucket || cleanPath.startsWith(`${cleanBucket}/`))) {
+    return objectBucketUrl
+      ? joinUrl(objectBucketUrl, cleanPath)
+      : joinUrl(apiBaseUrl, cleanPath);
   }
-  
-  const base = process.env.NEXT_PUBLIC_API_URL ?? 'https://api-finance.wajiracorps.co.id';
-  const cleanBase = base.replace(/\/$/, '');
-  const cleanPath = path.replace(/^\/+/, '');
-  
+
   if (cleanPath.startsWith('storage/')) {
-    return `${cleanBase}/${cleanPath}`;
+    return joinUrl(apiBaseUrl, cleanPath);
   }
-  return `${cleanBase}/storage/${cleanPath}`;
+
+  return joinUrl(apiBaseUrl, `storage/${cleanPath}`);
 }

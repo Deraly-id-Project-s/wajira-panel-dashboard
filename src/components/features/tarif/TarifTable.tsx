@@ -4,19 +4,13 @@ import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuIte
 import { Button } from '@/components/ui/button';
 import { MoreVertical } from 'lucide-react';
 import type { Tarif } from '@/@types/tarif.types';
-import type { PaginationMeta } from '@/@types/pagination.types';
 import { currenciesFormat } from '@/components/ui/currenciesFormat';
 
 interface TarifTableProps {
     data: Tarif[];
-    meta?: PaginationMeta;
     isLoading?: boolean;
-    page: number;
-    perPage: number;
     canEdit: boolean;
     canDelete: boolean;
-    onPageChange: (page: number) => void;
-    onPerPageChange: (perPage: number) => void;
     onEdit: (tarif: Tarif) => void;
     onVersioning: (tarif: Tarif) => void;
     onDelete: (tarif: Tarif) => void;
@@ -24,14 +18,9 @@ interface TarifTableProps {
 
 export function TarifTable({
     data,
-    meta,
     isLoading = false,
-    page,
-    perPage,
     canEdit,
     canDelete,
-    onPageChange,
-    onPerPageChange,
     onEdit,
     onVersioning,
     onDelete,
@@ -109,7 +98,7 @@ export function TarifTable({
                                     e.preventDefault();
                                     onVersioning(item);
                                 }}
-                                className="rounded-lg px-3 py-2 text-sm text-slate-900 focus:bg-slate-50 cursor-pointer"
+                                className="rounded-md px-3 py-2 text-sm text-slate-900 focus:bg-slate-50 cursor-pointer"
                             >
                                 Detail
                             </DropdownMenuItem>
@@ -119,7 +108,7 @@ export function TarifTable({
                                     onEdit(item);
                                 }}
                                 disabled={!canEdit}
-                                className="rounded-lg px-3 py-2 text-sm text-slate-900 focus:bg-slate-50 cursor-pointer"
+                                className="rounded-md px-3 py-2 text-sm text-slate-900 focus:bg-slate-50 cursor-pointer"
                             >
                                 Edit
                             </DropdownMenuItem>
@@ -129,7 +118,7 @@ export function TarifTable({
                                     onDelete(item);
                                 }}
                                 disabled={!canDelete}
-                                className="rounded-lg px-3 py-2 text-sm text-red-600 focus:bg-red-50 focus:text-red-600 cursor-pointer"
+                                className="rounded-md px-3 py-2 text-sm text-red-600 focus:bg-red-50 focus:text-red-600 cursor-pointer"
                             >
                                 Hapus
                             </DropdownMenuItem>
@@ -147,13 +136,6 @@ export function TarifTable({
             columns={columns}
             loading={isLoading}
             defaultSort={{ key: 'loadingIn', direction: 'asc' }}
-            meta={{
-                currentPage: page,
-                perPage,
-                lastPage: meta?.lastPage ?? 1,
-                total: meta?.total ?? data.length,
-            }}
-            onPageChange={onPageChange}
         />
     );
 }

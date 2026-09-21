@@ -153,10 +153,10 @@ export function SparepartTable({ data, onEdit, onDelete, onAdd, onImport, canEdi
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="min-w-[150px] rounded-md border-slate-200 p-1.5 shadow-lg">
-              <DropdownMenuItem onClick={() => onEdit(item)} disabled={!canEdit} className="rounded-lg px-3 py-2 text-sm text-slate-900 focus:bg-slate-50 cursor-pointer">
+              <DropdownMenuItem onClick={() => onEdit(item)} disabled={!canEdit} className="rounded-md px-3 py-2 text-sm text-slate-900 focus:bg-slate-50 cursor-pointer">
                 Edit
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => onDelete(item)} disabled={!canDelete} className="rounded-lg px-3 py-2 text-sm text-red-600 focus:bg-red-50 focus:text-red-600 cursor-pointer">
+              <DropdownMenuItem onClick={() => onDelete(item)} disabled={!canDelete} className="rounded-md px-3 py-2 text-sm text-red-600 focus:bg-red-50 focus:text-red-600 cursor-pointer">
                 Hapus
               </DropdownMenuItem>
             </DropdownMenuContent>
@@ -201,7 +201,7 @@ export function SparepartTable({ data, onEdit, onDelete, onAdd, onImport, canEdi
             </Button>
           )}
           {onAdd && (
-            <Button onClick={onAdd} className="w-full sm:w-auto bg-[#1e3a5f] hover:bg-[#152e4d]">
+            <Button onClick={onAdd} className="btn-primary!">
               <Plus className="h-4 w-4 mr-2" />
               Tambah
             </Button>

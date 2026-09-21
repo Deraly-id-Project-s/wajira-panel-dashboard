@@ -5,9 +5,11 @@ import { TableRow, TableCell } from '@/components/ui/table';
 import { toast } from 'sonner';
 import { useCompany } from '@/contexts/CompanyContext';
 import { useGetWarehouseStock } from '@/hooks/useLaporanWarehouse';
+import { useDebouncedValue } from '@/hooks/useDebouncedValue';
 import { StockItem } from '@/services/laporan-warehouse.service';
 import { AlertCircle } from 'lucide-react';
 import BaseTable, { ColumnDef } from '@/components/ui/base-table';
+import { SearchPagination } from '@/components/ui/search-pagination';
 import { ReferenceLink } from '@/components/ui/reference-link';
 import { CopyBox } from '@/components/ui/copy-box';
 import { useRouter } from 'next/router';
@@ -30,6 +32,8 @@ export default function StockTab({ perPage, onActionsChange }: StockTabProps) {
   const { companyId } = useCompany();
   const [page, setPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(perPage || 25);
+  const [search, setSearch] = useState('');
+  const debouncedSearch = useDebouncedValue(search, 500);
 
   useEffect(() => {
     setItemsPerPage(perPage);
@@ -44,6 +48,7 @@ export default function StockTab({ perPage, onActionsChange }: StockTabProps) {
     company_id: companyId ? Number(companyId) : 1,
     page,
     per_page: itemsPerPage,
+    search: debouncedSearch || undefined,
   });
 
   const rows = useMemo(() => response?.data || [], [response?.data]);
@@ -202,25 +207,33 @@ export default function StockTab({ perPage, onActionsChange }: StockTabProps) {
           <p className="text-sm">Gagal memuat data stock</p>
         </div>
       ) : (
-        <BaseTable
-          data={rows}
-          columns={columns}
-          loading={isLoading}
-          footer={footerRow}
-          showLimitChange
+        <SearchPagination
+          searchValue={search}
+          onSearchChange={(val) => {
+            setSearch(val);
+            setPage(1);
+          }}
+          searchPlaceholder="Search here.."
+          searchAriaLabel="Cari stok unit"
+          page={page}
           perPage={itemsPerPage}
+          total={response?.total}
+          lastPage={response?.last_page}
+          from={response?.from}
+          to={response?.to}
+          onPageChange={setPage}
           onPerPageChange={(pp) => {
             setItemsPerPage(pp);
             setPage(1);
           }}
-          meta={{
-            currentPage: response?.current_page || page,
-            perPage: response?.per_page || itemsPerPage,
-            lastPage: response?.last_page || 1,
-            total: response?.total || rows.length,
-          }}
-          onPageChange={setPage}
-        />
+        >
+          <BaseTable
+            data={rows}
+            columns={columns}
+            loading={isLoading}
+            footer={footerRow}
+          />
+        </SearchPagination>
       )}
     </div>
   );

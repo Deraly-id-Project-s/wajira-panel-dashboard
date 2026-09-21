@@ -7,6 +7,7 @@ import { useCreateRefundPayment } from '@/hooks/useRefundAdministrasi';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { InputDate } from '@/components/ui/input-date';
 import { Label } from '@/components/ui/label';
 import { formatCurrency } from '@/lib/utils/currency';
 import { toast } from 'sonner';
@@ -105,7 +106,7 @@ export default function RefundPaymentModal({ open, onClose, refund }: RefundPaym
 
           <div className="space-y-2">
             <Label htmlFor="payment_date">Tanggal Pembayaran</Label>
-            <Input id="payment_date" type="date" {...register('payment_date')} />
+            <InputDate id="payment_date" {...register('payment_date')} />
             {errors.payment_date ? <p className="text-sm text-red-600">{errors.payment_date.message}</p> : null}
           </div>
 

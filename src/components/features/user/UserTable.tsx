@@ -184,7 +184,7 @@ export function UserTable({ data, onEdit, onDelete, onAdd, isLoading, canCreate,
                         <Info className="h-3.5 w-3.5 mr-0.5" />
                       </button>
                     </TooltipTrigger>
-                    <TooltipContent side="top" align="center" className="max-w-xs bg-slate-900 text-white rounded-lg p-2 text-xs shadow-md">
+                    <TooltipContent side="top" align="center" className="max-w-xs bg-slate-900 text-white rounded-md p-2 text-xs shadow-md">
                       Akun ini non-aktif, pengguna tidak bisa menggunakan akun ini untuk login ke Dashboard
                     </TooltipContent>
                   </Tooltip>
@@ -216,20 +216,20 @@ export function UserTable({ data, onEdit, onDelete, onAdd, isLoading, canCreate,
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="min-w-[150px] rounded-md border-slate-200 p-1.5 shadow-lg">
-                <DropdownMenuItem onClick={() => onEdit(item)} disabled={!canEdit} className="rounded-lg px-3 py-2 text-sm text-slate-900 focus:bg-slate-50 cursor-pointer">
+                <DropdownMenuItem onClick={() => onEdit(item)} disabled={!canEdit} className="rounded-md px-3 py-2 text-sm text-slate-900 focus:bg-slate-50 cursor-pointer">
                   Edit
                 </DropdownMenuItem>
                 <DropdownMenuItem
                   onClick={() => handleCopyPassword(item.id)}
                   disabled={!canEdit || fetchingPasswordId !== null}
-                  className="rounded-lg px-3 py-2 text-sm cursor-pointer disabled:pointer-events-none disabled:opacity-50"
+                  className="rounded-md px-3 py-2 text-sm cursor-pointer disabled:pointer-events-none disabled:opacity-50"
                 >
                   {fetchingPasswordId === item.id ? 'Menyalin...' : 'Salin Password'}
                 </DropdownMenuItem>
                 <DropdownMenuItem
                   onClick={() => onDelete(item)}
                   disabled={!canDelete}
-                  className="rounded-lg px-3 py-2 text-sm text-red-600 focus:bg-red-50 focus:text-red-600 cursor-pointer disabled:pointer-events-none disabled:opacity-50"
+                  className="rounded-md px-3 py-2 text-sm text-red-600 focus:bg-red-50 focus:text-red-600 cursor-pointer disabled:pointer-events-none disabled:opacity-50"
                 >
                   Hapus
                 </DropdownMenuItem>
@@ -246,7 +246,7 @@ export function UserTable({ data, onEdit, onDelete, onAdd, isLoading, canCreate,
     () =>
       onAdd ? (
         <div className="flex flex-wrap items-center gap-2">
-          <Button onClick={canCreate ? onAdd : () => { }} disabled={!canCreate} className="button-theme-1!">
+          <Button onClick={canCreate ? onAdd : () => { }} disabled={!canCreate} className="btn-primary!">
             <Plus className="h-4 w-4 mr-2" />
             Tambah Data
           </Button>

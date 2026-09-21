@@ -1,21 +1,23 @@
 import { useEffect, useMemo, useState } from 'react';
 import Head from 'next/head';
 import { useRouter } from 'next/router';
-import { Plus, Search } from 'lucide-react';
+import { Plus } from 'lucide-react';
 import { toast } from 'sonner';
+import type { DateRange } from 'react-day-picker';
 import type { KasHarian, KasHarianListItem } from '@/@types/kas-harian.types';
 import type { PaginationMeta } from '@/@types/pagination.types';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { PageHeader } from '@/components/ui/page-header';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { SearchPagination } from '@/components/ui/search-pagination';
+import { DatePickerWithRange } from '@/components/ui/date-range-picker';
 import DeleteKasHarianDialog from '@/components/features/kas-harian/DeleteKasHarianDialog';
 import TogglePaymentStatusDialog from '@/components/features/kas-harian/TogglePaymentStatusDialog';
 import KasHarianTable from '@/components/features/kas-harian/KasHarianTable';
 import { useCompany } from '@/contexts/CompanyContext';
-import { useKasHarian } from '@/hooks/useKasHarian';
+import { useKasHarian, useSyncKasHarianPpnData } from '@/hooks/useKasHarian';
 import { usePermissionGuard } from '@/hooks/usePermissionGuard';
+import { getApiErrorMessage } from '@/utils/apiErrorHandler';
 
 const LIVE_UPDATE_INTERVAL = 5000;
 
@@ -54,10 +56,12 @@ export default function KasHarianPage() {
   const [searchValue, setSearchValue] = useState('');
   const [page, setPage] = useState(1);
   const [perPage, setPerPage] = useState(25);
+  const [date, setDate] = useState<DateRange | undefined>();
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
   const [isToggleOpen, setIsToggleOpen] = useState(false);
   const [targetStatus, setTargetStatus] = useState(false);
   const [selectedItem, setSelectedItem] = useState<KasHarian | null>(null);
+  const syncPpnMutation = useSyncKasHarianPpnData();
 
   useEffect(() => {
     const timeout = window.setTimeout(() => {
@@ -68,11 +72,21 @@ export default function KasHarianPage() {
     return () => window.clearTimeout(timeout);
   }, [searchInput]);
 
+  const handleDateChange = (next?: DateRange) => {
+    setDate(next);
+    setPage(1);
+  };
+
+  const startDate = date?.from ? date.from.toISOString().split('T')[0] : undefined;
+  const endDate = date?.to ? date.to.toISOString().split('T')[0] : undefined;
+
   const kasHarianQuery = useKasHarian(
     {
       page: 1,
       per_page: 1000,
       company_id: companyNumber || undefined,
+      start_date: startDate,
+      end_date: endDate,
     },
     {
       enabled: !isCompanyLoading && companyNumber > 0,
@@ -156,6 +170,17 @@ export default function KasHarianPage() {
     setIsToggleOpen(true);
   };
 
+  const handleSyncPpnData = async (item: KasHarianListItem) => {
+    if (!item.cashFlowId || syncPpnMutation.isPending) return;
+
+    try {
+      await syncPpnMutation.mutateAsync(item.cashFlowId);
+      toast.success('Data PPN berhasil disinkronkan');
+    } catch (error) {
+      toast.error(getApiErrorMessage(error) || 'Gagal menyinkronkan data PPN');
+    }
+  };
+
   const pushTo = (item: KasHarianListItem) => {
     const targetId = item.cashFlowId || item.id;
     if (!targetId) return;
@@ -174,48 +199,37 @@ export default function KasHarianPage() {
           subtitle="Kelola arus transaksi kas harian"
         />
 
-        <div className="space-y-4">
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-4 no-print">
-            <div className="flex flex-col gap-4 lg:flex-row lg:items-center flex-wrap w-full sm:w-auto">
-              <div className="relative w-full sm:w-[332px]">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
-                <Input
-                  placeholder="Search here"
-                  className="pl-9 bg-white"
-                  value={searchInput}
-                  onChange={(event) => setSearchInput(event.target.value)}
-                />
-              </div>
-
-              <div className="flex items-center gap-2 text-sm text-slate-500 whitespace-nowrap">
-                <span>Show</span>
-                <Select
-                  value={String(perPage)}
-                  onValueChange={(value) => {
-                    setPerPage(Number(value));
-                    setPage(1);
-                  }}
-                >
-                  <SelectTrigger className="w-[70px] bg-white cursor-pointer">
-                    <SelectValue placeholder="25" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="25">25</SelectItem>
-                    <SelectItem value="50">50</SelectItem>
-                    <SelectItem value="100">100</SelectItem>
-                  </SelectContent>
-                </Select>
-                <span>Page</span>
-              </div>
-            </div>
-            {canCreate && (
-              <Button type="button" onClick={() => void router.push(`/dashboard/${slug}/finance/transaksi-kas-harian/create`)} className="w-full sm:w-auto bg-[#1e3a5f] hover:bg-[#152e4d]">
+        <SearchPagination
+          searchValue={searchInput}
+          onSearchChange={setSearchInput}
+          searchPlaceholder="Search here"
+          searchAriaLabel="Cari transaksi kas harian"
+          filters={
+            <DatePickerWithRange
+              date={date}
+              onChange={handleDateChange}
+              placeholder="Pilih rentang tanggal"
+              className="w-full sm:w-[260px]"
+            />
+          }
+          page={page}
+          perPage={perPage}
+          total={meta.total}
+          lastPage={meta.lastPage}
+          onPageChange={setPage}
+          onPerPageChange={(value) => {
+            setPerPage(value);
+            setPage(1);
+          }}
+          actions={
+            canCreate ? (
+              <Button type="button" onClick={() => void router.push(`/dashboard/${slug}/finance/transaksi-kas-harian/create`)} className="w-full sm:w-auto btn-primary">
                 <Plus className="mr-2 h-4 w-4" />
                 Tambah Data
               </Button>
-            )}
-          </div>
-
+            ) : null
+          }
+        >
           <KasHarianTable
             data={paginatedData}
             meta={meta}
@@ -231,12 +245,12 @@ export default function KasHarianPage() {
             onPay={pushTo}
             onEdit={handleEdit}
             onDelete={handleDelete}
+            onSyncPpnData={(item) => void handleSyncPpnData(item)}
             onToggleStatus={handleToggleStatus}
-            onPageChange={setPage}
             canEdit={canEdit}
             canDelete={canDelete}
           />
-        </div>
+        </SearchPagination>
       </div>
 
       <DeleteKasHarianDialog open={isDeleteOpen} onOpenChange={setIsDeleteOpen} data={selectedItem} />

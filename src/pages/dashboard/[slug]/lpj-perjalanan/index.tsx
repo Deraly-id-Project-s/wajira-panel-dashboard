@@ -1,20 +1,24 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
 import { toast } from 'sonner';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { DeleteLPJModal } from '@/components/features/lpj-perjalanan/DeleteLPJModal';
 import { LPJTable } from '@/components/features/lpj-perjalanan/LPJTable';
+import { Button } from '@/components/ui/button';
+import { SearchPagination } from '@/components/ui/search-pagination';
+import { Plus } from 'lucide-react';
 import { DUMMY_LPJ_RECORDS, type LPJRecord, setDummyLPJRecords } from '@/components/features/lpj-perjalanan/lpj-perjalanan.data';
+import { useQueryParamsTable } from '@/hooks/useQueryParamsTable';
 
 export default function LPJPerjalananPage() {
   const router = useRouter();
   const { slug } = router.query;
 
-  const [lpjRecords, setLpjRecords] = useState<LPJRecord[]>(DUMMY_LPJ_RECORDS);
-  const [search, setSearch] = useState('');
-  const [page, setPage] = useState(1);
-  const [perPage, setPerPage] = useState(25);
+  const { page, perPage, search, setPage, setPerPage, updateQuery } = useQueryParamsTable({
+    defaultPerPage: 25,
+  });
 
+  const [lpjRecords, setLpjRecords] = useState<LPJRecord[]>(DUMMY_LPJ_RECORDS);
   const [selectedItem, setSelectedItem] = useState<LPJRecord | null>(null);
   const [deleteOpen, setDeleteOpen] = useState(false);
 
@@ -34,6 +38,14 @@ export default function LPJPerjalananPage() {
     const startIndex = (page - 1) * perPage;
     return filteredData.slice(startIndex, startIndex + perPage);
   }, [filteredData, page, perPage]);
+
+  const lastPage = useMemo(() => Math.max(1, Math.ceil(filteredData.length / perPage)), [filteredData.length, perPage]);
+
+  useEffect(() => {
+    if (page > lastPage) {
+      setPage(lastPage);
+    }
+  }, [page, lastPage, setPage]);
 
   const handleAdd = () => {
     router.push(`/dashboard/${slug}/lpj-perjalanan/create`);
@@ -71,26 +83,33 @@ export default function LPJPerjalananPage() {
           <p className="text-sm text-gray-500 mt-1">Laporan Pertanggungjawaban Pengiriman</p>
         </div>
 
-        <LPJTable
-          data={paginatedData}
-          search={search}
+        <SearchPagination
+          searchValue={search ?? ''}
           onSearchChange={(value) => {
-            setSearch(value);
-            setPage(1);
+            updateQuery({ search: value, page: 1 });
           }}
+          searchPlaceholder="Cari LPJ..."
+          searchAriaLabel="Cari data LPJ"
           page={page}
           perPage={perPage}
-          totalData={filteredData.length}
+          total={filteredData.length}
+          lastPage={lastPage}
           onPageChange={setPage}
-          onPerPageChange={(value) => {
-            setPerPage(value);
-            setPage(1);
-          }}
-          onAdd={handleAdd}
-          onEdit={handleEdit}
-          onDetail={handleDetail}
-          onDelete={handleDelete}
-        />
+          onPerPageChange={setPerPage}
+          actions={
+            <Button onClick={handleAdd} className="btn-primary!">
+              <Plus className="mr-2 h-4 w-4" />
+              Tambah
+            </Button>
+          }
+        >
+          <LPJTable
+            data={paginatedData}
+            onEdit={handleEdit}
+            onDetail={handleDetail}
+            onDelete={handleDelete}
+          />
+        </SearchPagination>
       </div>
 
       <DeleteLPJModal isOpen={deleteOpen} onClose={() => setDeleteOpen(false)} onConfirm={confirmDelete} />

@@ -7,6 +7,7 @@ import { ArrowLeft, Search, Plus, Save, ChevronRight } from 'lucide-react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { InputDate } from '@/components/ui/input-date';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -295,8 +296,7 @@ export default function PurchaseRefundFormPageContent({ mode, refundId }: Purcha
               {/* Date Input */}
               <div className="space-y-2">
                 <Label>Tanggal Refund</Label>
-                <Input
-                  type="date"
+                <InputDate
                   value={form.watch('refund_date')}
                   onChange={(e) => form.setValue('refund_date', e.target.value)}
                 />
@@ -358,7 +358,7 @@ export default function PurchaseRefundFormPageContent({ mode, refundId }: Purcha
               <Button
                 onClick={form.handleSubmit(onSubmit)}
                 disabled={createMutation.isPending || updateMutation.isPending}
-                className="w-full bg-[#1e3a5f] hover:bg-[#152e4d] gap-2 py-6 rounded-md"
+                className="gap-2 py-6 rounded-md btn-primary!"
               >
                 {createMutation.isPending || updateMutation.isPending ? (
                   <LoadingState variant="inline" text={null} />

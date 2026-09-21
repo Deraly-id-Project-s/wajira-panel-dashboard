@@ -155,7 +155,7 @@ export function Topbar() {
                 return (
                   <div
                     key={index}
-                    className="group/item flex items-center justify-between rounded-lg px-2.5 py-1.5 text-left text-sm text-gray-700 hover:bg-slate-50 transition cursor-pointer"
+                    className="group/item flex items-center justify-between rounded-md px-2.5 py-1.5 text-left text-sm text-gray-700 hover:bg-slate-50 transition cursor-pointer"
                     onClick={() => {
                       if (matchedMenu) {
                         router.push(matchedMenu.href);
@@ -205,7 +205,7 @@ export function Topbar() {
                     setOpen(false);
                     setMobileSearchOpen(false);
                   }}
-                  className="flex w-full items-center justify-between rounded-lg px-2.5 py-2 text-left text-sm text-gray-700 hover:bg-slate-50 hover:text-[#1e3a5f] transition group"
+                  className="flex w-full items-center justify-between rounded-md px-2.5 py-2 text-left text-sm text-gray-700 hover:bg-slate-50 hover:text-[#1e3a5f] transition group"
                 >
                   <div className="flex flex-col overflow-hidden mr-2">
                     <span className="font-medium truncate">{item.label}</span>
@@ -273,10 +273,10 @@ export function Topbar() {
           {/* ── Mobile Search Button ── */}
           <button
             onClick={() => setMobileSearchOpen(true)}
-            className="md:hidden flex items-center gap-2 rounded-md border border-gray-200 bg-gray-50 px-3 py-2 text-sm text-gray-400 hover:bg-white transition w-full"
+            className="flex h-9 w-9 items-center justify-center rounded-md border border-gray-200 bg-gray-50 text-gray-500 transition hover:bg-white md:hidden"
+            aria-label="Buka pencarian"
           >
             <Search className="h-4 w-4 shrink-0" />
-            <span className="truncate">Search...</span>
           </button>
         </div>
 
@@ -300,7 +300,7 @@ export function Topbar() {
                     {isProfileLoading ? '' : userId}
                   </span>
                 </div>
-                <div className="flex h-9 w-9 md:h-10 md:w-10 items-center justify-center rounded-full bg-slate-50 text-[13px] font-bold text-black border border-gray-100 overflow-hidden">
+                <div className="flex h-9 w-9 md:h-10 md:w-10 items-center justify-center rounded-full text-[13px] font-bold text-white overflow-hidden btn-primary">
                   {user?.avatar ? (
                     <ParsedImage
                       src={user.avatar}
@@ -314,11 +314,11 @@ export function Topbar() {
               </button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-[180px] p-2 rounded-md">
-              <DropdownMenuItem onClick={handleProfileClick} className="cursor-pointer font-medium text-slate-900 text-[13px] py-2 px-3 rounded-lg hover:bg-slate-50 focus:bg-slate-50">
+              <DropdownMenuItem onClick={handleProfileClick} className="cursor-pointer font-medium text-slate-900 text-[13px] py-2 px-3 rounded-md hover:bg-slate-50 focus:bg-slate-50">
                 Profil Pengguna
               </DropdownMenuItem>
               <DropdownMenuSeparator className="my-1" />
-              <DropdownMenuItem onClick={handleLogout} className="cursor-pointer font-medium text-red-600 text-[13px] py-2 px-3 rounded-lg hover:bg-red-50 focus:bg-red-50 focus:text-red-600">
+              <DropdownMenuItem onClick={handleLogout} className="cursor-pointer font-medium text-red-600 text-[13px] py-2 px-3 rounded-md hover:bg-red-50 focus:bg-red-50 focus:text-red-600">
                 <LogOut className="mr-2 h-4 w-4" />
                 Logout
               </DropdownMenuItem>

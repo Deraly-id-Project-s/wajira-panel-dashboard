@@ -94,7 +94,7 @@ export default function RolesPage() {
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="min-w-[150px] rounded-md border-slate-200 p-1.5 shadow-lg">
               <DropdownMenuItem
-                className="rounded-lg px-3 py-2 text-sm text-slate-900 focus:bg-slate-50 cursor-pointer"
+                className="rounded-md px-3 py-2 text-sm text-slate-900 focus:bg-slate-50 cursor-pointer"
                 onClick={() => router.push(`/dashboard/${slug}/settings/roles/${item.id}`)}
               >
                 Lihat Detail
@@ -103,14 +103,14 @@ export default function RolesPage() {
               {item.name.toLowerCase() !== 'admin' && (
                 <>
                   <DropdownMenuItem
-                    className="rounded-lg px-3 py-2 text-sm text-slate-900 focus:bg-slate-50 cursor-pointer"
+                    className="rounded-md px-3 py-2 text-sm text-slate-900 focus:bg-slate-50 cursor-pointer"
                     onClick={() => handleEdit(item)}
                   >
                     Atur Permissions
                   </DropdownMenuItem>
 
                   <DropdownMenuItem
-                    className="rounded-lg px-3 py-2 text-sm text-red-600 focus:bg-red-50 focus:text-red-600 cursor-pointer"
+                    className="rounded-md px-3 py-2 text-sm text-red-600 focus:bg-red-50 focus:text-red-600 cursor-pointer"
                     onClick={() => setRoleToDelete(item)}
                   >
                     Hapus
@@ -127,7 +127,7 @@ export default function RolesPage() {
 
   const headerActions = useMemo(
     () => (
-      <Button onClick={handleAdd} disabled={isLoading} className="w-full sm:w-auto bg-[#1e3a5f] hover:bg-[#152e4d]">
+      <Button onClick={handleAdd} disabled={isLoading} className="btn-primary-orange!">
         <Plus size={16} className="mr-2" />
         Tambah Role
       </Button>

@@ -93,15 +93,23 @@ export default function KasHarianFormPage({ mode }: Props) {
     };
 
     try {
+      let targetId: number | string | undefined = cashFlowId;
       if (mode === 'edit') {
         if (!cashFlowId) return;
-        await updateMutation.mutateAsync({ id: cashFlowId, payload });
+        const result = await updateMutation.mutateAsync({ id: cashFlowId, payload });
+        targetId = result?.id ?? cashFlowId;
         toast.success('Transaksi kas harian berhasil diperbarui');
       } else {
-        await createMutation.mutateAsync(payload);
+        const result = await createMutation.mutateAsync(payload);
+        targetId = result?.id;
         toast.success('Transaksi kas harian berhasil ditambahkan');
       }
-      await router.push(basePath);
+
+      const detailPath = typeof slug === 'string' && targetId
+        ? `/dashboard/${slug}/finance/transaksi-kas-harian/${targetId}`
+        : basePath;
+
+      await router.push(detailPath);
     } catch (error) {
       toast.error(getApiErrorMessage(error) || `Gagal ${mode === 'edit' ? 'memperbarui' : 'menambahkan'} transaksi kas harian`);
     }

@@ -67,7 +67,7 @@ export function RegionFormModal({ isOpen, onClose, onSave }: RegionFormModalProp
                         </div>
 
                         <div className="flex flex-col space-y-2 pt-4">
-                            <Button type="submit" className="w-full bg-[#1e3a5f] hover:bg-[#152e4d]">Simpan</Button>
+                            <Button type="submit" className="btn-primary!">Simpan</Button>
                             <Button type="button" variant="outline" className="w-full" onClick={onClose}>Batal</Button>
                         </div>
                     </form>

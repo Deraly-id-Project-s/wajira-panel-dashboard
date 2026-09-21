@@ -29,7 +29,7 @@ export default function DeleteKasHarianDialog({ open, onOpenChange, data }: Prop
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-sm rounded-[24px]">
+      <DialogContent className="max-w-sm rounded-md">
         <DialogHeader>
           <DialogTitle className="text-xl font-semibold text-slate-950">Hapus Data Ini?</DialogTitle>
           <DialogDescription className="text-sm text-slate-500">

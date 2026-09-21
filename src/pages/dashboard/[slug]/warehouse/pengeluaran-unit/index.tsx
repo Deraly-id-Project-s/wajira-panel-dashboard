@@ -9,6 +9,10 @@ import { useWarehouseActivities } from '@/hooks/useWarehouseActivity';
 import { usePermissionGuard } from '@/hooks/usePermissionGuard';
 import { LoadingState } from '@/components/ui/loading-state';
 import { useCompany } from '@/contexts/CompanyContext';
+import { SearchPagination } from '@/components/ui/search-pagination';
+import { useQueryParamsTable } from '@/hooks/useQueryParamsTable';
+import { DatePickerWithRange } from '@/components/ui/date-range-picker';
+import type { DateRange } from 'react-day-picker';
 
 export default function PengeluaranUnitPage() {
   const router = useRouter();
@@ -17,21 +21,19 @@ export default function PengeluaranUnitPage() {
   const canEdit = hasPermission('warehouse:edit');
   const canDelete = hasPermission('warehouse:delete');
 
-  const [page, setPage] = useState(1);
-  const [perPage, setPerPage] = useState(25);
-  const [searchInput, setSearchInput] = useState('');
-  const [search, setSearch] = useState('');
+  const { page, perPage, search, setPage, setPerPage, setSearch } = useQueryParamsTable({ defaultPerPage: 25 });
+  const [searchInput, setSearchInput] = useState(search);
   const [startDate, setStartDate] = useState<string | null>(null);
   const [endDate, setEndDate] = useState<string | null>(null);
 
   useEffect(() => {
     const timeout = window.setTimeout(() => {
-      setSearch(searchInput.trim());
-      setPage(1);
+      if (search !== searchInput.trim()) {
+        setSearch(searchInput.trim());
+      }
     }, 400);
-
     return () => window.clearTimeout(timeout);
-  }, [searchInput]);
+  }, [searchInput, search, setSearch]);
 
   const { data, isLoading, isError, error, refetch, isFetching } = useWarehouseActivities({
     activityType: 'issue',
@@ -44,11 +46,20 @@ export default function PengeluaranUnitPage() {
     company_id: companyId ? Number(companyId) : null,
   });
 
-  const meta = data?.meta ?? {
-    currentPage: page,
-    perPage,
-    total: 0,
-    lastPage: 1,
+  const dateRange = useMemo<DateRange | undefined>(() => {
+    if (!startDate && !endDate) return undefined;
+    return {
+      from: startDate ? new Date(startDate) : undefined,
+      to: endDate ? new Date(endDate) : undefined,
+    };
+  }, [startDate, endDate]);
+
+  const handleDateRangeChange = (range: DateRange | undefined) => {
+    const start = range?.from ? range.from.toISOString().slice(0, 10) : null;
+    const end = range?.to ? range.to.toISOString().slice(0, 10) : null;
+    setStartDate(start);
+    setEndDate(end);
+    setPage(1);
   };
 
   const errorMessage = useMemo(() => {
@@ -76,34 +87,44 @@ export default function PengeluaranUnitPage() {
           subtitle="Kelola dan lacak semua data pengeluaran stock unit"
         />
 
-        <PengeluaranUnitTable
-          data={data?.data ?? []}
-          meta={meta}
-          search={searchInput}
-          perPage={perPage}
-          page={page}
-          isLoading={isLoading || isFetching}
-          isError={isError}
-          errorMessage={errorMessage}
+        <SearchPagination
+          searchValue={searchInput}
           onSearchChange={setSearchInput}
-          onPerPageChange={(value) => {
-            setPerPage(value);
-            setPage(1);
-          }}
-          canEdit={canEdit}
-          canDelete={canDelete}
+          searchPlaceholder="Search here"
+          searchAriaLabel="Cari pengeluaran unit"
+          page={page}
+          perPage={perPage}
+          total={data?.meta?.total}
+          lastPage={data?.meta?.lastPage}
           onPageChange={setPage}
-          startDate={startDate}
-          endDate={endDate}
-          onDateRangeChange={(start, end) => {
-            setStartDate(start);
-            setEndDate(end);
-            setPage(1);
-          }}
-          onRetry={() => {
-            refetch().catch(() => undefined);
-          }}
-        />
+          onPerPageChange={setPerPage}
+          filters={(
+            <DatePickerWithRange
+              date={dateRange}
+              onChange={handleDateRangeChange}
+              className="w-full sm:w-[260px]"
+            />
+          )}
+        >
+          {isError ? (
+            <div className="flex flex-col items-center justify-center gap-3 bg-white rounded-md border border-red-200 p-8 text-center text-red-500">
+              <p>{errorMessage}</p>
+              <button
+                onClick={() => refetch().catch(() => undefined)}
+                className="rounded-md border border-slate-200 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 cursor-pointer"
+              >
+                Coba Lagi
+              </button>
+            </div>
+          ) : (
+            <PengeluaranUnitTable
+              data={data?.data ?? []}
+              isLoading={isLoading || isFetching}
+              canEdit={canEdit}
+              canDelete={canDelete}
+            />
+          )}
+        </SearchPagination>
       </div>
     </DashboardLayout>
   );

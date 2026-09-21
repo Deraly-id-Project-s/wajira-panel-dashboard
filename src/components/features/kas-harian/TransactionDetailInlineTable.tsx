@@ -248,10 +248,10 @@ export default function TransactionDetailInlineTable({ items, financeBillingId, 
         if (isEditing) {
           return (
             <div className="flex items-center justify-center gap-2">
-              <Button type="button" size="sm" className="h-9 rounded-lg bg-[#18385b] px-3 hover:bg-[#102843]" disabled={isBusy} onClick={() => void handleSave(item.id)}>
+              <Button type="button" size="sm" className="h-9 rounded-md bg-[#18385b] px-3 hover:bg-[#102843]" disabled={isBusy} onClick={() => void handleSave(item.id)}>
                 Simpan
               </Button>
-              <Button type="button" size="sm" variant="outline" className="h-9 rounded-lg border-slate-200 px-3" disabled={isBusy} onClick={resetEditor}>
+              <Button type="button" size="sm" variant="outline" className="h-9 rounded-md border-slate-200 px-3" disabled={isBusy} onClick={resetEditor}>
                 Batal
               </Button>
             </div>
@@ -265,10 +265,10 @@ export default function TransactionDetailInlineTable({ items, financeBillingId, 
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="min-w-[150px] rounded-md border-slate-200 p-1.5 shadow-lg">
-              <DropdownMenuItem onClick={() => handleEditRow(item)} className="rounded-lg px-3 py-2 text-sm text-slate-900 focus:bg-slate-50 cursor-pointer">
+              <DropdownMenuItem onClick={() => handleEditRow(item)} className="rounded-md px-3 py-2 text-sm text-slate-900 focus:bg-slate-50 cursor-pointer">
                 Edit
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => void handleDeleteOne(item.id)} className="rounded-lg px-3 py-2 text-sm text-red-600 focus:bg-red-50 focus:text-red-600 cursor-pointer">
+              <DropdownMenuItem onClick={() => void handleDeleteOne(item.id)} className="rounded-md px-3 py-2 text-sm text-red-600 focus:bg-red-50 focus:text-red-600 cursor-pointer">
                 Hapus
               </DropdownMenuItem>
             </DropdownMenuContent>
@@ -305,10 +305,10 @@ export default function TransactionDetailInlineTable({ items, financeBillingId, 
         </td>
         <td className="px-4 py-3 text-center w-20 sticky right-0 bg-slate-50/60 z-10 border-l border-t border-slate-200 shadow-[-4px_0_6px_-4px_rgba(0,0,0,0.05)]">
           <div className="flex items-center justify-center gap-2">
-            <Button type="button" size="sm" className="h-9 rounded-lg bg-[#18385b] px-3 hover:bg-[#102843]" disabled={isBusy} onClick={() => void handleSave('new')}>
+            <Button type="button" size="sm" className="h-9 rounded-md bg-[#18385b] px-3 hover:bg-[#102843]" disabled={isBusy} onClick={() => void handleSave('new')}>
               Simpan
             </Button>
-            <Button type="button" size="sm" variant="outline" className="h-9 rounded-lg border-slate-200 px-3" disabled={isBusy} onClick={resetEditor}>
+            <Button type="button" size="sm" variant="outline" className="h-9 rounded-md border-slate-200 px-3" disabled={isBusy} onClick={resetEditor}>
               Batal
             </Button>
           </div>
@@ -335,7 +335,7 @@ export default function TransactionDetailInlineTable({ items, financeBillingId, 
             <Trash2 className="mr-2 h-4 w-4" />
             Delete ({selectedIds.length})
           </Button>
-          <Button type="button" disabled={disabled || isBusy || editingId === 'new'} onClick={handleAddRow} className="w-full sm:w-auto bg-[#1e3a5f] hover:bg-[#152e4d]">
+          <Button type="button" disabled={disabled || isBusy || editingId === 'new'} onClick={handleAddRow} className="btn-primary!">
             <Plus className="mr-2 h-4 w-4" />
             Tambah Data Transaksi
           </Button>

@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from 'react';
+import { useState, type CSSProperties } from 'react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { PageHeader } from '@/components/ui/page-header';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -14,6 +14,11 @@ import { useRouter } from 'next/router';
 import { useCompany } from '@/contexts/CompanyContext';
 import { resolveCompanyId, getLetterheadByCompanyId } from '@/lib/print-letterhead';
 import { PrintLetterPage } from '@/components/common/PrintLetterPage';
+import { DocumentTemplatePrintFooter } from '@/components/common/DocumentTemplatePrintFooter';
+import { getObjectStorageUrl } from '@/components/ui/storage-image';
+import { useReportTemplatePrint } from '@/hooks/useReportTemplatePrint';
+import { Button } from '@/components/ui/button';
+import { ReportTemplatePrintDialog } from '@/components/ui/report-template-print-dialog';
 
 type TabType = 'per-nota' | 'per-tipe' | 'per-customer';
 
@@ -38,6 +43,13 @@ export default function LaporanPengirimanPage() {
   const slugParam = router.query.slug;
   const resolvedCompanyId = resolveCompanyId(slugParam, companyId);
   const selectedPrintBackground = getLetterheadByCompanyId(resolvedCompanyId);
+  const templatePrint = useReportTemplatePrint(selectedPrintBackground);
+  const templateBackground = templatePrint.selectedTemplate?.documentTemplate
+    ? getObjectStorageUrl(templatePrint.selectedTemplate.documentTemplate)
+    : selectedPrintBackground;
+  const templateColor = templatePrint.selectedTemplate && /^#[0-9a-f]{6}$/i.test(templatePrint.selectedTemplate.tableColor)
+    ? templatePrint.selectedTemplate.tableColor
+    : '#1f4163';
 
   const handleTabChange = (tab: string) => {
     setActiveTab(tab as TabType);
@@ -56,7 +68,7 @@ export default function LaporanPengirimanPage() {
   };
 
   const handlePrint = () => {
-    window.print();
+    templatePrint.openPrintDialog();
   };
 
   const exportToCSV = () => {
@@ -124,13 +136,13 @@ export default function LaporanPengirimanPage() {
           <Tabs value={activeTab} onValueChange={handleTabChange} className="space-y-4">
             <div className="flex no-print">
               <TabsList className="flex h-auto p-1 bg-gray-50 border border-gray-100 rounded-md">
-                <TabsTrigger value="per-nota" className="rounded-lg px-6 py-2.5 text-[14px] font-medium data-[state=active]:bg-white data-[state=active]:text-gray-900 data-[state=active]:shadow-sm">
+                <TabsTrigger value="per-nota" className="rounded-md px-6 py-2.5 text-[14px] font-medium data-[state=active]:bg-white data-[state=active]:text-gray-900 data-[state=active]:shadow-sm">
                   Laporan Pengiriman
                 </TabsTrigger>
-                <TabsTrigger value="per-tipe" className="rounded-lg px-6 py-2.5 text-[14px] font-medium data-[state=active]:bg-white data-[state=active]:text-gray-900 data-[state=active]:shadow-sm">
+                <TabsTrigger value="per-tipe" className="rounded-md px-6 py-2.5 text-[14px] font-medium data-[state=active]:bg-white data-[state=active]:text-gray-900 data-[state=active]:shadow-sm">
                   Laporan Pengiriman Per Tipe
                 </TabsTrigger>
-                <TabsTrigger value="per-customer" className="rounded-lg px-6 py-2.5 text-[14px] font-medium data-[state=active]:bg-white data-[state=active]:text-gray-900 data-[state=active]:shadow-sm">
+                <TabsTrigger value="per-customer" className="rounded-md px-6 py-2.5 text-[14px] font-medium data-[state=active]:bg-white data-[state=active]:text-gray-900 data-[state=active]:shadow-sm">
                   Laporan Pengiriman Per Customer
                 </TabsTrigger>
               </TabsList>
@@ -139,9 +151,12 @@ export default function LaporanPengirimanPage() {
             <PrintLetterPage
               id="laporan-pengiriman-print"
               className="laporan-pengiriman-print-area laporan-penerimaan-print-area"
-              letterheadSrc={selectedPrintBackground}
+              letterheadSrc={templateBackground}
             >
-              <div className="laporan-pengiriman-print-content laporan-penerimaan-print-content">
+              <div
+                className="laporan-pengiriman-print-content laporan-penerimaan-print-content templated-report-print-content"
+                style={{ '--report-template-color': templateColor } as CSSProperties}
+              >
                 <div className="flex flex-col items-center justify-center text-center space-y-1 mb-8">
                   <h2 className="text-[13px] font-bold uppercase text-gray-900 tracking-wide">
                     REKAP PENGIRIMAN {activeTab.replace('-', ' ')}
@@ -182,10 +197,22 @@ export default function LaporanPengirimanPage() {
                     onPageChange={setPage}
                   />
                 </TabsContent>
+
+                <DocumentTemplatePrintFooter template={templatePrint.selectedTemplate} />
               </div>
             </PrintLetterPage>
           </Tabs>
         </div>
+
+        <ReportTemplatePrintDialog
+          open={templatePrint.isDialogOpen}
+          onOpenChange={templatePrint.setIsDialogOpen}
+          selectedTemplateId={templatePrint.selectedTemplateId}
+          onTemplateChange={templatePrint.setSelectedTemplateId}
+          onPrint={templatePrint.printWithSelectedTemplate}
+          isPreparingPrint={templatePrint.isPreparingPrint}
+          reportName="laporan pengiriman"
+        />
       </div>
     </DashboardLayout>
   );

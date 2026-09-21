@@ -1,8 +1,9 @@
 import React from 'react';
-import { useForm } from 'react-hook-form';
+import { Controller, useForm } from 'react-hook-form';
 import { useRouter } from 'next/router';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { InputDate } from '@/components/ui/input-date';
 import { Label } from '@/components/ui/label';
 import { ARMADA_EQUIPMENT_FIELDS } from '@/@types/armada.types';
 import type { Armada, ArmadaEquipmentField, ArmadaPayload } from '@/@types/armada.types';
@@ -107,6 +108,7 @@ export function ArmadaForm({ initialData, title, onSubmit, isSubmitting = false 
   const {
     register,
     handleSubmit,
+    control,
     formState: { errors },
   } = useForm<ArmadaFormData>({
     defaultValues: initialData
@@ -218,12 +220,20 @@ export function ArmadaForm({ initialData, title, onSubmit, isSubmitting = false 
 
           <div className="space-y-2">
             <Label htmlFor="stnkAge">Masa STNK</Label>
-            <Input id="stnkAge" type="date" {...register('stnkAge')} />
+            <Controller
+              control={control}
+              name="stnkAge"
+              render={({ field }) => <InputDate id="stnkAge" {...field} />}
+            />
           </div>
 
           <div className="space-y-2">
             <Label htmlFor="kirAge">Masa KIR</Label>
-            <Input id="kirAge" type="date" {...register('kirAge')} />
+            <Controller
+              control={control}
+              name="kirAge"
+              render={({ field }) => <InputDate id="kirAge" {...field} />}
+            />
           </div>
 
           <div className="space-y-2">
@@ -267,7 +277,7 @@ export function ArmadaForm({ initialData, title, onSubmit, isSubmitting = false 
         <Button type="button" variant="outline" className="w-[120px]" onClick={() => router.back()} disabled={isSubmitting}>
           Batal
         </Button>
-        <Button type="submit" className="w-[120px] bg-[#1e3a5f] hover:bg-[#152e4d]" disabled={isSubmitting}>
+        <Button type="submit" className="w-[120px] btn-primary!" disabled={isSubmitting}>
           {isSubmitting ? 'Menyimpan...' : 'Simpan'}
         </Button>
       </div>

@@ -1,12 +1,13 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/router';
-import { ArrowLeft, ChevronRight, Hash, Tag, Scale, Coins, ShieldCheck, Search, Filter } from 'lucide-react';
+import { ArrowLeft, ChevronRight, Hash, Tag, Scale, Coins, ShieldCheck, Search, Filter, Plus } from 'lucide-react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { SearchPagination } from '@/components/ui/search-pagination';
 import { useTypeUnitDetail } from '@/hooks/useTypeUnit';
 import { useCompany } from '@/contexts/CompanyContext';
 import { LoadingState } from '@/components/ui/loading-state';
@@ -26,6 +27,7 @@ import { UnitTypePriceVersionForm } from '@/components/features/type-unit/UnitTy
 import type { UnitTypePriceVersion, UnitTypePriceVersionFormValues } from '@/@types/unit-type-price-version.types';
 import { toast } from 'sonner';
 import { usePermissionGuard } from '@/hooks/usePermissionGuard';
+import { CollapsibleBox } from '@/components/ui/collapsible-box';
 
 const statusConfig: Record<string, { label: string; className: string }> = {
   normal: { label: 'Normal', className: 'border-emerald-200 bg-emerald-50 text-emerald-700 font-semibold' },
@@ -61,6 +63,9 @@ export default function TypeUnitDetailPage() {
   const canDelete = hasPermission('master-data:delete');
 
   // Search & Filter States
+  const [inputColor, setInputColor] = useState('');
+  const [inputMachineNumber, setInputMachineNumber] = useState('');
+  const [inputChassisNumber, setInputChassisNumber] = useState('');
   const [filterColor, setFilterColor] = useState('');
   const [filterMachineNumber, setFilterMachineNumber] = useState('');
   const [filterChassisNumber, setFilterChassisNumber] = useState('');
@@ -71,6 +76,16 @@ export default function TypeUnitDetailPage() {
   const [perPage, setPerPage] = useState(5);
   const [sortBy, setSortBy] = useState('created_at');
   const [sortDir, setSortDir] = useState('asc');
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setFilterColor(inputColor);
+      setFilterMachineNumber(inputMachineNumber);
+      setFilterChassisNumber(inputChassisNumber);
+      setPage(1);
+    }, 400);
+    return () => clearTimeout(timer);
+  }, [inputColor, inputMachineNumber, inputChassisNumber]);
 
   // Fetch detail unit type info
   const queryParams = useMemo(() => ({
@@ -350,23 +365,16 @@ export default function TypeUnitDetailPage() {
         </Card>
 
         {/* STOCK TABLE COMPONENT */}
-        <div className="rounded-md border border-slate-200 bg-white p-6 shadow-sm space-y-4">
-          <div className="flex flex-col gap-1 md:flex-row md:items-center md:justify-between border-b pb-4">
-            <div>
-              <h3 className="text-lg font-bold text-slate-900">Daftar Unit Barang</h3>
-              <p className="text-sm text-slate-500 text-muted-foreground">Status ketersediaan detail unit tipe</p>
-            </div>
-          </div>
-
+        <CollapsibleBox title="Daftar Unit Barang" description="Status ketersediaan detail unit tipe">
           {/* FILTERS */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 bg-slate-50 p-4 rounded-xl">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 bg-slate-50 p-4 rounded-md">
             <div className="space-y-1">
               <span className="text-xs font-semibold text-slate-500">Warna</span>
               <div className="relative">
                 <Search className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-slate-400" />
                 <Input
-                  value={filterColor}
-                  onChange={(e) => { setFilterColor(e.target.value); setPage(1); }}
+                  value={inputColor}
+                  onChange={(e) => setInputColor(e.target.value)}
                   placeholder="Cari warna..."
                   className="pl-8 h-9 text-xs"
                 />
@@ -378,8 +386,8 @@ export default function TypeUnitDetailPage() {
               <div className="relative">
                 <Search className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-slate-400" />
                 <Input
-                  value={filterMachineNumber}
-                  onChange={(e) => { setFilterMachineNumber(e.target.value); setPage(1); }}
+                  value={inputMachineNumber}
+                  onChange={(e) => setInputMachineNumber(e.target.value)}
                   placeholder="Cari nomor mesin..."
                   className="pl-8 h-9 text-xs"
                 />
@@ -391,8 +399,8 @@ export default function TypeUnitDetailPage() {
               <div className="relative">
                 <Search className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-slate-400" />
                 <Input
-                  value={filterChassisNumber}
-                  onChange={(e) => { setFilterChassisNumber(e.target.value); setPage(1); }}
+                  value={inputChassisNumber}
+                  onChange={(e) => setInputChassisNumber(e.target.value)}
                   placeholder="Cari nomor rangka..."
                   className="pl-8 h-9 text-xs"
                 />
@@ -423,7 +431,7 @@ export default function TypeUnitDetailPage() {
             loading={isLoading}
             showLimitChange
             perPage={perPage}
-            onPerPageChange={(val) => { setPerPage(val); setPage(1); }}
+            onPerPageChange={(val) => { setPerPage(val); }}
             meta={{
               currentPage: page,
               perPage: perPage,
@@ -432,38 +440,40 @@ export default function TypeUnitDetailPage() {
             }}
             onPageChange={setPage}
           />
-        </div>
+        </CollapsibleBox>
 
         {/* PRICE VERSIONING TABLE COMPONENT */}
-        <div className="rounded-md border border-slate-200 bg-white p-6 shadow-sm space-y-4">
-          <div className="border-b pb-4">
-            <h3 className="text-lg font-bold text-slate-900">Riwayat Versi Harga</h3>
-            <p className="text-sm text-slate-500 text-muted-foreground">Kelola riwayat harga beli & harga jual untuk tipe unit ini</p>
-          </div>
-
-          <UnitTypePriceVersionTable
-            data={priceVersionsData?.data || []}
-            meta={priceVersionsData ? {
-              currentPage: priceVersionsData.current_page,
-              lastPage: priceVersionsData.last_page,
-              perPage: priceVersionsData.per_page,
-              total: priceVersionsData.total,
-            } : undefined}
-            isLoading={isPriceLoading}
-            search={priceSearch}
+        <CollapsibleBox title="Riwayat Versi Harga" description="Kelola riwayat harga beli & harga jual untuk tipe unit ini">
+          <SearchPagination
+            searchValue={priceSearch}
+            onSearchChange={setPriceSearch}
+            searchPlaceholder="Cari versi harga..."
+            searchAriaLabel="Cari versi harga"
             page={pricePage}
             perPage={pricePerPage}
-            onSearchChange={setPriceSearch}
+            total={priceVersionsData?.total ?? 0}
+            lastPage={priceVersionsData?.last_page ?? 1}
             onPageChange={setPricePage}
             onPerPageChange={setPricePerPage}
-            onAdd={handleAddPrice}
-            onEdit={handleEditPrice}
-            onDelete={handleDeletePrice}
-            canCreate={canCreate}
-            canEdit={canEdit}
-            canDelete={canDelete}
-          />
-        </div>
+            actions={
+              canCreate && (
+                <Button onClick={handleAddPrice} className="btn-primary!">
+                  <Plus className="mr-2 h-4 w-4" />
+                  Tambah Versi
+                </Button>
+              )
+            }
+          >
+            <UnitTypePriceVersionTable
+              data={priceVersionsData?.data || []}
+              isLoading={isPriceLoading}
+              onEdit={handleEditPrice}
+              onDelete={handleDeletePrice}
+              canEdit={canEdit}
+              canDelete={canDelete}
+            />
+          </SearchPagination>
+        </CollapsibleBox>
       </div>
 
       <UnitTypePriceVersionForm
@@ -473,6 +483,6 @@ export default function TypeUnitDetailPage() {
         onSubmit={handlePriceSubmit}
         isSubmitting={createPriceMutation.isPending || updatePriceMutation.isPending}
       />
-    </DashboardLayout>
+    </DashboardLayout >
   );
 }

@@ -4,36 +4,42 @@ import { useRouter } from 'next/router';
 import { getTaxes, createTax, updateTax, deleteTax, type Tax } from '@/services/tax.service';
 import { TaxTable } from '@/components/features/settings/tax/TaxTable';
 import { TaxForm } from '@/components/features/settings/tax/TaxForm';
+import { SearchPagination } from '@/components/ui/search-pagination';
+import { Button } from '@/components/ui/button';
+import { Plus } from 'lucide-react';
 import { toast } from 'sonner';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { PageHeader } from '@/components/ui/page-header';
 import Head from 'next/head';
+import { useQueryParamsTable } from '@/hooks/useQueryParamsTable';
+import { usePermissionGuard } from '@/hooks/usePermissionGuard';
 
 export default function TaxPage() {
   const router = useRouter();
   const slug = router.query.slug as string;
   const queryClient = useQueryClient();
 
-  const [page, setPage] = useState(1);
-  const [perPage, setPerPage] = useState(25);
-  const [searchInput, setSearchInput] = useState('');
-  const [debouncedSearch, setDebouncedSearch] = useState('');
+  const { page, perPage, search, updateQuery, setPage, setPerPage, setSearch } = useQueryParamsTable({ defaultPerPage: 25 });
+  const [searchInput, setSearchInput] = useState(search);
 
   useEffect(() => {
     const timeout = window.setTimeout(() => {
-      setDebouncedSearch(searchInput.trim());
-      setPage(1);
+      if (search !== searchInput.trim()) {
+        setSearch(searchInput.trim());
+      }
     }, 400);
     return () => window.clearTimeout(timeout);
-  }, [searchInput]);
+  }, [searchInput, search, setSearch]);
 
+  const { hasPermission } = usePermissionGuard();
+  const canCreate = hasPermission('master-data:create');
 
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [selectedTax, setSelectedTax] = useState<Tax | undefined>();
 
-  const { data, isLoading, isFetching } = useQuery({
-    queryKey: ['taxes', page, perPage, debouncedSearch],
-    queryFn: () => getTaxes(page, perPage, debouncedSearch),
+  const { data, isLoading } = useQuery({
+    queryKey: ['taxes', page, perPage, search],
+    queryFn: () => getTaxes(page, perPage, search),
   });
 
   const createMutation = useMutation({
@@ -112,26 +118,49 @@ export default function TaxPage() {
             subtitle="Kelola master data pajak dan versinya"
           />
 
-          <TaxTable
-            data={data?.data?.data || []}
-            meta={data?.data ? {
-              currentPage: data.data.current_page,
-              lastPage: data.data.last_page,
-              perPage: data.data.per_page,
-              total: data.data.total,
-            } : undefined}
-            isLoading={isLoading}
-            search={searchInput}
+          <SearchPagination
+            searchValue={searchInput}
+            onSearchChange={setSearchInput}
+            searchPlaceholder="Cari pajak"
+            searchAriaLabel="Cari pajak"
             page={page}
             perPage={perPage}
-            onSearchChange={setSearchInput}
+            total={data?.data?.total}
+            lastPage={data?.data?.last_page}
             onPageChange={setPage}
             onPerPageChange={setPerPage}
-            onAdd={handleAdd}
-            onEdit={handleEdit}
-            onDelete={handleDelete}
-            onViewDetail={handleViewDetail}
-          />
+            actions={
+              <>
+                {search && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      setSearchInput('');
+                      updateQuery({ search: undefined, page: 1 });
+                    }}
+                    className="rounded-md border-slate-200 text-slate-700 bg-white hover:bg-slate-50 cursor-pointer h-9 text-xs px-3"
+                  >
+                    Reset
+                  </Button>
+                )}
+                {canCreate && (
+                  <Button onClick={handleAdd} className="btn-primary!">
+                    <Plus className="h-4 w-4 mr-2" />
+                    Tambah Data
+                  </Button>
+                )}
+              </>
+            }
+          >
+            <TaxTable
+              data={data?.data?.data || []}
+              isLoading={isLoading}
+              onEdit={handleEdit}
+              onDelete={handleDelete}
+              onViewDetail={handleViewDetail}
+            />
+          </SearchPagination>
         </div>
 
         <TaxForm

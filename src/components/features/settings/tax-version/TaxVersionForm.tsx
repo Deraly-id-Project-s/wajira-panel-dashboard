@@ -3,6 +3,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, FormDescription } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
+import { InputDate } from '@/components/ui/input-date';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Switch } from '@/components/ui/switch';
@@ -126,7 +127,7 @@ export function TaxVersionForm({ open, onOpenChange, initialData, baseTaxId, onS
                   <FormItem>
                     <FormLabel>Berlaku Dari (Opsional)</FormLabel>
                     <FormControl>
-                      <Input type="date" disabled={isSubmitting} {...field} />
+                      <InputDate disabled={isSubmitting} {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -139,7 +140,7 @@ export function TaxVersionForm({ open, onOpenChange, initialData, baseTaxId, onS
                   <FormItem>
                     <FormLabel>Berlaku Sampai (Opsional)</FormLabel>
                     <FormControl>
-                      <Input type="date" disabled={isSubmitting} {...field} />
+                      <InputDate disabled={isSubmitting} {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -151,7 +152,7 @@ export function TaxVersionForm({ open, onOpenChange, initialData, baseTaxId, onS
               control={form.control}
               name="is_default"
               render={({ field }) => (
-                <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3 shadow-sm">
+                <FormItem className="flex flex-row items-center justify-between rounded-md border p-3 shadow-sm">
                   <div className="space-y-0.5">
                     <FormLabel>Jadikan Default</FormLabel>
                     <FormDescription>
@@ -173,7 +174,7 @@ export function TaxVersionForm({ open, onOpenChange, initialData, baseTaxId, onS
               <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={isSubmitting}>
                 Batal
               </Button>
-              <Button type="submit" disabled={isSubmitting} className="bg-[#1e3a5f] hover:bg-[#152e4d]">
+              <Button type="submit" disabled={isSubmitting} className="btn-primary!">
                 {isSubmitting && <LoadingState variant="inline" text={null} />}
                 Simpan
               </Button>

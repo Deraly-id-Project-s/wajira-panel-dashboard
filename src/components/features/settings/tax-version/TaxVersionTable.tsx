@@ -1,45 +1,25 @@
 import { useMemo } from 'react';
 import BaseTable, { ColumnDef } from '@/components/ui/base-table';
-import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
-import { MoreVertical, Pencil, Plus, Trash, CheckCircle2, Lock } from 'lucide-react';
+import { MoreVertical, Pencil, Trash, CheckCircle2, Lock } from 'lucide-react';
 import type { TaxVersion } from '@/services/tax.service';
-import type { PaginationMeta } from '@/@types/pagination.types';
 import { Badge } from '@/components/ui/badge';
 
 interface TaxVersionTableProps {
   data: TaxVersion[];
-  meta?: PaginationMeta;
-  search: string;
-  page: number;
-  perPage: number;
   isLoading?: boolean;
-  onSearchChange: (value: string) => void;
-  onAdd: () => void;
   onEdit: (version: TaxVersion) => void;
   onDelete: (version: TaxVersion) => void;
-  onPageChange: (page: number) => void;
-  onPerPageChange: (perPage: number) => void;
-  canCreate: boolean;
   canEdit: boolean;
   canDelete: boolean;
 }
 
 export const TaxVersionTable = ({
   data,
-  meta,
-  search,
-  page,
-  perPage,
   isLoading = false,
-  onSearchChange,
-  onAdd,
   onEdit,
   onDelete,
-  onPageChange,
-  onPerPageChange,
-  canCreate,
   canEdit,
   canDelete,
 }: TaxVersionTableProps) => {
@@ -121,18 +101,18 @@ export const TaxVersionTable = ({
                 <MoreVertical className="h-4 w-4" />
               </button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="min-w-[150px] rounded-xl border-slate-200 p-1.5 shadow-lg">
+            <DropdownMenuContent align="end" className="min-w-[150px] rounded-md border-slate-200 p-1.5 shadow-lg">
               <DropdownMenuItem
                 onClick={() => onEdit(item)}
                 disabled={!canEdit || item.is_lock === 1 || item.is_lock === true}
-                className="rounded-lg px-3 py-2 text-sm text-slate-900 focus:bg-slate-50 cursor-pointer animate-none"
+                className="rounded-md px-3 py-2 text-sm text-slate-900 focus:bg-slate-50 cursor-pointer animate-none"
               >
                 <Pencil className="mr-2 h-4 w-4" />
                 Edit
               </DropdownMenuItem>
               <DropdownMenuItem
                 onClick={() => onDelete(item)}
-                className="rounded-lg px-3 py-2 text-sm text-red-600 focus:bg-red-50 focus:text-red-600 cursor-pointer animate-none"
+                className="rounded-md px-3 py-2 text-sm text-red-600 focus:bg-red-50 focus:text-red-600 cursor-pointer animate-none"
                 disabled={!canDelete || item.is_default === 1 || item.is_default === true || item.is_lock === 1 || item.is_lock === true}
               >
                 <Trash className="mr-2 h-4 w-4" />
@@ -151,26 +131,7 @@ export const TaxVersionTable = ({
       data={data}
       columns={columns}
       loading={isLoading}
-      searchPlaceholder="Cari versi pajak..."
-      search={search}
-      onSearchChange={onSearchChange}
-      showLimitChange
-      perPage={perPage}
-      onPerPageChange={onPerPageChange}
       defaultSort={{ key: 'id', direction: 'desc' }}
-      meta={{
-        currentPage: page,
-        perPage,
-        lastPage: meta?.lastPage ?? 1,
-        total: meta?.total ?? data.length,
-      }}
-      onPageChange={onPageChange}
-      headerActions={
-        <Button onClick={onAdd} disabled={!canCreate} className="button-theme-1!">
-          <Plus className="mr-2 h-4 w-4" />
-          Tambah Versi
-        </Button>
-      }
     />
   );
 };

@@ -2,6 +2,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, FormDescription } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
+import { InputDate } from '@/components/ui/input-date';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Switch } from '@/components/ui/switch';
@@ -147,7 +148,7 @@ export function UnitTypePriceVersionForm({
                   <FormItem>
                     <FormLabel>Berlaku Dari (Opsional)</FormLabel>
                     <FormControl>
-                      <Input type="date" disabled={isSubmitting} {...field} value={field.value ?? ''} />
+                      <InputDate disabled={isSubmitting} {...field} value={field.value ?? ''} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -160,7 +161,7 @@ export function UnitTypePriceVersionForm({
                   <FormItem>
                     <FormLabel>Berlaku Sampai (Opsional)</FormLabel>
                     <FormControl>
-                      <Input type="date" disabled={isSubmitting} {...field} value={field.value ?? ''} />
+                      <InputDate disabled={isSubmitting} {...field} value={field.value ?? ''} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -172,7 +173,7 @@ export function UnitTypePriceVersionForm({
               control={form.control}
               name="is_default"
               render={({ field }) => (
-                <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3 shadow-sm">
+                <FormItem className="flex flex-row items-center justify-between rounded-md border p-3 shadow-sm">
                   <div className="space-y-0.5">
                     <FormLabel>Jadikan Default</FormLabel>
                     <FormDescription>
@@ -194,7 +195,7 @@ export function UnitTypePriceVersionForm({
               <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={isSubmitting}>
                 Batal
               </Button>
-              <Button type="submit" disabled={isSubmitting} className="bg-[#1e3a5f] hover:bg-[#152e4d]">
+              <Button type="submit" disabled={isSubmitting} className="btn-primary!">
                 {isSubmitting && <LoadingState variant="inline" text={null} />}
                 Simpan
               </Button>

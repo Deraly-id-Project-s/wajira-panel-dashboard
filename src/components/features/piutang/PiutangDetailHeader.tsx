@@ -31,7 +31,7 @@ export default function PiutangDetailHeader({ data, onTerima }: Props) {
             </div>
           </div>
         </div>
-        <button onClick={onTerima} className="bg-[#22c55e] hover:bg-[#16a34a] text-white px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2 transition-colors">
+        <button onClick={onTerima} className="bg-[#22c55e] hover:bg-[#16a34a] text-white px-4 py-2 rounded-md text-sm font-medium flex items-center gap-2 transition-colors">
           + Terima
         </button>
       </div>
@@ -40,7 +40,7 @@ export default function PiutangDetailHeader({ data, onTerima }: Props) {
         {/* Informasi Pembayaran Hutang Card */}
         <div className="bg-white p-6 rounded-md border border-gray-100 shadow-sm space-y-6">
           <div className="flex items-center gap-3 mb-2">
-            <div className="p-2 bg-blue-50 rounded-lg">
+            <div className="p-2 bg-blue-50 rounded-md">
               <FileText className="w-5 h-5 text-blue-600" />
             </div>
             <h3 className="font-medium text-gray-700">Informasi Pembayaran Hutang</h3>
@@ -77,7 +77,7 @@ export default function PiutangDetailHeader({ data, onTerima }: Props) {
         {/* Status Pembayaran Card */}
         <div className="bg-white p-6 rounded-md border border-gray-100 shadow-sm space-y-6">
           <div className="flex items-center gap-3 mb-2">
-            <div className="p-2 bg-pink-50 rounded-lg">
+            <div className="p-2 bg-pink-50 rounded-md">
               <ListChecks className="w-5 h-5 text-pink-500" />
             </div>
             <h3 className="font-medium text-gray-700">Status Pembayaran</h3>

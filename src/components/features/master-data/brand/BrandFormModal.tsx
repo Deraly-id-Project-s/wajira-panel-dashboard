@@ -92,24 +92,25 @@ export function BrandFormModal({
                                     <FormControl>
                                         <div className="space-y-2">
                                             {preview ? (
-                                                <div className="relative aspect-video w-full overflow-hidden rounded-lg border bg-slate-50">
+                                                <div className="relative aspect-video w-full overflow-hidden rounded-md border bg-slate-50">
                                                     {/* eslint-disable-next-line @next/next/no-img-element */}
                                                     <img src={preview} alt="Preview" className="h-full w-full object-contain" />
-                                                    <Button
-                                                        type="button"
-                                                        variant="destructive"
-                                                        size="icon"
-                                                        className="absolute right-2 top-2 h-8 w-8 rounded-full"
-                                                        onClick={() => {
-                                                            onChange(null);
-                                                            setPreview(null);
-                                                        }}
-                                                    >
-                                                        <X className="h-4 w-4" />
-                                                    </Button>
+                                                    <div className="absolute right-2 top-2">
+                                                        <Button
+                                                            type="button"
+                                                            variant="destructive"
+                                                            size="icon-sm"
+                                                            onClick={() => {
+                                                                onChange(null);
+                                                                setPreview(null);
+                                                            }}
+                                                        >
+                                                            <X className="h-4 w-4" />
+                                                        </Button>
+                                                    </div>
                                                 </div>
                                             ) : (
-                                                <label className="flex h-32 w-full cursor-pointer flex-col items-center justify-center rounded-lg border border-dashed border-slate-300 bg-slate-50 transition hover:border-slate-400 hover:bg-slate-100">
+                                                <label className="flex h-32 w-full cursor-pointer flex-col items-center justify-center rounded-md border border-dashed border-slate-300 bg-slate-50 transition hover:border-slate-400 hover:bg-slate-100">
                                                     <div className="flex flex-col items-center justify-center pb-6 pt-5">
                                                         <Upload className="mb-2 h-8 w-8 text-slate-400" />
                                                         <p className="text-xs text-slate-500">Klik atau seret gambar ke sini</p>
@@ -134,10 +135,10 @@ export function BrandFormModal({
                         />
 
                         <div className="flex flex-col gap-2 pt-4">
-                            <Button type="submit" className="w-full" disabled={isSubmitting}>
+                            <Button type="submit" variant="default" disabled={isSubmitting}>
                                 {isSubmitting ? 'Menyimpan...' : submitLabel}
                             </Button>
-                            <Button type="button" variant="outline" className="w-full" onClick={() => onOpenChange(false)}>
+                            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
                                 Batal
                             </Button>
                         </div>

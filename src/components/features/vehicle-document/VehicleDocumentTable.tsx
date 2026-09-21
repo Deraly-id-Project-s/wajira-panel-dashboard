@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { Download, MoreVertical, Plus, Upload } from 'lucide-react';
+import { MoreVertical } from 'lucide-react';
 import { format } from 'date-fns';
 import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
@@ -8,20 +8,9 @@ import type { VehicleDocumentSummary } from '@/@types/vehicle-document.types';
 
 interface Props {
   items: VehicleDocumentSummary[];
-  search: string;
   isLoading?: boolean;
-  page: number;
-  perPage: number;
-  totalData: number;
-  onSearchChange: (value: string) => void;
-  onPageChange: (page: number) => void;
-  onPerPageChange: (value: number) => void;
-  onAdd: () => void;
-  onImport: () => void;
-  onExport: () => void;
   onEdit: (item: VehicleDocumentSummary) => void;
   onDelete: (item: VehicleDocumentSummary) => void;
-  isExporting?: boolean;
 }
 
 const formatDate = (value?: string) => {
@@ -33,23 +22,10 @@ const formatDate = (value?: string) => {
 
 export function VehicleDocumentTable({
   items,
-  search,
   isLoading = false,
-  page,
-  perPage,
-  totalData,
-  onSearchChange,
-  onPageChange,
-  onPerPageChange,
-  onAdd,
-  onImport,
-  onExport,
   onEdit,
   onDelete,
-  isExporting = false,
 }: Props) {
-  const totalPages = Math.max(1, Math.ceil(totalData / perPage));
-
   const columns = useMemo<ColumnDef<VehicleDocumentSummary>[]>(
     () => [
       {
@@ -118,10 +94,10 @@ export function VehicleDocumentTable({
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-[160px] rounded-md border-slate-200 p-1.5 shadow-lg">
-                <DropdownMenuItem onClick={() => onEdit(item)} className="rounded-lg px-3 py-2 text-sm text-slate-900 focus:bg-slate-50 cursor-pointer">
+                <DropdownMenuItem onClick={() => onEdit(item)} className="rounded-md px-3 py-2 text-sm text-slate-900 focus:bg-slate-50 cursor-pointer">
                   Detail / Edit
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => onDelete(item)} className="rounded-lg px-3 py-2 text-sm text-red-600 focus:bg-red-50 focus:text-red-600 cursor-pointer">
+                <DropdownMenuItem onClick={() => onDelete(item)} className="rounded-md px-3 py-2 text-sm text-red-600 focus:bg-red-50 focus:text-red-600 cursor-pointer">
                   Hapus
                 </DropdownMenuItem>
               </DropdownMenuContent>
@@ -138,35 +114,6 @@ export function VehicleDocumentTable({
       data={items}
       columns={columns}
       loading={isLoading}
-      searchPlaceholder="Search here"
-      search={search}
-      onSearchChange={onSearchChange}
-      showLimitChange
-      perPage={perPage}
-      onPerPageChange={onPerPageChange}
-      meta={{
-        currentPage: page,
-        perPage,
-        lastPage: totalPages,
-        total: totalData,
-      }}
-      onPageChange={onPageChange}
-      headerActions={
-        <div className="flex flex-wrap gap-2">
-          <Button onClick={onImport} variant="outline" className="w-full sm:w-auto">
-            <Upload className="mr-2 h-4 w-4" />
-            Import
-          </Button>
-          <Button onClick={onExport} disabled={isExporting} variant="outline" className="w-full sm:w-auto">
-            <Download className="mr-2 h-4 w-4" />
-            {isExporting ? 'Exporting...' : 'Export'}
-          </Button>
-          <Button onClick={onAdd} className="w-full sm:w-auto bg-[#1e3a5f] hover:bg-[#152e4d]">
-            <Plus className="mr-2 h-4 w-4" />
-            Tambah Data
-          </Button>
-        </div>
-      }
     />
   );
 }

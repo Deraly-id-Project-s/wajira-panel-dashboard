@@ -27,8 +27,8 @@ export default function DeletePengeluaranUnitDialog({
                     </AlertDialogDescription>
                 </AlertDialogHeader>
                 <AlertDialogFooter className="flex-row justify-end gap-3 sm:gap-3 sm:space-x-0">
-                    <AlertDialogCancel className="mt-0 h-10 px-6 rounded-lg font-medium border-gray-200 text-gray-900 hover:bg-gray-50">Batal</AlertDialogCancel>
-                    <AlertDialogAction className="h-10 px-6 rounded-lg font-medium bg-[#DC2626] text-white hover:bg-red-700" onClick={onConfirm}>
+                    <AlertDialogCancel className="mt-0 h-10 px-6 rounded-md font-medium border-gray-200 text-gray-900 hover:bg-gray-50">Batal</AlertDialogCancel>
+                    <AlertDialogAction className="h-10 px-6 rounded-md font-medium bg-[#DC2626] text-white hover:bg-red-700" onClick={onConfirm}>
                         Hapus
                     </AlertDialogAction>
                 </AlertDialogFooter>
