@@ -28,6 +28,7 @@ import { useTypeUnit } from '@/hooks/useTypeUnit';
 import { LoadingState } from '@/components/ui/loading-state';
 import { useCompany } from '@/contexts/CompanyContext';
 import { getStoredCompanyId } from '@/lib/session/storage';
+import { CollapsibleBox } from '@/components/ui/collapsible-box';
 
 const readApiError = (error: any): string => {
   const statusCode = error?.statusCode ?? error?.response?.status;
@@ -487,74 +488,72 @@ export default function SalesUnitDetailPage() {
         <SalesDetailCards data={salesData.ui} billingHistories={resolvedBillingHistories} unitType={unitTypeData} />
 
         <Card className="border border-slate-200 shadow-sm">
-          <CardContent className="p-4 space-y-4">
-            <div className="flex flex-col md:flex-row md:items-center justify-between border-b border-slate-100 pb-4 gap-4">
-              <div>
-                <h2 className="text-base font-bold text-slate-800">Data Penjualan Detail Unit Tipe</h2>
-                <p className="text-xs text-slate-500 mt-1">Pilih stock unit yang tersedia untuk dijual</p>
-              </div>
+          <CollapsibleBox title="Data Penjualan Detail Unit Tipe" description="Pilih stock unit yang tersedia untuk dijual">
+            <CardContent className="p-4 space-y-4">
+              <div className="flex flex-col md:items-end justify-between border-b border-slate-100 pb-4 gap-4">
 
-              <div className={cn(
-                "flex items-center gap-4 px-4 py-2.5 rounded-md border",
-                selectedCount >= requiredQty
-                  ? "bg-emerald-50/50 border-emerald-100"
-                  : "bg-blue-50/50 border-blue-100"
-              )}>
-                <div>
-                  <p className={cn(
-                    "text-[11px] font-semibold uppercase tracking-wider mb-0.5",
-                    selectedCount >= requiredQty ? "text-emerald-600" : "text-blue-600"
+                <div className={cn(
+                  "flex items-center gap-4 px-4 py-2.5 rounded-md border",
+                  selectedCount >= requiredQty
+                    ? "bg-emerald-50/50 border-emerald-100"
+                    : "bg-blue-50/50 border-blue-100"
+                )}>
+                  <div>
+                    <p className={cn(
+                      "text-[11px] font-semibold uppercase tracking-wider mb-0.5",
+                      selectedCount >= requiredQty ? "text-emerald-600" : "text-blue-600"
+                    )}>
+                      Status Pemilihan Unit
+                    </p>
+                    <div className="flex items-baseline gap-1.5">
+                      <span className="text-xl font-bold text-slate-800 leading-none">{selectedCount}</span>
+                      <span className="text-sm font-medium text-slate-500">/ {requiredQty}</span>
+                      <span className="text-xs text-slate-500 ml-0.5">Unit</span>
+                    </div>
+                  </div>
+                  <div className={cn(
+                    "flex items-center justify-center h-10 w-10 rounded-md",
+                    selectedCount >= requiredQty ? "bg-emerald-100 text-emerald-600" : "bg-blue-100 text-blue-600"
                   )}>
-                    Status Pemilihan Unit
-                  </p>
-                  <div className="flex items-baseline gap-1.5">
-                    <span className="text-xl font-bold text-slate-800 leading-none">{selectedCount}</span>
-                    <span className="text-sm font-medium text-slate-500">/ {requiredQty}</span>
-                    <span className="text-xs text-slate-500 ml-0.5">Unit</span>
+                    {selectedCount >= requiredQty ? <CheckCircle2 className="h-5 w-5" /> : <ListTodoIcon className="h-5 w-5" />}
                   </div>
                 </div>
-                <div className={cn(
-                  "flex items-center justify-center h-10 w-10 rounded-md",
-                  selectedCount >= requiredQty ? "bg-emerald-100 text-emerald-600" : "bg-blue-100 text-blue-600"
-                )}>
-                  {selectedCount >= requiredQty ? <CheckCircle2 className="h-5 w-5" /> : <ListTodoIcon className="h-5 w-5" />}
-                </div>
               </div>
-            </div>
 
-            <StockPickerTable
-              units={pickerRows}
-              selectedIds={selectedIds}
-              requiredQty={requiredQty}
-              unitType={unitTypeData}
-              isPaid={isPaid}
-              currentTransactionId={salesId}
-              isSelectionLocked={isStockSelectionLocked}
-              onToggleOne={toggleOne}
-              onToggleAllPage={toggleAllPage}
-              currentPage={currentPage}
-              perPage={perPage}
-              onPageChange={setCurrentPage}
-              onPerPageChange={setPerPage}
-              isLoading={isStockLoading}
-              isError={isStockError}
-              searchValue={search}
-              searchAction={(
-                <Button
-                  size="sm"
-                  className="bg-primary text-primary-foreground hover:bg-primary/90"
-                  disabled={!canAssignStock || isSelectionMatchingSaved || assignMutation.isPending || dispatchMutation.isPending || updateStateMutation.isPending || isPaid || isStockSelectionLocked}
-                  onClick={() => setIsAssignDialogOpen(true)}
-                >
-                  {assignMutation.isPending ? 'Menyimpan...' : `Unit Terjual (${selectedCount}/${requiredQty})`}
-                </Button>
-              )}
-              onSearchChange={(value) => {
-                setSearch(value);
-                setCurrentPage(1);
-              }}
-            />
-          </CardContent>
+              <StockPickerTable
+                units={pickerRows}
+                selectedIds={selectedIds}
+                requiredQty={requiredQty}
+                unitType={unitTypeData}
+                isPaid={isPaid}
+                currentTransactionId={salesId}
+                isSelectionLocked={isStockSelectionLocked}
+                onToggleOne={toggleOne}
+                onToggleAllPage={toggleAllPage}
+                currentPage={currentPage}
+                perPage={perPage}
+                onPageChange={setCurrentPage}
+                onPerPageChange={setPerPage}
+                isLoading={isStockLoading}
+                isError={isStockError}
+                searchValue={search}
+                searchAction={(
+                  <Button
+                    size="sm"
+                    className="bg-primary text-primary-foreground hover:bg-primary/90"
+                    disabled={!canAssignStock || isSelectionMatchingSaved || assignMutation.isPending || dispatchMutation.isPending || updateStateMutation.isPending || isPaid || isStockSelectionLocked}
+                    onClick={() => setIsAssignDialogOpen(true)}
+                  >
+                    {assignMutation.isPending ? 'Menyimpan...' : `Unit Terjual (${selectedCount}/${requiredQty})`}
+                  </Button>
+                )}
+                onSearchChange={(value) => {
+                  setSearch(value);
+                  setCurrentPage(1);
+                }}
+              />
+            </CardContent>
+          </CollapsibleBox>
         </Card>
       </div>
 

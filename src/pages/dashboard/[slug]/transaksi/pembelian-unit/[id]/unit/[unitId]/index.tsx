@@ -30,6 +30,7 @@ import BaseTable from '@/components/ui/base-table';
 import { LoadingState } from '@/components/ui/loading-state';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
+import { CollapsibleBox } from '@/components/ui/collapsible-box';
 
 const statusConfig: Record<string, { label: string; className: string }> = {
   // Backend enum statuses
@@ -515,82 +516,80 @@ export default function UnitPurchaseDetailPage() {
           </div>
 
           <Card className="border border-slate-200 shadow-sm">
-            <CardContent className="p-4 space-y-4">
-              <div className="flex flex-col md:flex-row md:items-center justify-between border-b border-slate-100 pb-4 gap-4">
-                <div>
-                  <h2 className="text-base font-bold text-slate-800">Data Pembelian Detail Unit Tipe</h2>
-                  <p className="text-xs text-slate-500 mt-1">Rincian lengkap detail unit yang dibeli</p>
-                </div>
-
-                <div className={cn(
-                  "flex items-center gap-4 px-4 py-2.5 rounded-md border",
-                  details.length >= qty
-                    ? "bg-emerald-50/50 border-emerald-100"
-                    : "bg-blue-50/50 border-blue-100"
-                )}>
-                  <div>
-                    <p className={cn(
-                      "text-[11px] font-semibold uppercase tracking-wider mb-0.5",
-                      details.length >= qty ? "text-emerald-600" : "text-blue-600"
+            <CollapsibleBox title="Data Pembelian Detail Unit Tipe" description="Rincian lengkap detail unit yang dibeli">
+              <CardContent className="p-4 space-y-4">
+                <div className="flex flex-col md:items-end justify-between border-b border-slate-100 pb-4 gap-4">
+                  <div className={cn(
+                    "flex items-center gap-4 px-4 py-2.5 rounded-md border",
+                    details.length >= qty
+                      ? "bg-emerald-50/50 border-emerald-100"
+                      : "bg-blue-50/50 border-blue-100"
+                  )}>
+                    <div>
+                      <p className={cn(
+                        "text-[11px] font-semibold uppercase tracking-wider mb-0.5",
+                        details.length >= qty ? "text-emerald-600" : "text-blue-600"
+                      )}>
+                        Status Pengisian Unit
+                      </p>
+                      <div className="flex items-baseline gap-1.5">
+                        <span className="text-xl font-bold text-slate-800 leading-none">{details.length}</span>
+                        <span className="text-sm font-medium text-slate-500">/ {qty}</span>
+                        <span className="text-xs text-slate-500 ml-0.5">Unit</span>
+                      </div>
+                    </div>
+                    <div className={cn(
+                      "flex items-center justify-center h-10 w-10 rounded-full",
+                      details.length >= qty ? "bg-emerald-100 text-emerald-600" : "bg-blue-100 text-blue-600"
                     )}>
-                      Status Pengisian Unit
-                    </p>
-                    <div className="flex items-baseline gap-1.5">
-                      <span className="text-xl font-bold text-slate-800 leading-none">{details.length}</span>
-                      <span className="text-sm font-medium text-slate-500">/ {qty}</span>
-                      <span className="text-xs text-slate-500 ml-0.5">Unit</span>
+                      {details.length >= qty ? <CheckCircle2 className="h-5 w-5" /> : <ListTodoIcon className="h-5 w-5" />}
                     </div>
                   </div>
-                  <div className={cn(
-                    "flex items-center justify-center h-10 w-10 rounded-full",
-                    details.length >= qty ? "bg-emerald-100 text-emerald-600" : "bg-blue-100 text-blue-600"
-                  )}>
-                    {details.length >= qty ? <CheckCircle2 className="h-5 w-5" /> : <ListTodoIcon className="h-5 w-5" />}
-                  </div>
                 </div>
-              </div>
 
-              <BaseTable
-                data={filteredDetails}
-                columns={columns}
-                loading={purchaseLoading}
-                headerRowClassName="bg-[#f8f9fa] border-b border-gray-200"
-                defaultSort={{ key: 'payment_date', direction: 'desc' }}
-                showCheckbox={!isPaid}
-                selectedIds={selectedIds}
-                onSelectedIdsChange={setSelectedIds}
-                search={search}
-                onSearchChange={(val) => { setSearch(val); }}
-                headerActions=
-                {(
-                  <div className="flex flex-col sm:flex-row items-center gap-2 w-full sm:w-auto">
-                    {selectedIds.size > 0 && canDelete && !isPaid && (
-                      <Button
-                        onClick={() => setOpenBulkDeleteModal(true)}
-                        disabled={isBulkDeleting}
-                        variant="destructive"
-                        className="w-full sm:w-auto bg-[#EF4444] hover:bg-[#DC2626] text-white"
-                      >
-                        <Trash className="h-4 w-4 mr-2" />
-                        Hapus ({selectedIds.size})
-                      </Button>
-                    )}
-                    {canCreate && (
-                      <>
-                        <Button onClick={() => setOpenImport(true)} disabled={qty === details.length} variant="outline">
-                          <Upload className="h-4 w-4 mr-2" />
-                          Import
+                <BaseTable
+                  data={filteredDetails}
+                  columns={columns}
+                  loading={purchaseLoading}
+                  headerRowClassName="bg-[#f8f9fa] border-b border-gray-200"
+                  defaultSort={{ key: 'payment_date', direction: 'desc' }}
+                  showCheckbox={!isPaid}
+                  selectedIds={selectedIds}
+                  onSelectedIdsChange={setSelectedIds}
+                  search={search}
+                  onSearchChange={(val) => { setSearch(val); }}
+                  headerActions=
+                  {(
+                    <div className="flex flex-col sm:flex-row items-center gap-2 w-full sm:w-auto">
+                      {selectedIds.size > 0 && canDelete && !isPaid && (
+                        <Button
+                          onClick={() => setOpenBulkDeleteModal(true)}
+                          disabled={isBulkDeleting}
+                          variant="destructive"
+                          className="w-full sm:w-auto bg-[#EF4444] hover:bg-[#DC2626] text-white"
+                        >
+                          <Trash className="h-4 w-4 mr-2" />
+                          Hapus ({selectedIds.size})
                         </Button>
-                        <Button onClick={openCreateForm} disabled={qty === details.length || !qty} variant="default">
-                          <Plus className="h-4 w-4 mr-2" />
-                          Tambah Detail Unit
-                        </Button>
-                      </>
-                    )}
-                  </div>
-                )}
-              />
-            </CardContent>
+                      )}
+                      {canCreate && (
+                        <>
+                          <Button onClick={() => setOpenImport(true)} disabled={qty === details.length} variant="outline">
+                            <Upload className="h-4 w-4 mr-2" />
+                            Import
+                          </Button>
+                          <Button onClick={openCreateForm} disabled={qty === details.length || !qty} variant="default">
+                            <Plus className="h-4 w-4 mr-2" />
+                            Tambah Detail Unit
+                          </Button>
+                        </>
+                      )}
+                    </div>
+                  )}
+                />
+              </CardContent>
+            </CollapsibleBox>
+
           </Card>
         </div>
       </div>
