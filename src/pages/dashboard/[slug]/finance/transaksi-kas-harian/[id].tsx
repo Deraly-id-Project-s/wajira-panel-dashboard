@@ -270,7 +270,7 @@ export default function KasHarianDetailPage() {
                 }}
                 disabled={remainingPayment !== 0 && !cashFlowDetail.is_valid}
               >
-                {cashFlowDetail.is_paid ? 'Tandai Belum Lunas' : 'Tandai Lunas'}
+                {cashFlowDetail.is_paid ? 'Batal Posting Jurnal' : 'Posting Jurnal'}
               </Button>
             </>
           }
