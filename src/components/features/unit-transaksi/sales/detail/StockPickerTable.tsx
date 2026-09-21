@@ -4,6 +4,7 @@ import { WarehouseStockUnit } from '@/@types/unit-transaction.types';
 import BaseTable, { ColumnDef } from '@/components/ui/base-table';
 import { CopyBox } from '@/components/ui/copy-box';
 import { Badge } from '@/components/ui/badge';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { cn } from '@/lib/utils';
 import { TypeUnit } from '@/@types/type-unit.types';
 import { ReferenceLink } from '@/components/ui/reference-link';
@@ -18,11 +19,14 @@ interface StockPickerTableProps {
   onToggleAllPage: (checked: boolean) => void;
   currentPage: number;
   perPage: number;
+  totalItems?: number;
   onPageChange: (page: number) => void;
   onPerPageChange: (value: number) => void;
   isLoading?: boolean;
   isError?: boolean;
   searchValue: string;
+  searchCategory?: string;
+  onSearchCategoryChange?: (value: string) => void;
   onSearchChange: (value: string) => void;
   searchAction?: ReactNode;
   requiredQty?: number;
@@ -94,28 +98,18 @@ export function StockPickerTable({
   onToggleOne,
   currentPage,
   perPage,
+  totalItems = 0,
   onPageChange,
   onPerPageChange,
   isLoading,
   searchValue,
+  searchCategory,
+  onSearchCategoryChange,
   onSearchChange,
   searchAction,
   requiredQty,
 }: StockPickerTableProps) {
-  const filteredUnits = useMemo(() => {
-    const query = searchValue.trim().toLowerCase();
-    if (!query) return units;
-
-    return units.filter((item) => {
-      return [item.color, item.machine_number, item.chassis_number].some((field) => String(field ?? '').toLowerCase().includes(query));
-    });
-  }, [units, searchValue]);
-
-  const totalPages = Math.max(1, Math.ceil(filteredUnits.length / perPage));
-  const pagedRows = useMemo(() => {
-    const start = (currentPage - 1) * perPage;
-    return filteredUnits.slice(start, start + perPage);
-  }, [filteredUnits, currentPage, perPage]);
+  const totalPages = Math.max(1, Math.ceil(totalItems / perPage));
 
   const stringSelectedIds = useMemo(() => {
     return new Set<string>(Array.from(selectedIds).map(String));
@@ -132,7 +126,7 @@ export function StockPickerTable({
 
   const handleSelectedIdsChange = useCallback((ids: Set<string>) => {
     const numIds = new Set<number>(Array.from(ids).map(Number));
-    const allPageIds = new Set(pagedRows.map((r) => r.id));
+    const allPageIds = new Set(units.map((r) => r.id));
 
     const added = Array.from(numIds).filter((id) => !selectedIds.has(id));
     const removed = Array.from(allPageIds).filter((id) => selectedIds.has(id) && !numIds.has(id));
@@ -151,7 +145,7 @@ export function StockPickerTable({
         currentSelectedSize++;
       }
     }
-  }, [pagedRows, selectedIds, onToggleOne, requiredQty]);
+  }, [units, selectedIds, onToggleOne, requiredQty]);
 
   const columns = useMemo<ColumnDef<WarehouseStockUnit>[]>(() => [
     {
@@ -237,7 +231,7 @@ export function StockPickerTable({
   return (
     <div className="space-y-4">
       <BaseTable
-        data={pagedRows}
+        data={units}
         columns={columns}
         headerRowClassName="bg-[#f8f9fa] border-b border-gray-200"
         loading={isLoading}
@@ -259,10 +253,26 @@ export function StockPickerTable({
           currentPage,
           perPage,
           lastPage: totalPages,
-          total: filteredUnits.length,
+          total: totalItems,
         }}
         onPageChange={onPageChange}
-        headerActions={searchAction ? <div>{searchAction}</div> : undefined}
+        headerActions={
+          <div className="flex items-center gap-2">
+            {onSearchCategoryChange && (
+              <Select value={searchCategory ?? 'search'} onValueChange={onSearchCategoryChange}>
+                <SelectTrigger className="w-[160px] h-9">
+                  <SelectValue placeholder="Pencarian" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="search">Semua</SelectItem>
+                  <SelectItem value="machine_number">No. Mesin</SelectItem>
+                  <SelectItem value="chassis_number">No. Rangka</SelectItem>
+                </SelectContent>
+              </Select>
+            )}
+            {searchAction && <div>{searchAction}</div>}
+          </div>
+        }
       />
     </div>
   );
