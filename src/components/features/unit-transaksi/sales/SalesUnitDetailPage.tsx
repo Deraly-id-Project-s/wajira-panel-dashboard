@@ -22,7 +22,10 @@ import { PageHeader } from '@/components/ui/page-header';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { useSalesDetail } from '@/hooks/useSales';
-import { useStockUnits, useAssignUnitItemSales, useDispatchStockLifecycle } from '@/hooks/useUnitTransactionItemSales';
+import { useStockUnits } from '@/hooks/useStockUnit';
+import { useAssignUnitItemSales, useDispatchStockLifecycle } from '@/hooks/useUnitTransactionItemSales';
+import { unitTransactionItemSalesService } from '@/services/unitTransactionItemSales.service';
+import { useQuery } from '@tanstack/react-query';
 import { useUpdateUnitTransactionState } from '@/hooks/useUnitTransaction';
 import { useTypeUnit } from '@/hooks/useTypeUnit';
 import { LoadingState } from '@/components/ui/loading-state';
@@ -112,15 +115,43 @@ export default function SalesUnitDetailPage() {
   const companyId = String((salesData?.raw as any)?.company_id ?? '1');
   const fallbackUnitTypeId = String(fallbackUnitItemFromSales?.unit_type_id ?? selectedUnitId ?? '');
 
+  const [search, setSearch] = useState('');
+  const [searchCategory, setSearchCategory] = useState<string>('search');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [perPage, setPerPage] = useState(25);
+  const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
+  const [isAssignDialogOpen, setIsAssignDialogOpen] = useState(false);
+
+  const isValidId = !!selectedUnitId && selectedUnitId !== 'unit' && selectedUnitId !== 'undefined' && selectedUnitId !== 'null' && String(selectedUnitId).trim() !== '';
+  const unitItemQuery = useQuery({
+    queryKey: ['unit-transaction-item', selectedUnitId ?? ''],
+    queryFn: () => unitTransactionItemSalesService.getUnitItemById(selectedUnitId as string),
+    enabled: isValidId,
+    staleTime: 1000 * 60,
+  });
+
   const {
-    unitItem,
-    stockUnits,
-    isUnitItemLoading,
-    isStockLoading,
-    isUnitItemError,
-    isStockError,
-    stockError,
-  } = useStockUnits(selectedUnitId, { companyId, unitTypeIdFallback: fallbackUnitTypeId });
+    data: stockData,
+    isLoading: isStockLoading,
+    isError: isStockError,
+    error: stockError,
+  } = useStockUnits(companyId, {
+    page: currentPage,
+    perPage: perPage,
+    search: searchCategory === 'search' ? search : undefined,
+    machine_number: searchCategory === 'machine_number' ? search : undefined,
+    chassis_number: searchCategory === 'chassis_number' ? search : undefined,
+    stock_state: 'draft',
+    in_stock: true,
+    unit_transaction_item_id: selectedUnitId,
+    specified: 'sales_outstanding'
+  });
+
+  const unitItem = unitItemQuery.data;
+  const isUnitItemLoading = unitItemQuery.isLoading;
+  const isUnitItemError = unitItemQuery.isError;
+  const stockUnits = stockData?.data ?? [];
+  const stockMeta = stockData?.meta;
 
   const effectiveUnitItem = unitItem ?? fallbackUnitItemFromSales;
 
@@ -143,12 +174,6 @@ export default function SalesUnitDetailPage() {
     return Boolean(isPaidVal);
   }, [salesData]);
 
-  const [search, setSearch] = useState('');
-  const [currentPage, setCurrentPage] = useState(1);
-  const [perPage, setPerPage] = useState(25);
-  const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
-  const [isAssignDialogOpen, setIsAssignDialogOpen] = useState(false);
-
   const assignMutation = useAssignUnitItemSales();
   const dispatchMutation = useDispatchStockLifecycle();
   const updateStateMutation = useUpdateUnitTransactionState();
@@ -169,8 +194,8 @@ export default function SalesUnitDetailPage() {
     }));
 
     const detailLookup = new Map<number, WarehouseStockUnit>();
-    stockUnits.forEach((detail: WarehouseStockUnit) => {
-      detailLookup.set(detail.id, detail);
+    stockUnits.forEach((detail: any) => {
+      detailLookup.set(detail.id, detail as WarehouseStockUnit);
     });
     mappedFromItemDetails.forEach((detail: any) => {
       detailLookup.set(detail.id, detail);
@@ -472,11 +497,17 @@ export default function SalesUnitDetailPage() {
               onToggleAllPage={toggleAllPage}
               currentPage={currentPage}
               perPage={perPage}
+              totalItems={stockMeta?.total}
               onPageChange={setCurrentPage}
               onPerPageChange={setPerPage}
               isLoading={isStockLoading}
               isError={isStockError}
               searchValue={search}
+              searchCategory={searchCategory}
+              onSearchCategoryChange={(val) => {
+                setSearchCategory(val);
+                setCurrentPage(1);
+              }}
               searchAction={(
                 <Button
                   size="sm"
