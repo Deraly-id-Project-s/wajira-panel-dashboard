@@ -15,6 +15,7 @@ import { Input } from '@/components/ui/input';
 import { SlidersHorizontal } from 'lucide-react';
 import { SearchPagination } from '@/components/ui/search-pagination';
 import { useQueryParamsTable } from '@/hooks/useQueryParamsTable';
+import { SearchInput } from '@/components/ui/search-input';
 
 export default function StockUnitPage() {
   const { companyId } = useCompany();
@@ -100,7 +101,7 @@ export default function StockUnitPage() {
   const params = useMemo(() => ({
     page,
     perPage,
-    search,
+    search: search,
     stock_state: stockState,
     in_stock: inStock,
     activity_type: activityType,
@@ -115,16 +116,6 @@ export default function StockUnitPage() {
 
   const isDataLoading = isLoading || isFetching;
 
-  if (isLoading) {
-    return (
-      <DashboardLayout>
-        <div className="space-y-6">
-          <PageHeader title="Data Unit Stok" subtitle="Kelola dan lacak semua unit stok" />
-          <LoadingState variant="page" />
-        </div>
-      </DashboardLayout>
-    );
-  }
 
   if (isError) {
     return (
@@ -172,11 +163,37 @@ export default function StockUnitPage() {
     </div>
   );
 
+  const searchFilters = (
+    <div className="flex gap-2 w-full sm:w-auto flex-col sm:flex-row">
+      <SearchInput
+        searchValue={machineNumber}
+        onSearchChange={(val) => {
+          setMachineNumber(val || undefined);
+          setPage(1);
+        }}
+        placeholder="Nomor Mesin"
+        aria-label="Cari nomor mesin"
+        wrapperClassName="sm:w-[200px]"
+      />
+      <SearchInput
+        searchValue={chassisNumber}
+        onSearchChange={(val) => {
+          setChassisNumber(val || undefined);
+          setPage(1);
+        }}
+        placeholder="Nomor Rangka"
+        aria-label="Cari nomor rangka"
+        wrapperClassName="sm:w-[200px]"
+      />
+    </div>
+  );
+
   return (
     <DashboardLayout>
       <div className="space-y-6">
         <PageHeader title="Data Unit Stok" subtitle="Kelola dan lacak semua unit stok" />
         <SearchPagination
+          hideSearch={true}
           searchValue={search}
           onSearchChange={setSearch}
           searchPlaceholder="Search here"
@@ -188,6 +205,7 @@ export default function StockUnitPage() {
           onPageChange={setPage}
           onPerPageChange={setPerPage}
           actions={filters}
+          filters={searchFilters}
         >
           <StockUnitTable
             data={data?.data || []}

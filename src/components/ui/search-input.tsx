@@ -67,6 +67,30 @@ const SearchInput = React.forwardRef<HTMLInputElement, SearchInputProps>(
             return () => document.removeEventListener("keydown", focusSearchInput)
         }, [disabled, enableShortcut, readOnly])
 
+        const [localValue, setLocalValue] = React.useState(searchValue ?? props.value ?? "")
+
+        React.useEffect(() => {
+            if (searchValue !== undefined && searchValue !== localValue) {
+                setLocalValue(searchValue)
+            }
+        }, [searchValue])
+
+        const debouncedSearch = React.useRef<NodeJS.Timeout | null>(null)
+
+        const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+            const val = event.target.value
+            setLocalValue(val)
+            onChange?.(event)
+            onValueChange?.(val)
+
+            if (debouncedSearch.current) {
+                clearTimeout(debouncedSearch.current)
+            }
+            debouncedSearch.current = setTimeout(() => {
+                onSearchChange?.(val)
+            }, 400)
+        }
+
         return (
             <div className={cn("relative w-full", wrapperClassName)}>
                 <Search
@@ -79,15 +103,11 @@ const SearchInput = React.forwardRef<HTMLInputElement, SearchInputProps>(
                     type="search"
                     disabled={disabled}
                     readOnly={readOnly}
-                    value={searchValue ?? props.value}
+                    value={localValue}
                     placeholder={placeholder}
                     aria-keyshortcuts={enableShortcut ? "Control+H" : undefined}
                     className={cn("bg-white pl-9", enableShortcut && "pr-16", className)}
-                    onChange={(event) => {
-                        onChange?.(event)
-                        onSearchChange?.(event.target.value)
-                        onValueChange?.(event.target.value)
-                    }}
+                    onChange={handleChange}
                 />
                 {enableShortcut && (
                     <kbd className="pointer-events-none absolute right-2 top-1/2 hidden -translate-y-1/2 rounded border border-slate-200 bg-slate-50 px-1.5 py-0.5 text-[10px] font-medium text-slate-500 sm:inline-flex">
