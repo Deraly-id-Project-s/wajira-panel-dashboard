@@ -24,8 +24,8 @@ export default function CreateSalesSparepartPage() {
       });
       toast.success('Penjualan Sparepart berhasil ditambahkan');
       router.push(`/dashboard/${slug}/transaksi/penjualan-sparepart/${sparepartTransactionResponse?.id}`);
-    } catch {
-      toast.error('Gagal menambahkan Penjualan Sparepart');
+    } catch (error) {
+      throw error;
     }
   };
 

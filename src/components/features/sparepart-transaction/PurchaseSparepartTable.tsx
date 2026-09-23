@@ -231,57 +231,74 @@ export default function PurchaseSparepartTable({
         alignment: 'center',
         sticky: 'right',
         cell: (item) => (
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" className="h-8 w-8 p-0">
-                <MoreVertical className="h-4 w-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem onClick={() => router.push(`/dashboard/${slug}/transaksi/pembelian-sparepart/${item.id}`)}>
-                <Eye className="mr-2 h-4 w-4" /> Detail
-              </DropdownMenuItem>
-              {!item.is_refunded && canCreate && (
-                <DropdownMenuItem onClick={() => router.push(`/dashboard/${slug}/transaksi/refund-sparepart/create?sparepart_transaction_id=${item.id}`)}>
-                  <Undo2 className="mr-2 h-4 w-4" /> Refund
-                </DropdownMenuItem>
-              )}
-              {canEdit && (
-                <DropdownMenuItem onClick={() => router.push(`/dashboard/${slug}/transaksi/pembelian-sparepart/edit/${item.id}`)}>
-                  <Pencil className="mr-2 h-4 w-4" /> Edit
-                </DropdownMenuItem>
-              )}
-              {canEdit && (() => {
-                const billing = item.sparepart_transaction_billing;
-                const remainingPayment = Number(billing?.is_remaining_payment ?? item.billing_summary?.remaining_payment);
-                const canMarkAsPaid = !billing?.is_paid && Number.isFinite(remainingPayment) && remainingPayment === 0 && Boolean(billing?.id);
-
-                return canMarkAsPaid ? (
-                  <DropdownMenuItem onClick={() => handleMarkAsPaid(String(billing?.id))}>
-                    <CheckCircle className="mr-2 h-4 w-4" /> Tandai Lunas
-                  </DropdownMenuItem>
-                ) : null;
-              })()}
-              {canDelete && (
-                <DropdownMenuItem
-                  className={cn(
-                    "text-red-600 focus:text-red-600 focus:bg-red-50 cursor-pointer",
-                    item.sparepart_transaction_billing?.is_paid && "opacity-50 cursor-not-allowed hover:bg-transparent hover:text-red-600 focus:bg-transparent"
-                  )}
-                  disabled={item.sparepart_transaction_billing?.is_paid}
-                  onClick={(e) => {
-                    if (item.sparepart_transaction_billing?.is_paid) {
-                      e.preventDefault();
-                      return;
-                    }
-                    onDelete(String(item.id));
-                  }}
+          <div className="flex justify-center">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="ghost"
+                  className="h-8 w-8 p-0 rounded-full text-slate-600 hover:bg-slate-100 hover:text-slate-900"
                 >
-                  <Trash2 className="mr-2 h-4 w-4" /> Hapus
+                  <MoreVertical className="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="min-w-[150px] rounded-md border-slate-200 p-1.5 shadow-lg">
+                <DropdownMenuItem
+                  onClick={() => router.push(`/dashboard/${slug}/transaksi/pembelian-sparepart/${item.id}`)}
+                  className="rounded-md px-3 py-2 text-sm text-slate-900 focus:bg-slate-50 cursor-pointer"
+                >
+                  Detail
                 </DropdownMenuItem>
-              )}
-            </DropdownMenuContent>
-          </DropdownMenu>
+                {!item.is_refunded && canCreate && (
+                  <DropdownMenuItem
+                    onClick={() => router.push(`/dashboard/${slug}/transaksi/refund-sparepart/create?sparepart_transaction_id=${item.id}`)}
+                    className="rounded-md px-3 py-2 text-sm text-slate-900 focus:bg-slate-50 cursor-pointer"
+                  >
+                    Refund
+                  </DropdownMenuItem>
+                )}
+                {canEdit && (
+                  <DropdownMenuItem
+                    onClick={() => router.push(`/dashboard/${slug}/transaksi/pembelian-sparepart/edit/${item.id}`)}
+                    className="rounded-md px-3 py-2 text-sm text-slate-900 focus:bg-slate-50 cursor-pointer"
+                  >
+                    Edit
+                  </DropdownMenuItem>
+                )}
+                {canEdit && (() => {
+                  const billing = item.sparepart_transaction_billing;
+                  const remainingPayment = Number(billing?.is_remaining_payment ?? item.billing_summary?.remaining_payment);
+                  const canMarkAsPaid = !billing?.is_paid && Number.isFinite(remainingPayment) && remainingPayment === 0 && Boolean(billing?.id);
+
+                  return canMarkAsPaid ? (
+                    <DropdownMenuItem
+                      onClick={() => handleMarkAsPaid(String(billing?.id))}
+                      className="rounded-md px-3 py-2 text-sm text-slate-900 focus:bg-slate-50 cursor-pointer"
+                    >
+                      Tandai Lunas
+                    </DropdownMenuItem>
+                  ) : null;
+                })()}
+                {canDelete && (
+                  <DropdownMenuItem
+                    className={cn(
+                      "rounded-md px-3 py-2 text-sm text-red-600 focus:bg-red-50 focus:text-red-600 cursor-pointer",
+                      item.sparepart_transaction_billing?.is_paid && "opacity-50 cursor-not-allowed hover:bg-transparent hover:text-red-600 focus:bg-transparent"
+                    )}
+                    disabled={item.sparepart_transaction_billing?.is_paid}
+                    onClick={(e) => {
+                      if (item.sparepart_transaction_billing?.is_paid) {
+                        e.preventDefault();
+                        return;
+                      }
+                      onDelete(String(item.id));
+                    }}
+                  >
+                    Hapus
+                  </DropdownMenuItem>
+                )}
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
         ),
       },
     ],

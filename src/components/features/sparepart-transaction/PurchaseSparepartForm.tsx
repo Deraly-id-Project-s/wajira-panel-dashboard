@@ -282,10 +282,10 @@ export function PurchaseSparepartForm({ defaultValues, onSubmit, onCancel, readO
         )} />
 
         <div className="flex justify-center items-center gap-4 pt-10">
-          <Button type="button" variant="outline" onClick={onCancel} disabled={form.formState.isSubmitting}>Batal</Button>
+          <Button type="button" variant="outline" onClick={onCancel} disabled={form.formState.isSubmitting} className="min-w-[120px] h-10 border-slate-300">Batal</Button>
           {!readOnly && (
-            <Button type="submit" variant="default" disabled={form.formState.isSubmitting}>
-              {form.formState.isSubmitting ? 'Menyimpan...' : 'Simpan'}
+            <Button type="submit" disabled={form.formState.isSubmitting} className="min-w-[120px] h-10 bg-[#1e293b] hover:bg-[#0f172a] text-white">
+              {form.formState.isSubmitting ? 'Menyimpan...' : <><Save className="w-4 h-4 mr-2" /> Simpan</>}
             </Button>
           )}
         </div>

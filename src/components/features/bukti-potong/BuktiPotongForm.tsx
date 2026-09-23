@@ -15,6 +15,7 @@ import { Separator } from '@/components/ui/separator';
 import { LoadingState } from '@/components/ui/loading-state';
 import { useCompany } from '@/contexts/CompanyContext';
 import { getStoredCompanyId } from '@/lib/session/storage';
+import { Save } from 'lucide-react';
 
 interface Props {
   item: WithholdingTaxItem | null;
@@ -353,6 +354,7 @@ export default function BuktiPotongForm({ item, companyId, onSuccess: onFinish, 
           disabled={isPending}
           className="w-full sm:w-auto min-w-[120px]"
         >
+          <Save className="mr-2 h-4 w-4" />
           {isPending ? (
             <LoadingState variant="inline" text="Menyimpan..." iconClassName="text-white" />
           ) : (

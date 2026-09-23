@@ -1,9 +1,8 @@
 'use client';
 
 import { useState } from 'react';
-import { useForm, Controller, UseFormReturn } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { sparepartSchema, type SparepartFormValues } from '@/scheme/sparepart.schema';
+import { UseFormReturn } from 'react-hook-form';
+import { type SparepartFormValues } from '@/scheme/sparepart.schema';
 import { useSparepartCategories } from '@/hooks/useSparepart';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
@@ -13,9 +12,10 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
 import { MoneyInput } from '@/components/ui/money-input';
 import { CreateSparepartCategoryDialog } from './CreateSparepartCategoryDialog';
-import { Check, ChevronsUpDown, Plus, Save } from 'lucide-react';
+import { Check, ChevronsUpDown, Save } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import RequiredMark from '@/components/ui/required-mark';
+import { SelectAdd } from '@/components/ui/select-add';
 
 interface SparepartFormProps {
   form: UseFormReturn<SparepartFormValues>;
@@ -101,7 +101,12 @@ export function SparepartForm({
             render={({ field }) => (
               <FormItem className="flex flex-col min-w-0">
                 <FormLabel className="text-sm font-medium">Grup</FormLabel>
-                <div className="flex items-center gap-2 w-full min-w-0">
+                <SelectAdd
+                  onAdd={() => setOpenCreateGroup(true)}
+                  addDisabled={isSubmitting}
+                  addLabel="Tambah grup"
+                  addVariant="default"
+                >
                   <Popover
                     open={openGroupSelect}
                     onOpenChange={(open) => {
@@ -173,19 +178,7 @@ export function SparepartForm({
                       </Command>
                     </PopoverContent>
                   </Popover>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="icon"
-                    className="h-10 w-10 shrink-0"
-                    disabled={isSubmitting}
-                    aria-label="Tambah grup"
-                    onClick={() => setOpenCreateGroup(true)}
-                  >
-                    <Plus className="h-4 w-4" />
-                    <span className="sr-only">Tambah grup</span>
-                  </Button>
-                </div>
+                </SelectAdd>
                 <FormMessage />
               </FormItem>
             )}

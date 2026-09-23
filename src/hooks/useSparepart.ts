@@ -1,11 +1,23 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { createSparepart, createSparepartCategory, deleteSparepart, getSparepartCategories, getSpareparts, importSparepart, updateSparepart } from '@/services/sparepart.service';
 import type { SparepartPayload } from '@/@types/sparepart.types';
+import type { PaginationParams } from '@/@types/pagination.types';
 
-export function useSpareparts(companyId?: string | number) {
+export function useSpareparts(
+  paramsOrCompanyId?: (PaginationParams & { company_id?: string | number; enabled?: boolean }) | string | number
+) {
+  const params =
+    typeof paramsOrCompanyId === 'object' && paramsOrCompanyId !== null
+      ? paramsOrCompanyId
+      : { company_id: paramsOrCompanyId };
+
+  const { enabled = true, ...restParams } = params;
+
   return useQuery({
-    queryKey: ['spareparts', companyId],
-    queryFn: () => getSpareparts(companyId),
+    queryKey: ['spareparts', restParams],
+    queryFn: () => getSpareparts(restParams),
+    enabled,
+    placeholderData: (previous) => previous,
   });
 }
 

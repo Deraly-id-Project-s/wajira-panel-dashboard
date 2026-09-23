@@ -1,7 +1,7 @@
 import type { Sparepart, SparepartCategory, SparepartListResponse, SparepartPayload } from '@/@types/sparepart.types';
 import { apiClient } from '@/lib/api/client';
 import { ApiResponseError, LaravelApiResponse, ensureSuccess } from '@/lib/api/response';
-import type { LaravelPagination } from '@/@types/pagination.types';
+import type { LaravelPagination, PaginationParams } from '@/@types/pagination.types';
 
 interface SparepartApiModel {
   id: number;
@@ -69,7 +69,7 @@ const mapSparepart = (payload: SparepartApiModel): Sparepart => {
     code: payload.code,
     name: payload.name,
     categoryId: payload.sparepart_category_id ?? category?.id ?? null,
-    unitType: payload.unit_type ?? payload.unit ?? '',
+    unit_type: payload.unit_type ?? payload.unit ?? null,
     price: price === undefined || price === null ? 0 : Number(price),
     purchasePrice: rawPurchase === undefined || rawPurchase === null ? (price ? Number(price) : 0) : Number(rawPurchase),
     sellingPrice: rawSelling === undefined || rawSelling === null ? (price ? Number(price) : 0) : Number(rawSelling),
@@ -125,20 +125,76 @@ interface SparepartCategoryPayload {
   description?: string;
 }
 
-export const getSpareparts = async (companyId?: string | number): Promise<SparepartListResponse> => {
+export const getSpareparts = async (
+  paramsOrCompanyId?: (PaginationParams & { company_id?: string | number }) | string | number,
+): Promise<SparepartListResponse> => {
+  const params: PaginationParams & { company_id?: string | number } =
+    typeof paramsOrCompanyId === 'object' && paramsOrCompanyId !== null
+      ? paramsOrCompanyId
+      : { company_id: paramsOrCompanyId };
+
+  const queryParams: Record<string, any> = {};
+  if (params.company_id) queryParams.company_id = params.company_id;
+  if (params.page) queryParams.page = params.page;
+  if (params.perPage) queryParams.per_page = params.perPage;
+  if (params.search && params.search.trim() !== '') queryParams.search = params.search.trim();
+
   const response = await apiClient.get<SparepartListApiResponse>(sparepartBasePath, {
-    params: companyId ? { company_id: companyId } : undefined,
+    params: Object.keys(queryParams).length > 0 ? queryParams : undefined,
   });
   const data = ensureSuccess(response.data);
-  const { list, meta } = normalizeList(data);
+  const isDirectArray = Array.isArray(data);
+  const items: SparepartApiModel[] = isDirectArray ? data : ((data as any).data ?? []);
+
+  const scopedData = params.company_id
+    ? items.filter((item) => {
+        if (item.company_id === undefined || item.company_id === null) return true;
+        return String(item.company_id) === String(params.company_id);
+      })
+    : items;
+
+  let filteredData = scopedData;
+  if (params.search && params.search.trim() !== '') {
+    const keyword = params.search.toLowerCase().trim();
+    filteredData = filteredData.filter((item) => {
+      const code = (item.code ?? '').toLowerCase();
+      const name = (item.name ?? '').toLowerCase();
+      const group = (item.group ?? item.sparepart_category?.name ?? '').toLowerCase();
+      const unitType = (item.unit_type ?? item.unit ?? '').toLowerCase();
+      return (
+        code.includes(keyword) ||
+        name.includes(keyword) ||
+        group.includes(keyword) ||
+        unitType.includes(keyword)
+      );
+    });
+  }
+
+  if (!isDirectArray && (data as any).current_page !== undefined && (data as any).last_page !== undefined) {
+    const laravelData = data as LaravelPagination<SparepartApiModel>;
+    return {
+      data: (laravelData.data ?? []).map(mapSparepart),
+      meta: {
+        currentPage: laravelData.current_page,
+        perPage: laravelData.per_page ?? params.perPage ?? 25,
+        total: laravelData.total ?? laravelData.data?.length ?? 0,
+        lastPage: laravelData.last_page ?? 1,
+      },
+    };
+  }
+
+  const page = params.page ?? 1;
+  const perPage = params.perPage ?? 25;
+  const start = (page - 1) * perPage;
+  const paginatedData = filteredData.slice(start, start + perPage);
 
   return {
-    data: list.map(mapSparepart),
+    data: paginatedData.map(mapSparepart),
     meta: {
-      currentPage: meta.current_page,
-      perPage: meta.perPage,
-      total: meta.total,
-      lastPage: meta.last_page,
+      currentPage: page,
+      perPage,
+      total: filteredData.length,
+      lastPage: Math.max(1, Math.ceil(filteredData.length / perPage)),
     },
   };
 };

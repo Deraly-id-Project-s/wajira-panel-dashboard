@@ -14,22 +14,16 @@ export interface Sparepart {
   code: string;
   name: string;
   categoryId: number | null;
-  unitType: string;
+  unit_type: string | null;
   price: number; // primary price field (maps to selling price when available)
   purchasePrice: number;
   sellingPrice: number;
-  capacity: number;
   companyId?: number | string | null;
   createdAt?: string;
   updatedAt?: string;
   category?: SparepartCategory | null;
-  // For backward compatibility with the previous UI naming
   group?: string;
-  brandId?: number | null;
-  brand?: { name: string } | null;
-  unitModel?: string | null;
-  nettoWeight?: number | null;
-  brutoWeight?: number | null;
+  capacity?: number;
 }
 
 export interface SparepartPayload {

@@ -18,9 +18,12 @@ import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, Command
 import { cn } from '@/lib/utils';
 import { ChevronsUpDown, Check } from 'lucide-react';
 
+import { UseFormReturn } from 'react-hook-form';
+import { handleApiFormError } from '@/lib/validation';
+
 interface Props {
   defaultValues?: Partial<SalesSparepartFormData>;
-  onSubmit: (data: SalesSparepartFormData) => void;
+  onSubmit: (data: SalesSparepartFormData, form: UseFormReturn<SalesSparepartFormData>) => Promise<void> | void;
   onCancel: () => void;
   readOnly?: boolean;
   companyId?: string | null;
@@ -76,9 +79,24 @@ export function SalesSparepartForm({ defaultValues, onSubmit, onCancel, readOnly
   const bruto = qty * price;
   const netto = bruto - (bruto * (discount / 100));
 
+  const [isSubmittingLocal, setIsSubmittingLocal] = useState(false);
+
+  const handleFormSubmit = async (values: SalesSparepartFormData) => {
+    try {
+      setIsSubmittingLocal(true);
+      await onSubmit(values, form);
+    } catch (error) {
+      handleApiFormError(error, form);
+    } finally {
+      setIsSubmittingLocal(false);
+    }
+  };
+
+  const isSubmitting = form.formState.isSubmitting || isSubmittingLocal;
+
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+      <form onSubmit={form.handleSubmit(handleFormSubmit)} className="space-y-6">
         <div>
           <h2 className="text-xl font-semibold text-foreground tracking-tight">Informasi Penjualan Sparepart</h2>
           <p className="text-sm text-gray-500 mt-1">Lengkapi data penjualan sparepart di bawah ini</p>
@@ -280,10 +298,10 @@ export function SalesSparepartForm({ defaultValues, onSubmit, onCancel, readOnly
         )} />
 
         <div className="flex justify-center items-center gap-4 pt-10">
-          <Button type="button" variant="outline" onClick={onCancel} disabled={form.formState.isSubmitting} className="min-w-[120px] h-10 border-slate-300">Batal</Button>
+          <Button type="button" variant="outline" onClick={onCancel} disabled={isSubmitting} className="min-w-[120px] h-10 border-slate-300">Batal</Button>
           {!readOnly && (
-            <Button type="submit" disabled={form.formState.isSubmitting} className="min-w-[120px] h-10 bg-[#1e293b] hover:bg-[#0f172a] text-white">
-              {form.formState.isSubmitting ? 'Menyimpan...' : <><Save className="w-4 h-4 mr-2" /> Simpan</>}
+            <Button type="submit" disabled={isSubmitting} className="min-w-[120px] h-10 bg-[#1e293b] hover:bg-[#0f172a] text-white">
+              {isSubmitting ? 'Menyimpan...' : <><Save className="w-4 h-4 mr-2" /> Simpan</>}
             </Button>
           )}
         </div>

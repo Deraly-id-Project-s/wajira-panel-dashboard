@@ -53,16 +53,10 @@ export default function PurchaseSparepartPage() {
   return (
     <DashboardLayout>
       <div className="space-y-6">
-        <div className="flex items-center justify-between">
-          <PageHeader
-            title="Pembelian Sparepart"
-            breadcrumbs={[
-              { label: 'Administrasi' },
-              { label: 'Pembelian Sparepart' },
-            ]}
-          />
-          <div className="flex gap-2"></div>
-        </div>
+        <PageHeader
+          title="Pembelian Sparepart"
+          subtitle="Kelola dan lacak semua transaksi pembelian sparepart"
+        />
 
         <PurchaseSparepartTable
           data={data?.data ?? []}

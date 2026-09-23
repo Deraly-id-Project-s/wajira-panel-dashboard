@@ -134,15 +134,12 @@ export default function WithholdingTaxTable({
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-40">
               <DropdownMenuItem onClick={() => onView(item)} className="cursor-pointer">
-                <Eye className="mr-2 h-4 w-4" />
                 <span>Detail</span>
               </DropdownMenuItem>
               <DropdownMenuItem onClick={() => onEdit(item)} className="cursor-pointer">
-                <Edit className="mr-2 h-4 w-4" />
                 <span>Edit</span>
               </DropdownMenuItem>
               <DropdownMenuItem onClick={() => onDelete(item)} className="cursor-pointer text-red-600 focus:text-red-600 focus:bg-red-50">
-                <Trash2 className="mr-2 h-4 w-4" />
                 <span>Hapus</span>
               </DropdownMenuItem>
             </DropdownMenuContent>

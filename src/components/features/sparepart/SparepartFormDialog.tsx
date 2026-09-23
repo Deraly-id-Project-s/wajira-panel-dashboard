@@ -18,6 +18,7 @@ import { CreateSparepartCategoryDialog } from './CreateSparepartCategoryDialog';
 import { Check, ChevronsUpDown } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import RequiredMark from '@/components/ui/required-mark';
+import { handleApiFormError } from '@/lib/validation';
 
 interface Props {
   open: boolean;
@@ -49,6 +50,7 @@ export function SparepartFormDialog({ open, onOpenChange, sparepart, companyId }
     handleSubmit,
     reset,
     setValue,
+    setError,
     control,
     formState: { errors, isSubmitting },
   } = useForm<SparepartFormValues>({
@@ -69,7 +71,7 @@ export function SparepartFormDialog({ open, onOpenChange, sparepart, companyId }
         code: sparepart.code || '',
         name: sparepart.name || '',
         categoryId: sparepart.categoryId ?? sparepart.category?.id ?? null,
-        unitType: sparepart.unitType ? sparepart.unitType.toLowerCase() : '',
+        unitType: sparepart.unit_type ? sparepart.unit_type.toLowerCase() : '',
         purchasePrice: sparepart.purchasePrice ?? sparepart.price ?? 0,
         sellingPrice: sparepart.sellingPrice ?? sparepart.price ?? 0,
         capacity: sparepart.capacity ?? 0,
@@ -87,7 +89,7 @@ export function SparepartFormDialog({ open, onOpenChange, sparepart, companyId }
               code: sparepart.code || '',
               name: sparepart.name || '',
               categoryId: sparepart.categoryId ?? sparepart.category?.id ?? null,
-              unitType: sparepart.unitType ? sparepart.unitType.toLowerCase() : '',
+              unitType: sparepart.unit_type ? sparepart.unit_type.toLowerCase() : '',
               purchasePrice: sparepart.purchasePrice ?? sparepart.price ?? 0,
               sellingPrice: sparepart.sellingPrice ?? sparepart.price ?? 0,
               capacity: sparepart.capacity ?? 0,
@@ -126,8 +128,21 @@ export function SparepartFormDialog({ open, onOpenChange, sparepart, companyId }
       onOpenChange(false);
       reset();
     } catch (err: any) {
-      const message = err?.response?.data?.message || err?.message || 'Terjadi kesalahan';
-      toast.error(message);
+      const handled = handleApiFormError(err, { setError }, {
+        fieldMapping: {
+          code: 'code',
+          name: 'name',
+          category_id: 'categoryId',
+          unit_type: 'unitType',
+          purchase_price: 'purchasePrice',
+          selling_price: 'sellingPrice',
+          capacity: 'capacity',
+        },
+      });
+      if (!handled) {
+        const message = err?.response?.data?.message || err?.message || 'Terjadi kesalahan';
+        toast.error(message);
+      }
     }
   };
 

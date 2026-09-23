@@ -30,8 +30,8 @@ export default function EditSalesSparepartPage() {
       });
       toast.success('Penjualan Sparepart berhasil diperbarui');
       router.push(`/dashboard/${slug}/transaksi/penjualan-sparepart/${sparepartTransactionResponse?.id}`);
-    } catch {
-      toast.error('Gagal memperbarui Penjualan Sparepart');
+    } catch (error) {
+      throw error;
     }
   };
 

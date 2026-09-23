@@ -1,35 +1,64 @@
-import { useState } from 'react';
+'use client';
+
+import { useMemo, useState } from 'react';
+import Head from 'next/head';
 import { useRouter } from 'next/router';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { PageHeader } from '@/components/ui/page-header';
 import { LoadingState } from '@/components/ui/loading-state';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { formatDate } from '@/lib/utils/format';
-import { useSparepartTransaction, useCreateSparepartTransactionBillingHistory, useUpdateSparepartTransactionBillingHistory, useDeleteSparepartTransactionBillingHistory, useUpdateSparepartTransactionBillingPaymentStatus } from '@/hooks/useSparepartTransaction';
 import { Button } from '@/components/ui/button';
-import { CheckCircle, Eye, Edit, Trash2, Plus, MoreVertical, CreditCard, Info, Warehouse } from 'lucide-react';
-import { PaymentModal } from '@/components/features/sparepart-transaction/PaymentModal';
-import DeletePaymentDialog from '@/components/features/sparepart-transaction/DeletePaymentDialog';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { CollapsibleBox } from '@/components/ui/collapsible-box';
 import BaseTable, { ColumnDef } from '@/components/ui/base-table';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { currenciesFormat } from '@/components/ui/currenciesFormat';
-import { usePermissionGuard } from '@/hooks/usePermissionGuard';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import {
+  CheckCircle2,
+  CreditCard,
+  Edit,
+  Info,
+  MoreVertical,
+  ReceiptText,
+  Warehouse,
+} from 'lucide-react';
+import {
+  useSparepartTransaction,
+  useCreateSparepartTransactionBillingHistory,
+  useUpdateSparepartTransactionBillingHistory,
+  useDeleteSparepartTransactionBillingHistory,
+  useUpdateSparepartTransactionBillingPaymentStatus,
+} from '@/hooks/useSparepartTransaction';
 import { useCreateWarehouseActivity } from '@/hooks/useWarehouseActivity';
+import { usePermissionGuard } from '@/hooks/usePermissionGuard';
 import { useQueryClient } from '@tanstack/react-query';
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { formatDate } from '@/lib/utils/format';
+import { currenciesFormat } from '@/components/ui/currenciesFormat';
+import { cn } from '@/lib/utils';
+import { SalesSparepartDetailCards } from '@/components/features/sparepart-transaction/SalesSparepartDetailCards';
+import { PaymentModal } from '@/components/features/sparepart-transaction/PaymentModal';
+import DeletePaymentDialog from '@/components/features/sparepart-transaction/DeletePaymentDialog';
 
 export default function DetailSalesSparepartPage() {
   const router = useRouter();
   const { slug, id } = router.query;
+  const transactionId = typeof id === 'string' ? id : '';
 
   const { hasPermission } = usePermissionGuard();
   const canEdit = hasPermission('transaction:edit');
   const canDelete = hasPermission('transaction:delete');
 
-  const { data: transaction, isLoading } = useSparepartTransaction(id as string, !!id);
+  const { data: transaction, isLoading, error } = useSparepartTransaction(transactionId, Boolean(transactionId));
   const createPaymentMutation = useCreateSparepartTransactionBillingHistory();
   const updatePaymentMutation = useUpdateSparepartTransactionBillingHistory();
   const deletePaymentMutation = useDeleteSparepartTransactionBillingHistory();
@@ -40,10 +69,13 @@ export default function DetailSalesSparepartPage() {
   const [paymentModalOpen, setPaymentModalOpen] = useState(false);
   const [selectedPayment, setSelectedPayment] = useState<any>(null);
   const [deletePaymentId, setDeletePaymentId] = useState<string | null>(null);
+  const [isMarkAsPaidDialogOpen, setIsMarkAsPaidDialogOpen] = useState(false);
   const [processDialogOpen, setProcessDialogOpen] = useState(false);
   const [isProcessed, setIsProcessed] = useState(false);
 
-  const handleBack = () => router.push(`/dashboard/${slug}/transaksi/penjualan-sparepart`);
+  const handleBack = () => {
+    void router.push(`/dashboard/${slug}/transaksi/penjualan-sparepart`);
+  };
 
   const openAddPayment = () => {
     setSelectedPayment(null);
@@ -57,7 +89,7 @@ export default function DetailSalesSparepartPage() {
 
   const handlePaymentSubmit = async (data: any) => {
     if (!transaction?.sparepart_transaction_billing?.id) {
-      toast.error("Billing ID tidak valid");
+      toast.error('Billing ID tidak valid');
       return;
     }
 
@@ -72,9 +104,9 @@ export default function DetailSalesSparepartPage() {
             bca_payment_amount: data.bca_payment_amount,
             bca_payment_usd_amount: data.bca_payment_usd_amount,
             note: data.note,
-          }
+          },
         });
-        toast.success("Pembayaran berhasil diubah");
+        toast.success('Pembayaran berhasil diubah');
       } else {
         await createPaymentMutation.mutateAsync({
           sparepart_transaction_billing_id: transaction.sparepart_transaction_billing.id,
@@ -84,11 +116,11 @@ export default function DetailSalesSparepartPage() {
           bca_payment_usd_amount: data.bca_payment_usd_amount,
           note: data.note,
         });
-        toast.success("Pembayaran berhasil ditambahkan");
+        toast.success('Pembayaran berhasil ditambahkan');
       }
       setPaymentModalOpen(false);
     } catch {
-      toast.error("Gagal memproses pembayaran");
+      toast.error('Gagal memproses pembayaran');
     }
   };
 
@@ -96,32 +128,26 @@ export default function DetailSalesSparepartPage() {
     if (!deletePaymentId) return;
     try {
       await deletePaymentMutation.mutateAsync(deletePaymentId);
-      toast.success("Pembayaran berhasil dihapus");
+      toast.success('Pembayaran berhasil dihapus');
       setDeletePaymentId(null);
     } catch {
-      toast.error("Gagal menghapus pembayaran");
+      toast.error('Gagal menghapus pembayaran');
     }
-  }
+  };
 
   const handleMarkAsPaid = async () => {
     const billing = transaction?.sparepart_transaction_billing;
-    const remainingPayment = Number(billing?.is_remaining_payment ?? transaction?.billing_summary?.remaining_payment);
-
-    if (billing?.is_paid) return;
-    if (!Number.isFinite(remainingPayment) || remainingPayment !== 0) {
-      toast.error("Transaksi masih memiliki sisa pembayaran");
-      return;
-    }
     if (!billing?.id) {
-      toast.error("Billing ID tidak valid");
+      toast.error('Billing ID tidak valid');
       return;
     }
 
     try {
       await updatePaymentStatusMutation.mutateAsync({ billingId: String(billing.id), is_paid: true });
-      toast.success("Transaksi berhasil ditandai lunas");
+      toast.success('Transaksi berhasil ditandai sebagai lunas');
+      setIsMarkAsPaidDialogOpen(false);
     } catch {
-      toast.error("Gagal menandai transaksi lunas");
+      toast.error('Gagal menandai transaksi lunas');
     }
   };
 
@@ -152,295 +178,351 @@ export default function DetailSalesSparepartPage() {
     }
   };
 
+  const sparepartBilling = transaction?.sparepart_transaction_billing;
+  const histories = sparepartBilling?.sparepart_transaction_billing_histories || [];
+  const remainingPayment = Number(
+    sparepartBilling?.is_remaining_payment ??
+    transaction?.billing_summary?.remaining_payment ??
+    0
+  );
+  const isPaid = sparepartBilling?.is_paid === true;
+  const canMarkAsPaid =
+    !isPaid &&
+    Number.isFinite(remainingPayment) &&
+    remainingPayment === 0 &&
+    Boolean(sparepartBilling?.id);
+  const canProcessGoods = isPaid && !transaction?.is_refunded && !isProcessed;
+
+  const historyColumns = useMemo<ColumnDef<any>[]>(
+    () => [
+      {
+        header: 'Tanggal Pembayaran',
+        accessorKey: 'payment_at',
+        alignment: 'left',
+        cell: (item: any) => formatDate(item.payment_at || item.created_at) || '-',
+      },
+      {
+        header: 'Nominal Dibayar',
+        accessorKey: 'grand_total',
+        alignment: 'right',
+        cell: (item: any) =>
+          currenciesFormat(
+            'idr',
+            item.grand_total || item.cash_payment_amount || item.bca_payment_amount || 0
+          ),
+      },
+      {
+        header: 'Keterangan',
+        accessorKey: 'note',
+        alignment: 'left',
+        cell: (item: any) => item.note || '-',
+      },
+      {
+        header: 'Aksi',
+        alignment: 'center',
+        sticky: 'right',
+        cell: (item: any) => (
+          <div className="flex justify-center">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="ghost"
+                  className="h-8 w-8 p-0 rounded-full text-slate-600 hover:bg-slate-100 hover:text-slate-900"
+                >
+                  <MoreVertical className="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="min-w-[150px] rounded-md border-slate-200 p-1.5 shadow-lg">
+                <DropdownMenuItem
+                  disabled={!canEdit || isPaid}
+                  onClick={() => openEditPayment(item)}
+                  className="rounded-md px-3 py-2 text-sm text-slate-900 focus:bg-slate-50 cursor-pointer disabled:cursor-not-allowed"
+                >
+                  Edit
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  disabled={!canDelete || isPaid}
+                  className="rounded-md px-3 py-2 text-sm text-red-600 focus:bg-red-50 focus:text-red-600 cursor-pointer disabled:cursor-not-allowed"
+                  onClick={() => setDeletePaymentId(String(item.id))}
+                >
+                  Hapus
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+        ),
+      },
+    ],
+    [canEdit, canDelete, isPaid]
+  );
+
   if (isLoading) {
     return (
       <DashboardLayout>
-        <LoadingState variant="page" />
+        <LoadingState variant="page" text="Memuat data penjualan sparepart..." />
       </DashboardLayout>
     );
   }
 
-  if (!transaction) {
+  if (error || !transaction) {
     return (
       <DashboardLayout>
-        <div className="p-10 text-center">Data tidak ditemukan</div>
+        <div className="space-y-6">
+          <PageHeader
+            breadcrumbs={[
+              { label: 'Penjualan Sparepart', onClick: handleBack },
+              { label: 'Detail Penjualan' },
+            ]}
+            title="Data Penjualan Sparepart"
+            subtitle="Data penjualan tidak dapat ditemukan"
+            onBack={handleBack}
+          />
+          <Card className="rounded-md border-red-200 bg-red-50 shadow-none">
+            <CardContent className="p-6 text-sm text-red-700">
+              Data transaksi penjualan sparepart tidak ditemukan. Silakan periksa kembali URL.
+            </CardContent>
+          </Card>
+        </div>
       </DashboardLayout>
-    )
+    );
   }
-
-  const sparepartBilling = transaction?.sparepart_transaction_billing;
-  const histories = sparepartBilling?.sparepart_transaction_billing_histories || [];
-  const totalTagihan = Number(sparepartBilling?.grand_total ?? transaction.billing_summary?.grand_total ?? transaction.transaction_netto_total ?? 0);
-  const totalPaid = Number(transaction.billing_summary?.total_paid ?? 0);
-  const remainingPayment = Number(sparepartBilling?.is_remaining_payment ?? transaction.billing_summary?.remaining_payment);
-  const isPaid = sparepartBilling?.is_paid === true;
-  const canMarkAsPaid = !isPaid && Number.isFinite(remainingPayment) && remainingPayment === 0 && Boolean(sparepartBilling?.id);
-  const canProcessGoods = isPaid && !transaction.is_refunded && !isProcessed;
-
-  const billingStatusLabel = isPaid ? 'Lunas' : 'Belum Lunas';
-
-  const columns: ColumnDef<any>[] = [
-    {
-      header: 'Tanggal Pembayaran',
-      accessorKey: 'payment_at',
-      sortable: false,
-      cell: (item: any) => formatDate(item.payment_at || item.created_at) || '-'
-    },
-    {
-      header: 'Nominal Dibayar',
-      accessorKey: 'grand_total',
-      alignment: 'center',
-      sortable: false,
-      cell: (item: any) => currenciesFormat('idr', item.grand_total || item.cash_payment_amount || item.bca_payment_amount || 0)
-    },
-    {
-      header: 'Keterangan',
-      accessorKey: 'note',
-      sortable: false,
-      cell: (item: any) => item.note || '-'
-    },
-    {
-      header: 'Aksi',
-      alignment: 'center',
-      sticky: 'right',
-      cell: (item: any) => (
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" className="h-8 w-8 p-0">
-              <MoreVertical className="h-4 w-4" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuItem onClick={() => openEditPayment(item)}>
-              <Edit className="mr-2 h-4 w-4" /> Edit
-            </DropdownMenuItem>
-            <DropdownMenuItem
-              className="text-red-600 focus:text-red-600 focus:bg-red-50 cursor-pointer"
-              onClick={() => setDeletePaymentId(String(item.id))}
-            >
-              <Trash2 className="mr-2 h-4 w-4" /> Hapus
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      )
-    }
-  ];
-
-  // histories is already computed above
 
   return (
     <DashboardLayout>
+      <Head>
+        <title>Detail Penjualan Sparepart - Wajira Dashboard</title>
+      </Head>
+
       <div className="space-y-6">
         <PageHeader
-          title="Detail Penjualan Sparepart"
-          subtitle={
-            <>
-              <span>Kode Jual:</span>
-              <span className="inline-flex items-center gap-1.5 font-semibold text-orange-600 hover:text-orange-700">{transaction.code}</span>
-              {isPaid ? (
-                <Badge variant="outline" className="border-emerald-200 bg-emerald-50 text-emerald-700 font-semibold">
-                  Lunas
-                </Badge>
-              ) : (
-                <Badge variant="outline" className="border-rose-200 bg-rose-50 text-rose-700 font-semibold">
-                  Belum Lunas
-                </Badge>
-              )}
-            </>
-          }
-          onBack={handleBack}
           breadcrumbs={[
             { label: 'Penjualan Sparepart', onClick: handleBack },
             { label: 'Detail Penjualan' },
           ]}
+          title="Data Penjualan Sparepart"
+          subtitle={
+            <div className="flex flex-wrap items-center gap-2">
+              <span>Kode Jual:</span>
+              <span className="inline-flex items-center gap-1.5 font-semibold text-orange-600 hover:text-orange-700">
+                {transaction.code}
+              </span>
+              <Badge
+                variant="outline"
+                className={cn(
+                  'font-semibold',
+                  isPaid
+                    ? 'border-emerald-200 bg-emerald-50 text-emerald-700'
+                    : 'border-rose-200 bg-rose-50 text-rose-700'
+                )}
+              >
+                {isPaid ? 'Lunas' : 'Belum Lunas'}
+              </Badge>
+            </div>
+          }
+          onBack={handleBack}
           actions={
-            <>
-              <Button
-                className="bg-emerald-500 hover:bg-emerald-600 text-white disabled:cursor-not-allowed disabled:opacity-50"
-                disabled={!canEdit || isPaid}
-                onClick={openAddPayment} >
-                <CreditCard className="mr-2 h-4 w-4" />
-                {isPaid ? 'Sudah Dibayar' : 'Bayar'}
-              </Button>
-              <Button
-                onClick={handleMarkAsPaid}
-                variant="outline"
-                className="border-blue-600 text-blue-600 hover:bg-blue-50 disabled:cursor-not-allowed disabled:opacity-50"
-                disabled={updatePaymentStatusMutation.isPending || !canEdit || !canMarkAsPaid}
-              >
-                <CheckCircle className="mr-2 h-4 w-4" />
-                Tandai Lunas
-              </Button>
-              <Button
-                onClick={() => setProcessDialogOpen(true)}
-                variant="outline"
-                className="border-blue-600 text-blue-600 hover:bg-blue-50 disabled:cursor-not-allowed disabled:opacity-50"
-                disabled={!canEdit || !canProcessGoods || createWarehouseActivityMutation.isPending}
-              >
-                <Warehouse className="mr-2 h-4 w-4" />
-                {createWarehouseActivityMutation.isPending ? 'Memproses...' : isProcessed ? 'Sudah Diproses' : 'Proses Barang'}
-              </Button>
-              <Button
-                variant="outline"
-                disabled={isPaid}
-                onClick={() => router.push(`/dashboard/${slug}/transaksi/penjualan-sparepart/edit/${transaction.id}`)}>
-                <Edit className="mr-2 h-4 w-4" />
-                Edit Data
-              </Button>
-            </>
+            <TooltipProvider>
+              <div className="flex flex-wrap items-center gap-2">
+                <Button
+                  variant="default"
+                  disabled={!canEdit || isPaid}
+                  onClick={openAddPayment}
+                >
+                  <CreditCard className="mr-2 h-4 w-4" />
+                  {isPaid ? 'Sudah Dibayar' : 'Bayar'}
+                </Button>
+
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <span className="inline-block">
+                      <Button
+                        type="button"
+                        variant="success"
+                        disabled={
+                          !canEdit ||
+                          !canMarkAsPaid ||
+                          updatePaymentStatusMutation.isPending
+                        }
+                        onClick={() => setIsMarkAsPaidDialogOpen(true)}
+                      >
+                        <CheckCircle2 className="mr-2 h-4 w-4" />
+                        {isPaid ? 'Sudah Lunas' : 'Tandai Lunas'}
+                      </Button>
+                    </span>
+                  </TooltipTrigger>
+                  <TooltipContent side="bottom" className="max-w-xs text-center text-xs">
+                    {canMarkAsPaid
+                      ? 'Tandai transaksi lunas dan catat ke kas harian'
+                      : isPaid
+                        ? 'Transaksi sudah lunas'
+                        : 'Pastikan seluruh sisa tagihan sudah dibayar lunas untuk menandai'}
+                  </TooltipContent>
+                </Tooltip>
+
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <span className="inline-block">
+                      <Button
+                        variant="default"
+                        disabled={
+                          !canEdit ||
+                          !canProcessGoods ||
+                          createWarehouseActivityMutation.isPending
+                        }
+                        onClick={() => setProcessDialogOpen(true)}
+                      >
+                        <Warehouse className="mr-2 h-4 w-4" />
+                        {createWarehouseActivityMutation.isPending
+                          ? 'Memproses...'
+                          : isProcessed
+                            ? 'Sudah Diproses'
+                            : 'Proses Barang'}
+                      </Button>
+                    </span>
+                  </TooltipTrigger>
+                  <TooltipContent side="bottom" className="max-w-xs text-center text-xs">
+                    {canProcessGoods
+                      ? 'Kirim data pengeluaran stok sparepart ke Warehouse'
+                      : isProcessed
+                        ? 'Stok sudah diproses di Warehouse'
+                        : 'Transaksi harus berstatus lunas sebelum memproses barang'}
+                  </TooltipContent>
+                </Tooltip>
+
+                <Button
+                  variant="outline"
+                  disabled={!canEdit || isPaid}
+                  onClick={() =>
+                    router.push(
+                      `/dashboard/${slug}/transaksi/penjualan-sparepart/edit/${transaction.id}`
+                    )
+                  }
+                >
+                  <Edit className="mr-2 h-4 w-4" />
+                  Edit Data
+                </Button>
+              </div>
+            </TooltipProvider>
           }
         />
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div className="md:col-span-2 space-y-6">
-            <Card className="shadow-none border-gray-200">
-              <CardHeader className="bg-slate-50/50 border-b border-gray-100 py-4 px-6">
-                <CardTitle className="text-lg font-semibold">Informasi Transaksi</CardTitle>
-              </CardHeader>
-              <CardContent className="text-slate-700 p-6 pt-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-y-6 gap-x-8">
-                  <div>
-                    <p className="text-sm font-medium text-slate-500 mb-1">Tanggal Transaksi</p>
-                    <p className="text-base text-slate-900 font-medium">{formatDate(transaction.transaction_date || transaction.created_at)}</p>
-                  </div>
-                  <div>
-                    <p className="text-sm font-medium text-slate-500 mb-1">No Nota</p>
-                    <p className="text-base text-slate-900 font-medium">{transaction.nota_number || '-'}</p>
-                  </div>
-                  <div>
-                    <p className="text-sm font-medium text-slate-500 mb-1">Customer</p>
-                    <p className="text-base text-slate-900 font-medium">{transaction.person?.name || '-'}</p>
-                  </div>
-                  <div>
-                    <p className="text-sm font-medium text-slate-500 mb-1">Gudang Penyimpanan</p>
-                    <p className="text-base text-slate-900 font-medium">{transaction.warehouse?.name || '-'}</p>
-                  </div>
-                  <div>
-                    <p className="text-sm font-medium text-slate-500 mb-1">Sparepart</p>
-                    <p className="text-base text-slate-900 font-medium">{transaction.sparepart?.name || '-'} ({transaction.sparepart?.code})</p>
-                  </div>
-                  <div>
-                    <p className="text-sm font-medium text-slate-500 mb-1">Kuantitas</p>
-                    <p className="text-base text-slate-900 font-medium">{transaction.qty} {transaction.sparepart?.unit_type || ''}</p>
-                  </div>
-                  <div>
-                    <p className="text-sm font-medium text-slate-500 mb-1">Tipe Pembayaran</p>
-                    <p className="text-base text-slate-900 font-medium capitalize">{transaction.billing_type || '-'}</p>
-                  </div>
-                  <div>
-                    <p className="text-sm font-medium text-slate-500 mb-1">Catatan</p>
-                    <p className="text-base text-slate-900 font-medium">{transaction.note || '-'}</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
+        {/* 3 Overview Detail Cards */}
+        <SalesSparepartDetailCards transaction={transaction} />
 
-            <Card className="shadow-none border-gray-200">
-              <CardHeader className="bg-slate-50/50 border-b border-gray-100 py-4 px-6 flex flex-row items-center justify-between">
-                <CardTitle className=" text-lg font-semibold">Riwayat Pembayaran</CardTitle>
-              </CardHeader>
-              <CardContent className="p-6 pt-6">
-                <div className="overflow-x-auto">
-                  <BaseTable
-                    data={histories}
-                    columns={columns}
-                  />
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-
-          <div className="space-y-6">
-            <Card className="shadow-none border-gray-200">
-              <CardHeader className="bg-slate-50/50 border-b border-gray-100 py-4 px-6">
-                <CardTitle className="text-lg font-semibold">Rincian Transaksi</CardTitle>
-              </CardHeader>
-              <CardContent className="p-6 pt-6 space-y-4">
-                <div className="flex justify-between items-center text-sm">
-                  <span className="text-slate-500">Harga Satuan</span>
-                  <span className="font-medium text-slate-900">{currenciesFormat('idr', transaction.price)}</span>
-                </div>
-                <div className="flex justify-between items-center text-sm">
-                  <span className="text-slate-500">Kuantitas</span>
-                  <span className="font-medium text-slate-900">{transaction.qty}</span>
-                </div>
-                <div className="flex justify-between items-center text-sm">
-                  <span className="text-slate-500">Total Bruto</span>
-                  <span className="font-medium text-slate-900">{currenciesFormat('idr', transaction.transaction_bruto_total)}</span>
-                </div>
-                <div className="flex justify-between items-center text-sm">
-                  <span className="text-slate-500">Diskon</span>
-                  <span className="font-medium text-slate-900">{transaction.discount}%</span>
-                </div>
-
-                <div className="h-px bg-slate-200 my-2"></div>
-
-                <div className="flex justify-between items-center">
-                  <span className="text-sm font-semibold text-slate-700">TOTAL PENJUALAN</span>
-                  <span className="font-bold text-base text-slate-900">{currenciesFormat('idr', transaction.transaction_netto_total)}</span>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card className="shadow-none border-gray-200">
-              <CardHeader className="bg-slate-50/50 border-b border-gray-100 py-4 px-6">
-                <CardTitle className="text-lg font-semibold">Rincian Pembayaran</CardTitle>
-              </CardHeader>
-              <CardContent className="p-6 pt-6 space-y-4">
-                <div className="flex justify-between items-center text-sm">
-                  <span className="text-slate-500">Total Tagihan</span>
-                  <span className="font-medium text-slate-900">{currenciesFormat('idr', totalTagihan)}</span>
-                </div>
-                <div className="flex justify-between items-center text-sm">
-                  <span className="text-slate-500">Total Dibayar</span>
-                  <span className="font-medium text-emerald-600">{currenciesFormat('idr', totalPaid)}</span>
-                </div>
-
-                <div className="h-px bg-slate-200 my-2"></div>
-
-                <div className="flex justify-between items-center">
-                  <span className="text-sm font-semibold text-slate-700">KURANG BAYAR</span>
-                  <span className="font-bold text-base text-red-600">{currenciesFormat('idr', remainingPayment)}</span>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
+        {/* Collapsible Riwayat Pembayaran */}
+        <div className="space-y-3">
+          <CollapsibleBox
+            title="Riwayat Pembayaran"
+            description="Rincian catatan dan riwayat pembayaran transaksi penjualan sparepart"
+            icon={ReceiptText}
+            defaultExpanded
+          >
+            <BaseTable
+              data={histories}
+              columns={historyColumns}
+              loading={isLoading}
+              headerRowClassName="bg-green-100"
+            />
+          </CollapsibleBox>
         </div>
-
-        <PaymentModal
-          open={paymentModalOpen}
-          onClose={() => setPaymentModalOpen(false)}
-          onSubmit={handlePaymentSubmit}
-          defaultValues={selectedPayment}
-          loading={createPaymentMutation.isPending || updatePaymentMutation.isPending}
-          remainingPayment={remainingPayment}
-        />
-
-        <DeletePaymentDialog
-          open={!!deletePaymentId}
-          onClose={() => setDeletePaymentId(null)}
-          onConfirm={handleDeletePayment}
-          loading={deletePaymentMutation.isPending}
-        />
-
-        <Dialog open={processDialogOpen} onOpenChange={setProcessDialogOpen}>
-          <DialogContent className="sm:max-w-[425px]">
-            <DialogHeader>
-              <DialogTitle>Konfirmasi Proses Barang</DialogTitle>
-              <DialogDescription className="pt-2">Apakah Anda yakin ingin memproses pengeluaran sparepart ini?</DialogDescription>
-              <div className="rounded-md border border-slate-200 bg-slate-50 p-2 text-sm text-slate-700">
-                <div className="flex gap-2"><Info className="h-5 w-5 shrink-0" /><span>Proses ini akan membuat data pengeluaran sparepart pada Warehouse.</span></div>
-              </div>
-            </DialogHeader>
-            <DialogFooter className="mt-4 flex justify-end gap-2">
-              <Button type="button" variant="outline" onClick={() => setProcessDialogOpen(false)} disabled={createWarehouseActivityMutation.isPending}>Batal</Button>
-              <Button type="button" className="bg-blue-600 text-white hover:bg-blue-700" onClick={handleProcessGoods} disabled={createWarehouseActivityMutation.isPending}>
-                {createWarehouseActivityMutation.isPending ? 'Memproses...' : 'Ya, Proses Barang'}
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
       </div>
+
+      {/* MODAL TAMBAH / EDIT PEMBAYARAN */}
+      <PaymentModal
+        open={paymentModalOpen}
+        onClose={() => setPaymentModalOpen(false)}
+        onSubmit={handlePaymentSubmit}
+        defaultValues={selectedPayment}
+        loading={createPaymentMutation.isPending || updatePaymentMutation.isPending}
+        remainingPayment={remainingPayment}
+      />
+
+      {/* DIALOG HAPUS PEMBAYARAN */}
+      <DeletePaymentDialog
+        open={Boolean(deletePaymentId)}
+        onClose={() => setDeletePaymentId(null)}
+        onConfirm={handleDeletePayment}
+        loading={deletePaymentMutation.isPending}
+      />
+
+      {/* CONFIRMATION DIALOG TANDAI LUNAS */}
+      <Dialog
+        open={isMarkAsPaidDialogOpen}
+        onOpenChange={setIsMarkAsPaidDialogOpen}
+      >
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Konfirmasi Tandai Lunas</DialogTitle>
+            <DialogDescription className="pt-2">
+              Apakah Anda yakin ingin menandai transaksi ini sebagai <strong>Lunas</strong>?
+            </DialogDescription>
+            <div className="mt-2 rounded-md border border-slate-200 bg-slate-50 p-3 text-justify text-sm text-slate-700">
+              <div className="flex gap-2">
+                <Info className="h-5 w-5 shrink-0 text-blue-600" />
+                <span>
+                  Proses ini akan mencatat transaksi ke <b>Finance Kas Harian</b>.
+                </span>
+              </div>
+            </div>
+          </DialogHeader>
+          <DialogFooter className="mt-4 flex justify-end gap-2">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setIsMarkAsPaidDialogOpen(false)}
+              disabled={updatePaymentStatusMutation.isPending}
+            >
+              Batal
+            </Button>
+            <Button
+              type="button"
+              className="bg-emerald-600 text-white hover:bg-emerald-700"
+              onClick={handleMarkAsPaid}
+              disabled={updatePaymentStatusMutation.isPending}
+            >
+              {updatePaymentStatusMutation.isPending ? 'Memproses...' : 'Ya, Tandai Lunas'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* CONFIRMATION DIALOG PROSES BARANG */}
+      <Dialog open={processDialogOpen} onOpenChange={setProcessDialogOpen}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Konfirmasi Proses Barang</DialogTitle>
+            <DialogDescription className="pt-2">
+              Apakah Anda yakin ingin memproses pengeluaran sparepart ini ke Warehouse?
+            </DialogDescription>
+            <div className="mt-2 rounded-md border border-slate-200 bg-slate-50 p-3 text-justify text-sm text-slate-700">
+              <div className="flex gap-2">
+                <Info className="h-5 w-5 shrink-0 text-blue-600" />
+                <span>
+                  Proses ini akan membuat dokumen pengeluaran stok sparepart pada <b>Warehouse Activity</b>.
+                </span>
+              </div>
+            </div>
+          </DialogHeader>
+          <DialogFooter className="mt-4 flex justify-end gap-2">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setProcessDialogOpen(false)}
+              disabled={createWarehouseActivityMutation.isPending}
+            >
+              Batal
+            </Button>
+            <Button
+              type="button"
+              className="bg-blue-600 text-white hover:bg-blue-700"
+              onClick={handleProcessGoods}
+              disabled={createWarehouseActivityMutation.isPending}
+            >
+              {createWarehouseActivityMutation.isPending ? 'Memproses...' : 'Ya, Proses Barang'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </DashboardLayout>
-  )
+  );
 }

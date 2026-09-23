@@ -84,12 +84,12 @@ export function CreateSparepartCategoryDialog({ open, onOpenChange, onCreated }:
             {errors.description && <p className="text-xs text-destructive">{errors.description.message}</p>}
           </div>
 
-          <div className="space-y-2 pt-2">
-            <Button type="submit" className="w-full" disabled={isSubmitting}>
-              Simpan
-            </Button>
+          <div className="space-y-2 pt-2 flex flex-row gap-2 justify-end">
             <Button type="button" variant="outline" className="w-full" onClick={() => onOpenChange(false)}>
               Batal
+            </Button>
+            <Button type="submit" className="w-full" disabled={isSubmitting}>
+              Simpan
             </Button>
           </div>
         </form>

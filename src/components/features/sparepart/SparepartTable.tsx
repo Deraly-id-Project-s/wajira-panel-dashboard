@@ -33,7 +33,7 @@ export function SparepartTable({ data, onEdit, onDelete, onAdd, onImport, canEdi
     if (!term) return data;
 
     return data.filter((item) =>
-      [item.code, item.name, item.category?.name, item.group, item.unitType]
+      [item.code, item.name, item.category?.name, item.group, item.unit_type]
         .filter(Boolean)
         .some((value) => String(value).toLowerCase().includes(term)),
     );
@@ -85,47 +85,24 @@ export function SparepartTable({ data, onEdit, onDelete, onAdd, onImport, canEdi
         cell: (item) => <CopyBox text={item.code} />,
       },
       {
-        header: 'MEREK',
-        accessorKey: 'brand.name',
-        sortable: true,
-        alignment: 'left',
-        cell: (item) => item.brand?.name ? <ReferenceLink href={`/dashboard/${slugStr}/master/brand?search=${item?.brand?.name}`}>
-          {item.brand?.name}
-        </ReferenceLink> : '-'
-      },
-      {
-        header: 'TIPE UNIT',
+        header: 'NAMA SPAREPART',
         accessorKey: 'name',
         sortable: true,
         alignment: 'left',
       },
       {
-        header: 'JENIS',
-        accessorKey: 'unitType',
+        header: 'Grup',
+        accessorKey: 'category.name',
         sortable: true,
         alignment: 'left',
-        cell: (item) => item.unitType || '-',
+        cell: (item) => item?.category?.name
       },
       {
-        header: 'MODEL',
-        accessorKey: 'unitModel',
+        header: 'Satuan',
+        accessorKey: 'unit_type',
         sortable: true,
         alignment: 'left',
-        cell: (item) => item.unitModel || '-',
-      },
-      {
-        header: 'NETTO (KG)',
-        accessorKey: 'nettoWeight',
-        sortable: true,
-        alignment: 'center',
-        cell: (item) => item.nettoWeight ?? '-',
-      },
-      {
-        header: 'BRUTO (KG)',
-        accessorKey: 'brutoWeight',
-        sortable: true,
-        alignment: 'center',
-        cell: (item) => item.brutoWeight ?? '-',
+        cell: (item) => item.unit_type || '-',
       },
       {
         header: 'HARGA BELI',

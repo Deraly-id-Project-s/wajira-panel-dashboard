@@ -226,24 +226,33 @@ export default function SalesSparepartTable({
                 <MoreVertical className="h-4 w-4" />
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem onClick={() => router.push(`/dashboard/${slug}/transaksi/penjualan-sparepart/${item.id}`)}>
-                <Eye className="mr-2 h-4 w-4" /> Detail
+            <DropdownMenuContent align="end" className="min-w-[140px] rounded-md border-slate-200 p-1.5 shadow-lg">
+              <DropdownMenuItem
+                onClick={() => router.push(`/dashboard/${slug}/transaksi/penjualan-sparepart/${item.id}`)}
+                className="rounded-md px-3 py-2 text-sm text-slate-900 focus:bg-slate-50 cursor-pointer"
+              >
+                Detail
               </DropdownMenuItem>
               {!item.is_refunded && canCreate && (
-                <DropdownMenuItem onClick={() => router.push(`/dashboard/${slug}/transaksi/refund-sparepart/create?sparepart_transaction_id=${item.id}`)}>
-                  <Undo2 className="mr-2 h-4 w-4" /> Refund
+                <DropdownMenuItem
+                  onClick={() => router.push(`/dashboard/${slug}/transaksi/refund-sparepart/create?sparepart_transaction_id=${item.id}`)}
+                  className="rounded-md px-3 py-2 text-sm text-slate-900 focus:bg-slate-50 cursor-pointer"
+                >
+                  Refund
                 </DropdownMenuItem>
               )}
               {canEdit && (
-                <DropdownMenuItem onClick={() => router.push(`/dashboard/${slug}/transaksi/penjualan-sparepart/edit/${item.id}`)}>
-                  <Pencil className="mr-2 h-4 w-4" /> Edit
+                <DropdownMenuItem
+                  onClick={() => router.push(`/dashboard/${slug}/transaksi/penjualan-sparepart/edit/${item.id}`)}
+                  className="rounded-md px-3 py-2 text-sm text-slate-900 focus:bg-slate-50 cursor-pointer"
+                >
+                  Edit
                 </DropdownMenuItem>
               )}
               {canDelete && (
                 <DropdownMenuItem
                   className={cn(
-                    "text-red-600 focus:text-red-600 focus:bg-red-50 cursor-pointer",
+                    "rounded-md px-3 py-2 text-sm text-red-600 focus:bg-red-50 focus:text-red-600 cursor-pointer",
                     item.sparepart_transaction_billing?.is_paid && "opacity-50 cursor-not-allowed hover:bg-transparent hover:text-red-600 focus:bg-transparent"
                   )}
                   disabled={item.sparepart_transaction_billing?.is_paid}
@@ -255,7 +264,7 @@ export default function SalesSparepartTable({
                     onDelete(String(item.id));
                   }}
                 >
-                  <Trash2 className="mr-2 h-4 w-4" /> Hapus
+                  Hapus
                 </DropdownMenuItem>
               )}
             </DropdownMenuContent>
