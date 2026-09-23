@@ -444,6 +444,8 @@ export function SalesTable({
     </div>
   );
 
+  const showInternalControls = Boolean(onSearchChange);
+
   return (
     <div className="space-y-4">
       <BaseTable
@@ -454,19 +456,11 @@ export function SalesTable({
         onSelectedIdsChange={setSelectedIds}
         showLimitChange={false}
         perPage={itemsPerPage}
-        onPerPageChange={(val) => {
-          handleItemsPerPageChange(val.toString());
-          onPageChange?.(1);
-        }}
-        meta={{
-          currentPage,
-          perPage: itemsPerPage,
-          lastPage: totalPages,
-          total: totalEntries,
-        }}
-        onPageChange={handlePageChange}
-        headerActions={headerActions}
-        addDateRangePicker={true}
+        onPerPageChange={onPerPageChange}
+        meta={meta}
+        onPageChange={onPageChange}
+        headerActions={showInternalControls ? headerActions : undefined}
+        addDateRangePicker={showInternalControls && Boolean(onDateRangeChange)}
         startDate={startDate}
         endDate={endDate}
         onDateRangeChange={onDateRangeChange}

@@ -10,6 +10,7 @@ import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useCreateBrand } from '@/hooks/useBrand';
 import { toast } from 'sonner';
+import RequiredMark from '@/components/ui/required-mark';
 
 const brandSchema = z.object({
   name: z.string().min(1, 'Nama merk wajib diisi'),
@@ -70,7 +71,7 @@ export function CreateBrandDialog({ open, onOpenChange, onCreated }: Props) {
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           <div className="space-y-1">
-            <label className="text-sm font-medium">Nama Merk</label>
+            <label className="text-sm font-medium">Nama Merk <RequiredMark /></label>
             <Controller control={control} name="name" render={({ field }) => <Input placeholder="Masukkan nama merk" value={field.value ?? ''} onChange={field.onChange} onBlur={field.onBlur} />} />
             {errors.name && <p className="text-xs text-destructive">{errors.name.message}</p>}
           </div>

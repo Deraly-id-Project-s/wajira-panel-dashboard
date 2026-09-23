@@ -96,7 +96,7 @@ const buildDriverPayload = (data: DriverPayload, opts?: { asUpdate?: boolean }) 
   return formData;
 };
 
-export const createDriver = async (data: DriverPayload): Promise<void> => {
+export const createDriver = async (data: DriverPayload): Promise<Driver> => {
   const formData = buildDriverPayload(data);
 
   try {
@@ -104,10 +104,8 @@ export const createDriver = async (data: DriverPayload): Promise<void> => {
       headers: { 'Content-Type': 'multipart/form-data' },
     });
 
-    const payload = response.data;
-    if (!payload.status) {
-      throw new ApiResponseError(payload.message ?? 'Failed to create driver');
-    }
+    const dataRes = ensureSuccess(response.data);
+    return dataRes ? mapDriver(dataRes) : ({} as Driver);
   } catch (error) {
     if (error instanceof ApiValidationError) throw error;
     throw error;

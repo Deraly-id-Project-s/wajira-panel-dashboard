@@ -110,7 +110,7 @@ const buildUpdatePayload = (data: ArmadaPayload) => {
   return params;
 };
 
-export const createArmada = async (payload: ArmadaPayload): Promise<void> => {
+export const createArmada = async (payload: ArmadaPayload): Promise<Armada> => {
   const formData = buildCreatePayload(payload);
 
   try {
@@ -118,9 +118,8 @@ export const createArmada = async (payload: ArmadaPayload): Promise<void> => {
       headers: { 'Content-Type': 'multipart/form-data' },
     });
 
-    if (!response.data.status) {
-      throw new ApiResponseError(response.data.message ?? 'Failed to create vehicle fleet');
-    }
+    const dataRes = ensureSuccess(response.data);
+    return dataRes ? mapArmada(dataRes) : ({} as Armada);
   } catch (error) {
     if (error instanceof ApiValidationError) throw error;
     throw error;

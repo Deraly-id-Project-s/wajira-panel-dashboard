@@ -149,10 +149,13 @@ export default function PurchaseTable({
   const totalEntries = billingFilter === 'all' ? meta?.total ?? processedData.length : processedData.length;
 
   const pagedData = useMemo(() => {
+    if (meta || !onPageChange) {
+      return processedData;
+    }
     const start = (currentPage - 1) * itemsPerPage;
     const end = start + itemsPerPage;
     return processedData.slice(start, end);
-  }, [processedData, currentPage, itemsPerPage]);
+  }, [processedData, meta, onPageChange, currentPage, itemsPerPage]);
 
   const handleItemsPerPageChange = (value: string) => {
     const parsed = Number(value);
@@ -423,6 +426,8 @@ export default function PurchaseTable({
     </div >
   );
 
+  const showInternalControls = Boolean(onSearchChange);
+
   return (
     <div className="space-y-4">
       <BaseTable
@@ -433,19 +438,11 @@ export default function PurchaseTable({
         onSelectedIdsChange={setSelectedIds}
         showLimitChange={false}
         perPage={itemsPerPage}
-        onPerPageChange={(val) => {
-          handleItemsPerPageChange(val.toString());
-          onPageChange?.(1);
-        }}
-        meta={{
-          currentPage,
-          perPage: itemsPerPage,
-          lastPage: totalPages,
-          total: totalEntries,
-        }}
-        onPageChange={handlePageChange}
-        headerActions={headerActions}
-        addDateRangePicker={true}
+        onPerPageChange={onPerPageChange}
+        meta={meta}
+        onPageChange={onPageChange}
+        headerActions={showInternalControls ? headerActions : undefined}
+        addDateRangePicker={showInternalControls && Boolean(onDateRangeChange)}
         startDate={startDate}
         endDate={endDate}
         onDateRangeChange={onDateRangeChange}

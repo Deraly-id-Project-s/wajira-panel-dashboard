@@ -52,16 +52,14 @@ const serializePayload = (data: TarifPayload): URLSearchParams => {
     return params;
 };
 
-export const createTarif = async (data: TarifPayload): Promise<void> => {
+export const createTarif = async (data: TarifPayload): Promise<Tarif> => {
     try {
         const payload = serializePayload(data);
         const response = await apiClient.post<LaravelApiResponse<any>>(basePath, payload, {
             headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
         });
-        const result = response.data;
-        if (!result.status) {
-            throw new ApiResponseError(result.message ?? 'Failed to create tarif');
-        }
+        const dataRes = ensureSuccess(response.data);
+        return dataRes ? mapTarifItem(dataRes) : ({} as Tarif);
     } catch (error) {
         if (error instanceof ApiValidationError) throw error;
         throw error;

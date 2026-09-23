@@ -10,6 +10,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useCreateSparepartCategory } from '@/hooks/useSparepart';
 import { toast } from 'sonner';
+import RequiredMark from '@/components/ui/required-mark';
 
 const categorySchema = z.object({
   code: z.string().min(1, 'Kode wajib diisi'),
@@ -67,13 +68,13 @@ export function CreateSparepartCategoryDialog({ open, onOpenChange, onCreated }:
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           <div className="space-y-1">
-            <label className="text-sm font-medium">Nama Grup</label>
+            <label className="text-sm font-medium">Nama Grup <RequiredMark /></label>
             <Controller control={control} name="name" render={({ field }) => <Input placeholder="Masukkan nama grup" value={field.value ?? ''} onChange={field.onChange} onBlur={field.onBlur} />} />
             {errors.name && <p className="text-xs text-destructive">{errors.name.message}</p>}
           </div>
 
           <div className="space-y-1">
-            <label className="text-sm font-medium">Kode Grup</label>
+            <label className="text-sm font-medium">Kode Grup <RequiredMark /></label>
             <Controller control={control} name="code" render={({ field }) => <Input placeholder="Tambahkan kode" value={field.value ?? ''} onChange={field.onChange} onBlur={field.onBlur} />} />
             {errors.code && <p className="text-xs text-destructive">{errors.code.message}</p>}
           </div>

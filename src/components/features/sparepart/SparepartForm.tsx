@@ -100,7 +100,7 @@ export function SparepartForm({
             name="categoryId"
             render={({ field }) => (
               <FormItem className="flex flex-col min-w-0">
-                <FormLabel className="text-sm font-medium">Grup</FormLabel>
+                <FormLabel className="text-sm font-medium">Grup <RequiredMark /></FormLabel>
                 <SelectAdd
                   onAdd={() => setOpenCreateGroup(true)}
                   addDisabled={isSubmitting}

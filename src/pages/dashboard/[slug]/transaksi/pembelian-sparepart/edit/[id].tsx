@@ -1,6 +1,6 @@
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { PageHeader } from '@/components/ui/page-header';
-import { PurchaseSparepartForm } from '@/components/features/sparepart-transaction/PurchaseSparepartForm';
+import { SparepartForm } from '@/components/features/sparepart-transaction/SparepartForm';
 import { useSparepartTransaction, useUpdateSparepartTransaction } from '@/hooks/useSparepartTransaction';
 import { useRouter } from 'next/router';
 import { toast } from 'sonner';
@@ -57,7 +57,8 @@ export default function EditPurchaseSparepartPage() {
 
         <div className="bg-white rounded-md border border-gray-200 p-6 shadow-sm">
           {!isLoading && transaction ? (
-            <PurchaseSparepartForm
+            <SparepartForm
+              type="purchase"
               defaultValues={{
                 person_id: transaction.person_id,
                 sparepart_id: transaction.sparepart_id,

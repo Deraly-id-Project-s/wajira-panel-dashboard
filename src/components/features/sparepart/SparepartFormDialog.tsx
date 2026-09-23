@@ -19,12 +19,14 @@ import { Check, ChevronsUpDown } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import RequiredMark from '@/components/ui/required-mark';
 import { handleApiFormError } from '@/lib/validation';
+import { SelectAdd } from '@/components/ui/select-add';
 
 interface Props {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   sparepart: Sparepart | null;
   companyId: string;
+  onCreated?: (id: number) => void;
 }
 
 const defaultSparepartValues: SparepartFormValues = {
@@ -37,7 +39,7 @@ const defaultSparepartValues: SparepartFormValues = {
   capacity: 0,
 };
 
-export function SparepartFormDialog({ open, onOpenChange, sparepart, companyId }: Props) {
+export function SparepartFormDialog({ open, onOpenChange, sparepart, companyId, onCreated }: Props) {
   const isEdit = Boolean(sparepart);
 
   const createMutation = useCreateSparepart(companyId);
@@ -45,6 +47,11 @@ export function SparepartFormDialog({ open, onOpenChange, sparepart, companyId }
   const { data: categories, isLoading: loadingCategories } = useSparepartCategories();
   const [openCreateGroup, setOpenCreateGroup] = useState(false);
   const [openGroupSelect, setOpenGroupSelect] = useState(false);
+  const [groupSearch, setGroupSearch] = useState('');
+
+  const filteredCategories = (categories ?? []).filter((category) =>
+    category.name.toLowerCase().includes(groupSearch.toLowerCase())
+  );
 
   const {
     handleSubmit,
@@ -86,14 +93,14 @@ export function SparepartFormDialog({ open, onOpenChange, sparepart, companyId }
       reset(
         sparepart
           ? {
-              code: sparepart.code || '',
-              name: sparepart.name || '',
-              categoryId: sparepart.categoryId ?? sparepart.category?.id ?? null,
-              unitType: sparepart.unit_type ? sparepart.unit_type.toLowerCase() : '',
-              purchasePrice: sparepart.purchasePrice ?? sparepart.price ?? 0,
-              sellingPrice: sparepart.sellingPrice ?? sparepart.price ?? 0,
-              capacity: sparepart.capacity ?? 0,
-            }
+            code: sparepart.code || '',
+            name: sparepart.name || '',
+            categoryId: sparepart.categoryId ?? sparepart.category?.id ?? null,
+            unitType: sparepart.unit_type ? sparepart.unit_type.toLowerCase() : '',
+            purchasePrice: sparepart.purchasePrice ?? sparepart.price ?? 0,
+            sellingPrice: sparepart.sellingPrice ?? sparepart.price ?? 0,
+            capacity: sparepart.capacity ?? 0,
+          }
           : defaultSparepartValues,
       );
     }
@@ -121,8 +128,12 @@ export function SparepartFormDialog({ open, onOpenChange, sparepart, companyId }
         });
         toast.success('Data berhasil diperbarui');
       } else {
-        await createMutation.mutateAsync(payload);
+        const res = await createMutation.mutateAsync(payload);
         toast.success('Data berhasil ditambahkan');
+        const createdId = (res as any)?.data?.id ?? (res as any)?.id;
+        if (createdId && onCreated) {
+          onCreated(Number(createdId));
+        }
       }
 
       onOpenChange(false);
@@ -158,13 +169,13 @@ export function SparepartFormDialog({ open, onOpenChange, sparepart, companyId }
         maxWidthClassName="max-w-md"
       >
         <div>
-          <label className="block text-sm font-bold mb-1">Kode Part<RequiredMark /></label>
+          <label className="block text-sm font-bold mb-1">Kode Part <RequiredMark /></label>
           <Controller control={control} name="code" render={({ field }) => <Input placeholder="Tambahkan kode" value={field.value ?? ''} onChange={field.onChange} />} />
           {errors.code && <p className="text-xs text-destructive mt-1">{errors.code.message}</p>}
         </div>
 
         <div>
-          <label className="block text-sm font-bold mb-1">Nama Part<RequiredMark /></label>
+          <label className="block text-sm font-bold mb-1">Nama Part <RequiredMark /></label>
           <Controller control={control} name="name" render={({ field }) => <Input placeholder="Tambahkan nama" value={field.value ?? ''} onChange={field.onChange} />} />
           {errors.name && <p className="text-xs text-destructive mt-1">{errors.name.message}</p>}
         </div>
@@ -175,19 +186,45 @@ export function SparepartFormDialog({ open, onOpenChange, sparepart, companyId }
             control={control}
             name="categoryId"
             render={({ field }) => (
-              <div className="flex gap-2">
-                <Popover open={openGroupSelect} onOpenChange={setOpenGroupSelect}>
+              <SelectAdd
+                onAdd={() => setOpenCreateGroup(true)}
+                addDisabled={isSubmitting}
+                addLabel="Tambah grup"
+                addVariant="default"
+              >
+                <Popover
+                  open={openGroupSelect}
+                  onOpenChange={(open) => {
+                    setOpenGroupSelect(open);
+                    if (!open) setGroupSearch('');
+                  }}
+                >
                   <PopoverTrigger asChild>
-                    <Button type="button" variant="outline" role="combobox" aria-expanded={openGroupSelect} disabled={loadingCategories} className="flex-1 justify-between font-normal">
+                    <button
+                      type="button"
+                      role="combobox"
+                      aria-expanded={openGroupSelect}
+                      aria-controls="sparepart-dialog-group-popover"
+                      disabled={loadingCategories || isSubmitting}
+                      className="flex h-10 w-full items-center justify-between rounded-md border border-input bg-transparent px-3 py-2 text-sm ring-offset-background disabled:cursor-not-allowed disabled:opacity-50 min-w-0 font-normal text-left"
+                    >
                       <span className={cn('truncate', !field.value && 'text-muted-foreground')}>
-                        {field.value ? categories?.find((category) => category.id === Number(field.value))?.name ?? 'Pilih grup' : loadingCategories ? 'Memuat grup...' : 'Pilih grup'}
+                        {field.value
+                          ? categories?.find((category) => category.id === Number(field.value))?.name ?? 'Pilih grup'
+                          : loadingCategories
+                            ? 'Memuat grup...'
+                            : 'Pilih grup'}
                       </span>
                       <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                    </Button>
+                    </button>
                   </PopoverTrigger>
-                  <PopoverContent className="w-[--radix-popover-trigger-width] p-0" align="start">
-                    <Command>
-                      <CommandInput placeholder="Cari grup..." />
+                  <PopoverContent id="sparepart-dialog-group-popover" className="w-[--radix-popover-trigger-width] p-0" align="start">
+                    <Command shouldFilter={false}>
+                      <CommandInput
+                        placeholder="Cari grup..."
+                        value={groupSearch}
+                        onValueChange={setGroupSearch}
+                      />
                       <CommandList>
                         <CommandEmpty>Grup tidak ditemukan.</CommandEmpty>
                         <CommandGroup>
@@ -196,21 +233,28 @@ export function SparepartFormDialog({ open, onOpenChange, sparepart, companyId }
                             onSelect={() => {
                               field.onChange(null);
                               setOpenGroupSelect(false);
+                              setGroupSearch('');
                             }}
                           >
                             <Check className={cn('mr-2 h-4 w-4', !field.value ? 'opacity-100' : 'opacity-0')} />
                             <span className="truncate">Tanpa grup</span>
                           </CommandItem>
-                          {(categories ?? []).map((category) => (
+                          {filteredCategories.map((category) => (
                             <CommandItem
                               key={category.id}
                               value={`${category.name} ${category.id}`}
                               onSelect={() => {
                                 field.onChange(category.id);
                                 setOpenGroupSelect(false);
+                                setGroupSearch('');
                               }}
                             >
-                              <Check className={cn('mr-2 h-4 w-4', Number(field.value) === category.id ? 'opacity-100' : 'opacity-0')} />
+                              <Check
+                                className={cn(
+                                  'mr-2 h-4 w-4',
+                                  Number(field.value) === category.id ? 'opacity-100' : 'opacity-0'
+                                )}
+                              />
                               <span className="truncate">{category.name}</span>
                             </CommandItem>
                           ))}
@@ -219,17 +263,14 @@ export function SparepartFormDialog({ open, onOpenChange, sparepart, companyId }
                     </Command>
                   </PopoverContent>
                 </Popover>
-                <Button type="button" variant="outline" size="icon" className="h-10 w-10" onClick={() => setOpenCreateGroup(true)}>
-                  +
-                </Button>
-              </div>
+              </SelectAdd>
             )}
           />
           {errors.categoryId && <p className="text-xs text-destructive mt-1">{errors.categoryId.message}</p>}
         </div>
 
         <div>
-          <label className="block text-sm font-bold mb-1">Satuan<RequiredMark /></label>
+          <label className="block text-sm font-bold mb-1">Satuan <RequiredMark /></label>
           <Controller
             control={control}
             name="unitType"
@@ -250,13 +291,13 @@ export function SparepartFormDialog({ open, onOpenChange, sparepart, companyId }
         </div>
 
         <div>
-          <label className="block text-sm font-bold mb-1">Harga Beli<RequiredMark /></label>
+          <label className="block text-sm font-bold mb-1">Harga Beli <RequiredMark /></label>
           <Controller control={control} name="purchasePrice" render={({ field: { onChange, value, ...rest } }) => <MoneyInput placeholder="Tambahkan harga beli" {...rest} value={value || 0} onChangeValue={onChange} />} />
           {errors.purchasePrice && <p className="text-xs text-destructive mt-1">{errors.purchasePrice.message}</p>}
         </div>
 
         <div>
-          <label className="block text-sm font-bold mb-1">Harga Jual<RequiredMark /></label>
+          <label className="block text-sm font-bold mb-1">Harga Jual <RequiredMark /></label>
           <Controller control={control} name="sellingPrice" render={({ field: { onChange, value, ...rest } }) => <MoneyInput placeholder="Tambahkan harga jual" {...rest} value={value || 0} onChangeValue={onChange} />} />
           {errors.sellingPrice && <p className="text-xs text-destructive mt-1">{errors.sellingPrice.message}</p>}
         </div>

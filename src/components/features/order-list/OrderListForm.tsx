@@ -28,9 +28,19 @@ import {
   formatOrderCurrency,
 } from './order-list.utils';
 import { getOrderListFormula } from '@/services/order-list.service';
+import { SelectAdd } from '@/components/ui/select-add';
 import { CustomerFormModal } from '@/components/features/customer/CustomerFormModal';
+import { TarifFormModal } from '@/components/features/tarif/TarifFormModal';
+import { DriverFormModal } from '@/components/features/driver/DriverFormModal';
+import { ArmadaFormModal } from '@/components/features/armada/ArmadaFormModal';
 import { useCreateCustomer } from '@/hooks/useCustomer';
+import { useCreateTarif } from '@/hooks/useTarif';
+import { useCreateDriver } from '@/hooks/useDriver';
+import { useCreateArmada } from '@/hooks/useArmada';
 import { customerSchema, type CustomerFormValues } from '@/scheme/customer.schema';
+import type { TarifPayload } from '@/@types/tarif.types';
+import type { DriverPayload } from '@/@types/driver.types';
+import type { ArmadaPayload } from '@/@types/armada.types';
 import { useAuthMe } from '@/features/auth/hooks/use-auth-me';
 import { useCompany } from '@/contexts/CompanyContext';
 import { ApiValidationError } from '@/lib/api/response';
@@ -194,9 +204,24 @@ export function OrderListForm({
   const { companyId } = useCompany();
   const { data: profile } = useAuthMe();
   const createCustomerMutation = useCreateCustomer();
+  const createTarifMutation = useCreateTarif();
+  const createDriverMutation = useCreateDriver();
+  const createArmadaMutation = useCreateArmada();
 
   const [localCustomers, setLocalCustomers] = React.useState<any[]>([]);
   const [isCreateCustomerOpen, setIsCreateCustomerOpen] = React.useState(false);
+
+  const [localTarifRecords, setLocalTarifRecords] = React.useState<Tarif[]>([]);
+  const [isCreateTarifOpen, setIsCreateTarifOpen] = React.useState(false);
+  const [activeTarifIndex, setActiveTarifIndex] = React.useState<number | null>(null);
+
+  const [localDrivers, setLocalDrivers] = React.useState<any[]>([]);
+  const [isCreateDriverOpen, setIsCreateDriverOpen] = React.useState(false);
+  const [activeDriverIndex, setActiveDriverIndex] = React.useState<number | null>(null);
+
+  const [localArmadas, setLocalArmadas] = React.useState<any[]>([]);
+  const [isCreateArmadaOpen, setIsCreateArmadaOpen] = React.useState(false);
+  const [activeVehicleIndex, setActiveVehicleIndex] = React.useState<number | null>(null);
 
   const customerForm = useForm<CustomerFormValues>({
     resolver: zodResolver(customerSchema),
@@ -252,6 +277,76 @@ export function OrderListForm({
     }
   };
 
+  const handleCreateTarifSubmit = async (data: TarifPayload) => {
+    try {
+      const created = await createTarifMutation.mutateAsync(data);
+      toast.success('Data tarif berhasil ditambahkan');
+      if (created?.id) {
+        setLocalTarifRecords((prev) => [...prev, created]);
+        if (activeTarifIndex !== null) {
+          handleTarifChange(activeTarifIndex, String(created.id));
+        }
+      }
+      setIsCreateTarifOpen(false);
+    } catch (error: any) {
+      if (error instanceof ApiValidationError) {
+        toast.error(error.message || 'Validasi tarif gagal');
+        return;
+      }
+      toast.error(error.message || 'Gagal menambahkan data tarif');
+    }
+  };
+
+  const handleCreateDriverSubmit = async (data: DriverPayload) => {
+    if (!companyId) {
+      toast.error('Company ID tidak ditemukan');
+      return;
+    }
+    const userId = profile?.data?.id;
+
+    try {
+      const created = await createDriverMutation.mutateAsync({
+        ...data,
+        company_id: companyId,
+        user_id: userId,
+      });
+      toast.success('Data driver berhasil ditambahkan');
+      if (created?.id) {
+        setLocalDrivers((prev) => [...prev, created]);
+        if (activeDriverIndex !== null) {
+          setValue(`items.${activeDriverIndex}.driverId`, String(created.id), { shouldValidate: true, shouldDirty: true });
+        }
+      }
+      setIsCreateDriverOpen(false);
+    } catch (error: any) {
+      if (error instanceof ApiValidationError) {
+        toast.error(error.message || 'Validasi driver gagal');
+        return;
+      }
+      toast.error(error.message || 'Gagal menambahkan data driver');
+    }
+  };
+
+  const handleCreateArmadaSubmit = async (data: ArmadaPayload) => {
+    try {
+      const created = await createArmadaMutation.mutateAsync(data);
+      toast.success('Data armada berhasil ditambahkan');
+      if (created?.id) {
+        setLocalArmadas((prev) => [...prev, created]);
+        if (activeVehicleIndex !== null) {
+          setValue(`items.${activeVehicleIndex}.vehicleId`, String(created.id), { shouldValidate: true, shouldDirty: true });
+        }
+      }
+      setIsCreateArmadaOpen(false);
+    } catch (error: any) {
+      if (error instanceof ApiValidationError) {
+        toast.error(error.message || 'Validasi armada gagal');
+        return;
+      }
+      toast.error(error.message || 'Gagal menambahkan data armada');
+    }
+  };
+
   const defaultCustomerOption = React.useMemo<SearchableSelectOption[]>(() => {
     if (!initialData?.customer?.id) return [];
     return [
@@ -294,9 +389,68 @@ export function OrderListForm({
     return [...merged, ...filteredLocal];
   }, [customerOptions, defaultCustomerOption, localCustomerOptions]);
 
+  const combinedTarifRecords = React.useMemo(() => {
+    const map = new Map<string | number, Tarif>();
+    tarifRecords.forEach((t) => map.set(t.id, t));
+    localTarifRecords.forEach((t) => map.set(t.id, t));
+    return Array.from(map.values());
+  }, [tarifRecords, localTarifRecords]);
+
+  const localTarifOptions = React.useMemo<SearchableSelectOption[]>(
+    () =>
+      localTarifRecords.map((item) => ({
+        value: String(item.id),
+        label: [item.loadingIn, item.loadingOut].filter(Boolean).join(' - ') || `Tarif #${item.id}`,
+        subtitle: item.customer?.name,
+      })),
+    [localTarifRecords],
+  );
+
   const mergedTarifOptions = React.useMemo(() => {
-    return mergeSelectOptions(tarifOptions, defaultTarifOptions);
-  }, [tarifOptions, defaultTarifOptions]);
+    const base = mergeSelectOptions(tarifOptions, defaultTarifOptions);
+    const existing = new Set(base.map((o) => o.value));
+    const filteredLocal = localTarifOptions.filter((o) => !existing.has(o.value));
+    return [...base, ...filteredLocal];
+  }, [tarifOptions, defaultTarifOptions, localTarifOptions]);
+
+  const localDriverOptions = React.useMemo<SearchableSelectOption[]>(
+    () =>
+      localDrivers.map((item) => ({
+        value: String(item.id),
+        label: item.name,
+        subtitle: item.code,
+      })),
+    [localDrivers],
+  );
+
+  const mergedDriverOptions = React.useMemo(() => {
+    const existing = new Set(driverOptions.map((o) => o.value));
+    const filteredLocal = localDriverOptions.filter((o) => !existing.has(o.value));
+    return [...driverOptions, ...filteredLocal];
+  }, [driverOptions, localDriverOptions]);
+
+  const mergedVehicleOptions = React.useMemo(() => {
+    const result: Record<OrderListVehicleType, SearchableSelectOption[]> = {
+      fuso: [...(vehicleOptions.fuso || [])],
+      cdd: [...(vehicleOptions.cdd || [])],
+      towing: [...(vehicleOptions.towing || [])],
+    };
+
+    localArmadas.forEach((armada) => {
+      const typeKey = (armada.type?.toLowerCase() || 'fuso') as OrderListVehicleType;
+      if (result[typeKey]) {
+        if (!result[typeKey].some((o) => o.value === String(armada.id))) {
+          result[typeKey].unshift({
+            value: String(armada.id),
+            label: armada.registrationNumber || armada.registration_number || `Armada #${armada.id}`,
+            subtitle: (armada.type || typeKey).toUpperCase(),
+          });
+        }
+      }
+    });
+
+    return result;
+  }, [vehicleOptions, localArmadas]);
 
   const form = useForm<OrderListFormValues>({
     resolver: zodResolver(orderListFormSchema),
@@ -344,8 +498,8 @@ export function OrderListForm({
   const invoiceBill = useWatch({ control, name: 'invoiceBill' });
   const watchedPpn = useWatch({ control, name: 'ppn' });
   const watchedPph = useWatch({ control, name: 'pph' });
+
   const watchedUjDriver = useWatch({ control, name: 'ujDriver' });
-  const selectedCustomer = mergedCustomerOptions.find((item) => item.value === customerId);
   const selectedTarifIds = React.useMemo(() => {
     const ids = new Set<string>();
     (initialData?.tarifs ?? []).forEach((item) => {
@@ -378,8 +532,7 @@ export function OrderListForm({
 
   const getTarifById = React.useCallback(
     (tarifId: string): Tarif | undefined => {
-      const fromLookup = tarifRecords.find((item) => String(item.id) === tarifId)
-        ;
+      const fromLookup = combinedTarifRecords.find((item) => String(item.id) === tarifId);
       if (fromLookup) return fromLookup;
 
       const fromInitial = initialData?.tarifs?.find((item) => String(item.tarifId) === tarifId)?.tarif;
@@ -401,7 +554,7 @@ export function OrderListForm({
       }
       return undefined;
     },
-    [initialData?.tarifs, tarifRecords],
+    [initialData?.tarifs, combinedTarifRecords],
   );
 
   const handleTarifChange = React.useCallback(
@@ -527,27 +680,9 @@ export function OrderListForm({
                 render={({ field }) => (
                   <FormItem className="flex flex-col min-w-0 relative pb-5">
                     <FormLabel className="text-sm font-medium">Customer<RequiredMark /></FormLabel>
-                    <div className="flex items-center gap-2 w-full min-w-0">
-                      <div className="flex-1 min-w-0">
-                        <FormControl>
-                          <SearchableSelect
-                            value={field.value}
-                            onChange={field.onChange}
-                            options={mergedCustomerOptions}
-                            placeholder="Pilih customer"
-                            searchPlaceholder="Cari customer..."
-                            loading={customerLoading}
-                            onSearchChange={onCustomerSearch}
-                            className="bg-transparent"
-                          />
-                        </FormControl>
-                      </div>
-                      <Button
-                        type="button"
-                        variant="default"
-                        size="icon"
-                        aria-label="Tambah customer"
-                        onClick={() => {
+                    <FormControl>
+                      <SelectAdd
+                        onAdd={() => {
                           customerForm.reset({
                             name: '',
                             address: '',
@@ -558,11 +693,21 @@ export function OrderListForm({
                           });
                           setIsCreateCustomerOpen(true);
                         }}
-                        className="h-10 w-10 shrink-0 cursor-pointer"
+                        addLabel="Tambah customer"
+                        addVariant="default"
                       >
-                        <Plus className="h-4 w-4" />
-                      </Button>
-                    </div>
+                        <SearchableSelect
+                          value={field.value}
+                          onChange={field.onChange}
+                          options={mergedCustomerOptions}
+                          placeholder="Pilih customer"
+                          searchPlaceholder="Cari customer..."
+                          loading={customerLoading}
+                          onSearchChange={onCustomerSearch}
+                          className="bg-transparent"
+                        />
+                      </SelectAdd>
+                    </FormControl>
                     <FormMessage className="absolute bottom-0 text-[11px] leading-none mt-0" />
                   </FormItem>
                 )}
@@ -629,8 +774,15 @@ export function OrderListForm({
                         render={({ field: controllerField }) => (
                           <FormItem className="flex flex-col min-w-0 relative pb-5">
                             <FormLabel className="text-sm font-medium">Pilih Rute / Tarif<RequiredMark /></FormLabel>
-                            <div className="w-full min-w-0">
-                              <FormControl>
+                            <FormControl>
+                              <SelectAdd
+                                onAdd={() => {
+                                  setActiveTarifIndex(index);
+                                  setIsCreateTarifOpen(true);
+                                }}
+                                addLabel="Tambah tarif"
+                                addVariant="default"
+                              >
                                 <SearchableSelect
                                   value={controllerField.value}
                                   onChange={(value) => handleTarifChange(index, value)}
@@ -642,8 +794,8 @@ export function OrderListForm({
                                   disabledValues={selectedTarifIds.filter((value) => value !== controllerField.value)}
                                   className="bg-transparent"
                                 />
-                              </FormControl>
-                            </div>
+                              </SelectAdd>
+                            </FormControl>
                             <FormMessage className="absolute bottom-0 text-[11px] leading-none mt-0" />
                           </FormItem>
                         )}
@@ -726,17 +878,26 @@ export function OrderListForm({
                         name={`items.${index}.vehicleId`}
                         render={({ field: controllerField }) => (
                           <FormItem className="flex flex-col relative pb-5">
-                            <FormLabel className="text-sm font-medium">Kendaraan<RequiredMark /></FormLabel>
+                            <FormLabel className="text-sm font-medium">Armada/Kendaraan<RequiredMark /></FormLabel>
                             <FormControl>
-                              <SearchableSelect
-                                value={controllerField.value}
-                                onChange={controllerField.onChange}
-                                options={vehicleOptions[item?.vehicleType ?? 'fuso']}
-                                placeholder="Pilih kendaraan"
-                                searchPlaceholder="Cari nomor polisi..."
-                                loading={vehicleLoading}
-                                onSearchChange={onVehicleSearch}
-                              />
+                              <SelectAdd
+                                onAdd={() => {
+                                  setActiveVehicleIndex(index);
+                                  setIsCreateArmadaOpen(true);
+                                }}
+                                addLabel="Tambah armada"
+                                addVariant="default"
+                              >
+                                <SearchableSelect
+                                  value={controllerField.value}
+                                  onChange={controllerField.onChange}
+                                  options={mergedVehicleOptions[item?.vehicleType ?? 'fuso']}
+                                  placeholder="Pilih kendaraan"
+                                  searchPlaceholder="Cari nomor polisi..."
+                                  loading={vehicleLoading}
+                                  onSearchChange={onVehicleSearch}
+                                />
+                              </SelectAdd>
                             </FormControl>
                             <FormMessage className="absolute bottom-0 text-[11px] leading-none mt-0" />
                           </FormItem>
@@ -750,15 +911,24 @@ export function OrderListForm({
                           <FormItem className="flex flex-col relative pb-5">
                             <FormLabel className="text-sm font-medium">Driver<RequiredMark /></FormLabel>
                             <FormControl>
-                              <SearchableSelect
-                                value={controllerField.value}
-                                onChange={controllerField.onChange}
-                                options={driverOptions}
-                                placeholder="Pilih driver"
-                                searchPlaceholder="Cari driver..."
-                                loading={driverLoading}
-                                onSearchChange={onDriverSearch}
-                              />
+                              <SelectAdd
+                                onAdd={() => {
+                                  setActiveDriverIndex(index);
+                                  setIsCreateDriverOpen(true);
+                                }}
+                                addLabel="Tambah driver"
+                                addVariant="default"
+                              >
+                                <SearchableSelect
+                                  value={controllerField.value}
+                                  onChange={controllerField.onChange}
+                                  options={mergedDriverOptions}
+                                  placeholder="Pilih driver"
+                                  searchPlaceholder="Cari driver..."
+                                  loading={driverLoading}
+                                  onSearchChange={onDriverSearch}
+                                />
+                              </SelectAdd>
                             </FormControl>
                             <FormMessage className="absolute bottom-0 text-[11px] leading-none mt-0" />
                           </FormItem>
@@ -1023,6 +1193,29 @@ export function OrderListForm({
         isSubmitting={createCustomerMutation.isPending}
       />
 
+      <TarifFormModal
+        isOpen={isCreateTarifOpen}
+        onClose={() => setIsCreateTarifOpen(false)}
+        onSave={handleCreateTarifSubmit}
+        isSubmitting={createTarifMutation.isPending}
+      />
+
+      <DriverFormModal
+        isOpen={isCreateDriverOpen}
+        onClose={() => setIsCreateDriverOpen(false)}
+        onSave={handleCreateDriverSubmit}
+        companyId={companyId ?? undefined}
+        userId={profile?.data?.id}
+        isSubmitting={createDriverMutation.isPending}
+      />
+
+      <ArmadaFormModal
+        isOpen={isCreateArmadaOpen}
+        onClose={() => setIsCreateArmadaOpen(false)}
+        onSave={handleCreateArmadaSubmit}
+        defaultType={activeVehicleIndex !== null ? watchedItems?.[activeVehicleIndex]?.vehicleType : undefined}
+        isSubmitting={createArmadaMutation.isPending}
+      />
     </div>
   );
 }

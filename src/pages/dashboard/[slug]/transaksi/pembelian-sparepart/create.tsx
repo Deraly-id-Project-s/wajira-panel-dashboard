@@ -1,6 +1,6 @@
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { PageHeader } from '@/components/ui/page-header';
-import { PurchaseSparepartForm } from '@/components/features/sparepart-transaction/PurchaseSparepartForm';
+import { SparepartForm } from '@/components/features/sparepart-transaction/SparepartForm';
 import { useCreateSparepartTransaction } from '@/hooks/useSparepartTransaction';
 import { useRouter } from 'next/router';
 import { toast } from 'sonner';
@@ -42,7 +42,8 @@ export default function CreatePurchaseSparepartPage() {
         />
 
         <div className="bg-white rounded-md border border-gray-200 p-6 shadow-sm">
-          <PurchaseSparepartForm
+          <SparepartForm
+            type="purchase"
             onSubmit={handleSubmit}
             onCancel={handleCancel}
             companyId={companyId}
