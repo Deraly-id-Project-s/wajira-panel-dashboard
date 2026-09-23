@@ -231,21 +231,22 @@ export function SparepartForm({
     setOpenSparepartDialog(false);
   };
 
+  const personId = form.watch('person_id');
+  const sparepartId = form.watch('sparepart_id');
+
   const selectedPartyName = useMemo(() => {
-    const personId = form.watch('person_id');
     if (!personId) return null;
     if (isSales) {
       return customers?.data?.find((c: any) => String(c.id) === String(personId))?.name;
     }
     return suppliers?.data?.find((s: any) => String(s.id) === String(personId))?.name;
-  }, [form.watch('person_id'), isSales, customers, suppliers]);
+  }, [personId, isSales, customers, suppliers]);
 
   const selectedSparepartLabel = useMemo(() => {
-    const spId = form.watch('sparepart_id');
-    if (!spId) return null;
-    const sp = spareparts?.data?.find((s: any) => String(s.id) === String(spId));
+    if (!sparepartId) return null;
+    const sp = spareparts?.data?.find((s: any) => String(s.id) === String(sparepartId));
     return sp ? `${sp.name} (${sp.code})` : null;
-  }, [form.watch('sparepart_id'), spareparts]);
+  }, [sparepartId, spareparts]);
 
   return (
     <>
