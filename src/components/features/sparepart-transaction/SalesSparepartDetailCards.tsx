@@ -30,7 +30,7 @@ export function SalesSparepartDetailCards({ transaction }: Props) {
       0
   );
 
-  const customerName = transaction.person?.name || transaction.customer?.name || '-';
+  const customerName = transaction.person?.name || '-';
   const sparepartName = transaction.sparepart?.name || '-';
   const sparepartCode = transaction.sparepart?.code;
   const unitType = transaction.sparepart?.unit_type || '';

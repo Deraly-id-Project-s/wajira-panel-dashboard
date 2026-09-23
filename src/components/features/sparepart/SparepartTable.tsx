@@ -7,7 +7,6 @@ import { CopyBox } from '@/components/ui/copy-box';
 import { currenciesFormat } from '@/components/ui/currenciesFormat';
 import BaseTable, { ColumnDef } from '@/components/ui/base-table';
 import { ReferenceLink } from '@/components/ui/reference-link';
-import { useRouter } from 'next/router';
 
 interface Props {
   data: Sparepart[];
@@ -24,9 +23,6 @@ export function SparepartTable({ data, onEdit, onDelete, onAdd, onImport, canEdi
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(25);
   const [sortState, setSortState] = useState<{ key: string; direction: 'asc' | 'desc' }>({ key: 'code', direction: 'asc' });
-  const router = useRouter();
-  const { slug } = router.query;
-  const slugStr = typeof slug === 'string' ? slug : '';
 
   const filteredData = useMemo(() => {
     const term = search.trim().toLowerCase();
@@ -141,7 +137,7 @@ export function SparepartTable({ data, onEdit, onDelete, onAdd, onImport, canEdi
         ),
       },
     ],
-    [canEdit, canDelete, onEdit, onDelete, slugStr]
+    [canEdit, canDelete, onEdit, onDelete]
   );
 
   return (
