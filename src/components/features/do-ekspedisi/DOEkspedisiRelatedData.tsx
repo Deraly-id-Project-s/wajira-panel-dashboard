@@ -32,14 +32,8 @@ export function DOEkspedisiRelatedData({ data, onRefresh }: DOEkspedisiRelatedDa
               <DOEkspedisiExpenses data={data} onRefresh={onRefresh} />
             </div>
           </div>
-          <div className="grid grid-cols-1 gap-6 xl:grid-cols-2">
-            <div className="min-w-0 [&>section]:h-full">
-              <DOEkspedisiDocumentations data={data} onRefresh={onRefresh} />
-            </div>
-            <div className="min-w-0 [&>section]:h-full">
-              <DOEkspedisiClaims data={data} onRefresh={onRefresh} />
-            </div>
-          </div>
+          <DOEkspedisiClaims data={data} onRefresh={onRefresh} />
+          <DOEkspedisiDocumentations data={data} />
         </div>
       </CollapsibleBox>
 
@@ -57,4 +51,3 @@ export function DOEkspedisiRelatedData({ data, onRefresh }: DOEkspedisiRelatedDa
     </div>
   );
 }
-

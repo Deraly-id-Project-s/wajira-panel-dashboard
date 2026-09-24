@@ -17,6 +17,8 @@ import { ReportTemplatePrintDialog } from '@/components/ui/report-template-print
 import { cn } from '@/lib/utils';
 import { formatDate } from '@/lib/utils/format';
 import { DOEkspedisiRelatedData } from '@/components/features/do-ekspedisi/DOEkspedisiRelatedData';
+import { DOEkspedisiRejectApproval } from '@/components/features/do-ekspedisi/DOEkspedisiRejectApproval';
+import { getDoEkspedisiStatusBadgeClassName, getDoEkspedisiStatusLabel } from '@/components/features/do-ekspedisi/do-ekspedisi-status';
 import { useCompany } from '@/contexts/CompanyContext';
 import { useReportTemplatePrint } from '@/hooks/useReportTemplatePrint';
 import { getCompanyName, getLetterheadByCompanyId, resolveCompanyId } from '@/lib/print-letterhead';
@@ -33,40 +35,6 @@ import {
 } from '@/components/ui/alert-dialog';
 
 // pagination helper removed (unused in print/detail view)
-
-const getDoStatusBadgeClassName = (status: string) => {
-  switch (String(status).toLowerCase()) {
-    case 'draft':
-      return 'border-slate-200 bg-slate-50 text-slate-700';
-    case 'process':
-      return 'border-blue-200 bg-blue-50 text-blue-700 font-semibold';
-    case 'done':
-      return 'border-emerald-200 bg-emerald-50 text-emerald-700 font-semibold';
-    case 'failed':
-      return 'border-rose-200 bg-rose-50 text-rose-700 font-semibold';
-    case 'pending':
-      return 'border-amber-200 bg-amber-50 text-amber-700 font-semibold';
-    default:
-      return 'border-slate-200 bg-slate-50 text-slate-700';
-  }
-};
-
-const getDoStatusLabel = (status: string) => {
-  switch (String(status).toLowerCase()) {
-    case 'draft':
-      return 'Draft';
-    case 'process':
-      return 'Proses';
-    case 'done':
-      return 'Selesai';
-    case 'failed':
-      return 'Gagal';
-    case 'pending':
-      return 'Tertunda';
-    default:
-      return status || '-';
-  }
-};
 
 export default function DetailDOEkspedisiPage() {
   const router = useRouter();
@@ -126,8 +94,8 @@ export default function DetailDOEkspedisiPage() {
           <span>Kode DO:</span>
           <span className="font-semibold text-orange-600">{detailQuery.data?.doCode}</span>
           {detailQuery.data && (
-            <Badge variant="outline" className={cn('rounded-full px-3 py-1', getDoStatusBadgeClassName(detailQuery.data.status))}>
-              {getDoStatusLabel(detailQuery.data.status)}
+            <Badge variant="outline" className={cn('rounded-full px-3 py-1', getDoEkspedisiStatusBadgeClassName(detailQuery.data.status))}>
+              {getDoEkspedisiStatusLabel(detailQuery.data.status)}
             </Badge>
           )}
           <span className="text-xs text-slate-500">Ditambahkan {detailQuery.data?.createdAt ? formatDate(detailQuery.data.createdAt) : ''}</span>
@@ -297,6 +265,7 @@ export default function DetailDOEkspedisiPage() {
         )}
 
         <DOEkspedisiDetailCard data={detailQuery.data} />
+        <DOEkspedisiRejectApproval data={detailQuery.data} onApproved={() => void detailQuery.refetch()} />
         <DOEkspedisiRelatedData data={detailQuery.data} onRefresh={() => void detailQuery.refetch()} />
 
         {/* <div className="flex flex-col items-start justify-between gap-4 lg:flex-row lg:items-center">

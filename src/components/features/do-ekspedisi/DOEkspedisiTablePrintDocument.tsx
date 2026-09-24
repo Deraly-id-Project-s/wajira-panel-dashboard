@@ -2,6 +2,7 @@ import { useMemo } from 'react';
 import type { DocumentTemplate } from '@/@types/document-template.types';
 import type { DoEkspedisi } from '@/@types/do-ekspedisi.types';
 import { getObjectStorageUrl } from '@/components/ui/storage-image';
+import { getDoEkspedisiStatusLabel } from './do-ekspedisi-status';
 
 const ROWS_PER_PRINT_PAGE = 22;
 
@@ -30,23 +31,6 @@ const htmlToPlainText = (value?: string | null) =>
     .replace(/&#(?:39|x27);/gi, "'")
     .replace(/\n{3,}/g, '\n\n')
     .trim();
-
-const getDoStatusLabel = (status: string) => {
-  switch (String(status).toLowerCase()) {
-    case 'draft':
-      return 'Draft';
-    case 'process':
-      return 'Proses';
-    case 'done':
-      return 'Selesai';
-    case 'failed':
-      return 'Gagal';
-    case 'pending':
-      return 'Pending';
-    default:
-      return status || '-';
-  }
-};
 
 export interface DOEkspedisiTablePrintDocumentProps {
   data: DoEkspedisi[];
@@ -195,7 +179,7 @@ export function DOEkspedisiTablePrintDocument({
                             </td>
                             <td className="border border-slate-300 px-1 py-1 text-center">
                               <span className="inline-block rounded bg-slate-100 px-1 py-0.5 text-[5.5pt] font-semibold uppercase text-slate-700">
-                                {getDoStatusLabel(item.status)}
+                                {getDoEkspedisiStatusLabel(item.status)}
                               </span>
                             </td>
                           </tr>

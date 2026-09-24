@@ -2,6 +2,7 @@ import React from 'react';
 import type { DocumentTemplate } from '@/@types/document-template.types';
 import type { DoEkspedisi } from '@/@types/do-ekspedisi.types';
 import { getObjectStorageUrl } from '@/components/ui/storage-image';
+import { getDoEkspedisiStatusLabel } from './do-ekspedisi-status';
 
 const formatCompactDate = (value: string | Date | null | undefined) => {
   if (!value) return '-';
@@ -42,23 +43,6 @@ const htmlToPlainText = (value?: string | null) =>
     .replace(/&#(?:39|x27);/gi, "'")
     .replace(/\n{3,}/g, '\n\n')
     .trim();
-
-const getDoStatusLabel = (status: string) => {
-  switch (String(status).toLowerCase()) {
-    case 'draft':
-      return 'Draft';
-    case 'process':
-      return 'Proses';
-    case 'done':
-      return 'Selesai';
-    case 'failed':
-      return 'Gagal';
-    case 'pending':
-      return 'Pending';
-    default:
-      return status || '-';
-  }
-};
 
 const formatCurrency = (value: number | string | null | undefined) =>
   new Intl.NumberFormat('id-ID', {
@@ -244,7 +228,7 @@ export const DOEkspedisiPrintDocument: React.FC<DOEkspedisiPrintDocumentProps> =
                 <dt className="text-slate-500">Tgl DO</dt>
                 <dd className="font-medium">: {formatCompactDate(data.date)}</dd>
                 <dt className="text-slate-500">Status DO</dt>
-                <dd className="font-semibold text-slate-900">: {getDoStatusLabel(data.status)}</dd>
+                <dd className="font-semibold text-slate-900">: {getDoEkspedisiStatusLabel(data.status)}</dd>
                 <dt className="text-slate-500">Dicetak</dt>
                 <dd>: {formatCompactDate(printedAt)}</dd>
               </dl>
@@ -562,4 +546,3 @@ export const DOEkspedisiPrintDocument: React.FC<DOEkspedisiPrintDocumentProps> =
 };
 
 export default DOEkspedisiPrintDocument;
-

@@ -29,6 +29,8 @@ import type {
   DoEkspedisiClaimPayload,
   DoEkspedisiClaimDocumentationPayload,
   DoEkspedisiExpeditionTrack,
+  DoEkspedisiReject,
+  DoEkspedisiRejectApprovalPayload,
 } from '@/@types/do-ekspedisi.types';
 import type { PaginationParams } from '@/@types/pagination.types';
 import { apiClient } from '@/lib/api/client';
@@ -105,6 +107,7 @@ const mapVehicle = (item: any): DoEkspedisiVehicle => ({
 const mapDriver = (item: any): DoEkspedisiDriver => ({
   id: Number(item?.id ?? 0),
   uuid: item?.uuid,
+  code: item?.code,
   name: item?.name ?? '',
   phone: item?.phone ?? null,
 });
@@ -113,7 +116,7 @@ const mapExpeditionTrack = (item: any): DoEkspedisiExpeditionTrack | null => {
   if (!item || typeof item !== 'object') return null;
 
   return {
-    doExpeditionId: Number(item?.do_expedition_id ?? item?.do_expeditions_id ?? 0),
+    doExpeditionId: Number(item?.do_expedition_id ?? item?.do_expeditions_id ?? item?.doExpeditionId ?? 0),
     driverId: Number(item?.driver_id ?? 0),
     traccarDeviceId: Number(item?.traccar_device_id ?? 0),
     traccarUniqueId: toText(item?.traccar_unique_id),
@@ -147,14 +150,32 @@ const mapClaimDocumentation = (item: any): DoEkspedisiClaimDocumentation => ({
 const mapDoEkspedisiDocumentation = (item: any): DoEkspedisiDocumentation => ({
   id: Number(item?.id ?? 0),
   uuid: item?.uuid,
-  doExpeditionId: Number(item?.do_expedition_id ?? item?.do_expeditions_id ?? 0),
-  documentationPosition: item?.documentation_position ?? '',
+  doExpeditionId: Number(item?.do_expedition_id ?? item?.do_expeditions_id ?? item?.doExpeditionId ?? 0),
+  documentationPosition: item?.documentation_position ?? item?.documentationPosition ?? '',
+  documentationType: item?.documentation_type ?? item?.documentationType ?? item?.type ?? '',
   subject: item?.subject ?? '',
   description: item?.description ?? null,
   image: item?.image ?? null,
   createdAt: item?.created_at,
   updatedAt: item?.updated_at,
 });
+
+const mapDoEkspedisiReject = (item: any): DoEkspedisiReject | null => {
+  if (!item || typeof item !== 'object') return null;
+
+  return {
+    id: Number(item?.id ?? 0),
+    doExpeditionId: Number(item?.do_expedition_id ?? item?.do_expeditions_id ?? item?.doExpeditionId ?? 0),
+    driverId: (item?.driver_id ?? item?.driverId) == null ? null : Number(item?.driver_id ?? item?.driverId),
+    isApprove: (item?.is_approve ?? item?.isApprove) == null ? null : Boolean(item?.is_approve ?? item?.isApprove),
+    lastExpeditionType: String(item?.last_expedition_type ?? item?.lastExpeditionType ?? ''),
+    rejectReason: item?.reject_reason ?? item?.rejectReason ?? '',
+    rejectDocumentation: item?.reject_documentation ?? item?.rejectDocumentation ?? null,
+    createdAt: item?.created_at,
+    updatedAt: item?.updated_at,
+    driver: item?.driver ? mapDriver(item.driver) : null,
+  };
+};
 
 const mapDriverNote = (item: any): DoEkspedisiDriverNote => ({
   id: Number(item?.id ?? 0), uuid: item?.uuid,
@@ -374,6 +395,9 @@ const mapDoEkspedisi = (item: any): DoEkspedisi => {
     driverExpeditionClaims: (item?.driver_expedition_claims ?? []).map(mapClaimApplication),
     driverCashAdvanceClaims: (item?.driver_cash_advance_claims ?? []).map(mapDriverCashAdvanceClaim),
     expeditionTrack: mapExpeditionTrack(item?.expedition_track ?? item?.expeditionTrack),
+    hasRejectRequest: Boolean(item?.has_reject_request ?? item?.hasRejectRequest),
+    expeditionReject: mapDoEkspedisiReject(item?.expedition_reject ?? item?.expeditionReject),
+    expeditionDocumentations: (item?.expedition_documentations ?? item?.expeditionDocumentations ?? []).map(mapDoEkspedisiDocumentation),
   };
 };
 
@@ -897,6 +921,20 @@ export const updateDoExpeditionStatus = async (id: string | number, status: stri
   const response = await apiClient.put<LaravelApiResponse<any>>(
     `${expeditionBasePath}/${id}/update-status`,
     { status },
+  );
+  return mapDoEkspedisi(ensureSuccess(response.data));
+};
+
+export const approveDoExpeditionReject = async (
+  id: string | number,
+  payload: DoEkspedisiRejectApprovalPayload,
+): Promise<DoEkspedisi> => {
+  const response = await apiClient.put<LaravelApiResponse<any>>(
+    `${expeditionBasePath}/${id}/approve-reject`,
+    {
+      vehicle_id: payload.vehicle_id,
+      driver_id: payload.driver_id,
+    },
   );
   return mapDoEkspedisi(ensureSuccess(response.data));
 };

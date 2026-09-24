@@ -11,6 +11,7 @@ export interface DoEkspedisiVehicle {
 export interface DoEkspedisiDriver {
   id: number;
   uuid?: string;
+  code?: string;
   name: string;
   phone?: string | null;
 }
@@ -160,6 +161,22 @@ export interface DoEkspedisi {
   driverExpeditionClaims: DoEkspedisiClaimApplication[];
   driverCashAdvanceClaims: DriverCashAdvanceClaim[];
   expeditionTrack?: DoEkspedisiExpeditionTrack | null;
+  hasRejectRequest?: boolean;
+  expeditionReject?: DoEkspedisiReject | null;
+  expeditionDocumentations?: DoEkspedisiDocumentation[];
+}
+
+export interface DoEkspedisiReject {
+  id: number;
+  doExpeditionId: number;
+  driverId: number | null;
+  isApprove: boolean | null;
+  lastExpeditionType: string;
+  rejectReason: string;
+  rejectDocumentation: string | null;
+  createdAt?: string;
+  updatedAt?: string;
+  driver?: DoEkspedisiDriver | null;
 }
 
 export interface DoEkspedisiDriverNote {
@@ -285,6 +302,11 @@ export interface DoEkspedisiPayload {
   target_end_date?: string | null;
 }
 
+export interface DoEkspedisiRejectApprovalPayload {
+  vehicle_id: number | string;
+  driver_id: number | string;
+}
+
 export interface DoEkspedisiItemPayload {
   do_expedition_id: string | number;
   customer_id: string | number;
@@ -322,6 +344,7 @@ export interface DoEkspedisiDocumentation {
   uuid?: string;
   doExpeditionId: number;
   documentationPosition: string;
+  documentationType: string;
   subject: string;
   description: string | null;
   image: string | null;

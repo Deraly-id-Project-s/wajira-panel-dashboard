@@ -11,6 +11,7 @@ import type {
   DoEkspedisiDocumentationListParams,
   DoEkspedisiClaimPayload,
   DoEkspedisiClaimDocumentationPayload,
+  DoEkspedisiRejectApprovalPayload,
 } from '@/@types/do-ekspedisi.types';
 import type { PaginationParams } from '@/@types/pagination.types';
 import {
@@ -46,6 +47,7 @@ import {
   createExpeditionClaim,
   updateExpeditionClaim,
   createExpeditionClaimDocumentation,
+  approveDoExpeditionReject,
   type DetailResource,
 } from '@/services/do-ekspedisi.service';
 
@@ -380,6 +382,18 @@ export function useUpdateDoExpeditionStatus() {
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ['do-ekspedisi'] });
       queryClient.invalidateQueries({ queryKey: ['do-ekspedisi', 'detail', String(variables.id)] });
+    },
+  });
+}
+
+export function useApproveDoExpeditionReject(expeditionId: string | number) {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (payload: DoEkspedisiRejectApprovalPayload) => approveDoExpeditionReject(expeditionId, payload),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['do-ekspedisi'] });
+      queryClient.invalidateQueries({ queryKey: ['do-ekspedisi', 'detail', String(expeditionId)] });
     },
   });
 }

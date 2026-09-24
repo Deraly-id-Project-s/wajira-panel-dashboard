@@ -1,17 +1,17 @@
 import React, { useMemo } from 'react';
-import { MoreVertical, Printer, Edit, FileText, Trash2 } from 'lucide-react';
+import { MoreVertical } from 'lucide-react';
 import { format } from 'date-fns';
 import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import BaseTable, { ColumnDef } from '@/components/ui/base-table';
 import type { DoEkspedisi } from '@/@types/do-ekspedisi.types';
 import { CopyBox } from '@/components/ui/copy-box';
-import { formatDate } from '@/lib/utils/format';
 import { useRouter } from 'next/router';
 import { ReferenceLink } from '@/components/ui/reference-link';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import { currenciesFormat } from '@/components/ui/currenciesFormat';
+import { getDoEkspedisiStatusBadgeClassName, getDoEkspedisiStatusLabel } from './do-ekspedisi-status';
 
 interface DOEkspedisiTableProps {
   data: DoEkspedisi[];
@@ -21,40 +21,6 @@ interface DOEkspedisiTableProps {
   onDelete: (item: DoEkspedisi) => void;
   onPrint: (item: DoEkspedisi) => void;
 }
-
-const getDoStatusBadgeClassName = (status: string) => {
-  switch (String(status).toLowerCase()) {
-    case 'draft':
-      return 'border-slate-200 bg-slate-50 text-slate-700';
-    case 'process':
-      return 'border-blue-200 bg-blue-50 text-blue-700 font-semibold';
-    case 'done':
-      return 'border-emerald-200 bg-emerald-50 text-emerald-700 font-semibold';
-    case 'failed':
-      return 'border-rose-200 bg-rose-50 text-rose-700 font-semibold';
-    case 'pending':
-      return 'border-amber-200 bg-amber-50 text-amber-700 font-semibold';
-    default:
-      return 'border-slate-200 bg-slate-50 text-slate-700';
-  }
-};
-
-const getDoStatusLabel = (status: string) => {
-  switch (String(status).toLowerCase()) {
-    case 'draft':
-      return 'Draft';
-    case 'process':
-      return 'Proses';
-    case 'done':
-      return 'Selesai';
-    case 'failed':
-      return 'Gagal';
-    case 'pending':
-      return 'Tertunda';
-    default:
-      return status || '-';
-  }
-};
 
 const getVehicleTypeBadgeClassName = (type: string) => {
   switch (String(type).toLowerCase()) {
@@ -112,8 +78,8 @@ export const DOEkspedisiTable = React.memo(function DOEkspedisiTable({
         accessorKey: 'status',
         alignment: 'center',
         cell: (item) => (
-          <Badge variant="outline" className={cn('rounded-full px-2.5 py-0.5 text-xs', getDoStatusBadgeClassName(item.status))}>
-            {getDoStatusLabel(item.status)}
+          <Badge variant="outline" className={cn('rounded-full px-2.5 py-0.5 text-xs', getDoEkspedisiStatusBadgeClassName(item.status))}>
+            {getDoEkspedisiStatusLabel(item.status)}
           </Badge>
         ),
       },
