@@ -1,10 +1,7 @@
-import React from 'react';
-import { Camera, FileCheck2, FileText, PackageCheck } from 'lucide-react';
+import { Camera, FileText, PackageCheck } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
 import { CollapsibleBox } from '@/components/ui/collapsible-box';
-import { ImagePreview } from '@/components/ui/image-preview';
-import { getObjectStorageUrl } from '@/components/ui/storage-image';
+import { StorageImage } from '@/components/ui/storage-image';
 import { TextTruncate } from '@/components/ui/text-truncate';
 import type { DoEkspedisi, DoEkspedisiDocumentation } from '@/@types/do-ekspedisi.types';
 
@@ -34,12 +31,12 @@ const documentationGroups = [
 ] as const;
 
 const documentationTypeLabel: Record<string, string> = {
-  mounting_process: 'Mounting Process',
-  mounting_done: 'Mounting Done',
-  delivery_ducument: 'Delivery Document',
-  unmount_process: 'Unmount Process',
-  delivery_document_complete: 'Delivery Document Complete',
-  other: 'Other',
+  mounting_process: 'Mulai Proses Muat',
+  mounting_done: 'Selesai Proses Muat',
+  delivery_ducument: 'Surat Jalan',
+  other: 'Lain-lain',
+  unmount_process: 'Mulai Proses Bongkar',
+  delivery_document_complete: 'Surat Jalan Tanda Terima',
 };
 
 const knownPrimaryDocumentationTypes = new Set([
@@ -57,10 +54,8 @@ const getDocumentationType = (item: DoEkspedisiDocumentation) => {
 
 function DocumentationItem({
   item,
-  onPreview,
 }: {
   item: DoEkspedisiDocumentation;
-  onPreview: (url: string) => void;
 }) {
   const type = getDocumentationType(item);
 
@@ -76,27 +71,21 @@ function DocumentationItem({
             <TextTruncate text={item.description || '-'} maxLength={90} className="mt-1 text-sm leading-relaxed text-slate-500" />
           </div>
         </div>
-        {item.image ? (
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            className="shrink-0 border-orange-200 text-orange-700 hover:bg-orange-50"
-            onClick={() => onPreview(getObjectStorageUrl(item.image))}
-          >
-            <FileCheck2 className="h-4 w-4" />
-            Lihat Gambar
-          </Button>
-        ) : (
-          <span className="shrink-0 text-sm text-slate-400">Tidak ada gambar</span>
-        )}
+        <div className="w-full shrink-0 overflow-hidden rounded-md border border-slate-200 bg-slate-100 sm:w-36">
+          <StorageImage
+            src={item.image}
+            alt={item.subject || 'Dokumentasi ekspedisi'}
+            lightbox
+            lightboxTitle={item.subject || 'Dokumentasi ekspedisi'}
+            className="h-24 w-full object-cover transition hover:opacity-80"
+          />
+        </div>
       </div>
     </div>
   );
 }
 
 export function DOEkspedisiDocumentations({ data }: DOEkspedisiDocumentationsProps) {
-  const [previewUrl, setPreviewUrl] = React.useState<string | null>(null);
   const documentations = data.expeditionDocumentations ?? [];
 
   return (
@@ -124,8 +113,8 @@ export function DOEkspedisiDocumentations({ data }: DOEkspedisiDocumentationsPro
             >
               {items.length > 0 ? (
                 <div className="grid grid-cols-1 gap-3 xl:grid-cols-2">
-                  {items.map((item) => (
-                    <DocumentationItem key={item.uuid ?? item.id} item={item} onPreview={setPreviewUrl} />
+                    {items.map((item) => (
+                      <DocumentationItem key={item.uuid ?? item.id} item={item} />
                   ))}
                 </div>
               ) : (
@@ -138,7 +127,6 @@ export function DOEkspedisiDocumentations({ data }: DOEkspedisiDocumentationsPro
         })}
       </div>
 
-      <ImagePreview open={previewUrl !== null} onClose={() => setPreviewUrl(null)} src={previewUrl} />
     </>
   );
 }

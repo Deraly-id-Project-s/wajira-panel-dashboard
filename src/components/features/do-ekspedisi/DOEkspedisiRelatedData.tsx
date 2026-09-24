@@ -32,7 +32,9 @@ export function DOEkspedisiRelatedData({ data, onRefresh }: DOEkspedisiRelatedDa
               <DOEkspedisiExpenses data={data} onRefresh={onRefresh} />
             </div>
           </div>
-          <DOEkspedisiClaims data={data} onRefresh={onRefresh} />
+          {data.status === 'done' && (
+            <DOEkspedisiClaims data={data} onRefresh={onRefresh} />
+          )}
           <DOEkspedisiDocumentations data={data} />
         </div>
       </CollapsibleBox>
