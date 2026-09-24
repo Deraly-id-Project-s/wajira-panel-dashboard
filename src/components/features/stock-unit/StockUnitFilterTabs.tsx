@@ -4,12 +4,13 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 interface StockUnitFilterTabsProps {
   active: StockStatus | 'all';
   onChange: (value: StockStatus | 'all') => void;
+  className?: string;
 }
 
-export default function StockUnitFilterDropdown({ active, onChange }: StockUnitFilterTabsProps) {
+export default function StockUnitFilterDropdown({ active, onChange, className }: StockUnitFilterTabsProps) {
   return (
     <Select value={active} onValueChange={(value) => onChange(value as StockStatus | 'all')}>
-      <SelectTrigger className="h-10 w-[200px] border-gray-300 bg-white text-gray-900 rounded-md shadow-sm">
+      <SelectTrigger className={`h-10 ${className} border-gray-300 bg-white text-gray-900 rounded-md shadow-sm`}>
         <SelectValue placeholder="Semua Status" />
       </SelectTrigger>
       <SelectContent>

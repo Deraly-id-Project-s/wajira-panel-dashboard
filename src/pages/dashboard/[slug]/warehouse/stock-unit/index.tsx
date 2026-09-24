@@ -140,7 +140,7 @@ export default function StockUnitPage() {
   }
 
   const filters = (
-    <div className="flex flex-col sm:flex-row items-center gap-2 w-full sm:w-auto">
+    <div className="flex flex-col sm:flex-row items-center gap-2 w-full">
       <Select
         value={inStock === undefined ? 'all' : inStock ? 'true' : 'false'}
         onValueChange={(val) => {
@@ -149,16 +149,17 @@ export default function StockUnitPage() {
           setPage(1);
         }}
       >
-        <SelectTrigger className="h-10 w-[160px] border-gray-300 bg-white text-gray-900 rounded-md shadow-sm">
+        <SelectTrigger className="h-10 w-full md:w-[160px] border-gray-300 bg-white text-gray-900 rounded-md shadow-sm">
           <SelectValue placeholder="Semua Ketersediaan" />
         </SelectTrigger>
         <SelectContent>
-          <SelectItem value="all">Semua Stok</SelectItem>
+          <SelectItem value="all" className="w-full">Semua Stok</SelectItem>
           <SelectItem value="true">Tersedia (In Stock)</SelectItem>
           <SelectItem value="false">Tidak Tersedia</SelectItem>
         </SelectContent>
       </Select>
       <StockUnitFilterDropdown
+        className="w-full md:w-[160px]"
         active={(stockState as StockStatus) ?? 'all'}
         onChange={(value) => {
           const nextStatus = value === 'all' ? undefined : value;

@@ -238,7 +238,7 @@ export function DashboardLayout({ children, minimal = false }: DashboardLayoutPr
                     <Topbar />
                 </div>
                 <main className="flex-1 overflow-y-auto bg-muted/40 print:bg-white print:p-0">
-                    <div className="mx-auto w-full max-w-[1600px] px-4 sm:px-6 lg:px-8 xl:px-10 py-6 lg:py-8 space-y-6 print:max-w-none print:space-y-4 print:p-0 box-border">
+                    <div className="w-full px-4 sm:px-6 lg:px-8 xl:px-10 py-6 lg:py-8 space-y-6 print:space-y-4 print:p-0 box-border">
                         {children}
                     </div>
                 </main>

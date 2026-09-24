@@ -65,6 +65,7 @@ const FEATURE_MAP: Record<string, { path: string; label?: string; group?: string
   'unit-inventory': { path: '/warehouse/stock-unit', label: 'Stok Unit', group: 'Unit Tipe' },
   'unit-receipts': { path: '/warehouse/penerimaan-unit', label: 'Penerimaan Unit', group: 'Unit Tipe' },
   'unit-dispatches': { path: '/warehouse/pengeluaran-unit', label: 'Pengeluaran Unit', group: 'Unit Tipe' },
+  'sparepart-inventory': { path: '/warehouse/stock-sparepart', label: 'Stok Sparepart', group: 'Sparepart' },
   'sparepart-receipts': { path: '/warehouse/penerimaan-sparepart', label: 'Penerimaan Sparepart', group: 'Sparepart' },
   'sparepart-dispatches': { path: '/warehouse/pengeluaran-sparepart', label: 'Pengeluaran Sparepart', group: 'Sparepart' },
 

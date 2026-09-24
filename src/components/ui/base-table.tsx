@@ -4,7 +4,24 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
-import { ArrowDown, ArrowUp, ArrowUpDown, Search, Info, Lock, Unlock } from 'lucide-react';
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuSeparator,
+} from '@/components/ui/dropdown-menu';
+import {
+  ArrowDown,
+  ArrowUp,
+  ArrowUpDown,
+  Search,
+  Info,
+  Lock,
+  Unlock,
+  Eye,
+  EyeOff,
+  RotateCcw,
+} from 'lucide-react';
 import { LoadingState } from '@/components/ui/loading-state';
 import { cn } from '@/lib/utils';
 import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from '@/components/ui/tooltip';
@@ -14,9 +31,12 @@ import { format } from 'date-fns';
 
 export interface ColumnDef<T> {
   header: React.ReactNode;
+  label?: string; // Optional text label for column visibility menu
   id?: string;
   accessorKey?: string; // Optional key for sorting (or path)
   sortable?: boolean; // If true, this column can be sorted
+  hideable?: boolean; // If false, column cannot be hidden (default: true)
+  defaultHidden?: boolean; // If true, column is hidden on initial render
   alignment?: 'left' | 'center' | 'right';
   className?: string;
   headerClassName?: string;
@@ -41,6 +61,12 @@ export interface BaseTableProps<T> {
   showLimitChange?: boolean;
   perPage?: number;
   onPerPageChange?: (value: number) => void;
+
+  // Column Visibility props
+  showColumnVisibility?: boolean;
+  hiddenColumns?: Set<string | number> | (string | number)[];
+  onHiddenColumnsChange?: (hiddenColumns: Set<string | number>) => void;
+  defaultHiddenColumns?: (string | number)[];
 
   // Sorting props
   sortBy?: string;
@@ -91,6 +117,10 @@ export default function BaseTable<T>({
   showLimitChange = false,
   perPage = 25,
   onPerPageChange,
+  showColumnVisibility = true,
+  hiddenColumns,
+  onHiddenColumnsChange,
+  defaultHiddenColumns,
   sortBy,
   sortDirection,
   onSortChange,
@@ -121,6 +151,93 @@ export default function BaseTable<T>({
   const [columnLeftOffsets, setColumnLeftOffsets] = useState<Record<string | number, number>>({});
   const tableContainerRef = useRef<HTMLDivElement>(null);
 
+  // Column key helper
+  const getColKey = useCallback((col: ColumnDef<T>, idx: number): string | number => {
+    return col.id || col.accessorKey || String(idx);
+  }, []);
+
+  // Column text label helper (for dropdown menu)
+  const getColumnLabel = useCallback((col: ColumnDef<T>, idx: number): string => {
+    if (col.label) return col.label;
+    if (typeof col.header === 'string') return col.header;
+    if (typeof col.header === 'number') return String(col.header);
+    if (col.id) return String(col.id);
+    if (col.accessorKey) return String(col.accessorKey);
+    return `Kolom ${idx + 1}`;
+  }, []);
+
+  // Initial hidden columns setup
+  const initialHiddenColumns = useMemo(() => {
+    const hidden = new Set<string | number>();
+    columns.forEach((col, idx) => {
+      const colKey = getColKey(col, idx);
+      if (col.defaultHidden) {
+        hidden.add(colKey);
+      }
+    });
+    if (defaultHiddenColumns) {
+      defaultHiddenColumns.forEach((key) => hidden.add(key));
+    }
+    return hidden;
+  }, [columns, defaultHiddenColumns, getColKey]);
+
+  const [internalHiddenColumns, setInternalHiddenColumns] = useState<Set<string | number>>(initialHiddenColumns);
+
+  // Controlled / uncontrolled hidden columns
+  const effectiveHiddenColumns = useMemo(() => {
+    if (hiddenColumns !== undefined) {
+      return hiddenColumns instanceof Set ? hiddenColumns : new Set(hiddenColumns);
+    }
+    return internalHiddenColumns;
+  }, [hiddenColumns, internalHiddenColumns]);
+
+  // Filter visible columns
+  const visibleColumns = useMemo(() => {
+    return columns.filter((col, idx) => {
+      const colKey = getColKey(col, idx);
+      return !effectiveHiddenColumns.has(colKey);
+    });
+  }, [columns, effectiveHiddenColumns, getColKey]);
+
+  const toggleHideColumn = useCallback((colKey: string | number, e?: React.MouseEvent) => {
+    if (e) e.stopPropagation();
+    const next = new Set(effectiveHiddenColumns);
+    if (next.has(colKey)) {
+      // Unhide column
+      next.delete(colKey);
+    } else {
+      // Hide column: ensure at least 1 column remains visible
+      if (visibleColumns.length <= 1) {
+        return;
+      }
+      next.add(colKey);
+    }
+    if (onHiddenColumnsChange) {
+      onHiddenColumnsChange(next);
+    } else {
+      setInternalHiddenColumns(next);
+    }
+  }, [effectiveHiddenColumns, onHiddenColumnsChange, visibleColumns.length]);
+
+  const showAllColumns = useCallback(() => {
+    const next = new Set<string | number>();
+    if (onHiddenColumnsChange) {
+      onHiddenColumnsChange(next);
+    } else {
+      setInternalHiddenColumns(next);
+    }
+  }, [onHiddenColumnsChange]);
+
+  const resetHiddenColumns = useCallback(() => {
+    if (onHiddenColumnsChange) {
+      onHiddenColumnsChange(initialHiddenColumns);
+    } else {
+      setInternalHiddenColumns(initialHiddenColumns);
+    }
+  }, [initialHiddenColumns, onHiddenColumnsChange]);
+
+  const hiddenCount = effectiveHiddenColumns.size;
+
   const updateLeftOffsets = useCallback(() => {
     if (!tableContainerRef.current) return;
     const headerCells = tableContainerRef.current.querySelectorAll('thead th');
@@ -132,8 +249,8 @@ export default function BaseTable<T>({
     }
 
     const startIdx = showCheckbox ? 1 : 0;
-    columns.forEach((col, idx) => {
-      const colKey = col.id || col.accessorKey || String(idx);
+    visibleColumns.forEach((col, idx) => {
+      const colKey = getColKey(col, idx);
       const isLocked = lockedColumns.has(colKey) || col.sticky === 'left';
 
       if (isLocked) {
@@ -148,25 +265,25 @@ export default function BaseTable<T>({
     });
 
     setColumnLeftOffsets(offsets);
-  }, [columns, showCheckbox, lockedColumns]);
+  }, [visibleColumns, showCheckbox, lockedColumns, getColKey]);
 
   const lastStickyLeftKey = useMemo(() => {
     let lastKey: string | number | null = null;
-    columns.forEach((col, idx) => {
-      const colKey = col.id || col.accessorKey || String(idx);
+    visibleColumns.forEach((col, idx) => {
+      const colKey = getColKey(col, idx);
       if (lockedColumns.has(colKey) || col.sticky === 'left') {
         lastKey = colKey;
       }
     });
     return lastKey;
-  }, [columns, lockedColumns]);
+  }, [visibleColumns, lockedColumns, getColKey]);
 
   useEffect(() => {
     const timer = setTimeout(() => {
       updateLeftOffsets();
     }, 50);
     return () => clearTimeout(timer);
-  }, [data, loading, lockedColumns, updateLeftOffsets]);
+  }, [data, loading, lockedColumns, effectiveHiddenColumns, updateLeftOffsets]);
 
   useEffect(() => {
     updateLeftOffsets();
@@ -383,8 +500,20 @@ export default function BaseTable<T>({
     ));
   };
 
-  const hasControls = Boolean(onSearchChange || headerActions || showLimitChange || addDateRangePicker);
-  const showDefaultControls = Boolean(onSearchChange || showLimitChange || addDateRangePicker);
+  const hasControls = Boolean(
+    onSearchChange ||
+    headerActions ||
+    showLimitChange ||
+    addDateRangePicker ||
+    showColumnVisibility
+  );
+
+  const showDefaultControls = Boolean(
+    onSearchChange ||
+    showLimitChange ||
+    addDateRangePicker ||
+    showColumnVisibility
+  );
 
   return (
     <div className="space-y-4">
@@ -403,6 +532,114 @@ export default function BaseTable<T>({
                     onChange={(e) => setLocalSearch(e.target.value)}
                   />
                 </div>
+              )}
+
+              {showColumnVisibility && (
+                <DropdownMenu>
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <DropdownMenuTrigger asChild>
+                          <Button
+                            variant="outline-primary"
+                            size="sm"
+                            className="h-9 text-xs sm:text-sm gap-2 shrink-0 font-normal"
+                          >
+                            {hiddenCount > 0 ? (
+                              <EyeOff className="h-4 w-4 shrink-0 text-[#ed333b]" />
+                            ) : (
+                              <Eye className="h-4 w-4 shrink-0 text-[#ed333b]" />
+                            )}
+                            <span>Kolom</span>
+                            {hiddenCount > 0 && (
+                              <span className="rounded-full bg-[#ed333b]/10 text-[#ed333b] border border-[#ed333b]/20 px-1.5 py-0.5 text-[10px] font-semibold">
+                                {hiddenCount}
+                              </span>
+                            )}
+                          </Button>
+                        </DropdownMenuTrigger>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        {hiddenCount > 0
+                          ? `${hiddenCount} kolom disembunyikan. Klik untuk mengatur tampilan kolom`
+                          : "Atur visibilitas kolom tabel"}
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+
+                  <DropdownMenuContent align="start" className="w-64 p-2">
+                    <div className="flex items-center justify-between px-2 py-1.5 text-xs">
+                      <div className="flex flex-col">
+                        <span className="font-semibold text-slate-900">Visibilitas Kolom</span>
+                        <span className="text-[11px] text-slate-500">
+                          {visibleColumns.length} dari {columns.length} kolom aktif
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        {hiddenCount > 0 && (
+                          <button
+                            type="button"
+                            onClick={showAllColumns}
+                            className="text-xs font-medium text-[#ed333b] hover:text-[#dc2626] hover:underline cursor-pointer"
+                          >
+                            Tampilkan Semua
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                    <DropdownMenuSeparator className="my-1.5" />
+                    <div className="max-h-64 overflow-y-auto space-y-0.5 pr-1">
+                      {columns.map((col, idx) => {
+                        const colKey = getColKey(col, idx);
+                        const isHidden = effectiveHiddenColumns.has(colKey);
+                        const isLastVisible = !isHidden && visibleColumns.length <= 1;
+                        const isHideable = col.hideable !== false && !isLastVisible;
+                        const colLabel = getColumnLabel(col, idx);
+
+                        return (
+                          <div
+                            key={colKey}
+                            onClick={() => isHideable && toggleHideColumn(colKey)}
+                            title={isLastVisible ? "Minimal 1 kolom harus tetap tampil" : undefined}
+                            className={cn(
+                              "flex items-center justify-between px-2.5 py-1.5 text-xs rounded-md transition-colors select-none",
+                              isHideable
+                                ? "cursor-pointer hover:bg-slate-100 text-slate-700 hover:text-slate-900"
+                                : "opacity-50 cursor-not-allowed text-slate-400 bg-slate-50/50",
+                              !isHidden && isHideable && "font-medium text-slate-900",
+                              isLastVisible && "font-medium text-slate-700 opacity-60 cursor-not-allowed"
+                            )}
+                          >
+                            <span className="truncate pr-2">{colLabel}</span>
+                            <div className="flex items-center gap-1.5 shrink-0">
+                              {!isHidden ? (
+                                <Eye className="h-3.5 w-3.5 text-[#ed333b]" />
+                              ) : (
+                                <EyeOff className="h-3.5 w-3.5 text-slate-400" />
+                              )}
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                    {hiddenCount > 0 && (
+                      <>
+                        <DropdownMenuSeparator className="my-1.5" />
+                        <div className="px-1 pt-1">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={resetHiddenColumns}
+                            className="w-full h-7 text-xs font-normal text-slate-600 hover:text-slate-900 justify-center gap-1.5"
+                          >
+                            <RotateCcw className="h-3 w-3" />
+                            <span>Reset Kolom Default</span>
+                          </Button>
+                        </div>
+                      </>
+                    )}
+                  </DropdownMenuContent>
+                </DropdownMenu>
               )}
 
               {addDateRangePicker && (
@@ -460,14 +697,14 @@ export default function BaseTable<T>({
                   />
                 </TableHead>
               )}
-              {columns.map((col, idx) => {
+              {visibleColumns.map((col, idx) => {
                 const alignment = col.alignment ?? 'left';
                 const textAlignment = alignment === 'right' ? 'text-right' : alignment === 'center' ? 'text-center' : 'text-left';
                 const justifyClass = alignment === 'right' ? 'justify-end' : alignment === 'center' ? 'justify-center' : 'justify-start';
 
                 const isSortable = col.sortable && col.accessorKey;
                 const sortKey = String(col.accessorKey || col.id || '');
-                const colKey = col.id || col.accessorKey || String(idx);
+                const colKey = getColKey(col, idx);
                 const isSorted = activeSort?.key === sortKey;
 
                 const isStickyLeft = col.sticky === 'left' || lockedColumns.has(colKey);
@@ -475,6 +712,7 @@ export default function BaseTable<T>({
                 const isLastStickyLeft = colKey === lastStickyLeftKey;
                 const leftOffset = columnLeftOffsets[colKey] ?? 0;
                 const canLock = !col.sticky;
+                const canHide = col.hideable !== false;
 
                 return (
                   <TableHead
@@ -520,24 +758,39 @@ export default function BaseTable<T>({
                       {isSortable && (
                         isSorted ? (
                           activeSort.direction === 'asc' ? (
-                            <ArrowUp className="h-3 w-3 text-indigo-500 shrink-0" />
+                            <ArrowUp className="h-3 w-3 text-[#ed333b] shrink-0" />
                           ) : (
-                            <ArrowDown className="h-3 w-3 text-indigo-500 shrink-0" />
+                            <ArrowDown className="h-3 w-3 text-[#ed333b] shrink-0" />
                           )
                         ) : (
                           <ArrowUpDown className="h-3 w-3 opacity-0 group-hover:opacity-70 transition-opacity duration-150 shrink-0" />
                         )
                       )}
+                      {canHide && (
+                        <button
+                          type="button"
+                          disabled={visibleColumns.length <= 1}
+                          onClick={(e) => toggleHideColumn(colKey, e)}
+                          className={cn(
+                            "p-1 rounded hover:bg-slate-100/80 text-slate-400 hover:text-[#ed333b] transition-all shrink-0 cursor-pointer opacity-0 group-hover:opacity-100",
+                            visibleColumns.length <= 1 && "opacity-20 cursor-not-allowed hover:text-slate-400 pointer-events-none"
+                          )}
+                          title={visibleColumns.length <= 1 ? "Minimal 1 kolom harus tetap tampil" : "Sembunyikan kolom ini"}
+                        >
+                          <EyeOff className="h-3 w-3" />
+                        </button>
+                      )}
                       {canLock && (
                         <button
+                          type="button"
                           onClick={(e) => toggleLockColumn(colKey, e)}
                           className={cn(
                             "p-1 rounded hover:bg-slate-100/80 text-slate-400 hover:text-slate-700 transition-all shrink-0 cursor-pointer",
                             lockedColumns.has(colKey)
-                              ? "text-indigo-600 opacity-100"
+                              ? "text-[#ed333b] opacity-100"
                               : "opacity-0 group-hover:opacity-100"
                           )}
-                          title={lockedColumns.has(colKey) ? "Unlock column" : "Lock column"}
+                          title={lockedColumns.has(colKey) ? "Lepas pin kolom" : "Pin kolom"}
                         >
                           {lockedColumns.has(colKey) ? (
                             <Lock className="h-3 w-3" />
@@ -555,7 +808,7 @@ export default function BaseTable<T>({
           <TableBody>
             {sortedData.length === 0 ? (
               <TableRow className="hover:bg-transparent border-none">
-                <TableCell colSpan={columns.length + (showCheckbox ? 1 : 0)} className="text-center px-4 py-16 bg-white border-none">
+                <TableCell colSpan={visibleColumns.length + (showCheckbox ? 1 : 0)} className="text-center px-4 py-16 bg-white border-none">
                   <div className="flex flex-col items-center justify-center gap-2">
                     {loading ? (
                       <LoadingState variant="section" text="Memuat data..." />
@@ -602,17 +855,15 @@ export default function BaseTable<T>({
                         />
                       </TableCell>
                     )}
-                    {columns.map((col, colIdx) => {
+                    {visibleColumns.map((col, colIdx) => {
                       const alignment = col.alignment ?? 'left';
                       const textAlignment = alignment === 'right' ? 'text-right' : alignment === 'center' ? 'text-center' : 'text-left';
-                      const colKey = col.id || col.accessorKey || String(colIdx);
+                      const colKey = getColKey(col, colIdx);
 
                       const isStickyLeft = col.sticky === 'left' || lockedColumns.has(colKey);
                       const isStickyRight = col.sticky === 'right';
                       const isLastStickyLeft = colKey === lastStickyLeftKey;
                       const leftOffset = columnLeftOffsets[colKey] ?? 0;
-
-                      const isFirstCell = !showCheckbox && colIdx === 0;
 
                       return (
                         <TableCell

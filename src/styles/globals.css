@@ -77,6 +77,10 @@
   @apply border border-slate-200 bg-white bg-none w-full sm:w-auto text-slate-700 hover:bg-slate-50 hover:text-slate-900 hover:bg-none font-medium transition-all duration-300 shadow-sm disabled:bg-slate-50 disabled:text-slate-400 disabled:border-slate-100 disabled:cursor-not-allowed disabled:pointer-events-none disabled:shadow-none;
 }
 
+@utility btn-outline-primary {
+  @apply border border-[#ed333b] bg-white text-[#ed333b] hover:bg-red-50 hover:text-[#dc2626] hover:border-[#dc2626] font-medium transition-all duration-300 shadow-xs disabled:bg-slate-50 disabled:text-slate-400 disabled:border-slate-100 disabled:cursor-not-allowed disabled:pointer-events-none disabled:shadow-none;
+}
+
 @utility btn-outline-secondary {
   @apply border border-slate-200 bg-white w-full sm:w-auto text-slate-700 hover:bg-slate-50 hover:text-slate-900 font-medium transition-all duration-300 shadow-sm disabled:opacity-50 disabled:cursor-not-allowed disabled:pointer-events-none disabled:shadow-none;
 }

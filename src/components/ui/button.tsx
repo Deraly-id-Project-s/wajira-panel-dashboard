@@ -12,6 +12,7 @@ const buttonVariants = cva(
     variants: {
       variant: {
         default: "btn-primary w-full sm:w-auto",
+        "outline-primary": "btn-outline-primary w-full sm:w-auto",
         success: "btn-success w-full sm:w-auto",
         error: "btn-error w-full sm:w-auto",
         destructive:
