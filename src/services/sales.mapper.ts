@@ -59,11 +59,14 @@ export type SalesApiModel = {
   } | null;
   billing_summary?: {
     grand_total?: string | number;
+    total_usd_payment?: string | number;
     total_cash_payment?: string | number;
     total_bca_payment?: string | number;
     total_bca_usd_payment?: string | number;
     total_paid?: string | number;
+    total_paid_usd?: string | number;
     remaining_payment?: string | number;
+    remaining_payment_usd?: string | number;
     is_paid?: boolean | number | string;
   } | null;
   unit_transaction_item_total_dpp?: string | number;
@@ -88,6 +91,7 @@ export type SalesApiModel = {
     ppn_tax_id?: number | string;
     price_usd?: string | number;
     price_per_unit_usd?: string | number;
+    price_total?: string | number;
     unit_transaction_item_details?: Array<{
       id?: number | string;
       color?: string;
@@ -267,10 +271,14 @@ export const mapSalesToTableItem = (item: SalesApiModel): UnitTransaction => {
     billing_summary: item.billing_summary
       ? {
         grand_total: toNumber(item.billing_summary.grand_total),
+        total_usd_payment: toNumber(item.billing_summary.total_usd_payment),
         total_cash_payment: toNumber(item.billing_summary.total_cash_payment),
         total_bca_payment: toNumber(item.billing_summary.total_bca_payment),
+        total_bca_usd_payment: toNumber(item.billing_summary.total_bca_usd_payment),
         total_paid: toNumber(item.billing_summary.total_paid),
+        total_paid_usd: toNumber(item.billing_summary.total_paid_usd ?? item.billing_summary.total_usd_payment),
         remaining_payment: toNumber(item.billing_summary.remaining_payment),
+        remaining_payment_usd: toNumber(item.billing_summary.remaining_payment_usd),
         is_paid: toBool(item.billing_summary?.is_paid),
       }
       : null,
@@ -287,6 +295,8 @@ const mapSalesLineItem = (item: NonNullable<SalesApiModel['unit_transaction_item
   const hpp = toNumber(item.hpp_total_price);
   const dpp = toNumber(item.dpp_total_price);
   const ppn = toNumber(item.ppn_total_price);
+  const calculatedTotal = (dpp > 0 ? dpp : hpp) + ppn + biayaBbn + biayaEkspedisi + biayaLain;
+  const priceTotal = item.price_total !== undefined ? toNumber(item.price_total) : calculatedTotal;
 
   return {
     id: String(item.id ?? index + 1),
@@ -301,7 +311,8 @@ const mapSalesLineItem = (item: NonNullable<SalesApiModel['unit_transaction_item
     hpp,
     dpp,
     ppn,
-    jumlah: hpp + ppn + biayaBbn + biayaEkspedisi + biayaLain,
+    jumlah: priceTotal,
+    price_total: priceTotal,
     price_usd: item.price_usd !== undefined ? toNumber(item.price_usd) : undefined,
     price_per_unit_usd: item.price_per_unit_usd !== undefined ? toNumber(item.price_per_unit_usd) : undefined,
   };
@@ -349,6 +360,20 @@ export const mapSalesDetailToUI = (item: SalesApiModel): SalesItem => {
     unit_transaction_price_usd_total: item.unit_transaction_price_usd_total ? toNumber(item.unit_transaction_price_usd_total) : undefined,
     unit_transaction_price_usd_total_actual: item.unit_transaction_price_usd_total_actual ? toNumber(item.unit_transaction_price_usd_total_actual) : undefined,
     documentTemplateId: item.document_template_id != null ? String(item.document_template_id) : item.document_template?.id != null ? String(item.document_template.id) : item.document_template?.uuid ?? null,
+    billing_summary: item.billing_summary
+      ? {
+        grand_total: toNumber(item.billing_summary.grand_total),
+        total_usd_payment: toNumber(item.billing_summary.total_usd_payment),
+        total_cash_payment: toNumber(item.billing_summary.total_cash_payment),
+        total_bca_payment: toNumber(item.billing_summary.total_bca_payment),
+        total_bca_usd_payment: toNumber(item.billing_summary.total_bca_usd_payment),
+        total_paid: toNumber(item.billing_summary.total_paid),
+        total_paid_usd: toNumber(item.billing_summary.total_paid_usd ?? item.billing_summary.total_usd_payment),
+        remaining_payment: toNumber(item.billing_summary.remaining_payment),
+        remaining_payment_usd: toNumber(item.billing_summary.remaining_payment_usd),
+        is_paid: toBool(item.billing_summary?.is_paid),
+      }
+      : null,
   };
 };
 

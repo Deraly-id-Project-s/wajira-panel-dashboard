@@ -53,6 +53,7 @@ export function SalesUnitTable({ lineItems, salesId, onAddUnit, canCreate, canEd
       hpp_total_price: Number(item.hpp ?? 0),
       dpp_total_price: Number(item.dpp ?? 0),
       ppn_total_price: Number(item.ppn ?? 0),
+      price_total: Number(item.price_total ?? item.jumlah ?? 0),
       price_usd: item.price_usd ? Number(item.price_usd) : undefined,
       price_per_unit_usd: item.price_per_unit_usd ? Number(item.price_per_unit_usd) : undefined,
     }));
@@ -141,25 +142,20 @@ export function SalesUnitTable({ lineItems, salesId, onAddUnit, canCreate, canEd
       cell: (item) => currenciesFormat('idr', item.other_fee),
     },
     {
-      header: 'HPP',
-      alignment: 'center',
-      cell: (item) => currenciesFormat('idr', item.hpp_total_price ?? 0),
-    },
-    {
-      header: 'DPP',
+      header: 'DPP Total',
       alignment: 'center',
       cell: (item) => currenciesFormat('idr', item.dpp_total_price),
     },
     {
-      header: 'PPN',
+      header: 'PPN Total',
       alignment: 'center',
       cell: (item) => currenciesFormat('idr', item.ppn_total_price),
     },
     {
-      header: 'Jumlah',
+      header: 'Sub Total',
       alignment: 'center',
       className: 'font-semibold text-slate-900',
-      cell: (item) => currenciesFormat('idr', (item.hpp_total_price ?? 0) + item.ppn_total_price + item.bbn_price + item.expedition_fee + item.other_fee),
+      cell: (item) => currenciesFormat('idr', item.price_total ?? ((item.dpp_total_price ?? 0) + (item.ppn_total_price ?? 0) + (item.bbn_price ?? 0) + (item.expedition_fee ?? 0) + (item.other_fee ?? 0))),
     },
     {
       header: 'Aksi',

@@ -50,6 +50,7 @@ type UnitTransactionApiModel = {
     bbn_price?: number | string;
     expedition_fee?: number | string;
     other_fee?: number | string;
+    price_total?: number | string;
     unit_type?: { name?: string };
   }>;
   unit_transaction_billing?: {
@@ -75,10 +76,14 @@ type UnitTransactionApiModel = {
   } | null;
   billing_summary?: {
     grand_total?: number | string;
+    total_usd_payment?: number | string;
     total_cash_payment?: number | string;
     total_bca_payment?: number | string;
+    total_bca_usd_payment?: number | string;
     total_paid?: number | string;
+    total_paid_usd?: number | string;
     remaining_payment?: number | string;
+    remaining_payment_usd?: number | string;
     is_paid?: boolean;
   } | null;
   has_refund_transaction?: boolean;
@@ -328,10 +333,14 @@ const mapUnitTransaction = (item: UnitTransactionApiModel): UnitTransaction => (
   billing_summary: item.billing_summary
     ? {
       grand_total: toNumber(item.billing_summary.grand_total),
+      total_usd_payment: toNumber(item.billing_summary.total_usd_payment),
       total_cash_payment: toNumber(item.billing_summary.total_cash_payment),
       total_bca_payment: toNumber(item.billing_summary.total_bca_payment),
+      total_bca_usd_payment: toNumber(item.billing_summary.total_bca_usd_payment),
       total_paid: toNumber(item.billing_summary.total_paid),
+      total_paid_usd: toNumber(item.billing_summary.total_paid_usd ?? item.billing_summary.total_usd_payment),
       remaining_payment: toNumber(item.billing_summary.remaining_payment),
+      remaining_payment_usd: toNumber(item.billing_summary.remaining_payment_usd),
       is_paid: Boolean(item.billing_summary?.is_paid),
     }
     : null,
@@ -580,10 +589,14 @@ const mapUnitTransactionDetail = (item: UnitTransactionApiModel): UnitTransactio
     billing_summary: item.billing_summary
       ? {
         grand_total: toNumber(item.billing_summary.grand_total),
+        total_usd_payment: toNumber(item.billing_summary.total_usd_payment),
         total_cash_payment: toNumber(item.billing_summary.total_cash_payment),
         total_bca_payment: toNumber(item.billing_summary.total_bca_payment),
+        total_bca_usd_payment: toNumber(item.billing_summary.total_bca_usd_payment),
         total_paid: toNumber(item.billing_summary.total_paid),
+        total_paid_usd: toNumber(item.billing_summary.total_paid_usd ?? item.billing_summary.total_usd_payment),
         remaining_payment: toNumber(item.billing_summary.remaining_payment),
+        remaining_payment_usd: toNumber(item.billing_summary.remaining_payment_usd),
         is_paid: Boolean(item.billing_summary?.is_paid),
       }
       : null,

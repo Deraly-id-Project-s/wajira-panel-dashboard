@@ -1,5 +1,6 @@
-/**
+import { UnitTransactionBillingSummary } from '@/@types/unit-transaction.types';
 
+/**
  * Sales Data Types - EXACT dari Figma
  */
 export interface UnitItem {
@@ -23,6 +24,7 @@ export interface SalesLineItem {
   dpp: number;
   ppn: number;
   jumlah: number;
+  price_total?: number;
   price_usd?: number;
   price_per_unit_usd?: number;
 }
@@ -57,6 +59,7 @@ export interface SalesItem {
   unit_transaction_price_usd_total?: number;
   unit_transaction_price_usd_total_actual?: number;
   documentTemplateId?: string | null;
+  billing_summary?: UnitTransactionBillingSummary | null;
 }
 
 /**

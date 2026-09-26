@@ -54,10 +54,14 @@ export interface UnitTransactionBilling {
 
 export interface UnitTransactionBillingSummary {
   grand_total?: number;
+  total_usd_payment?: number;
   total_cash_payment?: number;
   total_bca_payment?: number;
+  total_bca_usd_payment?: number;
   total_paid?: number;
+  total_paid_usd?: number;
   remaining_payment?: number;
+  remaining_payment_usd?: number;
   is_paid?: boolean;
 }
 
@@ -193,6 +197,7 @@ export interface UnitTransactionItem {
   ppn_total_price: number;
   price_usd?: number;
   price_per_unit_usd?: number;
+  price_total?: number;
   dpp_tax_id?: string | number;
   ppn_tax_id?: string | number;
   ppn_tax_rate?: number;
@@ -286,6 +291,7 @@ export interface UnitTransactionItemSummary {
   hpp_total_price?: number;
   dpp_total_price?: number;
   ppn_total_price?: number;
+  price_total?: number;
   dpp_tax?: TaxInfo | null;
   ppn_tax?: TaxInfo | null;
   unit_type?: {

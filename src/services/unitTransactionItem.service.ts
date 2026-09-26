@@ -32,6 +32,7 @@ type UnitTransactionItemApiModel = {
   ppn_total_price?: number | string;
   price_usd?: number | string;
   price_per_unit_usd?: number | string;
+  price_total?: number | string;
 };
 
 export type UnitFormulaInput = {
@@ -117,6 +118,7 @@ const mapItem = (item: UnitTransactionItemApiModel): UnitTransactionItem => {
     hpp_total_price: hppTotal,
     dpp_total_price: dppTotal,
     ppn_total_price: ppnTotal,
+    price_total: item.price_total !== undefined ? toNumber(item.price_total) : (dppTotal + ppnTotal + bbnPrice + expeditionFee + otherFee),
     price_usd: item.price_usd !== undefined ? toNumber(item.price_usd) : undefined,
     price_per_unit_usd: item.price_per_unit_usd !== undefined ? toNumber(item.price_per_unit_usd) : undefined,
   };

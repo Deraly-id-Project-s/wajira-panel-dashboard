@@ -28,17 +28,34 @@ export function SalesDetailCards({ data, billingHistories = [], unitType }: Prop
   const slugQuery = router.query.slug;
   const slug = Array.isArray(slugQuery) ? slugQuery[0] : slugQuery || '';
 
-  const historyPaid = billingHistories.reduce((sum, item) => sum + getHistoryTotalIdrEquivalent(item), 0);
-  const kurangBayar = Math.max(0, totalJual - historyPaid);
+  const billingSummary = data.billing_summary;
 
-  const debetBankUsd = billingHistories.reduce((sum, item) => sum + getHistoryUsdAmount(item), 0);
-  const debetBankIdr = billingHistories.reduce((sum, item) => sum + getHistoryBcaIdrAmount(item), 0);
-  const debetCashIdr = billingHistories.reduce((sum, item) => sum + getHistoryCashIdrAmount(item), 0);
+  const historyPaid = billingHistories.reduce((sum, item) => sum + getHistoryTotalIdrEquivalent(item), 0);
+  const debetBankUsd = billingSummary?.total_paid_usd !== undefined
+    ? Number(billingSummary.total_paid_usd)
+    : (billingSummary?.total_usd_payment !== undefined
+      ? Number(billingSummary.total_usd_payment)
+      : billingHistories.reduce((sum, item) => sum + getHistoryUsdAmount(item), 0));
+
+  const debetBankIdr = billingSummary?.total_bca_payment !== undefined
+    ? Number(billingSummary.total_bca_payment)
+    : billingHistories.reduce((sum, item) => sum + getHistoryBcaIdrAmount(item), 0);
+
+  const debetCashIdr = billingSummary?.total_cash_payment !== undefined
+    ? Number(billingSummary.total_cash_payment)
+    : billingHistories.reduce((sum, item) => sum + getHistoryCashIdrAmount(item), 0);
+
+  const kurangBayarIdr = billingSummary?.remaining_payment !== undefined
+    ? Number(billingSummary.remaining_payment)
+    : Math.max(0, totalJual - historyPaid);
 
   const totalUsd = Number(data.unit_transaction_price_usd_total_actual && Number(data.unit_transaction_price_usd_total_actual) > 0
     ? data.unit_transaction_price_usd_total_actual
     : (data.unit_transaction_price_usd_total ?? data.price_usd ?? 0));
-  const kurangBayarUsd = Math.max(0, totalUsd - debetBankUsd);
+
+  const kurangBayarUsd = billingSummary?.remaining_payment_usd !== undefined
+    ? Number(billingSummary.remaining_payment_usd)
+    : Math.max(0, totalUsd - debetBankUsd);
 
   return (
     <div className="grid gap-4 md:grid-cols-3">
@@ -152,8 +169,8 @@ export function SalesDetailCards({ data, billingHistories = [], unitType }: Prop
               <span>Debet Bank USD</span>
               <span className="text-sm font-semibold text-slate-900">{currenciesFormat('usd', debetBankUsd)}</span>
             </div>
-            {totalUsd > 0 && (
-              <div className="flex items-center justify-between text-amber-800 bg-amber-50/30 px-2 py-0.5 rounded border border-amber-100/50">
+            {(totalUsd > 0 || (billingSummary?.remaining_payment_usd !== undefined && Number(billingSummary.remaining_payment_usd) > 0) || debetBankUsd > 0) && (
+              <div className="flex items-center justify-between text-amber-800 bg-amber-50/50 px-2 py-1 rounded border border-amber-200/60 font-medium">
                 <span>Kurang Bayar USD</span>
                 <span className="font-semibold">{currenciesFormat('usd', kurangBayarUsd)}</span>
               </div>
@@ -165,6 +182,10 @@ export function SalesDetailCards({ data, billingHistories = [], unitType }: Prop
             <div className="flex items-center justify-between">
               <span>Debet Cash IDR</span>
               <span className="text-sm font-semibold text-slate-900">{currenciesFormat('idr', debetCashIdr)}</span>
+            </div>
+            <div className="flex items-center justify-between text-rose-800 bg-rose-50/50 px-2 py-1 rounded border border-rose-200/60 font-medium">
+              <span>Kurang Bayar IDR</span>
+              <span className="font-semibold">{currenciesFormat('idr', kurangBayarIdr)}</span>
             </div>
           </div>
         </CardContent>

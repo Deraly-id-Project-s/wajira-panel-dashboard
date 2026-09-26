@@ -111,7 +111,7 @@ export default function PurchaseUnitTable({ purchaseId, slug, isPaid, canEdit, c
       cell: (item) => item.qty_total + " Unit",
     },
     {
-      header: 'Harga',
+      header: 'Harga Beli',
       alignment: 'center',
       cell: (item) => (
         <div>
@@ -125,7 +125,7 @@ export default function PurchaseUnitTable({ purchaseId, slug, isPaid, canEdit, c
       ),
     },
     {
-      header: 'BBN',
+      header: 'Biaya BBN',
       alignment: 'center',
       cell: (item) => currenciesFormat('idr', item.bbn_price),
     },
@@ -149,6 +149,12 @@ export default function PurchaseUnitTable({ purchaseId, slug, isPaid, canEdit, c
       header: 'PPN Total',
       alignment: 'center',
       cell: (item) => currenciesFormat('idr', item.ppn_total_price),
+    },
+    {
+      header: 'Sub Total',
+      alignment: 'center',
+      className: 'font-semibold text-slate-900',
+      cell: (item) => currenciesFormat('idr', item.price_total ?? (Number(item.dpp_total_price ?? 0) + Number(item.ppn_total_price ?? 0) + Number(item.bbn_price ?? 0) + Number(item.expedition_fee ?? 0) + Number(item.other_fee ?? 0))),
     },
     {
       header: 'Aksi',
