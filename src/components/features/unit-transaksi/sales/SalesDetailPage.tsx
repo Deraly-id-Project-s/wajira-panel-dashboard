@@ -345,7 +345,8 @@ export default function SalesDetailPage() {
               <Button
                 type="button"
                 variant="success"
-                disabled={isPaid || isRefunded || updateBillingIsPaid.isPending || sales?.unit_transaction_billing == null || !canCreate}
+                disabled={isPaid || isRefunded || updateBillingIsPaid.isPending || sales?.unit_transaction_billing == null || !canCreate || !sales?.isUnitTypeDetailValid}
+                tooltip="tombol lunasi pembayaran akan aktif apabila unit tipe detail sudah lengkap pada masing-masing unit tipe pada unit transaksi ini"
                 onClick={() => setIsMarkAsPaidDialogOpen(true)}
               >
                 <CheckCircle2 className="mr-2 h-4 w-4" />
