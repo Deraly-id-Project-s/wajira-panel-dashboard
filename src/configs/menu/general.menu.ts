@@ -111,6 +111,23 @@ export const getGeneralMenus = (slug: string): MenuItem[] => {
           ]
         },
         {
+          label: 'Ekspedisi',
+          children: [
+            {
+              label: 'Order List',
+              href: base('/administrasi/order-list'),
+            },
+            {
+              label: 'DO Ekspedisi',
+              href: base('/do-ekspedisi'),
+            },
+            {
+              label: 'DO Invoice',
+              href: base('/administrasi/do-invoice'),
+            },
+          ]
+        },
+        {
           label: 'Bukti Potong',
           href: base('/administrasi/bukti-potong'),
         },

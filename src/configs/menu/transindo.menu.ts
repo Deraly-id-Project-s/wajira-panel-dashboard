@@ -71,20 +71,25 @@ export const getTransindoMenus = (slug: string): MenuItem[] => {
           href: base('/arus-transaksi'),
         },
         {
-          label: 'Order List',
-          href: base('/administrasi/order-list'),
-        },
-        {
-          label: 'DO Ekspedisi',
-          href: base('/do-ekspedisi'),
+          label: 'Ekspedisi',
+          children: [
+            {
+              label: 'Order List',
+              href: base('/administrasi/order-list'),
+            },
+            {
+              label: 'DO Ekspedisi',
+              href: base('/do-ekspedisi'),
+            },
+            {
+              label: 'DO Invoice',
+              href: base('/administrasi/do-invoice'),
+            },
+          ]
         },
         {
           label: 'Kas Bon',
           href: base('/kas-bon'),
-        },
-        {
-          label: 'DO Invoice',
-          href: base('/administrasi/do-invoice'),
         },
         {
           label: 'Bukti Potong',
