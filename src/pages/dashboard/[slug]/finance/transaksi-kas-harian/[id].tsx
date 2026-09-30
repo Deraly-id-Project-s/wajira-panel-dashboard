@@ -9,12 +9,16 @@ import {
   CalendarDays,
   CheckCircle2,
   CircleDollarSign,
+  Coins,
   ExternalLink,
   FileCheck2,
   Info,
   Pencil,
+  Percent,
   ReceiptText,
   Save,
+  ShieldCheck,
+  Truck,
   WalletCards,
 } from 'lucide-react';
 import { toast } from 'sonner';
@@ -139,6 +143,7 @@ export default function KasHarianDetailPage() {
     || cashFlowDetail?.unit_transaction_billing
     || cashFlowDetail?.goods_transaction_billing,
   );
+  const unitTransaction = cashFlowDetail?.unit_transaction_billing?.unit_transaction;
 
   const debetIdr = Number(cashFlowDetail?.debet ?? 0);
   const creditIdr = Number(cashFlowDetail?.credit ?? 0);
@@ -357,6 +362,28 @@ export default function KasHarianDetailPage() {
             <DetailItem label="Perusahaan" icon={<Building2 className="h-4 w-4" />}>{cashFlowDetail.company?.name || '-'}</DetailItem>
             <DetailItem label="Nomor Invoice" icon={<FileCheck2 className="h-4 w-4" />}>{cashFlowDetail.invoice_number || '-'}</DetailItem>
           </CardContent>
+          {unitTransaction && (
+            <>
+              <Separator />
+              <CardContent className="grid gap-6 p-4 sm:grid-cols-2 sm:p-6 lg:grid-cols-3 xl:grid-cols-5">
+                <DetailItem label="Total Biaya Ekspedisi" icon={<Truck className="h-4 w-4" />}>
+                  {currenciesFormat('idr', unitTransaction.expedition_fee_total ?? unitTransaction.expedition_total ?? 0)}
+                </DetailItem>
+                <DetailItem label="Biaya Lainnya" icon={<Coins className="h-4 w-4" />}>
+                  {currenciesFormat('idr', unitTransaction.other_fee_total ?? 0)}
+                </DetailItem>
+                <DetailItem label="Biaya BBN" icon={<ShieldCheck className="h-4 w-4" />}>
+                  {currenciesFormat('idr', unitTransaction.bbn_price_total ?? 0)}
+                </DetailItem>
+                <DetailItem label="Total Biaya DPP" icon={<ReceiptText className="h-4 w-4" />}>
+                  {currenciesFormat('idr', unitTransaction.dpp_total ?? 0)}
+                </DetailItem>
+                <DetailItem label="Total Biaya PPN" icon={<Percent className="h-4 w-4" />}>
+                  {currenciesFormat('idr', unitTransaction.ppn_total ?? 0)}
+                </DetailItem>
+              </CardContent>
+            </>
+          )}
           <Separator />
           <CardContent className="grid gap-4 px-4 py-4 text-xs text-slate-500 sm:grid-cols-2 sm:px-6">
             <span>Dibuat: {formatDate(cashFlowDetail.created_at)}</span>

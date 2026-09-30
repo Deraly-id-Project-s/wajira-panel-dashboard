@@ -23,6 +23,19 @@ export interface KasHarianCompany {
   name: string;
 }
 
+export interface KasHarianUnitTransaction {
+  id: number;
+  code?: string;
+  dpp_total?: number;
+  ppn_total?: number;
+  expedition_total?: number;
+  bbn_price_total?: number;
+  other_fee_total?: number;
+  has_warehouse_activity?: boolean;
+  has_refund_transaction?: boolean;
+  expedition_fee_total?: number;
+}
+
 export interface KasHarianUnitTransactionBilling {
   id: number;
   uuid?: string;
@@ -33,6 +46,7 @@ export interface KasHarianUnitTransactionBilling {
   is_valid?: boolean;
   created_at?: string;
   updated_at?: string;
+  unit_transaction?: KasHarianUnitTransaction | null;
 }
 
 export interface KasHarianGoodsTransactionBilling {
@@ -54,7 +68,10 @@ export interface KasHarian {
   cash_id?: number | null;
   account_id?: number | null;
   unit_transaction_billing_id?: number | null;
+  sparepart_transaction_billing_id?: number | null;
   goods_transaction_billing_id?: number | null;
+  driver_cash_advance_billing_id?: number | null;
+  do_invoice_billing_id?: number | null;
   cash_flow_type?: 'debet' | 'credit' | string;
   code: string;
   date: string;

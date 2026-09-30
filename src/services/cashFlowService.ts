@@ -32,9 +32,18 @@ const normalizeCashFlow = (payload: Partial<KasHarian>): KasHarian => ({
   unit_transaction_billing_id: payload.unit_transaction_billing_id
     ? toNumber(payload.unit_transaction_billing_id)
     : (payload.unit_transaction_billing?.id ? toNumber(payload.unit_transaction_billing.id) : null),
+  sparepart_transaction_billing_id: payload.sparepart_transaction_billing_id
+    ? toNumber(payload.sparepart_transaction_billing_id)
+    : null,
   goods_transaction_billing_id: payload.goods_transaction_billing_id
     ? toNumber(payload.goods_transaction_billing_id)
     : (payload.goods_transaction_billing?.id ? toNumber(payload.goods_transaction_billing.id) : null),
+  driver_cash_advance_billing_id: payload.driver_cash_advance_billing_id
+    ? toNumber(payload.driver_cash_advance_billing_id)
+    : null,
+  do_invoice_billing_id: payload.do_invoice_billing_id
+    ? toNumber(payload.do_invoice_billing_id)
+    : null,
   cash_flow_type: payload.cash_flow_type ?? '',
   code: payload.code ?? '-',
   date: payload.date ?? '',
@@ -110,6 +119,23 @@ const normalizeCashFlow = (payload: Partial<KasHarian>): KasHarian => ({
         is_valid: toBoolean(payload.unit_transaction_billing.is_valid),
         created_at: payload.unit_transaction_billing.created_at ?? '',
         updated_at: payload.unit_transaction_billing.updated_at ?? '',
+        unit_transaction: payload.unit_transaction_billing.unit_transaction
+          ? {
+              id: toNumber(payload.unit_transaction_billing.unit_transaction.id),
+              code: payload.unit_transaction_billing.unit_transaction.code ?? '',
+              dpp_total: toNumber(payload.unit_transaction_billing.unit_transaction.dpp_total),
+              ppn_total: toNumber(payload.unit_transaction_billing.unit_transaction.ppn_total),
+              expedition_total: toNumber(payload.unit_transaction_billing.unit_transaction.expedition_total),
+              bbn_price_total: toNumber(payload.unit_transaction_billing.unit_transaction.bbn_price_total),
+              other_fee_total: toNumber(payload.unit_transaction_billing.unit_transaction.other_fee_total),
+              has_warehouse_activity: toBoolean(payload.unit_transaction_billing.unit_transaction.has_warehouse_activity),
+              has_refund_transaction: toBoolean(payload.unit_transaction_billing.unit_transaction.has_refund_transaction),
+              expedition_fee_total: toNumber(
+                payload.unit_transaction_billing.unit_transaction.expedition_fee_total ??
+                payload.unit_transaction_billing.unit_transaction.expedition_total
+              ),
+            }
+          : null,
       }
     : null,
   goods_transaction_billing: payload.goods_transaction_billing
