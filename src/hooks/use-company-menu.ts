@@ -50,6 +50,8 @@ const FEATURE_MAP: Record<string, { path: string; label?: string; group?: string
   'sparepart-purchases': { path: '/transaksi/pembelian-sparepart', label: 'Pembelian Sparepart', group: 'Transaksi Sparepart' },
   'sparepart-sales': { path: '/transaksi/penjualan-sparepart', label: 'Penjualan Sparepart', group: 'Transaksi Sparepart' },
   'sparepart-refunds': { path: '/transaksi/refund-sparepart', label: 'Refund Sparepart', group: 'Transaksi Sparepart' },
+  'vehicle-equipment-purchases': { path: '/transaksi/pembelian-perlengkapan', label: 'Pembelian Perlengkapan', group: 'Perlengkapan' },
+  'vehicle-equipment-sales': { path: '/transaksi/penjualan-perlengkapan', label: 'Penjualan Perlengkapan', group: 'Perlengkapan' },
   'invoices': { path: '/transaksi/faktur', label: 'Faktur' },
   'expedition-delivery-orders': { path: '/do-ekspedisi', label: 'DO Ekspedisi', group: 'Ekspedisi' },
   'do-expedition': { path: '/do-ekspedisi', label: 'DO Ekspedisi', group: 'Ekspedisi' },
@@ -70,8 +72,11 @@ const FEATURE_MAP: Record<string, { path: string; label?: string; group?: string
   'sparepart-dispatches': { path: '/warehouse/pengeluaran-sparepart', label: 'Pengeluaran Sparepart', group: 'Sparepart' },
 
   'perlengkapan-inventory': { path: '/warehouse/stock-perlengkapan', label: 'Stok Perlengkapan', group: 'Perlengkapan' },
-  'perlengkapan-receipts': { path: '/warehouse/perlengkapan-masuk', label: 'Perlengkapan Masuk', group: 'Perlengkapan' },
-  'perlengkapan-dispatches': { path: '/warehouse/pengeluaran-perlengkapan', label: 'Pengeluaran Perlengkapan', group: 'Perlengkapan' },
+  'perlengkapan-receipts': { path: '/warehouse/perlengkapan-masuk', label: 'Penerimaan Perlengkapan', group: 'Perlengkapan' },
+  'perlengkapan-dispatches': { path: '/warehouse/perlengkapan-keluar', label: 'Pengeluaran Perlengkapan', group: 'Perlengkapan' },
+  'vehicle-equipment-inventory': { path: '/warehouse/stock-perlengkapan', label: 'Stok Perlengkapan', group: 'Perlengkapan' },
+  'vehicle-equipment-receipts': { path: '/warehouse/perlengkapan-masuk', label: 'Penerimaan Perlengkapan', group: 'Perlengkapan' },
+  'vehicle-equipment-dispatches': { path: '/warehouse/perlengkapan-keluar', label: 'Pengeluaran Perlengkapan', group: 'Perlengkapan' },
   'maintenance-armada': { path: '/warehouse/maintenance', label: 'Maintenance Armada' },
   'penerimaan-material': { path: '/warehouse/penerimaan-material', label: 'Penerimaan Material', group: 'Warehouse Material' },
   'pengeluaran-material': { path: '/warehouse/pengeluaran-material', label: 'Pengeluaran Material', group: 'Warehouse Material' },
@@ -283,6 +288,7 @@ const ensureExpeditionReportMenus = (
 
 const hasModuleAccess = (item: SidebarModuleItem, permissionSet: Set<string>) => {
   if (item.module.slug === 'dashboard') return true;
+  if (item.features.length > 0) return true;
   if (permissionSet.has(`${item.module.slug}:list`)) return true;
 
   return item.features.some((feature) => permissionSet.has(`${feature.slug}:list`));
@@ -292,6 +298,18 @@ const sortSettingMenuItems = (items: MenuItem[]) => {
   items.sort((a, b) => {
     const aIndex = SETTING_MENU_ITEMS.findIndex((item) => item.label === a.label);
     const bIndex = SETTING_MENU_ITEMS.findIndex((item) => item.label === b.label);
+
+    if (aIndex === -1 && bIndex === -1) return 0;
+    if (aIndex === -1) return 1;
+    if (bIndex === -1) return -1;
+    return aIndex - bIndex;
+  });
+};
+
+const sortGroupedMenuItems = (items: MenuItem[], preferredOrder: string[]) => {
+  items.sort((a, b) => {
+    const aIndex = preferredOrder.indexOf(a.label);
+    const bIndex = preferredOrder.indexOf(b.label);
 
     if (aIndex === -1 && bIndex === -1) return 0;
     if (aIndex === -1) return 1;
@@ -407,13 +425,37 @@ export function buildDynamicMenus(sidebarData: SidebarModuleItem[], permissions:
           };
           children.push(groupMap[mapping.group]);
         }
-        groupMap[mapping.group].children!.push(menuItem);
+        const alreadyExists = groupMap[mapping.group].children!.some((child) => child.href === menuItem.href);
+        if (!alreadyExists) {
+          groupMap[mapping.group].children!.push(menuItem);
+        }
       } else {
         children.push(menuItem);
       }
     }
 
     if (children.length > 0) {
+      if (moduleSlug === 'transaction') {
+        sortGroupedMenuItems(children, [
+          'Arus Transaksi',
+          'Transaksi Unit Tipe',
+          'Transaksi Sparepart',
+          'Ekspedisi',
+          'Perlengkapan',
+          'Bukti Potong',
+        ]);
+      }
+
+      if (moduleSlug === 'warehouse') {
+        sortGroupedMenuItems(children, [
+          'Unit Tipe',
+          'Sparepart',
+          'Perlengkapan',
+          'Warehouse Material',
+          'Maintenance Armada',
+        ]);
+      }
+
       if (moduleSlug === 'report') {
         ensureJournalReportMenu(children, slug);
         ensureLedgerReportMenu(children, slug);

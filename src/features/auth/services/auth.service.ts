@@ -2,7 +2,7 @@ import { apiClient } from '@/lib/api/client';
 import { AuthResponse, LoginRequest, ProfileResponse } from '../types/auth.types';
 import type { Module } from '@/services/module.service';
 
-const COMPANY_ACCESS_CACHE_VERSION = 2;
+const COMPANY_ACCESS_CACHE_VERSION = 3;
 
 export class AuthService {
   /**
@@ -203,20 +203,7 @@ export class AuthService {
     const companyModuleMap = new Map(
       companyModules.map((module) => [module.slug, module]),
     );
-    const data = authSidebar
-      .filter((item) => companyModuleMap.has(item.module.slug))
-      .map((item) => {
-        const companyModule = companyModuleMap.get(item.module.slug);
-        const allowedFeatureIds = new Set(companyModule?.features?.map((feature) => feature.id) ?? []);
-        const allowedFeatureSlugs = new Set(companyModule?.features?.map((feature) => feature.slug).filter(Boolean) ?? []);
-
-        return {
-          ...item,
-          features: item.features.filter(
-            (feature) => allowedFeatureIds.has(feature.id) || allowedFeatureSlugs.has(feature.slug),
-          ),
-        };
-      });
+    const data = authSidebar.filter((item) => companyModuleMap.has(item.module.slug));
 
     if (typeof window !== 'undefined') {
       try {

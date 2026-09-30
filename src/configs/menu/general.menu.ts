@@ -59,6 +59,10 @@ export const getGeneralMenus = (slug: string): MenuItem[] => {
           href: master('/asset'),
         },
         {
+          label: 'Perlengkapan Kendaraan',
+          href: master('/vehicle-equipment'),
+        },
+        {
           label: 'Pajak',
           href: master('/tax'),
         },
@@ -128,6 +132,19 @@ export const getGeneralMenus = (slug: string): MenuItem[] => {
           ]
         },
         {
+          label: 'Perlengkapan',
+          children: [
+            {
+              label: 'Pembelian Perlengkapan',
+              href: base('/transaksi/pembelian-perlengkapan'),
+            },
+            {
+              label: 'Penjualan Perlengkapan',
+              href: base('/transaksi/penjualan-perlengkapan'),
+            },
+          ],
+        },
+        {
           label: 'Bukti Potong',
           href: base('/administrasi/bukti-potong'),
         },
@@ -175,15 +192,15 @@ export const getGeneralMenus = (slug: string): MenuItem[] => {
           label: 'Perlengkapan',
           children: [
             {
-              label: 'Stock Perlengkapan',
+              label: 'Stok Perlengkapan',
               href: base('/warehouse/stock-perlengkapan'),
             },
             {
-              label: 'Perlengkapan Masuk',
+              label: 'Penerimaan Perlengkapan',
               href: base('/warehouse/perlengkapan-masuk'),
             },
             {
-              label: 'Perlengkapan Keluar',
+              label: 'Pengeluaran Perlengkapan',
               href: base('/warehouse/perlengkapan-keluar'),
             },
           ]
