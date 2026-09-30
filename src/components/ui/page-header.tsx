@@ -36,6 +36,7 @@ export function PageHeader({
   return (
     <div className={`space-y-3 sm:space-y-5 ${hideOnPrint ? 'print:hidden' : ''} ${className}`}>
       {/* BREADCRUMB HEADER */}
+      <title>WAJIRA DASH: {title}</title>
       {breadcrumbs && breadcrumbs.length > 0 && (
         <nav aria-label="Breadcrumb" className="flex min-w-0 items-center gap-1.5 overflow-hidden text-xs text-slate-500 sm:gap-2 sm:text-sm">
           {breadcrumbs.map((item, index) => (

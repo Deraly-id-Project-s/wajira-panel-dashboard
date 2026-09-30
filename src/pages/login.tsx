@@ -69,6 +69,7 @@ export default function LoginPage() {
 
   return (
     <>
+      <title>WAJIRA DASH: Masuk ke akun Pengguna</title>
       {/* Initialization Overlay */}
       {isCheckingAuth && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-white bg-opacity-70">
