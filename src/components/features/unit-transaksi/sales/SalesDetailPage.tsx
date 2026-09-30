@@ -28,12 +28,17 @@ import {
 import { formatDate } from '@/lib/utils/format';
 import { LoadingState } from '@/components/ui/loading-state';
 import { useCompany } from '@/contexts/CompanyContext';
-import { CreditCard, AlertTriangle, CheckCircle2, Info } from 'lucide-react';
+import { CreditCard, AlertTriangle, CheckCircle2, Info, Edit, Printer } from 'lucide-react';
 import { TextTruncate } from '@/components/ui/text-truncate';
 import { UnitTypeDetailTable } from '@/components/features/unit-transaksi/UnitTypeDetailTable';
 import { useDocumentTemplate } from '@/hooks/useDocumentTemplate';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { CollapsibleBox } from '@/components/ui/collapsible-box';
+import { useReportTemplatePrint } from '@/hooks/useReportTemplatePrint';
+import { ReportTemplatePrintDialog } from '@/components/ui/report-template-print-dialog';
+import { resolveCompanyId, getLetterheadByCompanyId, getCompanyName } from '@/lib/print-letterhead';
+import { useUnitTransactionTypeDetails } from '@/hooks/useUnitTransaction';
+import SalesPrintDocument from '@/components/features/unit-transaksi/sales/SalesPrintDocument';
 
 export default function SalesDetailPage() {
   const router = useRouter();
@@ -54,7 +59,7 @@ export default function SalesDetailPage() {
   const [isMarkAsPaidDialogOpen, setIsMarkAsPaidDialogOpen] = useState(false);
   const [isDeliveryDialogOpen, setIsDeliveryDialogOpen] = useState(false);
   const [isWarehouseProcessing, setIsWarehouseProcessing] = useState(false);
-  const { companyId } = useCompany();
+  const { companyId, companies } = useCompany();
   const queryClient = useQueryClient();
 
   useEffect(() => {
@@ -109,13 +114,65 @@ export default function SalesDetailPage() {
         cashes: (history as any).cashes,
       }));
 
+  const resolvedCompanyId = resolveCompanyId(slug, companyId) || 1;
+  const selectedPrintBackground = getLetterheadByCompanyId(resolvedCompanyId);
+  const templatePrint = useReportTemplatePrint(selectedPrintBackground);
+
+  const companyName = useMemo(() => {
+    const found = companies.find((c) => c.id === resolvedCompanyId || c.slug === slug);
+    return found?.name ? found.name.toUpperCase() : getCompanyName(resolvedCompanyId);
+  }, [companies, resolvedCompanyId, slug]);
+
+  const detailsQuery = useUnitTransactionTypeDetails(sales?.id ? String(sales.id) : (id ? String(id) : undefined), { page: 1, perPage: 1000 });
+  const detailsList = useMemo(() => {
+    const list = detailsQuery.data?.data ?? [];
+    return list.map((item) => ({
+      id: item.id,
+      unit_transaction_item_id: item.unit_transaction_item_id,
+      code: '',
+      created_at: item.created_at,
+      unit_type_name: item.unit_transaction_item?.unit_type?.name ?? '',
+      color: item.color ?? '-',
+      machine_number: item.machine_number ?? '-',
+      chassis_number: item.chassis_number ?? '-',
+      in_stock: item.in_stock,
+      is_forecast: item.is_forecast,
+      is_sold_unit: item.is_sold_unit,
+      status: item.status ?? '',
+      price: item.unit_transaction_item?.price ?? item.unit_transaction_item?.unit_type?.sell_price ?? 0,
+      price_usd: item.unit_transaction_item?.price_usd ?? undefined,
+      unit_transaction_bruto_total: 0,
+      unit_transaction_item_total_hpp: 0,
+      unit_transaction_item_total_dpp: 0,
+      unit_transaction_item_total_ppn: 0,
+      unit_transaction_item_bruto_total: 0,
+      transaction_bbn_total: 0,
+      transaction_other_fee: 0,
+      expedition_fee_total: 0,
+      person: { id: '', name: '' },
+      warehouse_sub_block: {
+        id: item.warehouse_sub_block?.id ?? '',
+        name: item.warehouse_sub_block?.name ?? '',
+      },
+    }));
+  }, [detailsQuery.data?.data]);
+
+  const activeDocumentTemplate = templatePrint.selectedTemplate || documentTemplate || null;
+
+  const handleOpenPrint = () => {
+    templatePrint.setSelectedTemplateId(
+      sales?.documentTemplateId ? String(sales.documentTemplateId) : null
+    );
+    templatePrint.setIsDialogOpen(true);
+  };
+
   useEffect(() => {
-    if (router.query.print === 'true' && !isLoading && sales?.documentTemplateId) {
+    if (router.query.print === 'true' && !isLoading && (sales?.documentTemplateId || templatePrint.selectedTemplateId)) {
       setTimeout(() => {
         window.print();
       }, 800);
     }
-  }, [router.query.print, isLoading, sales]);
+  }, [router.query.print, isLoading, sales, templatePrint.selectedTemplateId]);
 
   const historyColumns = useMemo<ColumnDef<any>[]>(
     () => [
@@ -313,7 +370,7 @@ export default function SalesDetailPage() {
 
   return (
     <DashboardLayout>
-      <div className="space-y-6">
+      <div className="space-y-6 no-print">
         <PageHeader
           breadcrumbs={[
             { label: 'Penjualan Unit', onClick: () => router.push(`/dashboard/${slug}/transaksi/penjualan-unit`) },
@@ -359,6 +416,21 @@ export default function SalesDetailPage() {
               >
                 {deliveryButtonText}
               </Button>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={handleOpenPrint}
+              >
+                <Printer className="mr-2 h-4 w-4" />
+                Print
+              </Button>
+              <Button
+                variant="outline"
+                disabled={!canEdit || isPaid}
+                onClick={() => router.push(`/dashboard/${slug}/transaksi/penjualan-unit/edit/${sales?.id}`)}>
+                <Edit className="mr-2 h-4 w-4" />
+                Edit Data
+              </Button>
             </>
           }
         />
@@ -374,24 +446,6 @@ export default function SalesDetailPage() {
         ) : null}
 
         <SalesDetailCards data={salesData} billingHistories={resolvedBillingHistories} />
-
-        {sales?.documentTemplateId ? (
-          <div
-            onClick={() => router.push(`/dashboard/${slug}/transaksi/penjualan-unit/print/${sales.id}`)}
-            className="rounded-md border border-gray-200 bg-white px-4 py-3 text-sm shadow-sm hover:bg-slate-50 transition-colors cursor-pointer flex items-center justify-between"
-          >
-            <div>
-              <span className="text-muted-foreground">Document Template:</span>{' '}
-              <span className="font-medium text-blue-600 hover:underline">{documentTemplate?.name ?? 'Memuat template...'}</span>
-            </div>
-            <span className="text-xs text-blue-600 font-medium hover:underline">Print Dokumen</span>
-          </div>
-        ) : (
-          <div className="rounded-md border border-gray-200 bg-white px-4 py-3 text-sm shadow-sm">
-            <span className="text-muted-foreground">Document Template:</span>{' '}
-            <span className="font-medium text-gray-500">{documentTemplate?.name ?? 'Tidak ada template'}</span>
-          </div>
-        )}
 
         <SalesUnitTable lineItems={salesData.lineItems} salesId={sales.id} onAddUnit={handleCreateUnit} canEdit={canEdit} canDelete={canDelete} canCreate={canCreate} isPaid={isPaid} />
 
@@ -487,6 +541,29 @@ export default function SalesDetailPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {activeDocumentTemplate && salesData && (
+        <div className="accounting-print-root hidden print:block [&_.print-letter-page]:!relative [&_.print-letter-page]:!top-auto [&_.print-letter-page]:!left-auto [&_.print-letter-page]:!break-after-page [&_.print-letter-page:last-child]:!break-after-avoid" aria-hidden="true">
+          <SalesPrintDocument
+            sales={salesData}
+            items={detailsList}
+            letterheadUrl={selectedPrintBackground}
+            companyName={companyName}
+            documentTemplate={activeDocumentTemplate}
+            hideControls
+          />
+        </div>
+      )}
+
+      <ReportTemplatePrintDialog
+        open={templatePrint.isDialogOpen}
+        onOpenChange={templatePrint.setIsDialogOpen}
+        selectedTemplateId={templatePrint.selectedTemplateId}
+        onTemplateChange={templatePrint.setSelectedTemplateId}
+        onPrint={templatePrint.printWithSelectedTemplate}
+        isPreparingPrint={templatePrint.isPreparingPrint}
+        reportName="administrasi penjualan"
+      />
     </DashboardLayout>
   );
 }

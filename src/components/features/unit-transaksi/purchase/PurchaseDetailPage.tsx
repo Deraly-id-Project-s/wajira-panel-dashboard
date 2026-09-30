@@ -10,13 +10,13 @@ import { Badge } from '@/components/ui/badge';
 import { PurchaseDetailCards } from '@/components/features/unit-transaksi/purchase/PurchaseDetailCards';
 import PurchaseUnitTable from '@/components/features/unit-transaksi/purchase/PurchaseUnitTable';
 import BaseTable, { ColumnDef } from '@/components/ui/base-table';
-import { usePurchaseById } from '@/hooks/useUnitTransaction';
+import { usePurchaseById, useUnitTransactionTypeDetails } from '@/hooks/useUnitTransaction';
 import { useUnitBillings, useCurrentBilling, useBillingHistory, useUpdateBillingIsPaid } from '@/hooks/useUnitBilling';
 import { usePurchaseUnitItems } from '@/hooks/useUnitTransactionItem';
 import { useTypeUnits } from '@/hooks/useTypeUnit';
 import { unitItemDetailService } from '@/services/unitItemDetail.service';
 import { warehouseActivityService } from '@/services/warehouseActivity.service';
-import { CreditCard, AlertTriangle, CheckCircle2, Info, Edit, Warehouse } from 'lucide-react';
+import { CreditCard, AlertTriangle, CheckCircle2, Info, Edit, Warehouse, Printer } from 'lucide-react';
 import { toast } from 'sonner';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { usePermissionGuard } from '@/hooks/usePermissionGuard';
@@ -34,6 +34,11 @@ import { LoadingState } from '@/components/ui/loading-state';
 import { UnitTypeDetailTable } from '@/components/features/unit-transaksi/UnitTypeDetailTable';
 import { useDocumentTemplate } from '@/hooks/useDocumentTemplate';
 import { CollapsibleBox } from '@/components/ui/collapsible-box';
+import { useCompany } from '@/contexts/CompanyContext';
+import { useReportTemplatePrint } from '@/hooks/useReportTemplatePrint';
+import { ReportTemplatePrintDialog } from '@/components/ui/report-template-print-dialog';
+import { resolveCompanyId, getLetterheadByCompanyId, getCompanyName } from '@/lib/print-letterhead';
+import PurchasePrintDocument from '@/components/features/unit-transaksi/purchase/PurchasePrintDocument';
 
 const readApiError = (error: any): string => {
   const details = error?.details ?? error?.response?.data?.errors;
@@ -117,13 +122,67 @@ export default function PurchaseDetailPage() {
         cashes: (history as any).cashes,
       }));
 
+  const { companyId, companies } = useCompany();
+  const resolvedCompanyId = resolveCompanyId(slug, companyId) || 1;
+  const selectedPrintBackground = getLetterheadByCompanyId(resolvedCompanyId);
+  const templatePrint = useReportTemplatePrint(selectedPrintBackground);
+
+  const companyName = useMemo(() => {
+    const found = companies.find((c) => c.id === resolvedCompanyId || c.slug === slug);
+    return found?.name ? found.name.toUpperCase() : getCompanyName(resolvedCompanyId);
+  }, [companies, resolvedCompanyId, slug]);
+
+  const detailsQuery = useUnitTransactionTypeDetails(purchase?.id ? String(purchase.id) : (id ? String(id) : undefined), { page: 1, perPage: 1000 });
+  const detailsList = useMemo(() => {
+    const list = detailsQuery.data?.data ?? [];
+    return list.map((item) => ({
+      id: item.id,
+      unit_transaction_item_id: item.unit_transaction_item_id,
+      code: '',
+      created_at: item.created_at,
+      unit_type_name: item.unit_transaction_item?.unit_type?.name ?? '',
+      color: item.color ?? '-',
+      machine_number: item.machine_number ?? '-',
+      chassis_number: item.chassis_number ?? '-',
+      in_stock: item.in_stock,
+      is_forecast: item.is_forecast,
+      is_sold_unit: item.is_sold_unit,
+      status: item.status ?? '',
+      stock_state: item.stock_state ?? '-',
+      price: item.unit_transaction_item?.price ?? item.unit_transaction_item?.unit_type?.buy_price ?? 0,
+      price_usd: item.unit_transaction_item?.price_usd ?? undefined,
+      unit_transaction_bruto_total: 0,
+      unit_transaction_item_total_hpp: 0,
+      unit_transaction_item_total_dpp: 0,
+      unit_transaction_item_total_ppn: 0,
+      unit_transaction_item_bruto_total: 0,
+      transaction_bbn_total: 0,
+      transaction_other_fee: 0,
+      expedition_fee_total: 0,
+      person: { id: '', name: '' },
+      warehouse_sub_block: {
+        id: item.warehouse_sub_block?.id ?? '',
+        name: item.warehouse_sub_block?.name ?? '',
+      },
+    }));
+  }, [detailsQuery.data?.data]);
+
+  const activeDocumentTemplate = templatePrint.selectedTemplate || documentTemplate || null;
+
+  const handleOpenPrint = () => {
+    templatePrint.setSelectedTemplateId(
+      purchase?.documentTemplateId ? String(purchase.documentTemplateId) : null
+    );
+    templatePrint.setIsDialogOpen(true);
+  };
+
   useEffect(() => {
-    if (router.query.print === 'true' && !isLoading && purchase?.documentTemplateId) {
+    if (router.query.print === 'true' && !isLoading && (purchase?.documentTemplateId || templatePrint.selectedTemplateId)) {
       setTimeout(() => {
         window.print();
       }, 800);
     }
-  }, [router.query.print, isLoading, purchase]);
+  }, [router.query.print, isLoading, purchase, templatePrint.selectedTemplateId]);
 
   const historyColumns = useMemo<ColumnDef<any>[]>(
     () => [
@@ -299,7 +358,7 @@ export default function PurchaseDetailPage() {
 
   return (
     <DashboardLayout>
-      <div className="space-y-6">
+      <div className="space-y-6 no-print">
         <PageHeader
           breadcrumbs={[
             { label: 'Pembelian Unit', onClick: () => router.push(`/dashboard/${slug}/transaksi/pembelian-unit`) },
@@ -349,8 +408,16 @@ export default function PurchaseDetailPage() {
                 {receiveButtonText}
               </Button>
               <Button
+                type="button"
                 variant="outline"
-                disabled={!canEdit}
+                onClick={handleOpenPrint}
+              >
+                <Printer className="mr-2 h-4 w-4" />
+                Print
+              </Button>
+              <Button
+                variant="outline"
+                disabled={!canEdit || isPaid}
                 onClick={() => router.push(`/dashboard/${slug}/transaksi/pembelian-unit/edit/${purchase?.id}`)}>
                 <Edit className="mr-2 h-4 w-4" />
                 Edit Data
@@ -370,24 +437,6 @@ export default function PurchaseDetailPage() {
         ) : null}
 
         <PurchaseDetailCards data={purchase} billingHistories={resolvedBillingHistories} />
-
-        {purchase?.documentTemplateId ? (
-          <div
-            onClick={() => router.push(`/dashboard/${slug}/transaksi/pembelian-unit/print/${purchase.id}`)}
-            className="rounded-md border border-gray-200 bg-white px-4 py-3 text-sm shadow-sm hover:bg-slate-50 transition-colors cursor-pointer flex items-center justify-between"
-          >
-            <div>
-              <span className="text-muted-foreground">Document Template:</span>{' '}
-              <span className="font-medium text-blue-600 hover:underline">{documentTemplate?.name ?? 'Memuat template...'}</span>
-            </div>
-            <span className="text-xs text-blue-600 font-medium hover:underline">Print Dokumen</span>
-          </div>
-        ) : (
-          <div className="rounded-md border border-gray-200 bg-white px-4 py-3 text-sm shadow-sm">
-            <span className="text-muted-foreground">Document Template:</span>{' '}
-            <span className="font-medium text-gray-500">{documentTemplate?.name ?? 'Tidak ada template'}</span>
-          </div>
-        )}
 
         <PurchaseUnitTable purchaseId={purchase.id} slug={slug as string} isPaid={isPaid} canEdit={canEdit} canDelete={canDelete} />
 
@@ -484,6 +533,29 @@ export default function PurchaseDetailPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {activeDocumentTemplate && (
+        <div className="accounting-print-root hidden print:block [&_.print-letter-page]:!relative [&_.print-letter-page]:!top-auto [&_.print-letter-page]:!left-auto [&_.print-letter-page]:!break-after-page [&_.print-letter-page:last-child]:!break-after-avoid" aria-hidden="true">
+          <PurchasePrintDocument
+            purchase={purchase}
+            items={detailsList}
+            letterheadUrl={selectedPrintBackground}
+            companyName={companyName}
+            documentTemplate={activeDocumentTemplate}
+            hideControls
+          />
+        </div>
+      )}
+
+      <ReportTemplatePrintDialog
+        open={templatePrint.isDialogOpen}
+        onOpenChange={templatePrint.setIsDialogOpen}
+        selectedTemplateId={templatePrint.selectedTemplateId}
+        onTemplateChange={templatePrint.setSelectedTemplateId}
+        onPrint={templatePrint.printWithSelectedTemplate}
+        isPreparingPrint={templatePrint.isPreparingPrint}
+        reportName="administrasi pembelian"
+      />
     </DashboardLayout>
   );
 }

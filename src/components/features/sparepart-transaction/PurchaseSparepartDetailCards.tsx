@@ -19,15 +19,15 @@ export function PurchaseSparepartDetailCards({ transaction }: Props) {
   const sparepartBilling = transaction.sparepart_transaction_billing;
   const totalTagihan = Number(
     sparepartBilling?.grand_total ??
-      transaction.billing_summary?.grand_total ??
-      transaction.transaction_netto_total ??
-      0
+    transaction.billing_summary?.grand_total ??
+    transaction.transaction_netto_total ??
+    0
   );
   const totalPaid = Number(transaction.billing_summary?.total_paid ?? 0);
   const remainingPayment = Number(
     sparepartBilling?.is_remaining_payment ??
-      transaction.billing_summary?.remaining_payment ??
-      0
+    transaction.billing_summary?.remaining_payment ??
+    0
   );
 
   const supplierName = transaction.person?.name || transaction.supplier?.name || '-';

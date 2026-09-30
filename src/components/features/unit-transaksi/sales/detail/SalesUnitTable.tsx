@@ -6,6 +6,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { Eye, MoreVertical, Pencil, Plus, Trash2 } from 'lucide-react';
 import { currenciesFormat } from '@/components/ui/currenciesFormat';
+import { FilteredCurrency } from '@/components/ui/filtered-currency';
 import { SalesLineItem } from '../sales.data';
 import { useBulkDeleteUnitItem, useDeleteUnitItem, useSalesUnitItems } from '@/hooks/useUnitTransactionItem';
 import { useTypeUnits } from '@/hooks/useTypeUnit';
@@ -115,16 +116,14 @@ export function SalesUnitTable({ lineItems, salesId, onAddUnit, canCreate, canEd
     {
       header: 'Harga Jual',
       alignment: 'center',
-      cell: (item) => (
-        <div>
-          <div>{currenciesFormat('idr', item.price)}</div>
-          {item.price_usd ? (
-            <div className="text-[11px] text-amber-600 font-semibold mt-0.5" title="Harga Jual USD">
-              {currenciesFormat('usd', item.price_usd)}
-            </div>
-          ) : null}
-        </div>
-      ),
+      cell: (item) => {
+        const idrPrice = Number(item.price ?? 0);
+        const usdPrice = Number(item.price_per_unit_usd ?? 0) > 0
+          ? Number(item.price_per_unit_usd)
+          : Number(item.price_usd ?? 0);
+
+        return <FilteredCurrency idr={idrPrice} usd={usdPrice} />;
+      },
     },
     {
       header: 'Biaya BBN',
@@ -155,7 +154,21 @@ export function SalesUnitTable({ lineItems, salesId, onAddUnit, canCreate, canEd
       header: 'Sub Total',
       alignment: 'center',
       className: 'font-semibold text-slate-900',
-      cell: (item) => currenciesFormat('idr', item.price_total ?? ((item.dpp_total_price ?? 0) + (item.ppn_total_price ?? 0) + (item.bbn_price ?? 0) + (item.expedition_fee ?? 0) + (item.other_fee ?? 0))),
+      cell: (item) => {
+        const idrSubtotal = Number(
+          item.price_total ??
+            ((item.dpp_total_price ?? 0) +
+              (item.ppn_total_price ?? 0) +
+              (item.bbn_price ?? 0) +
+              (item.expedition_fee ?? 0) +
+              (item.other_fee ?? 0))
+        );
+        const usdSubtotal = Number(item.price_usd ?? 0) > 0
+          ? Number(item.price_usd)
+          : (Number(item.price_per_unit_usd ?? 0) * Number(item.qty_total ?? 1));
+
+        return <FilteredCurrency idr={idrSubtotal} usd={usdSubtotal} />;
+      },
     },
     {
       header: 'Aksi',

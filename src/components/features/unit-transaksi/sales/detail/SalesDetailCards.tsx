@@ -135,12 +135,8 @@ export function SalesDetailCards({ data, billingHistories = [], unitType }: Prop
               <>
                 <div className="border-t border-slate-100 my-1"></div>
                 <div className="flex items-center justify-between text-slate-900">
-                  <span className="font-bold uppercase text-sm">TOTAL USD</span>
+                  <span className="font-bold uppercase text-sm">TOTAL HARGA (USD)</span>
                   <span className="text-sm font-bold text-amber-600">{currenciesFormat('usd', totalUsd)}</span>
-                </div>
-                <div className="flex items-center justify-between text-xs text-amber-800 bg-amber-50/50 px-2 py-1 rounded border border-amber-100 mt-2">
-                  <span className="font-medium">Total Harga (USD)</span>
-                  <span className="font-bold">{currenciesFormat('usd', totalUsd)}</span>
                 </div>
               </>
             )}

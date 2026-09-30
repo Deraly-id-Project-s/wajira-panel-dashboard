@@ -12,6 +12,7 @@ import { useBulkDeleteUnitItem, useDeleteUnitItem, usePurchaseUnitItems } from '
 import { useTypeUnits } from '@/hooks/useTypeUnit';
 import { useUnitItemDetailsByTransactionId } from '@/hooks/useUnitItemDetail';
 import { currenciesFormat } from '@/components/ui/currenciesFormat';
+import { FilteredCurrency } from '@/components/ui/filtered-currency';
 import { ReferenceLink } from '@/components/ui/reference-link';
 import BaseTable, { ColumnDef } from '@/components/ui/base-table';
 import { CollapsibleBox } from '@/components/ui/collapsible-box';
@@ -113,16 +114,14 @@ export default function PurchaseUnitTable({ purchaseId, slug, isPaid, canEdit, c
     {
       header: 'Harga Beli',
       alignment: 'center',
-      cell: (item) => (
-        <div>
-          <div>{currenciesFormat('idr', item.price)}</div>
-          {item.price_usd ? (
-            <div className="text-[11px] text-amber-600 font-semibold mt-0.5" title="Harga USD">
-              {currenciesFormat('usd', item.price_usd)}
-            </div>
-          ) : null}
-        </div>
-      ),
+      cell: (item) => {
+        const idrPrice = Number(item.price ?? 0);
+        const usdPrice = Number(item.price_per_unit_usd ?? 0) > 0
+          ? Number(item.price_per_unit_usd)
+          : Number(item.price_usd ?? 0);
+
+        return <FilteredCurrency idr={idrPrice} usd={usdPrice} />;
+      },
     },
     {
       header: 'Biaya BBN',
@@ -154,7 +153,21 @@ export default function PurchaseUnitTable({ purchaseId, slug, isPaid, canEdit, c
       header: 'Sub Total',
       alignment: 'center',
       className: 'font-semibold text-slate-900',
-      cell: (item) => currenciesFormat('idr', item.price_total ?? (Number(item.dpp_total_price ?? 0) + Number(item.ppn_total_price ?? 0) + Number(item.bbn_price ?? 0) + Number(item.expedition_fee ?? 0) + Number(item.other_fee ?? 0))),
+      cell: (item) => {
+        const idrSubtotal = Number(
+          item.price_total ??
+            (Number(item.dpp_total_price ?? 0) +
+              Number(item.ppn_total_price ?? 0) +
+              Number(item.bbn_price ?? 0) +
+              Number(item.expedition_fee ?? 0) +
+              Number(item.other_fee ?? 0))
+        );
+        const usdSubtotal = Number(item.price_usd ?? 0) > 0
+          ? Number(item.price_usd)
+          : (Number(item.price_per_unit_usd ?? 0) * Number(item.qty_total ?? 1));
+
+        return <FilteredCurrency idr={idrSubtotal} usd={usdSubtotal} />;
+      },
     },
     {
       header: 'Aksi',
