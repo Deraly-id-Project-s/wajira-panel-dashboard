@@ -10,7 +10,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Card } from '@/components/ui/card';
 import { MoneyInput } from '@/components/ui/money-input';
 import RequiredMark from '@/components/ui/required-mark';
-import { vehicleEquipmentSchema, type VehicleEquipmentFormValues } from '@/scheme/vehicle-equipment.schema';
+import { vehicleEquipmentSchema, type VehicleEquipmentFormInput, type VehicleEquipmentFormValues } from '@/scheme/vehicle-equipment.schema';
 import type { VehicleEquipment } from '@/@types/vehicle-equipment.types';
 
 interface VehicleEquipmentFormProps {
@@ -29,7 +29,7 @@ export function VehicleEquipmentForm({ initialData, onSubmit, isSubmitting, titl
     reset,
     control,
     formState: { errors },
-  } = useForm<VehicleEquipmentFormValues>({
+  } = useForm<VehicleEquipmentFormInput, unknown, VehicleEquipmentFormValues>({
     resolver: zodResolver(vehicleEquipmentSchema),
     defaultValues: {
       code: '',

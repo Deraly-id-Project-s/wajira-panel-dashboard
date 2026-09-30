@@ -8,7 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { MoneyInput } from '@/components/ui/money-input';
 import RequiredMark from '@/components/ui/required-mark';
-import { vehicleEquipmentSchema, type VehicleEquipmentFormValues } from '@/scheme/vehicle-equipment.schema';
+import { vehicleEquipmentSchema, type VehicleEquipmentFormInput, type VehicleEquipmentFormValues } from '@/scheme/vehicle-equipment.schema';
 import type { VehicleEquipment } from '@/@types/vehicle-equipment.types';
 
 interface VehicleEquipmentFormModalProps {
@@ -34,7 +34,7 @@ export function VehicleEquipmentFormModal({
     reset,
     control,
     formState: { errors },
-  } = useForm<VehicleEquipmentFormValues>({
+  } = useForm<VehicleEquipmentFormInput, unknown, VehicleEquipmentFormValues>({
     resolver: zodResolver(vehicleEquipmentSchema),
     defaultValues: {
       code: '',

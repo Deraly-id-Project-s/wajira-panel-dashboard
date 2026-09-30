@@ -49,4 +49,5 @@ export const vehicleEquipmentPriceVersionSchema = z.object({
   is_lock: z.boolean().optional(),
 });
 
-export type VehicleEquipmentPriceVersionFormValues = z.infer<typeof vehicleEquipmentPriceVersionSchema>;
+export type VehicleEquipmentPriceVersionFormInput = z.input<typeof vehicleEquipmentPriceVersionSchema>;
+export type VehicleEquipmentPriceVersionFormValues = z.output<typeof vehicleEquipmentPriceVersionSchema>;

@@ -13,6 +13,7 @@ import RequiredMark from '@/components/ui/required-mark';
 import {
   vehicleEquipmentPriceVersionSchema,
   type VehicleEquipmentPriceVersion,
+  type VehicleEquipmentPriceVersionFormInput,
   type VehicleEquipmentPriceVersionFormValues,
 } from '@/@types/vehicle-equipment-price-version.types';
 
@@ -31,7 +32,7 @@ export function VehicleEquipmentPriceVersionForm({
   onSubmit,
   isSubmitting,
 }: Props) {
-  const form = useForm<VehicleEquipmentPriceVersionFormValues>({
+  const form = useForm<VehicleEquipmentPriceVersionFormInput, unknown, VehicleEquipmentPriceVersionFormValues>({
     resolver: zodResolver(vehicleEquipmentPriceVersionSchema),
     defaultValues: {
       name: '',

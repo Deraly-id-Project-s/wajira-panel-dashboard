@@ -8,4 +8,5 @@ export const vehicleEquipmentSchema = z.object({
   sell_price: z.coerce.number().min(0, 'Harga jual tidak boleh kurang dari 0').default(0),
 });
 
-export type VehicleEquipmentFormValues = z.infer<typeof vehicleEquipmentSchema>;
+export type VehicleEquipmentFormInput = z.input<typeof vehicleEquipmentSchema>;
+export type VehicleEquipmentFormValues = z.output<typeof vehicleEquipmentSchema>;
