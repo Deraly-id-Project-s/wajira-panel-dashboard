@@ -41,7 +41,7 @@ export interface WarehouseActivity {
   keterangan: string;
   isRefundActivity?: boolean;
   state_note?: string;
-  type?: 'unit-type' | 'sparepart' | string;
+  type?: 'unit-type' | 'sparepart' | 'vehicle-equipment' | string;
 }
 
 export interface WarehouseActivityListResponse {
@@ -85,6 +85,34 @@ export interface WarehouseActivityDetail extends WarehouseActivity {
       sell_price: number;
     } | null;
   } | null;
+  goods_transaction?: {
+    id: number;
+    uuid?: string;
+    code: string;
+    warehouse_id?: number | null;
+    person_id: number;
+    vehicle_equipment_id?: number;
+    type: string;
+    billing_type: string;
+    is_refunded?: boolean;
+    qty: number;
+    price: number;
+    discount: number;
+    transaction_date: string;
+    nota_number?: string | null;
+    billing_due_date?: string | null;
+    invoice_file?: string | null;
+    note?: string | null;
+    vehicle_equipment?: {
+      id: number;
+      uuid?: string;
+      code: string;
+      name: string;
+      description?: string | null;
+      buy_price?: number;
+      sell_price?: number;
+    } | null;
+  } | null;
 }
 
 export interface ReceiptStockPayload {
@@ -97,7 +125,7 @@ export interface WarehouseActivityListParams {
   search?: string;
   company_id?: number | null;
   activityType?: 'receipt' | 'issue' | string;
-  type?: 'unit-type' | 'sparepart' | string;
+  type?: 'unit-type' | 'sparepart' | 'vehicle-equipment' | string;
   start_date?: string | null;
   end_date?: string | null;
 }
@@ -109,9 +137,10 @@ export interface CreateWarehouseActivityPayload {
   activity_type?: 'receipt' | 'issue' | string;
   person_id?: string;
   sparepart_transaction_id?: string;
+  goods_transaction_id?: string;
   state?: 'draft' | 'process' | 'done' | string;
   supplier_name?: string;
-  type?: 'unit-type' | 'sparepart' | string;
+  type?: 'unit-type' | 'sparepart' | 'vehicle-equipment' | string;
 }
 
 export interface UpdateWarehouseActivityPayload {
@@ -121,7 +150,7 @@ export interface UpdateWarehouseActivityPayload {
   description?: string;
   person_id?: string;
   supplier_name?: string;
-  type?: 'unit-type' | 'sparepart' | string;
+  type?: 'unit-type' | 'sparepart' | 'vehicle-equipment' | string;
 }
 
 export interface CreateWarehouseDataPayload {
@@ -130,5 +159,5 @@ export interface CreateWarehouseDataPayload {
   activity_type: 'receipt' | 'issue';
   activity_date: string;
   description?: string;
-  type?: 'unit-type' | 'sparepart' | string;
+  type?: 'unit-type' | 'sparepart' | 'vehicle-equipment' | string;
 }

@@ -302,6 +302,10 @@ const normalizeCreateUpdatePayload = (payload: CreateWarehouseActivityPayload | 
     body.append('sparepart_transaction_id', payload.sparepart_transaction_id);
   }
 
+  if ('goods_transaction_id' in payload && payload.goods_transaction_id) {
+    body.append('goods_transaction_id', payload.goods_transaction_id);
+  }
+
   if ('state' in payload && payload.state) {
     body.append('state', payload.state);
   }
@@ -402,6 +406,7 @@ export const getWarehouseActivityById = async (id: string): Promise<WarehouseAct
     ...mapped,
     unit_transaction_details: mappedDetails,
     sparepart_transaction: (activity as any).sparepart_transaction || null,
+    goods_transaction: (activity as any).goods_transaction || null,
   };
 };
 
