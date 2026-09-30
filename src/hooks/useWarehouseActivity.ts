@@ -113,6 +113,8 @@ export const useWarehouseActivityStateUpdate = () => {
       queryClient.invalidateQueries({ queryKey: ['sales-by-id'] });
       queryClient.invalidateQueries({ queryKey: ['purchase-by-id'] });
       queryClient.invalidateQueries({ queryKey: ['pengeluaran-unit'] });
+      queryClient.invalidateQueries({ queryKey: ['vehicle-equipment-transactions'] });
+      queryClient.invalidateQueries({ queryKey: ['stock-vehicle-equipment'] });
     },
   });
 };

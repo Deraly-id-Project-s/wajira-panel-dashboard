@@ -4,11 +4,13 @@ import BaseTable, { ColumnDef } from '@/components/ui/base-table';
 import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import type { VehicleEquipment } from '@/@types/vehicle-equipment.types';
+import { currenciesFormat } from '@/components/ui/currenciesFormat';
 
 interface VehicleEquipmentTableProps {
   equipments: VehicleEquipment[];
   isLoading?: boolean;
   onEdit: (equipment: VehicleEquipment) => void;
+  onVersioning: (equipment: VehicleEquipment) => void;
   onDelete: (equipment: VehicleEquipment) => void;
   canEdit: boolean;
   canDelete: boolean;
@@ -18,6 +20,7 @@ export function VehicleEquipmentTable({
   equipments,
   isLoading = false,
   onEdit,
+  onVersioning,
   onDelete,
   canEdit,
   canDelete,
@@ -25,43 +28,89 @@ export function VehicleEquipmentTable({
   const columns = useMemo<ColumnDef<VehicleEquipment>[]>(
     () => [
       {
-        header: 'KODE BARANG',
+        header: 'KODE',
         accessorKey: 'code',
-        alignment: 'center',
-        className: 'font-medium text-slate-900',
+        sortable: true,
+        className: 'font-mono text-slate-900',
         cell: (item) => item.code || '-',
       },
       {
-        header: 'NAMA BARANG',
+        header: 'NAMA PERLENGKAPAN',
         accessorKey: 'name',
-        alignment: 'center',
-        className: 'text-gray-800 font-medium',
+        sortable: true,
+        className: 'text-gray-900 font-medium',
         cell: (item) => item.name || '-',
       },
       {
-        header: 'Aksi',
+        header: 'DESKRIPSI',
+        accessorKey: 'description',
+        sortable: true,
+        cell: (item) => item.description || '-',
+      },
+      {
+        header: 'HARGA BELI',
+        accessorKey: 'buy_price',
+        sortable: true,
+        alignment: 'right',
+        cell: (item) => currenciesFormat('idr', item.buy_price ?? item.buyPrice ?? 0),
+      },
+      {
+        header: 'HARGA JUAL',
+        accessorKey: 'sell_price',
+        sortable: true,
+        alignment: 'right',
+        cell: (item) => currenciesFormat('idr', item.sell_price ?? item.sellPrice ?? 0),
+      },
+      {
+        header: 'STOK',
+        accessorKey: 'available_stock',
+        sortable: true,
+        alignment: 'center',
+        cell: (item) => (
+          <span className="font-semibold tabular-nums">
+            {(item.available_stock ?? item.availableStock ?? 0).toLocaleString('id-ID')}
+          </span>
+        ),
+      },
+      {
+        header: 'AKSI',
         alignment: 'center',
         sticky: 'right',
         cell: (item) => (
           <div className="flex justify-center">
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" className="h-8 w-8 p-0 hover:bg-gray-100 rounded-full text-slate-600">
-                  <MoreVertical className="h-4 w-4 text-gray-500" />
+                <Button variant="ghost" className="h-8 w-8 p-0 rounded-full text-slate-600 hover:bg-slate-100 hover:text-slate-900">
+                  <MoreVertical className="h-4 w-4" />
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-[140px] rounded-md border border-gray-100 bg-white shadow-lg p-1.5">
+              <DropdownMenuContent align="end" className="min-w-[150px] rounded-md border-slate-200 p-1.5 shadow-lg">
                 <DropdownMenuItem
-                  onClick={() => onEdit(item)}
+                  onSelect={(e) => {
+                    e.preventDefault();
+                    onVersioning(item);
+                  }}
+                  className="rounded-md px-3 py-2 text-sm text-slate-900 focus:bg-slate-50 cursor-pointer"
+                >
+                  Detail
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  onSelect={(e) => {
+                    e.preventDefault();
+                    onEdit(item);
+                  }}
                   disabled={!canEdit}
-                  className="cursor-pointer text-slate-900 font-medium rounded-md hover:bg-gray-50 px-3 py-2 text-sm"
+                  className="rounded-md px-3 py-2 text-sm text-slate-900 focus:bg-slate-50 cursor-pointer disabled:cursor-not-allowed"
                 >
                   Edit
                 </DropdownMenuItem>
                 <DropdownMenuItem
-                  onClick={() => onDelete(item)}
+                  onSelect={(e) => {
+                    e.preventDefault();
+                    onDelete(item);
+                  }}
                   disabled={!canDelete}
-                  className="text-red-600 cursor-pointer font-medium rounded-md hover:bg-red-50 focus:bg-red-50 focus:text-red-600 px-3 py-2 text-sm"
+                  className="rounded-md px-3 py-2 text-sm text-red-600 focus:bg-red-50 focus:text-red-600 cursor-pointer disabled:cursor-not-allowed"
                 >
                   Hapus
                 </DropdownMenuItem>
@@ -71,7 +120,7 @@ export function VehicleEquipmentTable({
         ),
       },
     ],
-    [canDelete, canEdit, onDelete, onEdit],
+    [canDelete, canEdit, onDelete, onEdit, onVersioning],
   );
 
   return (
@@ -79,7 +128,7 @@ export function VehicleEquipmentTable({
       data={equipments}
       columns={columns}
       loading={isLoading}
-      getRowId={(item) => item.uuid || String(item.id || '')}
+      defaultSort={{ key: 'name', direction: 'asc' }}
     />
   );
 }

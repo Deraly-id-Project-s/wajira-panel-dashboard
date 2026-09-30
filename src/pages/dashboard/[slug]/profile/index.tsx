@@ -122,6 +122,9 @@ export default function ProfilePage() {
     return (
         <DashboardLayout>
             <div className="space-y-6">
+                <title>
+                    Profil Pengguna
+                </title>
                 <div className="flex flex-col gap-4 rounded-md border border-slate-200 bg-white px-5 py-5 shadow-sm md:flex-row md:items-center md:justify-between">
                     <div className="flex items-center gap-4">
                         <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-md bg-[#1e3a5f]/10 text-[#1e3a5f]">
