@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   CreateWarehouseDataPayload,
   CreateWarehouseActivityPayload,
+  CreateAssignDispatchPayload,
   ReceiptStockPayload,
   UpdateWarehouseActivityPayload,
   WarehouseActivityListParams,
@@ -18,6 +19,11 @@ import {
   processSparepartStock,
   ProcessSparepartStockPayload,
 } from '@/services/warehouse.service';
+import {
+  createAssignDispatchActivity,
+  updateAssignDispatchActivityState,
+} from '@/services/vehicle-fleet.service';
+
 
 const warehouseActivitiesKey = 'warehouse-activities';
 
@@ -135,6 +141,24 @@ export const useProcessSparepartStock = () => {
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: [warehouseActivitiesKey] });
       queryClient.invalidateQueries({ queryKey: [warehouseActivitiesKey, 'detail', String(variables.activityId)] });
+    },
+  });
+};
+
+export const useCreateAssignDispatchActivity = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (payload: CreateAssignDispatchPayload) => {
+      const activity = await createAssignDispatchActivity(payload);
+      if (activity?.id) {
+        await updateAssignDispatchActivityState(activity.id, 'done');
+      }
+      return activity;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [warehouseActivitiesKey] });
+      queryClient.invalidateQueries({ queryKey: ['stock-vehicle-equipment'] });
     },
   });
 };

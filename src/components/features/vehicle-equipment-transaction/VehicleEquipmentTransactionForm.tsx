@@ -42,7 +42,7 @@ const createSchema = (type: 'purchase' | 'sales') =>
       .refine((value) => value > 0, 'Perlengkapan wajib diisi'),
     qty: z.coerce.number().min(1, 'Minimal kuantitas adalah 1'),
     price: z.coerce.number().min(0, 'Harga tidak valid'),
-    discount: z.coerce.number().min(0, 'Diskon tidak valid').default(0),
+    discount: z.coerce.number().min(0, 'Diskon minimal 0%').max(100, 'Diskon maksimal 100%').default(0),
     transaction_date: z.string().min(1, 'Tanggal transaksi wajib diisi'),
     nota_number: z.string().optional().nullable(),
     billing_type: z.enum(['cash', 'transfer', 'credit']).default('cash'),

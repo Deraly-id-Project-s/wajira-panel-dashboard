@@ -100,6 +100,13 @@ export default function ArmadaPage() {
     setIsDeleteOpen(true);
   };
 
+  const handleDetailClick = (armada: { id: string | number }) => {
+    if (slug) {
+      router.push(`/dashboard/${slug}/master/armada/${armada.id}`);
+    }
+  };
+
+
   const handleConfirmDelete = async () => {
     if (!canDelete) return;
     if (!selectedArmadaId) return;
@@ -239,6 +246,7 @@ export default function ArmadaPage() {
               isLoading={isLoading}
               onEdit={handleEditClick}
               onDelete={handleDeleteClick}
+              onDetail={handleDetailClick}
               canEdit={canEdit}
               canDelete={canDelete}
               getRowMark={getDoExpeditionRowMark}

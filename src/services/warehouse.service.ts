@@ -77,10 +77,12 @@ type WarehouseActivityApiModel = {
   isRefundActivity?: boolean | number | string;
   state_note?: string;
   stateNote?: string;
+  is_system_sync?: boolean | number | string;
   unit_transaction_details?: WarehouseActivityUnitDetailApiModel[];
   details?: WarehouseActivityUnitDetailApiModel[];
   data?: WarehouseActivityApiModel;
 };
+
 
 type LaravelPaginationLike<T> = {
   data?: T[];
@@ -126,6 +128,7 @@ const mapActivity = (item: WarehouseActivityApiModel): WarehouseActivity => {
   const state = item?.state ?? '-';
   const isRefundActivity = toBoolValue(item.is_refund_activity) || toBoolValue(item.isRefundActivity);
   const state_note = item.state_note ?? item.stateNote;
+  const is_system_sync = toBoolValue(item.is_system_sync);
 
   return {
     id,
@@ -155,8 +158,10 @@ const mapActivity = (item: WarehouseActivityApiModel): WarehouseActivity => {
     isRefundActivity,
     state_note,
     type: item.type,
+    is_system_sync,
   };
 };
+
 
 const mapDetail = (activityId: string, detail: WarehouseActivityUnitDetailApiModel): WarehouseActivityUnitDetail => {
   const detailId =

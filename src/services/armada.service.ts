@@ -31,9 +31,22 @@ const mapArmada = (item: any): Armada => ({
   stnkNumber: item.stnk_number ?? null,
   kirBook: item.kir_book ?? null,
   equipment: mapEquipment(item),
+  vehicleEquipmentAssigned: Array.isArray(item.vehicle_equipment_assigned)
+    ? item.vehicle_equipment_assigned.map((eq: any) => ({
+        id: eq.id,
+        uuid: eq.uuid || '',
+        code: eq.code || '',
+        name: eq.name || '',
+        description: eq.description ?? null,
+        stock: eq.stock !== undefined && eq.stock !== null ? Number(eq.stock) : 0,
+        buy_price: eq.buy_price !== undefined && eq.buy_price !== null ? Number(eq.buy_price) : 0,
+        sell_price: eq.sell_price !== undefined && eq.sell_price !== null ? Number(eq.sell_price) : 0,
+      }))
+    : [],
   createdAt: item.created_at,
   updatedAt: item.updated_at,
 });
+
 
 export const getArmadas = async (
   params: PaginationParams & ArmadaListParams,

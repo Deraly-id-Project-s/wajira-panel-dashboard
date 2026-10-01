@@ -1,23 +1,28 @@
 import { useMemo, useState } from 'react';
+import { useRouter } from 'next/router';
 import type { DateRange } from 'react-day-picker';
+import { Plus } from 'lucide-react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { PageHeader } from '@/components/ui/page-header';
 import { LoadingState } from '@/components/ui/loading-state';
 import { SearchPagination } from '@/components/ui/search-pagination';
 import { DatePickerWithRange } from '@/components/ui/date-range-picker';
+import { Button } from '@/components/ui/button';
 import VehicleEquipmentActivityTable from '@/components/features/vehicle-equipment-warehouse/VehicleEquipmentActivityTable';
 import { useCompany } from '@/contexts/CompanyContext';
 import { useQueryParamsTable } from '@/hooks/useQueryParamsTable';
 import { useWarehouseActivities } from '@/hooks/useWarehouseActivity';
 
 export default function VehicleEquipmentIssuePage() {
+  const router = useRouter();
+  const { slug } = router.query;
   const { companyId } = useCompany();
   const { page, perPage, search, setPage, setPerPage, setSearch } = useQueryParamsTable({ defaultPerPage: 25 });
   const [startDate, setStartDate] = useState<string | null>(null);
   const [endDate, setEndDate] = useState<string | null>(null);
 
   const { data, isLoading, isError, error, isFetching } = useWarehouseActivities({
-    activityType: 'issue',
+    activityType: 'issue,dispatch',
     type: 'vehicle-equipment',
     page,
     perPage,
@@ -43,7 +48,19 @@ export default function VehicleEquipmentIssuePage() {
   return (
     <DashboardLayout>
       <div className="space-y-6">
-        <PageHeader title="Pengeluaran Perlengkapan" subtitle="Kelola aktivitas pengeluaran perlengkapan kendaraan" />
+        <PageHeader
+          title="Pengeluaran Perlengkapan"
+          subtitle="Kelola aktivitas pengeluaran & dispatch perlengkapan kendaraan"
+          actions={
+            <Button
+              variant="default"
+              onClick={() => router.push(`/dashboard/${slug}/warehouse/perlengkapan-keluar/dispatch`)}
+            >
+              <Plus className="mr-2 h-4 w-4" />
+              Tambah Data +
+            </Button>
+          }
+        />
         {isLoading ? (
           <LoadingState variant="page" />
         ) : isError ? (

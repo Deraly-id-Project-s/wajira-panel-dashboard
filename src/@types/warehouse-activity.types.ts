@@ -4,14 +4,15 @@ export interface WarehouseActivity {
   person_id: number;
   cash_id: number | null;
   warehouse_id: number;
-  type: 'unit-type' | 'sparepart' | string;
+  type: 'unit-type' | 'sparepart' | 'vehicle-equipment' | string;
   unit_transaction_id: number | null;
   sparepart_transaction_id: number | null;
   activity_number: string;
-  activity_type: 'receipt' | 'issue' | string;
+  activity_type: 'receipt' | 'issue' | 'assign' | 'dispatch' | string;
   activity_date: string;
   description: string | null;
   state: 'draft' | 'process' | 'done' | string;
+  is_system_sync: boolean;
   warehouse?: {
     id: number;
     uuid: string;

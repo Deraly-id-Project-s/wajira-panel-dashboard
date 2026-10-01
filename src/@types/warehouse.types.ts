@@ -27,7 +27,7 @@ export interface WarehouseActivity {
   activityNumber?: string;
   activity_date: string;
   activityDate?: string;
-  activity_type?: string;
+  activity_type?: 'receipt' | 'issue' | 'assign' | 'dispatch' | string;
   description?: string;
   warehouse?: {
     id: string;
@@ -42,6 +42,7 @@ export interface WarehouseActivity {
   isRefundActivity?: boolean;
   state_note?: string;
   type?: 'unit-type' | 'sparepart' | 'vehicle-equipment' | string;
+  is_system_sync?: boolean;
 }
 
 export interface WarehouseActivityListResponse {
@@ -124,7 +125,7 @@ export interface WarehouseActivityListParams {
   perPage?: number;
   search?: string;
   company_id?: number | null;
-  activityType?: 'receipt' | 'issue' | string;
+  activityType?: 'receipt' | 'issue' | 'assign' | 'dispatch' | string;
   type?: 'unit-type' | 'sparepart' | 'vehicle-equipment' | string;
   start_date?: string | null;
   end_date?: string | null;
@@ -134,7 +135,7 @@ export interface CreateWarehouseActivityPayload {
   warehouse_id?: string;
   activity_date: string;
   description?: string;
-  activity_type?: 'receipt' | 'issue' | string;
+  activity_type?: 'receipt' | 'issue' | 'assign' | 'dispatch' | string;
   person_id?: string;
   sparepart_transaction_id?: string;
   goods_transaction_id?: string;
@@ -145,7 +146,7 @@ export interface CreateWarehouseActivityPayload {
 
 export interface UpdateWarehouseActivityPayload {
   warehouse_id?: string;
-  activity_type?: 'receipt' | 'issue' | string;
+  activity_type?: 'receipt' | 'issue' | 'assign' | 'dispatch' | string;
   activity_date?: string;
   description?: string;
   person_id?: string;
@@ -156,8 +157,20 @@ export interface UpdateWarehouseActivityPayload {
 export interface CreateWarehouseDataPayload {
   person_id: number;
   warehouse_id: number;
-  activity_type: 'receipt' | 'issue';
+  activity_type: 'receipt' | 'issue' | 'assign' | 'dispatch';
   activity_date: string;
   description?: string;
   type?: 'unit-type' | 'sparepart' | 'vehicle-equipment' | string;
+}
+
+export interface CreateAssignDispatchPayload {
+  warehouse_id: number;
+  type: 'vehicle-equipment';
+  activity_type: 'assign' | 'dispatch';
+  activity_date: string;
+  description?: string;
+  state_note?: string;
+  vehicle_equipment_id: number;
+  vehicle_fleet_id: number;
+  qty: number;
 }

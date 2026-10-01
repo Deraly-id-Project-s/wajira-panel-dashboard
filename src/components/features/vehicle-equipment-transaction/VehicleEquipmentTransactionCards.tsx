@@ -14,8 +14,10 @@ export default function VehicleEquipmentTransactionCards({ transaction, partyLab
   const equipment = transaction.vehicle_equipment;
   const billing = transaction.goods_transaction_billing;
   const summary = transaction.billing_summary;
-  const bruto = transaction.transaction_bruto_total ?? transaction.qty * transaction.price;
-  const netto = transaction.transaction_netto_total ?? bruto - bruto * (transaction.discount / 100);
+  // Pastikan discount adalah bilangan desimal (persentase 0-100), bukan nilai mata uang
+  const discount = Number(transaction.discount ?? 0);
+  const totalHarga = transaction.transaction_bruto_total ?? Number(transaction.qty ?? 0) * Number(transaction.price ?? 0);
+  const totalSetelahDiskon = transaction.transaction_netto_total ?? Math.max(0, totalHarga - totalHarga * (discount / 100));
 
   return (
     <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
@@ -56,10 +58,10 @@ export default function VehicleEquipmentTransactionCards({ transaction, partyLab
             <h3 className="text-sm font-semibold text-slate-700">Ringkasan Billing</h3>
           </div>
           <div className="space-y-2 text-sm">
-            <div className="flex justify-between gap-3"><span className="text-slate-500">Bruto</span><span className="font-semibold">{currenciesFormat('idr', bruto)}</span></div>
-            <div className="flex justify-between gap-3"><span className="text-slate-500">Diskon</span><span className="font-semibold">{transaction.discount}%</span></div>
-            <div className="flex justify-between gap-3"><span className="text-slate-500">Netto</span><span className="font-semibold">{currenciesFormat('idr', netto)}</span></div>
-            <div className="flex justify-between gap-3 border-t pt-2"><span className="text-slate-500">Dibayar</span><span className="font-semibold">{currenciesFormat('idr', summary?.total_paid ?? 0)}</span></div>
+            <div className="flex justify-between gap-3"><span className="text-slate-500">Total Harga</span><span className="font-semibold">{currenciesFormat('idr', totalHarga)}</span></div>
+            <div className="flex justify-between gap-3"><span className="text-slate-500">Diskon</span><span className="font-semibold">{discount}%</span></div>
+            <div className="flex justify-between gap-3 border-b pb-2"><span className="text-slate-500">Total Setelah Diskon</span><span className="font-semibold text-emerald-700">{currenciesFormat('idr', totalSetelahDiskon)}</span></div>
+            <div className="flex justify-between gap-3"><span className="text-slate-500">Dibayar</span><span className="font-semibold">{currenciesFormat('idr', summary?.total_paid ?? 0)}</span></div>
             <div className="flex justify-between gap-3"><span className="text-slate-500">Sisa</span><span className="font-semibold">{currenciesFormat('idr', Number(billing?.is_remaining_payment ?? summary?.remaining_payment ?? 0))}</span></div>
           </div>
         </CardContent>

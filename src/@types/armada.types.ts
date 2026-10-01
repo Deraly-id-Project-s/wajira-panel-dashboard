@@ -25,6 +25,17 @@ export type ArmadaEquipmentField = (typeof ARMADA_EQUIPMENT_FIELDS)[number];
 
 export type ArmadaEquipment = Partial<Record<ArmadaEquipmentField, number | null>>;
 
+export interface VehicleEquipmentAssigned {
+  id: number;
+  uuid: string;
+  code: string;
+  name: string;
+  description: string | null;
+  stock: number;
+  buy_price: number;
+  sell_price: number;
+}
+
 export interface Armada {
   id: number | string;
   uuid?: string;
@@ -37,6 +48,7 @@ export interface Armada {
   stnkNumber?: string | null;
   kirBook?: string | null;
   equipment: ArmadaEquipment;
+  vehicleEquipmentAssigned?: VehicleEquipmentAssigned[];
   createdAt?: string;
   updatedAt?: string;
 }
