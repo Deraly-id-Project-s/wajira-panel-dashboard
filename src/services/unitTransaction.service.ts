@@ -101,6 +101,7 @@ type UnitTransactionApiModel = {
     activity_date?: string;
     description?: string;
     state?: string;
+    is_system_sync?: boolean | number | string;
   };
   is_unit_type_detail_valid?: boolean | string | number;
   unit_transaction_price_usd_total?: string | number;
@@ -628,6 +629,7 @@ const mapUnitTransactionDetail = (item: UnitTransactionApiModel): UnitTransactio
         activity_date: item.warehouse_activity.activity_date ?? '',
         description: item.warehouse_activity.description ?? null,
         state: item.warehouse_activity.state ?? '',
+        is_system_sync: Boolean(item.warehouse_activity.is_system_sync),
       }
       : null,
     unit_transaction_items: item.unit_transaction_items,
