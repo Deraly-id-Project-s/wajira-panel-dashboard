@@ -77,7 +77,7 @@ function Card({
         data-expanded={expanded}
         data-collapsible={isCollapsible}
         className={cn(
-          'rounded-xl border border-slate-200 bg-card text-card-foreground shadow-sm transition-all overflow-hidden',
+          'rounded-md border border-slate-200 bg-card text-card-foreground shadow-sm transition-all overflow-hidden',
           className
         )}
         {...props}

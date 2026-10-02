@@ -57,7 +57,7 @@ export default function VehicleEquipmentReceiptPage() {
               onClick={() => router.push(`/dashboard/${slug}/warehouse/perlengkapan-masuk/assign`)}
             >
               <Plus className="mr-2 h-4 w-4" />
-              Tambah Data +
+              Tambah Data
             </Button>
           }
         />

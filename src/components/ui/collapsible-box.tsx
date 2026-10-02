@@ -30,7 +30,7 @@ export function CollapsibleBox({
   const contentId = React.useId();
 
   return (
-    <section className={cn('overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm transition-all', className)}>
+    <section className={cn('overflow-hidden rounded-md border border-slate-200 bg-white shadow-sm transition-all', className)}>
       <button
         type="button"
         className={cn(

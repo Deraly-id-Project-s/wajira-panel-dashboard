@@ -412,6 +412,8 @@ export const getWarehouseActivityById = async (id: string): Promise<WarehouseAct
     unit_transaction_details: mappedDetails,
     sparepart_transaction: (activity as any).sparepart_transaction || null,
     goods_transaction: (activity as any).goods_transaction || null,
+    warehouse_movement_assignment: (activity as any).warehouse_movement_assignment || null,
+    warehouse_movements: (activity as any).warehouse_movements || [],
   };
 };
 

@@ -174,7 +174,7 @@ export default function AssetPage() {
           }
         >
           {isError ? (
-            <div className="rounded-3xl border border-red-200 bg-red-50 px-6 py-5 text-base text-red-600">
+            <div className="rounded-md border border-red-200 bg-red-50 px-6 py-5 text-base text-red-600">
               Gagal memuat data aset.
             </div>
           ) : (
@@ -199,15 +199,15 @@ export default function AssetPage() {
       />
 
       {selectedAsset && (
-          <EditAssetModal
-            isOpen={isFormOpen && !!selectedAsset}
-            onClose={() => {
-                setIsFormOpen(false);
-                setTimeout(() => setSelectedAsset(null), 300);
-            }}
-            onSave={handleSaveForm}
-            initialData={selectedAsset}
-          />
+        <EditAssetModal
+          isOpen={isFormOpen && !!selectedAsset}
+          onClose={() => {
+            setIsFormOpen(false);
+            setTimeout(() => setSelectedAsset(null), 300);
+          }}
+          onSave={handleSaveForm}
+          initialData={selectedAsset}
+        />
       )}
 
       <DeleteAssetModal

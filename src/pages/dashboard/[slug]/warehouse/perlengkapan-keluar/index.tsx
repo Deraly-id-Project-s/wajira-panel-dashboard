@@ -57,7 +57,7 @@ export default function VehicleEquipmentIssuePage() {
               onClick={() => router.push(`/dashboard/${slug}/warehouse/perlengkapan-keluar/dispatch`)}
             >
               <Plus className="mr-2 h-4 w-4" />
-              Tambah Data +
+              Tambah Data
             </Button>
           }
         />

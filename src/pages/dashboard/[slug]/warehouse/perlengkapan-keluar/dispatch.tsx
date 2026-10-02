@@ -17,7 +17,7 @@ export default function DispatchPerlengkapanPage() {
 
   const handleSubmit = async (data: AssignDispatchFormData) => {
     const payload: CreateAssignDispatchPayload = {
-      warehouse_id: data.warehouse_id,
+      warehouse_id: data.warehouse_id || 0,
       type: 'vehicle-equipment',
       activity_type: 'dispatch',
       activity_date: data.activity_date,

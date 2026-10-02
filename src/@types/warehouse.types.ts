@@ -114,6 +114,46 @@ export interface WarehouseActivityDetail extends WarehouseActivity {
       sell_price?: number;
     } | null;
   } | null;
+  warehouse_movement_assignment?: {
+    id: number;
+    warehouse_movement_id: number;
+    vehicle_fleet_id: number;
+    vehicle_equipment_id: number;
+    qty: number;
+    created_at: string;
+    updated_at: string;
+    laravel_through_key?: number;
+    vehicle_equipment?: {
+      id: number;
+      uuid?: string;
+      code: string;
+      name: string;
+      description?: string | null;
+      buy_price?: number;
+      sell_price?: number;
+    } | null;
+    vehicle_fleet?: {
+      id: number;
+      uuid?: string;
+      registration_number: string;
+      type?: string;
+      machine_number?: string;
+      chassis_number?: string;
+      stnk_age?: string | null;
+      kir_age?: string | null;
+      stnk_number?: string | null;
+      kir_book?: string | null;
+    } | null;
+  } | null;
+  warehouse_movements?: Array<{
+    id: number;
+    uuid?: string;
+    serial_number?: string;
+    warehouse_activity_id?: number;
+    status?: string;
+    created_at?: string;
+    updated_at?: string;
+  }> | null;
 }
 
 export interface ReceiptStockPayload {

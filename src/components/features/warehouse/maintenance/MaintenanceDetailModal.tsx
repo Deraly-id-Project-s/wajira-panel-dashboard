@@ -35,7 +35,7 @@ export function MaintenanceDetailModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent showCloseButton={true} className="max-w-[850px] max-h-[85vh] overflow-y-auto rounded-3xl border-none p-8 shadow-2xl bg-white">
+      <DialogContent showCloseButton={true} className="max-w-[850px] max-h-[85vh] overflow-y-auto rounded-md border-none p-8 shadow-2xl bg-white">
         <DialogHeader className="border-b border-slate-100 pb-4 text-left">
           <DialogTitle className="text-[22px] font-bold text-slate-950">
             Detail Maintenance

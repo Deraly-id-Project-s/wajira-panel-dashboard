@@ -67,7 +67,7 @@ function RelatedSection({
   children: React.ReactNode;
 }) {
   return (
-    <section className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+    <section className="rounded-md border border-slate-200 bg-white p-5 shadow-sm">
       <div className="mb-4 flex items-start justify-between gap-3">
         <div>
           <div className="flex items-center gap-3">

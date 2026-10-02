@@ -56,9 +56,8 @@ export default function ArmadaDetailPage() {
       cell: (item) => item.description || '-',
     },
     {
-      header: 'Stok Assign',
+      header: 'Stok',
       accessorKey: 'stock',
-      alignment: 'center',
       cell: (item) => (
         <Badge variant="outline" className="border-blue-200 bg-blue-50 text-blue-700 font-semibold">
           {item.stock} pcs
@@ -68,13 +67,11 @@ export default function ArmadaDetailPage() {
     {
       header: 'Harga Beli',
       accessorKey: 'buy_price',
-      alignment: 'right',
       cell: (item) => <span className="text-slate-600">{currenciesFormat('idr', item.buy_price)}</span>,
     },
     {
       header: 'Harga Jual',
       accessorKey: 'sell_price',
-      alignment: 'right',
       cell: (item) => <span className="text-slate-600">{currenciesFormat('idr', item.sell_price)}</span>,
     },
   ], []);
@@ -128,7 +125,7 @@ export default function ArmadaDetailPage() {
           </Button>
           <div>
             <h1 className="text-2xl font-bold text-slate-900">Detail Armada: {armada.registrationNumber}</h1>
-            <p className="text-sm text-slate-500">Informasi lengkap armada beserta perlengkapan yang ter-assign</p>
+            <p className="text-sm text-slate-500">Informasi lengkap Armada beserta perlengkapan Armada</p>
           </div>
         </div>
 
@@ -209,8 +206,8 @@ export default function ArmadaDetailPage() {
         {/* Vehicle Equipment Assigned */}
         <CollapsibleBox
           icon={Package}
-          title="Perlengkapan Ter-Assign"
-          description={`${assignedEquipments.length} jenis perlengkapan ter-assign pada armada ini`}
+          title="Perlengkapan Armada"
+          description={`${assignedEquipments.length} jenis perlengkapan pada armada ini`}
           defaultExpanded
         >
           {assignedEquipments.length === 0 ? (
