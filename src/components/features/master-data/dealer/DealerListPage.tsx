@@ -160,7 +160,7 @@ export const DealerListPage = () => {
                     }
                 >
                     {isError ? (
-                        <div className="rounded-3xl border border-red-200 bg-red-50 px-6 py-5 text-base text-red-600">
+                        <div className="rounded-md border border-red-200 bg-red-50 px-6 py-5 text-base text-red-600">
                             Gagal memuat data dealer.
                         </div>
                     ) : (
