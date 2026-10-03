@@ -1,10 +1,11 @@
 import { ChevronDown, Check, Menu, X, PanelLeftClose, PanelLeftOpen } from 'lucide-react';
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useCompany } from '@/contexts/CompanyContext';
 import { Company } from '@/services/company.service';
 import { getPreferences, getPreferenceValue, PreferenceItem, updatePreference } from '@/services/preference.service';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { cn } from '@/lib/utils';
 import { useRouter } from 'next/router';
 import Link from 'next/link';
@@ -15,6 +16,10 @@ import Image from 'next/image';
 import { AuthService } from '@/features/auth/services/auth.service';
 
 const SIDEBAR_COLLAPSED_PREFERENCE_KEY = 'sidebar_collapsed';
+const SIDEBAR_WIDTH_KEY = 'sidebar_width';
+const SIDEBAR_MIN_WIDTH = 180;
+const SIDEBAR_MAX_WIDTH = 400;
+const SIDEBAR_DEFAULT_WIDTH = 256;
 
 const parseBooleanPreference = (value: unknown, fallback = false) => {
   if (typeof value === 'boolean') return value;
@@ -45,6 +50,29 @@ const readStoredSidebarCollapsed = () => {
   }
 
   return false;
+};
+
+const readStoredSidebarWidth = (): number => {
+  if (typeof window === 'undefined') return SIDEBAR_DEFAULT_WIDTH;
+  try {
+    const stored = localStorage.getItem(SIDEBAR_WIDTH_KEY);
+    if (stored) {
+      const w = Number(stored);
+      if (w >= SIDEBAR_MIN_WIDTH && w <= SIDEBAR_MAX_WIDTH) return w;
+    }
+  } catch (e) {
+    console.warn(e);
+  }
+  return SIDEBAR_DEFAULT_WIDTH;
+};
+
+const writeStoredSidebarWidth = (width: number) => {
+  if (typeof window === 'undefined') return;
+  try {
+    localStorage.setItem(SIDEBAR_WIDTH_KEY, String(width));
+  } catch (e) {
+    console.warn(e);
+  }
 };
 
 const writeStoredSidebarCollapsed = (collapsed: boolean) => {
@@ -218,8 +246,8 @@ function CompanySelector({ companies, companyId }: { companies: Company[], compa
   return (
     <Popover open={isOpen} onOpenChange={setIsOpen}>
       <PopoverTrigger asChild>
-        <button className="flex w-full items-center justify-between rounded-md border cursor-pointer border-gray-300 bg-white px-3 py-1.5 text-left shadow-sm hover:bg-gray-50 transition-colors">
-          <div className="flex flex-col overflow-hidden">
+        <button className="flex w-full items-center justify-between rounded-md border cursor-pointer border-gray-300 bg-white px-3 py-1.5 text-left shadow-xs hover:bg-gray-50 transition-colors">
+          <div className="flex flex-col overflow-hidden text-left">
             <span className="text-[10px] uppercase font-semibold text-red-400">Perusahaan</span>
             <span className="font-medium text-gray-900 truncate uppercase">{selectedCompany ? selectedCompany.name : 'Select Company'}</span>
           </div>
@@ -228,14 +256,14 @@ function CompanySelector({ companies, companyId }: { companies: Company[], compa
       </PopoverTrigger>
 
       <PopoverContent className="w-64 p-2" align="start">
-        <div className="space-y-1">
+        <div className="space-y-1 text-left">
           {companies.map((company) => (
             <button
               key={company.id}
               onClick={() => handleSelectCompany(company)}
-              className={cn('flex cursor-pointer w-full items-center justify-between rounded-md px-2 py-2 text-sm hover:bg-gray-100', String(company.id) === String(companyId) && 'bg-gray-100')}
+              className={cn('flex cursor-pointer w-full items-center justify-between rounded-md px-2 py-2 text-sm text-left hover:bg-gray-100', String(company.id) === String(companyId) && 'bg-gray-100')}
             >
-              <span className="uppercase">{company.name}</span>
+              <span className="uppercase text-left">{company.name}</span>
               {String(company.id) === String(companyId) && <Check className="h-4 w-4 text-primary" />}
             </button>
           ))}
@@ -248,11 +276,15 @@ function CompanySelector({ companies, companyId }: { companies: Company[], compa
 interface SidebarProps {
   isDesktopCollapsed?: boolean;
   onDesktopCollapsedChange?: (collapsed: boolean) => void;
+  sidebarWidth?: number;
+  onSidebarWidthChange?: (width: number) => void;
 }
 
 export function Sidebar({
   isDesktopCollapsed: controlledDesktopCollapsed,
   onDesktopCollapsedChange,
+  sidebarWidth: controlledSidebarWidth,
+  onSidebarWidthChange,
 }: SidebarProps = {}) {
   const router = useRouter();
   const queryClient = useQueryClient();
@@ -262,6 +294,13 @@ export function Sidebar({
     return readStoredSidebarCollapsed();
   });
   const isDesktopCollapsed = controlledDesktopCollapsed ?? internalDesktopCollapsed;
+
+  const [internalSidebarWidth, setInternalSidebarWidth] = useState(() => readStoredSidebarWidth());
+  const sidebarWidth = controlledSidebarWidth ?? internalSidebarWidth;
+  const isResizingRef = useRef(false);
+  const startXRef = useRef(0);
+  const startWidthRef = useRef(0);
+
   const { data: preferences } = useQuery({
     queryKey: ['settings', 'preference', companyId],
     queryFn: () => getPreferences(companyId as string),
@@ -303,12 +342,46 @@ export function Sidebar({
     onDesktopCollapsedChange?.(collapsed);
   };
 
+  const setSidebarWidth = useCallback((width: number) => {
+    const clamped = Math.min(SIDEBAR_MAX_WIDTH, Math.max(SIDEBAR_MIN_WIDTH, width));
+    if (controlledSidebarWidth === undefined) {
+      setInternalSidebarWidth(clamped);
+    }
+    writeStoredSidebarWidth(clamped);
+    onSidebarWidthChange?.(clamped);
+  }, [controlledSidebarWidth, onSidebarWidthChange]);
+
+  const handleResizeMouseDown = useCallback((e: React.MouseEvent) => {
+    e.preventDefault();
+    isResizingRef.current = true;
+    startXRef.current = e.clientX;
+    startWidthRef.current = sidebarWidth;
+
+    const onMouseMove = (moveEvent: MouseEvent) => {
+      if (!isResizingRef.current) return;
+      const delta = moveEvent.clientX - startXRef.current;
+      setSidebarWidth(startWidthRef.current + delta);
+    };
+
+    const onMouseUp = () => {
+      isResizingRef.current = false;
+      document.removeEventListener('mousemove', onMouseMove);
+      document.removeEventListener('mouseup', onMouseUp);
+      document.body.style.cursor = '';
+      document.body.style.userSelect = '';
+    };
+
+    document.addEventListener('mousemove', onMouseMove);
+    document.addEventListener('mouseup', onMouseUp);
+    document.body.style.cursor = 'col-resize';
+    document.body.style.userSelect = 'none';
+  }, [sidebarWidth, setSidebarWidth]);
+
   const { menus, isLoading: isMenuLoading } = useCompanyMenu(companies);
   const slugQuery = router.query.slug;
   const slug = Array.isArray(slugQuery) ? slugQuery[0] : slugQuery || '';
   const visibleMenus = useMemo(() => ensureReportFallbackSidebarMenus(menus, slug), [menus, slug]);
 
-  // Close mobile sidebar on route change
   useEffect(() => {
     setIsMobileOpen(false);
   }, [router.asPath]);
@@ -337,18 +410,17 @@ export function Sidebar({
   ]);
 
   const sidebarContent = (
-    <aside className="flex h-full w-full flex-col border-r border-gray-200 bg-[#F9FAFB]">
+    <aside className="flex h-full w-full flex-col border-r border-gray-200 bg-[#F9FAFB] text-left">
       <div className={cn("flex h-16 shrink-0 items-center border-b border-gray-200", isDesktopCollapsed ? "px-0 justify-center" : "px-4")}>
         <div className="flex w-full items-center gap-2">
           {isDesktopCollapsed ? (
             <div className="flex items-center justify-center w-full">
               <button
                 onClick={() => setIsDesktopCollapsed(false)}
-                className="p-2 rounded-md hover:bg-gray-200 text-gray-500 transition-colors"
-                title="Expand Sidebar"
+                className="p-2 rounded-md hover:bg-gray-200 text-gray-500 transition-colors cursor-pointer"
+                aria-label="Expand Sidebar"
               >
                 <Image src="/wajira-logo.png" alt="Wajira Logo" height={40} width={40} priority />
-                {/* <PanelLeftOpen className="w-5 h-5" /> */}
               </button>
             </div>
           ) : (
@@ -360,7 +432,7 @@ export function Sidebar({
 
               <button
                 onClick={() => setIsMobileOpen(false)}
-                className="md:hidden ml-1 shrink-0 rounded-md p-1.5 text-gray-500 hover:bg-gray-200 transition-colors"
+                className="md:hidden ml-1 shrink-0 rounded-md p-1.5 text-gray-500 hover:bg-gray-200 transition-colors cursor-pointer"
                 aria-label="Close menu"
               >
                 <X className="h-5 w-5" />
@@ -372,29 +444,31 @@ export function Sidebar({
 
       <div className={cn("flex-1 overflow-y-auto py-6", isDesktopCollapsed ? "px-2" : "px-4")}>
         <div className="mb-4 flex items-center justify-between text-sm font-semibold text-gray-500">
-          {!isDesktopCollapsed && <span className="uppercase text-xs tracking-wider">Menu Utama</span>}
+          {!isDesktopCollapsed && <span className="uppercase text-xs tracking-wider text-left">Menu Utama</span>}
           <button
             onClick={() => setIsDesktopCollapsed(!isDesktopCollapsed)}
-            className={cn("hidden md:block p-1.5 rounded-md hover:bg-gray-200 text-gray-400 hover:text-gray-600 transition-colors", isDesktopCollapsed && "mx-auto")}
-            title="Toggle Sidebar"
+            className={cn("hidden md:block p-1.5 rounded-md hover:bg-gray-200 text-gray-400 hover:text-gray-600 transition-colors cursor-pointer", isDesktopCollapsed && "mx-auto")}
+            aria-label="Toggle Sidebar"
           >
             {isDesktopCollapsed ? <PanelLeftOpen className="w-[18px] h-[18px]" /> : <PanelLeftClose className="w-[18px] h-[18px]" />}
           </button>
         </div>
 
-        <nav className="space-y-1">
-          {isMenuLoading ? (
-            <div className="space-y-2 animate-pulse px-2">
-              {[1, 2, 3, 4, 5].map((i) => (
-                <div key={i} className="h-8 bg-gray-200 rounded-md w-full"></div>
-              ))}
-            </div>
-          ) : (
-            visibleMenus.map((item, index) => (
-              <SidebarNavItem key={index} item={item} isCollapsed={isDesktopCollapsed} />
-            ))
-          )}
-        </nav>
+        <TooltipProvider delayDuration={200}>
+          <nav className="space-y-1 text-left">
+            {isMenuLoading ? (
+              <div className="space-y-2 animate-pulse px-2">
+                {[1, 2, 3, 4, 5].map((i) => (
+                  <div key={i} className="h-8 bg-gray-200 rounded-md w-full"></div>
+                ))}
+              </div>
+            ) : (
+              visibleMenus.map((item, index) => (
+                <SidebarNavItem key={index} item={item} isCollapsed={isDesktopCollapsed} />
+              ))
+            )}
+          </nav>
+        </TooltipProvider>
       </div>
     </aside>
   );
@@ -403,19 +477,34 @@ export function Sidebar({
     <>
       <button
         onClick={() => setIsMobileOpen(true)}
-        className="md:hidden fixed mt-3 left-4 z-40 rounded-md border border-gray-200 bg-white p-2 shadow-sm text-gray-700 hover:bg-gray-50 transition-colors"
+        className="md:hidden fixed mt-3 left-4 z-40 rounded-md border border-gray-200 bg-white p-2 shadow-xs text-gray-700 hover:bg-gray-50 transition-colors cursor-pointer"
         aria-label="Open menu"
       >
         <Menu className="h-5 w-5" />
       </button>
 
-      <div className="hidden md:flex h-full w-full">
-        {sidebarContent}
+      <div
+        className="hidden md:flex h-full relative"
+        style={{ width: isDesktopCollapsed ? 72 : sidebarWidth }}
+      >
+        <div className="flex-1 overflow-hidden">
+          {sidebarContent}
+        </div>
+
+        {!isDesktopCollapsed && (
+          <div
+            onMouseDown={handleResizeMouseDown}
+            className="absolute right-0 top-0 bottom-0 w-1.5 cursor-col-resize z-10 group hover:bg-orange-400/30 transition-colors"
+            title="Geser untuk mengubah lebar sidebar"
+          >
+            <div className="absolute right-0 top-1/2 -translate-y-1/2 w-0.5 h-12 rounded-full bg-gray-300 group-hover:bg-orange-400 transition-colors" />
+          </div>
+        )}
       </div>
 
       {isMobileOpen && (
         <div
-          className="md:hidden fixed inset-0 z-40 bg-primary/40 backdrop-blur-sm transition-opacity"
+          className="md:hidden fixed inset-0 z-40 bg-primary/40 backdrop-blur-xs transition-opacity"
           onClick={() => setIsMobileOpen(false)}
           aria-hidden="true"
         />
@@ -432,6 +521,71 @@ export function Sidebar({
     </>
   );
 }
+
+function SidebarMenuLabel({ label, maxWidth }: { label: string; maxWidth?: number }) {
+  const containerRef = useRef<HTMLSpanElement>(null);
+  const innerRef = useRef<HTMLSpanElement>(null);
+  const [overflowData, setOverflowData] = useState<{ isOverflow: boolean; distance: number }>({
+    isOverflow: false,
+    distance: 0,
+  });
+
+  useEffect(() => {
+    const measure = () => {
+      const container = containerRef.current;
+      const inner = innerRef.current;
+      if (!container || !inner) return;
+
+      const containerWidth = container.getBoundingClientRect().width;
+      const innerWidth = inner.getBoundingClientRect().width;
+
+      // If container is collapsed, hidden or too small, disable marquee
+      if (containerWidth < 60 || container.offsetParent === null) {
+        setOverflowData({ isOverflow: false, distance: 0 });
+        return;
+      }
+
+      const diff = innerWidth - containerWidth;
+
+      if (diff > 4) {
+        setOverflowData({ isOverflow: true, distance: diff });
+      } else {
+        setOverflowData({ isOverflow: false, distance: 0 });
+      }
+    };
+
+    measure();
+    // Re-measure on resize (e.g. when sidebar is resized)
+    const handleResize = () => measure();
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, [label, maxWidth]);
+
+
+  return (
+    <span
+      ref={containerRef}
+      className="relative overflow-hidden block min-w-0 text-left w-full"
+      style={{ maxWidth: maxWidth ?? '100%' }}
+    >
+      <span
+        ref={innerRef}
+        className={cn(
+          "inline-block whitespace-nowrap text-left",
+          overflowData.isOverflow && "animate-[sidebar-marquee_6s_linear_infinite]"
+        )}
+        style={
+          overflowData.isOverflow
+            ? ({ ['--marquee-distance' as string]: `-${overflowData.distance}px` } as React.CSSProperties)
+            : undefined
+        }
+      >
+        {label}
+      </span>
+    </span>
+  );
+}
+
 
 function SidebarNavItem({ item, isCollapsed }: { item: MenuItem; isCollapsed?: boolean }) {
   const router = useRouter();
@@ -472,49 +626,73 @@ function SidebarNavItem({ item, isCollapsed }: { item: MenuItem; isCollapsed?: b
   };
 
   if (!item.children && item.href) {
+    const linkElement = (
+      <Link
+        href={item.href}
+        className={cn(
+          'flex items-center justify-start text-left rounded-md py-[9px] text-sm font-medium transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary',
+          isCollapsed ? 'w-10 h-10 justify-center p-0' : 'w-full px-3',
+          isSelfActive ? 'sidebar-menu-primary' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900',
+        )}
+        aria-current={isSelfActive ? 'page' : undefined}
+      >
+        <div className="flex items-center gap-3 min-w-0 flex-1 text-left justify-start">
+          {item.icon && <item.icon className={cn("w-[18px] h-[18px] shrink-0", isSelfActive ? "text-white" : "text-slate-500")} />}
+          {!isCollapsed && <SidebarMenuLabel label={item.label} />}
+        </div>
+      </Link>
+    );
+
     return (
-      <div className={cn(isCollapsed && "flex justify-center mb-1")}>
-        <Link
-          href={item.href}
-          title={isCollapsed ? item.label : undefined}
-          className={cn(
-            'flex items-center justify-between rounded-md py-[9px] text-sm font-medium transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary',
-            isCollapsed ? 'w-10 h-10 justify-center p-0' : 'w-full px-3',
-            isSelfActive ? 'sidebar-menu-primary' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900',
-          )}
-          aria-current={isSelfActive ? 'page' : undefined}
-        >
-          <div className="flex items-center gap-3">
-            {item.icon && <item.icon className={cn("w-[18px] h-[18px] shrink-0", isSelfActive ? "text-white" : "text-slate-500")} />}
-            {!isCollapsed && <span>{item.label}</span>}
-          </div>
-        </Link>
+      <div className={cn("w-full text-left", isCollapsed && "flex justify-center mb-1")}>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <span className={cn("inline-block text-left", isCollapsed ? "w-auto" : "w-full")}>
+              {linkElement}
+            </span>
+          </TooltipTrigger>
+          <TooltipContent side="right" className="font-medium text-xs">
+            {item.label}
+          </TooltipContent>
+        </Tooltip>
       </div>
     );
   }
 
+  const buttonElement = (
+    <button
+      onClick={handleToggle}
+      className={cn(
+        'flex items-center justify-between text-left rounded-md py-[9px] text-sm font-medium transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary cursor-pointer',
+        isCollapsed ? 'w-10 h-10 justify-center p-0' : 'w-full px-3',
+        isChildActive ? 'text-orange-600 bg-orange-50/80 font-semibold' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900',
+      )}
+    >
+      <div className="flex items-center gap-3 min-w-0 flex-1 text-center justify-center">
+        {item.icon && <item.icon className={cn("w-[18px] h-[18px] shrink-0", isChildActive ? "text-orange-600" : "text-slate-500")} />}
+        {!isCollapsed && <SidebarMenuLabel label={item.label} />}
+      </div>
+      {!isCollapsed && item.children && (
+        <ChevronDown className={cn('h-4 w-4 shrink-0 transition-transform duration-200 ml-1', open && 'rotate-180', isChildActive ? 'text-orange-600' : 'text-slate-400')} />
+      )}
+    </button>
+  );
+
   return (
-    <div className={cn(isCollapsed && "flex justify-center mb-1")}>
-      <button
-        onClick={handleToggle}
-        title={isCollapsed ? item.label : undefined}
-        className={cn(
-          'flex items-center justify-between rounded-md py-[9px] text-sm font-medium transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary cursor-pointer',
-          isCollapsed ? 'w-10 h-10 justify-center p-0' : 'w-full px-3',
-          isChildActive ? 'text-orange-600 bg-orange-50/80 font-semibold' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900',
-        )}
-      >
-        <div className="flex items-center gap-3">
-          {item.icon && <item.icon className={cn("w-[18px] h-[18px] shrink-0", isChildActive ? "text-orange-600" : "text-slate-500")} />}
-          {!isCollapsed && <span>{item.label}</span>}
-        </div>
-        {!isCollapsed && item.children && (
-          <ChevronDown className={cn('h-4 w-4 shrink-0 transition-transform duration-200', open && 'rotate-180', isChildActive ? 'text-orange-600' : 'text-slate-400')} />
-        )}
-      </button>
+    <div className={cn("w-full text-left", isCollapsed && "flex justify-center mb-1")}>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <span className={cn("inline-block text-left", isCollapsed ? "w-auto" : "w-full")}>
+            {buttonElement}
+          </span>
+        </TooltipTrigger>
+        <TooltipContent side="right" className="font-medium text-xs">
+          {item.label}
+        </TooltipContent>
+      </Tooltip>
 
       {item.children && open && !isCollapsed && (
-        <div className="relative mt-1 ml-[22px] space-y-1">
+        <div className="relative mt-1 ml-[22px] space-y-1 text-left">
           <div className="absolute left-0 top-0 bottom-0 w-px bg-slate-200" />
 
           {item.children.map((child, idx) => (
@@ -551,50 +729,85 @@ function SidebarSubNavItem({
 
   if (!item.children) {
     const active = isActiveRoute(item.href, item.exact);
-    return (
+    const subLink = (
       <Link
         href={item.href || '#'}
         className={cn(
-          'group relative ml-1 block rounded-md pl-3 pr-2 py-2 text-sm transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary',
+          'group relative ml-1 flex items-center justify-start text-left rounded-md pl-3 pr-2 py-2 text-sm transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary overflow-hidden w-full',
           active ? 'sidebar-menu-primary' : 'text-slate-600 hover:bg-orange-50/60 hover:text-orange-600',
         )}
         aria-current={active ? 'page' : undefined}
       >
-        {item.label}
+        <SidebarMenuLabel label={item.label} />
       </Link>
+    );
+
+    return (
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <span className="inline-block w-full text-left">
+            {subLink}
+          </span>
+        </TooltipTrigger>
+        <TooltipContent side="right" className="font-medium text-xs">
+          {item.label}
+        </TooltipContent>
+      </Tooltip>
     );
   }
 
   return (
-    <div className="ml-1">
-      <button
-        onClick={() => setOpen(!open)}
-        className={cn(
-          'flex w-full items-center justify-between rounded-md pl-3 pr-2 py-2 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary cursor-pointer',
-          isSubChildActive ? 'text-orange-600 font-semibold' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900',
-        )}
-      >
-        <span>{item.label}</span>
-        <ChevronDown className={cn('h-3.5 w-3.5 transition-transform duration-200', open && 'rotate-180', isSubChildActive ? 'text-orange-600' : 'text-slate-400')} />
-      </button>
+    <div className="ml-1 w-full text-left">
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <span className="inline-block w-full text-left">
+            <button
+              onClick={() => setOpen(!open)}
+              className={cn(
+                'flex w-full items-center justify-between text-left rounded-md pl-3 pr-2 py-2 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary cursor-pointer',
+                isSubChildActive ? 'text-orange-600 font-semibold' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900',
+              )}
+            >
+              <span className="min-w-0 flex-1 truncate text-left"><SidebarMenuLabel label={item.label} /></span>
+              <ChevronDown className={cn('h-3.5 w-3.5 transition-transform duration-200 ml-1 shrink-0', open && 'rotate-180', isSubChildActive ? 'text-orange-600' : 'text-slate-400')} />
+            </button>
+          </span>
+        </TooltipTrigger>
+        <TooltipContent side="right" className="font-medium text-xs">
+          {item.label}
+        </TooltipContent>
+      </Tooltip>
 
       {open && (
-        <div className="relative mt-1 ml-3 space-y-1">
+        <div className="relative mt-1 ml-3 space-y-1 text-left">
           <div className="absolute left-0 top-0 bottom-0 w-px bg-slate-200" />
           {item.children.map((subChild, idx) => {
             const active = isActiveRoute(subChild.href, subChild.exact);
-            return (
+            const childLink = (
               <Link
                 key={idx}
                 href={subChild.href || '#'}
                 className={cn(
-                  'group relative ml-2 block rounded-md pl-3 pr-2 py-2 text-sm transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary',
+                  'group relative ml-2 flex items-center justify-start text-left rounded-md pl-3 pr-2 py-2 text-sm transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary overflow-hidden w-full',
                   active ? 'sidebar-menu-primary' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900',
                 )}
                 aria-current={active ? 'page' : undefined}
               >
-                {subChild.label}
+                <SidebarMenuLabel label={subChild.label} />
               </Link>
+            );
+
+            return (
+              <Tooltip key={idx}>
+                <TooltipTrigger asChild>
+                  <span className="inline-block w-full text-left">
+                    {childLink}
+                  </span>
+                </TooltipTrigger>
+                <TooltipContent side="right" className="font-medium text-xs">
+                  {subChild.label}
+                </TooltipContent>
+              </Tooltip>
             );
           })}
         </div>

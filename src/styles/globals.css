@@ -89,6 +89,27 @@
   @apply bg-gradient-to-r to-orange-400 from-[#ed333b] text-white font-medium shadow-xs shadow-orange-500/20 transition-all duration-200;
 }
 
+/* Sidebar marquee / scrolling label animation */
+@keyframes sidebar-marquee {
+  0%   { transform: translateX(0); }
+  10%  { transform: translateX(0); }
+  90%  { transform: translateX(var(--marquee-distance, -50%)); }
+  100% { transform: translateX(var(--marquee-distance, -50%)); }
+}
+
+@utility sidebar-label-scroll {
+  display: flex;
+  overflow: hidden;
+  position: relative;
+}
+
+@utility sidebar-label-scroll-inner {
+  display: inline-block;
+  white-space: nowrap;
+  animation: sidebar-marquee 6s linear infinite;
+}
+
+
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
