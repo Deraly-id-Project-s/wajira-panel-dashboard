@@ -10,6 +10,23 @@ import { Button } from "@/components/ui/button"
 import { clearCompanyScopedQueries } from "@/lib/session/query-cache"
 import { useQueryClient } from "@tanstack/react-query"
 
+const SIDEBAR_MIN_WIDTH = 180;
+const SIDEBAR_DEFAULT_WIDTH = 256;
+
+const readStoredSidebarWidth = (): number => {
+    if (typeof window === 'undefined') return SIDEBAR_DEFAULT_WIDTH;
+    try {
+        const stored = localStorage.getItem('sidebar_width');
+        if (stored) {
+            const w = Number(stored);
+            if (w >= SIDEBAR_MIN_WIDTH && w <= 400) return w;
+        }
+    } catch (e) {
+        console.warn(e);
+    }
+    return SIDEBAR_DEFAULT_WIDTH;
+};
+
 interface DashboardLayoutProps {
     children: ReactNode
     minimal?: boolean
@@ -48,6 +65,8 @@ export function DashboardLayout({ children, minimal = false }: DashboardLayoutPr
         }
         return false;
     });
+
+    const [sidebarWidth, setSidebarWidth] = useState(() => readStoredSidebarWidth());
 
     const handleDesktopCollapsedChange = (collapsed: boolean) => {
         setIsDesktopSidebarCollapsed(collapsed);
@@ -218,12 +237,14 @@ export function DashboardLayout({ children, minimal = false }: DashboardLayoutPr
             <div
                 className={cn(
                     "print:hidden hidden md:flex shrink-0 h-full overflow-hidden transition-[width] duration-300 ease-in-out",
-                    isDesktopSidebarCollapsed ? "w-[72px]" : "w-64",
                 )}
+                style={{ width: isDesktopSidebarCollapsed ? 72 : sidebarWidth }}
             >
                 <Sidebar
                     isDesktopCollapsed={isDesktopSidebarCollapsed}
                     onDesktopCollapsedChange={handleDesktopCollapsedChange}
+                    sidebarWidth={sidebarWidth}
+                    onSidebarWidthChange={setSidebarWidth}
                 />
             </div>
 

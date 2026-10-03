@@ -119,7 +119,7 @@ const FEATURE_MAP: Record<string, { path: string; label?: string; group?: string
   'cash-advance-reports': { path: '/laporan/cash-advance-reports', label: 'Laporan Kas Bon' },
   'expedition-claim-reports': { path: '/laporan/expedition-claim-reports', label: 'Laporan Klaim Ekspedisi' },
   'maintenance-reports': { path: '/laporan/laporan-ritase-armada', label: 'Laporan Ritase Armada/Maintenance' },
-  'vehicle-usage-reports': { path: '/laporan/laporan-ritase-armada', label: 'Laporan Pemakaian Kendaraan' },
+  'vehicle-usage-reports': { path: '/laporan/laporan-penggunaan-perlengkapan-kendaraan', label: 'Laporan Pemakaian Perlengkapan Kendaraan' },
   'perlengkapan-reports': { path: '/laporan/laporan-stock-perlengkapan', label: 'Laporan Persediaan Barang' },
   'asset-reports': { path: '/laporan/laporan-aset', label: 'Laporan Aset' },
   'witholding-tax-reports': { path: '/laporan/laporan-bukti-potong', label: 'Laporan Bukti Potong' },
@@ -128,6 +128,8 @@ const FEATURE_MAP: Record<string, { path: string; label?: string; group?: string
   'lp-jumlah-penyerahan': { path: '/laporan/lp-jumlah-penyerahan', label: 'LP Jumlah Penyerahan' },
   'lp-jumlah-outstanding': { path: '/laporan/lp-jumlah-outstanding', label: 'LP Jumlah Outstanding' },
   'laporan-stock-material': { path: '/laporan/laporan-stock-material', label: 'Laporan Stock Material' },
+  'vehicle-equipment-transaction-reports': { path: '/laporan/laporan-transaksi-perlengkapan-kendaraan', label: 'Laporan Transaksi Perlengkapan' },
+  'vehicle-equipment-assignment-reports': { path: '/laporan/laporan-penggunaan-perlengkapan-kendaraan', label: 'Laporan Penggunaan Perlengkapan' },
 
   // User
   'users': { path: '/master/user', label: 'Pengguna' },
@@ -193,7 +195,9 @@ const REPORT_MENU_ORDER = [
   'Laporan Order List',
   'Laporan Kas Bon',
   'Laporan Klaim Ekspedisi',
-  'Laporan Pemakaian Kendaraan',
+  'Laporan Pemakaian Perlengkapan Kendaraan',
+  'Laporan Transaksi Perlengkapan',
+  'Laporan Penggunaan Perlengkapan',
 ];
 
 const sortReportMenuItems = (items: MenuItem[]) => {

@@ -309,6 +309,14 @@ export const getGeneralMenus = (slug: string): MenuItem[] => {
           label: 'Laporan Bukti Potong',
           href: base('/laporan/laporan-bukti-potong'),
         },
+        {
+          label: 'Laporan Transaksi Perlengkapan',
+          href: base('/laporan/laporan-transaksi-perlengkapan-kendaraan'),
+        },
+        {
+          label: 'Laporan Penggunaan Perlengkapan',
+          href: base('/laporan/laporan-penggunaan-perlengkapan-kendaraan'),
+        },
       ],
     },
     {
