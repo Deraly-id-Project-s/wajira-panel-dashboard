@@ -19,7 +19,7 @@ interface StockVehicleEquipmentApiModel {
 
 const mapStockVehicleEquipment = (
   payload: StockVehicleEquipmentApiModel,
-  index: number,
+  index = 0,
 ): StockVehicleEquipment => ({
   id: String(index),
   vehicleEquipmentCode: payload.vehicle_equipment_code ?? payload.kode_perlengkapan ?? '-',
