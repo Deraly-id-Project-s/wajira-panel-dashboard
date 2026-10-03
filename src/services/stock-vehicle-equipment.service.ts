@@ -5,51 +5,29 @@ import { buildLaravelPaginationQuery } from '@/lib/api/pagination';
 import { LaravelApiResponse, ensureSuccess, toPaginatedResult } from '@/lib/api/response';
 
 interface StockVehicleEquipmentApiModel {
-  id: number | string;
-  vehicle_equipment_id?: number;
-  vehicle_equipment?: {
-    id: number;
-    code: string;
-    name: string;
-    buy_price?: number | string;
-    sell_price?: number | string;
-  };
-  unit_type?: {
-    id: number;
-    code: string;
-    name: string;
-    buy_price?: number | string;
-    sell_price?: number | string;
-  };
-  code?: string;
-  name?: string;
-  stock_available?: number | string | boolean;
-  stock_forecast?: number | string;
-  purchase_price?: number | string;
-  status?: string;
-  stock_state?: string;
-  is_sold_unit?: boolean | number | string;
+  vehicle_equipment_code?: string;
+  vehicle_equipment_name?: string;
+  stock_available?: number;
+  stock_used?: number;
+  total_stock?: number;
+  kode_perlengkapan?: string;
+  nama_perlengkapan?: string;
+  stok_tersedia?: number;
+  stok_terpakai?: number;
+  total_stok?: number;
 }
 
-const toBool = (value: unknown) => value === true || value === 1 || value === '1' || value === 'true';
-
-const mapStockVehicleEquipment = (payload: StockVehicleEquipmentApiModel): StockVehicleEquipment => {
-  const equipment = payload.vehicle_equipment ?? payload.unit_type;
-
-  return {
-    id: String(payload.id),
-    vehicleEquipmentId: equipment?.id ?? payload.vehicle_equipment_id ?? 0,
-    vehicleEquipmentCode: equipment?.code ?? payload.code ?? '-',
-    vehicleEquipmentName: equipment?.name ?? payload.name ?? '-',
-    qty: Number(payload.stock_available ?? 0),
-    forecastQty: Number(payload.stock_forecast ?? 0),
-    price: Number(payload.purchase_price ?? equipment?.buy_price ?? equipment?.sell_price ?? 0),
-    status: payload.status ?? '-',
-    stockStatus: payload.stock_state ?? '-',
-    stockState: payload.stock_state ?? '-',
-    isSoldUnit: toBool(payload.is_sold_unit),
-  };
-};
+const mapStockVehicleEquipment = (
+  payload: StockVehicleEquipmentApiModel,
+  index: number,
+): StockVehicleEquipment => ({
+  id: String(index),
+  vehicleEquipmentCode: payload.vehicle_equipment_code ?? payload.kode_perlengkapan ?? '-',
+  vehicleEquipmentName: payload.vehicle_equipment_name ?? payload.nama_perlengkapan ?? '-',
+  stockAvailable: Number(payload.stock_available ?? payload.stok_tersedia ?? 0),
+  stockUsed: Number(payload.stock_used ?? payload.stok_terpakai ?? 0),
+  totalStock: Number(payload.total_stock ?? payload.total_stok ?? 0),
+});
 
 type PaginatedStockVehicleEquipmentResponse = LaravelApiResponse<{
   data: StockVehicleEquipmentApiModel[];
@@ -62,18 +40,7 @@ type PaginatedStockVehicleEquipmentResponse = LaravelApiResponse<{
 export const getStockVehicleEquipments = async (
   companyId: number | string,
   params: PaginationParams & {
-    id?: number | string;
-    specified?: 'purchase_outstanding' | 'sales_outstanding' | string;
-    in_stock?: boolean | string;
-    vehicle_equipment_id?: number | string;
-    machine_number?: string;
-    chassis_number?: string;
-    activity_number?: string;
-    code?: string;
-    activity_type?: 'receipt' | 'issue' | string;
-    stock_state?: string;
-    sort_by?: 'id' | 'created_at' | 'activity_number' | 'activity_date' | string;
-    sort_dir?: 'asc' | 'desc' | string;
+    search?: string;
   },
 ) => {
   const response = await apiClient.get<PaginatedStockVehicleEquipmentResponse>(
@@ -84,18 +51,6 @@ export const getStockVehicleEquipments = async (
         page: params.page,
         per_page: params.perPage,
         search: params.search || undefined,
-        id: params.id || undefined,
-        specified: params.specified || undefined,
-        in_stock: params.in_stock ?? undefined,
-        vehicle_equipment_id: params.vehicle_equipment_id || undefined,
-        machine_number: params.machine_number || undefined,
-        chassis_number: params.chassis_number || undefined,
-        activity_number: params.activity_number || undefined,
-        code: params.code || undefined,
-        activity_type: params.activity_type || undefined,
-        stock_state: params.stock_state || undefined,
-        sort_by: params.sort_by || undefined,
-        sort_dir: params.sort_dir || undefined,
       },
     },
   );
