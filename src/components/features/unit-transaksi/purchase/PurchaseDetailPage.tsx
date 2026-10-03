@@ -320,6 +320,7 @@ export default function PurchaseDetailPage() {
         description,
         personId,
         unitTransactionItemId: String(unitItems[0]?.id ?? ''),
+        type: 'unit-type',
       });
 
       await warehouseActivityService.receiptStock(activityId, detailIds);

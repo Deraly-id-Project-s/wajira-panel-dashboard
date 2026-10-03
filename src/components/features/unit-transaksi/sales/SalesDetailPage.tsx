@@ -328,6 +328,7 @@ export default function SalesDetailPage() {
         personId,
         description,
         unitTransactionItemId: String(items[0]?.id ?? ''),
+        type: 'unit-type',
       });
 
       await warehouseActivityService.dispatchStock(activityId, detailIds);

@@ -48,6 +48,7 @@ export const warehouseActivityService = {
     description?: string;
     unitTransactionItemId?: string;
     activityDate?: string;
+    type?: string;
   }): Promise<string> {
     const unitTransactionId = String(payload.unitTransactionId ?? '').trim();
     const warehouseId = String(payload.warehouseId ?? '').trim();
@@ -72,6 +73,7 @@ export const warehouseActivityService = {
     form.append('warehouse_id', warehouseId);
     form.append('unit_transaction_id', unitTransactionId);
     form.append('activity_type', 'receipt');
+    form.append('type', payload.type ?? 'unit-type');
     form.append('description', description);
     form.append('person_id', personId);
     form.append('unit_transaction_item_id', unitTransactionItemId);
@@ -100,6 +102,7 @@ export const warehouseActivityService = {
     unitTransactionItemId?: string;
     activityDate?: string;
     description?: string;
+    type?: string;
   }): Promise<string> {
     const unitTransactionId = String(payload.unitTransactionId ?? '').trim();
     const warehouseId = String(payload.warehouseId ?? '').trim();
@@ -123,6 +126,7 @@ export const warehouseActivityService = {
     const form = new FormData();
     form.append('warehouse_id', warehouseId);
     form.append('activity_type', 'issue');
+    form.append('type', payload.type ?? 'unit-type');
     form.append('description', description);
     form.append('unit_transaction_id', unitTransactionId);
     form.append('state', 'process');
