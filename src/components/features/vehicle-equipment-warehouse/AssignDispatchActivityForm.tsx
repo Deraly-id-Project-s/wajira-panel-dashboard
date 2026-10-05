@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -70,10 +70,10 @@ export default function AssignDispatchActivityForm({
 
   const fleets = fleetsData?.data ?? [];
 
-  const getActiveCompanyId = () => {
+  const getActiveCompanyId = useCallback(() => {
     const stored = getStoredCompanyId();
     return Number(stored || contextCompanyId || 0);
-  };
+  }, [contextCompanyId]);
 
   const form = useForm<AssignDispatchFormData>({
     resolver: zodResolver(schema) as any,
@@ -93,7 +93,7 @@ export default function AssignDispatchActivityForm({
     if (currentCompanyId) {
       form.setValue('warehouse_id', currentCompanyId);
     }
-  }, [contextCompanyId, form]);
+  }, [form, getActiveCompanyId]);
 
   const equipmentId = form.watch('vehicle_equipment_id');
 
