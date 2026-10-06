@@ -153,7 +153,7 @@ export function MoveUnitStockModal({
           <div className="space-y-2 max-h-[350px] overflow-y-auto pr-1">
             {isLoading ? (
               <div className="py-8">
-                <LoadingState variant="component" text="Memuat transaksi tujuan..." />
+                <LoadingState variant="inline" text="Memuat transaksi tujuan..." iconClassName="h-4 w-4 text-muted-foreground" />
               </div>
             ) : isError ? (
               <div className="py-8 text-center text-sm text-red-500">

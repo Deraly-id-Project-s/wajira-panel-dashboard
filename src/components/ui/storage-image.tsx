@@ -106,8 +106,8 @@ export function StorageImage({ src, alt, lightbox = false, lightboxTitle, ...pro
     );
   }
 
-  // eslint-disable-next-line @next/next/no-img-element
   const image = (
+    // eslint-disable-next-line @next/next/no-img-element
     <img
       {...props}
       src={imageUrl}
