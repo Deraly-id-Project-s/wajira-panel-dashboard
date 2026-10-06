@@ -857,6 +857,37 @@ export const unitTransactionService = {
     );
     return ensureSuccess(response.data);
   },
+
+  async getFewerStockItems(params: {
+    type?: string;
+    unit_type_id?: number | string;
+    company_id?: number | string;
+    start_date?: string;
+    end_date?: string;
+    search?: string;
+    per_page?: number;
+    page?: number;
+  }) {
+    const response = await apiClient.get<LaravelApiResponse<any>>(
+      `/wapi/transaction/unit-transaction/fewer-stock-unit-transaction-item`,
+      { params }
+    );
+    return ensureSuccess(response.data);
+  },
+
+  async assignFewerStockItems(
+    sourceTransactionId: string | number,
+    payload: {
+      unit_transaction_id: number | string;
+      unit_transaction_item_details_id: Array<number | string>;
+    }
+  ) {
+    const response = await apiClient.post<LaravelApiResponse<any>>(
+      `/wapi/transaction/unit-transaction/unit-transaction/${sourceTransactionId}/assign-fewer-stock-items`,
+      payload
+    );
+    return ensureSuccess(response.data);
+  },
 };
 
 export type TransactionAdjustmentApiItem = {

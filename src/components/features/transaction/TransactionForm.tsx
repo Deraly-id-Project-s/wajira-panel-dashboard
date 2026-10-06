@@ -139,16 +139,16 @@ export default function TransactionForm({ defaultValues, onSubmit, onCancel, isB
             <h2 className="text-sm font-semibold uppercase tracking-wider text-slate-700">Informasi Tambahan</h2>
             <p className="mt-1 text-sm text-slate-500">Tambahkan keterangan pendukung dan bukti transaksi bila ada.</p>
           </div>
-          <div className="grid gap-5 md:grid-cols-2">
+          <div className="grid gap-5 md:grid-cols-2 items-start">
             <FormField control={form.control} name="description" render={({ field }) => (
-              <FormItem className="md:col-span-2">
+              <FormItem>
                 <FormLabel>Keterangan</FormLabel>
                 <FormControl><Textarea placeholder="Masukkan keterangan transaksi" className="min-h-24 resize-none" {...field} value={field.value ?? ''} disabled={isBusy} /></FormControl>
                 <FormMessage />
               </FormItem>
             )} />
             <FormField control={form.control} name="transactionProof" render={({ field }) => (
-              <FormItem className="md:col-span-2">
+              <FormItem>
                 <FormLabel>Bukti Transaksi (Payment Proof)</FormLabel>
                 <FormControl>
                   <FileInput

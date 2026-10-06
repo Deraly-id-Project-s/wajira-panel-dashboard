@@ -136,6 +136,14 @@ export interface UnitTransactionItemDetail {
   is_sold_unit: boolean | undefined;
   expedition_fee_total: number;
   total_operational_fee?: number;
+  source_transaction_before_id?: number | string | null;
+  source_transaction_before?: {
+    id?: number | string;
+    uuid?: string;
+    code?: string | null;
+    type?: string | null;
+    transaction_type?: string | null;
+  } | null;
   has_refund_transaction?: boolean;
   billing_summary?: UnitTransactionBillingSummary | null;
   unit_transaction_billing?: UnitTransactionBilling | null;
@@ -299,6 +307,7 @@ export interface UnitTransactionItemSummary {
     name?: string;
     code?: string;
   } | null;
+  unit_transaction_item_details?: UnitTransactionItemDetail[];
 }
 
 export interface TransactionAdjustment {
@@ -382,6 +391,14 @@ export interface WarehouseStockUnit {
   warehouse_sub_block?: WarehouseSubBlock;
   stock_state?: string | null;
   is_reserved?: boolean;
+  source_transaction_before_id?: number | string | null;
+  source_transaction_before?: {
+    id?: number | string;
+    uuid?: string;
+    code?: string | null;
+    type?: string | null;
+    transaction_type?: string | null;
+  } | null;
   unit_transaction_item_sales?: {
     id?: number | string;
     unit_transaction_item_id?: number | string;

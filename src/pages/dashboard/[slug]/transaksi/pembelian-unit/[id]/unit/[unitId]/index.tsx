@@ -2,7 +2,8 @@ import { useMemo, useState } from 'react';
 import { useRouter } from 'next/router';
 import { toast } from 'sonner';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
-import { DollarSignIcon, FileText, Info, ListTodoIcon, MoreVertical, Plus, Upload, Trash, CheckCircle2 } from 'lucide-react';
+import { DollarSignIcon, FileText, Info, ListTodoIcon, MoreVertical, Plus, Upload, Trash, CheckCircle2, ArrowRightLeft } from 'lucide-react';
+import { MoveUnitStockModal } from '@/components/features/unit-transaksi/MoveUnitStockModal';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { PageHeader } from '@/components/ui/page-header';
 import { usePurchaseById } from '@/hooks/useUnitTransaction';
@@ -115,6 +116,7 @@ export default function UnitPurchaseDetailPage() {
   const [deleteTarget, setDeleteTarget] = useState<{ id: string | number } | null>(null);
   const [isBulkDeleting, setIsBulkDeleting] = useState(false);
   const [openBulkDeleteModal, setOpenBulkDeleteModal] = useState(false);
+  const [openMoveModal, setOpenMoveModal] = useState(false);
 
   const [search, setSearch] = useState('');
 
@@ -124,7 +126,27 @@ export default function UnitPurchaseDetailPage() {
     chassis_number: '',
   });
 
-  const details = useMemo(() => detailResponse?.data ?? [], [detailResponse?.data]);
+  const details = useMemo(() => {
+    const primaryDetails: any[] = detailResponse?.data ?? [];
+    const itemDetails: any[] = unitItem?.unit_transaction_item_details ?? [];
+
+    if (primaryDetails.length === 0) return itemDetails;
+    if (itemDetails.length === 0) return primaryDetails;
+
+    const itemDetailsMap = new Map<string, any>();
+    itemDetails.forEach((d) => {
+      if (d.id) itemDetailsMap.set(String(d.id), d);
+    });
+
+    return primaryDetails.map((d) => {
+      const matched = itemDetailsMap.get(String(d.id));
+      return {
+        ...d,
+        source_transaction_before_id: d.source_transaction_before_id ?? matched?.source_transaction_before_id ?? null,
+        source_transaction_before: d.source_transaction_before ?? matched?.source_transaction_before ?? null,
+      };
+    });
+  }, [detailResponse?.data, unitItem?.unit_transaction_item_details]);
 
   const isPaid = purchase?.unit_transaction_billing?.is_paid;
 
@@ -163,6 +185,19 @@ export default function UnitPurchaseDetailPage() {
         sortable: true,
         alignment: 'left' as const,
         cell: (details: any) => <CopyBox text={`${details.chassis_number}`} />,
+      },
+      {
+        header: 'Unit Transaksi Sebelumnya',
+        accessorKey: 'source_transaction_before',
+        sortable: true,
+        alignment: 'left' as const,
+        tooltip: 'Kode unit transaksi asal sebelum unit dipindahkan',
+        cell: (details: any) =>
+          details?.source_transaction_before?.code ? (
+            <CopyBox text={`${details.source_transaction_before.code}`} />
+          ) : (
+            <span className="text-slate-400">-</span>
+          ),
       },
       {
         header: 'Sub Blok',
@@ -561,6 +596,16 @@ export default function UnitPurchaseDetailPage() {
                   headerActions=
                   {(
                     <div className="flex flex-col sm:flex-row items-center gap-2 w-full sm:w-auto">
+                      {selectedIds.size > 0 && !isPaid && (
+                        <Button
+                          onClick={() => setOpenMoveModal(true)}
+                          variant="outline"
+                          className="w-full sm:w-auto border-blue-600 text-blue-600 hover:bg-blue-50"
+                        >
+                          <ArrowRightLeft className="h-4 w-4 mr-2" />
+                          Pindahkan Unit ({selectedIds.size})
+                        </Button>
+                      )}
                       {selectedIds.size > 0 && canDelete && !isPaid && (
                         <Button
                           onClick={() => setOpenBulkDeleteModal(true)}
@@ -657,6 +702,18 @@ export default function UnitPurchaseDetailPage() {
         isPending={importMutation.isPending}
         templateUrl="https://docs.google.com/spreadsheets/d/1UdemvHlkJrmTD3mK5N4hcI5OfwQi2T2yw-vZxwrmcGg/edit?usp=sharing"
       />
-    </DashboardLayout >
+
+      <MoveUnitStockModal
+        open={openMoveModal}
+        onOpenChange={setOpenMoveModal}
+        sourceTransactionId={purchaseId}
+        sourceTransactionCode={purchase?.code}
+        transactionType="purchase"
+        unitTypeId={unitItem?.unit_type?.id ?? ''}
+        unitTypeName={unitItem?.unit_type?.name}
+        selectedDetailIds={Array.from(selectedIds)}
+        onSuccess={() => setSelectedIds(new Set())}
+      />
+    </DashboardLayout>
   );
 }

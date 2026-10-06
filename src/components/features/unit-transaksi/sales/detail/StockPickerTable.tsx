@@ -212,6 +212,19 @@ export function StockPickerTable({
       ),
     },
     {
+      header: 'Unit Transaksi Sebelumnya',
+      accessorKey: 'source_transaction_before',
+      sortable: true,
+      alignment: 'left' as const,
+      tooltip: 'Kode unit transaksi asal sebelum unit dipindahkan',
+      cell: (item) =>
+        item?.source_transaction_before?.code ? (
+          <CopyBox text={`${item.source_transaction_before.code}`} />
+        ) : (
+          <span className="text-slate-400">-</span>
+        ),
+    },
+    {
       header: 'Sub Blok',
       accessorKey: 'warehouseSubBlock',
       alignment: 'center' as const,

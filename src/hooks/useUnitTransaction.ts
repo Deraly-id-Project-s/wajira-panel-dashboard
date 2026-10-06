@@ -182,3 +182,58 @@ export const useTransactionAdjustments = (transactionId?: string) => {
     staleTime: 1000 * 60 * 2,
   });
 };
+
+export const useFewerStockItems = (params: {
+  type?: string;
+  unit_type_id?: number | string;
+  search?: string;
+  start_date?: string;
+  end_date?: string;
+  per_page?: number;
+  page?: number;
+} = {}, enabled = true) => {
+  const { companyId } = useCompany();
+
+  return useQuery({
+    queryKey: ['fewer-stock-items', companyId, params],
+    queryFn: () =>
+      unitTransactionService.getFewerStockItems({
+        ...params,
+        company_id: companyId ?? undefined,
+      }),
+    enabled: enabled && Boolean(params.type) && Boolean(params.unit_type_id),
+    staleTime: 0,
+  });
+};
+
+export const useAssignFewerStockItems = () => {
+  const queryClient = useQueryClient();
+  const { companyId } = useCompany();
+
+  return useMutation({
+    mutationFn: ({
+      sourceTransactionId,
+      payload,
+    }: {
+      sourceTransactionId: string | number;
+      payload: {
+        unit_transaction_id: number | string;
+        unit_transaction_item_details_id: Array<number | string>;
+      };
+    }) => unitTransactionService.assignFewerStockItems(sourceTransactionId, payload),
+    onSuccess: () => {
+      if (companyId) {
+        queryClient.invalidateQueries({ queryKey: companyQueryKeys.companyScope(companyId) });
+      }
+      queryClient.invalidateQueries({ queryKey: ['unit-transactions'] });
+      queryClient.invalidateQueries({ queryKey: ['unit-transaction'] });
+      queryClient.invalidateQueries({ queryKey: ['purchase-by-id'] });
+      queryClient.invalidateQueries({ queryKey: ['sales-by-id'] });
+      queryClient.invalidateQueries({ queryKey: ['unit-item-details'] });
+      queryClient.invalidateQueries({ queryKey: ['unit-transaction-item'] });
+      queryClient.invalidateQueries({ queryKey: ['unit-item-details-by-transaction'] });
+      queryClient.invalidateQueries({ queryKey: ['stock-units'] });
+      queryClient.invalidateQueries({ queryKey: ['fewer-stock-items'] });
+    },
+  });
+};

@@ -33,6 +33,8 @@ export const unitTransactionItemSalesService = {
       warehouse_sub_block: detail.warehouse_sub_block,
       stock_state: detail.stock_state ?? null,
       is_reserved: detail.is_reserved === true || detail.is_reserved === 1 || detail.is_reserved === '1',
+      source_transaction_before_id: detail.source_transaction_before_id ?? detail.source_transaction_before?.id ?? null,
+      source_transaction_before: detail.source_transaction_before ?? null,
       unit_transaction_item_sales: detail.unit_transaction_item_sales ?? null,
     }));
   },

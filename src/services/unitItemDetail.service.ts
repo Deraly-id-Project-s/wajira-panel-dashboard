@@ -55,11 +55,20 @@ type UnitTransactionItemApiModel = {
     name?: string,
     code?: string,
   };
+  unit_transaction_item_details?: UnitTransactionItemDetailApiModel[];
 };
 
 type UnitTransactionItemDetailApiModel = {
   id?: string | number;
   unit_transaction_item_id?: string | number;
+  source_transaction_before_id?: string | number | null;
+  source_transaction_before?: {
+    id?: string | number;
+    uuid?: string;
+    code?: string | null;
+    type?: string | null;
+    transaction_type?: string | null;
+  } | null;
   color?: string;
   machine_number?: string;
   chassis_number?: string;
@@ -163,7 +172,8 @@ const mapUnitTransactionItem = (item: UnitTransactionItemApiModel): UnitTransact
     id: item?.unit_type?.id,
     name: item?.unit_type?.name,
     code: item?.unit_type?.code,
-  }
+  },
+  unit_transaction_item_details: (item?.unit_transaction_item_details ?? []).map(mapItemDetail),
 });
 
 const mapItemDetail = (item: UnitTransactionItemDetailApiModel): UnitTransactionItemDetail => ({
@@ -194,6 +204,16 @@ const mapItemDetail = (item: UnitTransactionItemDetailApiModel): UnitTransaction
   transaction_other_fee: 0,
   expedition_fee_total: 0,
   stock_state: item.stock_state ?? null,
+  source_transaction_before_id: item.source_transaction_before_id ?? null,
+  source_transaction_before: item.source_transaction_before
+    ? {
+        id: item.source_transaction_before.id,
+        uuid: item.source_transaction_before.uuid,
+        code: item.source_transaction_before.code ?? null,
+        type: item.source_transaction_before.type ?? null,
+        transaction_type: item.source_transaction_before.transaction_type ?? null,
+      }
+    : null,
 });
 
 export const unitItemDetailService = {
