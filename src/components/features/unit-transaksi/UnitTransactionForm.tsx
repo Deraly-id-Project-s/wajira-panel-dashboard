@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input';
 import { MoneyInput } from '@/components/ui/money-input';
 import { formatCurrency } from '@/lib/utils/currency';
 import { Button } from '@/components/ui/button';
-import { Save, Plus } from 'lucide-react';
+import { Plus } from 'lucide-react';
 import { useTypeUnits } from '@/hooks/useTypeUnit';
 import type { TypeUnit } from '@/@types/type-unit.types';
 import { Label } from '@/components/ui/label';
