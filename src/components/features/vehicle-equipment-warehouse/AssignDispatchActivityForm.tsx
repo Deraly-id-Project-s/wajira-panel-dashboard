@@ -93,7 +93,7 @@ export default function AssignDispatchActivityForm({
     if (currentCompanyId) {
       form.setValue('warehouse_id', currentCompanyId);
     }
-  }, [contextCompanyId, form, getActiveCompanyId]);
+  }, [form, getActiveCompanyId]);
 
   const equipmentId = form.watch('vehicle_equipment_id');
 
