@@ -43,6 +43,14 @@ export type UnitFormulaInput = {
   other_fee?: number | string;
   dpp_tax_id?: number | string | null;
   ppn_tax_id?: number | string | null;
+  price_per_unit_usd?: number | string;
+  price_usd?: number | string;
+  usd_costs?: Array<{
+    id?: number;
+    cost_type: string;
+    amount: number;
+    note?: string | null;
+  }>;
 };
 
 export type UnitFormulaResult = {
@@ -52,6 +60,11 @@ export type UnitFormulaResult = {
   hpp_total_price: number;
   dpp_total_price: number;
   ppn_total_price: number;
+  price_per_unit_usd?: number;
+  price_usd?: number;
+  total_usd_cost?: number;
+  price_total?: number;
+  price_total_usd?: number;
 };
 
 const basePath = '/wapi/transaction/unit-transaction/unit-transaction-item';
@@ -131,7 +144,12 @@ const mapFormula = (payload: any): UnitFormulaResult => ({
   hpp_total_price: toNumber(payload?.hpp_total_price),
   dpp_total_price: toNumber(payload?.dpp_total_price),
   ppn_total_price: toNumber(payload?.ppn_total_price),
-})
+  price_per_unit_usd: payload?.price_per_unit_usd !== undefined ? toNumber(payload?.price_per_unit_usd) : undefined,
+  price_usd: payload?.price_usd !== undefined ? toNumber(payload?.price_usd) : undefined,
+  total_usd_cost: payload?.total_usd_cost !== undefined ? toNumber(payload?.total_usd_cost) : undefined,
+  price_total: payload?.price_total !== undefined ? toNumber(payload?.price_total) : undefined,
+  price_total_usd: payload?.price_total_usd !== undefined ? toNumber(payload?.price_total_usd) : undefined,
+});
 
 // ======================
 // SERVICE
@@ -139,7 +157,7 @@ const mapFormula = (payload: any): UnitFormulaResult => ({
 
 export const unitTransactionItemService = {
   async getFormula(payload: UnitFormulaInput): Promise<UnitFormulaResult> {
-    const requestParams: Record<string, string | number | undefined> = {
+    const requestParams: Record<string, any> = {
       qty_total: toIntegerString(payload.qty_total),
       price: toDecimalString(payload.price),
       bbn_price: toDecimalString(payload.bbn_price),
@@ -147,11 +165,20 @@ export const unitTransactionItemService = {
       other_fee: toDecimalString(payload.other_fee),
     };
 
+    if (payload.price_per_unit_usd !== undefined && payload.price_per_unit_usd !== null) {
+      requestParams.price_per_unit_usd = toDecimalString(payload.price_per_unit_usd);
+    }
+    if (payload.price_usd !== undefined && payload.price_usd !== null) {
+      requestParams.price_usd = toDecimalString(payload.price_usd);
+    }
     if (payload.dpp_tax_id != null && payload.dpp_tax_id !== '') {
       requestParams.dpp_tax_id = Number(payload.dpp_tax_id);
     }
     if (payload.ppn_tax_id != null && payload.ppn_tax_id !== '') {
       requestParams.ppn_tax_id = Number(payload.ppn_tax_id);
+    }
+    if (payload.usd_costs && payload.usd_costs.length > 0) {
+      requestParams.usd_costs = payload.usd_costs;
     }
 
     const response = await apiClient.get<LaravelApiResponse<any>>(`${basePath}/get-formula`, {

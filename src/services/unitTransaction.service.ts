@@ -106,6 +106,16 @@ type UnitTransactionApiModel = {
   is_unit_type_detail_valid?: boolean | string | number;
   unit_transaction_price_usd_total?: string | number;
   unit_transaction_price_usd_total_actual?: string | number;
+  total_usd_cost?: string | number;
+  transaction_usd_cost_total?: string | number;
+  usd_cost_freight_total?: string | number;
+  usd_cost_box_packing_total?: string | number;
+  usd_cost_admin_cost_total?: string | number;
+  usd_cost_ckd_processing_cost_total?: string | number;
+  usd_cost_bill_of_lading_switch_cost_total?: string | number;
+  usd_cost_customs_clearance_cost_total?: string | number;
+  usd_cost_other_total?: string | number;
+  unit_transaction_usd_costs?: any[];
 };
 
 type UnitTransactionItemListApiModel = {
@@ -653,6 +663,16 @@ const mapUnitTransactionDetail = (item: UnitTransactionApiModel): UnitTransactio
     documentTemplateId: item.document_template_id != null ? String(item.document_template_id) : item.document_template?.id != null ? String(item.document_template.id) : item.document_template?.uuid ?? null,
     unit_transaction_price_usd_total: item.unit_transaction_price_usd_total !== undefined ? toNumber(item.unit_transaction_price_usd_total) : undefined,
     unit_transaction_price_usd_total_actual: item.unit_transaction_price_usd_total_actual !== undefined ? toNumber(item.unit_transaction_price_usd_total_actual) : undefined,
+    total_usd_cost: item.total_usd_cost !== undefined ? toNumber(item.total_usd_cost) : (item.transaction_usd_cost_total !== undefined ? toNumber(item.transaction_usd_cost_total) : undefined),
+    transaction_usd_cost_total: item.transaction_usd_cost_total !== undefined ? toNumber(item.transaction_usd_cost_total) : (item.total_usd_cost !== undefined ? toNumber(item.total_usd_cost) : undefined),
+    usd_cost_freight_total: item.usd_cost_freight_total !== undefined ? toNumber(item.usd_cost_freight_total) : undefined,
+    usd_cost_box_packing_total: item.usd_cost_box_packing_total !== undefined ? toNumber(item.usd_cost_box_packing_total) : undefined,
+    usd_cost_admin_cost_total: item.usd_cost_admin_cost_total !== undefined ? toNumber(item.usd_cost_admin_cost_total) : undefined,
+    usd_cost_ckd_processing_cost_total: item.usd_cost_ckd_processing_cost_total !== undefined ? toNumber(item.usd_cost_ckd_processing_cost_total) : undefined,
+    usd_cost_bill_of_lading_switch_cost_total: item.usd_cost_bill_of_lading_switch_cost_total !== undefined ? toNumber(item.usd_cost_bill_of_lading_switch_cost_total) : undefined,
+    usd_cost_customs_clearance_cost_total: item.usd_cost_customs_clearance_cost_total !== undefined ? toNumber(item.usd_cost_customs_clearance_cost_total) : undefined,
+    usd_cost_other_total: item.usd_cost_other_total !== undefined ? toNumber(item.usd_cost_other_total) : undefined,
+    unit_transaction_usd_costs: item.unit_transaction_usd_costs ?? [],
   };
 };
 

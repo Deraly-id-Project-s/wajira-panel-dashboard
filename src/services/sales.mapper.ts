@@ -359,6 +359,16 @@ export const mapSalesDetailToUI = (item: SalesApiModel): SalesItem => {
     price_per_unit_usd: item.unit_transaction_items?.[0]?.price_per_unit_usd ? toNumber(item.unit_transaction_items[0].price_per_unit_usd) : undefined,
     unit_transaction_price_usd_total: item.unit_transaction_price_usd_total ? toNumber(item.unit_transaction_price_usd_total) : undefined,
     unit_transaction_price_usd_total_actual: item.unit_transaction_price_usd_total_actual ? toNumber(item.unit_transaction_price_usd_total_actual) : undefined,
+    total_usd_cost: (item as any).total_usd_cost !== undefined ? toNumber((item as any).total_usd_cost) : ((item as any).transaction_usd_cost_total !== undefined ? toNumber((item as any).transaction_usd_cost_total) : undefined),
+    transaction_usd_cost_total: (item as any).transaction_usd_cost_total !== undefined ? toNumber((item as any).transaction_usd_cost_total) : ((item as any).total_usd_cost !== undefined ? toNumber((item as any).total_usd_cost) : undefined),
+    usd_cost_freight_total: (item as any).usd_cost_freight_total !== undefined ? toNumber((item as any).usd_cost_freight_total) : undefined,
+    usd_cost_box_packing_total: (item as any).usd_cost_box_packing_total !== undefined ? toNumber((item as any).usd_cost_box_packing_total) : undefined,
+    usd_cost_admin_cost_total: (item as any).usd_cost_admin_cost_total !== undefined ? toNumber((item as any).usd_cost_admin_cost_total) : undefined,
+    usd_cost_ckd_processing_cost_total: (item as any).usd_cost_ckd_processing_cost_total !== undefined ? toNumber((item as any).usd_cost_ckd_processing_cost_total) : undefined,
+    usd_cost_bill_of_lading_switch_cost_total: (item as any).usd_cost_bill_of_lading_switch_cost_total !== undefined ? toNumber((item as any).usd_cost_bill_of_lading_switch_cost_total) : undefined,
+    usd_cost_customs_clearance_cost_total: (item as any).usd_cost_customs_clearance_cost_total !== undefined ? toNumber((item as any).usd_cost_customs_clearance_cost_total) : undefined,
+    usd_cost_other_total: (item as any).usd_cost_other_total !== undefined ? toNumber((item as any).usd_cost_other_total) : undefined,
+    unit_transaction_usd_costs: (item as any).unit_transaction_usd_costs ?? [],
     documentTemplateId: item.document_template_id != null ? String(item.document_template_id) : item.document_template?.id != null ? String(item.document_template.id) : item.document_template?.uuid ?? null,
     billing_summary: item.billing_summary
       ? {

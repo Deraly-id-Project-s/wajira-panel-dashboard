@@ -5,11 +5,26 @@ export function useUnitFormula(form: UnitFormulaInput) {
   const [formula, setFormula] = useState<UnitFormulaResult | null>(null);
   const [loading, setLoading] = useState(false);
 
-  useEffect(() => {
-    const qty = Number(form.qty_total ?? 0);
-    const price = Number(form.price ?? 0);
+  const {
+    qty_total,
+    price,
+    bbn_price,
+    expedition_fee,
+    other_fee,
+    dpp_tax_id,
+    ppn_tax_id,
+    price_per_unit_usd,
+    price_usd,
+    usd_costs,
+  } = form;
 
-    if (!qty || qty <= 0 || !price || price < 0) {
+  const usdCostsSerialized = JSON.stringify(usd_costs ?? []);
+
+  useEffect(() => {
+    const qty = Number(qty_total ?? 0);
+    const priceVal = Number(price ?? 0);
+
+    if (!qty || qty <= 0 || !priceVal || priceVal < 0) {
       setFormula(null);
       setLoading(false);
       return;
@@ -22,12 +37,15 @@ export function useUnitFormula(form: UnitFormulaInput) {
       try {
         const result = await unitTransactionItemService.getFormula({
           qty_total: qty,
-          price,
-          bbn_price: Number(form.bbn_price ?? 0),
-          expedition_fee: Number(form.expedition_fee ?? 0),
-          other_fee: Number(form.other_fee ?? 0),
-          dpp_tax_id: form.dpp_tax_id,
-          ppn_tax_id: form.ppn_tax_id,
+          price: priceVal,
+          bbn_price: Number(bbn_price ?? 0),
+          expedition_fee: Number(expedition_fee ?? 0),
+          other_fee: Number(other_fee ?? 0),
+          dpp_tax_id,
+          ppn_tax_id,
+          price_per_unit_usd: price_per_unit_usd ? Number(price_per_unit_usd) : undefined,
+          price_usd: price_usd ? Number(price_usd) : undefined,
+          usd_costs,
         });
 
         if (!active) return;
@@ -44,7 +62,19 @@ export function useUnitFormula(form: UnitFormulaInput) {
       active = false;
       clearTimeout(handler);
     };
-  }, [form.qty_total, form.price, form.bbn_price, form.expedition_fee, form.other_fee, form.dpp_tax_id, form.ppn_tax_id]);
+  }, [
+    qty_total,
+    price,
+    bbn_price,
+    expedition_fee,
+    other_fee,
+    dpp_tax_id,
+    ppn_tax_id,
+    price_per_unit_usd,
+    price_usd,
+    usd_costs,
+    usdCostsSerialized,
+  ]);
 
   return { formula, loading };
 }

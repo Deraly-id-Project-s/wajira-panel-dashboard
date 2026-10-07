@@ -18,4 +18,21 @@ export const unitTransactionSchema = z.object({
   hppTotal: z.number().min(0).optional(),
   dppTotal: z.number().min(0).optional(),
   ppnTotal: z.number().min(0).optional(),
+  usdCostsFreight: z.number().min(0).optional(),
+  usdCostsBoxPacking: z.number().min(0).optional(),
+  usdCostsAdminCost: z.number().min(0).optional(),
+  usdCostsCkdProcessingCost: z.number().min(0).optional(),
+  usdCostsBillOfLadingSwitchCost: z.number().min(0).optional(),
+  usdCostsCustomsClearanceCost: z.number().min(0).optional(),
+  usdCostsOther: z.array(z.object({
+    id: z.number().optional(),
+    note: z.string().nullable().optional(),
+    amount: z.number().min(0),
+  })).optional(),
+  usd_costs: z.array(z.object({
+    id: z.number().optional(),
+    cost_type: z.string(),
+    amount: z.number().min(0),
+    note: z.string().nullable().optional(),
+  })).optional(),
 });

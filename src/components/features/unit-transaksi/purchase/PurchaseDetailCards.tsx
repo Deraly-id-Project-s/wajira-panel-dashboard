@@ -56,8 +56,17 @@ export function PurchaseDetailCards({ data, billingHistories = [] }: Props) {
     ? Number(billingSummary.remaining_payment_usd)
     : Math.max(0, totalUsd - debetBankUsd);
 
+  const freightCost = Number(data.usd_cost_freight_total ?? 0);
+  const boxPackingCost = Number(data.usd_cost_box_packing_total ?? 0);
+  const adminCost = Number(data.usd_cost_admin_cost_total ?? 0);
+  const ckdCost = Number(data.usd_cost_ckd_processing_cost_total ?? 0);
+  const blSwitchCost = Number(data.usd_cost_bill_of_lading_switch_cost_total ?? 0);
+  const customsCost = Number(data.usd_cost_customs_clearance_cost_total ?? 0);
+  const otherCost = Number(data.usd_cost_other_total ?? 0);
+  const totalUsdCost = Number(data.total_usd_cost ?? data.transaction_usd_cost_total ?? (freightCost + boxPackingCost + adminCost + ckdCost + blSwitchCost + customsCost + otherCost));
+
   return (
-    <div className="grid gap-4 md:grid-cols-3">
+    <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
       {/* Card 1: Informasi Invoice */}
       <Card className="rounded-md border border-slate-200 shadow-sm h-full">
         <CardContent className="p-5 flex flex-col h-full gap-4">
@@ -97,53 +106,98 @@ export function PurchaseDetailCards({ data, billingHistories = [] }: Props) {
         </CardContent>
       </Card>
 
-      {/* Card 2: Detail Pembelian */}
+      {/* Card 2: Detail Pembelian (IDR) */}
       <Card className="rounded-md border border-slate-200 shadow-sm h-full">
         <CardContent className="p-5 flex flex-col h-full gap-4">
           <div className="flex items-center gap-3">
             <div className="p-2 rounded-md bg-emerald-50">
               <DollarSign className="h-5 w-5 text-emerald-500" />
             </div>
-            <h3 className="text-sm font-semibold text-slate-700">Detail Pembelian</h3>
+            <h3 className="text-sm font-semibold text-slate-700">Detail Pembelian (IDR)</h3>
           </div>
 
           <div className="space-y-3 text-xs text-slate-500">
             <div className="flex items-center justify-between">
               <span>Total DPP</span>
-              <span className="text-sm font-semibold text-slate-900">{currenciesFormat('idr', (totalDpp))}</span>
+              <span className="text-sm font-semibold text-slate-900">{currenciesFormat('idr', totalDpp)}</span>
             </div>
             <div className="flex items-center justify-between">
               <span>Total PPN</span>
-              <span className="text-sm font-semibold text-slate-900">{currenciesFormat('idr', (totalPpn))}</span>
+              <span className="text-sm font-semibold text-slate-900">{currenciesFormat('idr', totalPpn)}</span>
             </div>
             <div className="border-t border-slate-100 my-1"></div>
             <div className="flex items-center justify-between text-slate-900">
               <span className="font-bold text-sm">Total HPP</span>
-              <span className="text-sm font-bold">{currenciesFormat('idr', (totalHpp))}</span>
+              <span className="text-sm font-bold">{currenciesFormat('idr', totalHpp)}</span>
             </div>
             <div className="flex items-center justify-between">
               <span>Total Biaya</span>
-              <span className="text-sm font-semibold text-slate-900">{currenciesFormat('idr', (totalBiaya))}</span>
+              <span className="text-sm font-semibold text-slate-900">{currenciesFormat('idr', totalBiaya)}</span>
             </div>
             <div className="border-t border-slate-100 my-1"></div>
             <div className="flex items-center justify-between text-slate-900">
               <span className="font-bold uppercase text-sm">TOTAL PEMBELIAN</span>
-              <span className="text-sm font-bold">{currenciesFormat('idr', (totalPembelian))}</span>
+              <span className="text-sm font-bold">{currenciesFormat('idr', totalPembelian)}</span>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Card 3: Detail Pembelian (USD) */}
+      <Card className="rounded-md border border-slate-200 shadow-sm h-full">
+        <CardContent className="p-5 flex flex-col h-full gap-4">
+          <div className="flex items-center gap-3">
+            <div className="p-2 rounded-md bg-amber-50">
+              <DollarSign className="h-5 w-5 text-amber-600" />
+            </div>
+            <h3 className="text-sm font-semibold text-slate-700">Detail Pembelian (USD)</h3>
+          </div>
+
+          <div className="space-y-2.5 text-xs text-slate-500">
+            <div className="flex items-center justify-between">
+              <span>Biaya Freight (Pengiriman)</span>
+              <span className="text-sm font-semibold text-slate-900">{currenciesFormat('usd', freightCost)}</span>
+            </div>
+            <div className="flex items-center justify-between">
+              <span>Biaya Box Packing (Peti)</span>
+              <span className="text-sm font-semibold text-slate-900">{currenciesFormat('usd', boxPackingCost)}</span>
+            </div>
+            <div className="flex items-center justify-between">
+              <span>Biaya Administrasi</span>
+              <span className="text-sm font-semibold text-slate-900">{currenciesFormat('usd', adminCost)}</span>
+            </div>
+            <div className="flex items-center justify-between">
+              <span>Biaya Pemrosesan CKD</span>
+              <span className="text-sm font-semibold text-slate-900">{currenciesFormat('usd', ckdCost)}</span>
+            </div>
+            <div className="flex items-center justify-between">
+              <span>Biaya Switch B/L</span>
+              <span className="text-sm font-semibold text-slate-900">{currenciesFormat('usd', blSwitchCost)}</span>
+            </div>
+            <div className="flex items-center justify-between">
+              <span>Biaya Bea Cukai</span>
+              <span className="text-sm font-semibold text-slate-900">{currenciesFormat('usd', customsCost)}</span>
+            </div>
+            <div className="flex items-center justify-between">
+              <span>Biaya USD Lainnya</span>
+              <span className="text-sm font-semibold text-slate-900">{currenciesFormat('usd', otherCost)}</span>
+            </div>
+            <div className="border-t border-slate-100 my-1"></div>
+            <div className="flex items-center justify-between text-slate-900">
+              <span className="font-bold text-sm">Total Biaya USD</span>
+              <span className="text-sm font-bold text-amber-700">{currenciesFormat('usd', totalUsdCost)}</span>
             </div>
             {totalUsd > 0 && (
-              <>
-                <div className="border-t border-slate-100 my-1"></div>
-                <div className="flex items-center justify-between text-slate-900">
-                  <span className="font-bold uppercase text-sm">TOTAL HARGA (USD)</span>
-                  <span className="text-sm font-bold text-amber-600">{currenciesFormat('usd', totalUsd)}</span>
-                </div>
-              </>
+              <div className="flex items-center justify-between text-slate-900 pt-1">
+                <span className="font-bold uppercase text-sm">TOTAL PEMBELIAN (USD)</span>
+                <span className="text-sm font-bold text-amber-600">{currenciesFormat('usd', totalUsd)}</span>
+              </div>
             )}
           </div>
         </CardContent>
       </Card>
 
-      {/* Card 3: Riwayat Pembayaran */}
+      {/* Card 4: Riwayat Pembayaran */}
       <Card className="rounded-md border border-slate-200 shadow-sm h-full">
         <CardContent className="p-5 flex flex-col h-full gap-4">
           <div className="flex items-center gap-3">
@@ -179,6 +233,6 @@ export function PurchaseDetailCards({ data, billingHistories = [] }: Props) {
           </div>
         </CardContent>
       </Card>
-    </div >
+    </div>
   );
 }

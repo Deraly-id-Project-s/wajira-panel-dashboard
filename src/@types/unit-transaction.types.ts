@@ -185,9 +185,27 @@ export interface UnitTransactionDetail {
   documentTemplateId?: string | null;
   unit_transaction_price_usd_total?: number;
   unit_transaction_price_usd_total_actual?: number;
+  total_usd_cost?: number;
+  transaction_usd_cost_total?: number;
+  usd_cost_freight_total?: number;
+  usd_cost_box_packing_total?: number;
+  usd_cost_admin_cost_total?: number;
+  usd_cost_ckd_processing_cost_total?: number;
+  usd_cost_bill_of_lading_switch_cost_total?: number;
+  usd_cost_customs_clearance_cost_total?: number;
+  usd_cost_other_total?: number;
+  unit_transaction_usd_costs?: UsdCostItem[];
   pivot: {
     unit_transaction_item_detail_id: number;
   };
+}
+
+export interface UsdCostItem {
+  id?: number;
+  unit_transaction_item_id?: number | string;
+  cost_type: string;
+  amount: number;
+  note?: string | null;
 }
 
 export interface UnitTransactionItem {
@@ -206,6 +224,16 @@ export interface UnitTransactionItem {
   price_usd?: number;
   price_per_unit_usd?: number;
   price_total?: number;
+  price_total_usd?: number;
+  total_usd_cost?: number;
+  usd_cost_freight_total?: number;
+  usd_cost_box_packing_total?: number;
+  usd_cost_admin_cost_total?: number;
+  usd_cost_ckd_processing_cost_total?: number;
+  usd_cost_bill_of_lading_switch_cost_total?: number;
+  usd_cost_customs_clearance_cost_total?: number;
+  usd_cost_other_total?: number;
+  unit_transaction_usd_costs?: UsdCostItem[];
   dpp_tax_id?: string | number;
   ppn_tax_id?: string | number;
   ppn_tax_rate?: number;
