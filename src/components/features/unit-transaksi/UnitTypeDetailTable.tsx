@@ -3,12 +3,14 @@ import { useMemo, useState } from 'react';
 import type { UnitTransactionTypeDetail } from '@/@types/unit-transaction.types';
 import BaseTable, { type ColumnDef } from '@/components/ui/base-table';
 import { Badge } from '@/components/ui/badge';
-import { useUnitTransactionTypeDetails } from '@/hooks/useUnitTransaction';
+import { Button } from '@/components/ui/button';
+import { useExportUnitTypeDetails, useUnitTransactionTypeDetails } from '@/hooks/useUnitTransaction';
 import { cn } from '@/lib/utils';
 import { CopyBox } from '@/components/ui/copy-box';
 import { ReferenceLink } from '@/components/ui/reference-link';
 import { useRouter } from 'next/router';
 import { CollapsibleBox } from '@/components/ui/collapsible-box';
+import { Download } from 'lucide-react';
 
 const stockStateConfig: Record<string, { label: string; className: string }> = {
   draft: { label: 'Draft', className: 'border-slate-200 bg-slate-50 text-slate-600' },
@@ -21,15 +23,28 @@ const stockStateConfig: Record<string, { label: string; className: string }> = {
 
 type UnitTypeDetailTableProps = {
   transactionId: string;
+  transactionCode?: string;
+  transactionType?: 'purchase' | 'sales' | string;
 };
 
-export function UnitTypeDetailTable({ transactionId }: UnitTypeDetailTableProps) {
+export function UnitTypeDetailTable({
+  transactionId,
+  transactionCode,
+  transactionType,
+}: UnitTypeDetailTableProps) {
   const [page, setPage] = useState(1);
   const perPage = 10;
   const { data, isLoading, isFetching } = useUnitTransactionTypeDetails(transactionId, { page, perPage });
+  const { handleExport, isExporting } = useExportUnitTypeDetails();
 
   const router = useRouter();
   const slug = typeof router.query.slug === 'string' ? router.query.slug : '';
+
+  const isSales =
+    transactionType === 'sales' ||
+    router.pathname.includes('penjualan') ||
+    router.asPath.includes('penjualan');
+  const personColumnHeader = isSales ? 'Supplier' : 'Customer';
 
   const columns = useMemo<ColumnDef<UnitTransactionTypeDetail>[]>(
     () => [
@@ -68,6 +83,22 @@ export function UnitTypeDetailTable({ transactionId }: UnitTypeDetailTableProps)
         accessorKey: 'chassis_number',
         sortable: true,
         cell: (item) => item?.chassis_number ? <CopyBox text={item.chassis_number} /> : '-',
+      },
+      {
+        header: personColumnHeader,
+        accessorKey: 'person.name',
+        sortable: true,
+        cell: (item) =>
+          item.person?.name ? (
+            <div className="flex flex-col">
+              <span className="font-medium text-slate-900">{item.person.name}</span>
+              {item.person.code && (
+                <span className="text-xs text-slate-500 font-mono">{item.person.code}</span>
+              )}
+            </div>
+          ) : (
+            '-'
+          ),
       },
       {
         header: 'Sub Blok Warehouse',
@@ -122,11 +153,27 @@ export function UnitTypeDetailTable({ transactionId }: UnitTypeDetailTableProps)
         },
       },
     ],
-    [data?.meta.currentPage, data?.meta.perPage, page, perPage, slug],
+    [data?.meta.currentPage, data?.meta.perPage, page, perPage, slug, personColumnHeader],
   );
 
   return (
-    <CollapsibleBox title="Detail Unit Tipe" description="Rincian identitas dan status setiap unit pada transaksi">
+    <CollapsibleBox
+      title="Daftar Detail Unit Tipe"
+      description="Rincian identitas dan status setiap unit tipe pada transaksi ini"
+      actions={
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          disabled={isExporting}
+          onClick={() => handleExport(transactionId, transactionCode)}
+          className="gap-2 cursor-pointer"
+        >
+          <Download className="h-4 w-4" />
+          {isExporting ? 'Mengekspor...' : 'Export Excel'}
+        </Button>
+      }
+    >
       <div className="p-6">
         <BaseTable
           data={data?.data ?? []}

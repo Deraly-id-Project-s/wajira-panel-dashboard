@@ -160,6 +160,13 @@ type UnitTransactionTypeDetailApiModel = {
   is_sold_unit?: boolean | number | string;
   created_at?: string;
   updated_at?: string;
+  person?: {
+    id?: number | string;
+    uuid?: string;
+    code?: string;
+    type?: string;
+    name?: string;
+  } | null;
   unit_transaction_item?: {
     id?: number | string;
     unit_transaction_id?: number | string;
@@ -228,6 +235,15 @@ const mapUnitTransactionTypeDetail = (
   is_sold_unit: toBoolean(item.is_sold_unit),
   created_at: item.created_at,
   updated_at: item.updated_at,
+  person: item.person
+    ? {
+        id: item.person.id ?? '',
+        uuid: item.person.uuid ?? '',
+        code: item.person.code ?? '',
+        type: item.person.type ?? '',
+        name: item.person.name ?? '-',
+      }
+    : null,
   unit_transaction_item: item.unit_transaction_item
     ? {
         id: String(item.unit_transaction_item.id ?? ''),
@@ -721,7 +737,11 @@ export const unitTransactionService = {
 
   async getUnitTransactionTypeDetails(
     id: string,
-    params: PaginationParams = {},
+    params: PaginationParams & {
+      search?: string;
+      status?: string;
+      in_stock?: boolean | string;
+    } = {},
   ): Promise<UnitTransactionTypeDetailListResponse> {
     const response = await apiClient.get<LaravelApiResponse<any>>(
       `${strictBasePath}/${id}/get-unit-type-details`,
@@ -729,6 +749,9 @@ export const unitTransactionService = {
         params: {
           page: params.page ?? 1,
           per_page: params.perPage ?? 10,
+          search: params.search || undefined,
+          status: params.status || undefined,
+          in_stock: params.in_stock !== undefined ? params.in_stock : undefined,
         },
       },
     );
@@ -747,6 +770,27 @@ export const unitTransactionService = {
     }
 
     return toPaginatedResult(payload, mapUnitTransactionTypeDetail);
+  },
+
+  /**
+   * Export Unit Type Details to Excel (.xlsx)
+   */
+  async exportUnitTypeDetails(
+    id: string | number,
+    params?: {
+      search?: string;
+      status?: string;
+      in_stock?: boolean | string;
+    },
+  ): Promise<Blob> {
+    const response = await apiClient.get(
+      `${strictBasePath}/${id}/export-unit-type-details`,
+      {
+        params,
+        responseType: 'blob',
+      },
+    );
+    return response.data;
   },
 
   async updateUnitTransactionState(

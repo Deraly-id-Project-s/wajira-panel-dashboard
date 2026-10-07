@@ -340,6 +340,13 @@ export interface UnitTransactionTypeDetail {
   is_sold_unit: boolean;
   created_at?: string;
   updated_at?: string;
+  person?: {
+    id: number | string;
+    uuid?: string;
+    code?: string;
+    type?: string;
+    name: string;
+  } | null;
   unit_transaction_item: {
     id: string;
     unit_transaction_id: string;

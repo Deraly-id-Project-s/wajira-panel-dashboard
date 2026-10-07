@@ -159,7 +159,10 @@ export default function PurchaseDetailPage() {
       transaction_bbn_total: 0,
       transaction_other_fee: 0,
       expedition_fee_total: 0,
-      person: { id: '', name: '' },
+      person: {
+        id: String(item.person?.id ?? ''),
+        name: item.person?.name ?? '',
+      },
       warehouse_sub_block: {
         id: item.warehouse_sub_block?.id ?? '',
         name: item.warehouse_sub_block?.name ?? '',
@@ -441,7 +444,11 @@ export default function PurchaseDetailPage() {
 
         <PurchaseUnitTable purchaseId={purchase.id} slug={slug as string} isPaid={isPaid} canEdit={canEdit} canDelete={canDelete} />
 
-        <UnitTypeDetailTable transactionId={purchase.id} />
+        <UnitTypeDetailTable
+          transactionId={purchase.id}
+          transactionCode={purchase.code}
+          transactionType="purchase"
+        />
 
         <div className="space-y-3">
           <CollapsibleBox title="History Pembayaran" description="Rincian lengkap unit yang dibeli">

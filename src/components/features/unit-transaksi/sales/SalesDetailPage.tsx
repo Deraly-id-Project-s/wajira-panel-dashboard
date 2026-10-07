@@ -149,7 +149,10 @@ export default function SalesDetailPage() {
       transaction_bbn_total: 0,
       transaction_other_fee: 0,
       expedition_fee_total: 0,
-      person: { id: '', name: '' },
+      person: {
+        id: String(item.person?.id ?? ''),
+        name: item.person?.name ?? '',
+      },
       warehouse_sub_block: {
         id: item.warehouse_sub_block?.id ?? '',
         name: item.warehouse_sub_block?.name ?? '',
@@ -450,7 +453,11 @@ export default function SalesDetailPage() {
 
         <SalesUnitTable lineItems={salesData.lineItems} salesId={sales.id} onAddUnit={handleCreateUnit} canEdit={canEdit} canDelete={canDelete} canCreate={canCreate} isPaid={isPaid} />
 
-        <UnitTypeDetailTable transactionId={sales.id} />
+        <UnitTypeDetailTable
+          transactionId={sales.id}
+          transactionCode={sales.code}
+          transactionType="sales"
+        />
 
         <div className="space-y-3">
           <CollapsibleBox title="History Pembayaran" description="Rincian lengkap unit yang terjual">

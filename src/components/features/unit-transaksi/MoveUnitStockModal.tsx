@@ -67,10 +67,10 @@ export function MoveUnitStockModal({
   const rawItems = Array.isArray(fewerStockData?.data?.data)
     ? fewerStockData.data.data
     : Array.isArray(fewerStockData?.data)
-    ? fewerStockData.data
-    : Array.isArray(fewerStockData)
-    ? fewerStockData
-    : [];
+      ? fewerStockData.data
+      : Array.isArray(fewerStockData)
+        ? fewerStockData
+        : [];
 
   const candidates = rawItems.filter(
     (item: any) => String(item?.id ?? '') !== String(sourceTransactionId ?? ''),
@@ -175,11 +175,10 @@ export function MoveUnitStockModal({
                   <div
                     key={targetId}
                     onClick={() => setSelectedTargetId(targetId)}
-                    className={`flex cursor-pointer items-center justify-between rounded-lg border p-3.5 transition-colors ${
-                      isSelected
-                        ? 'border-blue-500 bg-blue-50/40 ring-1 ring-blue-500'
-                        : 'border-slate-200 hover:border-slate-300 hover:bg-slate-50'
-                    }`}
+                    className={`flex cursor-pointer items-center justify-between rounded-lg border p-3.5 transition-colors ${isSelected
+                      ? 'border-blue-500 bg-blue-50/40 ring-1 ring-blue-500'
+                      : 'border-slate-200 hover:border-slate-300 hover:bg-slate-50'
+                      }`}
                   >
                     <div className="space-y-1">
                       <div className="flex items-center gap-2">
@@ -219,7 +218,7 @@ export function MoveUnitStockModal({
           </div>
         </div>
 
-        <DialogFooter className="gap-2 sm:gap-0 border-t pt-3">
+        <DialogFooter className="gap-2 sm:gap-0 flex flex-row border-t pt-3">
           <Button
             type="button"
             variant="outline"
@@ -230,7 +229,7 @@ export function MoveUnitStockModal({
           </Button>
           <Button
             type="button"
-            className="bg-blue-600 hover:bg-blue-700 text-white"
+            className="bg-blue-600 ml-2 hover:bg-blue-700 text-white"
             onClick={handleTransfer}
             disabled={!selectedTargetId || assignMutation.isPending || selectedDetailIds.length === 0}
           >

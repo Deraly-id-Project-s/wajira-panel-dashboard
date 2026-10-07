@@ -1,7 +1,9 @@
+import { useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { unitTransactionService } from '@/services/unitTransaction.service';
 import { useCompany } from '@/contexts/CompanyContext';
 import { companyQueryKeys } from '@/lib/query/company-key';
+import { toast } from 'sonner';
 
 const unitTransactionKeys = {
   list: (companyId: string | number, options: { page?: number; perPage?: number; search?: string; status?: string; start_date?: string | null; end_date?: string | null }) =>
@@ -15,8 +17,8 @@ const unitTransactionKeys = {
     }),
   detail: (companyId: string | number, id: string) => companyQueryKeys.detail(companyId, 'unit-transactions', id),
   purchaseDetail: (companyId: string | number, id: string) => companyQueryKeys.detail(companyId, 'purchase-by-id', id),
-  typeDetails: (companyId: string | number, id: string, page: number, perPage: number) =>
-    companyQueryKeys.list(companyId, 'unit-transaction-type-details', { id, page, perPage }),
+  typeDetails: (companyId: string | number, id: string, page: number, perPage: number, filters?: Record<string, any>) =>
+    companyQueryKeys.list(companyId, 'unit-transaction-type-details', { id, page, perPage, ...filters }),
 };
 
 export const useUnitTransactions = (options: { page?: number; perPage?: number; search?: string; status?: string; start_date?: string | null; end_date?: string | null } = {}) => {
@@ -75,17 +77,33 @@ export const usePurchaseById = (id?: string) => {
 
 export const useUnitTransactionTypeDetails = (
   id?: string,
-  options: { page?: number; perPage?: number } = {},
+  options: {
+    page?: number;
+    perPage?: number;
+    search?: string;
+    status?: string;
+    in_stock?: boolean | string;
+  } = {},
 ) => {
   const { companyId } = useCompany();
   const page = options.page ?? 1;
   const perPage = options.perPage ?? 10;
+  const search = options.search;
+  const status = options.status;
+  const in_stock = options.in_stock;
 
   return useQuery({
     queryKey: companyId
-      ? unitTransactionKeys.typeDetails(companyId, id ?? '', page, perPage)
-      : ['unit-transaction-type-details', 'unscoped', id, page, perPage],
-    queryFn: () => unitTransactionService.getUnitTransactionTypeDetails(id as string, { page, perPage }),
+      ? unitTransactionKeys.typeDetails(companyId, id ?? '', page, perPage, { search, status, in_stock })
+      : ['unit-transaction-type-details', 'unscoped', id, page, perPage, search, status, in_stock],
+    queryFn: () =>
+      unitTransactionService.getUnitTransactionTypeDetails(id as string, {
+        page,
+        perPage,
+        search,
+        status,
+        in_stock,
+      }),
     enabled: Boolean(id) && Boolean(companyId),
     placeholderData: (previousData) => previousData,
     refetchOnWindowFocus: true,
@@ -93,6 +111,51 @@ export const useUnitTransactionTypeDetails = (
     refetchOnMount: 'always',
     staleTime: 0,
   });
+};
+
+export const useExportUnitTypeDetails = () => {
+  const [isExporting, setIsExporting] = useState(false);
+
+  const handleExport = async (
+    transactionId: string | number,
+    transactionCode?: string,
+    filters?: { search?: string; status?: string; in_stock?: boolean | string },
+  ) => {
+    try {
+      setIsExporting(true);
+      const blob = await unitTransactionService.exportUnitTypeDetails(transactionId, filters);
+
+      const downloadUrl = window.URL.createObjectURL(new Blob([blob]));
+      const link = document.createElement('a');
+      link.href = downloadUrl;
+      const cleanCode = transactionCode ? String(transactionCode).replace(/[\/\\]/g, '-') : String(transactionId);
+      link.setAttribute('download', `unit_type_details_${cleanCode}.xlsx`);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(downloadUrl);
+      toast.success('File Excel berhasil diunduh');
+    } catch (error: any) {
+      console.error('Gagal mengunduh data export unit type details:', error);
+      let errorMessage = 'Gagal mengunduh data export unit type details';
+      if (error?.response?.data instanceof Blob) {
+        try {
+          const text = await error.response.data.text();
+          const json = JSON.parse(text);
+          if (json?.message) errorMessage = json.message;
+        } catch {
+          // ignore
+        }
+      } else if (error?.message) {
+        errorMessage = error.message;
+      }
+      toast.error(errorMessage);
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
+  return { handleExport, isExporting };
 };
 
 export const useUpdateUnitTransactionState = () => {
