@@ -24,9 +24,9 @@ export function useFinanceBilling(params: { page?: number; per_page?: number; se
     staleTime: 5 * 60 * 1000,
     retry: 2,
     refetchInterval: options?.refetchInterval ?? false,
-    refetchIntervalInBackground: true,
-    refetchOnWindowFocus: true,
-    refetchOnReconnect: true,
+    refetchIntervalInBackground: false,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
   });
 }
 
@@ -38,9 +38,9 @@ export function useFinanceBillingDetail(id?: number, options?: FinanceBillingQue
     retry: 1,
     staleTime: 5 * 60 * 1000,
     refetchInterval: options?.refetchInterval ?? false,
-    refetchIntervalInBackground: true,
-    refetchOnWindowFocus: true,
-    refetchOnReconnect: true,
+    refetchIntervalInBackground: false,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
   });
 }
 

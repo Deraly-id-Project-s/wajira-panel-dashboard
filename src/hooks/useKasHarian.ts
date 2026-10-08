@@ -22,13 +22,12 @@ export function useKasHarian(params: CashFlowFilterParams, options?: CashFlowQue
     enabled: options?.enabled ?? true,
     placeholderData: keepPreviousData,
     retry: 2,
-    staleTime: 0,
+    staleTime: Infinity,
     gcTime: 30 * 60 * 1000,
     refetchInterval: options?.refetchInterval ?? false,
-    refetchIntervalInBackground: true,
-    refetchOnWindowFocus: true,
-    refetchOnReconnect: true,
-    refetchOnMount: 'always',
+    refetchIntervalInBackground: false,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
   });
 }
 
@@ -38,12 +37,11 @@ export function useKasHarianDetail(id?: number, options?: CashFlowQueryOptions) 
     queryFn: () => fetchCashFlowDetail(id as number),
     enabled: (options?.enabled ?? true) && typeof id === 'number' && Number.isFinite(id),
     retry: 1,
-    staleTime: 0,
+    staleTime: Infinity,
     refetchInterval: options?.refetchInterval ?? false,
-    refetchIntervalInBackground: true,
-    refetchOnWindowFocus: true,
-    refetchOnReconnect: true,
-    refetchOnMount: 'always',
+    refetchIntervalInBackground: false,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
   });
 }
 

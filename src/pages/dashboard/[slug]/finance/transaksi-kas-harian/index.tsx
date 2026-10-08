@@ -19,8 +19,6 @@ import { useKasHarian, useSyncKasHarianPpnData } from '@/hooks/useKasHarian';
 import { usePermissionGuard } from '@/hooks/usePermissionGuard';
 import { getApiErrorMessage } from '@/utils/apiErrorHandler';
 
-const LIVE_UPDATE_INTERVAL = 5000;
-
 const mapManualCashFlow = (item: KasHarian): KasHarianListItem => ({
   id: item.id,
   source: (item.finance_billings ?? []).length > 0 ? 'billing' : 'manual',
@@ -90,7 +88,7 @@ export default function KasHarianPage() {
     },
     {
       enabled: !isCompanyLoading && companyNumber > 0,
-      refetchInterval: !isDeleteOpen && !isToggleOpen ? LIVE_UPDATE_INTERVAL : false,
+      refetchInterval: false,
     },
   );
 
