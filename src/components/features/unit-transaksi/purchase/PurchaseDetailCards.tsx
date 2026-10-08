@@ -1,6 +1,6 @@
 import { Card, CardContent } from '@/components/ui/card';
 
-import { UnitTransactionDetail } from '@/@types/unit-transaction.types';
+import { UnitTransactionDetail, UnitTransactionItem } from '@/@types/unit-transaction.types';
 import { Calendar, User, FileText, DollarSign, CreditCard } from 'lucide-react';
 import { getHistoryTotalIdrEquivalent, getHistoryUsdAmount, getHistoryBcaIdrAmount, getHistoryCashIdrAmount } from '@/utils/payment-helpers';
 import { currenciesFormat } from '@/components/ui/currenciesFormat';
@@ -11,9 +11,10 @@ import { ReferenceLink } from '@/components/ui/reference-link';
 interface Props {
   data: UnitTransactionDetail;
   billingHistories?: any[];
+  unitItems?: UnitTransactionItem[];
 }
 
-export function PurchaseDetailCards({ data, billingHistories = [] }: Props) {
+export function PurchaseDetailCards({ data, billingHistories = [], unitItems }: Props) {
   const totalDpp = Number(data.unit_transaction_item_total_dpp ?? 0);
   const totalPpn = Number(data.unit_transaction_item_total_ppn ?? 0);
   const totalHpp = totalDpp + totalPpn;
@@ -64,6 +65,37 @@ export function PurchaseDetailCards({ data, billingHistories = [] }: Props) {
   const customsCost = Number(data.usd_cost_customs_clearance_cost_total ?? 0);
   const otherCost = Number(data.usd_cost_other_total ?? 0);
   const totalUsdCost = Number(data.total_usd_cost ?? data.transaction_usd_cost_total ?? (freightCost + boxPackingCost + adminCost + ckdCost + blSwitchCost + customsCost + otherCost));
+
+  const items: any[] = (unitItems && unitItems.length > 0)
+    ? unitItems
+    : (data.unit_transaction_items ?? []);
+
+  const totalDiscountIdr = items.reduce((sum, item) => {
+    const itemPrice = Number(item.price ?? 0);
+    const itemQty = Number(item.qty_total ?? item.max_capacity ?? 1);
+    const discountPercent = Number(item.price_discount ?? (data as any).price_discount ?? 0);
+    return sum + (itemPrice * (discountPercent / 100) * itemQty);
+  }, 0);
+
+  const discountIdrPercentages = Array.from(new Set(items.map((i) => Number(i.price_discount ?? 0)).filter((p) => p > 0)));
+  const fallbackSingleIdrDiscount = Number((data as any).price_discount ?? 0);
+  const resolvedDiscountIdrPercent = discountIdrPercentages.length === 1
+    ? discountIdrPercentages[0]
+    : (discountIdrPercentages.length === 0 ? (fallbackSingleIdrDiscount > 0 ? fallbackSingleIdrDiscount : 0) : null);
+
+  const totalDiscountUsd = items.reduce((sum, item) => {
+    const itemPriceUsd = Number(item.price_usd && Number(item.price_usd) > 0
+      ? item.price_usd
+      : (Number(item.price_per_unit_usd ?? 0) * Number(item.qty_total ?? item.max_capacity ?? 1)));
+    const discountUsdPercent = Number(item.price_usd_discount ?? (data as any).price_usd_discount ?? 0);
+    return sum + (itemPriceUsd * (discountUsdPercent / 100));
+  }, 0);
+
+  const discountUsdPercentages = Array.from(new Set(items.map((i) => Number(i.price_usd_discount ?? 0)).filter((p) => p > 0)));
+  const fallbackSingleUsdDiscount = Number((data as any).price_usd_discount ?? 0);
+  const resolvedDiscountUsdPercent = discountUsdPercentages.length === 1
+    ? discountUsdPercentages[0]
+    : (discountUsdPercentages.length === 0 ? (fallbackSingleUsdDiscount > 0 ? fallbackSingleUsdDiscount : 0) : null);
 
   return (
     <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
@@ -125,6 +157,23 @@ export function PurchaseDetailCards({ data, billingHistories = [] }: Props) {
               <span>Total PPN</span>
               <span className="text-sm font-semibold text-slate-900">{currenciesFormat('idr', totalPpn)}</span>
             </div>
+            <div className="flex items-center justify-between">
+              <span>Diskon Harga</span>
+              <span className="text-sm font-semibold text-slate-900">
+                {totalDiscountIdr > 0 ? (
+                  <>
+                    <span className="text-emerald-600">-{currenciesFormat('idr', totalDiscountIdr)}</span>
+                    {resolvedDiscountIdrPercent !== null && resolvedDiscountIdrPercent > 0 && (
+                      <span className="text-xs text-slate-500 ml-1">({resolvedDiscountIdrPercent}%)</span>
+                    )}
+                  </>
+                ) : (
+                  resolvedDiscountIdrPercent !== null && resolvedDiscountIdrPercent > 0
+                    ? `${resolvedDiscountIdrPercent}%`
+                    : '0%'
+                )}
+              </span>
+            </div>
             <div className="border-t border-slate-100 my-1"></div>
             <div className="flex items-center justify-between text-slate-900">
               <span className="font-bold text-sm">Total HPP</span>
@@ -181,6 +230,23 @@ export function PurchaseDetailCards({ data, billingHistories = [] }: Props) {
             <div className="flex items-center justify-between">
               <span>Biaya USD Lainnya</span>
               <span className="text-sm font-semibold text-slate-900">{currenciesFormat('usd', otherCost)}</span>
+            </div>
+            <div className="flex items-center justify-between">
+              <span>Diskon Harga (USD)</span>
+              <span className="text-sm font-semibold text-slate-900">
+                {totalDiscountUsd > 0 ? (
+                  <>
+                    <span className="text-emerald-600">-{currenciesFormat('usd', totalDiscountUsd)}</span>
+                    {resolvedDiscountUsdPercent !== null && resolvedDiscountUsdPercent > 0 && (
+                      <span className="text-xs text-slate-500 ml-1">({resolvedDiscountUsdPercent}%)</span>
+                    )}
+                  </>
+                ) : (
+                  resolvedDiscountUsdPercent !== null && resolvedDiscountUsdPercent > 0
+                    ? `${resolvedDiscountUsdPercent}%`
+                    : '0%'
+                )}
+              </span>
             </div>
             <div className="border-t border-slate-100 my-1"></div>
             <div className="flex items-center justify-between text-slate-900">

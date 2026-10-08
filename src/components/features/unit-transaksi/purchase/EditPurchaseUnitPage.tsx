@@ -132,6 +132,18 @@ export default function EditPurchaseUnitPage() {
         payload.price_per_unit_usd = pricePerUnitUsd;
       }
 
+      const currentPriceDiscount = Number(unit?.price_discount ?? 0);
+      const currentPriceUsdDiscount = Number(unit?.price_usd_discount ?? 0);
+      const priceDiscount = Number(data.price_discount ?? 0) || 0;
+      const priceUsdDiscount = Number(data.price_usd_discount ?? 0) || 0;
+
+      if (!isSame(priceDiscount, currentPriceDiscount)) {
+        payload.price_discount = priceDiscount;
+      }
+      if (!isSame(priceUsdDiscount, currentPriceUsdDiscount)) {
+        payload.price_usd_discount = priceUsdDiscount;
+      }
+
       const currentDppTaxId = unit?.dpp_tax_id ? Number(unit.dpp_tax_id) : 0;
       const currentPpnTaxId = unit?.ppn_tax_id ? Number(unit.ppn_tax_id) : 0;
       const newDppTaxId = data.dppTaxVersionId ? Number(data.dppTaxVersionId) : 0;
@@ -217,6 +229,8 @@ export default function EditPurchaseUnitPage() {
                 expeditionFee: unit.expedition_fee,
                 documentTemplateId: purchase?.documentTemplateId ?? null,
                 otherFee: unit.other_fee,
+                price_discount: Number(unit.price_discount ?? 0) || 0,
+                price_usd_discount: Number(unit.price_usd_discount ?? 0) || 0,
                 priceUsd: unit.price_usd,
                 pricePerUnitUsd: unit.price_per_unit_usd,
                 dppTaxVersionId: unit.dpp_tax_id != null ? String(unit.dpp_tax_id) : undefined,

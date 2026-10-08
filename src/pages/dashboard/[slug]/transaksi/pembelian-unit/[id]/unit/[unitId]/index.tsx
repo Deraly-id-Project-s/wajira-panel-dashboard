@@ -486,6 +486,21 @@ export default function UnitPurchaseDetailPage() {
                   <span className="font-semibold text-slate-900">{qty}</span>
                 </div>
                 <div className="flex items-center justify-between text-sm text-slate-600">
+                  <span>Diskon Harga</span>
+                  <span className="font-semibold text-slate-900">
+                    {Number(unitItem?.price_discount ?? 0) > 0 ? (
+                      <>
+                        <span className="text-emerald-600">
+                          -{currenciesFormat('idr', price * (Number(unitItem?.price_discount) / 100) * qty)}
+                        </span>
+                        <span className="text-xs text-slate-500 ml-1">({Number(unitItem?.price_discount)}%)</span>
+                      </>
+                    ) : (
+                      '0%'
+                    )}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between text-sm text-slate-600">
                   <span>Total HPP</span>
                   <span className="font-semibold text-slate-900">{currenciesFormat('idr', totalHpp)}</span>
                 </div>
@@ -499,6 +514,23 @@ export default function UnitPurchaseDetailPage() {
                   <div className="flex items-center justify-between text-sm text-amber-800 bg-amber-50/50 px-2.5 py-1.5 rounded-md border border-amber-100">
                     <span className="font-medium">Harga Satuan (USD)</span>
                     <span className="font-bold">{currenciesFormat('usd', Number(unitItem.price_per_unit_usd))}</span>
+                  </div>
+                ) : null}
+                {unitItem?.price_usd || Number(unitItem?.price_usd_discount ?? 0) > 0 ? (
+                  <div className="flex items-center justify-between text-sm text-slate-600">
+                    <span>Diskon Harga (USD)</span>
+                    <span className="font-semibold text-slate-900">
+                      {Number(unitItem?.price_usd_discount ?? 0) > 0 ? (
+                        <>
+                          <span className="text-emerald-600">
+                            -{currenciesFormat('usd', Number(unitItem?.price_usd ?? (Number(unitItem?.price_per_unit_usd ?? 0) * qty)) * (Number(unitItem?.price_usd_discount) / 100))}
+                          </span>
+                          <span className="text-xs text-slate-500 ml-1">({Number(unitItem?.price_usd_discount)}%)</span>
+                        </>
+                      ) : (
+                        '0%'
+                      )}
+                    </span>
                   </div>
                 ) : null}
               </CardContent>

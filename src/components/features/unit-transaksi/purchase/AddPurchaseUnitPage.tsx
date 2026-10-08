@@ -27,6 +27,8 @@ export default function AddPurchaseUnitPage() {
                 biayaBBN: Number(formData.bbnPrice ?? 0),
                 biayaEkspedisi: Number(formData.expeditionFee ?? 0),
                 biayaLain: Number(formData.otherFee ?? 0),
+                price_discount: Number(formData.price_discount ?? 0) || 0,
+                price_usd_discount: Number(formData.price_usd_discount ?? 0) || 0,
                 dppTaxVersionId: String(formData.dppTaxVersionId ?? ''),
                 ppnTaxVersionId: String(formData.ppnTaxVersionId ?? ''),
                 priceUsd: formData.priceUsd ? Number(formData.priceUsd) : undefined,

@@ -1,8 +1,12 @@
 import { useEffect, useState } from 'react';
-import { unitTransactionItemService, UnitFormulaInput, UnitFormulaResult } from '@/services/unitTransactionItem.service';
+import {
+  unitTransactionItemService,
+  UnitFormulaInput,
+  UnitTransactionItemFormulaResponse,
+} from '@/services/unitTransactionItem.service';
 
 export function useUnitFormula(form: UnitFormulaInput) {
-  const [formula, setFormula] = useState<UnitFormulaResult | null>(null);
+  const [formula, setFormula] = useState<UnitTransactionItemFormulaResponse | null>(null);
   const [loading, setLoading] = useState(false);
 
   const {
@@ -11,6 +15,8 @@ export function useUnitFormula(form: UnitFormulaInput) {
     bbn_price,
     expedition_fee,
     other_fee,
+    price_discount,
+    price_usd_discount,
     dpp_tax_id,
     ppn_tax_id,
     price_per_unit_usd,
@@ -23,8 +29,12 @@ export function useUnitFormula(form: UnitFormulaInput) {
   useEffect(() => {
     const qty = Number(qty_total ?? 0);
     const priceVal = Number(price ?? 0);
+    const priceUsdVal = Number(price_usd ?? 0);
+    const pricePerUnitUsdVal = Number(price_per_unit_usd ?? 0);
 
-    if (!qty || qty <= 0 || !priceVal || priceVal < 0) {
+    const hasPrice = priceVal > 0 || priceUsdVal > 0 || pricePerUnitUsdVal > 0;
+
+    if (!qty || qty <= 0 || !hasPrice || priceVal < 0 || priceUsdVal < 0 || pricePerUnitUsdVal < 0) {
       setFormula(null);
       setLoading(false);
       return;
@@ -41,10 +51,12 @@ export function useUnitFormula(form: UnitFormulaInput) {
           bbn_price: Number(bbn_price ?? 0),
           expedition_fee: Number(expedition_fee ?? 0),
           other_fee: Number(other_fee ?? 0),
+          price_discount: Number(price_discount ?? 0),
+          price_usd_discount: Number(price_usd_discount ?? 0),
           dpp_tax_id,
           ppn_tax_id,
-          price_per_unit_usd: price_per_unit_usd ? Number(price_per_unit_usd) : undefined,
-          price_usd: price_usd ? Number(price_usd) : undefined,
+          price_per_unit_usd: price_per_unit_usd !== undefined && price_per_unit_usd !== null && price_per_unit_usd !== '' ? Number(price_per_unit_usd) : undefined,
+          price_usd: price_usd !== undefined && price_usd !== null && price_usd !== '' ? Number(price_usd) : undefined,
           usd_costs,
         });
 
@@ -68,6 +80,8 @@ export function useUnitFormula(form: UnitFormulaInput) {
     bbn_price,
     expedition_fee,
     other_fee,
+    price_discount,
+    price_usd_discount,
     dpp_tax_id,
     ppn_tax_id,
     price_per_unit_usd,

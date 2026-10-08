@@ -23,6 +23,8 @@ export type SalesPayload = {
   bbn_price?: number;
   expedition_fee?: number;
   other_fee?: number;
+  price_discount?: number;
+  price_usd_discount?: number;
   transaction_date?: string;
   price_usd?: number;
   price_per_unit_usd?: number;
@@ -47,6 +49,8 @@ const appendPayload = (form: FormData, payload: SalesPayload) => {
   appendIfDefined(form, 'sparepart_id', payload.sparepart_id);
   appendIfDefined(form, 'qty_total', payload.qty_total);
   appendIfDefined(form, 'price', payload.price);
+  form.append('price_discount', String(payload.price_discount ?? 0));
+  form.append('price_usd_discount', String(payload.price_usd_discount ?? 0));
   appendIfDefined(form, 'bbn_price', payload.bbn_price);
   appendIfDefined(form, 'expedition_fee', payload.expedition_fee);
   appendIfDefined(form, 'other_fee', payload.other_fee);
@@ -79,6 +83,8 @@ const toUrlEncodedPayload = (payload: SalesPayload): URLSearchParams => {
   if (payload.price !== undefined && payload.price !== null) {
     params.append('price', String(payload.price));
   }
+  params.append('price_discount', String(payload.price_discount ?? 0));
+  params.append('price_usd_discount', String(payload.price_usd_discount ?? 0));
   if (payload.bbn_price !== undefined && payload.bbn_price !== null) {
     params.append('bbn_price', String(payload.bbn_price));
   }

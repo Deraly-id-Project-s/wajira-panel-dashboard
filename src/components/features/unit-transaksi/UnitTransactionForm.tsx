@@ -8,7 +8,8 @@ import { MoneyInput } from '@/components/ui/money-input';
 import { formatCurrency } from '@/lib/utils/currency';
 import { currenciesFormat } from '@/components/ui/currenciesFormat';
 import { Button } from '@/components/ui/button';
-import { Plus, Trash2 } from 'lucide-react';
+import { Plus, Trash2, Percent, Info } from 'lucide-react';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { useTypeUnits } from '@/hooks/useTypeUnit';
 import type { TypeUnit } from '@/@types/type-unit.types';
 import { Label } from '@/components/ui/label';
@@ -44,12 +45,12 @@ export interface UnitTransactionFormProps {
 }
 
 const USD_COST_TYPES = [
-  { key: 'usdCostsFreight', type: 'freight', label: 'Freight (Pengiriman)' },
-  { key: 'usdCostsBoxPacking', type: 'box_packing', label: 'Box Packing (Peti)' },
-  { key: 'usdCostsAdminCost', type: 'admin_cost', label: 'Admin Cost (Administrasi)' },
-  { key: 'usdCostsCkdProcessingCost', type: 'ckd_processing_cost', label: 'CKD Processing Cost (Pemrosesan CKD)' },
-  { key: 'usdCostsBillOfLadingSwitchCost', type: 'bill_of_lading_switch_cost', label: 'Bill of Lading Switch Cost (Switch B/L)' },
-  { key: 'usdCostsCustomsClearanceCost', type: 'customs_clearance_cost', label: 'Customs Clearance Cost (Bea Cukai)' },
+  { key: 'usdCostsFreight', type: 'freight', label: 'Pengiriman', englishLabel: 'Freight' },
+  { key: 'usdCostsBoxPacking', type: 'box_packing', label: 'Pengepakan Peti', englishLabel: 'Box Packing' },
+  { key: 'usdCostsAdminCost', type: 'admin_cost', label: 'Biaya Administrasi', englishLabel: 'Admin Cost' },
+  { key: 'usdCostsCkdProcessingCost', type: 'ckd_processing_cost', label: 'Pemrosesan CKD', englishLabel: 'CKD Processing Cost' },
+  { key: 'usdCostsBillOfLadingSwitchCost', type: 'bill_of_lading_switch_cost', label: 'Switch B/L', englishLabel: 'Bill of Lading Switch Cost' },
+  { key: 'usdCostsCustomsClearanceCost', type: 'customs_clearance_cost', label: 'Bea Cukai', englishLabel: 'Customs Clearance Cost' },
 ] as const;
 
 const extractInitialUsdCosts = (defaults?: any) => {
@@ -176,6 +177,16 @@ export function UnitTransactionForm({
       bbnPrice: defaultValues?.bbnPrice || 0,
       expeditionFee: defaultValues?.expeditionFee || 0,
       otherFee: defaultValues?.otherFee || 0,
+      price_discount: defaultValues?.price_discount !== undefined
+        ? Number(defaultValues.price_discount)
+        : (defaultValues as any)?.priceDiscount !== undefined
+          ? Number((defaultValues as any).priceDiscount)
+          : 0,
+      price_usd_discount: defaultValues?.price_usd_discount !== undefined
+        ? Number(defaultValues.price_usd_discount)
+        : (defaultValues as any)?.priceUsdDiscount !== undefined
+          ? Number((defaultValues as any).priceUsdDiscount)
+          : 0,
       priceUsd: defaultValues?.priceUsd || 0,
       pricePerUnitUsd: defaultValues?.pricePerUnitUsd || 0,
       usdCostsFreight: initialCosts.usdCostsFreight,
@@ -193,7 +204,10 @@ export function UnitTransactionForm({
   const bbnPrice = Number(form.watch('bbnPrice') ?? 0);
   const expeditionFee = Number(form.watch('expeditionFee') ?? 0);
   const otherFee = Number(form.watch('otherFee') ?? 0);
+  const priceDiscount = Number(form.watch('price_discount') ?? 0);
+  const priceUsdDiscount = Number(form.watch('price_usd_discount') ?? 0);
   const pricePerUnitUsd = form.watch('pricePerUnitUsd');
+  const priceUsd = form.watch('priceUsd');
 
   useEffect(() => {
     if (isUsd) {
@@ -251,12 +265,25 @@ export function UnitTransactionForm({
     bbn_price: bbnPrice,
     expedition_fee: expeditionFee,
     other_fee: otherFee,
+    price_discount: priceDiscount,
+    price_usd_discount: isUsd ? priceUsdDiscount : 0,
     dpp_tax_id: selectedDppTaxVersionId ?? undefined,
     ppn_tax_id: selectedPpnTaxVersionId ?? undefined,
     price_per_unit_usd: isUsd ? pricePerUnitUsd : undefined,
-    price_usd: isUsd ? form.watch('priceUsd') : undefined,
+    price_usd: isUsd ? priceUsd : undefined,
     usd_costs: compiledUsdCosts,
   });
+
+  const additionalUsdTotal = formula?.price_usd_additional_total ?? formula?.total_usd_cost ?? compiledUsdCosts.reduce((s, c) => s + c.amount, 0);
+
+  const fallbackGrandTotalUsd = useMemo(() => {
+    const discountUsdPercent = Math.min(100, Math.max(0, priceUsdDiscount));
+    const basePriceUsd = Number(priceUsd ?? 0);
+    const discountedPriceUsd = discountUsdPercent > 0 ? basePriceUsd * (1 - discountUsdPercent / 100) : basePriceUsd;
+    return discountedPriceUsd + additionalUsdTotal;
+  }, [priceUsdDiscount, priceUsd, additionalUsdTotal]);
+
+  const grandTotalUsd = formula?.price_usd_total ?? formula?.price_total_usd ?? fallbackGrandTotalUsd;
 
   const hppPerUnit = Number(formula?.hpp_per_unit_price ?? 0);
   const dppPerUnit = Number(formula?.dpp_per_unit_price ?? 0);
@@ -282,6 +309,8 @@ export function UnitTransactionForm({
   const handleFormSubmit = (values: UnitTransactionFormValues) => {
     onSubmit({
       ...values,
+      price_discount: Number(values.price_discount ?? 0) || 0,
+      price_usd_discount: isUsd ? (Number(values.price_usd_discount ?? 0) || 0) : 0,
       priceUsd: isUsd ? Number(values.priceUsd) || 0 : 0,
       pricePerUnitUsd: isUsd ? Number(values.pricePerUnitUsd) || 0 : 0,
       usd_costs: isUsd ? compiledUsdCosts : [],
@@ -426,195 +455,296 @@ export function UnitTransactionForm({
 
               {/* USD Inputs */}
               {isUsd && (
-                <div className="space-y-6 p-4 rounded-md border border-amber-200 bg-amber-50/30 animate-in fade-in slide-in-from-top-2 duration-200">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <FormField
-                      control={form.control}
-                      name="pricePerUnitUsd"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel className="text-sm font-medium text-amber-900">Harga Satuan (USD)</FormLabel>
-                          <FormControl>
-                            <MoneyInput
-                              currency="USD"
-                              placeholder="$ 0.00"
-                              name={field.name}
-                              value={field.value ?? 0}
-                              onChangeValue={(val) => field.onChange(val === 0 ? undefined : val)}
-                              disabled={readOnly}
-                              onBlur={field.onBlur}
-                              className="border-amber-200 focus:border-amber-300 focus:ring-amber-200 bg-white"
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
+                <TooltipProvider>
+                  <div className="space-y-6 p-4 rounded-md border border-amber-200 bg-amber-50/30 animate-in fade-in slide-in-from-top-2 duration-200">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <FormField
+                        control={form.control}
+                        name="pricePerUnitUsd"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel className="text-sm font-medium text-amber-900 inline-flex items-center gap-1.5">
+                              <span>Harga Satuan (USD)</span>
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <span className="inline-flex cursor-help text-amber-600/70 hover:text-amber-800">
+                                    <Info className="h-3.5 w-3.5" />
+                                  </span>
+                                </TooltipTrigger>
+                                <TooltipContent>Unit Price (USD)</TooltipContent>
+                              </Tooltip>
+                            </FormLabel>
+                            <FormControl>
+                              <MoneyInput
+                                currency="USD"
+                                placeholder="$ 0.00"
+                                name={field.name}
+                                value={field.value ?? 0}
+                                onChangeValue={(val) => field.onChange(val === 0 ? undefined : val)}
+                                disabled={readOnly}
+                                onBlur={field.onBlur}
+                                className="border-amber-200 focus:border-amber-300 focus:ring-amber-200 bg-white"
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
 
-                    <FormField
-                      control={form.control}
-                      name="priceUsd"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel className="text-sm font-medium text-amber-900">Total Harga Unit (USD)</FormLabel>
-                          <FormControl>
-                            <MoneyInput
-                              currency="USD"
-                              placeholder="$ 0.00"
-                              name={field.name}
-                              value={field.value ?? 0}
-                              onChangeValue={(val) => field.onChange(val === 0 ? undefined : val)}
-                              disabled={true}
-                              onBlur={field.onBlur}
-                              className="border-amber-200 focus:border-amber-300 focus:ring-amber-200 bg-white"
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </div>
+                      <FormField
+                        control={form.control}
+                        name="priceUsd"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel className="text-sm font-medium text-amber-900 inline-flex items-center gap-1.5">
+                              <span>Total Harga Unit (USD)</span>
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <span className="inline-flex cursor-help text-amber-600/70 hover:text-amber-800">
+                                    <Info className="h-3.5 w-3.5" />
+                                  </span>
+                                </TooltipTrigger>
+                                <TooltipContent>Total Unit Price (USD)</TooltipContent>
+                              </Tooltip>
+                            </FormLabel>
+                            <FormControl>
+                              <MoneyInput
+                                currency="USD"
+                                placeholder="$ 0.00"
+                                name={field.name}
+                                value={field.value ?? 0}
+                                onChangeValue={(val) => field.onChange(val === 0 ? undefined : val)}
+                                disabled={true}
+                                onBlur={field.onBlur}
+                                className="border-amber-200 focus:border-amber-300 focus:ring-amber-200 bg-white"
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
 
-                  {/* 6 Biaya Operasional USD tambahan (Non-Other) */}
-                  <div className="space-y-3 pt-2 border-t border-amber-200/80">
-                    <Label className="text-sm font-semibold text-amber-950">
-                      Biaya Operasional USD Tambahan (Maks. 1x per jenis)
-                    </Label>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                      {USD_COST_TYPES.map((costType) => (
+                    {/* Biaya Operasional USD tambahan (Non-Other) */}
+                    <div className="space-y-3 pt-2 border-t border-amber-200/80">
+                      <Label className="text-sm font-semibold text-amber-950 inline-flex items-center gap-1.5">
+                        <span>Biaya Operasional Tambahan (USD)</span>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <span className="inline-flex cursor-help text-amber-600/70 hover:text-amber-800">
+                              <Info className="h-3.5 w-3.5" />
+                            </span>
+                          </TooltipTrigger>
+                          <TooltipContent>Additional Operational USD Costs (Max. 1x per type)</TooltipContent>
+                        </Tooltip>
+                      </Label>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                        {USD_COST_TYPES.map((costType) => (
+                          <FormField
+                            key={costType.key}
+                            control={form.control}
+                            name={costType.key as any}
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel className="text-xs font-medium text-amber-900 inline-flex items-center gap-1">
+                                  <span>{costType.label}</span>
+                                  <Tooltip>
+                                    <TooltipTrigger asChild>
+                                      <span className="inline-flex cursor-help text-amber-600/70 hover:text-amber-800">
+                                        <Info className="h-3 w-3" />
+                                      </span>
+                                    </TooltipTrigger>
+                                    <TooltipContent>{costType.englishLabel}</TooltipContent>
+                                  </Tooltip>
+                                </FormLabel>
+                                <FormControl>
+                                  <MoneyInput
+                                    currency="USD"
+                                    placeholder="$ 0.00"
+                                    name={field.name}
+                                    value={Number(field.value) || 0}
+                                    onChangeValue={(val) => field.onChange(val)}
+                                    onBlur={field.onBlur}
+                                    disabled={readOnly}
+                                    className="h-9 border-amber-200 focus:border-amber-300 bg-white text-xs"
+                                  />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                        ))}
+
+                        {/* Diskon Harga (USD) disamping form input Bea Cukai */}
                         <FormField
-                          key={costType.key}
                           control={form.control}
-                          name={costType.key as any}
+                          name="price_usd_discount"
                           render={({ field }) => (
                             <FormItem>
-                              <FormLabel className="text-xs font-medium text-amber-900">{costType.label}</FormLabel>
+                              <FormLabel className="text-xs font-medium text-amber-900 inline-flex items-center gap-1">
+                                <span>Diskon Harga (USD)</span>
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <span className="inline-flex cursor-help text-amber-600/70 hover:text-amber-800">
+                                      <Info className="h-3 w-3" />
+                                    </span>
+                                  </TooltipTrigger>
+                                  <TooltipContent>Price Discount (USD)</TooltipContent>
+                                </Tooltip>
+                              </FormLabel>
                               <FormControl>
-                                <MoneyInput
-                                  currency="USD"
-                                  placeholder="$ 0.00"
-                                  name={field.name}
-                                  value={Number(field.value) || 0}
-                                  onChangeValue={(val) => field.onChange(val)}
-                                  onBlur={field.onBlur}
-                                  disabled={readOnly}
-                                  className="h-9 border-amber-200 focus:border-amber-300 bg-white text-xs"
-                                />
+                                <div className="relative">
+                                  <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-2.5 text-amber-700/70">
+                                    <Percent className="h-3.5 w-3.5" />
+                                  </div>
+                                  <Input
+                                    type="number"
+                                    step="any"
+                                    min="0"
+                                    max="100"
+                                    placeholder="0"
+                                    value={field.value ?? ''}
+                                    onChange={(e) => {
+                                      const val = e.target.value;
+                                      field.onChange(val === '' ? 0 : Number(val));
+                                    }}
+                                    disabled={readOnly}
+                                    className="h-9 border-amber-200 focus:border-amber-300 bg-white text-xs pl-8"
+                                  />
+                                </div>
                               </FormControl>
                               <FormMessage />
                             </FormItem>
                           )}
                         />
-                      ))}
-                    </div>
-                  </div>
 
-                  {/* Biaya USD Lainnya (Other) Table */}
-                  <div className="space-y-3 pt-2 border-t border-amber-200/80">
-                    <div className="flex items-center justify-between">
-                      <Label className="text-sm font-semibold text-amber-950">
-                        Biaya USD Lainnya (Other USD Costs)
-                      </Label>
-                      {!readOnly && (
-                        <Button
-                          type="button"
-                          variant="outline"
-                          size="sm"
-                          className="h-8 border-amber-300 bg-white text-amber-900 hover:bg-amber-100/60"
-                          onClick={() => setOtherCosts((prev) => [...prev, { note: '', amount: 0 }])}
-                        >
-                          <Plus className="mr-1 h-3.5 w-3.5" /> Tambah List Other
-                        </Button>
+                        {/* Total Biaya USD */}
+                        <FormItem>
+                          <FormLabel className="text-xs font-medium text-amber-900">Total Biaya USD</FormLabel>
+                          <FormControl>
+                            <Input
+                              value={currenciesFormat('usd', additionalUsdTotal)}
+                              className="h-9 bg-muted/50 border-amber-200 text-xs"
+                              disabled
+                              readOnly
+                            />
+                          </FormControl>
+                        </FormItem>
+
+                        {/* Total Transaksi (USD) */}
+                        <FormItem>
+                          <FormLabel className="text-xs font-medium text-amber-900">Total Transaksi (USD)</FormLabel>
+                          <FormControl>
+                            <Input
+                              value={currenciesFormat('usd', grandTotalUsd)}
+                              className="h-9 bg-muted/50 border-amber-200 text-xs font-semibold"
+                              disabled
+                              readOnly
+                            />
+                          </FormControl>
+                        </FormItem>
+                      </div>
+                    </div>
+
+                    {/* Biaya USD Lainnya (Other) Table */}
+                    <div className="space-y-3 pt-2 border-t border-amber-200/80">
+                      <div className="flex items-center justify-between">
+                        <Label className="text-sm font-semibold text-amber-950 inline-flex items-center gap-1.5">
+                          <span>Biaya USD Lainnya</span>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <span className="inline-flex cursor-help text-amber-600/70 hover:text-amber-800">
+                                <Info className="h-3.5 w-3.5" />
+                              </span>
+                            </TooltipTrigger>
+                            <TooltipContent>Other USD Costs</TooltipContent>
+                          </Tooltip>
+                        </Label>
+                        {!readOnly && (
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            className="h-8 border-amber-300 bg-white text-amber-900 hover:bg-amber-100/60"
+                            onClick={() => setOtherCosts((prev) => [...prev, { note: '', amount: 0 }])}
+                          >
+                            <Plus className="mr-1 h-3.5 w-3.5" /> Tambah List Other
+                          </Button>
+                        )}
+                      </div>
+
+                      {otherCosts.length === 0 ? (
+                        <div className="rounded-md border border-dashed border-amber-200 bg-white/60 p-3 text-center text-xs text-amber-700/70">
+                          Belum ada nominal biaya USD lainnya. Klik &quot;Tambah List Other&quot; untuk menambahkan.
+                        </div>
+                      ) : (
+                        <div className="overflow-x-auto rounded-md border border-amber-200 bg-white shadow-sm">
+                          <table className="w-full text-left text-xs">
+                            <thead className="bg-amber-100/60 text-amber-900 font-semibold border-b border-amber-200">
+                              <tr>
+                                <th className="px-3 py-2 w-[40px]">No</th>
+                                <th className="px-3 py-2">Keterangan / Catatan</th>
+                                <th className="px-3 py-2 text-right w-[180px]">Nominal (USD)</th>
+                                {!readOnly && <th className="px-3 py-2 text-center w-[50px]">Aksi</th>}
+                              </tr>
+                            </thead>
+                            <tbody className="divide-y divide-amber-100">
+                              {otherCosts.map((item, index) => (
+                                <tr key={index} className="hover:bg-amber-50/40">
+                                  <td className="px-3 py-2 font-medium text-amber-800">{index + 1}</td>
+                                  <td className="px-3 py-2">
+                                    <Input
+                                      placeholder="Keterangan biaya (misal: Biaya karantina USD)"
+                                      value={item.note}
+                                      onChange={(e) => {
+                                        const val = e.target.value;
+                                        setOtherCosts((prev) =>
+                                          prev.map((row, i) => (i === index ? { ...row, note: val } : row))
+                                        );
+                                      }}
+                                      disabled={readOnly}
+                                      className="h-8 border-amber-200 text-xs bg-white focus:border-amber-400"
+                                    />
+                                  </td>
+                                  <td className="px-3 py-2 text-right">
+                                    <MoneyInput
+                                      currency="USD"
+                                      placeholder="$ 0.00"
+                                      value={item.amount}
+                                      onChangeValue={(val) => {
+                                        setOtherCosts((prev) =>
+                                          prev.map((row, i) => (i === index ? { ...row, amount: val } : row))
+                                        );
+                                      }}
+                                      disabled={readOnly}
+                                      className="h-8 border-amber-200 text-xs text-right bg-white focus:border-amber-400"
+                                    />
+                                  </td>
+                                  {!readOnly && (
+                                    <td className="px-3 py-2 text-center">
+                                      <Button
+                                        type="button"
+                                        variant="ghost"
+                                        size="icon"
+                                        className="h-7 w-7 rounded-full text-rose-600 hover:bg-rose-50 hover:text-rose-700"
+                                        onClick={() => setOtherCosts((prev) => prev.filter((_, i) => i !== index))}
+                                      >
+                                        <Trash2 className="h-4 w-4" />
+                                      </Button>
+                                    </td>
+                                  )}
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
                       )}
                     </div>
-
-                    {otherCosts.length === 0 ? (
-                      <div className="rounded-md border border-dashed border-amber-200 bg-white/60 p-3 text-center text-xs text-amber-700/70">
-                        Belum ada nominal biaya USD lainnya. Klik &quot;Tambah List Other&quot; untuk menambahkan.
-                      </div>
-                    ) : (
-                      <div className="overflow-x-auto rounded-md border border-amber-200 bg-white shadow-sm">
-                        <table className="w-full text-left text-xs">
-                          <thead className="bg-amber-100/60 text-amber-900 font-semibold border-b border-amber-200">
-                            <tr>
-                              <th className="px-3 py-2 w-[40px]">No</th>
-                              <th className="px-3 py-2">Keterangan / Catatan</th>
-                              <th className="px-3 py-2 text-right w-[180px]">Nominal (USD)</th>
-                              {!readOnly && <th className="px-3 py-2 text-center w-[50px]">Aksi</th>}
-                            </tr>
-                          </thead>
-                          <tbody className="divide-y divide-amber-100">
-                            {otherCosts.map((item, index) => (
-                              <tr key={index} className="hover:bg-amber-50/40">
-                                <td className="px-3 py-2 font-medium text-amber-800">{index + 1}</td>
-                                <td className="px-3 py-2">
-                                  <Input
-                                    placeholder="Keterangan biaya (misal: Biaya karantina USD)"
-                                    value={item.note}
-                                    onChange={(e) => {
-                                      const val = e.target.value;
-                                      setOtherCosts((prev) =>
-                                        prev.map((row, i) => (i === index ? { ...row, note: val } : row))
-                                      );
-                                    }}
-                                    disabled={readOnly}
-                                    className="h-8 border-amber-200 text-xs bg-white focus:border-amber-400"
-                                  />
-                                </td>
-                                <td className="px-3 py-2 text-right">
-                                  <MoneyInput
-                                    currency="USD"
-                                    placeholder="$ 0.00"
-                                    value={item.amount}
-                                    onChangeValue={(val) => {
-                                      setOtherCosts((prev) =>
-                                        prev.map((row, i) => (i === index ? { ...row, amount: val } : row))
-                                      );
-                                    }}
-                                    disabled={readOnly}
-                                    className="h-8 border-amber-200 text-xs text-right bg-white focus:border-amber-400"
-                                  />
-                                </td>
-                                {!readOnly && (
-                                  <td className="px-3 py-2 text-center">
-                                    <Button
-                                      type="button"
-                                      variant="ghost"
-                                      size="icon"
-                                      className="h-7 w-7 rounded-full text-rose-600 hover:bg-rose-50 hover:text-rose-700"
-                                      onClick={() => setOtherCosts((prev) => prev.filter((_, i) => i !== index))}
-                                    >
-                                      <Trash2 className="h-4 w-4" />
-                                    </Button>
-                                  </td>
-                                )}
-                              </tr>
-                            ))}
-                          </tbody>
-                        </table>
-                      </div>
-                    )}
                   </div>
-
-                  {/* Summary Totals USD */}
-                  <div className="pt-2 border-t border-amber-200/80 flex flex-wrap items-center justify-between text-xs text-amber-950 font-medium gap-2">
-                    <div>
-                      <span>Total Biaya USD: </span>
-                      <span className="font-bold text-amber-900">
-                        {currenciesFormat('usd', formula?.total_usd_cost ?? compiledUsdCosts.reduce((s, c) => s + c.amount, 0))}
-                      </span>
-                    </div>
-                    <div>
-                      <span>Total Transaksi (USD): </span>
-                      <span className="font-bold text-amber-900 text-sm">
-                        {currenciesFormat('usd', formula?.price_total_usd ?? ((Number(form.watch('priceUsd') ?? 0)) + (formula?.total_usd_cost ?? compiledUsdCosts.reduce((s, c) => s + c.amount, 0))))}
-                      </span>
-                    </div>
-                  </div>
-                </div>
+                </TooltipProvider>
               )}
 
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
                 <FormField
                   control={form.control}
                   name="bbnPrice"
@@ -653,6 +783,38 @@ export function UnitTransactionForm({
                       </FormLabel>
                       <FormControl>
                         <MoneyInput placeholder="Value" name={field.name} value={Number(field.value) || 0} onChangeValue={(val) => field.onChange(val)} onBlur={field.onBlur} disabled={readOnly} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="price_discount"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-sm font-medium">Diskon Harga</FormLabel>
+                      <FormControl>
+                        <div className="relative">
+                          <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-muted-foreground">
+                            <Percent className="h-4 w-4" />
+                          </div>
+                          <Input
+                            type="number"
+                            step="any"
+                            min="0"
+                            max="100"
+                            placeholder="0"
+                            value={field.value ?? ''}
+                            onChange={(e) => {
+                              const val = e.target.value;
+                              field.onChange(val === '' ? 0 : Number(val));
+                            }}
+                            disabled={readOnly}
+                            className="pl-9"
+                          />
+                        </div>
                       </FormControl>
                       <FormMessage />
                     </FormItem>

@@ -27,6 +27,8 @@ export interface SalesLineItem {
   price_total?: number;
   price_usd?: number;
   price_per_unit_usd?: number;
+  price_discount?: number;
+  price_usd_discount?: number;
 }
 
 export interface SalesItem {
@@ -45,6 +47,8 @@ export interface SalesItem {
   dppTaxVersionId: string;
   ppnTaxVersionId: string;
   biayaLain: number;
+  price_discount?: number;
+  price_usd_discount?: number;
   totalHpp: number;
   totalDpp: number;
   totalPpn: number;

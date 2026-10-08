@@ -53,11 +53,10 @@ export const useSalesById = (id?: string) => {
     queryKey: companyId ? ['sales-by-id', companyId, id ?? ''] : ['sales-by-id', 'unscoped', id],
     queryFn: () => salesService.getSalesDetail(id as string, companyId ?? undefined),
     enabled: !!id && Boolean(companyId),
-    refetchOnWindowFocus: true,
-    refetchOnReconnect: true,
-    refetchOnMount: 'always',
-    refetchInterval: 30_000,
-    staleTime: 0,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
+    refetchInterval: false,
+    staleTime: 1000 * 60 * 5,
   });
 };
 

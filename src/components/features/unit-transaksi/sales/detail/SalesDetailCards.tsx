@@ -66,6 +66,34 @@ export function SalesDetailCards({ data, billingHistories = [], unitType }: Prop
   const otherCost = Number(data.usd_cost_other_total ?? 0);
   const totalUsdCost = Number(data.total_usd_cost ?? data.transaction_usd_cost_total ?? (freightCost + boxPackingCost + adminCost + ckdCost + blSwitchCost + customsCost + otherCost));
 
+  const items = data.lineItems ?? [];
+  const totalDiscountIdr = items.reduce((sum, item) => {
+    const itemPrice = Number(item.hargaJual ?? 0);
+    const itemQty = Number(item.qty ?? 1);
+    const discountPercent = Number(item.price_discount ?? data.price_discount ?? 0);
+    return sum + (itemPrice * (discountPercent / 100) * itemQty);
+  }, 0);
+
+  const discountIdrPercentages = Array.from(new Set(items.map((i) => Number(i.price_discount ?? 0)).filter((p) => p > 0)));
+  const fallbackSingleIdrDiscount = Number(data.price_discount ?? 0);
+  const resolvedDiscountIdrPercent = discountIdrPercentages.length === 1
+    ? discountIdrPercentages[0]
+    : (discountIdrPercentages.length === 0 ? (fallbackSingleIdrDiscount > 0 ? fallbackSingleIdrDiscount : 0) : null);
+
+  const totalDiscountUsd = items.reduce((sum, item) => {
+    const itemPriceUsd = Number(item.price_usd && Number(item.price_usd) > 0
+      ? item.price_usd
+      : (Number(item.price_per_unit_usd ?? 0) * Number(item.qty ?? 1)));
+    const discountUsdPercent = Number(item.price_usd_discount ?? data.price_usd_discount ?? 0);
+    return sum + (itemPriceUsd * (discountUsdPercent / 100));
+  }, 0);
+
+  const discountUsdPercentages = Array.from(new Set(items.map((i) => Number(i.price_usd_discount ?? 0)).filter((p) => p > 0)));
+  const fallbackSingleUsdDiscount = Number(data.price_usd_discount ?? 0);
+  const resolvedDiscountUsdPercent = discountUsdPercentages.length === 1
+    ? discountUsdPercentages[0]
+    : (discountUsdPercentages.length === 0 ? (fallbackSingleUsdDiscount > 0 ? fallbackSingleUsdDiscount : 0) : null);
+
   return (
     <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
       {/* Card 1: Informasi Penjualan */}
@@ -126,6 +154,23 @@ export function SalesDetailCards({ data, billingHistories = [], unitType }: Prop
               <span>Total PPN</span>
               <span className="text-sm font-semibold text-slate-900">{currenciesFormat('idr', totalPpn)}</span>
             </div>
+            <div className="flex items-center justify-between">
+              <span>Diskon Harga</span>
+              <span className="text-sm font-semibold text-slate-900">
+                {totalDiscountIdr > 0 ? (
+                  <>
+                    <span className="text-emerald-600">-{currenciesFormat('idr', totalDiscountIdr)}</span>
+                    {resolvedDiscountIdrPercent !== null && resolvedDiscountIdrPercent > 0 && (
+                      <span className="text-xs text-slate-500 ml-1">({resolvedDiscountIdrPercent}%)</span>
+                    )}
+                  </>
+                ) : (
+                  resolvedDiscountIdrPercent !== null && resolvedDiscountIdrPercent > 0
+                    ? `${resolvedDiscountIdrPercent}%`
+                    : '0%'
+                )}
+              </span>
+            </div>
             <div className="border-t border-slate-100 my-1"></div>
             <div className="flex items-center justify-between text-slate-900">
               <span className="font-bold text-sm">Total HPP</span>
@@ -182,6 +227,23 @@ export function SalesDetailCards({ data, billingHistories = [], unitType }: Prop
             <div className="flex items-center justify-between">
               <span>Biaya USD Lainnya</span>
               <span className="text-sm font-semibold text-slate-900">{currenciesFormat('usd', otherCost)}</span>
+            </div>
+            <div className="flex items-center justify-between">
+              <span>Diskon Harga (USD)</span>
+              <span className="text-sm font-semibold text-slate-900">
+                {totalDiscountUsd > 0 ? (
+                  <>
+                    <span className="text-emerald-600">-{currenciesFormat('usd', totalDiscountUsd)}</span>
+                    {resolvedDiscountUsdPercent !== null && resolvedDiscountUsdPercent > 0 && (
+                      <span className="text-xs text-slate-500 ml-1">({resolvedDiscountUsdPercent}%)</span>
+                    )}
+                  </>
+                ) : (
+                  resolvedDiscountUsdPercent !== null && resolvedDiscountUsdPercent > 0
+                    ? `${resolvedDiscountUsdPercent}%`
+                    : '0%'
+                )}
+              </span>
             </div>
             <div className="border-t border-slate-100 my-1"></div>
             <div className="flex items-center justify-between text-slate-900">

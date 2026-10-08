@@ -36,11 +36,10 @@ export const useUnitTransactions = (options: { page?: number; perPage?: number; 
       company_id: companyId ?? undefined
     }),
     placeholderData: (previousData) => previousData,
-    refetchOnWindowFocus: true,
-    refetchOnReconnect: true,
-    refetchOnMount: 'always',
-    refetchInterval: 30_000,
-    staleTime: 0,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
+    refetchInterval: false,
+    staleTime: 1000 * 60 * 5,
     enabled: Boolean(companyId),
   });
 };
@@ -52,11 +51,10 @@ export const useUnitTransactionDetail = (id?: string) => {
     queryKey: companyId ? unitTransactionKeys.detail(companyId, id ?? '') : ['unit-transaction', 'unscoped', id],
     queryFn: () => unitTransactionService.getUnitTransactionDetail(id as string, companyId ?? undefined),
     enabled: !!id && Boolean(companyId),
-    refetchOnWindowFocus: true,
-    refetchOnReconnect: true,
-    refetchOnMount: 'always',
-    refetchInterval: 30_000,
-    staleTime: 0,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
+    refetchInterval: false,
+    staleTime: 1000 * 60 * 5,
   });
 };
 
@@ -67,11 +65,10 @@ export const usePurchaseById = (id?: string) => {
     queryKey: companyId ? unitTransactionKeys.purchaseDetail(companyId, id ?? '') : ['purchase-by-id', 'unscoped', id],
     queryFn: () => unitTransactionService.getUnitTransactionDetail(id as string, companyId ?? undefined),
     enabled: !!id && Boolean(companyId),
-    refetchOnWindowFocus: true,
-    refetchOnReconnect: true,
-    refetchOnMount: 'always',
-    refetchInterval: 30_000,
-    staleTime: 0,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
+    refetchInterval: false,
+    staleTime: 1000 * 60 * 5,
   });
 };
 
@@ -106,10 +103,9 @@ export const useUnitTransactionTypeDetails = (
       }),
     enabled: Boolean(id) && Boolean(companyId),
     placeholderData: (previousData) => previousData,
-    refetchOnWindowFocus: true,
-    refetchOnReconnect: true,
-    refetchOnMount: 'always',
-    staleTime: 0,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
+    staleTime: 1000 * 60 * 5,
   });
 };
 

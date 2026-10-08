@@ -2,8 +2,6 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import * as service from '@/services/transaction.service';
 import { Transaction, CreateTransactionRequest } from '@/@types/transaction.types';
 
-const LIVE_REFETCH_INTERVAL = 10_000;
-
 const KEYS = {
   all: ['transactions'] as const,
   list: (companyId: string, page: number, limit: number, search: string, startDate?: string, endDate?: string) => [...KEYS.all, 'list', companyId, page, limit, search, startDate, endDate] as const,
@@ -15,24 +13,24 @@ export const useTransactions = (companyId: string, page: number, limit: number, 
   useQuery({
     queryKey: KEYS.list(companyId, page, limit, search, startDate, endDate),
     queryFn: () => service.getTransactions(companyId, page, limit, search, startDate, endDate),
-    staleTime: LIVE_REFETCH_INTERVAL,
+    staleTime: 1000 * 60 * 5,
     retry: 1,
-    refetchInterval: LIVE_REFETCH_INTERVAL,
+    refetchInterval: false,
     refetchIntervalInBackground: false,
-    refetchOnWindowFocus: true,
-    refetchOnReconnect: true,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
   });
 
 export const useTransactionSummary = (companyId: string) =>
   useQuery({
     queryKey: KEYS.summary(companyId),
     queryFn: () => service.getTransactionSummary(companyId),
-    staleTime: LIVE_REFETCH_INTERVAL,
+    staleTime: 1000 * 60 * 5,
     retry: 1,
-    refetchInterval: LIVE_REFETCH_INTERVAL,
+    refetchInterval: false,
     refetchIntervalInBackground: false,
-    refetchOnWindowFocus: true,
-    refetchOnReconnect: true,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
   });
 
 export const useCreateTransaction = (companyId: string) => {

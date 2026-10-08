@@ -215,6 +215,8 @@ export interface UnitTransactionItem {
   sparepart_id?: string;
   qty_total: number;
   price: number;
+  price_discount?: number;
+  price_usd_discount?: number;
   bbn_price: number;
   expedition_fee: number;
   other_fee: number;
@@ -225,7 +227,9 @@ export interface UnitTransactionItem {
   price_per_unit_usd?: number;
   price_total?: number;
   price_total_usd?: number;
+  price_usd_total?: number;
   total_usd_cost?: number;
+  price_usd_additional_total?: number;
   usd_cost_freight_total?: number;
   usd_cost_box_packing_total?: number;
   usd_cost_admin_cost_total?: number;
@@ -258,6 +262,25 @@ export interface UnitTransactionItem {
   };
 }
 
+export interface UnitTransactionItemFormulaResponse {
+  bbn_price: number;
+  expedition_fee: number;
+  other_fee: number;
+  hpp_per_unit_price: number;
+  dpp_per_unit_price: number;
+  ppn_per_unit_price: number;
+  hpp_total_price: number;
+  dpp_total_price: number;
+  ppn_total_price: number;
+  price_per_unit_usd: number;
+  price_usd: number;
+  total_usd_cost: number;
+  price_usd_additional_total: number; // Sum of USD additional costs
+  price_usd_total: number;            // Main USD price + additional USD costs
+  price_total?: number;
+  price_total_usd?: number;
+}
+
 export interface UnitTransactionItemListResponse {
   data: UnitTransactionItem[];
   meta: PaginationMeta;
@@ -269,6 +292,8 @@ export interface CreateUnitTransactionItemPayload {
   sparepart_id?: string;
   qty_total: number;
   price: number;
+  price_discount?: number;
+  price_usd_discount?: number;
   bbn_price: number;
   expedition_fee: number;
   other_fee: number;
@@ -278,6 +303,12 @@ export interface CreateUnitTransactionItemPayload {
   price_per_unit_usd?: number;
   dpp_tax_id?: number | string;
   ppn_tax_id?: number | string;
+  usd_costs?: Array<{
+    id?: number;
+    cost_type: string;
+    amount: number;
+    note?: string | null;
+  }>;
 }
 
 export interface UpdateUnitTransactionItemPayload {
@@ -286,6 +317,8 @@ export interface UpdateUnitTransactionItemPayload {
   sparepart_id?: string;
   qty_total?: number;
   price?: number;
+  price_discount?: number;
+  price_usd_discount?: number;
   bbn_price?: number;
   expedition_fee?: number;
   other_fee?: number;
@@ -293,6 +326,12 @@ export interface UpdateUnitTransactionItemPayload {
   price_per_unit_usd?: number;
   dpp_tax_id?: number | string;
   ppn_tax_id?: number | string;
+  usd_costs?: Array<{
+    id?: number;
+    cost_type: string;
+    amount: number;
+    note?: string | null;
+  }>;
 }
 
 export interface TaxInfo {
@@ -312,6 +351,8 @@ export interface UnitTransactionItemSummary {
   unit_type_id?: string;
   qty_total: number;
   price: number;
+  price_discount?: number;
+  price_usd_discount?: number;
   bbn_price: number;
   expedition_fee: number;
   price_usd?: number;

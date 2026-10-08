@@ -440,7 +440,7 @@ export default function PurchaseDetailPage() {
           </Alert>
         ) : null}
 
-        <PurchaseDetailCards data={purchase} billingHistories={resolvedBillingHistories} />
+        <PurchaseDetailCards data={purchase} billingHistories={resolvedBillingHistories} unitItems={unitItems} />
 
         <PurchaseUnitTable purchaseId={purchase.id} slug={slug as string} isPaid={isPaid} canEdit={canEdit} canDelete={canDelete} />
 

@@ -88,6 +88,8 @@ export default function CreateSalesUnitPage() {
         bbn_price: Number(data.bbnPrice ?? 0),
         expedition_fee: Number(data.expeditionFee ?? 0),
         other_fee: Number(data.otherFee ?? 0),
+        price_discount: Number(data.price_discount ?? 0) || 0,
+        price_usd_discount: Number(data.price_usd_discount ?? 0) || 0,
         price_usd: data.priceUsd ? Number(data.priceUsd) : undefined,
         price_per_unit_usd: data.pricePerUnitUsd ? Number(data.pricePerUnitUsd) : undefined,
         company_id: companyId ?? undefined,

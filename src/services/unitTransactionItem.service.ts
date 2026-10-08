@@ -2,6 +2,7 @@ import { PaginationParams } from '@/@types/pagination.types';
 import {
   CreateUnitTransactionItemPayload,
   UnitTransactionItem,
+  UnitTransactionItemFormulaResponse,
   UnitTransactionItemListResponse,
   UpdateUnitTransactionItemPayload,
 } from '@/@types/unit-transaction.types';
@@ -32,6 +33,8 @@ type UnitTransactionItemApiModel = {
   ppn_total_price?: number | string;
   price_usd?: number | string;
   price_per_unit_usd?: number | string;
+  price_discount?: number | string;
+  price_usd_discount?: number | string;
   price_total?: number | string;
 };
 
@@ -41,6 +44,8 @@ export type UnitFormulaInput = {
   bbn_price?: number | string;
   expedition_fee?: number | string;
   other_fee?: number | string;
+  price_discount?: number | string;
+  price_usd_discount?: number | string;
   dpp_tax_id?: number | string | null;
   ppn_tax_id?: number | string | null;
   price_per_unit_usd?: number | string;
@@ -53,19 +58,8 @@ export type UnitFormulaInput = {
   }>;
 };
 
-export type UnitFormulaResult = {
-  hpp_per_unit_price: number;
-  dpp_per_unit_price: number;
-  ppn_per_unit_price: number;
-  hpp_total_price: number;
-  dpp_total_price: number;
-  ppn_total_price: number;
-  price_per_unit_usd?: number;
-  price_usd?: number;
-  total_usd_cost?: number;
-  price_total?: number;
-  price_total_usd?: number;
-};
+export type { UnitTransactionItemFormulaResponse } from '@/@types/unit-transaction.types';
+export type UnitFormulaResult = UnitTransactionItemFormulaResponse;
 
 const basePath = '/wapi/transaction/unit-transaction/unit-transaction-item';
 
@@ -134,29 +128,50 @@ const mapItem = (item: UnitTransactionItemApiModel): UnitTransactionItem => {
     price_total: item.price_total !== undefined ? toNumber(item.price_total) : (dppTotal + ppnTotal + bbnPrice + expeditionFee + otherFee),
     price_usd: item.price_usd !== undefined ? toNumber(item.price_usd) : undefined,
     price_per_unit_usd: item.price_per_unit_usd !== undefined ? toNumber(item.price_per_unit_usd) : undefined,
+    price_discount: item.price_discount !== undefined ? toNumber(item.price_discount) : 0,
+    price_usd_discount: item.price_usd_discount !== undefined ? toNumber(item.price_usd_discount) : 0,
   };
 };
 
-const mapFormula = (payload: any): UnitFormulaResult => ({
-  hpp_per_unit_price: toNumber(payload?.hpp_per_unit_price),
-  dpp_per_unit_price: toNumber(payload?.dpp_per_unit_price),
-  ppn_per_unit_price: toNumber(payload?.ppn_per_unit_price),
-  hpp_total_price: toNumber(payload?.hpp_total_price),
-  dpp_total_price: toNumber(payload?.dpp_total_price),
-  ppn_total_price: toNumber(payload?.ppn_total_price),
-  price_per_unit_usd: payload?.price_per_unit_usd !== undefined ? toNumber(payload?.price_per_unit_usd) : undefined,
-  price_usd: payload?.price_usd !== undefined ? toNumber(payload?.price_usd) : undefined,
-  total_usd_cost: payload?.total_usd_cost !== undefined ? toNumber(payload?.total_usd_cost) : undefined,
-  price_total: payload?.price_total !== undefined ? toNumber(payload?.price_total) : undefined,
-  price_total_usd: payload?.price_total_usd !== undefined ? toNumber(payload?.price_total_usd) : undefined,
-});
+const mapFormula = (payload: any): UnitTransactionItemFormulaResponse => {
+  const priceUsdAdditionalTotal = payload?.price_usd_additional_total !== undefined
+    ? toNumber(payload.price_usd_additional_total)
+    : toNumber(payload?.total_usd_cost);
+
+  const priceUsdTotal = payload?.price_usd_total !== undefined
+    ? toNumber(payload.price_usd_total)
+    : (payload?.price_total_usd !== undefined ? toNumber(payload.price_total_usd) : 0);
+
+  const totalUsdCost = payload?.total_usd_cost !== undefined
+    ? toNumber(payload.total_usd_cost)
+    : priceUsdAdditionalTotal;
+
+  return {
+    bbn_price: toNumber(payload?.bbn_price),
+    expedition_fee: toNumber(payload?.expedition_fee),
+    other_fee: toNumber(payload?.other_fee),
+    hpp_per_unit_price: toNumber(payload?.hpp_per_unit_price),
+    dpp_per_unit_price: toNumber(payload?.dpp_per_unit_price),
+    ppn_per_unit_price: toNumber(payload?.ppn_per_unit_price),
+    hpp_total_price: toNumber(payload?.hpp_total_price),
+    dpp_total_price: toNumber(payload?.dpp_total_price),
+    ppn_total_price: toNumber(payload?.ppn_total_price),
+    price_per_unit_usd: toNumber(payload?.price_per_unit_usd),
+    price_usd: toNumber(payload?.price_usd),
+    total_usd_cost: totalUsdCost,
+    price_usd_additional_total: priceUsdAdditionalTotal,
+    price_usd_total: priceUsdTotal,
+    price_total: payload?.price_total !== undefined ? toNumber(payload.price_total) : undefined,
+    price_total_usd: priceUsdTotal,
+  };
+};
 
 // ======================
 // SERVICE
 // ======================
 
 export const unitTransactionItemService = {
-  async getFormula(payload: UnitFormulaInput): Promise<UnitFormulaResult> {
+  async getFormula(payload: UnitFormulaInput): Promise<UnitTransactionItemFormulaResponse> {
     const requestParams: Record<string, any> = {
       qty_total: toIntegerString(payload.qty_total),
       price: toDecimalString(payload.price),
@@ -165,6 +180,12 @@ export const unitTransactionItemService = {
       other_fee: toDecimalString(payload.other_fee),
     };
 
+    if (payload.price_discount !== undefined && payload.price_discount !== null) {
+      requestParams.price_discount = toDecimalString(payload.price_discount);
+    }
+    if (payload.price_usd_discount !== undefined && payload.price_usd_discount !== null) {
+      requestParams.price_usd_discount = toDecimalString(payload.price_usd_discount);
+    }
     if (payload.price_per_unit_usd !== undefined && payload.price_per_unit_usd !== null) {
       requestParams.price_per_unit_usd = toDecimalString(payload.price_per_unit_usd);
     }
@@ -330,6 +351,8 @@ export const unitTransactionItemService = {
       payload.other_fee,
       toDecimalString
     );
+    form.append('price_discount', toDecimalString(payload.price_discount ?? 0));
+    form.append('price_usd_discount', toDecimalString(payload.price_usd_discount ?? 0));
     appendIfDefined(
       form,
       'price_usd',
@@ -395,6 +418,14 @@ export const unitTransactionItemService = {
 
     if (payload.price !== undefined) {
       params.append('price', Number(payload.price).toFixed(2));
+    }
+
+    if (payload.price_discount !== undefined) {
+      params.append('price_discount', Number(payload.price_discount).toFixed(2));
+    }
+
+    if (payload.price_usd_discount !== undefined) {
+      params.append('price_usd_discount', Number(payload.price_usd_discount).toFixed(2));
     }
 
     if (payload.bbn_price !== undefined) {

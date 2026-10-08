@@ -90,6 +90,8 @@ export default function CreatePurchaseUnitPage() {
         bbn_price: bbn,
         expedition_fee: expedition,
         other_fee: other,
+        price_discount: Number(data?.price_discount ?? 0) || 0,
+        price_usd_discount: Number(data?.price_usd_discount ?? 0) || 0,
         price_usd: data?.priceUsd ? Number(data?.priceUsd) : undefined,
         price_per_unit_usd: data?.pricePerUnitUsd ? Number(data?.pricePerUnitUsd) : undefined,
         dpp_tax_id: data?.dppTaxVersionId ? Number(data?.dppTaxVersionId) : undefined,

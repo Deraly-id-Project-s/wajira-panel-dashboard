@@ -57,6 +57,8 @@ export function SalesUnitTable({ lineItems, salesId, onAddUnit, canCreate, canEd
       price_total: Number(item.price_total ?? item.jumlah ?? 0),
       price_usd: item.price_usd ? Number(item.price_usd) : undefined,
       price_per_unit_usd: item.price_per_unit_usd ? Number(item.price_per_unit_usd) : undefined,
+      price_discount: item.price_discount !== undefined ? Number(item.price_discount) : undefined,
+      price_usd_discount: item.price_usd_discount !== undefined ? Number(item.price_usd_discount) : undefined,
     }));
   }, [unitItemsData?.data, lineItems, salesId]);
   const totalPages = Math.max(1, Math.ceil(items.length / perPage));
@@ -122,7 +124,21 @@ export function SalesUnitTable({ lineItems, salesId, onAddUnit, canCreate, canEd
           ? Number(item.price_per_unit_usd)
           : Number(item.price_usd ?? 0);
 
-        return <FilteredCurrency idr={idrPrice} usd={usdPrice} />;
+        return (
+          <div>
+            <FilteredCurrency idr={idrPrice} usd={usdPrice} />
+            {Number(item.price_discount ?? 0) > 0 && (
+              <span className="block text-[11px] text-emerald-600 font-medium">
+                Diskon: {item.price_discount}%
+              </span>
+            )}
+            {Number(item.price_usd_discount ?? 0) > 0 && (
+              <span className="block text-[11px] text-amber-600 font-medium">
+                Diskon USD: {item.price_usd_discount}%
+              </span>
+            )}
+          </div>
+        );
       },
     },
     {

@@ -91,6 +91,8 @@ export type SalesApiModel = {
     ppn_tax_id?: number | string;
     price_usd?: string | number;
     price_per_unit_usd?: string | number;
+    price_discount?: string | number;
+    price_usd_discount?: string | number;
     price_total?: string | number;
     unit_transaction_item_details?: Array<{
       id?: number | string;
@@ -315,6 +317,8 @@ const mapSalesLineItem = (item: NonNullable<SalesApiModel['unit_transaction_item
     price_total: priceTotal,
     price_usd: item.price_usd !== undefined ? toNumber(item.price_usd) : undefined,
     price_per_unit_usd: item.price_per_unit_usd !== undefined ? toNumber(item.price_per_unit_usd) : undefined,
+    price_discount: item.price_discount !== undefined ? toNumber(item.price_discount) : undefined,
+    price_usd_discount: item.price_usd_discount !== undefined ? toNumber(item.price_usd_discount) : undefined,
   };
 };
 
@@ -344,6 +348,8 @@ export const mapSalesDetailToUI = (item: SalesApiModel): SalesItem => {
     biayaBbn: toNumber(item.transaction_bbn_total),
     biayaEkspedisi: toNumber(item.expedition_fee_total),
     biayaLain: toNumber(item.transaction_other_fee),
+    price_discount: item.unit_transaction_items?.[0]?.price_discount !== undefined ? toNumber(item.unit_transaction_items[0].price_discount) : undefined,
+    price_usd_discount: item.unit_transaction_items?.[0]?.price_usd_discount !== undefined ? toNumber(item.unit_transaction_items[0].price_usd_discount) : undefined,
     dppTaxVersionId: item.unit_transaction_items?.[0]?.dpp_tax_id != null ? String(item.unit_transaction_items[0].dpp_tax_id) : '',
     ppnTaxVersionId: item.unit_transaction_items?.[0]?.ppn_tax_id != null ? String(item.unit_transaction_items[0].ppn_tax_id) : '',
     totalHpp: totalDpp,
@@ -409,6 +415,8 @@ export const mapSalesDetailToEditForm = (item: SalesApiModel): UnitTransactionFo
     bbnPrice: toNumber(item.transaction_bbn_total),
     expeditionFee: item.unit_transaction_items?.reduce((acc, row) => acc + toNumber(row.expedition_fee), 0) ?? 0,
     otherFee: toNumber(item.transaction_other_fee),
+    price_discount: toNumber(item.unit_transaction_items?.[0]?.price_discount),
+    price_usd_discount: toNumber(item.unit_transaction_items?.[0]?.price_usd_discount),
     hppPerUnit: totalDpp / qty,
     hppTotal: totalDpp,
     dppPerUnit: totalDpp / qty,
