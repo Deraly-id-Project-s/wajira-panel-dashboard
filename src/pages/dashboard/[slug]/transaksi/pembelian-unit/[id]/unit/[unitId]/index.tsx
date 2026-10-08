@@ -6,7 +6,9 @@ import { DollarSignIcon, FileText, Info, ListTodoIcon, MoreVertical, Plus, Uploa
 import { MoveUnitStockModal } from '@/components/features/unit-transaksi/MoveUnitStockModal';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { PageHeader } from '@/components/ui/page-header';
+import { PurchaseDetailCards } from '@/components/features/unit-transaksi/purchase/PurchaseDetailCards';
 import { usePurchaseById } from '@/hooks/useUnitTransaction';
+import { useCurrentBilling, useBillingHistory } from '@/hooks/useUnitBilling';
 import {
   useCreateUnitItemDetail,
   useDeleteUnitItemDetail,
@@ -16,6 +18,7 @@ import {
   useUpdateUnitItemDetail,
   useBulkDeleteUnitItemDetails,
 } from '@/hooks/useUnitItemDetail';
+import { usePurchaseUnitItems } from '@/hooks/useUnitTransactionItem';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -102,6 +105,29 @@ export default function UnitPurchaseDetailPage() {
   const { data: purchase, isLoading: purchaseLoading } = usePurchaseById(purchaseId);
   const { data: unitItem, isLoading: unitItemLoading, isError: unitItemError } = useUnitTransactionItemById(unitItemId);
   const { data: detailResponse } = useUnitItemDetails(unitItemId);
+  const { data: unitItemsResponse } = usePurchaseUnitItems(purchaseId);
+  const { data: currentBilling } = useCurrentBilling(String(purchase?.id ?? ''));
+  const billingId = String(currentBilling?.id ?? '');
+  const { data: billingHistories = [] } = useBillingHistory(billingId || undefined, String(purchase?.id ?? ''));
+
+  const resolvedBillingHistories = useMemo(() => {
+    return billingHistories.length > 0
+      ? billingHistories
+      : (purchase?.unit_transaction_billing?.unit_transaction_billing_histories ?? []).map((history) => ({
+        id: String(history.id ?? ''),
+        unit_transaction_billing_id: String(history.unit_transaction_billing_id ?? purchase?.unit_transaction_billing?.id ?? ''),
+        unit_transaction_id: purchase?.id,
+        payment_proof: history.payment_proof ?? null,
+        bca_payment_amount: Number((history as any).bca_payment_amount ?? (history as any).bca_payment ?? 0),
+        cash_payment_amount: Number((history as any).cash_payment_amount ?? (history as any).cash_payment ?? 0),
+        bca_payment_usd_amount: Number((history as any).bca_payment_usd_amount ?? (history as any).bca_payment_2 ?? 0),
+        payment_at: String(history.payment_at ?? ''),
+        note: history.note,
+        created_at: history.created_at,
+        updated_at: history.updated_at,
+        cashes: (history as any).cashes,
+      }));
+  }, [billingHistories, purchase]);
 
   const createMutation = useCreateUnitItemDetail();
   const updateMutation = useUpdateUnitItemDetail();
@@ -430,7 +456,7 @@ export default function UnitPurchaseDetailPage() {
               { label: 'Detail Pembelian', onClick: () => router.push(`/dashboard/${slug}/transaksi/pembelian-unit/${purchaseId}`) },
               { label: 'Detail Pembelian Unit' }
             ]}
-            title="Detail Data Pembelian"
+            title="Detail Data Pembelian Unit Tipe"
             subtitle={
               <>
                 <span>Kode Beli:</span>
@@ -440,147 +466,7 @@ export default function UnitPurchaseDetailPage() {
             onBack={() => router.push(`/dashboard/${slug}/transaksi/pembelian-unit/${purchaseId}`)}
           />
 
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-            <Card className="border-slate-200">
-              <CardContent className="p-5 space-y-2">
-
-                <div className="flex items-center gap-3">
-                  <div className="p-2 rounded-md bg-blue-50">
-                    <FileText className="h-5 w-5 text-blue-500" />
-                  </div>
-                  <h3 className="text-sm font-semibold text-slate-700">Informasi Invoice</h3>
-                </div>
-                <div className="text-sm text-slate-600">
-                  <p>Nomor Pembelian</p>
-                  <p className="font-semibold text-slate-900">
-                    <CopyBox text={purchase.code} />
-                  </p>
-                </div>
-                <div className="text-sm text-slate-600">
-                  <p>Tipe Unit</p>
-                  <p className="font-semibold text-slate-900">
-                    <ReferenceLink href={`/dashboard/${slug}/master/type-unit/${unitItem?.unit_type?.id}`}>{unitItem?.unit_type?.name}</ReferenceLink>
-                  </p>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card className="border-slate-200">
-              <CardContent className="p-5 space-y-2">
-                <div className="flex items-center gap-3">
-                  <div className="p-2 rounded-md bg-green-50">
-                    <DollarSignIcon className="h-5 w-5 text-green-500" />
-                  </div>
-                  <h3 className="text-sm font-semibold text-slate-700">Detail Pembelian</h3>
-                </div>
-                <div className="flex items-center justify-between text-sm text-slate-600">
-                  <span>Harga Unit</span>
-                  <span className="font-semibold text-slate-900">{currenciesFormat('idr', price)}</span>
-                </div>
-                <div className="flex items-center justify-between text-sm text-slate-600">
-                  <span>BBN</span>
-                  <span className="font-semibold text-slate-900">{currenciesFormat('idr', bbnPrice)}</span>
-                </div>
-                <div className="flex items-center justify-between text-sm text-slate-600">
-                  <span>Quantity</span>
-                  <span className="font-semibold text-slate-900">{qty}</span>
-                </div>
-                <div className="flex items-center justify-between text-sm text-slate-600">
-                  <span>Diskon Harga</span>
-                  <span className="font-semibold text-slate-900">
-                    {Number(unitItem?.price_discount ?? 0) > 0 ? (
-                      <>
-                        <span className="text-emerald-600">
-                          -{currenciesFormat('idr', price * (Number(unitItem?.price_discount) / 100) * qty)}
-                        </span>
-                        <span className="text-xs text-slate-500 ml-1">({Number(unitItem?.price_discount)}%)</span>
-                      </>
-                    ) : (
-                      '0%'
-                    )}
-                  </span>
-                </div>
-                <div className="flex items-center justify-between text-sm text-slate-600">
-                  <span>Total HPP</span>
-                  <span className="font-semibold text-slate-900">{currenciesFormat('idr', totalHpp)}</span>
-                </div>
-                {unitItem?.price_usd ? (
-                  <div className="flex items-center justify-between text-sm text-amber-800 bg-amber-50/50 px-2.5 py-1.5 rounded-md border border-amber-100 mt-2">
-                    <span className="font-medium">Total Harga (USD)</span>
-                    <span className="font-bold">{currenciesFormat('usd', Number(unitItem.price_usd))}</span>
-                  </div>
-                ) : null}
-                {unitItem?.price_per_unit_usd ? (
-                  <div className="flex items-center justify-between text-sm text-amber-800 bg-amber-50/50 px-2.5 py-1.5 rounded-md border border-amber-100">
-                    <span className="font-medium">Harga Satuan (USD)</span>
-                    <span className="font-bold">{currenciesFormat('usd', Number(unitItem.price_per_unit_usd))}</span>
-                  </div>
-                ) : null}
-                {unitItem?.price_usd || Number(unitItem?.price_usd_discount ?? 0) > 0 ? (
-                  <div className="flex items-center justify-between text-sm text-slate-600">
-                    <span>Diskon Harga (USD)</span>
-                    <span className="font-semibold text-slate-900">
-                      {Number(unitItem?.price_usd_discount ?? 0) > 0 ? (
-                        <>
-                          <span className="text-emerald-600">
-                            -{currenciesFormat('usd', Number(unitItem?.price_usd ?? (Number(unitItem?.price_per_unit_usd ?? 0) * qty)) * (Number(unitItem?.price_usd_discount) / 100))}
-                          </span>
-                          <span className="text-xs text-slate-500 ml-1">({Number(unitItem?.price_usd_discount)}%)</span>
-                        </>
-                      ) : (
-                        '0%'
-                      )}
-                    </span>
-                  </div>
-                ) : null}
-              </CardContent>
-            </Card>
-
-            <Card className="border-slate-200">
-              <CardContent className="p-5 space-y-2">
-                <div className="flex items-center gap-3">
-                  <div className="p-2 rounded-md bg-yellow-50">
-                    <ListTodoIcon className="h-5 w-5 text-yellow-500" />
-                  </div>
-                  <h3 className="text-sm font-semibold text-slate-700">Rincian Biaya</h3>
-                </div>
-                <div className="flex items-center justify-between text-sm text-slate-600">
-                  <span>DPP</span>
-                  <span className="font-semibold text-slate-900">
-                    {currenciesFormat('idr', dppPerUnit)}
-                    <span className="ml-2 font-light opacity-70">
-                      ({(Number(unitItem?.dpp_tax_rate) / 100).toFixed(2)}%)
-                      {unitItem?.dpp_tax?.tax?.name && (
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <span className="inline-flex cursor-help p-0.5">
-                              <Info className="h-3.5 w-3.5 text-slate-400 shrink-0" />
-                            </span>
-                          </TooltipTrigger>
-                          <TooltipContent>
-                            {unitItem?.dpp_tax?.tax?.name}
-                          </TooltipContent>
-                        </Tooltip>
-                      )}
-                    </span>
-                  </span>
-                </div>
-                <div className="flex items-center justify-between text-sm text-slate-600">
-                  <span>PPN</span>
-                  <span className="font-semibold text-slate-900">
-                    {currenciesFormat('idr', ppnPerUnit)}
-                    <span className="ml-2 font-light opacity-70">
-                      ({(Number(unitItem?.ppn_tax_rate) / 100).toFixed(2)}%)
-                    </span>
-                  </span>
-                </div>
-                <div className="pt-2 border-t border-slate-200 flex items-center justify-between text-sm">
-                  <span className="font-medium text-slate-700">Total Pembelian</span>
-                  <span className="font-semibold text-slate-900">{currenciesFormat('idr', totalPembelian)}</span>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
+          <PurchaseDetailCards data={purchase} billingHistories={resolvedBillingHistories} unitItems={unitItemsResponse?.data} />
 
           <Card className="border border-slate-200 shadow-sm">
             <CollapsibleBox title="Data Pembelian Detail Unit Tipe" description="Rincian lengkap detail unit yang dibeli">

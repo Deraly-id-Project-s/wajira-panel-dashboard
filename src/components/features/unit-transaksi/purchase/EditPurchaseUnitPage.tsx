@@ -156,6 +156,10 @@ export default function EditPurchaseUnitPage() {
         payload.ppn_tax_id = newPpnTaxId || undefined;
       }
 
+      if (data.usd_costs) {
+        payload.usd_costs = data.usd_costs;
+      }
+
       const hasChanges = Object.keys(payload).length > 1;
       if (!hasChanges) {
         toast.info('Tidak ada perubahan data');
@@ -233,6 +237,7 @@ export default function EditPurchaseUnitPage() {
                 price_usd_discount: Number(unit.price_usd_discount ?? 0) || 0,
                 priceUsd: unit.price_usd,
                 pricePerUnitUsd: unit.price_per_unit_usd,
+                usd_costs: (unit as any).unit_transaction_usd_costs || (unit as any).usd_costs || [],
                 dppTaxVersionId: unit.dpp_tax_id != null ? String(unit.dpp_tax_id) : undefined,
                 ppnTaxVersionId: unit.ppn_tax_id != null ? String(unit.ppn_tax_id) : undefined,
               }}

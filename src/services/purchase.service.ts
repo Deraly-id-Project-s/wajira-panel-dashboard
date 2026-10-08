@@ -461,6 +461,18 @@ export const purchaseService = {
     form.append('price_usd_discount', String(payload.price_usd_discount ?? 0));
     if (payload.price_usd !== undefined) form.append('price_usd', String(payload.price_usd));
     if (payload.price_per_unit_usd !== undefined) form.append('price_per_unit_usd', String(payload.price_per_unit_usd));
+    if (payload.usd_costs && payload.usd_costs.length > 0) {
+      payload.usd_costs.forEach((cost, index) => {
+        form.append(`usd_costs[${index}][cost_type]`, cost.cost_type);
+        form.append(`usd_costs[${index}][amount]`, String(cost.amount));
+        if (cost.note) {
+          form.append(`usd_costs[${index}][note]`, cost.note);
+        }
+        if (cost.id) {
+          form.append(`usd_costs[${index}][id]`, String(cost.id));
+        }
+      });
+    }
     form.append('document_template_id', payload.document_template_id == null ? '' : String(payload.document_template_id));
 
     if (process.env.NODE_ENV !== 'production') {
@@ -525,6 +537,18 @@ export const purchaseService = {
     form.append('price_usd_discount', String(payload.price_usd_discount ?? 0));
     if (payload.priceUsd !== undefined) form.append('price_usd', String(payload.priceUsd));
     if (payload.pricePerUnitUsd !== undefined) form.append('price_per_unit_usd', String(payload.pricePerUnitUsd));
+    if (payload.usd_costs && payload.usd_costs.length > 0) {
+      payload.usd_costs.forEach((cost, index) => {
+        form.append(`usd_costs[${index}][cost_type]`, cost.cost_type);
+        form.append(`usd_costs[${index}][amount]`, String(cost.amount));
+        if (cost.note) {
+          form.append(`usd_costs[${index}][note]`, cost.note);
+        }
+        if (cost.id) {
+          form.append(`usd_costs[${index}][id]`, String(cost.id));
+        }
+      });
+    }
 
     await apiClient.post<LaravelApiResponse<any>>(`${basePath}-item`, form);
 

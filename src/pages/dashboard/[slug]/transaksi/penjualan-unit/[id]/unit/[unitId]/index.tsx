@@ -483,7 +483,7 @@ export default function SalesUnitDetailPage() {
             { label: 'Detail Penjualan', onClick: () => router.push(`/dashboard/${slug}/transaksi/penjualan-unit/${salesId}`) },
             { label: 'Detail Unit' }
           ]}
-          title="Data Penjualan"
+          title="Detail Data Penjualan Unit Tipe"
           subtitle={
             <>
               <span>Kode Jual:</span>

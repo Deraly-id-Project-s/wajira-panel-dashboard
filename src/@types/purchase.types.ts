@@ -94,6 +94,12 @@ export interface CreatePurchaseRequest {
   transaction_date?: string;
   price_usd?: number;
   price_per_unit_usd?: number;
+  usd_costs?: Array<{
+    id?: number;
+    cost_type: string;
+    amount: number;
+    note?: string | null;
+  }>;
   document_template_id?: number | string | null;
 }
 
@@ -132,6 +138,12 @@ export interface CreatePurchaseUnitRequest {
   biayaLain: number;
   priceUsd?: number;
   pricePerUnitUsd?: number;
+  usd_costs?: Array<{
+    id?: number;
+    cost_type: string;
+    amount: number;
+    note?: string | null;
+  }>;
 }
 
 export interface PurchaseListResponse {

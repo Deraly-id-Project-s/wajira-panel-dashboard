@@ -164,6 +164,7 @@ export function UnitTransactionCreatePage({ type }: UnitTransactionCreatePagePro
       other_fee: toNumber(data.otherFee),
       price_usd: data.priceUsd ? Number(data.priceUsd) : undefined,
       price_per_unit_usd: data.pricePerUnitUsd ? Number(data.pricePerUnitUsd) : undefined,
+      usd_costs: data.usd_costs && data.usd_costs.length > 0 ? data.usd_costs : undefined,
       document_template_id: data.documentTemplateId ?? null,
     };
 
@@ -249,6 +250,7 @@ export function UnitTransactionCreatePage({ type }: UnitTransactionCreatePagePro
       other_fee: toNumber(data.otherFee),
       price_usd: data.priceUsd ? Number(data.priceUsd) : undefined,
       price_per_unit_usd: data.pricePerUnitUsd ? Number(data.pricePerUnitUsd) : undefined,
+      usd_costs: data.usd_costs && data.usd_costs.length > 0 ? data.usd_costs : undefined,
       dpp_tax_id: data.dppTaxVersionId ? Number(data.dppTaxVersionId) : undefined,
       ppn_tax_id: data.ppnTaxVersionId ? Number(data.ppnTaxVersionId) : undefined,
       document_template_id: data.documentTemplateId ?? null,

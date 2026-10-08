@@ -157,23 +157,6 @@ export function PurchaseDetailCards({ data, billingHistories = [], unitItems }: 
               <span>Total PPN</span>
               <span className="text-sm font-semibold text-slate-900">{currenciesFormat('idr', totalPpn)}</span>
             </div>
-            <div className="flex items-center justify-between">
-              <span>Diskon Harga</span>
-              <span className="text-sm font-semibold text-slate-900">
-                {totalDiscountIdr > 0 ? (
-                  <>
-                    <span className="text-emerald-600">-{currenciesFormat('idr', totalDiscountIdr)}</span>
-                    {resolvedDiscountIdrPercent !== null && resolvedDiscountIdrPercent > 0 && (
-                      <span className="text-xs text-slate-500 ml-1">({resolvedDiscountIdrPercent}%)</span>
-                    )}
-                  </>
-                ) : (
-                  resolvedDiscountIdrPercent !== null && resolvedDiscountIdrPercent > 0
-                    ? `${resolvedDiscountIdrPercent}%`
-                    : '0%'
-                )}
-              </span>
-            </div>
             <div className="border-t border-slate-100 my-1"></div>
             <div className="flex items-center justify-between text-slate-900">
               <span className="font-bold text-sm">Total HPP</span>
@@ -230,23 +213,6 @@ export function PurchaseDetailCards({ data, billingHistories = [], unitItems }: 
             <div className="flex items-center justify-between">
               <span>Biaya USD Lainnya</span>
               <span className="text-sm font-semibold text-slate-900">{currenciesFormat('usd', otherCost)}</span>
-            </div>
-            <div className="flex items-center justify-between">
-              <span>Diskon Harga (USD)</span>
-              <span className="text-sm font-semibold text-slate-900">
-                {totalDiscountUsd > 0 ? (
-                  <>
-                    <span className="text-emerald-600">-{currenciesFormat('usd', totalDiscountUsd)}</span>
-                    {resolvedDiscountUsdPercent !== null && resolvedDiscountUsdPercent > 0 && (
-                      <span className="text-xs text-slate-500 ml-1">({resolvedDiscountUsdPercent}%)</span>
-                    )}
-                  </>
-                ) : (
-                  resolvedDiscountUsdPercent !== null && resolvedDiscountUsdPercent > 0
-                    ? `${resolvedDiscountUsdPercent}%`
-                    : '0%'
-                )}
-              </span>
             </div>
             <div className="border-t border-slate-100 my-1"></div>
             <div className="flex items-center justify-between text-slate-900">

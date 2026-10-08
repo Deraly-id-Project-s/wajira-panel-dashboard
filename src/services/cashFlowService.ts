@@ -51,6 +51,10 @@ const normalizeCashFlow = (payload: Partial<KasHarian>): KasHarian => ({
   amount: toNumber(payload.amount),
   debet: toNumber(payload.debet),
   debet_usd: toNumber(payload.debet_usd),
+  debet_total: toNumber(payload.debet_total),
+  credit_total: toNumber(payload.credit_total),
+  debet_usd_total: toNumber(payload.debet_usd_total),
+  credit_usd_total: toNumber(payload.credit_usd_total),
   debet_original: toNumber(payload.debet_original),
   debet_usd_original: toNumber(payload.debet_usd_original),
   credit: toNumber(payload.credit),
@@ -62,6 +66,54 @@ const normalizeCashFlow = (payload: Partial<KasHarian>): KasHarian => ({
   is_valid: payload.is_valid !== undefined ? toBoolean(payload.is_valid) : undefined,
   created_at: payload.created_at ?? '',
   updated_at: payload.updated_at ?? '',
+  cash_position: payload.cash_position
+    ? {
+        debet_idr_total: toNumber(payload.cash_position.debet_idr_total),
+        credit_idr_total: toNumber(payload.cash_position.credit_idr_total),
+        debet_usd_total: toNumber(payload.cash_position.debet_usd_total),
+        credit_usd_total: toNumber(payload.cash_position.credit_usd_total),
+      }
+    : null,
+  cash_summaries: (payload.cash_summaries ?? []).map((cs) => ({
+    cash_id: toNumber(cs.cash_id),
+    cash: cs.cash
+      ? {
+          id: toNumber(cs.cash.id),
+          uuid: cs.cash.uuid,
+          code: cs.cash.code ?? '-',
+          description: cs.cash.description ?? '-',
+          type: cs.cash.type ?? '-',
+          currency_type: cs.cash.currency_type ?? 'idr',
+          cash_name: cs.cash.cash_name ?? cs.cash.code ?? '-',
+          company_id: cs.cash.company_id ? toNumber(cs.cash.company_id) : undefined,
+        }
+      : null,
+    debet_total: toNumber(cs.debet_total),
+    credit_total: toNumber(cs.credit_total),
+    debet_usd_total: toNumber(cs.debet_usd_total),
+    credit_usd_total: toNumber(cs.credit_usd_total),
+  })),
+  cash_flow_cashes: (payload.cash_flow_cashes ?? []).map((cfc) => ({
+    id: toNumber(cfc.id),
+    cash_flow_id: toNumber(cfc.cash_flow_id),
+    cash_id: toNumber(cfc.cash_id),
+    amount: toNumber(cfc.amount),
+    amount_original: toNumber(cfc.amount_original),
+    type: String(cfc.type ?? ''),
+    created_at: cfc.created_at ?? '',
+    updated_at: cfc.updated_at ?? '',
+    cash: cfc.cash
+      ? {
+          id: toNumber(cfc.cash.id),
+          uuid: cfc.cash.uuid,
+          company_id: cfc.cash.company_id ? toNumber(cfc.cash.company_id) : undefined,
+          currency_type: cfc.cash.currency_type ?? 'idr',
+          cash_name: cfc.cash.cash_name ?? cfc.cash.code ?? '-',
+          type: cfc.cash.type ?? '-',
+          code: cfc.cash.code ?? '-',
+        }
+      : null,
+  })),
   cash: {
     id: toNumber(payload.cash?.id),
     uuid: payload.cash?.uuid,
@@ -105,6 +157,7 @@ const normalizeCashFlow = (payload: Partial<KasHarian>): KasHarian => ({
     },
   })),
   grand_total: toNumber(payload.grand_total),
+  grand_total_usd: toNumber(payload.grand_total_usd),
   invoice_number: payload.invoice_number ?? null,
   remaining_payment: toNumber(payload.remaining_payment),
   remaining_payment_usd: toNumber(payload.remaining_payment_usd),
@@ -134,6 +187,15 @@ const normalizeCashFlow = (payload: Partial<KasHarian>): KasHarian => ({
                 payload.unit_transaction_billing.unit_transaction.expedition_fee_total ??
                 payload.unit_transaction_billing.unit_transaction.expedition_total
               ),
+              unit_transaction_usd_costs: (payload.unit_transaction_billing.unit_transaction.unit_transaction_usd_costs ?? []).map((c) => ({
+                id: toNumber(c.id),
+                unit_transaction_item_id: c.unit_transaction_item_id ? toNumber(c.unit_transaction_item_id) : undefined,
+                cost_type: String(c.cost_type || ''),
+                amount: toNumber(c.amount),
+                note: c.note ?? '',
+                created_at: c.created_at ?? '',
+                updated_at: c.updated_at ?? '',
+              })),
             }
           : null,
       }

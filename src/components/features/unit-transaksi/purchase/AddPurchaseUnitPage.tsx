@@ -33,6 +33,7 @@ export default function AddPurchaseUnitPage() {
                 ppnTaxVersionId: String(formData.ppnTaxVersionId ?? ''),
                 priceUsd: formData.priceUsd ? Number(formData.priceUsd) : undefined,
                 pricePerUnitUsd: formData.pricePerUnitUsd ? Number(formData.pricePerUnitUsd) : undefined,
+                usd_costs: formData.usd_costs && formData.usd_costs.length > 0 ? formData.usd_costs : undefined,
             })
 
             if ((formData.documentTemplateId ?? null) !== (purchase?.documentTemplateId ?? null)) {

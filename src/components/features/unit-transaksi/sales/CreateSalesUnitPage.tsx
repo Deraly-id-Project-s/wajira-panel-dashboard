@@ -92,6 +92,7 @@ export default function CreateSalesUnitPage() {
         price_usd_discount: Number(data.price_usd_discount ?? 0) || 0,
         price_usd: data.priceUsd ? Number(data.priceUsd) : undefined,
         price_per_unit_usd: data.pricePerUnitUsd ? Number(data.pricePerUnitUsd) : undefined,
+        usd_costs: data.usd_costs && data.usd_costs.length > 0 ? data.usd_costs : undefined,
         company_id: companyId ?? undefined,
         type: 'sales',
         dpp_tax_id: data.dppTaxVersionId ? Number(data.dppTaxVersionId) : undefined,

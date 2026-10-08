@@ -187,8 +187,8 @@ export function UnitTransactionForm({
         : (defaultValues as any)?.priceUsdDiscount !== undefined
           ? Number((defaultValues as any).priceUsdDiscount)
           : 0,
-      priceUsd: defaultValues?.priceUsd || 0,
-      pricePerUnitUsd: defaultValues?.pricePerUnitUsd || 0,
+      priceUsd: defaultValues?.priceUsd || (defaultValues as any)?.price_usd || 0,
+      pricePerUnitUsd: defaultValues?.pricePerUnitUsd || (defaultValues as any)?.price_per_unit_usd || 0,
       usdCostsFreight: initialCosts.usdCostsFreight,
       usdCostsBoxPacking: initialCosts.usdCostsBoxPacking,
       usdCostsAdminCost: initialCosts.usdCostsAdminCost,
@@ -313,6 +313,8 @@ export function UnitTransactionForm({
       price_usd_discount: isUsd ? (Number(values.price_usd_discount ?? 0) || 0) : 0,
       priceUsd: isUsd ? Number(values.priceUsd) || 0 : 0,
       pricePerUnitUsd: isUsd ? Number(values.pricePerUnitUsd) || 0 : 0,
+      price_usd: isUsd ? Number(values.priceUsd) || 0 : 0,
+      price_per_unit_usd: isUsd ? Number(values.pricePerUnitUsd) || 0 : 0,
       usd_costs: isUsd ? compiledUsdCosts : [],
       dppTaxVersionId: selectedDppTaxVersionId ?? undefined,
       ppnTaxVersionId: selectedPpnTaxVersionId ?? undefined,

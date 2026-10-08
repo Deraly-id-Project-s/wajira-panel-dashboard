@@ -379,6 +379,19 @@ export const unitTransactionItemService = {
       toIntegerString
     );
 
+    if (payload.usd_costs && payload.usd_costs.length > 0) {
+      payload.usd_costs.forEach((cost, index) => {
+        form.append(`usd_costs[${index}][cost_type]`, cost.cost_type);
+        form.append(`usd_costs[${index}][amount]`, String(cost.amount));
+        if (cost.note) {
+          form.append(`usd_costs[${index}][note]`, cost.note);
+        }
+        if (cost.id) {
+          form.append(`usd_costs[${index}][id]`, String(cost.id));
+        }
+      });
+    }
+
     const response = await apiClient.post<
       LaravelApiResponse<UnitTransactionItemApiModel>
     >(basePath, form);
@@ -454,6 +467,19 @@ export const unitTransactionItemService = {
 
     if (payload.ppn_tax_id !== undefined && payload.ppn_tax_id !== null && String(payload.ppn_tax_id) !== '') {
       params.append('ppn_tax_id', String(Math.trunc(Number(payload.ppn_tax_id))));
+    }
+
+    if (payload.usd_costs && payload.usd_costs.length > 0) {
+      payload.usd_costs.forEach((cost, index) => {
+        params.append(`usd_costs[${index}][cost_type]`, cost.cost_type);
+        params.append(`usd_costs[${index}][amount]`, String(cost.amount));
+        if (cost.note) {
+          params.append(`usd_costs[${index}][note]`, cost.note);
+        }
+        if (cost.id) {
+          params.append(`usd_costs[${index}][id]`, String(cost.id));
+        }
+      });
     }
 
     const response = await apiClient.put(

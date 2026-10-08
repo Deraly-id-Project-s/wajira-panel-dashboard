@@ -94,6 +94,7 @@ export default function CreatePurchaseUnitPage() {
         price_usd_discount: Number(data?.price_usd_discount ?? 0) || 0,
         price_usd: data?.priceUsd ? Number(data?.priceUsd) : undefined,
         price_per_unit_usd: data?.pricePerUnitUsd ? Number(data?.pricePerUnitUsd) : undefined,
+        usd_costs: data?.usd_costs && data?.usd_costs.length > 0 ? data.usd_costs : undefined,
         dpp_tax_id: data?.dppTaxVersionId ? Number(data?.dppTaxVersionId) : undefined,
         ppn_tax_id: data?.ppnTaxVersionId ? Number(data?.ppnTaxVersionId) : undefined,
       });

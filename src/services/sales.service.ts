@@ -28,6 +28,12 @@ export type SalesPayload = {
   transaction_date?: string;
   price_usd?: number;
   price_per_unit_usd?: number;
+  usd_costs?: Array<{
+    id?: number;
+    cost_type: string;
+    amount: number;
+    note?: string | null;
+  }>;
   document_template_id?: number | string | null;
 };
 
@@ -57,6 +63,18 @@ const appendPayload = (form: FormData, payload: SalesPayload) => {
   appendIfDefined(form, 'transaction_date', payload.transaction_date);
   appendIfDefined(form, 'price_usd', payload.price_usd);
   appendIfDefined(form, 'price_per_unit_usd', payload.price_per_unit_usd);
+  if (payload.usd_costs && payload.usd_costs.length > 0) {
+    payload.usd_costs.forEach((cost, index) => {
+      form.append(`usd_costs[${index}][cost_type]`, cost.cost_type);
+      form.append(`usd_costs[${index}][amount]`, String(cost.amount));
+      if (cost.note) {
+        form.append(`usd_costs[${index}][note]`, cost.note);
+      }
+      if (cost.id) {
+        form.append(`usd_costs[${index}][id]`, String(cost.id));
+      }
+    });
+  }
   form.append('document_template_id', payload.document_template_id == null ? '' : String(payload.document_template_id));
 };
 
@@ -102,6 +120,18 @@ const toUrlEncodedPayload = (payload: SalesPayload): URLSearchParams => {
   }
   if (payload.price_per_unit_usd !== undefined && payload.price_per_unit_usd !== null) {
     params.append('price_per_unit_usd', String(payload.price_per_unit_usd));
+  }
+  if (payload.usd_costs && payload.usd_costs.length > 0) {
+    payload.usd_costs.forEach((cost, index) => {
+      params.append(`usd_costs[${index}][cost_type]`, cost.cost_type);
+      params.append(`usd_costs[${index}][amount]`, String(cost.amount));
+      if (cost.note) {
+        params.append(`usd_costs[${index}][note]`, cost.note);
+      }
+      if (cost.id) {
+        params.append(`usd_costs[${index}][id]`, String(cost.id));
+      }
+    });
   }
   params.append('document_template_id', payload.document_template_id == null ? '' : String(payload.document_template_id));
   return params;
