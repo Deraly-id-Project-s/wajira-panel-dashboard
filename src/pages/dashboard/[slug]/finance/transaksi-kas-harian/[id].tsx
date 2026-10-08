@@ -38,6 +38,7 @@ import { Separator } from '@/components/ui/separator';
 import { Textarea } from '@/components/ui/textarea';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { useKasHarianDetail, useUpdateKasHarian } from '@/hooks/useKasHarian';
+import { useKas } from '@/hooks/useKas';
 import { cn } from '@/lib/utils';
 import { getApiErrorMessage } from '@/utils/apiErrorHandler';
 
@@ -135,6 +136,9 @@ export default function KasHarianDetailPage() {
   const updateMutation = useUpdateKasHarian();
   const cashFlowDetail = cashFlowQuery.data;
   const companyId = cashFlowDetail?.company_id ?? 0;
+  const kasQuery = useKas(companyId > 0 ? companyId : undefined);
+  const kasList = useMemo(() => kasQuery.data?.data ?? [], [kasQuery.data?.data]);
+
   const financeBillings = useMemo(() => cashFlowDetail?.finance_billings ?? [], [cashFlowDetail?.finance_billings]);
   const hasBillings = financeBillings.length > 0;
   const isLinkedTransaction = Boolean(
@@ -145,44 +149,180 @@ export default function KasHarianDetailPage() {
   );
   const unitTransaction = cashFlowDetail?.unit_transaction_billing?.unit_transaction;
 
-  const debetIdr = Number(cashFlowDetail?.debet ?? 0);
-  const creditIdr = Number(cashFlowDetail?.credit ?? 0);
-  const debetUsd = Number(cashFlowDetail?.debet_usd ?? 0);
-  const creditUsd = Number(cashFlowDetail?.credit_usd ?? 0);
-  const isUsdTransaction = debetUsd > 0 || creditUsd > 0;
-  const displayCurrency = isUsdTransaction ? 'usd' : 'idr';
-  const transactionAmount = isUsdTransaction
-    ? (debetUsd || creditUsd)
-    : (debetIdr || creditIdr || Number(cashFlowDetail?.grand_total ?? 0));
+  const debetIdr = Number(cashFlowDetail?.debet ?? cashFlowDetail?.cash_position?.debet_idr_total ?? 0);
+  const creditIdr = Number(cashFlowDetail?.credit ?? cashFlowDetail?.cash_position?.credit_idr_total ?? 0);
+  const debetUsd = Number(cashFlowDetail?.debet_usd ?? cashFlowDetail?.cash_position?.debet_usd_total ?? 0);
+  const creditUsd = Number(cashFlowDetail?.credit_usd ?? cashFlowDetail?.cash_position?.credit_usd_total ?? 0);
   const expectedIdr = debetIdr > 0 ? debetIdr : creditIdr;
   const expectedUsd = debetUsd > 0 ? debetUsd : creditUsd;
+
+  const grandTotalIdr = Number(cashFlowDetail?.grand_total ?? expectedIdr);
+  const grandTotalUsd = Number(cashFlowDetail?.grand_total_usd ?? expectedUsd);
 
   const totalPaidIdr = useMemo(
     () => financeBillings.filter(fb => !fb.cash?.code?.toLowerCase().includes('usd')).reduce((sum, fb) => sum + Number(fb.amount || 0), 0),
     [financeBillings]
   );
-  const remainingPaymentIdr = Math.max(0, expectedIdr - totalPaidIdr);
+  const remainingPaymentIdr = Number(cashFlowDetail?.remaining_payment ?? Math.max(0, grandTotalIdr - totalPaidIdr));
 
   const totalPaidUsd = useMemo(
     () => financeBillings.filter(fb => fb.cash?.code?.toLowerCase().includes('usd')).reduce((sum, fb) => sum + Number(fb.amount || 0), 0),
     [financeBillings]
   );
-  const remainingPaymentUsd = Math.max(0, expectedUsd - totalPaidUsd);
+  const remainingPaymentUsd = Number(cashFlowDetail?.remaining_payment_usd ?? Math.max(0, grandTotalUsd - totalPaidUsd));
 
-  const hasIdr = expectedIdr > 0;
-  const hasUsd = expectedUsd > 0;
+  const hasIdr = grandTotalIdr > 0 || debetIdr > 0 || creditIdr > 0;
+  const hasUsd = grandTotalUsd > 0 || debetUsd > 0 || creditUsd > 0;
   const isFullyPaid = (hasIdr ? remainingPaymentIdr <= 0 : true) && (hasUsd ? remainingPaymentUsd <= 0 : true);
   const isMarkedPaid = cashFlowDetail?.is_paid === true
     || cashFlowDetail?.is_paid === '1'
     || cashFlowDetail?.is_paid === 'true';
 
-  const totalPaid = useMemo(
-    () => financeBillings.reduce((sum, billing) => sum + Number(billing.amount || 0), 0),
-    [financeBillings],
-  );
   const remainingPayment = isFullyPaid ? 0 : (hasIdr && hasUsd) ? (remainingPaymentIdr + remainingPaymentUsd) : (hasUsd ? remainingPaymentUsd : remainingPaymentIdr);
   const proofUrl = buildProofUrl(cashFlowDetail?.payment_proof);
   const isLoading = cashFlowQuery.isLoading || router.isFallback || !router.isReady;
+
+  const usdCostsList = useMemo(() => {
+    const rawCosts = unitTransaction?.unit_transaction_usd_costs ?? [];
+    if (!rawCosts || rawCosts.length === 0) return [];
+
+    const costMap = new Map<string, number>();
+    for (const item of rawCosts) {
+      const costType = (item.cost_type || 'other').toLowerCase();
+      const current = costMap.get(costType) ?? 0;
+      costMap.set(costType, current + Number(item.amount || 0));
+    }
+
+    const labelMap: Record<string, string> = {
+      freight: 'Biaya Ongkos Angkut (Freight)',
+      box_packing: 'Biaya Box / Packing',
+      admin_cost: 'Biaya Admin',
+      ckd_processing_cost: 'Biaya Processing CKD',
+      bill_of_lading_switch_cost: 'Biaya Switch B/L',
+      customs_clearance_cost: 'Biaya Bea Cukai (Customs)',
+      other: 'Biaya Lainnya (USD)',
+    };
+
+    return Array.from(costMap.entries()).map(([type, amount]) => ({
+      type,
+      amount,
+      label: labelMap[type] || type.replace(/_/g, ' ').toUpperCase(),
+    }));
+  }, [unitTransaction?.unit_transaction_usd_costs]);
+
+  const mappedSummaryCards = useMemo(() => {
+    const summaries = cashFlowDetail?.cash_summaries ?? [];
+    const cfCashes = cashFlowDetail?.cash_flow_cashes ?? [];
+
+    if (kasList.length > 0) {
+      return kasList.map((kas) => {
+        const summary = summaries.find((s) => s.cash_id === kas.id);
+        const isUsd = (kas.currency_type || '').toLowerCase() === 'usd';
+        const currency = isUsd ? 'usd' : 'idr';
+
+        let debet = 0;
+        let credit = 0;
+
+        if (summary) {
+          debet = isUsd ? Number(summary.debet_usd_total || 0) : Number(summary.debet_total || 0);
+          credit = isUsd ? Number(summary.credit_usd_total || 0) : Number(summary.credit_total || 0);
+        } else {
+          const cashFlowsForThisKas = cfCashes.filter((c) => c.cash_id === kas.id);
+          debet = cashFlowsForThisKas.filter((c) => c.type === 'debet').reduce((sum, c) => sum + Number(c.amount || 0), 0);
+          credit = cashFlowsForThisKas.filter((c) => c.type === 'credit').reduce((sum, c) => sum + Number(c.amount || 0), 0);
+        }
+
+        const label = kas.cash_name || kas.code || `Kas #${kas.id}`;
+        const description = kas.description || `Kas ${kas.type || ''} (${currency.toUpperCase()})`;
+
+        if (debet > 0 && credit === 0) {
+          return {
+            key: kas.id,
+            label,
+            value: currenciesFormat(currency, debet),
+            description: `Uang Masuk / Debet (${description})`,
+            tone: 'green' as const,
+            icon: <ArrowDownLeft className="h-5 w-5" />,
+          };
+        }
+        if (credit > 0 && debet === 0) {
+          return {
+            key: kas.id,
+            label,
+            value: currenciesFormat(currency, credit),
+            description: `Uang Keluar / Kredit (${description})`,
+            tone: 'red' as const,
+            icon: <ArrowUpRight className="h-5 w-5" />,
+          };
+        }
+        if (debet > 0 && credit > 0) {
+          return {
+            key: kas.id,
+            label,
+            value: `+${currenciesFormat(currency, debet)} / -${currenciesFormat(currency, credit)}`,
+            description: `Arus Masuk & Keluar (${description})`,
+            tone: 'blue' as const,
+            icon: <CircleDollarSign className="h-5 w-5" />,
+          };
+        }
+        return {
+          key: kas.id,
+          label,
+          value: currenciesFormat(currency, 0),
+          description: `Kas ${currency.toUpperCase()}`,
+          tone: isUsd ? ('blue' as const) : ('amber' as const),
+          icon: <Coins className="h-5 w-5" />,
+        };
+      });
+    }
+
+    if (summaries.length > 0) {
+      return summaries.map((summary) => {
+        const isUsd = (summary.cash?.currency_type || '').toLowerCase() === 'usd' || summary.debet_usd_total > 0 || summary.credit_usd_total > 0;
+        const currency = isUsd ? 'usd' : 'idr';
+        const debet = isUsd ? Number(summary.debet_usd_total || 0) : Number(summary.debet_total || 0);
+        const credit = isUsd ? Number(summary.credit_usd_total || 0) : Number(summary.credit_total || 0);
+        const label = summary.cash?.cash_name || summary.cash?.code || `Kas #${summary.cash_id}`;
+        const description = `Kas ${summary.cash?.type || ''} (${currency.toUpperCase()})`;
+
+        if (debet > 0 && credit === 0) {
+          return {
+            key: summary.cash_id,
+            label,
+            value: currenciesFormat(currency, debet),
+            description: `Uang Masuk / Debet (${description})`,
+            tone: 'green' as const,
+            icon: <ArrowDownLeft className="h-5 w-5" />,
+          };
+        }
+        if (credit > 0 && debet === 0) {
+          return {
+            key: summary.cash_id,
+            label,
+            value: currenciesFormat(currency, credit),
+            description: `Uang Keluar / Kredit (${description})`,
+            tone: 'red' as const,
+            icon: <ArrowUpRight className="h-5 w-5" />,
+          };
+        }
+        return {
+          key: summary.cash_id,
+          label,
+          value: currenciesFormat(currency, debet || credit),
+          description: `Kas (${currency.toUpperCase()})`,
+          tone: isUsd ? ('blue' as const) : ('amber' as const),
+          icon: <Coins className="h-5 w-5" />,
+        };
+      });
+    }
+
+    return [
+      { key: 'debet-idr', label: 'Debet IDR', value: currenciesFormat('idr', debetIdr), description: 'Uang masuk dalam Rupiah', tone: 'green' as const, icon: <ArrowDownLeft className="h-5 w-5" /> },
+      { key: 'credit-idr', label: 'Kredit IDR', value: currenciesFormat('idr', creditIdr), description: 'Uang keluar dalam Rupiah', tone: 'red' as const, icon: <ArrowUpRight className="h-5 w-5" /> },
+      { key: 'debet-usd', label: 'Debet USD', value: currenciesFormat('usd', debetUsd), description: 'Uang masuk dalam Dollar', tone: 'blue' as const, icon: <CircleDollarSign className="h-5 w-5" /> },
+      { key: 'credit-usd', label: 'Kredit USD', value: currenciesFormat('usd', creditUsd), description: 'Uang keluar dalam Dollar', tone: 'amber' as const, icon: <CircleDollarSign className="h-5 w-5" /> },
+    ];
+  }, [kasList, cashFlowDetail?.cash_summaries, cashFlowDetail?.cash_flow_cashes, debetIdr, creditIdr, debetUsd, creditUsd]);
   const errorMessage = cashFlowQuery.error instanceof Error ? cashFlowQuery.error.message : null;
 
   useEffect(() => {
@@ -382,6 +522,21 @@ export default function KasHarianDetailPage() {
                   {currenciesFormat('idr', unitTransaction.ppn_total ?? 0)}
                 </DetailItem>
               </CardContent>
+              {usdCostsList.length > 0 && (
+                <>
+                  <Separator />
+                  <div className="p-4 sm:p-6 bg-slate-50/50">
+                    <p className="text-xs font-semibold uppercase tracking-wider text-slate-500 mb-3">Rincian Biaya USD Unit Transaksi</p>
+                    <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                      {usdCostsList.map((cost) => (
+                        <DetailItem key={cost.type} label={cost.label} icon={<CircleDollarSign className="h-4 w-4" />}>
+                          {currenciesFormat('usd', cost.amount)}
+                        </DetailItem>
+                      ))}
+                    </div>
+                  </div>
+                </>
+              )}
             </>
           )}
           <Separator />
@@ -392,55 +547,63 @@ export default function KasHarianDetailPage() {
         </Card>
 
         <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-          <SummaryCard label="Debet IDR" value={currenciesFormat('idr', debetIdr)} description="Uang masuk dalam Rupiah" tone="green" icon={<ArrowDownLeft className="h-5 w-5" />} />
-          <SummaryCard label="Kredit IDR" value={currenciesFormat('idr', creditIdr)} description="Uang keluar dalam Rupiah" tone="red" icon={<ArrowUpRight className="h-5 w-5" />} />
-          <SummaryCard label="Debet USD" value={currenciesFormat('usd', debetUsd)} description="Uang masuk dalam Dollar" tone="blue" icon={<CircleDollarSign className="h-5 w-5" />} />
-          <SummaryCard label="Kredit USD" value={currenciesFormat('usd', creditUsd)} description="Uang keluar dalam Dollar" tone="amber" icon={<CircleDollarSign className="h-5 w-5" />} />
+          {mappedSummaryCards.map((card, idx) => (
+            <SummaryCard
+              key={card.key ?? idx}
+              label={card.label}
+              value={card.value}
+              description={card.description}
+              tone={card.tone}
+              icon={card.icon}
+            />
+          ))}
         </div>
 
         <Card className="rounded-md border-slate-200 shadow-sm">
           <CardHeader className="border-b border-slate-100 py-5">
             <CardTitle>Ringkasan Pembayaran</CardTitle>
-            <CardDescription>Progres pembayaran berdasarkan mata uang transaksi</CardDescription>
+            <CardDescription>Progres pembayaran terpisah berdasarkan IDR dan USD</CardDescription>
           </CardHeader>
-          <CardContent className="grid gap-6 p-4 sm:p-6 md:grid-cols-3">
-            {!(expectedIdr > 0 && expectedUsd > 0) ? (
-              <>
-                <DetailItem label="Nilai Transaksi" icon={<WalletCards className="h-4 w-4" />}>{currenciesFormat(displayCurrency, transactionAmount)}</DetailItem>
-                <DetailItem label="Total Terbayar" icon={<CheckCircle2 className="h-4 w-4" />}>{currenciesFormat(displayCurrency, totalPaid)}</DetailItem>
-                <DetailItem label="Sisa Pembayaran" icon={<ReceiptText className="h-4 w-4" />}>
-                  <span className={remainingPayment > 0 ? 'text-amber-700 font-semibold' : 'text-emerald-700 font-semibold'}>{currenciesFormat(displayCurrency, remainingPayment)}</span>
-                </DetailItem>
-              </>
-            ) : (
-              <div className="col-span-3 grid gap-6 md:grid-cols-2">
-                <div className="space-y-4 p-4 rounded-md bg-slate-50/50 border border-slate-100">
-                  <h4 className="font-semibold text-slate-800 text-sm border-b border-slate-100 pb-2">Rincian Rupiah (IDR)</h4>
-                  <div className="grid gap-4 sm:grid-cols-3">
-                    <DetailItem label="Nilai Transaksi" icon={<WalletCards className="h-4 w-4" />}>{currenciesFormat('idr', expectedIdr)}</DetailItem>
-                    <DetailItem label="Total Terbayar" icon={<CheckCircle2 className="h-4 w-4" />}>{currenciesFormat('idr', totalPaidIdr)}</DetailItem>
-                    <DetailItem label="Sisa Pembayaran" icon={<ReceiptText className="h-4 w-4" />}>
-                      <span className={remainingPaymentIdr > 0 ? 'text-amber-700 font-semibold' : 'text-emerald-700 font-semibold'}>
-                        {currenciesFormat('idr', remainingPaymentIdr)}
-                      </span>
-                    </DetailItem>
-                  </div>
-                </div>
-
-                <div className="space-y-4 p-4 rounded-md bg-amber-50/10 border border-amber-100/50">
-                  <h4 className="font-semibold text-slate-800 text-sm border-b border-slate-100 pb-2 text-amber-900">Rincian Dollar (USD)</h4>
-                  <div className="grid gap-4 sm:grid-cols-3">
-                    <DetailItem label="Nilai Transaksi" icon={<WalletCards className="h-4 w-4" />}>{currenciesFormat('usd', expectedUsd)}</DetailItem>
-                    <DetailItem label="Total Terbayar" icon={<CheckCircle2 className="h-4 w-4" />}>{currenciesFormat('usd', totalPaidUsd)}</DetailItem>
-                    <DetailItem label="Sisa Pembayaran" icon={<ReceiptText className="h-4 w-4" />}>
-                      <span className={remainingPaymentUsd > 0 ? 'text-amber-700 font-semibold' : 'text-emerald-700 font-semibold'}>
-                        {currenciesFormat('usd', remainingPaymentUsd)}
-                      </span>
-                    </DetailItem>
-                  </div>
+          <CardContent className="p-4 sm:p-6">
+            <div className="grid gap-6 md:grid-cols-2">
+              <div className="space-y-4 p-4 rounded-md bg-slate-50/60 border border-slate-200/80">
+                <h4 className="font-semibold text-slate-800 text-sm border-b border-slate-200 pb-2 flex items-center gap-2">
+                  <span>Ringkasan Pembayaran (IDR)</span>
+                </h4>
+                <div className="grid gap-4 sm:grid-cols-3">
+                  <DetailItem label="Grand Total (IDR)" icon={<WalletCards className="h-4 w-4 text-slate-600" />}>
+                    {currenciesFormat('idr', grandTotalIdr)}
+                  </DetailItem>
+                  <DetailItem label="Total Terbayar (IDR)" icon={<CheckCircle2 className="h-4 w-4 text-emerald-600" />}>
+                    {currenciesFormat('idr', totalPaidIdr)}
+                  </DetailItem>
+                  <DetailItem label="Sisa Pembayaran (IDR)" icon={<ReceiptText className="h-4 w-4 text-amber-600" />}>
+                    <span className={remainingPaymentIdr > 0 ? 'text-amber-700 font-semibold' : 'text-emerald-700 font-semibold'}>
+                      {currenciesFormat('idr', remainingPaymentIdr)}
+                    </span>
+                  </DetailItem>
                 </div>
               </div>
-            )}
+
+              <div className="space-y-4 p-4 rounded-md bg-blue-50/30 border border-blue-100">
+                <h4 className="font-semibold text-blue-900 text-sm border-b border-blue-100 pb-2 flex items-center gap-2">
+                  <span>Ringkasan Pembayaran (USD)</span>
+                </h4>
+                <div className="grid gap-4 sm:grid-cols-3">
+                  <DetailItem label="Grand Total (USD)" icon={<WalletCards className="h-4 w-4 text-blue-600" />}>
+                    {currenciesFormat('usd', grandTotalUsd)}
+                  </DetailItem>
+                  <DetailItem label="Total Terbayar (USD)" icon={<CheckCircle2 className="h-4 w-4 text-emerald-600" />}>
+                    {currenciesFormat('usd', totalPaidUsd)}
+                  </DetailItem>
+                  <DetailItem label="Sisa Pembayaran (USD)" icon={<ReceiptText className="h-4 w-4 text-amber-600" />}>
+                    <span className={remainingPaymentUsd > 0 ? 'text-amber-700 font-semibold' : 'text-emerald-700 font-semibold'}>
+                      {currenciesFormat('usd', remainingPaymentUsd)}
+                    </span>
+                  </DetailItem>
+                </div>
+              </div>
+            </div>
           </CardContent>
         </Card>
 

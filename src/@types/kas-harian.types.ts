@@ -23,6 +23,52 @@ export interface KasHarianCompany {
   name: string;
 }
 
+export interface KasHarianCashPosition {
+  debet_idr_total: number;
+  credit_idr_total: number;
+  debet_usd_total: number;
+  credit_usd_total: number;
+}
+
+export interface KasHarianCashSummary {
+  cash_id: number;
+  cash?: (KasHarianCash & { currency_type?: string; cash_name?: string; company_id?: number }) | null;
+  debet_total: number;
+  credit_total: number;
+  debet_usd_total: number;
+  credit_usd_total: number;
+}
+
+export interface KasHarianCashFlowCash {
+  id: number;
+  cash_flow_id: number;
+  cash_id: number;
+  amount: number;
+  amount_original: number;
+  type: string;
+  created_at?: string;
+  updated_at?: string;
+  cash?: {
+    id: number;
+    uuid?: string;
+    company_id?: number;
+    currency_type?: string;
+    cash_name?: string;
+    type?: string;
+    code?: string;
+  } | null;
+}
+
+export interface KasHarianUnitTransactionUsdCost {
+  id: number;
+  unit_transaction_item_id?: number;
+  cost_type: string;
+  amount: number;
+  note?: string;
+  created_at?: string;
+  updated_at?: string;
+}
+
 export interface KasHarianUnitTransaction {
   id: number;
   code?: string;
@@ -34,6 +80,7 @@ export interface KasHarianUnitTransaction {
   has_warehouse_activity?: boolean;
   has_refund_transaction?: boolean;
   expedition_fee_total?: number;
+  unit_transaction_usd_costs?: KasHarianUnitTransactionUsdCost[];
 }
 
 export interface KasHarianUnitTransactionBilling {
@@ -79,6 +126,10 @@ export interface KasHarian {
   amount?: number;
   debet: number;
   debet_usd?: number;
+  debet_total?: number;
+  credit_total?: number;
+  debet_usd_total?: number;
+  credit_usd_total?: number;
   debet_original?: number;
   debet_usd_original?: number;
   credit: number;
@@ -91,9 +142,13 @@ export interface KasHarian {
   created_at?: string;
   updated_at?: string;
   grand_total?: number;
+  grand_total_usd?: number;
   invoice_number?: string | null;
   remaining_payment?: number;
   remaining_payment_usd?: number;
+  cash_position?: KasHarianCashPosition | null;
+  cash_summaries?: KasHarianCashSummary[];
+  cash_flow_cashes?: KasHarianCashFlowCash[];
   cash?: KasHarianCash | null;
   account?: KasHarianAccount | null;
   company: KasHarianCompany;
@@ -160,6 +215,9 @@ export interface KasHarianListItem {
   debet_usd: number;
   credit: number;
   credit_usd: number;
+  remaining_payment?: number;
+  remaining_payment_usd?: number;
+  cash_position?: KasHarianCashPosition | null;
   accountName: string;
   cashName?: string;
   cashFlowId?: number;

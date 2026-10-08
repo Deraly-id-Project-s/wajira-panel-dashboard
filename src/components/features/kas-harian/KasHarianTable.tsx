@@ -150,67 +150,93 @@ export default function KasHarianTable({
         accessorKey: 'debet',
         sortable: true,
         alignment: 'center',
-        cell: (item) => (
-          <div className="flex items-center justify-center gap-1 text-green-600 font-medium">
-            {item.isValid === true && item.debet > 0 ? (
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <button type="button" className="cursor-help text-green-400 hover:text-green-600 transition-colors">
-                      <CheckCircle className="h-4 w-4" />
-                    </button>
-                  </TooltipTrigger>
-                  <TooltipContent side="top" align="center" className="max-w-xs bg-slate-900 text-white rounded-md p-2 text-xs shadow-md">
-                    Nominal telah disesuaikan
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
-            ) : null}
-            <span>{currenciesFormat('idr', item.debet)}</span>
-          </div>
-        ),
+        cell: (item) => {
+          const debetVal = item.cash_position?.debet_idr_total ?? item.debet;
+          return (
+            <div className="flex items-center justify-center gap-1 text-green-600 font-medium">
+              {item.isValid === true && debetVal > 0 ? (
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <button type="button" className="cursor-help text-green-400 hover:text-green-600 transition-colors">
+                        <CheckCircle className="h-4 w-4" />
+                      </button>
+                    </TooltipTrigger>
+                    <TooltipContent side="top" align="center" className="max-w-xs bg-slate-900 text-white rounded-md p-2 text-xs shadow-md">
+                      Nominal telah disesuaikan
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              ) : null}
+              <span>{currenciesFormat('idr', debetVal)}</span>
+            </div>
+          );
+        },
       },
       {
         header: 'KREDIT IDR',
         accessorKey: 'credit',
         sortable: true,
         alignment: 'center',
-        cell: (item) => (
-          <div className="flex items-center justify-center gap-1 text-red-600 font-medium">
-            {item.isValid === true && item.credit > 0 ? (
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <button type="button" className="cursor-help text-green-400 hover:text-green-600 transition-colors">
-                      <CheckCircle className="h-4 w-4" />
-                    </button>
-                  </TooltipTrigger>
-                  <TooltipContent side="top" align="center" className="max-w-xs bg-slate-900 text-white rounded-md p-2 text-xs shadow-md">
-                    Nominal telah disesuaikan
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
-            ) : null}
-            <span>{currenciesFormat('idr', item.credit)}</span>
-          </div>
-        ),
+        cell: (item) => {
+          const creditVal = item.cash_position?.credit_idr_total ?? item.credit;
+          return (
+            <div className="flex items-center justify-center gap-1 text-red-600 font-medium">
+              {item.isValid === true && creditVal > 0 ? (
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <button type="button" className="cursor-help text-green-400 hover:text-green-600 transition-colors">
+                        <CheckCircle className="h-4 w-4" />
+                      </button>
+                    </TooltipTrigger>
+                    <TooltipContent side="top" align="center" className="max-w-xs bg-slate-900 text-white rounded-md p-2 text-xs shadow-md">
+                      Nominal telah disesuaikan
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              ) : null}
+              <span>{currenciesFormat('idr', creditVal)}</span>
+            </div>
+          );
+        },
       },
       {
         header: 'DEBET USD',
         accessorKey: 'debet_usd',
         sortable: true,
         alignment: 'center',
-        cell: (item) => (
-          <span className="font-medium text-green-600">{currenciesFormat('usd', item.debet_usd)}</span>
-        ),
+        cell: (item) => {
+          const debetUsdVal = item.cash_position?.debet_usd_total ?? item.debet_usd;
+          return <span className="font-medium text-green-600">{currenciesFormat('usd', debetUsdVal)}</span>;
+        },
       },
       {
         header: 'KREDIT USD',
         accessorKey: 'credit_usd',
         sortable: true,
         alignment: 'center',
+        cell: (item) => {
+          const creditUsdVal = item.cash_position?.credit_usd_total ?? item.credit_usd;
+          return <span className="font-medium text-red-600">{currenciesFormat('usd', creditUsdVal)}</span>;
+        },
+      },
+      {
+        header: 'KURANG BAYAR IDR',
+        accessorKey: 'remaining_payment',
+        sortable: true,
+        alignment: 'center',
         cell: (item) => (
-          <span className="font-medium text-red-600">{currenciesFormat('usd', item.credit_usd)}</span>
+          <span className="font-medium text-amber-700">{currenciesFormat('idr', item.remaining_payment ?? 0)}</span>
+        ),
+      },
+      {
+        header: 'KURANG BAYAR USD',
+        accessorKey: 'remaining_payment_usd',
+        sortable: true,
+        alignment: 'center',
+        cell: (item) => (
+          <span className="font-medium text-amber-700">{currenciesFormat('usd', item.remaining_payment_usd ?? 0)}</span>
         ),
       },
       {
