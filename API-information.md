@@ -1,379 +1,316 @@
-GET {{url}}/wapi/finance/cash-flow?company_id=1
+GET  /wapi/transaction/unit-transaction/unit-transaction-item/1 
 {
-    "status": true,
-    "message": "Cash Flow list retrieved successfully",
-    "errors": null,
-    "data": {
-        "current_page": 1,
-        "data": [
-            {
-                "id": 1,
-                "uuid": "1c586a02-0a76-453b-9c74-3af09a2884bc",
-                "company_id": 1,
-                "unit_transaction_billing_id": 1,
-                "sparepart_transaction_billing_id": null,
-                "goods_transaction_billing_id": null,
-                "driver_cash_advance_billing_id": null,
-                "do_invoice_billing_id": null,
-                "code": "PBL-WJM/20261008-0001-payment",
-                "date": "2026-10-07T17:00:00.000000Z",
-                "note": "Pelunasan Total PBL-WJM/20261008-0001",
-                "payment_proof": null,
-                "is_paid": false,
-                "is_valid": false,
-                "created_at": "2026-10-08T14:39:43.000000Z",
-                "updated_at": "2026-10-08T14:39:43.000000Z",
-                "invoice_number": "PBL-WJM/20261008-0001",
-                "debet_total": 57940000,
-                "credit_total": 0,
-                "debet_usd_total": 237,
-                "credit_usd_total": 0,
-                "grand_total": 57940000,
-                "grand_total_usd": 237,
-                "remaining_payment": 57940000,
-                "remaining_payment_usd": 237,
-                "cash_position": {
-                    "debet_idr_total": 57940000,
-                    "credit_idr_total": 0,
-                    "debet_usd_total": 237,
-                    "credit_usd_total": 0
-                },
-                "company": {
-                    "id": 1,
-                    "uuid": "db72335a-2f2f-469b-928a-d2040b580a80",
-                    "name": "PT Wajira Morindo"
-                },
-                "unit_transaction_billing": {
-                    "id": 1,
-                    "uuid": "0dfa21dd-9989-4b8f-895a-03db39fc20b8",
-                    "unit_transaction_id": 2,
-                    "grand_total": 57940000,
-                    "last_payment_at": "2026-10-07T17:00:00.000000Z",
-                    "is_paid": true,
-                    "created_at": "2026-10-08T14:39:36.000000Z",
-                    "updated_at": "2026-10-08T14:39:43.000000Z",
-                    "unit_transaction": {
-                        "id": 2,
-                        "code": "PBL-WJM/20261008-0001",
-                        "type": "purchase",
-                        "has_warehouse_activity": false,
-                        "has_refund_transaction": false,
-                        "expedition_fee_total": "152000.00"
-                    }
-                },
-                "goods_transaction_billing": null,
-                "sparepart_transaction_billing": null
-            }
-        ],
-        "first_page_url": "http://localhost:8000/wapi/finance/cash-flow?page=1",
-        "from": 1,
-        "last_page": 1,
-        "last_page_url": "http://localhost:8000/wapi/finance/cash-flow?page=1",
-        "links": [
-            {
-                "url": null,
-                "label": "&laquo; Previous",
-                "active": false
-            },
-            {
-                "url": "http://localhost:8000/wapi/finance/cash-flow?page=1",
-                "label": "1",
-                "active": true
-            },
-            {
-                "url": null,
-                "label": "Next &raquo;",
-                "active": false
-            }
-        ],
-        "next_page_url": null,
-        "path": "http://localhost:8000/wapi/finance/cash-flow",
-        "per_page": 10,
-        "prev_page_url": null,
-        "to": 1,
-        "total": 1
-    }
-}
-
-GET {{url}}/wapi/finance/cash-flow/:cash_flow_id
-{
-    "status": true,
-    "message": "Cash Flow data retrieved successfully",
-    "errors": null,
-    "data": {
-        "id": 1,
-        "uuid": "1c586a02-0a76-453b-9c74-3af09a2884bc",
-        "company_id": 1,
-        "unit_transaction_billing_id": 1,
-        "sparepart_transaction_billing_id": null,
-        "goods_transaction_billing_id": null,
-        "driver_cash_advance_billing_id": null,
-        "do_invoice_billing_id": null,
-        "code": "PBL-WJM/20261008-0001-payment",
-        "date": "2026-10-07T17:00:00.000000Z",
-        "note": "Pelunasan Total PBL-WJM/20261008-0001",
-        "payment_proof": null,
-        "is_paid": false,
-        "is_valid": false,
-        "created_at": "2026-10-08T14:39:43.000000Z",
-        "updated_at": "2026-10-08T14:39:43.000000Z",
-        "invoice_number": "PBL-WJM/20261008-0001",
-        "debet_total": 57940000,
-        "credit_total": 0,
-        "debet_usd_total": 237,
-        "credit_usd_total": 0,
-        "grand_total": 57940000,
-        "grand_total_usd": 237,
-        "remaining_payment": 57940000,
-        "remaining_payment_usd": 237,
-        "cash_position": {
-            "debet_idr_total": 57940000,
-            "credit_idr_total": 0,
-            "debet_usd_total": 237,
-            "credit_usd_total": 0
-        },
-        "cash_summaries": [
-            {
-                "cash_id": 2,
-                "cash": {
-                    "id": 2,
-                    "uuid": "9d5419c1-e7e8-44bd-8b9e-61d4d51325c3",
-                    "company_id": 1,
-                    "code": "bca_idr",
-                    "cash_name": "BCA IDR",
-                    "currency_type": "idr",
-                    "type": "bank"
-                },
-                "debet_total": 57940000,
-                "credit_total": 0,
-                "debet_usd_total": 0,
-                "credit_usd_total": 0
-            },
-            {
-                "cash_id": 3,
-                "cash": {
-                    "id": 3,
-                    "uuid": "3f6442a9-23f3-42ea-b93b-bad2ecd2b1a0",
-                    "company_id": 1,
-                    "code": "bca_usd",
-                    "cash_name": "BCA USD",
-                    "currency_type": "usd",
-                    "type": "bank"
-                },
-                "debet_total": 0,
-                "credit_total": 0,
-                "debet_usd_total": 237,
-                "credit_usd_total": 0
-            }
-        ],
-        "company": {
-            "id": 1,
-            "uuid": "db72335a-2f2f-469b-928a-d2040b580a80",
-            "name": "PT Wajira Morindo"
-        },
-        "cash_flow_cashes": [
-            {
-                "id": 1,
-                "cash_flow_id": 1,
-                "cash_id": 2,
-                "amount": 57940000,
-                "amount_original": 57940000,
-                "type": "debet",
-                "created_at": "2026-10-08T14:39:43.000000Z",
-                "updated_at": "2026-10-08T14:39:43.000000Z",
-                "cash": {
-                    "id": 2,
-                    "uuid": "9d5419c1-e7e8-44bd-8b9e-61d4d51325c3",
-                    "company_id": 1,
-                    "currency_type": "idr",
-                    "cash_name": "BCA IDR",
-                    "type": "bank",
-                    "code": "bca_idr"
-                }
-            },
-            {
-                "id": 2,
-                "cash_flow_id": 1,
-                "cash_id": 3,
-                "amount": 237,
-                "amount_original": 0,
-                "type": "debet",
-                "created_at": "2026-10-08T14:39:43.000000Z",
-                "updated_at": "2026-10-08T14:39:43.000000Z",
-                "cash": {
-                    "id": 3,
-                    "uuid": "3f6442a9-23f3-42ea-b93b-bad2ecd2b1a0",
-                    "company_id": 1,
-                    "currency_type": "usd",
-                    "cash_name": "BCA USD",
-                    "type": "bank",
-                    "code": "bca_usd"
-                }
-            }
-        ],
-        "finance_billings": [],
-        "unit_transaction_billing": {
-            "id": 1,
-            "uuid": "0dfa21dd-9989-4b8f-895a-03db39fc20b8",
-            "unit_transaction_id": 2,
-            "grand_total": 57940000,
-            "last_payment_at": "2026-10-07T17:00:00.000000Z",
-            "is_paid": true,
-            "created_at": "2026-10-08T14:39:36.000000Z",
-            "updated_at": "2026-10-08T14:39:43.000000Z",
-            "unit_transaction": {
-                "id": 2,
-                "uuid": "9605210d-0cda-4477-adfe-75bb01517f9e",
-                "warehouse_id": 1,
-                "person_id": 3,
-                "transaction_type": "unit_type",
-                "code": "PBL-WJM/20261008-0001",
-                "type": "purchase",
-                "invoice_file": null,
-                "is_refunded": false,
-                "document_template_id": 1,
-                "created_at": "2026-10-08T14:19:06.000000Z",
-                "updated_at": "2026-10-08T14:19:06.000000Z",
-                "dpp_total": 52171170,
-                "ppn_total": 5738830,
-                "expedition_total": 152000,
-                "bbn_price_total": 25000,
-                "other_fee_total": 5000,
-                "unit_transaction_costs": {
-                    "hpp_total_price": 57910000,
-                    "bbn_total_price": 25000,
-                    "expedition_total_fee": 152000,
-                    "other_total_fee": 5000
-                },
-                "has_warehouse_activity": false,
-                "has_refund_transaction": false,
-                "expedition_fee_total": 152000,
-                "unit_transaction_usd_costs": [
-                    {
-                        "id": 7,
-                        "unit_transaction_item_id": 2,
-                        "cost_type": "freight",
-                        "amount": 250,
-                        "note": "Biaya kontainer pengiriman laut",
-                        "created_at": "2026-10-08T14:19:06.000000Z",
-                        "updated_at": "2026-10-08T14:19:06.000000Z",
-                        "laravel_through_key": 2
-                    },
-                    {
-                        "id": 8,
-                        "unit_transaction_item_id": 2,
-                        "cost_type": "customs_clearance_cost",
-                        "amount": 100,
-                        "note": "Biaya bea cukai pelabuhan",
-                        "created_at": "2026-10-08T14:19:06.000000Z",
-                        "updated_at": "2026-10-08T14:19:06.000000Z",
-                        "laravel_through_key": 2
-                    },
-                    {
-                        "id": 9,
-                        "unit_transaction_item_id": 2,
-                        "cost_type": "other",
-                        "amount": 45,
-                        "note": "Biaya materai dokumen USD",
-                        "created_at": "2026-10-08T14:19:06.000000Z",
-                        "updated_at": "2026-10-08T14:19:06.000000Z",
-                        "laravel_through_key": 2
-                    },
-                    {
-                        "id": 10,
-                        "unit_transaction_item_id": 2,
-                        "cost_type": "other",
-                        "amount": 75.5,
-                        "note": "Handling tambahan",
-                        "created_at": "2026-10-08T14:19:06.000000Z",
-                        "updated_at": "2026-10-08T14:19:06.000000Z",
-                        "laravel_through_key": 2
-                    }
-                ]
-            }
-        },
-        "goods_transaction_billing": null,
-        "sparepart_transaction_billing": null
-    }
-}
-
-GET {{url}}/wapi/master-data/cash?company_id=1
-{
-    "status": true,
-    "message": "Cash list retrieved successfully",
-    "errors": null,
-    "data": {
-        "current_page": 1,
-        "data": [
-            {
-                "id": 3,
-                "uuid": "3f6442a9-23f3-42ea-b93b-bad2ecd2b1a0",
-                "company_id": 1,
-                "account_id": null,
-                "code": "bca_usd",
-                "currency_type": "usd",
-                "cash_name": "BCA USD",
-                "description": "Kas bca_usd PT Wajira Morindo",
-                "type": "bank",
-                "amount": 0,
-                "created_at": "2026-10-08T13:58:04.000000Z",
-                "account": null
-            },
-            {
-                "id": 2,
-                "uuid": "9d5419c1-e7e8-44bd-8b9e-61d4d51325c3",
-                "company_id": 1,
-                "account_id": null,
-                "code": "bca_idr",
-                "currency_type": "idr",
-                "cash_name": "BCA IDR",
-                "description": "Kas bca_idr PT Wajira Morindo",
-                "type": "bank",
-                "amount": 0,
-                "created_at": "2026-10-08T13:58:04.000000Z",
-                "account": null
-            },
-            {
-                "id": 1,
-                "uuid": "6ee336ad-791a-461e-a7c9-755238e204f2",
-                "company_id": 1,
-                "account_id": null,
-                "code": "cash_idr",
-                "currency_type": "idr",
-                "cash_name": "Cash IDR",
-                "description": "Kas cash_idr PT Wajira Morindo",
-                "type": "cash",
-                "amount": 0,
-                "created_at": "2026-10-08T13:58:04.000000Z",
-                "account": null
-            }
-        ],
-        "first_page_url": "http://localhost:8000/wapi/master-data/cash?page=1",
-        "from": 1,
-        "last_page": 1,
-        "last_page_url": "http://localhost:8000/wapi/master-data/cash?page=1",
-        "links": [
-            {
-                "url": null,
-                "label": "&laquo; Previous",
-                "active": false
-            },
-            {
-                "url": "http://localhost:8000/wapi/master-data/cash?page=1",
-                "label": "1",
-                "active": true
-            },
-            {
-                "url": null,
-                "label": "Next &raquo;",
-                "active": false
-            }
-        ],
-        "next_page_url": null,
-        "path": "http://localhost:8000/wapi/master-data/cash",
-        "per_page": 10,
-        "prev_page_url": null,
-        "to": 3,
-        "total": 3
-    }
+	"status": true,
+	"message": "Unit Transaction Item retrieved successfully",
+	"errors": null,
+	"data": {
+		"id": 1,
+		"uuid": "b7d45f8a-d915-4af5-97d9-ea59ea95c152",
+		"unit_transaction_id": 1,
+		"unit_type_id": 1,
+		"sparepart_id": null,
+		"qty_total": 9,
+		"price": 15000000,
+		"price_per_unit_usd": 1000,
+		"price_usd": 8100,
+		"is_usd_transaction": true,
+		"bbn_price": 1020,
+		"hpp_per_unit_price": 13521020,
+		"dpp_per_unit_price": 12181099,
+		"ppn_per_unit_price": 1339921,
+		"hpp_total_price": 121689180,
+		"dpp_total_price": 109629891,
+		"ppn_total_price": 12059289,
+		"expedition_fee": 10000,
+		"other_fee": 10000,
+		"dpp_tax_id": 2,
+		"dpp_tax_rate": 111,
+		"ppn_tax_id": 1,
+		"ppn_tax_rate": 11,
+		"price_discount": 10,
+		"price_usd_discount": 10,
+		"created_at": "2026-10-09T03:25:32.000000Z",
+		"updated_at": "2026-10-09T03:25:32.000000Z",
+		"total_usd_cost": 802,
+		"usd_cost_freight_total": 100,
+		"usd_cost_box_packing_total": 100,
+		"usd_cost_admin_cost_total": 100,
+		"usd_cost_ckd_processing_cost_total": 100,
+		"usd_cost_bill_of_lading_switch_cost_total": 100,
+		"usd_cost_customs_clearance_cost_total": 100,
+		"usd_cost_other_total": 202,
+		"unit_transaction": {
+			"id": 1,
+			"uuid": "fc8ccbc5-e837-4a1b-9e43-d7e3a17b1880",
+			"warehouse_id": 1,
+			"person_id": 3,
+			"transaction_type": "unit_type",
+			"code": "PBL-WAJ/20261009-13288",
+			"type": "purchase",
+			"invoice_file": null,
+			"is_refunded": false,
+			"document_template_id": 1,
+			"created_at": "2026-10-09T03:25:32.000000Z",
+			"updated_at": "2026-10-09T03:25:32.000000Z",
+			"has_warehouse_activity": true,
+			"has_refund_transaction": false,
+			"expedition_fee_total": "10000.00"
+		},
+		"unit_transaction_usd_costs": [
+			{
+				"id": 1,
+				"unit_transaction_item_id": 1,
+				"cost_type": "freight",
+				"amount": 100,
+				"note": "Freight",
+				"created_at": "2026-10-09T03:25:32.000000Z",
+				"updated_at": "2026-10-09T03:25:32.000000Z"
+			},
+			{
+				"id": 2,
+				"unit_transaction_item_id": 1,
+				"cost_type": "box_packing",
+				"amount": 100,
+				"note": "Box Packing",
+				"created_at": "2026-10-09T03:25:32.000000Z",
+				"updated_at": "2026-10-09T03:25:32.000000Z"
+			},
+			{
+				"id": 3,
+				"unit_transaction_item_id": 1,
+				"cost_type": "admin_cost",
+				"amount": 100,
+				"note": "Admin Cost",
+				"created_at": "2026-10-09T03:25:32.000000Z",
+				"updated_at": "2026-10-09T03:25:32.000000Z"
+			},
+			{
+				"id": 4,
+				"unit_transaction_item_id": 1,
+				"cost_type": "ckd_processing_cost",
+				"amount": 100,
+				"note": "CKD Processing Cost",
+				"created_at": "2026-10-09T03:25:32.000000Z",
+				"updated_at": "2026-10-09T03:25:32.000000Z"
+			},
+			{
+				"id": 5,
+				"unit_transaction_item_id": 1,
+				"cost_type": "bill_of_lading_switch_cost",
+				"amount": 100,
+				"note": "Bill of Lading Switch Cost",
+				"created_at": "2026-10-09T03:25:32.000000Z",
+				"updated_at": "2026-10-09T03:25:32.000000Z"
+			},
+			{
+				"id": 6,
+				"unit_transaction_item_id": 1,
+				"cost_type": "customs_clearance_cost",
+				"amount": 100,
+				"note": "Customs Clearance Cost",
+				"created_at": "2026-10-09T03:25:32.000000Z",
+				"updated_at": "2026-10-09T03:25:32.000000Z"
+			},
+			{
+				"id": 7,
+				"unit_transaction_item_id": 1,
+				"cost_type": "other",
+				"amount": 100,
+				"note": "test A",
+				"created_at": "2026-10-09T03:25:32.000000Z",
+				"updated_at": "2026-10-09T03:25:32.000000Z"
+			},
+			{
+				"id": 8,
+				"unit_transaction_item_id": 1,
+				"cost_type": "other",
+				"amount": 102,
+				"note": "test B",
+				"created_at": "2026-10-09T03:25:32.000000Z",
+				"updated_at": "2026-10-09T03:25:32.000000Z"
+			}
+		],
+		"unit_transaction_item_details": [
+			{
+				"id": 1,
+				"unit_transaction_item_id": 1,
+				"warehouse_sub_block_id": null,
+				"source_transaction_before_id": null,
+				"uuid": "a3586f7e-b057-41d3-9b59-d8c239c0e2e1",
+				"color": "PUTIH MERAH",
+				"machine_number": "JMA1E1228314",
+				"chassis_number": "MH1JMA113TK231595",
+				"in_stock": false,
+				"is_forecast": true,
+				"status": "normal",
+				"stock_state": "purchase_order",
+				"is_sold_unit": false,
+				"is_reserved": false,
+				"created_at": "2026-10-09T03:26:51.000000Z",
+				"updated_at": "2026-10-09T03:29:39.000000Z",
+				"source_transaction_before": null
+			},
+			{
+				"id": 2,
+				"unit_transaction_item_id": 1,
+				"warehouse_sub_block_id": null,
+				"source_transaction_before_id": null,
+				"uuid": "9cd102f6-b93b-4369-99e2-a6c9f6af44c9",
+				"color": "PUTIH MERAH",
+				"machine_number": "JMA1E1228321",
+				"chassis_number": "MH1JMA116TK231591",
+				"in_stock": false,
+				"is_forecast": true,
+				"status": "normal",
+				"stock_state": "purchase_order",
+				"is_sold_unit": false,
+				"is_reserved": false,
+				"created_at": "2026-10-09T03:26:51.000000Z",
+				"updated_at": "2026-10-09T03:29:39.000000Z",
+				"source_transaction_before": null
+			},
+			{
+				"id": 3,
+				"unit_transaction_item_id": 1,
+				"warehouse_sub_block_id": null,
+				"source_transaction_before_id": null,
+				"uuid": "71d2bdf7-f4a3-4193-b613-e518fa71e9c9",
+				"color": "PUTIH MERAH",
+				"machine_number": "JMA1E1228322",
+				"chassis_number": "MH1JMA112TK231586",
+				"in_stock": false,
+				"is_forecast": true,
+				"status": "normal",
+				"stock_state": "purchase_order",
+				"is_sold_unit": false,
+				"is_reserved": false,
+				"created_at": "2026-10-09T03:26:51.000000Z",
+				"updated_at": "2026-10-09T03:29:39.000000Z",
+				"source_transaction_before": null
+			},
+			{
+				"id": 4,
+				"unit_transaction_item_id": 1,
+				"warehouse_sub_block_id": null,
+				"source_transaction_before_id": null,
+				"uuid": "26ef2531-78ce-4a19-864b-1e6ab68eb553",
+				"color": "PUTIH MERAH",
+				"machine_number": "JMA1E1228323",
+				"chassis_number": "MH1JMA114TK231587",
+				"in_stock": false,
+				"is_forecast": true,
+				"status": "normal",
+				"stock_state": "purchase_order",
+				"is_sold_unit": false,
+				"is_reserved": false,
+				"created_at": "2026-10-09T03:26:51.000000Z",
+				"updated_at": "2026-10-09T03:29:39.000000Z",
+				"source_transaction_before": null
+			},
+			{
+				"id": 5,
+				"unit_transaction_item_id": 1,
+				"warehouse_sub_block_id": null,
+				"source_transaction_before_id": null,
+				"uuid": "14f110f2-34a1-442c-a2ee-0225f6b532e7",
+				"color": "PUTIH MERAH",
+				"machine_number": "JMA1E1228324",
+				"chassis_number": "MH1JMA116TK231588",
+				"in_stock": false,
+				"is_forecast": true,
+				"status": "normal",
+				"stock_state": "purchase_order",
+				"is_sold_unit": false,
+				"is_reserved": false,
+				"created_at": "2026-10-09T03:26:51.000000Z",
+				"updated_at": "2026-10-09T03:29:39.000000Z",
+				"source_transaction_before": null
+			},
+			{
+				"id": 6,
+				"unit_transaction_item_id": 1,
+				"warehouse_sub_block_id": null,
+				"source_transaction_before_id": null,
+				"uuid": "826a78a0-27da-449c-bbb4-ff63470463c7",
+				"color": "PUTIH MERAH",
+				"machine_number": "JMA1E1228329",
+				"chassis_number": "MH1JMA115TK231582",
+				"in_stock": false,
+				"is_forecast": true,
+				"status": "normal",
+				"stock_state": "purchase_order",
+				"is_sold_unit": false,
+				"is_reserved": false,
+				"created_at": "2026-10-09T03:26:51.000000Z",
+				"updated_at": "2026-10-09T03:29:39.000000Z",
+				"source_transaction_before": null
+			},
+			{
+				"id": 7,
+				"unit_transaction_item_id": 1,
+				"warehouse_sub_block_id": null,
+				"source_transaction_before_id": null,
+				"uuid": "7eb3e8a8-9da9-4de5-a2fe-c456703dc9fd",
+				"color": "PUTIH MERAH",
+				"machine_number": "JMA1E1228437",
+				"chassis_number": "MH1JMA117TK230157",
+				"in_stock": false,
+				"is_forecast": true,
+				"status": "normal",
+				"stock_state": "purchase_order",
+				"is_sold_unit": false,
+				"is_reserved": false,
+				"created_at": "2026-10-09T03:26:51.000000Z",
+				"updated_at": "2026-10-09T03:29:39.000000Z",
+				"source_transaction_before": null
+			},
+			{
+				"id": 8,
+				"unit_transaction_item_id": 1,
+				"warehouse_sub_block_id": null,
+				"source_transaction_before_id": null,
+				"uuid": "0fec5545-ea7a-4863-b124-317132f55711",
+				"color": "PUTIH MERAH",
+				"machine_number": "JMA1E1228514",
+				"chassis_number": "MH1JMA114TK230214",
+				"in_stock": false,
+				"is_forecast": true,
+				"status": "normal",
+				"stock_state": "purchase_order",
+				"is_sold_unit": false,
+				"is_reserved": false,
+				"created_at": "2026-10-09T03:26:51.000000Z",
+				"updated_at": "2026-10-09T03:29:39.000000Z",
+				"source_transaction_before": null
+			},
+			{
+				"id": 9,
+				"unit_transaction_item_id": 1,
+				"warehouse_sub_block_id": null,
+				"source_transaction_before_id": null,
+				"uuid": "a82f0fc0-5a31-4a37-8c1d-62788a18394b",
+				"color": "PUTIH MERAH",
+				"machine_number": "JMA1E1228561",
+				"chassis_number": "MH1JMA113TK230270",
+				"in_stock": false,
+				"is_forecast": true,
+				"status": "normal",
+				"stock_state": "purchase_order",
+				"is_sold_unit": false,
+				"is_reserved": false,
+				"created_at": "2026-10-09T03:26:51.000000Z",
+				"updated_at": "2026-10-09T03:29:39.000000Z",
+				"source_transaction_before": null
+			}
+		],
+		"unit_transaction_item_sales": [],
+		"unit_type": {
+			"id": 1,
+			"uuid": "439b19b0-6cef-415b-86e0-9ea73270fe93",
+			"code": "Vix012",
+			"name": "Honda VIZ R",
+			"buy_price": 15000000,
+			"sell_price": 16000000
+		}
+	}
 }
