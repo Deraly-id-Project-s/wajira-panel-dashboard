@@ -34,6 +34,7 @@ import BaseTable, { ColumnDef } from '@/components/ui/base-table';
 import { Textarea } from '@/components/ui/textarea';
 import { parseAndClampMoneyInput } from '@/lib/utils/money-input';
 import { formatDate } from '@/lib/utils/format';
+import { CollapsibleBox } from '@/components/ui/collapsible-box';
 
 const paymentSchema = z.object({
     bcaPayment: z.union([z.string(), z.number()]).transform(v => Number(v) || 0).pipe(z.number().min(0, 'Tidak boleh negatif')),
@@ -256,11 +257,8 @@ export function UnitTransactionPaymentForm({
         <div className="space-y-6">
             <div className="space-y-6">
                 {/* ── Section: Biaya ── */}
-                <div className="rounded-md border">
-                    <div className="border-b px-4 py-3">
-                        <h3 className="text-sm font-semibold text-muted-foreground">Biaya</h3>
-                    </div>
-                    <div className="grid grid-cols-1 gap-4 p-4 md:grid-cols-3">
+                <CollapsibleBox title="Biaya" description="Informasi ringkasan biaya transaksi" defaultExpanded={true}>
+                    <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
                         <div className="space-y-2">
                             <p className="text-sm font-medium">{isPurchase ? 'Total Beli' : 'Total Jual'}</p>
                             <Input value={currenciesFormat('idr', displayDpp)} disabled />
@@ -274,14 +272,11 @@ export function UnitTransactionPaymentForm({
                             <Input value={currenciesFormat('idr', totalTagihan)} disabled />
                         </div>
                     </div>
-                </div>
+                </CollapsibleBox>
 
                 {/* ── Section: Invoice ── */}
-                <div className="rounded-md border">
-                    <div className="border-b px-4 py-3">
-                        <h3 className="text-sm font-semibold text-muted-foreground">Biaya Invoice</h3>
-                    </div>
-                    <div className="grid grid-cols-1 gap-4 p-4 md:grid-cols-3">
+                <CollapsibleBox title="Biaya Invoice" description="Rincian status pembayaran dan sisa tagihan" defaultExpanded={true}>
+                    <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
                         {/* Tanggal */}
                         <div className="space-y-2">
                             <p className="text-sm font-medium">Tanggal</p>
@@ -313,7 +308,7 @@ export function UnitTransactionPaymentForm({
                             </div>
                         </div>
                     </div>
-                </div>
+                </CollapsibleBox>
 
                 {/* Validation warning */}
                 {validationMessage && (
@@ -325,115 +320,110 @@ export function UnitTransactionPaymentForm({
                 {/* ── Section: Pembayaran ── */}
                 <Form {...form}>
                     <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
-                        <div className="rounded-md border">
-                            <div className="border-b px-4 py-3">
-                                <h3 className="text-sm font-semibold text-muted-foreground">Riwayat Pembayaran</h3>
-                            </div>
-                            <div className="grid grid-cols-1 gap-4 p-4 md:grid-cols-3">
-                                <div className="space-y-2 md:col-span-3">
-                                    <p className="text-sm font-medium">Tanggal Bayar</p>
-                                    <InputDate
-                                        value={form.watch('paymentDate')}
-                                        disabled={billing && billingRemaining === 0 || isPaidAndValid}
-                                        onChange={(e) => form.setValue('paymentDate', e.target.value)}
+                        <CollapsibleBox title="Form Pembayaran" description="Masukkan nominal pembayaran yang akan dilakukan" defaultExpanded={true}>
+                            <div className="space-y-6">
+                                <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+                                    <div className="space-y-2 md:col-span-3">
+                                        <p className="text-sm font-medium">Tanggal Bayar</p>
+                                        <InputDate
+                                            value={form.watch('paymentDate')}
+                                            disabled={billing && billingRemaining === 0 || isPaidAndValid}
+                                            onChange={(e) => form.setValue('paymentDate', e.target.value)}
+                                        />
+                                    </div>
+                                    <FormField
+                                        control={form.control}
+                                        name="bcaPayment"
+                                        render={({ field }) => (
+                                            <FormItem className="space-y-2">
+                                                <FormLabel className="text-sm font-medium">BCA USD</FormLabel>
+                                                <FormControl>
+                                                    <MoneyInput
+                                                        name={field.name}
+                                                        currency="USD"
+                                                        value={Number(field.value) || 0}
+                                                        disabled={billing && billingRemaining === 0 || isPaidAndValid}
+                                                        onChangeValue={(val) => {
+                                                            const maxBca = remainingPaymentUsd;
+                                                            const capped = parseAndClampMoneyInput(val, maxBca, 'USD');
+                                                            field.onChange(capped);
+                                                        }}
+                                                        onBlur={field.onBlur}
+                                                    />
+                                                </FormControl>
+                                                <FormMessage />
+                                            </FormItem>
+                                        )}
+                                    />
+                                    <FormField
+                                        control={form.control}
+                                        name="bcaPayment2"
+                                        render={({ field }) => (
+                                            <FormItem className="space-y-2">
+                                                <FormLabel className="text-sm font-medium">BCA IDR</FormLabel>
+                                                <FormControl>
+                                                    <MoneyInput
+                                                        name={field.name}
+                                                        value={Number(field.value) || 0}
+                                                        disabled={billing && billingRemaining === 0 || isPaidAndValid}
+                                                        onChangeValue={(val) => {
+                                                            const capped = parseAndClampMoneyInput(val, maxBca2);
+                                                            field.onChange(capped);
+                                                        }}
+                                                        onBlur={field.onBlur}
+                                                    />
+                                                </FormControl>
+                                                <FormMessage />
+                                            </FormItem>
+                                        )}
+                                    />
+                                    <FormField
+                                        control={form.control}
+                                        name="cashPayment"
+                                        render={({ field }) => (
+                                            <FormItem className="space-y-2">
+                                                <FormLabel className="text-sm font-medium">CASH IDR</FormLabel>
+                                                <FormControl>
+                                                    <MoneyInput
+                                                        name={field.name}
+                                                        value={Number(field.value) || 0}
+                                                        disabled={billing && billingRemaining === 0 || isPaidAndValid}
+                                                        onChangeValue={(val) => {
+                                                            const capped = parseAndClampMoneyInput(val, maxCash);
+                                                            field.onChange(capped);
+                                                        }}
+                                                        onBlur={field.onBlur}
+                                                    />
+                                                </FormControl>
+                                                <FormMessage />
+                                            </FormItem>
+                                        )}
                                     />
                                 </div>
-                                <FormField
-                                    control={form.control}
-                                    name="bcaPayment"
-                                    render={({ field }) => (
-                                        <FormItem className="space-y-2">
-                                            <FormLabel className="text-sm font-medium">BCA USD</FormLabel>
-                                            <FormControl>
-                                                <MoneyInput
-                                                    name={field.name}
-                                                    currency="USD"
-                                                    value={Number(field.value) || 0}
-                                                    disabled={billing && billingRemaining === 0 || isPaidAndValid}
-                                                    onChangeValue={(val) => {
-                                                        const maxBca = remainingPaymentUsd;
-                                                        const capped = parseAndClampMoneyInput(val, maxBca, 'USD');
-                                                        field.onChange(capped);
-                                                    }}
-                                                    onBlur={field.onBlur}
-                                                />
-                                            </FormControl>
-                                            <FormMessage />
-                                        </FormItem>
-                                    )}
-                                />
-                                <FormField
-                                    control={form.control}
-                                    name="bcaPayment2"
-                                    render={({ field }) => (
-                                        <FormItem className="space-y-2">
-                                            <FormLabel className="text-sm font-medium">BCA IDR</FormLabel>
-                                            <FormControl>
-                                                <MoneyInput
-                                                    name={field.name}
-                                                    value={Number(field.value) || 0}
-                                                    disabled={billing && billingRemaining === 0 || isPaidAndValid}
-                                                    onChangeValue={(val) => {
-                                                        const capped = parseAndClampMoneyInput(val, maxBca2);
-                                                        field.onChange(capped);
-                                                    }}
-                                                    onBlur={field.onBlur}
-                                                />
-                                            </FormControl>
-                                            <FormMessage />
-                                        </FormItem>
-                                    )}
-                                />
-                                <FormField
-                                    control={form.control}
-                                    name="cashPayment"
-                                    render={({ field }) => (
-                                        <FormItem className="space-y-2">
-                                            <FormLabel className="text-sm font-medium">CASH IDR</FormLabel>
-                                            <FormControl>
-                                                <MoneyInput
-                                                    name={field.name}
-                                                    value={Number(field.value) || 0}
-                                                    disabled={billing && billingRemaining === 0 || isPaidAndValid}
-                                                    onChangeValue={(val) => {
-                                                        const capped = parseAndClampMoneyInput(val, maxCash);
-                                                        field.onChange(capped);
-                                                    }}
-                                                    onBlur={field.onBlur}
-                                                />
-                                            </FormControl>
-                                            <FormMessage />
-                                        </FormItem>
-                                    )}
-                                />
-                            </div>
-                        </div>
 
-                        {/* Note */}
-                        <div className="rounded-md border">
-                            <div className="border-b px-4 py-3">
-                                <h3 className="text-sm font-semibold text-muted-foreground">Catatan</h3>
+                                {/* Note */}
+                                <div className="space-y-2 border-t pt-4">
+                                    <FormLabel className="text-sm font-medium">Catatan</FormLabel>
+                                    <FormField
+                                        control={form.control}
+                                        name="note"
+                                        render={({ field }) => (
+                                            <FormItem className="flex-1 space-y-2">
+                                                <FormControl>
+                                                    <Textarea
+                                                        placeholder="Catatan pembayaran (opsional)"
+                                                        {...field}
+                                                        disabled={billing && billingRemaining === 0 || isPaidAndValid}
+                                                        value={field.value ?? ''}
+                                                    />
+                                                </FormControl>
+                                                <FormMessage />
+                                            </FormItem>
+                                        )}
+                                    />
+                                </div>
                             </div>
-                            <div className="flex flex-col gap-4 p-4">
-                                <FormField
-                                    control={form.control}
-                                    name="note"
-                                    render={({ field }) => (
-                                        <FormItem className="flex-1 space-y-2">
-                                            <FormControl>
-                                                <Textarea
-                                                    placeholder="Catatan pembayaran (opsional)"
-                                                    {...field}
-                                                    disabled={billing && billingRemaining === 0 || isPaidAndValid}
-                                                    value={field.value ?? ''}
-                                                />
-                                            </FormControl>
-                                            <FormMessage />
-                                        </FormItem>
-                                    )}
-                                />
-                            </div>
-                        </div>
+                        </CollapsibleBox>
 
                         {/* Footer Buttons */}
                         <div className="flex flex-col-reverse gap-3 pt-4 sm:flex-row sm:justify-end [&>*]:w-full sm:[&>*]:w-auto">
@@ -464,19 +454,14 @@ export function UnitTransactionPaymentForm({
                 </Form>
 
                 {/* ── Section: Histori Pembayaran ── */}
-                <div className="rounded-md border bg-white overflow-hidden">
-                    <div className="border-b px-4 py-3 bg-slate-50">
-                        <h3 className="text-sm font-semibold text-muted-foreground">Riwayat Pembayaran</h3>
-                    </div>
-                    <div className="p-4">
-                        <BaseTable
-                            data={histories ?? []}
-                            columns={columns}
-                            containerClassName="border-0 shadow-none rounded-none"
-                            headerRowClassName="bg-slate-50 hover:bg-slate-50 border-b"
-                        />
-                    </div>
-                </div>
+                <CollapsibleBox title="Riwayat Pembayaran" description="Daftar histori transaksi pembayaran" defaultExpanded={true}>
+                    <BaseTable
+                        data={histories ?? []}
+                        columns={columns}
+                        containerClassName="border-0 shadow-none rounded-none"
+                        headerRowClassName="bg-slate-50 hover:bg-slate-50 border-b"
+                    />
+                </CollapsibleBox>
             </div>
 
             <AlertDialog open={deleteId !== null} onOpenChange={(open) => !open && setDeleteId(null)}>
