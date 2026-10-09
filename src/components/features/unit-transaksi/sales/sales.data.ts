@@ -29,6 +29,7 @@ export interface SalesLineItem {
   price_per_unit_usd?: number;
   price_discount?: number;
   price_usd_discount?: number;
+  price_discount_usd?: number;
 }
 
 export interface SalesItem {

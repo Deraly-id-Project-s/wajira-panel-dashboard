@@ -349,6 +349,7 @@ export interface UnitTransactionItemSummary {
   unit_transaction_id: string;
   unit_transaction_code?: string;
   unit_type_id?: string;
+  sparepart_id?: string;
   qty_total: number;
   price: number;
   price_discount?: number;

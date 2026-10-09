@@ -11,6 +11,7 @@ import {
   usePurchaseUnitItems,
   useUpdateUnitItem,
 } from '@/hooks/useUnitTransactionItem';
+import { useUnitTransactionItemById } from '@/hooks/useUnitItemDetail';
 import { toast } from 'sonner';
 import type { UnitTransactionFormValues } from '@/types/unit-transaction.types';
 import { LoadingState } from '@/components/ui/loading-state';
@@ -41,10 +42,11 @@ export default function EditPurchaseUnitPage() {
 
   const { data: purchase, isLoading } = usePurchaseById(id as string);
   const { data: unitItems, isLoading: isUnitLoading } = usePurchaseUnitItems(id as string);
+  const { data: singleUnitItem, isLoading: isSingleItemLoading } = useUnitTransactionItemById(unitId as string);
   const updateUnitMutation = useUpdateUnitItem();
   const updateTemplateMutation = useUpdateUnitTransactionDocumentTemplate();
 
-  const unit = unitItems?.data?.find((item) => item.id === String(unitId));
+  const unit = singleUnitItem ?? unitItems?.data?.find((item) => item.id === String(unitId));
   const parentTransactionId = String(unit?.unit_transaction_id ?? id ?? '');
 
   const excludedTypeUnitIds = (unitItems?.data ?? [])
@@ -133,9 +135,9 @@ export default function EditPurchaseUnitPage() {
       }
 
       const currentPriceDiscount = Number(unit?.price_discount ?? 0);
-      const currentPriceUsdDiscount = Number(unit?.price_usd_discount ?? 0);
+      const currentPriceUsdDiscount = Number((unit as any)?.price_discount_usd ?? unit?.price_usd_discount ?? 0);
       const priceDiscount = Number(data.price_discount ?? 0) || 0;
-      const priceUsdDiscount = Number(data.price_usd_discount ?? 0) || 0;
+      const priceUsdDiscount = Number((data as any)?.price_discount_usd ?? data.price_usd_discount ?? 0) || 0;
 
       if (!isSame(priceDiscount, currentPriceDiscount)) {
         payload.price_discount = priceDiscount;
@@ -156,7 +158,7 @@ export default function EditPurchaseUnitPage() {
         payload.ppn_tax_id = newPpnTaxId || undefined;
       }
 
-      if (data.usd_costs) {
+      if (data.usd_costs !== undefined) {
         payload.usd_costs = data.usd_costs;
       }
 
@@ -181,7 +183,7 @@ export default function EditPurchaseUnitPage() {
     }
   };
 
-  if (isLoading || isUnitLoading) {
+  if (isLoading || isUnitLoading || isSingleItemLoading) {
     return (
       <DashboardLayout>
         <LoadingState variant="page" />
@@ -208,9 +210,9 @@ export default function EditPurchaseUnitPage() {
           breadcrumbs={[
             { label: 'Pembelian Unit', onClick: () => router.push(`/dashboard/${slug}/transaksi/pembelian-unit`) },
             { label: 'Detail Pembelian', onClick: () => router.push(`/dashboard/${slug}/transaksi/pembelian-unit/${parentTransactionId}`) },
-            { label: 'Edit Unit' }
+            { label: 'Edit Unit Tipe Pembelian' }
           ]}
-          title="Data Pembelian"
+          title="Data Pembelian Unit Tipe"
           subtitle={
             <>
               <span>Kode Beli:</span>
@@ -234,10 +236,19 @@ export default function EditPurchaseUnitPage() {
                 documentTemplateId: purchase?.documentTemplateId ?? null,
                 otherFee: unit.other_fee,
                 price_discount: Number(unit.price_discount ?? 0) || 0,
-                price_usd_discount: Number(unit.price_usd_discount ?? 0) || 0,
+                price_usd_discount: Number((unit as any).price_discount_usd ?? unit.price_usd_discount ?? 0) || 0,
                 priceUsd: unit.price_usd,
                 pricePerUnitUsd: unit.price_per_unit_usd,
+                unit_transaction_usd_costs: (unit as any).unit_transaction_usd_costs || (unit as any).usd_costs || [],
                 usd_costs: (unit as any).unit_transaction_usd_costs || (unit as any).usd_costs || [],
+                is_usd_transaction: (unit as any).is_usd_transaction,
+                usd_cost_freight_total: (unit as any).usd_cost_freight_total,
+                usd_cost_box_packing_total: (unit as any).usd_cost_box_packing_total,
+                usd_cost_admin_cost_total: (unit as any).usd_cost_admin_cost_total,
+                usd_cost_ckd_processing_cost_total: (unit as any).usd_cost_ckd_processing_cost_total,
+                usd_cost_bill_of_lading_switch_cost_total: (unit as any).usd_cost_bill_of_lading_switch_cost_total,
+                usd_cost_customs_clearance_cost_total: (unit as any).usd_cost_customs_clearance_cost_total,
+                usd_cost_other_total: (unit as any).usd_cost_other_total,
                 dppTaxVersionId: unit.dpp_tax_id != null ? String(unit.dpp_tax_id) : undefined,
                 ppnTaxVersionId: unit.ppn_tax_id != null ? String(unit.ppn_tax_id) : undefined,
               }}

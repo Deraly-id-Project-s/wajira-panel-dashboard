@@ -14,6 +14,8 @@ export const unitTransactionSchema = z.object({
   priceUsdDiscount: z.number().min(0).optional(),
   priceUsd: z.number().min(0).optional(),
   pricePerUnitUsd: z.number().min(0).optional(),
+  price_usd: z.number().min(0).optional(),
+  price_per_unit_usd: z.number().min(0).optional(),
   dppTaxVersionId: z.union([z.string(), z.number()]).optional(),
   ppnTaxVersionId: z.union([z.string(), z.number()]).optional(),
   hppPerUnit: z.number().min(0).optional(),

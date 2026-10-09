@@ -10,6 +10,7 @@ import { UnitTransactionForm } from '@/components/features/unit-transaksi/UnitTr
 import type { UnitTransactionFormValues } from '@/types/unit-transaction.types';
 import { toast } from 'sonner';
 import { useSalesUnitItems, useUpdateUnitItem } from '@/hooks/useUnitTransactionItem';
+import { useUnitTransactionItemById } from '@/hooks/useUnitItemDetail';
 import { useSalesDetail } from '@/hooks/useSales';
 import { useTypeUnits } from '@/hooks/useTypeUnit';
 import { useCompany } from '@/contexts/CompanyContext';
@@ -26,6 +27,7 @@ export default function EditSalesUnitPage() {
     const { companyId } = useCompany();
     const { data: salesDetail, isLoading: salesLoading } = useSalesDetail(salesId);
     const { data: itemResponse, isLoading: itemLoading } = useSalesUnitItems(salesId);
+    const { data: singleUnitItem, isLoading: isSingleItemLoading } = useUnitTransactionItemById(selectedUnitId ? String(selectedUnitId) : '');
     const { data: unitTypes, isLoading: typeUnitLoading } = useTypeUnits({
         sort_by: 'created_at',
         sort_order: 'asc',
@@ -35,7 +37,7 @@ export default function EditSalesUnitPage() {
     const updateMutation = useUpdateUnitItem();
     const updateTemplateMutation = useUpdateUnitTransactionDocumentTemplate();
 
-    const item = (itemResponse?.data ?? []).find((row) => String(row.id) === String(selectedUnitId ?? ''));
+    const item = singleUnitItem ?? (itemResponse?.data ?? []).find((row) => String(row.id) === String(selectedUnitId ?? ''));
     const invoiceCode = salesDetail?.raw?.code ?? '-';
 
     const formData: UnitTransactionFormValues | null = useMemo(() => {
@@ -58,8 +60,17 @@ export default function EditSalesUnitPage() {
             priceUsd: item.price_usd ? Number(item.price_usd) : undefined,
             pricePerUnitUsd: item.price_per_unit_usd ? Number(item.price_per_unit_usd) : undefined,
             price_discount: Number(item.price_discount ?? 0) || 0,
-            price_usd_discount: Number(item.price_usd_discount ?? 0) || 0,
+            price_usd_discount: Number((item as any).price_discount_usd ?? item.price_usd_discount ?? 0) || 0,
+            unit_transaction_usd_costs: (item as any).unit_transaction_usd_costs || (item as any).usd_costs || [],
             usd_costs: (item as any).unit_transaction_usd_costs || (item as any).usd_costs || [],
+            is_usd_transaction: (item as any).is_usd_transaction,
+            usd_cost_freight_total: (item as any).usd_cost_freight_total,
+            usd_cost_box_packing_total: (item as any).usd_cost_box_packing_total,
+            usd_cost_admin_cost_total: (item as any).usd_cost_admin_cost_total,
+            usd_cost_ckd_processing_cost_total: (item as any).usd_cost_ckd_processing_cost_total,
+            usd_cost_bill_of_lading_switch_cost_total: (item as any).usd_cost_bill_of_lading_switch_cost_total,
+            usd_cost_customs_clearance_cost_total: (item as any).usd_cost_customs_clearance_cost_total,
+            usd_cost_other_total: (item as any).usd_cost_other_total,
             dppTaxVersionId: item.dpp_tax_id ?? undefined,
             ppnTaxVersionId: item.ppn_tax_id ?? undefined,
             documentTemplateId: salesDetail?.ui?.documentTemplateId ?? null,
@@ -87,7 +98,7 @@ export default function EditSalesUnitPage() {
                     expedition_fee: Number(values.expeditionFee ?? 0),
                     other_fee: Number(values.otherFee ?? 0),
                     price_discount: Number(values.price_discount ?? 0) || 0,
-                    price_usd_discount: Number(values.price_usd_discount ?? 0) || 0,
+                    price_usd_discount: Number((values as any)?.price_discount_usd ?? values.price_usd_discount ?? 0) || 0,
                     price_usd: values.priceUsd ? Number(values.priceUsd) : undefined,
                     price_per_unit_usd: values.pricePerUnitUsd ? Number(values.pricePerUnitUsd) : undefined,
                     usd_costs: values.usd_costs,
@@ -118,7 +129,7 @@ export default function EditSalesUnitPage() {
         }
     };
 
-    if (salesLoading || itemLoading || typeUnitLoading) {
+    if (salesLoading || itemLoading || typeUnitLoading || isSingleItemLoading) {
         return (
             <DashboardLayout>
                 <LoadingState variant="page" />

@@ -30,6 +30,14 @@ export interface UnitTransactionFormProps {
     ppnTaxVersionId?: string | number | null;
     unit_transaction_usd_costs?: any[];
     usd_costs?: any[];
+    is_usd_transaction?: boolean;
+    usd_cost_freight_total?: number | string;
+    usd_cost_box_packing_total?: number | string;
+    usd_cost_admin_cost_total?: number | string;
+    usd_cost_ckd_processing_cost_total?: number | string;
+    usd_cost_bill_of_lading_switch_cost_total?: number | string;
+    usd_cost_customs_clearance_cost_total?: number | string;
+    usd_cost_other_total?: number | string;
   };
   readOnly?: boolean;
   loading?: boolean;
@@ -66,15 +74,26 @@ const extractInitialUsdCosts = (defaults?: any) => {
   };
 
   if (defaults?.usdCostsFreight !== undefined) result.usdCostsFreight = Number(defaults.usdCostsFreight);
-  if (defaults?.usdCostsBoxPacking !== undefined) result.usdCostsBoxPacking = Number(defaults.usdCostsBoxPacking);
-  if (defaults?.usdCostsAdminCost !== undefined) result.usdCostsAdminCost = Number(defaults.usdCostsAdminCost);
-  if (defaults?.usdCostsCkdProcessingCost !== undefined) result.usdCostsCkdProcessingCost = Number(defaults.usdCostsCkdProcessingCost);
-  if (defaults?.usdCostsBillOfLadingSwitchCost !== undefined) result.usdCostsBillOfLadingSwitchCost = Number(defaults.usdCostsBillOfLadingSwitchCost);
-  if (defaults?.usdCostsCustomsClearanceCost !== undefined) result.usdCostsCustomsClearanceCost = Number(defaults.usdCostsCustomsClearanceCost);
+  else if (defaults?.usd_cost_freight_total !== undefined) result.usdCostsFreight = Number(defaults.usd_cost_freight_total);
 
-  if (Array.isArray(rawCosts)) {
+  if (defaults?.usdCostsBoxPacking !== undefined) result.usdCostsBoxPacking = Number(defaults.usdCostsBoxPacking);
+  else if (defaults?.usd_cost_box_packing_total !== undefined) result.usdCostsBoxPacking = Number(defaults.usd_cost_box_packing_total);
+
+  if (defaults?.usdCostsAdminCost !== undefined) result.usdCostsAdminCost = Number(defaults.usdCostsAdminCost);
+  else if (defaults?.usd_cost_admin_cost_total !== undefined) result.usdCostsAdminCost = Number(defaults.usd_cost_admin_cost_total);
+
+  if (defaults?.usdCostsCkdProcessingCost !== undefined) result.usdCostsCkdProcessingCost = Number(defaults.usdCostsCkdProcessingCost);
+  else if (defaults?.usd_cost_ckd_processing_cost_total !== undefined) result.usdCostsCkdProcessingCost = Number(defaults.usd_cost_ckd_processing_cost_total);
+
+  if (defaults?.usdCostsBillOfLadingSwitchCost !== undefined) result.usdCostsBillOfLadingSwitchCost = Number(defaults.usdCostsBillOfLadingSwitchCost);
+  else if (defaults?.usd_cost_bill_of_lading_switch_cost_total !== undefined) result.usdCostsBillOfLadingSwitchCost = Number(defaults.usd_cost_bill_of_lading_switch_cost_total);
+
+  if (defaults?.usdCostsCustomsClearanceCost !== undefined) result.usdCostsCustomsClearanceCost = Number(defaults.usdCostsCustomsClearanceCost);
+  else if (defaults?.usd_cost_customs_clearance_cost_total !== undefined) result.usdCostsCustomsClearanceCost = Number(defaults.usd_cost_customs_clearance_cost_total);
+
+  if (Array.isArray(rawCosts) && rawCosts.length > 0) {
     rawCosts.forEach((item) => {
-      const amount = Number(item.amount ?? item.amount_total ?? 0);
+      const amount = Number(item.amount ?? item.amount_total ?? item.price ?? 0);
       const note = item.note ?? '';
       const id = item.id ? Number(item.id) : undefined;
 
@@ -104,6 +123,8 @@ const extractInitialUsdCosts = (defaults?: any) => {
           break;
       }
     });
+  } else if (defaults?.usd_cost_other_total !== undefined && Number(defaults.usd_cost_other_total) > 0) {
+    result.otherList.push({ note: 'Biaya USD Lainnya', amount: Number(defaults.usd_cost_other_total) });
   }
 
   return result;
@@ -135,6 +156,10 @@ export function UnitTransactionForm({
   const hasUsdData = Boolean(
     (defaultValues?.priceUsd && Number(defaultValues.priceUsd) > 0) ||
     (defaultValues?.pricePerUnitUsd && Number(defaultValues.pricePerUnitUsd) > 0) ||
+    ((defaultValues as any)?.price_usd && Number((defaultValues as any).price_usd) > 0) ||
+    ((defaultValues as any)?.price_per_unit_usd && Number((defaultValues as any).price_per_unit_usd) > 0) ||
+    (defaultValues as any)?.is_usd_transaction ||
+    (defaultValues as any)?.isUsd ||
     (defaultValues?.unit_transaction_usd_costs && defaultValues.unit_transaction_usd_costs.length > 0) ||
     (defaultValues?.usd_costs && defaultValues.usd_costs.length > 0) ||
     initialCosts.usdCostsFreight > 0 ||
@@ -184,9 +209,11 @@ export function UnitTransactionForm({
           : 0,
       price_usd_discount: defaultValues?.price_usd_discount !== undefined
         ? Number(defaultValues.price_usd_discount)
-        : (defaultValues as any)?.priceUsdDiscount !== undefined
-          ? Number((defaultValues as any).priceUsdDiscount)
-          : 0,
+        : (defaultValues as any)?.price_discount_usd !== undefined
+          ? Number((defaultValues as any).price_discount_usd)
+          : (defaultValues as any)?.priceUsdDiscount !== undefined
+            ? Number((defaultValues as any).priceUsdDiscount)
+            : 0,
       priceUsd: defaultValues?.priceUsd || (defaultValues as any)?.price_usd || 0,
       pricePerUnitUsd: defaultValues?.pricePerUnitUsd || (defaultValues as any)?.price_per_unit_usd || 0,
       usdCostsFreight: initialCosts.usdCostsFreight,
@@ -198,6 +225,71 @@ export function UnitTransactionForm({
       ...defaultValues,
     },
   });
+
+  useEffect(() => {
+    if (defaultValues) {
+      const nextCosts = extractInitialUsdCosts(defaultValues);
+      const nextHasUsd = Boolean(
+        (defaultValues.priceUsd && Number(defaultValues.priceUsd) > 0) ||
+        (defaultValues.pricePerUnitUsd && Number(defaultValues.pricePerUnitUsd) > 0) ||
+        ((defaultValues as any)?.price_usd && Number((defaultValues as any).price_usd) > 0) ||
+        ((defaultValues as any)?.price_per_unit_usd && Number((defaultValues as any).price_per_unit_usd) > 0) ||
+        (defaultValues as any)?.is_usd_transaction ||
+        (defaultValues as any)?.isUsd ||
+        (defaultValues.unit_transaction_usd_costs && defaultValues.unit_transaction_usd_costs.length > 0) ||
+        (defaultValues.usd_costs && defaultValues.usd_costs.length > 0) ||
+        nextCosts.usdCostsFreight > 0 ||
+        nextCosts.usdCostsBoxPacking > 0 ||
+        nextCosts.usdCostsAdminCost > 0 ||
+        nextCosts.usdCostsCkdProcessingCost > 0 ||
+        nextCosts.usdCostsBillOfLadingSwitchCost > 0 ||
+        nextCosts.usdCostsCustomsClearanceCost > 0 ||
+        nextCosts.otherList.length > 0
+      );
+      if (nextHasUsd) {
+        setIsUsd(true);
+      }
+      if (nextCosts.otherList.length > 0) {
+        setOtherCosts(nextCosts.otherList);
+      }
+      if (defaultValues.dppTaxVersionId !== undefined && defaultValues.dppTaxVersionId !== null) {
+        setSelectedDppTaxVersionId(defaultValues.dppTaxVersionId);
+      }
+      if (defaultValues.ppnTaxVersionId !== undefined && defaultValues.ppnTaxVersionId !== null) {
+        setSelectedPpnTaxVersionId(defaultValues.ppnTaxVersionId);
+      }
+      form.reset({
+        unitTypeId: defaultValues.unitTypeId ? String(defaultValues.unitTypeId) : '',
+        documentTemplateId: defaultValues.documentTemplateId ?? null,
+        qty: defaultValues.qty !== undefined ? Number(defaultValues.qty) : 1,
+        price: defaultValues.price !== undefined ? Number(defaultValues.price) : 0,
+        bbnPrice: defaultValues.bbnPrice !== undefined ? Number(defaultValues.bbnPrice) : 0,
+        expeditionFee: defaultValues.expeditionFee !== undefined ? Number(defaultValues.expeditionFee) : 0,
+        otherFee: defaultValues.otherFee !== undefined ? Number(defaultValues.otherFee) : 0,
+        price_discount: defaultValues.price_discount !== undefined
+          ? Number(defaultValues.price_discount)
+          : (defaultValues as any)?.priceDiscount !== undefined
+            ? Number((defaultValues as any).priceDiscount)
+            : 0,
+        price_usd_discount: defaultValues.price_usd_discount !== undefined
+          ? Number(defaultValues.price_usd_discount)
+          : (defaultValues as any)?.price_discount_usd !== undefined
+            ? Number((defaultValues as any).price_discount_usd)
+            : (defaultValues as any)?.priceUsdDiscount !== undefined
+              ? Number((defaultValues as any).priceUsdDiscount)
+              : 0,
+        priceUsd: defaultValues.priceUsd !== undefined ? Number(defaultValues.priceUsd) : (Number((defaultValues as any)?.price_usd) || 0),
+        pricePerUnitUsd: defaultValues.pricePerUnitUsd !== undefined ? Number(defaultValues.pricePerUnitUsd) : (Number((defaultValues as any)?.price_per_unit_usd) || 0),
+        usdCostsFreight: nextCosts.usdCostsFreight,
+        usdCostsBoxPacking: nextCosts.usdCostsBoxPacking,
+        usdCostsAdminCost: nextCosts.usdCostsAdminCost,
+        usdCostsCkdProcessingCost: nextCosts.usdCostsCkdProcessingCost,
+        usdCostsBillOfLadingSwitchCost: nextCosts.usdCostsBillOfLadingSwitchCost,
+        usdCostsCustomsClearanceCost: nextCosts.usdCostsCustomsClearanceCost,
+        ...defaultValues,
+      });
+    }
+  }, [defaultValues, form]);
 
   const qty = Number(form.watch('qty') ?? 0);
   const price = Number(form.watch('price') ?? 0);
