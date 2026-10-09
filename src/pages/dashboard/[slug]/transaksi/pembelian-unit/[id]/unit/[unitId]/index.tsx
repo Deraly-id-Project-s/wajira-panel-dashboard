@@ -466,7 +466,14 @@ export default function UnitPurchaseDetailPage() {
             onBack={() => router.push(`/dashboard/${slug}/transaksi/pembelian-unit/${purchaseId}`)}
           />
 
-          <PurchaseDetailCards data={purchase} billingHistories={resolvedBillingHistories} unitItems={unitItemsResponse?.data} />
+          <PurchaseDetailCards
+            data={purchase}
+            billingHistories={resolvedBillingHistories}
+            unitItems={unitItemsResponse?.data}
+            unitItem={unitItem}
+            unitType={unitItem?.unit_type}
+            stockQty={qty}
+          />
 
           <Card className="border border-slate-200 shadow-sm">
             <CollapsibleBox title="Data Pembelian Detail Unit Tipe" description="Rincian lengkap detail unit yang dibeli">

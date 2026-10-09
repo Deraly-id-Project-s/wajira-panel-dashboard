@@ -493,7 +493,12 @@ export default function SalesUnitDetailPage() {
           onBack={() => router.push(`/dashboard/${slug}/transaksi/penjualan-unit/${salesId}`)}
         />
 
-        <SalesDetailCards data={salesData.ui} billingHistories={resolvedBillingHistories} unitType={unitTypeData} />
+        <SalesDetailCards
+          data={salesData.ui}
+          billingHistories={resolvedBillingHistories}
+          unitType={unitTypeData ?? effectiveUnitItem?.unit_type}
+          stockQty={requiredQty}
+        />
 
         <Card className="border border-slate-200 shadow-sm">
           <CollapsibleBox title="Data Penjualan Detail Unit Tipe" description="Pilih stock unit yang tersedia untuk dijual">

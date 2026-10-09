@@ -1,5 +1,5 @@
 import { Card, CardContent } from '@/components/ui/card';
-
+import { Badge } from '@/components/ui/badge';
 import { UnitTransactionDetail, UnitTransactionItem } from '@/@types/unit-transaction.types';
 import { Calendar, User, FileText, DollarSign, CreditCard } from 'lucide-react';
 import { getHistoryTotalIdrEquivalent, getHistoryUsdAmount, getHistoryBcaIdrAmount, getHistoryCashIdrAmount } from '@/utils/payment-helpers';
@@ -12,9 +12,12 @@ interface Props {
   data: UnitTransactionDetail;
   billingHistories?: any[];
   unitItems?: UnitTransactionItem[];
+  unitItem?: UnitTransactionItem | any;
+  unitType?: { code?: string; name?: string; [key: string]: any } | null;
+  stockQty?: number;
 }
 
-export function PurchaseDetailCards({ data, billingHistories = [], unitItems }: Props) {
+export function PurchaseDetailCards({ data, billingHistories = [], unitItems, unitItem, unitType, stockQty }: Props) {
   const totalDpp = Number(data.unit_transaction_item_total_dpp ?? 0);
   const totalPpn = Number(data.unit_transaction_item_total_ppn ?? 0);
   const totalHpp = totalDpp + totalPpn;
@@ -68,7 +71,7 @@ export function PurchaseDetailCards({ data, billingHistories = [], unitItems }: 
 
   const items: any[] = (unitItems && unitItems.length > 0)
     ? unitItems
-    : (data.unit_transaction_items ?? []);
+    : (unitItem ? [unitItem] : (data.unit_transaction_items ?? []));
 
   const totalDiscountIdr = items.reduce((sum, item) => {
     const itemPrice = Number(item.price ?? 0);
@@ -87,15 +90,20 @@ export function PurchaseDetailCards({ data, billingHistories = [], unitItems }: 
     const itemPriceUsd = Number(item.price_usd && Number(item.price_usd) > 0
       ? item.price_usd
       : (Number(item.price_per_unit_usd ?? 0) * Number(item.qty_total ?? item.max_capacity ?? 1)));
-    const discountUsdPercent = Number(item.price_usd_discount ?? (data as any).price_usd_discount ?? 0);
+    const discountUsdPercent = Number(item.price_discount_usd ?? item.price_usd_discount ?? (data as any).price_discount_usd ?? (data as any).price_usd_discount ?? 0);
     return sum + (itemPriceUsd * (discountUsdPercent / 100));
   }, 0);
 
-  const discountUsdPercentages = Array.from(new Set(items.map((i) => Number(i.price_usd_discount ?? 0)).filter((p) => p > 0)));
-  const fallbackSingleUsdDiscount = Number((data as any).price_usd_discount ?? 0);
+  const discountUsdPercentages = Array.from(new Set(items.map((i) => Number(i.price_discount_usd ?? i.price_usd_discount ?? 0)).filter((p) => p > 0)));
+  const fallbackSingleUsdDiscount = Number((data as any).price_discount_usd ?? (data as any).price_usd_discount ?? 0);
   const resolvedDiscountUsdPercent = discountUsdPercentages.length === 1
     ? discountUsdPercentages[0]
     : (discountUsdPercentages.length === 0 ? (fallbackSingleUsdDiscount > 0 ? fallbackSingleUsdDiscount : 0) : null);
+
+  const activeUnitType = unitType ?? unitItem?.unit_type ?? (items.length === 1 ? items[0]?.unit_type : undefined);
+  const activeUnitTypeCode = activeUnitType?.code ?? unitItem?.unit_type_code ?? (items.length === 1 ? items[0]?.unit_type_code : undefined);
+  const activeUnitTypeName = activeUnitType?.name ?? unitItem?.unit_type_name ?? (items.length === 1 ? items[0]?.unit_type_name : undefined);
+  const activeStockQty = stockQty ?? unitItem?.qty_total ?? (items.length === 1 ? items[0]?.qty_total : undefined);
 
   return (
     <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
@@ -134,6 +142,30 @@ export function PurchaseDetailCards({ data, billingHistories = [], unitItems }: 
                 </span>
               </div>
             </div>
+            {activeUnitTypeCode && (
+              <div className="space-y-1">
+                <p>Kode Unit Tipe</p>
+                <p className="text-sm font-semibold text-slate-900">
+                  <CopyBox text={activeUnitTypeCode} />
+                </p>
+              </div>
+            )}
+            {activeUnitTypeName && (
+              <div className="space-y-1">
+                <p>Nama Unit Tipe</p>
+                <p className="text-sm font-semibold text-slate-900">
+                  {activeUnitTypeName}
+                </p>
+              </div>
+            )}
+            {activeStockQty !== undefined && activeStockQty !== null && (
+              <div className="space-y-1">
+                <p>Jumlah Stok</p>
+                <p className="text-sm font-semibold text-slate-900">
+                  {activeStockQty} Unit
+                </p>
+              </div>
+            )}
           </div>
         </CardContent>
       </Card>
@@ -161,6 +193,17 @@ export function PurchaseDetailCards({ data, billingHistories = [], unitItems }: 
             <div className="flex items-center justify-between text-slate-900">
               <span className="font-bold text-sm">Total HPP</span>
               <span className="text-sm font-bold">{currenciesFormat('idr', totalHpp)}</span>
+            </div>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-1.5">
+                <span>Diskon (IDR)</span>
+                {resolvedDiscountIdrPercent !== null && resolvedDiscountIdrPercent > 0 && (
+                  <Badge variant="outline" className="border-amber-300 bg-amber-100 text-amber-800 font-semibold text-[10px] px-1.5 py-0">
+                    {resolvedDiscountIdrPercent}%
+                  </Badge>
+                )}
+              </div>
+              <span className="text-sm font-semibold text-slate-900">{currenciesFormat('idr', totalDiscountIdr)}</span>
             </div>
             <div className="flex items-center justify-between">
               <span>Total Biaya</span>
@@ -218,6 +261,17 @@ export function PurchaseDetailCards({ data, billingHistories = [], unitItems }: 
             <div className="flex items-center justify-between text-slate-900">
               <span className="font-bold text-sm">Total Biaya USD</span>
               <span className="text-sm font-bold text-amber-700">{currenciesFormat('usd', totalUsdCost)}</span>
+            </div>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-1.5">
+                <span>Diskon (USD)</span>
+                {resolvedDiscountUsdPercent !== null && resolvedDiscountUsdPercent > 0 && (
+                  <Badge variant="outline" className="border-amber-300 bg-amber-100 text-amber-800 font-semibold text-[10px] px-1.5 py-0">
+                    {resolvedDiscountUsdPercent}%
+                  </Badge>
+                )}
+              </div>
+              <span className="text-sm font-semibold text-slate-900">{currenciesFormat('usd', totalDiscountUsd)}</span>
             </div>
             {totalUsd > 0 && (
               <div className="flex items-center justify-between text-slate-900 pt-1">
