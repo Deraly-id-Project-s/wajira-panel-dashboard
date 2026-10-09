@@ -77,11 +77,17 @@ export default function PurchaseTable({
     return () => clearTimeout(timer);
   }, [localSearch, onSearchChange, search]);
 
-  const isRefunded = (item: UnitTransaction) => String(item.stock_state ?? '').toLowerCase() === 'inbound_return';
-  const getBillingLabel = useCallback((item: UnitTransaction) => {
-    if (isRefunded(item)) return 'Refund';
-    return item.isPaid ? 'Lunas' : 'Belum Lunas';
-  }, []);
+  const isRefunded = useCallback(
+    (item: UnitTransaction) => String(item.stock_state ?? '').toLowerCase() === 'inbound_return',
+    []
+  );
+  const getBillingLabel = useCallback(
+    (item: UnitTransaction) => {
+      if (isRefunded(item)) return 'Refund';
+      return item.isPaid ? 'Lunas' : 'Belum Lunas';
+    },
+    [isRefunded]
+  );
 
   const getRemainingPayment = (item: UnitTransaction) => {
     if (item.isPaid) return item.remainingPayment || 0;
@@ -162,19 +168,6 @@ export default function PurchaseTable({
     onPerPageChange?.(parsed);
   };
 
-  const handlePageChange = (page: number) => {
-    onPageChange?.(page);
-  };
-
-  const handleSearch = (value: string) => {
-    setLocalSearch(value);
-  };
-
-  const handleBulkDelete = () => {
-    selectedIds.forEach((id) => onDelete(id));
-    setSelectedIds(new Set());
-  };
-
   const columns: ColumnDef<UnitTransaction>[] = useMemo(
     () => [
       {
@@ -182,7 +175,7 @@ export default function PurchaseTable({
         accessorKey: 'code',
         sortable: true,
         cell: (item) => {
-          const showUnBilled = item.unit_transaction_billing?.is_paid === false;
+          const showUnBilled = !isRefunded(item) && (!item.isPaid || item.unit_transaction_billing?.is_paid === false || item.billing_summary?.is_paid === false);
           const showUnVerified = item.isUnitTypeDetailValid === false;
 
           let tooltipText = '';
@@ -373,7 +366,7 @@ export default function PurchaseTable({
         ),
       },
     ],
-    [slug, canEdit, canDelete, onDelete, getBillingLabel, router]
+    [slug, canEdit, canDelete, onDelete, getBillingLabel, isRefunded, router]
   );
 
   const headerActions = (

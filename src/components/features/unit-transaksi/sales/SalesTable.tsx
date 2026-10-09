@@ -84,11 +84,17 @@ export function SalesTable({
     return () => clearTimeout(timer);
   }, [localSearch, onSearchChange, search]);
 
-  const isRefunded = (item: UnitTransaction) => String(item.stock_state ?? '').toLowerCase() === 'outbound_return';
-  const getBillingLabel = useCallback((item: UnitTransaction) => {
-    if (isRefunded(item)) return 'Refund';
-    return item.isPaid ? 'Lunas' : 'Belum Lunas';
-  }, []);
+  const isRefunded = useCallback(
+    (item: UnitTransaction) => String(item.stock_state ?? '').toLowerCase() === 'outbound_return',
+    []
+  );
+  const getBillingLabel = useCallback(
+    (item: UnitTransaction) => {
+      if (isRefunded(item)) return 'Refund';
+      return item.isPaid ? 'Lunas' : 'Belum Lunas';
+    },
+    [isRefunded]
+  );
 
   const getRemainingPayment = (item: UnitTransaction) => {
     if (item.isPaid) return item.remainingPayment || 0;
@@ -186,7 +192,7 @@ export function SalesTable({
         sortable: true,
         alignment: 'left',
         cell: (item) => {
-          const showUnBilled = item.billing_summary?.is_paid === false || item.isPaid === false;
+          const showUnBilled = !isRefunded(item) && (!item.isPaid || item.unit_transaction_billing?.is_paid === false || item.billing_summary?.is_paid === false);
           const showUnVerified = item.isUnitTypeDetailValid === false;
 
           let tooltipText = '';
@@ -392,7 +398,7 @@ export function SalesTable({
         ),
       },
     ],
-    [slug, canEdit, canDelete, onDelete, getBillingLabel, router]
+    [slug, canEdit, canDelete, onDelete, getBillingLabel, isRefunded, router]
   );
 
   const headerActions = (
