@@ -1,18 +1,17 @@
 'use client';
 
-import { useMemo, useState, useEffect, useRef, useCallback } from 'react';
+import { useMemo, useState, useCallback } from 'react';
 import { useRouter } from 'next/router';
-import { Plus, Pencil, Trash2, Info, MoreVertical } from 'lucide-react';
+import { Plus, Info, MoreVertical } from 'lucide-react';
 import { toast } from 'sonner';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { FormDialog } from '@/components/ui/form-dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
+import { MoneyInput } from '@/components/ui/money-input';
 import { InputDate } from '@/components/ui/input-date';
 import { Textarea } from '@/components/ui/textarea';
-import { cn } from '@/lib/utils';
 import BaseTable, { ColumnDef } from '@/components/ui/base-table';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { ReferenceLink } from '@/components/ui/reference-link';
@@ -32,34 +31,26 @@ const formatDate = (value?: string) => {
   return date.toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' });
 };
 
-const formatMoneyInput = (value: string) => {
-  const digits = value.replace(/\D/g, '').replace(/^0+(?=\d)/, '');
-  if (!digits) return '';
-  return digits.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
-};
-
-const formatMoneyValue = (value: number) => formatMoneyInput(String(Math.max(0, Math.floor(value))));
-
-const parseMoneyInput = (value: string) => {
-  const normalized = value.replace(/\D/g, '');
-  if (!normalized) return 0;
-  const amount = Number(normalized);
-  return Number.isFinite(amount) ? amount : 0;
+const isUsdKas = (kas?: { currency_type?: string | null; code?: string | null } | null) => {
+  if (!kas) return false;
+  if ((kas.currency_type || '').toLowerCase() === 'usd') return true;
+  return (kas.code || '').toLowerCase().includes('usd');
 };
 
 interface FormState {
   cash_id: number;
   account_id: number;
-  amount: string;
+  amount: number;
+  amount_original: number;
   payment_at: string;
   note: string;
 }
 
-
 const EMPTY_FORM: FormState = {
   cash_id: 0,
   account_id: 0,
-  amount: '',
+  amount: 0,
+  amount_original: 0,
   payment_at: '',
   note: '',
 };
@@ -105,7 +96,6 @@ export default function FinanceBillingTable({ financeBillings, cashFlowDetail, c
     perPage: 1000,
     search: '',
     company_id: companyId > 0 ? companyId : undefined,
-    type: currentTransactionType,
     enabled: companyId > 0,
   });
 
@@ -119,7 +109,7 @@ export default function FinanceBillingTable({ financeBillings, cashFlowDetail, c
 
   const akunOptions = useMemo(() => {
     if (!currentTransactionType) return rawAkunOptions;
-    return rawAkunOptions.filter((account) => {
+    const filtered = rawAkunOptions.filter((account) => {
       if (form.account_id && Number(account.id) === Number(form.account_id)) {
         return true;
       }
@@ -127,39 +117,48 @@ export default function FinanceBillingTable({ financeBillings, cashFlowDetail, c
       const normalizedType = account.type === 'debit' ? 'debet' : account.type;
       return normalizedType === currentTransactionType;
     });
+    return filtered.length > 0 ? filtered : rawAkunOptions;
   }, [rawAkunOptions, currentTransactionType, form.account_id]);
 
-  const totalPaid = useMemo(
-    () => financeBillings.reduce((sum, fb) => sum + Number(fb.amount || 0), 0),
-    [financeBillings],
+  const debetIdr = Number(cashFlowDetail.debet || cashFlowDetail.cash_position?.debet_idr_total || 0);
+  const creditIdr = Number(cashFlowDetail.credit || cashFlowDetail.cash_position?.credit_idr_total || 0);
+  const debetUsd = Number(cashFlowDetail.debet_usd || cashFlowDetail.cash_position?.debet_usd_total || 0);
+  const creditUsd = Number(cashFlowDetail.credit_usd || cashFlowDetail.cash_position?.credit_usd_total || 0);
+  const fallbackGrandTotal = Number(
+    cashFlowDetail.grand_total ||
+    cashFlowDetail.unit_transaction_billing?.grand_total ||
+    cashFlowDetail.goods_transaction_billing?.grand_total ||
+    cashFlowDetail.amount ||
+    0,
   );
-  const grandTotal = Number(cashFlowDetail.grand_total || cashFlowDetail.unit_transaction_billing?.grand_total || 0);
-  const cashFlowCurrency = Number(cashFlowDetail.debet_usd || cashFlowDetail.credit_usd || 0) > 0 ? 'usd' : 'idr';
-  const cashFlowAmount = cashFlowCurrency === 'usd'
-    ? Number(cashFlowDetail.debet_usd || cashFlowDetail.credit_usd || 0)
-    : Number(cashFlowDetail.amount || cashFlowDetail.debet || cashFlowDetail.credit || grandTotal || 0);
+  const fallbackGrandTotalUsd = Number(cashFlowDetail.grand_total_usd || 0);
+  const usdCostsTotal = (cashFlowDetail.unit_transaction_billing?.unit_transaction?.unit_transaction_usd_costs ?? []).reduce(
+    (sum, c) => sum + Number(c.amount || 0),
+    0,
+  );
 
-  const expectedIdr = Number(cashFlowDetail.debet) > 0 ? Number(cashFlowDetail.debet) : Number(cashFlowDetail.credit ?? 0);
+  const expectedIdr = debetIdr > 0 ? debetIdr : (creditIdr > 0 ? creditIdr : fallbackGrandTotal);
+  const expectedUsd = debetUsd > 0 ? debetUsd : (creditUsd > 0 ? creditUsd : (fallbackGrandTotalUsd > 0 ? fallbackGrandTotalUsd : usdCostsTotal));
+
   const totalPaidIdr = useMemo(
-    () => financeBillings.filter(fb => !fb.cash?.code?.toLowerCase().includes('usd')).reduce((sum, fb) => sum + Number(fb.amount || 0), 0),
+    () => financeBillings.filter(fb => !isUsdKas(fb.cash)).reduce((sum, fb) => sum + Number(fb.amount || 0), 0),
     [financeBillings]
   );
   const remainingPaymentIdr = Math.max(0, expectedIdr - totalPaidIdr);
 
-  const expectedUsd = Number(cashFlowDetail.debet_usd) > 0 ? Number(cashFlowDetail.debet_usd) : Number(cashFlowDetail.credit_usd ?? 0);
   const totalPaidUsd = useMemo(
-    () => financeBillings.filter(fb => fb.cash?.code?.toLowerCase().includes('usd')).reduce((sum, fb) => sum + Number(fb.amount || 0), 0),
+    () => financeBillings.filter(fb => isUsdKas(fb.cash)).reduce((sum, fb) => sum + Number(fb.amount || 0), 0),
     [financeBillings]
   );
   const remainingPaymentUsd = Math.max(0, expectedUsd - totalPaidUsd);
 
   const hasIdr = expectedIdr > 0;
   const hasUsd = expectedUsd > 0;
-  const isFullyPaid = (hasIdr ? remainingPaymentIdr <= 0 : true) && (hasUsd ? remainingPaymentUsd <= 0 : true);
+  const isFullyPaid = (hasIdr || hasUsd) && (hasIdr ? remainingPaymentIdr <= 0 : true) && (hasUsd ? remainingPaymentUsd <= 0 : true);
 
   const editingItem = useMemo(() => financeBillings.find((fb) => fb.id === editingId) || null, [editingId, financeBillings]);
   const editingAmount = Number(editingItem?.amount || 0);
-  const editingIsUsd = editingItem?.cash?.code?.toLowerCase().includes('usd');
+  const editingIsUsd = isUsdKas(editingItem?.cash);
 
   const selectedKas = useMemo(
     () => kasOptions.find((kas) => Number(kas.id) === Number(form.cash_id)) ?? null,
@@ -169,35 +168,55 @@ export default function FinanceBillingTable({ financeBillings, cashFlowDetail, c
     () => akunOptions.find((a) => Number(a.id) === Number(form.account_id)) ?? rawAkunOptions.find((a) => Number(a.id) === Number(form.account_id)) ?? null,
     [form.account_id, akunOptions, rawAkunOptions],
   );
-  const selectedCurrency = selectedKas?.code?.toLowerCase().endsWith('_usd') ? 'usd' : 'idr';
-  const selectedCurrencySymbol = selectedCurrency === 'usd' ? '$' : 'Rp';
+  const selectedCurrency = isUsdKas(selectedKas) ? 'usd' : 'idr';
   const formatSelectedCurrency = (value: number) => currenciesFormat(selectedCurrency, value);
 
   const maxPaymentAmount = useMemo(() => {
     if (selectedCurrency === 'usd') {
+      if (expectedUsd <= 0) return 0;
       const editOffset = (editingId && editingIsUsd) ? editingAmount : 0;
       return Math.max(0, expectedUsd - totalPaidUsd + editOffset);
     } else {
+      if (expectedIdr <= 0) return 0;
       const editOffset = (editingId && !editingIsUsd) ? editingAmount : 0;
       return Math.max(0, expectedIdr - totalPaidIdr + editOffset);
     }
   }, [selectedCurrency, expectedUsd, totalPaidUsd, expectedIdr, totalPaidIdr, editingId, editingIsUsd, editingAmount]);
 
   const currentLimitCurrencyAmount = selectedCurrency === 'usd' ? expectedUsd : expectedIdr;
-  const currentLimitCurrencyPaid = selectedCurrency === 'usd' ? totalPaidUsd : totalPaidIdr;
+  const currentLimitCurrencyPaid = selectedCurrency === 'usd'
+    ? (totalPaidUsd - ((editingId && editingIsUsd) ? editingAmount : 0))
+    : (totalPaidIdr - ((editingId && !editingIsUsd) ? editingAmount : 0));
   const hasPaymentLimit = currentLimitCurrencyAmount > 0;
-
-  const remainingPayment = Number(cashFlowDetail.remaining_payment ?? Math.max(0, grandTotal - totalPaid));
 
   const isLoading = createMutation.isPending || updateMutation.isPending;
 
   const openAddForm = () => {
     setEditingId(null);
+    let defaultCashId = cashFlowDetail.cash_id ? Number(cashFlowDetail.cash_id) : 0;
+    if (hasUsd && remainingPaymentUsd > 0 && (!hasIdr || remainingPaymentIdr <= 0)) {
+      const usdKas = kasOptions.find((k) => isUsdKas(k));
+      if (usdKas) defaultCashId = Number(usdKas.id);
+    } else if (!defaultCashId) {
+      const idrKas = kasOptions.find((k) => !isUsdKas(k));
+      if (idrKas) defaultCashId = Number(idrKas.id);
+    }
+
+    const defaultAccountId = cashFlowDetail.account_id
+      ? Number(cashFlowDetail.account_id)
+      : (akunOptions[0]?.id ? Number(akunOptions[0].id) : 0);
+
+    const initialKas = kasOptions.find((k) => Number(k.id) === defaultCashId);
+    const initialCurrency = isUsdKas(initialKas) ? 'usd' : 'idr';
+    const initialLimit = initialCurrency === 'usd' ? remainingPaymentUsd : remainingPaymentIdr;
+
     setForm({
-      ...EMPTY_FORM,
-      cash_id: cashFlowDetail.cash_id ?? 0,
-      account_id: cashFlowDetail.account_id ?? 0,
-      payment_at: cashFlowDetail.date?.slice(0, 10) || '',
+      cash_id: defaultCashId,
+      account_id: defaultAccountId,
+      amount: initialLimit > 0 ? initialLimit : 0,
+      amount_original: 0,
+      payment_at: cashFlowDetail.date?.slice(0, 10) || new Date().toISOString().slice(0, 10),
+      note: '',
     });
     setIsFormOpen(true);
   };
@@ -207,7 +226,8 @@ export default function FinanceBillingTable({ financeBillings, cashFlowDetail, c
     setForm({
       cash_id: fb.cash_id,
       account_id: fb.account_id,
-      amount: String(fb.amount || ''),
+      amount: Number(fb.amount || 0),
+      amount_original: Number(fb.amount_original || 0),
       payment_at: fb.payment_at?.slice(0, 10) || '',
       note: fb.note || '',
     });
@@ -231,15 +251,24 @@ export default function FinanceBillingTable({ financeBillings, cashFlowDetail, c
       toast.error('Akun wajib dipilih');
       return;
     }
-    const amount = parseMoneyInput(form.amount);
+    const amount = Number(form.amount || 0);
     if (amount <= 0) {
       toast.error('Nominal pembayaran harus lebih dari 0');
       return;
     }
-    if (hasPaymentLimit && amount > maxPaymentAmount) {
+    if (hasPaymentLimit && maxPaymentAmount > 0 && amount > maxPaymentAmount) {
       toast.error(`Nominal pembayaran maksimal ${formatSelectedCurrency(maxPaymentAmount)}`);
       return;
     }
+
+    const isSelectedKasUsd = isUsdKas(selectedKas);
+    const amountOriginal = isSelectedKasUsd ? Number(form.amount_original || 0) : amount;
+
+    if (isSelectedKasUsd && amountOriginal <= 0) {
+      toast.error('Nominal konversi (IDR) harus lebih dari 0');
+      return;
+    }
+
     if (!form.payment_at) {
       toast.error('Tanggal bayar wajib diisi');
       return;
@@ -250,9 +279,9 @@ export default function FinanceBillingTable({ financeBillings, cashFlowDetail, c
       cash_id: form.cash_id,
       account_id: form.account_id,
       amount,
-      amount_original: amount,
+      amount_original: amountOriginal,
       payment_at: form.payment_at,
-      note: form.note,
+      note: form.note || '',
     };
 
     try {
@@ -266,7 +295,6 @@ export default function FinanceBillingTable({ financeBillings, cashFlowDetail, c
       closeForm();
     } catch (error) {
       toast.error(getApiErrorMessage(error) || 'Gagal menyimpan pembayaran');
-      closeForm();
     }
   };
 
@@ -321,9 +349,16 @@ export default function FinanceBillingTable({ financeBillings, cashFlowDetail, c
         header: 'Nominal',
         alignment: 'left',
         cell: (fb) => (
-          <span className="font-semibold text-slate-900">
-            {currenciesFormat(fb?.cash?.code?.toLowerCase().endsWith('_usd') ? 'usd' : 'idr', fb.amount)}
-          </span>
+          <div className="flex flex-col">
+            <span className="font-semibold tabular-nums text-slate-900">
+              {currenciesFormat(isUsdKas(fb.cash) ? 'usd' : 'idr', fb.amount)}
+            </span>
+            {isUsdKas(fb.cash) && Number(fb.amount_original || 0) > 0 ? (
+              <span className="text-xs text-slate-500 tabular-nums">
+                Konversi: {currenciesFormat('idr', fb.amount_original)}
+              </span>
+            ) : null}
+          </div>
         ),
       },
       {
@@ -337,27 +372,36 @@ export default function FinanceBillingTable({ financeBillings, cashFlowDetail, c
         sticky: 'right',
         cell: (fb) =>
           !disabled ? (
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon" className="h-8 w-8 cursor-pointer" disabled={isFullyPaid}>
-                  <MoreVertical className="h-4 w-4" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuItem onClick={() => openEditForm(fb)} className="cursor-pointer">
-                  <Pencil className="mr-2 h-4 w-4" />
-                  Edit
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => setDeleteTarget(fb)} className="cursor-pointer text-red-600 focus:text-red-600">
-                  <Trash2 className="mr-2 h-4 w-4" />
-                  Hapus
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+            <div className="flex justify-center">
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    className="h-8 w-8 p-0 rounded-full text-slate-600 hover:bg-slate-100 hover:text-slate-900"
+                  >
+                    <MoreVertical className="h-4 w-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="min-w-[150px] rounded-md border-slate-200 p-1.5 shadow-lg">
+                  <DropdownMenuItem
+                    onClick={() => openEditForm(fb)}
+                    className="rounded-md px-3 py-2 text-sm text-slate-900 focus:bg-slate-50 cursor-pointer disabled:cursor-not-allowed"
+                  >
+                    Edit
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    onClick={() => setDeleteTarget(fb)}
+                    className="rounded-md px-3 py-2 text-sm text-red-600 focus:bg-red-50 focus:text-red-600 cursor-pointer disabled:cursor-not-allowed"
+                  >
+                    Hapus
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
           ) : null,
       },
     ],
-    [disabled, isFullyPaid, slugStr, getAccountLabel, getKasLabel]
+    [disabled, slugStr, getAccountLabel, getKasLabel]
   );
 
   return (
@@ -387,10 +431,38 @@ export default function FinanceBillingTable({ financeBillings, cashFlowDetail, c
           <p className="text-sm text-slate-500 mt-1">Daftar finance billing yang terkait dengan transaksi ini</p>
         </div>
         {!disabled && (
-          <Button type="button" onClick={openAddForm} variant="default" disabled={isFullyPaid} className="w-full sm:w-auto">
-            <Plus className="mr-1.5 h-4 w-4" />
-            Tambah Jurnal
-          </Button>
+          isFullyPaid ? (
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <span className="inline-block w-full sm:w-auto">
+                    <Button
+                      type="button"
+                      variant="default"
+                      className="w-full sm:w-auto"
+                      disabled
+                    >
+                      <Plus className="mr-1.5 h-4 w-4" />
+                      Tambah Jurnal
+                    </Button>
+                  </span>
+                </TooltipTrigger>
+                <TooltipContent side="bottom" className="max-w-xs text-center text-xs">
+                  Seluruh tagihan transaksi ini telah lunas.
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          ) : (
+            <Button
+              type="button"
+              onClick={openAddForm}
+              variant="default"
+              className="w-full sm:w-auto"
+            >
+              <Plus className="mr-1.5 h-4 w-4" />
+              Tambah Jurnal
+            </Button>
+          )
         )}
       </div>
 
@@ -399,41 +471,6 @@ export default function FinanceBillingTable({ financeBillings, cashFlowDetail, c
         loading={isLoading}
         columns={columns}
       />
-
-      {/* Summary */}
-      <div className="flex flex-col items-stretch gap-2 border-t border-slate-100 pt-4 text-sm sm:items-end">
-        {!(hasIdr && hasUsd) ? (
-          <>
-            <div className="flex flex-col items-start gap-1 sm:flex-row sm:items-center sm:gap-3">
-              <span className="text-slate-500">Total Pembayaran:</span>
-              <span className="font-bold text-slate-900">{currenciesFormat(cashFlowCurrency, totalPaid)}</span>
-            </div>
-            <div className="flex flex-col items-start gap-1 sm:flex-row sm:items-center sm:gap-3">
-              <span className="text-slate-500">Sisa Tagihan:</span>
-              <span className={`font-bold ${remainingPayment > 0 ? 'text-amber-600' : 'text-emerald-600'}`}>
-                {currenciesFormat(cashFlowCurrency, remainingPayment)}
-              </span>
-            </div>
-          </>
-        ) : (
-          <div className="w-full flex flex-col sm:flex-row justify-between gap-4 text-xs mt-2 border-t border-slate-50 pt-3">
-            <div className="space-y-1">
-              <div className="font-semibold text-slate-700">Rincian Rupiah (IDR):</div>
-              <div className="flex flex-col items-start gap-1 text-slate-500 sm:flex-row sm:items-center sm:gap-4">
-                <span>Terbayar: <strong className="text-slate-800">{currenciesFormat('idr', totalPaidIdr)}</strong></span>
-                <span>Sisa: <strong className={remainingPaymentIdr > 0 ? 'text-amber-600 font-semibold' : 'text-emerald-600 font-semibold'}>{currenciesFormat('idr', remainingPaymentIdr)}</strong></span>
-              </div>
-            </div>
-            <div className="space-y-1 sm:text-right">
-              <div className="font-semibold text-slate-700">Rincian Dollar (USD):</div>
-              <div className="flex flex-col items-start gap-1 text-slate-500 sm:flex-row sm:items-center sm:justify-end sm:gap-4">
-                <span>Terbayar: <strong className="text-slate-800">{currenciesFormat('usd', totalPaidUsd)}</strong></span>
-                <span>Sisa: <strong className={remainingPaymentUsd > 0 ? 'text-amber-600 font-semibold' : 'text-emerald-600 font-semibold'}>{currenciesFormat('usd', remainingPaymentUsd)}</strong></span>
-              </div>
-            </div>
-          </div>
-        )}
-      </div>
 
       {/* Add / Edit Dialog */}
       <FormDialog
@@ -445,13 +482,15 @@ export default function FinanceBillingTable({ financeBillings, cashFlowDetail, c
         isSubmitting={isLoading}
       >
         <div className="space-y-4">
-          <div className="rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800">
-            <div className="font-semibold">Maksimal nominal: {formatSelectedCurrency(maxPaymentAmount)}</div>
-            <div className="mt-0.5 text-amber-700">
-              Total transaksi {formatSelectedCurrency(currentLimitCurrencyAmount)} - total terbayar {formatSelectedCurrency(currentLimitCurrencyPaid)}
-              {editingId ? ` + nominal pembayaran ini ${formatSelectedCurrency(editingAmount)}` : ''}.
+          {hasPaymentLimit && (
+            <div className="rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800">
+              <div className="font-semibold">Maksimal nominal: {formatSelectedCurrency(maxPaymentAmount)}</div>
+              <div className="mt-0.5 text-amber-700">
+                Total transaksi {formatSelectedCurrency(currentLimitCurrencyAmount)} - total terbayar {formatSelectedCurrency(currentLimitCurrencyPaid)}
+                {editingId ? ` + nominal pembayaran ini ${formatSelectedCurrency(editingAmount)}` : ''}.
+              </div>
             </div>
-          </div>
+          )}
           <div className="grid gap-4 md:grid-cols-2">
             {/* Kas */}
             <div className="space-y-2">
@@ -462,7 +501,18 @@ export default function FinanceBillingTable({ financeBillings, cashFlowDetail, c
                     <div className="w-full">
                       <Select
                         value={form.cash_id ? String(form.cash_id) : undefined}
-                        onValueChange={(v) => setForm((prev) => ({ ...prev, cash_id: Number(v) }))}
+                        onValueChange={(v) => {
+                          const nextCashId = Number(v);
+                          const nextKas = kasOptions.find((k) => Number(k.id) === nextCashId);
+                          const nextCurrency = isUsdKas(nextKas) ? 'usd' : 'idr';
+                          const nextMax = nextCurrency === 'usd' ? remainingPaymentUsd : remainingPaymentIdr;
+                          setForm((prev) => ({
+                            ...prev,
+                            cash_id: nextCashId,
+                            amount: nextMax > 0 && prev.amount > nextMax ? nextMax : prev.amount,
+                            amount_original: nextCurrency === 'usd' ? prev.amount_original : 0,
+                          }));
+                        }}
                         disabled={isLoading}
                       >
                         <SelectTrigger className="h-11 w-full bg-white text-sm border-slate-200 text-slate-700">
@@ -522,15 +572,13 @@ export default function FinanceBillingTable({ financeBillings, cashFlowDetail, c
             {/* Nominal */}
             <div className="space-y-2">
               <label className="text-sm font-medium text-slate-800">Nominal</label>
-              <Input
+              <MoneyInput
                 value={form.amount}
-                onChange={(e) => {
-                  const nextAmount = parseMoneyInput(e.target.value);
-                  const clampedAmount = hasPaymentLimit ? Math.min(nextAmount, maxPaymentAmount) : nextAmount;
-                  setForm((prev) => ({ ...prev, amount: clampedAmount > 0 ? formatMoneyValue(clampedAmount) : '' }));
+                onChangeValue={(value) => {
+                  const clamped = hasPaymentLimit && maxPaymentAmount > 0 ? Math.min(value, maxPaymentAmount) : value;
+                  setForm((prev) => ({ ...prev, amount: clamped }));
                 }}
-                placeholder={`${selectedCurrencySymbol} 0`}
-                inputMode="numeric"
+                currency={selectedCurrency.toUpperCase()}
                 className="h-11"
                 disabled={isLoading}
               />
@@ -547,6 +595,22 @@ export default function FinanceBillingTable({ financeBillings, cashFlowDetail, c
               />
             </div>
           </div>
+
+          {/* Nominal Konversi (IDR) - Khusus Kas USD */}
+          {isUsdKas(selectedKas) && (
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-slate-800">Nominal Konversi (IDR)</label>
+              <MoneyInput
+                name="amount_original"
+                value={form.amount_original}
+                onChangeValue={(value) => setForm((prev) => ({ ...prev, amount_original: value }))}
+                currency="IDR"
+                className="h-11"
+                disabled={isLoading}
+                placeholder="Rp 0"
+              />
+            </div>
+          )}
 
           {/* Catatan */}
           <div className="space-y-2">
@@ -569,7 +633,7 @@ export default function FinanceBillingTable({ financeBillings, cashFlowDetail, c
             <AlertDialogTitle>Hapus Jurnal?</AlertDialogTitle>
             <AlertDialogDescription>
               Anda yakin ingin menghapus pembayaran sebesar{' '}
-              <span className="font-semibold">{deleteTarget ? currenciesFormat(deleteTarget.cash?.code?.toLowerCase().endsWith('_usd') ? 'usd' : 'idr', deleteTarget.amount) : ''}</span>?
+              <span className="font-semibold">{deleteTarget ? currenciesFormat(isUsdKas(deleteTarget.cash) ? 'usd' : 'idr', deleteTarget.amount) : ''}</span>?
               Tindakan ini tidak dapat dibatalkan.
             </AlertDialogDescription>
           </AlertDialogHeader>

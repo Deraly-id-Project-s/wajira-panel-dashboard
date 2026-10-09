@@ -149,39 +149,6 @@ export default function KasHarianDetailPage() {
   );
   const unitTransaction = cashFlowDetail?.unit_transaction_billing?.unit_transaction;
 
-  const debetIdr = Number(cashFlowDetail?.debet ?? cashFlowDetail?.cash_position?.debet_idr_total ?? 0);
-  const creditIdr = Number(cashFlowDetail?.credit ?? cashFlowDetail?.cash_position?.credit_idr_total ?? 0);
-  const debetUsd = Number(cashFlowDetail?.debet_usd ?? cashFlowDetail?.cash_position?.debet_usd_total ?? 0);
-  const creditUsd = Number(cashFlowDetail?.credit_usd ?? cashFlowDetail?.cash_position?.credit_usd_total ?? 0);
-  const expectedIdr = debetIdr > 0 ? debetIdr : creditIdr;
-  const expectedUsd = debetUsd > 0 ? debetUsd : creditUsd;
-
-  const grandTotalIdr = Number(cashFlowDetail?.grand_total ?? expectedIdr);
-  const grandTotalUsd = Number(cashFlowDetail?.grand_total_usd ?? expectedUsd);
-
-  const totalPaidIdr = useMemo(
-    () => financeBillings.filter(fb => !fb.cash?.code?.toLowerCase().includes('usd')).reduce((sum, fb) => sum + Number(fb.amount || 0), 0),
-    [financeBillings]
-  );
-  const remainingPaymentIdr = Number(cashFlowDetail?.remaining_payment ?? Math.max(0, grandTotalIdr - totalPaidIdr));
-
-  const totalPaidUsd = useMemo(
-    () => financeBillings.filter(fb => fb.cash?.code?.toLowerCase().includes('usd')).reduce((sum, fb) => sum + Number(fb.amount || 0), 0),
-    [financeBillings]
-  );
-  const remainingPaymentUsd = Number(cashFlowDetail?.remaining_payment_usd ?? Math.max(0, grandTotalUsd - totalPaidUsd));
-
-  const hasIdr = grandTotalIdr > 0 || debetIdr > 0 || creditIdr > 0;
-  const hasUsd = grandTotalUsd > 0 || debetUsd > 0 || creditUsd > 0;
-  const isFullyPaid = (hasIdr ? remainingPaymentIdr <= 0 : true) && (hasUsd ? remainingPaymentUsd <= 0 : true);
-  const isMarkedPaid = cashFlowDetail?.is_paid === true
-    || cashFlowDetail?.is_paid === '1'
-    || cashFlowDetail?.is_paid === 'true';
-
-  const remainingPayment = isFullyPaid ? 0 : (hasIdr && hasUsd) ? (remainingPaymentIdr + remainingPaymentUsd) : (hasUsd ? remainingPaymentUsd : remainingPaymentIdr);
-  const proofUrl = buildProofUrl(cashFlowDetail?.payment_proof);
-  const isLoading = cashFlowQuery.isLoading || router.isFallback || !router.isReady;
-
   const usdCostsList = useMemo(() => {
     const rawCosts = unitTransaction?.unit_transaction_usd_costs ?? [];
     if (!rawCosts || rawCosts.length === 0) return [];
@@ -209,6 +176,58 @@ export default function KasHarianDetailPage() {
       label: labelMap[type] || type.replace(/_/g, ' ').toUpperCase(),
     }));
   }, [unitTransaction?.unit_transaction_usd_costs]);
+
+  const usdCostsTotal = useMemo(
+    () => usdCostsList.reduce((sum, item) => sum + item.amount, 0),
+    [usdCostsList],
+  );
+
+  const debetIdr = Number(cashFlowDetail?.debet ?? cashFlowDetail?.cash_position?.debet_idr_total ?? 0);
+  const creditIdr = Number(cashFlowDetail?.credit ?? cashFlowDetail?.cash_position?.credit_idr_total ?? 0);
+  const debetUsd = Number(cashFlowDetail?.debet_usd ?? cashFlowDetail?.cash_position?.debet_usd_total ?? 0);
+  const creditUsd = Number(cashFlowDetail?.credit_usd ?? cashFlowDetail?.cash_position?.credit_usd_total ?? 0);
+  const expectedIdr = debetIdr > 0 ? debetIdr : creditIdr;
+  const expectedUsd = debetUsd > 0 ? debetUsd : creditUsd;
+
+  const fallbackGrandTotal = Number(
+    cashFlowDetail?.grand_total ||
+    cashFlowDetail?.unit_transaction_billing?.grand_total ||
+    cashFlowDetail?.goods_transaction_billing?.grand_total ||
+    cashFlowDetail?.amount ||
+    0,
+  );
+  const grandTotalIdr = Number(cashFlowDetail?.grand_total || expectedIdr || fallbackGrandTotal);
+  const fallbackGrandTotalUsd = Number(cashFlowDetail?.grand_total_usd || expectedUsd || 0);
+  const grandTotalUsd = fallbackGrandTotalUsd > 0 ? fallbackGrandTotalUsd : usdCostsTotal;
+
+  const isUsdKasItem = (cash?: { currency_type?: string | null; code?: string | null } | null) => {
+    if (!cash) return false;
+    if ((cash.currency_type || '').toLowerCase() === 'usd') return true;
+    return (cash.code || '').toLowerCase().includes('usd');
+  };
+
+  const totalPaidIdr = useMemo(
+    () => financeBillings.filter(fb => !isUsdKasItem(fb.cash)).reduce((sum, fb) => sum + Number(fb.amount || 0), 0),
+    [financeBillings]
+  );
+  const remainingPaymentIdr = Math.max(0, grandTotalIdr - totalPaidIdr);
+
+  const totalPaidUsd = useMemo(
+    () => financeBillings.filter(fb => isUsdKasItem(fb.cash)).reduce((sum, fb) => sum + Number(fb.amount || 0), 0),
+    [financeBillings]
+  );
+  const remainingPaymentUsd = Math.max(0, grandTotalUsd - totalPaidUsd);
+
+  const hasIdr = grandTotalIdr > 0;
+  const hasUsd = grandTotalUsd > 0;
+  const isFullyPaid = (hasIdr || hasUsd) && (hasIdr ? remainingPaymentIdr <= 0 : true) && (hasUsd ? remainingPaymentUsd <= 0 : true);
+  const isMarkedPaid = cashFlowDetail?.is_paid === true
+    || cashFlowDetail?.is_paid === '1'
+    || cashFlowDetail?.is_paid === 'true';
+
+  const remainingPayment = isFullyPaid ? 0 : (hasIdr && hasUsd) ? (remainingPaymentIdr + remainingPaymentUsd) : (hasUsd ? remainingPaymentUsd : remainingPaymentIdr);
+  const proofUrl = buildProofUrl(cashFlowDetail?.payment_proof);
+  const isLoading = cashFlowQuery.isLoading || router.isFallback || !router.isReady;
 
   const mappedSummaryCards = useMemo(() => {
     const summaries = cashFlowDetail?.cash_summaries ?? [];
@@ -448,7 +467,7 @@ export default function KasHarianDetailPage() {
                     : 'border-amber-200 bg-amber-50 text-amber-700',
                 )}
               >
-                {isMarkedPaid ? <CheckCircle2 /> : null}
+                {isMarkedPaid ? <CheckCircle2 className="mr-1 h-3.5 w-3.5" /> : null}
                 {isMarkedPaid ? 'Lunas' : 'Belum Lunas'}
               </Badge>
             </>
@@ -466,7 +485,7 @@ export default function KasHarianDetailPage() {
                   setTargetStatus(!isMarkedPaid);
                   setIsToggleOpen(true);
                 }}
-                disabled={(remainingPayment !== 0 && !cashFlowDetail.is_valid) || isStatusUpdating}
+                disabled={(!isMarkedPaid && remainingPayment !== 0 && !cashFlowDetail.is_valid) || isStatusUpdating}
                 loading={isStatusUpdating}
               >
                 {cashFlowDetail.is_paid ? 'Batal Posting Jurnal' : 'Posting Jurnal'}
@@ -486,7 +505,7 @@ export default function KasHarianDetailPage() {
                 <TooltipProvider>
                   <Tooltip>
                     <TooltipTrigger asChild>
-                      <Badge variant="outline" className="border-blue-200 bg-blue-50 text-blue-700"><Info />Terhubung Administrasi</Badge>
+                      <Badge variant="outline" className="border-blue-200 bg-blue-50 text-blue-700 mt-2"><Info />Terhubung Administrasi</Badge>
                     </TooltipTrigger>
                     <TooltipContent>Transaksi ini dibuat dari data administrasi.</TooltipContent>
                   </Tooltip>
@@ -616,7 +635,7 @@ export default function KasHarianDetailPage() {
           </Card>
         ) : null}
 
-        <FinanceBillingTable financeBillings={financeBillings} cashFlowDetail={cashFlowDetail} companyId={companyId} />
+        <FinanceBillingTable financeBillings={financeBillings} cashFlowDetail={cashFlowDetail} companyId={companyId} disabled={isMarkedPaid} />
 
         <div className="grid gap-6 lg:grid-cols-2">
           <Card className="rounded-md border-slate-200 shadow-sm">
