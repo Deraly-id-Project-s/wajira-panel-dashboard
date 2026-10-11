@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useEffect, useMemo } from 'react';
 import { useFieldArray, type UseFormReturn } from 'react-hook-form';
 import { CalendarDays, Coins, FileText, Plus, Trash2 } from 'lucide-react';
 import type { Company } from '@/services/company.service';
@@ -60,11 +60,22 @@ export default function KasHarianForm({
 
   const watchedCashes = useMemo(() => cashFlowCashes || [], [cashFlowCashes]);
 
-  // Determine active transaction type (Debit or Kredit) to enforce uniformity constraint
-  const activeType = useMemo(() => {
-    const found = watchedCashes.find((item) => item.type === 'debet' || item.type === 'credit');
-    return (found?.type as 'debet' | 'credit') ?? null;
-  }, [watchedCashes]);
+  // Data pertama dibuat acuan (reference) untuk menentukan tipe transaksi
+  const firstRowType = (form.watch('cash_flow_cashes.0.type') as 'debet' | 'credit') || 'debet';
+  const activeType = firstRowType;
+
+  // Pastikan seluruh baris rincian kas selalu sinkron mengikuti tipe transaksi data pertama
+  useEffect(() => {
+    const cashes = form.getValues('cash_flow_cashes') || [];
+    cashes.forEach((item, idx) => {
+      if (idx > 0 && item.type !== firstRowType) {
+        form.setValue(`cash_flow_cashes.${idx}.type`, firstRowType, {
+          shouldValidate: true,
+          shouldDirty: true,
+        });
+      }
+    });
+  }, [firstRowType, form]);
 
   const totalSummary = useMemo(() => {
     let idrTotal = 0;
@@ -131,22 +142,6 @@ export default function KasHarianForm({
         description="Pilih data kas, nominal, serta tipe transaksi (Debit/Kredit)."
         icon={Coins}
         defaultExpanded={true}
-        actions={
-          <div className="flex items-center gap-2">
-            {activeType && (
-              <Badge
-                variant="outline"
-                className={
-                  activeType === 'debet'
-                    ? 'border-emerald-200 bg-emerald-50 text-emerald-700 font-semibold'
-                    : 'border-rose-200 bg-rose-50 text-rose-700 font-semibold'
-                }
-              >
-                {activeType === 'debet' ? 'Mode Debit (Uang Masuk)' : 'Mode Kredit (Uang Keluar)'}
-              </Badge>
-            )}
-          </div>
-        }
       >
         <div className="space-y-6">
           <div className="flex flex-wrap items-center justify-between gap-4 border-b border-slate-100 pb-4">
@@ -158,22 +153,20 @@ export default function KasHarianForm({
             </div>
             <Button
               type="button"
-              variant="outline"
-              size="sm"
+              variant="default"
               onClick={() => {
-                const defaultType = activeType || 'debet';
                 append({
                   cash_id: 0,
                   amount: 0,
                   conversion_amount: undefined,
-                  type: defaultType,
+                  type: firstRowType,
                 });
               }}
-              disabled={isBusy}
-              className="border-slate-300 bg-white text-slate-700 hover:bg-slate-50"
+              disabled={isBusy || (kasList.length > 0 && watchedCashes.length >= kasList.length)}
+              title={kasList.length > 0 && watchedCashes.length >= kasList.length ? 'Semua kas yang tersedia sudah dipilih' : undefined}
             >
               <Plus className="mr-1.5 h-4 w-4" />
-              Tambah Kas
+              Tambah Rincian Pembayaran
             </Button>
           </div>
 
@@ -213,8 +206,11 @@ export default function KasHarianForm({
                                 {isKasLoading && <SelectItem value="loading" disabled>Memuat kas...</SelectItem>}
                                 {kasList.map((kas) => {
                                   const isUsd = (kas.currency_type || '').toLowerCase() === 'usd';
+                                  const isSelectedElsewhere = watchedCashes.some(
+                                    (item, itemIdx) => itemIdx !== index && Number(item.cash_id) === Number(kas.id) && Number(kas.id) > 0,
+                                  );
                                   return (
-                                    <SelectItem key={kas.id} value={String(kas.id)}>
+                                    <SelectItem key={kas.id} value={String(kas.id)} disabled={isSelectedElsewhere}>
                                       <span className="flex items-center gap-2">
                                         <span className="font-medium">{kas.cash_name || kas.code}</span>
                                         <Badge
@@ -227,6 +223,9 @@ export default function KasHarianForm({
                                         >
                                           {isUsd ? 'USD' : 'IDR'}
                                         </Badge>
+                                        {isSelectedElsewhere && (
+                                          <span className="text-[10px] text-slate-400 italic">(Sudah dipilih)</span>
+                                        )}
                                       </span>
                                     </SelectItem>
                                   );
@@ -249,34 +248,62 @@ export default function KasHarianForm({
                             <FormLabel className="text-xs font-medium text-slate-700">
                               Tipe Transaksi <RequiredMark />
                             </FormLabel>
-                            <Select
-                              value={field.value ?? 'debet'}
-                              onValueChange={(val: 'debet' | 'credit') => {
-                                field.onChange(val);
-                                // Sync all cash_flow_cashes items to the same type to maintain uniform constraint
-                                watchedCashes.forEach((_, idx) => {
-                                  form.setValue(`cash_flow_cashes.${idx}.type`, val, {
-                                    shouldValidate: true,
-                                    shouldDirty: true,
+                            {index === 0 ? (
+                              <Select
+                                value={field.value || firstRowType}
+                                onValueChange={(val: 'debet' | 'credit') => {
+                                  field.onChange(val);
+                                  // Data pertama dibuat acuan: sync seluruh baris ke tipe yang sama
+                                  const cashes = form.getValues('cash_flow_cashes') || [];
+                                  cashes.forEach((_, idx) => {
+                                    form.setValue(`cash_flow_cashes.${idx}.type`, val, {
+                                      shouldValidate: true,
+                                      shouldDirty: true,
+                                    });
                                   });
-                                });
-                              }}
-                              disabled={isBusy}
-                            >
-                              <FormControl>
-                                <SelectTrigger className="h-10 bg-white">
-                                  <SelectValue placeholder="Pilih Tipe" />
-                                </SelectTrigger>
-                              </FormControl>
-                              <SelectContent>
-                                <SelectItem value="debet" disabled={activeType === 'credit'}>
-                                  Debit
-                                </SelectItem>
-                                <SelectItem value="credit" disabled={activeType === 'debet'}>
-                                  Kredit
-                                </SelectItem>
-                              </SelectContent>
-                            </Select>
+                                }}
+                                disabled={isBusy}
+                              >
+                                <FormControl>
+                                  <SelectTrigger className="h-10 bg-white">
+                                    <SelectValue placeholder="Pilih Tipe" />
+                                  </SelectTrigger>
+                                </FormControl>
+                                <SelectContent>
+                                  <SelectItem value="debet">
+                                    Debit
+                                  </SelectItem>
+                                  <SelectItem value="credit">
+                                    Kredit
+                                  </SelectItem>
+                                </SelectContent>
+                              </Select>
+                            ) : (
+                              <>
+                                <Select
+                                  value={firstRowType}
+                                  disabled={true}
+                                >
+                                  <FormControl>
+                                    <SelectTrigger
+                                      className="h-10 bg-slate-50 cursor-not-allowed opacity-80"
+                                      title="Mengikuti tipe transaksi data pertama"
+                                    >
+                                      <SelectValue placeholder="Pilih Tipe" />
+                                    </SelectTrigger>
+                                  </FormControl>
+                                  <SelectContent>
+                                    <SelectItem value="debet">
+                                      Debit
+                                    </SelectItem>
+                                    <SelectItem value="credit">
+                                      Kredit
+                                    </SelectItem>
+                                  </SelectContent>
+                                </Select>
+                                <p className="text-[10px] text-slate-400 mt-1">Mengikuti tipe transaksi data pertama</p>
+                              </>
+                            )}
                             <FormMessage />
                           </FormItem>
                         )}

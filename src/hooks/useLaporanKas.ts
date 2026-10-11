@@ -19,6 +19,10 @@ interface UseLaporanKasReturn {
   error: string | null;
   totalPemasukan: number;
   totalPengeluaran: number;
+  totalDebetIdr: number;
+  totalCreditIdr: number;
+  totalDebetUsd: number;
+  totalCreditUsd: number;
   setPage: (page: number) => void;
   setPerPage: (perPage: number) => void;
   setDateRange: (startDate: string | null, endDate: string | null) => void;
@@ -48,6 +52,10 @@ export const useLaporanKas = (): UseLaporanKasReturn => {
   const [error, setError] = useState<string | null>(null);
   const [totalPemasukan, setTotalPemasukan] = useState(0);
   const [totalPengeluaran, setTotalPengeluaran] = useState(0);
+  const [totalDebetIdr, setTotalDebetIdr] = useState(0);
+  const [totalCreditIdr, setTotalCreditIdr] = useState(0);
+  const [totalDebetUsd, setTotalDebetUsd] = useState(0);
+  const [totalCreditUsd, setTotalCreditUsd] = useState(0);
 
   // Filter states
   const [currentPage, setCurrentPage] = useState(1);
@@ -64,6 +72,7 @@ export const useLaporanKas = (): UseLaporanKasReturn => {
     setError(null);
     try {
       const params: CashFlowQueryParams = {
+        is_paid: true,
         page: currentPage,
         per_page: currentPerPage,
         search: currentSearch || undefined,
@@ -87,11 +96,18 @@ export const useLaporanKas = (): UseLaporanKasReturn => {
         to: result.to || 0,
       });
 
-      // Hitung total pemasukan dan pengeluaran dari data yang ditampilkan
-      const pemasukan = result.data.reduce((sum, item) => sum + (item.debet || 0), 0);
-      const pengeluaran = result.data.reduce((sum, item) => sum + (item.credit || 0), 0);
-      setTotalPemasukan(pemasukan);
-      setTotalPengeluaran(pengeluaran);
+      // Hitung total debit dan kredit (IDR dan USD) dari data yang ditampilkan
+      const debetIdr = result.data.reduce((sum, item) => sum + (Number(item.debet_total ?? item.debet) || 0), 0);
+      const creditIdr = result.data.reduce((sum, item) => sum + (Number(item.kredit_total ?? item.credit_total ?? item.credit) || 0), 0);
+      const debetUsd = result.data.reduce((sum, item) => sum + (Number(item.debet_usd_total ?? item.debet_usd) || 0), 0);
+      const creditUsd = result.data.reduce((sum, item) => sum + (Number(item.kredit_usd_total ?? item.credit_usd_total ?? item.credit_usd) || 0), 0);
+
+      setTotalPemasukan(debetIdr);
+      setTotalPengeluaran(creditIdr);
+      setTotalDebetIdr(debetIdr);
+      setTotalCreditIdr(creditIdr);
+      setTotalDebetUsd(debetUsd);
+      setTotalCreditUsd(creditUsd);
 
     } catch (err: any) {
       setError(err.message || 'Gagal mengambil data laporan kas');
@@ -124,6 +140,10 @@ export const useLaporanKas = (): UseLaporanKasReturn => {
     error,
     totalPemasukan,
     totalPengeluaran,
+    totalDebetIdr,
+    totalCreditIdr,
+    totalDebetUsd,
+    totalCreditUsd,
     setPage: setCurrentPage,
     setPerPage: (perPage: number) => {
       setCurrentPerPage(perPage);

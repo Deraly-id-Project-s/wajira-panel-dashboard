@@ -25,8 +25,10 @@ export default function LaporanTransaksiKasPage() {
     data,
     pagination,
     isLoading,
-    totalPemasukan,
-    totalPengeluaran,
+    totalDebetIdr,
+    totalCreditIdr,
+    totalDebetUsd,
+    totalCreditUsd,
     setPage,
     setPerPage,
     setDateRange,
@@ -150,8 +152,10 @@ export default function LaporanTransaksiKasPage() {
 
                   <LaporanKasTable
                     data={data}
-                    totalPemasukan={totalPemasukan}
-                    totalPengeluaran={totalPengeluaran}
+                    totalDebetIdr={totalDebetIdr}
+                    totalCreditIdr={totalCreditIdr}
+                    totalDebetUsd={totalDebetUsd}
+                    totalCreditUsd={totalCreditUsd}
                     onSort={(key) => setSort(key, sortKey === key && sortOrder === 'asc' ? 'desc' : 'asc')}
                     sortKey={sortKey}
                     sortOrder={sortOrder}

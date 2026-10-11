@@ -1,6 +1,7 @@
 import { apiClient } from '@/lib/api/client';
 
 export interface CashFlowQueryParams {
+  is_paid?: boolean;
   page?: number;
   per_page?: number;
   start_date?: string;
@@ -56,6 +57,12 @@ export interface CashFlowItem {
   credit_usd: number;
   credit_original: number;
   credit_usd_original: number;
+  debet_total?: number;
+  credit_total?: number;
+  kredit_total?: number;
+  debet_usd_total?: number;
+  credit_usd_total?: number;
+  kredit_usd_total?: number;
   payment_proof?: string | null;
   is_paid?: boolean;
   is_valid?: boolean;
