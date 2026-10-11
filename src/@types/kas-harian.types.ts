@@ -147,6 +147,8 @@ export interface KasHarian {
   invoice_number?: string | null;
   remaining_payment?: number;
   remaining_payment_usd?: number;
+  dual_remaining_payment?: number;
+  dual_remaining_payment_usd?: number;
   cash_position?: KasHarianCashPosition | null;
   cash_summaries?: KasHarianCashSummary[];
   cash_flow_cashes?: KasHarianCashFlowCash[];
@@ -227,6 +229,8 @@ export interface KasHarianListItem {
   credit_usd: number;
   remaining_payment?: number;
   remaining_payment_usd?: number;
+  dual_remaining_payment?: number;
+  dual_remaining_payment_usd?: number;
   cash_position?: KasHarianCashPosition | null;
   accountName: string;
   cashName?: string;

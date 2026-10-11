@@ -389,7 +389,7 @@ export function UnitTransactionCreatePage({ type, mode }: UnitTransactionCreateP
         queryClient.invalidateQueries({ queryKey: ['sales-unit-items', transactionId] }),
       ]);
 
-      const code = response?.code || transactionDetail?.code || transactionId;
+      const code = (response as { code?: string } | undefined)?.code || transactionDetail?.code || transactionId;
       toast.success(`Transaksi ${isPurchase ? 'Pembelian' : 'Penjualan'} Unit Tipe berhasil ditambahkan dengan kode transaksi ${code}`);
       router.push(`${transactionPath}/${transactionId}`);
     } catch (error: any) {

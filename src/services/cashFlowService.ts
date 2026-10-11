@@ -158,12 +158,27 @@ const normalizeCashFlow = (payload: Partial<KasHarian>): KasHarian => ({
       code: fb.cash?.code ?? '-',
       cash_name: fb.cash?.cash_name ?? '-',
     },
+    account: fb.account
+      ? {
+          id: toNumber(fb.account.id),
+          uuid: fb.account.uuid,
+          code: fb.account.code ?? '-',
+          name: fb.account.name ?? '-',
+          type: fb.account.type ?? '',
+        }
+      : null,
+    remaining_payment: fb.remaining_payment !== undefined ? toNumber(fb.remaining_payment) : undefined,
+    remaining_payment_usd: fb.remaining_payment_usd !== undefined ? toNumber(fb.remaining_payment_usd) : undefined,
+    dual_remaining_payment: fb.dual_remaining_payment !== undefined ? toNumber(fb.dual_remaining_payment) : undefined,
+    dual_remaining_payment_usd: fb.dual_remaining_payment_usd !== undefined ? toNumber(fb.dual_remaining_payment_usd) : undefined,
   })),
   grand_total: toNumber(payload.grand_total),
   grand_total_usd: toNumber(payload.grand_total_usd),
   invoice_number: payload.invoice_number ?? null,
   remaining_payment: toNumber(payload.remaining_payment),
   remaining_payment_usd: toNumber(payload.remaining_payment_usd),
+  dual_remaining_payment: toNumber(payload.dual_remaining_payment),
+  dual_remaining_payment_usd: toNumber(payload.dual_remaining_payment_usd),
   unit_transaction_billing: payload.unit_transaction_billing
     ? {
         id: toNumber(payload.unit_transaction_billing.id),

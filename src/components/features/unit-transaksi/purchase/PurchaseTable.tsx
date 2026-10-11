@@ -380,7 +380,7 @@ export default function PurchaseTable({
             placeholder="Search No Transaksi, supplier, nominal..."
             className="pl-8 bg-white h-9 border-slate-300"
             value={localSearch}
-            onChange={(e) => handleSearch(e.target.value)}
+            onChange={(e) => setLocalSearch(e.target.value)}
           />
         </div>
 

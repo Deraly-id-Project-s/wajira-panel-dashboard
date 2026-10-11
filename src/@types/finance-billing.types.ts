@@ -22,6 +22,17 @@ export interface FinanceBilling {
   created_at?: string;
   updated_at?: string;
   cash: FinanceBillingCash;
+  account?: {
+    id: number;
+    uuid?: string;
+    code?: string;
+    name?: string;
+    type?: string;
+  } | null;
+  remaining_payment?: number;
+  remaining_payment_usd?: number;
+  dual_remaining_payment?: number;
+  dual_remaining_payment_usd?: number;
 }
 
 export interface FinanceBillingPayload {

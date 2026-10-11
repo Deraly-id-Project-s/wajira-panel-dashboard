@@ -182,12 +182,65 @@ export default function KasHarianDetailPage() {
     [usdCostsList],
   );
 
-  const debetIdr = Number(cashFlowDetail?.debet ?? cashFlowDetail?.cash_position?.debet_idr_total ?? 0);
-  const creditIdr = Number(cashFlowDetail?.credit ?? cashFlowDetail?.cash_position?.credit_idr_total ?? 0);
-  const debetUsd = Number(cashFlowDetail?.debet_usd ?? cashFlowDetail?.cash_position?.debet_usd_total ?? 0);
-  const creditUsd = Number(cashFlowDetail?.credit_usd ?? cashFlowDetail?.cash_position?.credit_usd_total ?? 0);
-  const expectedIdr = debetIdr > 0 ? debetIdr : creditIdr;
-  const expectedUsd = debetUsd > 0 ? debetUsd : creditUsd;
+  const isUsdKasItem = (cash?: { currency_type?: string | null; code?: string | null } | null) => {
+    if (!cash) return false;
+    if ((cash.currency_type || '').toLowerCase() === 'usd') return true;
+    return (cash.code || '').toLowerCase().includes('usd');
+  };
+
+  const originalFlowType = useMemo<'debet' | 'credit'>(() => {
+    if (cashFlowDetail?.cash_flow_type === 'credit') return 'credit';
+    if (cashFlowDetail?.cash_flow_type === 'debet' || cashFlowDetail?.cash_flow_type === 'debit') return 'debet';
+    if (Number(cashFlowDetail?.debet_total || cashFlowDetail?.debet || cashFlowDetail?.cash_position?.debet_idr_total || 0) > 0) return 'debet';
+    if (Number(cashFlowDetail?.credit_total || cashFlowDetail?.credit || cashFlowDetail?.cash_position?.credit_idr_total || 0) > 0) return 'credit';
+    return 'debet';
+  }, [cashFlowDetail]);
+
+  const dualFlowType = originalFlowType === 'debet' ? 'credit' : 'debet';
+
+  // Akumulasi total IDR dari seluruh kas di cash_flow_cashes
+  const idrCashesDebet = useMemo(() => {
+    return (cashFlowDetail?.cash_flow_cashes ?? [])
+      .filter((c) => !isUsdKasItem(c.cash) && (c.type === 'debet' || c.type === 'debit'))
+      .reduce((sum, c) => sum + Number(c.amount || 0), 0);
+  }, [cashFlowDetail?.cash_flow_cashes]);
+
+  const idrCashesCredit = useMemo(() => {
+    return (cashFlowDetail?.cash_flow_cashes ?? [])
+      .filter((c) => !isUsdKasItem(c.cash) && c.type === 'credit')
+      .reduce((sum, c) => sum + Number(c.amount || 0), 0);
+  }, [cashFlowDetail?.cash_flow_cashes]);
+
+  const debetIdrTotal = Math.max(
+    Number(cashFlowDetail?.debet_total || 0),
+    Number(cashFlowDetail?.cash_position?.debet_idr_total || 0),
+    Number(cashFlowDetail?.debet || 0),
+    idrCashesDebet,
+  );
+
+  const creditIdrTotal = Math.max(
+    Number(cashFlowDetail?.credit_total || 0),
+    Number(cashFlowDetail?.cash_position?.credit_idr_total || 0),
+    Number(cashFlowDetail?.credit || 0),
+    idrCashesCredit,
+  );
+
+  const debetUsdTotal = Math.max(
+    Number(cashFlowDetail?.debet_usd_total || 0),
+    Number(cashFlowDetail?.cash_position?.debet_usd_total || 0),
+    Number(cashFlowDetail?.debet_usd || 0),
+  );
+
+  const creditUsdTotal = Math.max(
+    Number(cashFlowDetail?.credit_usd_total || 0),
+    Number(cashFlowDetail?.cash_position?.credit_usd_total || 0),
+    Number(cashFlowDetail?.credit_usd || 0),
+  );
+
+  const debetIdr = debetIdrTotal;
+  const creditIdr = creditIdrTotal;
+  const debetUsd = debetUsdTotal;
+  const creditUsd = creditUsdTotal;
 
   const fallbackGrandTotal = Number(
     cashFlowDetail?.grand_total ||
@@ -196,36 +249,54 @@ export default function KasHarianDetailPage() {
     cashFlowDetail?.amount ||
     0,
   );
-  const grandTotalIdr = Number(cashFlowDetail?.grand_total || expectedIdr || fallbackGrandTotal);
-  const fallbackGrandTotalUsd = Number(cashFlowDetail?.grand_total_usd || expectedUsd || 0);
-  const grandTotalUsd = fallbackGrandTotalUsd > 0 ? fallbackGrandTotalUsd : usdCostsTotal;
+  const fallbackGrandTotalUsd = Number(cashFlowDetail?.grand_total_usd || 0);
 
-  const isUsdKasItem = (cash?: { currency_type?: string | null; code?: string | null } | null) => {
-    if (!cash) return false;
-    if ((cash.currency_type || '').toLowerCase() === 'usd') return true;
-    return (cash.code || '').toLowerCase().includes('usd');
-  };
+  const grandTotalIdr = Number(
+    cashFlowDetail?.grand_total ||
+    (originalFlowType === 'debet' ? debetIdrTotal : creditIdrTotal) ||
+    fallbackGrandTotal
+  );
+  const grandTotalUsd = fallbackGrandTotalUsd > 0
+    ? fallbackGrandTotalUsd
+    : (usdCostsTotal > 0 ? usdCostsTotal : (originalFlowType === 'debet' ? debetUsdTotal : creditUsdTotal));
 
+  // Akumulasi total pembayaran IDR dari semua kas IDR
   const totalPaidIdr = useMemo(
-    () => financeBillings.filter(fb => !isUsdKasItem(fb.cash)).reduce((sum, fb) => sum + Number(fb.amount || 0), 0),
+    () => financeBillings.filter((fb) => !isUsdKasItem(fb.cash)).reduce((sum, fb) => sum + Number(fb.amount || 0), 0),
     [financeBillings]
   );
-  const remainingPaymentIdr = Math.max(0, grandTotalIdr - totalPaidIdr);
 
   const totalPaidUsd = useMemo(
-    () => financeBillings.filter(fb => isUsdKasItem(fb.cash)).reduce((sum, fb) => sum + Number(fb.amount || 0), 0),
+    () => financeBillings.filter((fb) => isUsdKasItem(fb.cash)).reduce((sum, fb) => sum + Number(fb.amount || 0), 0),
     [financeBillings]
   );
-  const remainingPaymentUsd = Math.max(0, grandTotalUsd - totalPaidUsd);
 
-  const hasIdr = grandTotalIdr > 0;
-  const hasUsd = grandTotalUsd > 0;
-  const isFullyPaid = (hasIdr || hasUsd) && (hasIdr ? remainingPaymentIdr <= 0 : true) && (hasUsd ? remainingPaymentUsd <= 0 : true);
+  // Sisa alokasi dari backend API (atau fallback perhitungan lokal)
+  const remainingOriginalIdr = cashFlowDetail?.remaining_payment !== undefined
+    ? Number(cashFlowDetail.remaining_payment)
+    : Math.max(0, (originalFlowType === 'debet' ? debetIdrTotal : creditIdrTotal) - totalPaidIdr);
+
+  const remainingOriginalUsd = cashFlowDetail?.remaining_payment_usd !== undefined
+    ? Number(cashFlowDetail.remaining_payment_usd)
+    : Math.max(0, (originalFlowType === 'debet' ? debetUsdTotal : creditUsdTotal) - totalPaidUsd);
+
+  const remainingDualIdr = cashFlowDetail?.dual_remaining_payment !== undefined
+    ? Number(cashFlowDetail.dual_remaining_payment)
+    : 0;
+
+  const remainingDualUsd = cashFlowDetail?.dual_remaining_payment_usd !== undefined
+    ? Number(cashFlowDetail.dual_remaining_payment_usd)
+    : 0;
+
+  const isOriginalSettled = remainingOriginalIdr <= 0 && remainingOriginalUsd <= 0;
+  const isDualSettled = remainingDualIdr <= 0 && remainingDualUsd <= 0;
+  const isCompletelySettled = isOriginalSettled && isDualSettled;
+
   const isMarkedPaid = cashFlowDetail?.is_paid === true
     || cashFlowDetail?.is_paid === '1'
     || cashFlowDetail?.is_paid === 'true';
 
-  const remainingPayment = isFullyPaid ? 0 : (hasIdr && hasUsd) ? (remainingPaymentIdr + remainingPaymentUsd) : (hasUsd ? remainingPaymentUsd : remainingPaymentIdr);
+  const remainingPayment = remainingOriginalIdr + remainingOriginalUsd;
   const proofUrl = buildProofUrl(cashFlowDetail?.payment_proof);
   const isLoading = cashFlowQuery.isLoading || router.isFallback || !router.isReady;
 
@@ -581,43 +652,55 @@ export default function KasHarianDetailPage() {
         <Card className="rounded-md border-slate-200 shadow-sm">
           <CardHeader className="border-b border-slate-100 py-5">
             <CardTitle>Ringkasan Pembayaran</CardTitle>
-            <CardDescription>Progres pembayaran terpisah berdasarkan IDR dan USD</CardDescription>
+            <CardDescription>Progres pembayaran terpisah berdasarkan IDR dan USD dengan akumulasi total kas</CardDescription>
           </CardHeader>
           <CardContent className="p-4 sm:p-6">
             <div className="grid gap-6 md:grid-cols-2">
               <div className="space-y-4 p-4 rounded-md bg-slate-50/60 border border-slate-200/80">
-                <h4 className="font-semibold text-slate-800 text-sm border-b border-slate-200 pb-2 flex items-center gap-2">
+                <h4 className="font-semibold text-slate-800 text-sm border-b border-slate-200 pb-2 flex items-center justify-between">
                   <span>Ringkasan Pembayaran (IDR)</span>
+                  <span className="text-xs font-normal text-slate-500">Akumulasi Semua Kas IDR</span>
                 </h4>
-                <div className="grid gap-4 sm:grid-cols-3">
+                <div className="grid gap-4 sm:grid-cols-2">
                   <DetailItem label="Grand Total (IDR)" icon={<WalletCards className="h-4 w-4 text-slate-600" />}>
                     {currenciesFormat('idr', grandTotalIdr)}
                   </DetailItem>
                   <DetailItem label="Total Terbayar (IDR)" icon={<CheckCircle2 className="h-4 w-4 text-emerald-600" />}>
                     {currenciesFormat('idr', totalPaidIdr)}
                   </DetailItem>
-                  <DetailItem label="Sisa Pembayaran (IDR)" icon={<ReceiptText className="h-4 w-4 text-amber-600" />}>
-                    <span className={remainingPaymentIdr > 0 ? 'text-amber-700 font-semibold' : 'text-emerald-700 font-semibold'}>
-                      {currenciesFormat('idr', remainingPaymentIdr)}
+                  <DetailItem label={`Sisa Original (${originalFlowType === 'debet' ? 'Debit' : 'Kredit'})`} icon={<ReceiptText className="h-4 w-4 text-amber-600" />}>
+                    <span className={remainingOriginalIdr > 0 ? 'text-amber-700 font-semibold' : 'text-emerald-700 font-semibold'}>
+                      {currenciesFormat('idr', remainingOriginalIdr)}
+                    </span>
+                  </DetailItem>
+                  <DetailItem label={`Sisa Dual Flow (${dualFlowType === 'debet' ? 'Debit' : 'Kredit'})`} icon={<ReceiptText className="h-4 w-4 text-purple-600" />}>
+                    <span className={remainingDualIdr > 0 ? 'text-purple-700 font-semibold' : 'text-emerald-700 font-semibold'}>
+                      {currenciesFormat('idr', remainingDualIdr)}
                     </span>
                   </DetailItem>
                 </div>
               </div>
 
               <div className="space-y-4 p-4 rounded-md bg-blue-50/30 border border-blue-100">
-                <h4 className="font-semibold text-blue-900 text-sm border-b border-blue-100 pb-2 flex items-center gap-2">
+                <h4 className="font-semibold text-blue-900 text-sm border-blue-100 border-b pb-2 flex items-center justify-between">
                   <span>Ringkasan Pembayaran (USD)</span>
+                  <span className="text-xs font-normal text-blue-700">Akumulasi Kas USD</span>
                 </h4>
-                <div className="grid gap-4 sm:grid-cols-3">
+                <div className="grid gap-4 sm:grid-cols-2">
                   <DetailItem label="Grand Total (USD)" icon={<WalletCards className="h-4 w-4 text-blue-600" />}>
                     {currenciesFormat('usd', grandTotalUsd)}
                   </DetailItem>
                   <DetailItem label="Total Terbayar (USD)" icon={<CheckCircle2 className="h-4 w-4 text-emerald-600" />}>
                     {currenciesFormat('usd', totalPaidUsd)}
                   </DetailItem>
-                  <DetailItem label="Sisa Pembayaran (USD)" icon={<ReceiptText className="h-4 w-4 text-amber-600" />}>
-                    <span className={remainingPaymentUsd > 0 ? 'text-amber-700 font-semibold' : 'text-emerald-700 font-semibold'}>
-                      {currenciesFormat('usd', remainingPaymentUsd)}
+                  <DetailItem label={`Sisa Original (${originalFlowType === 'debet' ? 'Debit' : 'Kredit'})`} icon={<ReceiptText className="h-4 w-4 text-amber-600" />}>
+                    <span className={remainingOriginalUsd > 0 ? 'text-amber-700 font-semibold' : 'text-emerald-700 font-semibold'}>
+                      {currenciesFormat('usd', remainingOriginalUsd)}
+                    </span>
+                  </DetailItem>
+                  <DetailItem label={`Sisa Dual Flow (${dualFlowType === 'debet' ? 'Debit' : 'Kredit'})`} icon={<ReceiptText className="h-4 w-4 text-purple-600" />}>
+                    <span className={remainingDualUsd > 0 ? 'text-purple-700 font-semibold' : 'text-emerald-700 font-semibold'}>
+                      {currenciesFormat('usd', remainingDualUsd)}
                     </span>
                   </DetailItem>
                 </div>
@@ -626,16 +709,16 @@ export default function KasHarianDetailPage() {
           </CardContent>
         </Card>
 
-        {isFullyPaid && hasBillings ? (
+        {isCompletelySettled && hasBillings ? (
           <Card className="rounded-md border-emerald-200 bg-emerald-50/60 shadow-none">
             <CardContent className="flex items-start gap-3 p-5 text-emerald-800">
               <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0" />
-              <div><p className="font-semibold">Pembayaran sudah lengkap</p><p className="mt-1 text-sm text-emerald-700">Seluruh rincian pembayaran transaksi ini telah dilengkapi.</p></div>
+              <div><p className="font-semibold">Pembayaran sudah lengkap</p><p className="mt-1 text-sm text-emerald-700">Seluruh rincian pembayaran transaksi ini (original dan dual flow) telah dilengkapi.</p></div>
             </CardContent>
           </Card>
         ) : null}
 
-        <FinanceBillingTable financeBillings={financeBillings} cashFlowDetail={cashFlowDetail} companyId={companyId} disabled={isMarkedPaid} />
+        <FinanceBillingTable financeBillings={financeBillings} cashFlowDetail={cashFlowDetail} companyId={companyId} disabled={isCompletelySettled && isMarkedPaid} />
 
         <div className="grid gap-6 lg:grid-cols-2">
           <Card className="rounded-md border-slate-200 shadow-sm">

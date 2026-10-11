@@ -56,7 +56,9 @@ export default function KasHarianForm({
     name: 'cash_flow_cashes',
   });
 
-  const watchedCashes = form.watch('cash_flow_cashes') || [];
+  const cashFlowCashes = form.watch('cash_flow_cashes');
+
+  const watchedCashes = useMemo(() => cashFlowCashes || [], [cashFlowCashes]);
 
   // Determine active transaction type (Debit or Kredit) to enforce uniformity constraint
   const activeType = useMemo(() => {

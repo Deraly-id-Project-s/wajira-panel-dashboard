@@ -23,6 +23,7 @@ import { currenciesFormat } from '@/components/ui/currenciesFormat';
 import type { FinanceBilling, FinanceBillingPayload } from '@/@types/finance-billing.types';
 import type { KasHarian } from '@/@types/kas-harian.types';
 import { LoadingState } from '@/components/ui/loading-state';
+import { cn } from '@/lib/utils';
 
 const formatDate = (value?: string) => {
   if (!value) return '-';
@@ -71,25 +72,6 @@ export default function FinanceBillingTable({ financeBillings, cashFlowDetail, c
   const updateMutation = useUpdateFinanceBilling();
   const deleteMutation = useDeleteFinanceBilling();
 
-  const currentTransactionType = useMemo<'debet' | 'credit' | undefined>(() => {
-    if (
-      cashFlowDetail.cash_flow_type === 'debet' ||
-      cashFlowDetail.cash_flow_type === 'debit' ||
-      Number(cashFlowDetail.debet || 0) > 0 ||
-      Number(cashFlowDetail.debet_usd || 0) > 0
-    ) {
-      return 'debet';
-    }
-    if (
-      cashFlowDetail.cash_flow_type === 'credit' ||
-      Number(cashFlowDetail.credit || 0) > 0 ||
-      Number(cashFlowDetail.credit_usd || 0) > 0
-    ) {
-      return 'credit';
-    }
-    return undefined;
-  }, [cashFlowDetail]);
-
   const kasQuery = useKas(companyId > 0 ? companyId : undefined);
   const accountQuery = useAccounts({
     page: 1,
@@ -100,30 +82,67 @@ export default function FinanceBillingTable({ financeBillings, cashFlowDetail, c
   });
 
   const kasOptions = useMemo(() => kasQuery.data?.data ?? [], [kasQuery.data?.data]);
-  const rawAkunOptions = useMemo(() => accountQuery.data?.data ?? [], [accountQuery.data?.data]);
+  const akunOptions = useMemo(() => accountQuery.data?.data ?? [], [accountQuery.data?.data]);
 
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingId, setEditingId] = useState<number | null>(null);
   const [form, setForm] = useState<FormState>({ ...EMPTY_FORM });
   const [deleteTarget, setDeleteTarget] = useState<FinanceBilling | null>(null);
 
-  const akunOptions = useMemo(() => {
-    if (!currentTransactionType) return rawAkunOptions;
-    const filtered = rawAkunOptions.filter((account) => {
-      if (form.account_id && Number(account.id) === Number(form.account_id)) {
-        return true;
-      }
-      if (!account.type) return true;
-      const normalizedType = account.type === 'debit' ? 'debet' : account.type;
-      return normalizedType === currentTransactionType;
-    });
-    return filtered.length > 0 ? filtered : rawAkunOptions;
-  }, [rawAkunOptions, currentTransactionType, form.account_id]);
+  const originalFlowType = useMemo<'debet' | 'credit'>(() => {
+    if (cashFlowDetail.cash_flow_type === 'credit') return 'credit';
+    if (cashFlowDetail.cash_flow_type === 'debet' || cashFlowDetail.cash_flow_type === 'debit') return 'debet';
+    if (Number(cashFlowDetail.debet_total || cashFlowDetail.debet || cashFlowDetail.cash_position?.debet_idr_total || 0) > 0) return 'debet';
+    if (Number(cashFlowDetail.credit_total || cashFlowDetail.credit || cashFlowDetail.cash_position?.credit_idr_total || 0) > 0) return 'credit';
+    return 'debet';
+  }, [cashFlowDetail]);
 
-  const debetIdr = Number(cashFlowDetail.debet || cashFlowDetail.cash_position?.debet_idr_total || 0);
-  const creditIdr = Number(cashFlowDetail.credit || cashFlowDetail.cash_position?.credit_idr_total || 0);
-  const debetUsd = Number(cashFlowDetail.debet_usd || cashFlowDetail.cash_position?.debet_usd_total || 0);
-  const creditUsd = Number(cashFlowDetail.credit_usd || cashFlowDetail.cash_position?.credit_usd_total || 0);
+  const dualFlowType = originalFlowType === 'debet' ? 'credit' : 'debet';
+
+  // IDR total calculation - diakumulasikan dari semua kas IDR (cash_flow_cashes / cash_summaries / cash_position)
+  const idrCashesDebet = useMemo(() => {
+    return (cashFlowDetail.cash_flow_cashes ?? [])
+      .filter((c) => !isUsdKas(c.cash) && (c.type === 'debet' || c.type === 'debit'))
+      .reduce((sum, c) => sum + Number(c.amount || 0), 0);
+  }, [cashFlowDetail.cash_flow_cashes]);
+
+  const idrCashesCredit = useMemo(() => {
+    return (cashFlowDetail.cash_flow_cashes ?? [])
+      .filter((c) => !isUsdKas(c.cash) && c.type === 'credit')
+      .reduce((sum, c) => sum + Number(c.amount || 0), 0);
+  }, [cashFlowDetail.cash_flow_cashes]);
+
+  const debetIdrTotal = Math.max(
+    Number(cashFlowDetail.debet_total || 0),
+    Number(cashFlowDetail.cash_position?.debet_idr_total || 0),
+    Number(cashFlowDetail.debet || 0),
+    idrCashesDebet,
+  );
+
+  const creditIdrTotal = Math.max(
+    Number(cashFlowDetail.credit_total || 0),
+    Number(cashFlowDetail.cash_position?.credit_idr_total || 0),
+    Number(cashFlowDetail.credit || 0),
+    idrCashesCredit,
+  );
+
+  const debetUsdTotal = Math.max(
+    Number(cashFlowDetail.debet_usd_total || 0),
+    Number(cashFlowDetail.cash_position?.debet_usd_total || 0),
+    Number(cashFlowDetail.debet_usd || 0),
+  );
+
+  const creditUsdTotal = Math.max(
+    Number(cashFlowDetail.credit_usd_total || 0),
+    Number(cashFlowDetail.cash_position?.credit_usd_total || 0),
+    Number(cashFlowDetail.credit_usd || 0),
+  );
+
+  const debetIdr = debetIdrTotal;
+  const creditIdr = creditIdrTotal;
+  const debetUsd = debetUsdTotal;
+  const creditUsd = creditUsdTotal;
+
   const fallbackGrandTotal = Number(
     cashFlowDetail.grand_total ||
     cashFlowDetail.unit_transaction_billing?.grand_total ||
@@ -137,78 +156,150 @@ export default function FinanceBillingTable({ financeBillings, cashFlowDetail, c
     0,
   );
 
-  const expectedIdr = debetIdr > 0 ? debetIdr : (creditIdr > 0 ? creditIdr : fallbackGrandTotal);
-  const expectedUsd = debetUsd > 0 ? debetUsd : (creditUsd > 0 ? creditUsd : (fallbackGrandTotalUsd > 0 ? fallbackGrandTotalUsd : usdCostsTotal));
+  const expectedOriginalIdr = originalFlowType === 'debet' ? (debetIdrTotal || fallbackGrandTotal) : (creditIdrTotal || fallbackGrandTotal);
+  const expectedOriginalUsd = originalFlowType === 'debet' ? (debetUsdTotal || fallbackGrandTotalUsd || usdCostsTotal) : (creditUsdTotal || fallbackGrandTotalUsd || usdCostsTotal);
 
-  const totalPaidIdr = useMemo(
+  const expectedDualIdr = dualFlowType === 'debet' ? debetIdrTotal : creditIdrTotal;
+  const expectedDualUsd = dualFlowType === 'debet' ? debetUsdTotal : creditUsdTotal;
+
+  const getBillingFlowType = useCallback((fb: FinanceBilling): 'original' | 'dual' => {
+    const accType = fb.account?.type || akunOptions.find((a) => Number(a.id) === Number(fb.account_id))?.type;
+    const norm = accType === 'debit' ? 'debet' : accType;
+    if (norm === dualFlowType) return 'dual';
+    return 'original';
+  }, [akunOptions, dualFlowType]);
+
+  const totalPaidOriginalIdr = useMemo(
+    () => financeBillings.filter(fb => !isUsdKas(fb.cash) && getBillingFlowType(fb) === 'original').reduce((sum, fb) => sum + Number(fb.amount || 0), 0),
+    [financeBillings, getBillingFlowType]
+  );
+  const totalPaidOriginalUsd = useMemo(
+    () => financeBillings.filter(fb => isUsdKas(fb.cash) && getBillingFlowType(fb) === 'original').reduce((sum, fb) => sum + Number(fb.amount || 0), 0),
+    [financeBillings, getBillingFlowType]
+  );
+
+  const totalPaidDualIdr = useMemo(
+    () => financeBillings.filter(fb => !isUsdKas(fb.cash) && getBillingFlowType(fb) === 'dual').reduce((sum, fb) => sum + Number(fb.amount || 0), 0),
+    [financeBillings, getBillingFlowType]
+  );
+  const totalPaidDualUsd = useMemo(
+    () => financeBillings.filter(fb => isUsdKas(fb.cash) && getBillingFlowType(fb) === 'dual').reduce((sum, fb) => sum + Number(fb.amount || 0), 0),
+    [financeBillings, getBillingFlowType]
+  );
+
+  // Total pembayaran IDR yang diakumulasikan dari semua kas IDR
+  const totalPaidIdrAccumulated = useMemo(
     () => financeBillings.filter(fb => !isUsdKas(fb.cash)).reduce((sum, fb) => sum + Number(fb.amount || 0), 0),
     [financeBillings]
   );
-  const remainingPaymentIdr = Math.max(0, expectedIdr - totalPaidIdr);
-
-  const totalPaidUsd = useMemo(
+  const totalPaidUsdAccumulated = useMemo(
     () => financeBillings.filter(fb => isUsdKas(fb.cash)).reduce((sum, fb) => sum + Number(fb.amount || 0), 0),
     [financeBillings]
   );
-  const remainingPaymentUsd = Math.max(0, expectedUsd - totalPaidUsd);
 
-  const hasIdr = expectedIdr > 0;
-  const hasUsd = expectedUsd > 0;
-  const isFullyPaid = (hasIdr || hasUsd) && (hasIdr ? remainingPaymentIdr <= 0 : true) && (hasUsd ? remainingPaymentUsd <= 0 : true);
+  const remainingOriginalIdr = cashFlowDetail.remaining_payment !== undefined
+    ? Number(cashFlowDetail.remaining_payment)
+    : Math.max(0, expectedOriginalIdr - totalPaidOriginalIdr);
+
+  const remainingOriginalUsd = cashFlowDetail.remaining_payment_usd !== undefined
+    ? Number(cashFlowDetail.remaining_payment_usd)
+    : Math.max(0, expectedOriginalUsd - totalPaidOriginalUsd);
+
+  const remainingDualIdr = cashFlowDetail.dual_remaining_payment !== undefined
+    ? Number(cashFlowDetail.dual_remaining_payment)
+    : Math.max(0, expectedDualIdr - totalPaidDualIdr);
+
+  const remainingDualUsd = cashFlowDetail.dual_remaining_payment_usd !== undefined
+    ? Number(cashFlowDetail.dual_remaining_payment_usd)
+    : Math.max(0, expectedDualUsd - totalPaidDualUsd);
+
+  const isOriginalSettled = remainingOriginalIdr <= 0 && remainingOriginalUsd <= 0;
+  const isDualSettled = remainingDualIdr <= 0 && remainingDualUsd <= 0;
+  // Transaksi sepenuhnya lunas bila kedua flow (original dan dual) sudah selesai
+  const isCompletelySettled = isOriginalSettled && isDualSettled;
 
   const editingItem = useMemo(() => financeBillings.find((fb) => fb.id === editingId) || null, [editingId, financeBillings]);
   const editingAmount = Number(editingItem?.amount || 0);
   const editingIsUsd = isUsdKas(editingItem?.cash);
+  const editingFlow = editingItem ? getBillingFlowType(editingItem) : 'original';
 
   const selectedKas = useMemo(
     () => kasOptions.find((kas) => Number(kas.id) === Number(form.cash_id)) ?? null,
     [form.cash_id, kasOptions],
   );
   const selectedAkun = useMemo(
-    () => akunOptions.find((a) => Number(a.id) === Number(form.account_id)) ?? rawAkunOptions.find((a) => Number(a.id) === Number(form.account_id)) ?? null,
-    [form.account_id, akunOptions, rawAkunOptions],
+    () => akunOptions.find((a) => Number(a.id) === Number(form.account_id)) ?? null,
+    [form.account_id, akunOptions],
   );
+
+  const selectedAccountFlow = useMemo<'original' | 'dual'>(() => {
+    if (!selectedAkun?.type) return 'original';
+    const norm = selectedAkun.type === 'debit' ? 'debet' : selectedAkun.type;
+    return norm === dualFlowType ? 'dual' : 'original';
+  }, [selectedAkun, dualFlowType]);
+
+  const activeRemainingIdr = selectedAccountFlow === 'original' ? remainingOriginalIdr : remainingDualIdr;
+  const activeRemainingUsd = selectedAccountFlow === 'original' ? remainingOriginalUsd : remainingDualUsd;
+
   const selectedCurrency = isUsdKas(selectedKas) ? 'usd' : 'idr';
   const formatSelectedCurrency = (value: number) => currenciesFormat(selectedCurrency, value);
 
   const maxPaymentAmount = useMemo(() => {
-    if (selectedCurrency === 'usd') {
-      if (expectedUsd <= 0) return 0;
-      const editOffset = (editingId && editingIsUsd) ? editingAmount : 0;
-      return Math.max(0, expectedUsd - totalPaidUsd + editOffset);
-    } else {
-      if (expectedIdr <= 0) return 0;
-      const editOffset = (editingId && !editingIsUsd) ? editingAmount : 0;
-      return Math.max(0, expectedIdr - totalPaidIdr + editOffset);
-    }
-  }, [selectedCurrency, expectedUsd, totalPaidUsd, expectedIdr, totalPaidIdr, editingId, editingIsUsd, editingAmount]);
+    const isUsd = selectedCurrency === 'usd';
+    const targetRemaining = isUsd ? activeRemainingUsd : activeRemainingIdr;
+    const isSameEditingFlow = Boolean(editingId && editingFlow === selectedAccountFlow && editingIsUsd === isUsd);
+    const editOffset = isSameEditingFlow ? editingAmount : 0;
+    return Math.max(0, targetRemaining + editOffset);
+  }, [selectedCurrency, activeRemainingUsd, activeRemainingIdr, editingId, editingFlow, selectedAccountFlow, editingIsUsd, editingAmount]);
 
-  const currentLimitCurrencyAmount = selectedCurrency === 'usd' ? expectedUsd : expectedIdr;
-  const currentLimitCurrencyPaid = selectedCurrency === 'usd'
-    ? (totalPaidUsd - ((editingId && editingIsUsd) ? editingAmount : 0))
-    : (totalPaidIdr - ((editingId && !editingIsUsd) ? editingAmount : 0));
-  const hasPaymentLimit = currentLimitCurrencyAmount > 0;
+  const isKasDisabled = useCallback((k: { id: number | string; currency_type?: string | null; code?: string | null }) => {
+    if (editingId && editingItem && Number(editingItem.cash_id) === Number(k.id)) {
+      return false;
+    }
+    const isUsd = isUsdKas(k);
+    if (isUsd) {
+      const isSameEditingFlow = Boolean(editingId && editingFlow === selectedAccountFlow && editingIsUsd);
+      const effectiveRemaining = activeRemainingUsd + (isSameEditingFlow ? editingAmount : 0);
+      return effectiveRemaining <= 0;
+    } else {
+      const isSameEditingFlow = Boolean(editingId && editingFlow === selectedAccountFlow && !editingIsUsd);
+      const effectiveRemaining = activeRemainingIdr + (isSameEditingFlow ? editingAmount : 0);
+      return effectiveRemaining <= 0;
+    }
+  }, [editingId, editingItem, editingFlow, selectedAccountFlow, editingIsUsd, activeRemainingUsd, activeRemainingIdr, editingAmount]);
 
   const isLoading = createMutation.isPending || updateMutation.isPending;
 
   const openAddForm = () => {
     setEditingId(null);
-    let defaultCashId = cashFlowDetail.cash_id ? Number(cashFlowDetail.cash_id) : 0;
-    if (hasUsd && remainingPaymentUsd > 0 && (!hasIdr || remainingPaymentIdr <= 0)) {
+
+    // Prioritaskan flow yang masih memiliki sisa saldo
+    const defaultFlow = !isOriginalSettled ? 'original' : 'dual';
+    const targetAccounts = akunOptions.filter((a) => {
+      const norm = a.type === 'debit' ? 'debet' : a.type;
+      return defaultFlow === 'dual' ? norm === dualFlowType : norm !== dualFlowType;
+    });
+
+    const defaultAccountId = targetAccounts[0]?.id
+      ? Number(targetAccounts[0].id)
+      : (akunOptions[0]?.id ? Number(akunOptions[0].id) : 0);
+
+    const targetRemIdr = defaultFlow === 'original' ? remainingOriginalIdr : remainingDualIdr;
+    const targetRemUsd = defaultFlow === 'original' ? remainingOriginalUsd : remainingDualUsd;
+
+    let defaultCashId = 0;
+    if (targetRemUsd > 0 && targetRemIdr <= 0) {
       const usdKas = kasOptions.find((k) => isUsdKas(k));
       if (usdKas) defaultCashId = Number(usdKas.id);
-    } else if (!defaultCashId) {
+    } else {
       const idrKas = kasOptions.find((k) => !isUsdKas(k));
       if (idrKas) defaultCashId = Number(idrKas.id);
+      else if (kasOptions[0]) defaultCashId = Number(kasOptions[0].id);
     }
-
-    const defaultAccountId = cashFlowDetail.account_id
-      ? Number(cashFlowDetail.account_id)
-      : (akunOptions[0]?.id ? Number(akunOptions[0].id) : 0);
 
     const initialKas = kasOptions.find((k) => Number(k.id) === defaultCashId);
     const initialCurrency = isUsdKas(initialKas) ? 'usd' : 'idr';
-    const initialLimit = initialCurrency === 'usd' ? remainingPaymentUsd : remainingPaymentIdr;
+    const initialLimit = initialCurrency === 'usd' ? targetRemUsd : targetRemIdr;
 
     setForm({
       cash_id: defaultCashId,
@@ -256,8 +347,12 @@ export default function FinanceBillingTable({ financeBillings, cashFlowDetail, c
       toast.error('Nominal pembayaran harus lebih dari 0');
       return;
     }
-    if (hasPaymentLimit && maxPaymentAmount > 0 && amount > maxPaymentAmount) {
+    if (maxPaymentAmount > 0 && amount > maxPaymentAmount) {
       toast.error(`Nominal pembayaran maksimal ${formatSelectedCurrency(maxPaymentAmount)}`);
+      return;
+    }
+    if (maxPaymentAmount <= 0) {
+      toast.error(`Sisa saldo alokasi ${selectedAccountFlow === 'dual' ? 'Dual Flow' : 'Original Flow'} (${selectedCurrency.toUpperCase()}) telah habis`);
       return;
     }
 
@@ -316,10 +411,10 @@ export default function FinanceBillingTable({ financeBillings, cashFlowDetail, c
   }, [kasOptions]);
 
   const getAccountLabel = useCallback((accountId: number) => {
-    const akun = rawAkunOptions.find((a) => Number(a.id) === accountId);
+    const akun = akunOptions.find((a) => Number(a.id) === accountId);
     const getAccountType = akun?.type ? ` (${akun?.type == 'debet' ? 'Debit' : 'Kredit'})` : ``;
     return akun ? (akun.name + getAccountType || `${akun.code} - ${akun.description}`) : '-';
-  }, [rawAkunOptions]);
+  }, [akunOptions]);
 
   const columns = useMemo<ColumnDef<FinanceBilling>[]>(
     () => [
@@ -331,11 +426,33 @@ export default function FinanceBillingTable({ financeBillings, cashFlowDetail, c
       {
         header: 'Akun',
         alignment: 'left',
-        cell: (fb) => (
-          <ReferenceLink href={`/dashboard/${slugStr}/master/account?search=${encodeURIComponent(getKasLabel(fb.account_id))}`}>
-            {getAccountLabel(fb.account_id)}
-          </ReferenceLink>
-        ),
+        cell: (fb) => {
+          const flow = getBillingFlowType(fb);
+          const akun = akunOptions.find((a) => Number(a.id) === Number(fb.account_id));
+          const type = fb.account?.type || akun?.type;
+          return (
+            <div className="flex flex-col gap-0.5">
+              <ReferenceLink href={`/dashboard/${slugStr}/master/account?search=${encodeURIComponent(akun?.name || fb.account?.name || '')}`}>
+                {getAccountLabel(fb.account_id)}
+              </ReferenceLink>
+              <div className="flex items-center gap-1.5 mt-0.5">
+                {type ? (
+                  <span className={cn(
+                    'text-[10px] px-1.5 py-0.2 rounded font-semibold',
+                    (type === 'debet' || type === 'debit')
+                      ? 'bg-blue-50 text-blue-700 border border-blue-200'
+                      : 'bg-purple-50 text-purple-700 border border-purple-200'
+                  )}>
+                    {(type === 'debet' || type === 'debit') ? 'Debit' : 'Kredit'}
+                  </span>
+                ) : null}
+                <span className="text-[10px] text-slate-500 font-medium">
+                  ({flow === 'dual' ? 'Dual Flow' : 'Original Flow'})
+                </span>
+              </div>
+            </div>
+          );
+        },
       },
       {
         header: 'Kas',
@@ -402,7 +519,7 @@ export default function FinanceBillingTable({ financeBillings, cashFlowDetail, c
           ) : null,
       },
     ],
-    [disabled, slugStr, getAccountLabel, getKasLabel]
+    [disabled, slugStr, getAccountLabel, getKasLabel, akunOptions, getBillingFlowType]
   );
 
   return (
@@ -432,7 +549,7 @@ export default function FinanceBillingTable({ financeBillings, cashFlowDetail, c
           <p className="text-sm text-slate-500 mt-1">Daftar finance billing yang terkait dengan transaksi ini</p>
         </div>
         {!disabled && (
-          isFullyPaid ? (
+          isCompletelySettled ? (
             <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger asChild>
@@ -449,7 +566,7 @@ export default function FinanceBillingTable({ financeBillings, cashFlowDetail, c
                   </span>
                 </TooltipTrigger>
                 <TooltipContent side="bottom" className="max-w-xs text-center text-xs">
-                  Seluruh tagihan transaksi ini telah lunas.
+                  Seluruh alokasi jurnal transaksi ini (original dan dual flow) telah lunas.
                 </TooltipContent>
               </Tooltip>
             </TooltipProvider>
@@ -465,6 +582,45 @@ export default function FinanceBillingTable({ financeBillings, cashFlowDetail, c
             </Button>
           )
         )}
+      </div>
+
+      {/* Indikator Saldo Dual Flow & Akumulasi Pembayaran IDR */}
+      <div className="grid gap-2.5 sm:grid-cols-2 lg:grid-cols-3 text-xs">
+        <div className="flex flex-col gap-1 rounded-md border border-slate-200 bg-slate-50/80 p-3">
+          <span className="text-[11px] font-semibold uppercase tracking-wider text-slate-500">
+            Sisa Alokasi {originalFlowType === 'debet' ? 'Debit (Original)' : 'Kredit (Original)'}
+          </span>
+          <div className="flex flex-wrap items-baseline gap-2 font-semibold text-slate-900">
+            <span className="tabular-nums">IDR: {currenciesFormat('idr', remainingOriginalIdr)}</span>
+            {(remainingOriginalUsd > 0 || totalPaidOriginalUsd > 0) && (
+              <span className="text-slate-600 tabular-nums">· USD: {currenciesFormat('usd', remainingOriginalUsd)}</span>
+            )}
+          </div>
+        </div>
+
+        <div className="flex flex-col gap-1 rounded-md border border-slate-200 bg-slate-50/80 p-3">
+          <span className="text-[11px] font-semibold uppercase tracking-wider text-slate-500">
+            Sisa Alokasi {dualFlowType === 'debet' ? 'Debit (Dual Flow)' : 'Kredit (Dual Flow)'}
+          </span>
+          <div className="flex flex-wrap items-baseline gap-2 font-semibold text-slate-900">
+            <span className="tabular-nums">IDR: {currenciesFormat('idr', remainingDualIdr)}</span>
+            {(remainingDualUsd > 0 || totalPaidDualUsd > 0) && (
+              <span className="text-slate-600 tabular-nums">· USD: {currenciesFormat('usd', remainingDualUsd)}</span>
+            )}
+          </div>
+        </div>
+
+        <div className="flex flex-col gap-1 rounded-md border border-emerald-200 bg-emerald-50/50 p-3 sm:col-span-2 lg:col-span-1">
+          <span className="text-[11px] font-semibold uppercase tracking-wider text-emerald-700">
+            Total Terbayar IDR (Akumulasi Semua Kas)
+          </span>
+          <div className="flex flex-wrap items-baseline gap-2 font-semibold text-emerald-950">
+            <span className="tabular-nums">{currenciesFormat('idr', totalPaidIdrAccumulated)}</span>
+            {totalPaidUsdAccumulated > 0 && (
+              <span className="text-emerald-800 text-[11px] tabular-nums">· USD: {currenciesFormat('usd', totalPaidUsdAccumulated)}</span>
+            )}
+          </div>
+        </div>
       </div>
 
       <BaseTable
@@ -483,16 +639,84 @@ export default function FinanceBillingTable({ financeBillings, cashFlowDetail, c
         isSubmitting={isLoading}
       >
         <div className="space-y-4">
-          {hasPaymentLimit && (
-            <div className="rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800">
-              <div className="font-semibold">Maksimal nominal: {formatSelectedCurrency(maxPaymentAmount)}</div>
-              <div className="mt-0.5 text-amber-700">
-                Total transaksi {formatSelectedCurrency(currentLimitCurrencyAmount)} - total terbayar {formatSelectedCurrency(currentLimitCurrencyPaid)}
-                {editingId ? ` + nominal pembayaran ini ${formatSelectedCurrency(editingAmount)}` : ''}.
-              </div>
+          <div className="rounded-md border border-blue-200 bg-blue-50/70 p-3 text-xs text-blue-900">
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <span className="font-semibold">
+                Alokasi Akun: {selectedAccountFlow === 'dual' ? `Dual Flow (${dualFlowType === 'debet' ? 'Debit' : 'Kredit'})` : `Original Flow (${originalFlowType === 'debet' ? 'Debit' : 'Kredit'})`}
+              </span>
+              <span className="font-bold tabular-nums">
+                Maksimal: {formatSelectedCurrency(maxPaymentAmount)}
+              </span>
             </div>
-          )}
+            <div className="mt-1.5 flex flex-wrap gap-x-4 gap-y-1 text-[11px] text-blue-700">
+              <span>Sisa Original: {currenciesFormat('idr', remainingOriginalIdr)}{remainingOriginalUsd > 0 ? ` · ${currenciesFormat('usd', remainingOriginalUsd)}` : ''}</span>
+              <span>Sisa Dual: {currenciesFormat('idr', remainingDualIdr)}{remainingDualUsd > 0 ? ` · ${currenciesFormat('usd', remainingDualUsd)}` : ''}</span>
+            </div>
+          </div>
+
           <div className="grid gap-4 md:grid-cols-2">
+            {/* Akun */}
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-slate-800">Akun</label>
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <div className="w-full">
+                      <Select
+                        value={form.account_id ? String(form.account_id) : undefined}
+                        onValueChange={(v) => {
+                          const nextAccountId = Number(v);
+                          const nextAccount = akunOptions.find((a) => Number(a.id) === nextAccountId);
+                          const norm = nextAccount?.type === 'debit' ? 'debet' : nextAccount?.type;
+                          const nextFlow = norm === dualFlowType ? 'dual' : 'original';
+                          const nextRemIdr = nextFlow === 'original' ? remainingOriginalIdr : remainingDualIdr;
+                          const nextRemUsd = nextFlow === 'original' ? remainingOriginalUsd : remainingDualUsd;
+
+                          let nextCashId = form.cash_id;
+                          const currentKas = kasOptions.find((k) => Number(k.id) === form.cash_id);
+                          const currentIsUsd = isUsdKas(currentKas);
+
+                          if (currentIsUsd && nextRemUsd <= 0 && nextRemIdr > 0) {
+                            const idrKas = kasOptions.find((k) => !isUsdKas(k));
+                            if (idrKas) nextCashId = Number(idrKas.id);
+                          } else if (!currentIsUsd && nextRemIdr <= 0 && nextRemUsd > 0) {
+                            const usdKas = kasOptions.find((k) => isUsdKas(k));
+                            if (usdKas) nextCashId = Number(usdKas.id);
+                          }
+
+                          const effectiveKas = kasOptions.find((k) => Number(k.id) === nextCashId);
+                          const isUsd = isUsdKas(effectiveKas);
+                          const targetRem = isUsd ? nextRemUsd : nextRemIdr;
+
+                          setForm((prev) => ({
+                            ...prev,
+                            account_id: nextAccountId,
+                            cash_id: nextCashId,
+                            amount: targetRem > 0 && (prev.amount <= 0 || prev.amount > targetRem) ? targetRem : prev.amount,
+                          }));
+                        }}
+                        disabled={isLoading}
+                      >
+                        <SelectTrigger className="h-11 w-full bg-white text-sm border-slate-200 text-slate-700">
+                          <SelectValue placeholder="Pilih akun" />
+                        </SelectTrigger>
+                        <SelectContent className="max-h-60" showSearch searchPlaceholder="Cari akun...">
+                          {akunOptions.map((a) => (
+                            <SelectItem key={a.id} value={String(a.id)}>
+                              {a.type ? <span className="font-bold">[{a.type == 'debet' ? 'Debit' : 'Kredit'}]</span> : ''} {a.code} - {a.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </TooltipTrigger>
+                  <TooltipContent side="top" align="start">
+                    {selectedAkun ? `${selectedAkun.code} - ${selectedAkun.name}` : 'Pilih akun'}
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            </div>
+
             {/* Kas */}
             <div className="space-y-2">
               <label className="text-sm font-medium text-slate-800">Kas</label>
@@ -506,11 +730,11 @@ export default function FinanceBillingTable({ financeBillings, cashFlowDetail, c
                           const nextCashId = Number(v);
                           const nextKas = kasOptions.find((k) => Number(k.id) === nextCashId);
                           const nextCurrency = isUsdKas(nextKas) ? 'usd' : 'idr';
-                          const nextMax = nextCurrency === 'usd' ? remainingPaymentUsd : remainingPaymentIdr;
+                          const nextMax = nextCurrency === 'usd' ? activeRemainingUsd : activeRemainingIdr;
                           setForm((prev) => ({
                             ...prev,
                             cash_id: nextCashId,
-                            amount: nextMax > 0 && prev.amount > nextMax ? nextMax : prev.amount,
+                            amount: nextMax > 0 && (prev.amount > nextMax || prev.amount <= 0) ? nextMax : prev.amount,
                             amount_original: nextCurrency === 'usd' ? prev.amount_original : 0,
                           }));
                         }}
@@ -520,49 +744,25 @@ export default function FinanceBillingTable({ financeBillings, cashFlowDetail, c
                           <SelectValue placeholder="Pilih kas" />
                         </SelectTrigger>
                         <SelectContent className="max-h-60" showSearch searchPlaceholder="Cari kas...">
-                          {kasOptions.map((k) => (
-                            <SelectItem key={k.id} value={String(k.id)}>
-                              {k.cash_name || `${k.code} - ${k.description}`}
-                            </SelectItem>
-                          ))}
+                          {kasOptions.map((k) => {
+                            const disabledKas = isKasDisabled(k);
+                            return (
+                              <SelectItem key={k.id} value={String(k.id)} disabled={disabledKas}>
+                                <div className="flex items-center justify-between gap-2 w-full">
+                                  <span>{k.cash_name || `${k.code} - ${k.description}`}</span>
+                                  {disabledKas ? (
+                                    <span className="text-[10px] text-rose-500 font-medium">(Saldo Habis)</span>
+                                  ) : null}
+                                </div>
+                              </SelectItem>
+                            );
+                          })}
                         </SelectContent>
                       </Select>
                     </div>
                   </TooltipTrigger>
                   <TooltipContent side="top" align="start">
                     {selectedKas ? (selectedKas.cash_name || `${selectedKas.code} - ${selectedKas.description}`) : 'Pilih kas'}
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
-            </div>
-
-            {/* Akun */}
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-slate-800">Akun</label>
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <div className="w-full">
-                      <Select
-                        value={form.account_id ? String(form.account_id) : undefined}
-                        onValueChange={(v) => setForm((prev) => ({ ...prev, account_id: Number(v) }))}
-                        disabled={isLoading}
-                      >
-                        <SelectTrigger className="h-11 w-full bg-white text-sm border-slate-200 text-slate-700">
-                          <SelectValue placeholder="Pilih akun" />
-                        </SelectTrigger>
-                        <SelectContent className="max-h-60" showSearch searchPlaceholder="Cari akun...">
-                          {akunOptions.map((a) => (
-                            <SelectItem key={a.id} value={String(a.id)}>
-                              {a.code} - {a.name}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </TooltipTrigger>
-                  <TooltipContent side="top" align="start">
-                    {selectedAkun ? `${selectedAkun.code} - ${selectedAkun.name}` : 'Pilih akun'}
                   </TooltipContent>
                 </Tooltip>
               </TooltipProvider>
@@ -576,7 +776,7 @@ export default function FinanceBillingTable({ financeBillings, cashFlowDetail, c
               <MoneyInput
                 value={form.amount}
                 onChangeValue={(value) => {
-                  const clamped = hasPaymentLimit && maxPaymentAmount > 0 ? Math.min(value, maxPaymentAmount) : value;
+                  const clamped = maxPaymentAmount > 0 ? Math.min(value, maxPaymentAmount) : value;
                   setForm((prev) => ({ ...prev, amount: clamped }));
                 }}
                 currency={selectedCurrency.toUpperCase()}
