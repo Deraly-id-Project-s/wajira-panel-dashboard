@@ -135,7 +135,7 @@ export default function LaporanJurnalPage() {
     ? `${dateRange?.from ? format(dateRange.from, 'dd MMM yyyy') : '-'}${endDate && endDate !== startDate && dateRange?.to ? ` – ${format(dateRange.to, 'dd MMM yyyy')}` : ''}`
     : 'Semua periode';
   const accountLabel = selectedAccount
-    ? `${selectedAccount.code || '-'} · ${selectedAccount.name || '-'}`
+    ? `${selectedAccount.code || '-'} · ${selectedAccount.type ? `[${selectedAccount.type}] ` : ''}${selectedAccount.name || '-'}`
     : 'Semua akun';
 
   return (

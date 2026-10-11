@@ -2,6 +2,8 @@ export interface JournalReportAccount {
   id: number;
   code: string | null;
   name: string | null;
+  type?: string | null;
+  uuid?: string | null;
 }
 
 export interface JournalReportCashFlow {
