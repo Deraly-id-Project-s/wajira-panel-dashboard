@@ -31,10 +31,10 @@ export const ensureSuccess = <T>(payload: LaravelApiResponse<T>): T => {
   if (payload.status) return payload.data;
 
   if (payload.errors) {
-    throw new ApiValidationError(payload.message ?? 'Validation error', payload.errors);
+    throw new ApiValidationError('Data tidak valid atau terjadi kesalahan saat menyimpan data', payload.errors);
   }
 
-  throw new ApiResponseError(payload.message ?? 'Request failed');
+  throw new ApiResponseError(payload.message ?? 'Terjadi kesalahan saat menyimpan data');
 };
 
 export const mapLaravelPaginationMeta = (source: LaravelPagination<unknown>): PaginationMeta => ({

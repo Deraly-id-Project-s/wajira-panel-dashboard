@@ -45,6 +45,7 @@ export interface KasHarianCashFlowCash {
   cash_id: number;
   amount: number;
   amount_original: number;
+  conversion_amount?: number | null;
   type: string;
   created_at?: string;
   updated_at?: string;
@@ -157,16 +158,25 @@ export interface KasHarian {
   goods_transaction_billing?: KasHarianGoodsTransactionBilling | null;
 }
 
+export interface CashFlowCashPayloadItem {
+  id?: number;
+  cash_id: number;
+  amount: number;
+  conversion_amount?: number | null;
+  type: 'debet' | 'credit';
+}
+
 export interface CashFlowPayload {
   company_id: number;
   cash_id?: number;
   account_id?: number;
   date: string;
   note: string;
-  debet: number;
+  debet?: number;
   debet_usd?: number;
-  credit: number;
+  credit?: number;
   credit_usd?: number;
+  cash_flow_cashes?: CashFlowCashPayloadItem[];
   payment_proof?: File | null;
   is_paid?: boolean;
   is_valid?: boolean;

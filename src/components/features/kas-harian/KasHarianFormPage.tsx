@@ -28,6 +28,14 @@ const emptyValues = (companyId: number): KasHarianFormInput => ({
   debet_usd: 0,
   credit: 0,
   credit_usd: 0,
+  cash_flow_cashes: [
+    {
+      cash_id: 0,
+      amount: 0,
+      conversion_amount: undefined,
+      type: 'debet',
+    },
+  ],
   payment_proof: null,
 });
 
@@ -68,6 +76,23 @@ export default function KasHarianFormPage({ mode }: Props) {
 
   useEffect(() => {
     if (mode !== 'edit' || !cashFlow) return;
+    const initialCashes = (cashFlow.cash_flow_cashes && cashFlow.cash_flow_cashes.length > 0)
+      ? cashFlow.cash_flow_cashes.map((cfc) => ({
+          id: cfc.id,
+          cash_id: Number(cfc.cash_id),
+          amount: Number(cfc.amount || cfc.amount_original || 0),
+          conversion_amount: cfc.conversion_amount ? Number(cfc.conversion_amount) : undefined,
+          type: (cfc.type === 'credit' ? 'credit' : 'debet') as 'debet' | 'credit',
+        }))
+      : [
+          {
+            cash_id: Number(cashFlow.cash_id || 0),
+            amount: Number(cashFlow.debet || cashFlow.credit || cashFlow.amount || 0),
+            conversion_amount: undefined,
+            type: (Number(cashFlow.credit ?? 0) > 0 ? 'credit' : 'debet') as 'debet' | 'credit',
+          },
+        ];
+
     form.reset({
       company_id: cashFlow.company_id,
       date: cashFlow.date ? new Date(cashFlow.date) : new Date(),
@@ -76,19 +101,33 @@ export default function KasHarianFormPage({ mode }: Props) {
       debet_usd: Number(cashFlow.debet_usd ?? 0),
       credit: Number(cashFlow.credit ?? 0),
       credit_usd: Number(cashFlow.credit_usd ?? 0),
+      cash_flow_cashes: initialCashes,
       payment_proof: null,
     });
   }, [cashFlow, form, mode]);
 
   const handleSubmit = async (values: KasHarianFormValues) => {
+    let debetSum = 0;
+    let creditSum = 0;
+
+    (values.cash_flow_cashes || []).forEach((item) => {
+      if (item.type === 'debet') {
+        debetSum += item.amount;
+      } else {
+        creditSum += item.amount;
+      }
+    });
+
     const payload = {
       company_id: values.company_id,
       date: format(values.date, 'yyyy-MM-dd'),
       note: values.note,
-      debet: values.debet,
-      debet_usd: values.debet_usd,
-      credit: values.credit,
-      credit_usd: values.credit_usd,
+      debet: debetSum,
+      debet_usd: values.debet_usd ?? 0,
+      credit: creditSum,
+      credit_usd: values.credit_usd ?? 0,
+      cash_id: values.cash_flow_cashes[0]?.cash_id,
+      cash_flow_cashes: values.cash_flow_cashes,
       payment_proof: values.payment_proof,
     };
 
@@ -105,9 +144,10 @@ export default function KasHarianFormPage({ mode }: Props) {
         toast.success('Transaksi kas harian berhasil ditambahkan');
       }
 
-      const detailPath = typeof slug === 'string' && targetId
-        ? `/dashboard/${slug}/finance/transaksi-kas-harian/${targetId}`
-        : basePath;
+      const companySlug = typeof slug === 'string' && slug.trim() ? slug : 'wajira-morindo';
+      const detailPath = targetId
+        ? `/dashboard/${companySlug}/finance/transaksi-kas-harian/${targetId}?source=system`
+        : `/dashboard/${companySlug}/finance/transaksi-kas-harian?source=system`;
 
       await router.push(detailPath);
     } catch (error) {

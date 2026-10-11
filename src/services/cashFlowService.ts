@@ -27,7 +27,7 @@ const normalizeCashFlow = (payload: Partial<KasHarian>): KasHarian => ({
   id: toNumber(payload.id),
   uuid: payload.uuid,
   company_id: toNumber(payload.company_id),
-  cash_id: toNumber(payload.cash_id),
+  cash_id: payload.cash_id == null ? null : toNumber(payload.cash_id),
   account_id: payload.account_id == null ? null : toNumber(payload.account_id),
   unit_transaction_billing_id: payload.unit_transaction_billing_id
     ? toNumber(payload.unit_transaction_billing_id)
@@ -99,6 +99,7 @@ const normalizeCashFlow = (payload: Partial<KasHarian>): KasHarian => ({
     cash_id: toNumber(cfc.cash_id),
     amount: toNumber(cfc.amount),
     amount_original: toNumber(cfc.amount_original),
+    conversion_amount: cfc.conversion_amount !== undefined && cfc.conversion_amount !== null ? toNumber(cfc.conversion_amount) : undefined,
     type: String(cfc.type ?? ''),
     created_at: cfc.created_at ?? '',
     updated_at: cfc.updated_at ?? '',
@@ -114,13 +115,15 @@ const normalizeCashFlow = (payload: Partial<KasHarian>): KasHarian => ({
         }
       : null,
   })),
-  cash: {
-    id: toNumber(payload.cash?.id),
-    uuid: payload.cash?.uuid,
-    code: payload.cash?.code ?? '-',
-    description: payload.cash?.description ?? '-',
-    type: payload.cash?.type ?? '-',
-  },
+  cash: payload.cash
+    ? {
+        id: toNumber(payload.cash.id),
+        uuid: payload.cash.uuid,
+        code: payload.cash.code ?? '-',
+        description: payload.cash.description ?? '-',
+        type: payload.cash.type ?? '-',
+      }
+    : null,
   account: payload.account
     ? {
         id: toNumber(payload.account.id),
@@ -224,7 +227,7 @@ const toSuccessPayload = <T>(payload: { status: boolean; message?: string; error
 const buildCashFlowFormData = (payload: CashFlowPayload) => {
   const formData = new FormData();
   formData.append('company_id', String(payload.company_id));
-  if (payload.cash_id !== undefined && payload.cash_id !== null) {
+  if (payload.cash_id !== undefined && payload.cash_id !== null && payload.cash_id > 0) {
     formData.append('cash_id', String(payload.cash_id));
   }
   if (payload.account_id !== undefined && payload.account_id !== null) {
@@ -251,6 +254,21 @@ const buildCashFlowFormData = (payload: CashFlowPayload) => {
     const isPaidBool = payload.is_paid === true || String(payload.is_paid).toLowerCase() === 'true' || String(payload.is_paid) === '1';
     formData.append('is_paid', isPaidBool ? 'true' : 'false');
   }
+
+  if (payload.cash_flow_cashes && payload.cash_flow_cashes.length > 0) {
+    payload.cash_flow_cashes.forEach((item, index) => {
+      if (item.id) {
+        formData.append(`cash_flow_cashes[${index}][id]`, String(item.id));
+      }
+      formData.append(`cash_flow_cashes[${index}][cash_id]`, String(item.cash_id));
+      formData.append(`cash_flow_cashes[${index}][amount]`, String(item.amount));
+      if (item.conversion_amount !== undefined && item.conversion_amount !== null) {
+        formData.append(`cash_flow_cashes[${index}][conversion_amount]`, String(item.conversion_amount));
+      }
+      formData.append(`cash_flow_cashes[${index}][type]`, item.type);
+    });
+  }
+
   return formData;
 };
 

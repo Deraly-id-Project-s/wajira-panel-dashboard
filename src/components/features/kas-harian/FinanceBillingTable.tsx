@@ -317,7 +317,8 @@ export default function FinanceBillingTable({ financeBillings, cashFlowDetail, c
 
   const getAccountLabel = useCallback((accountId: number) => {
     const akun = rawAkunOptions.find((a) => Number(a.id) === accountId);
-    return akun ? (akun.name || `${akun.code} - ${akun.description}`) : '-';
+    const getAccountType = akun?.type ? ` (${akun?.type == 'debet' ? 'Debit' : 'Kredit'})` : ``;
+    return akun ? (akun.name + getAccountType || `${akun.code} - ${akun.description}`) : '-';
   }, [rawAkunOptions]);
 
   const columns = useMemo<ColumnDef<FinanceBilling>[]>(

@@ -16,40 +16,43 @@ const dateField = z.preprocess((value) => {
   return value;
 }, z.date({ required_error: 'Tanggal wajib diisi', invalid_type_error: 'Tanggal wajib diisi' }).refine((value) => !Number.isNaN(value.getTime()), 'Tanggal wajib diisi'));
 
+export const cashFlowCashSchema = z.object({
+  id: z.number().optional(),
+  cash_id: z.number({ required_error: 'Kas wajib dipilih' }).min(1, 'Kas wajib dipilih'),
+  amount: z.number({ required_error: 'Nominal wajib diisi' }).min(0.01, 'Nominal harus lebih dari 0'),
+  conversion_amount: z.number().min(0, 'Nominal konversi tidak valid').optional().nullable(),
+  type: z.enum(['debet', 'credit'], { required_error: 'Tipe transaksi wajib dipilih' }),
+});
+
 export const kasHarianSchema = z
   .object({
     company_id: z.number({ required_error: 'Perusahaan wajib dipilih' }).min(1, 'Perusahaan wajib dipilih'),
     date: dateField,
     note: z.string().trim().min(3, 'Keterangan minimal 3 karakter'),
-    debet: z.number().min(0, 'Debet tidak valid'),
-    debet_usd: z.number().min(0, 'Debet USD tidak valid'),
-    credit: z.number().min(0, 'Kredit tidak valid'),
-    credit_usd: z.number().min(0, 'Kredit USD tidak valid'),
+    debet: z.number().min(0).default(0),
+    debet_usd: z.number().min(0).default(0),
+    credit: z.number().min(0).default(0),
+    credit_usd: z.number().min(0).default(0),
+    cash_flow_cashes: z.array(cashFlowCashSchema).min(1, 'Minimal satu rincian kas transaksi harus diisi'),
     payment_proof: fileField,
   })
   .superRefine((value, ctx) => {
-    const hasDebet = value.debet > 0 || value.debet_usd > 0;
-    const hasCredit = value.credit > 0 || value.credit_usd > 0;
-
-    if (!hasDebet && !hasCredit) {
+    if (!value.cash_flow_cashes || value.cash_flow_cashes.length === 0) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
-        message: 'Minimal salah satu nominal debet atau kredit harus diisi',
-        path: ['debet'],
+        message: 'Minimal satu rincian kas transaksi harus diisi',
+        path: ['cash_flow_cashes'],
       });
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        message: 'Minimal salah satu nominal debet atau kredit harus diisi',
-        path: ['credit'],
-      });
+      return;
     }
 
-    if (hasDebet && hasCredit) {
-      (['debet', 'debet_usd', 'credit', 'credit_usd'] as const).forEach((field) => {
+    const types = new Set(value.cash_flow_cashes.map((item) => item.type));
+    if (types.has('debet') && types.has('credit')) {
+      value.cash_flow_cashes.forEach((_item, index) => {
         ctx.addIssue({
           code: z.ZodIssueCode.custom,
-          message: 'Debet dan kredit tidak boleh diisi bersamaan',
-          path: [field],
+          message: 'Tipe transaksi harus seragam (seluruhnya Debit atau seluruhnya Kredit)',
+          path: ['cash_flow_cashes', index, 'type'],
         });
       });
     }
