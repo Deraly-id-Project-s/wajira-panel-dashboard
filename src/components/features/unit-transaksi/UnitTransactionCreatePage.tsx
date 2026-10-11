@@ -5,6 +5,11 @@ import { useRouter } from 'next/router';
 import { toast } from 'sonner';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { PageHeader } from '@/components/ui/page-header';
+import { Card, CardContent } from '@/components/ui/card';
+import { LoadingState } from '@/components/ui/loading-state';
+import { CollapsibleBox } from '@/components/ui/collapsible-box';
+import { FileText } from 'lucide-react';
+import { useQueryClient } from '@tanstack/react-query';
 import { UnitTransactionForm } from '@/components/features/unit-transaksi/UnitTransactionForm';
 import {
   UnitTransactionPartyFields,
@@ -18,11 +23,19 @@ import type { UnitTransactionFormValues, UnitTransactionKind } from '@/types/uni
 import { apiClient } from '@/lib/api/client';
 import { purchaseService } from '@/services/purchase.service';
 import { generateSalesCode } from '@/lib/utils/sales';
-import { CollapsibleBox } from '@/components/ui/collapsible-box';
-import { FileText } from 'lucide-react';
+import {
+  usePurchaseById,
+  useUpdateUnitTransactionDocumentTemplate,
+} from '@/hooks/useUnitTransaction';
+import {
+  useCreateUnitItem,
+  usePurchaseUnitItems,
+  useSalesUnitItems,
+} from '@/hooks/useUnitTransactionItem';
 
 type UnitTransactionCreatePageProps = {
   type: UnitTransactionKind;
+  mode?: 'transaction' | 'unit';
 };
 
 type WarehouseDataResponse = {
@@ -97,14 +110,24 @@ const readApiErrorMessage = (error: unknown, fallback: string) => {
   return String(err?.message ?? fallback);
 };
 
-export function UnitTransactionCreatePage({ type }: UnitTransactionCreatePageProps) {
+export function UnitTransactionCreatePage({ type, mode }: UnitTransactionCreatePageProps) {
   const router = useRouter();
   const { companyId } = useCompany();
+  const queryClient = useQueryClient();
+
+  const slug = getSlug(router.query.slug);
+  const rawId = router.query.id;
+  const transactionId = Array.isArray(rawId) ? rawId[0] : typeof rawId === 'string' ? rawId : undefined;
+
+  const currentMode = mode ?? (transactionId ? 'unit' : 'transaction');
+  const isPurchase = type === 'purchase';
+  const isUnitMode = currentMode === 'unit';
+
+  const transactionPath = `/dashboard/${slug}/transaksi/${isPurchase ? 'pembelian-unit' : 'penjualan-unit'}`;
+
+  // Queries & Mutations for mode === 'transaction'
   const createPurchase = useCreatePurchase();
   const createSales = useCreateSales();
-  const slug = getSlug(router.query.slug);
-  const isPurchase = type === 'purchase';
-  const transactionPath = `/dashboard/${slug}/transaksi/${isPurchase ? 'pembelian-unit' : 'penjualan-unit'}`;
   const generatedCode = useMemo(
     () => (isPurchase ? createPurchaseCode(slug) : generateSalesCode(router.query.slug)),
     [isPurchase, router.query.slug, slug],
@@ -113,12 +136,28 @@ export function UnitTransactionCreatePage({ type }: UnitTransactionCreatePagePro
   const [selectedPerson, setSelectedPerson] = useState<UnitTransactionPerson | null>(null);
   const [transactionDate, setTransactionDate] = useState(new Date().toISOString().split('T')[0]);
 
+  // Queries & Mutations for mode === 'unit'
+  const { data: transactionDetail, isLoading: isLoadingDetail } = usePurchaseById(isUnitMode ? transactionId : undefined);
+  const { data: purchaseItems } = usePurchaseUnitItems(isUnitMode && isPurchase ? transactionId : undefined);
+  const { data: salesItems } = useSalesUnitItems(isUnitMode && !isPurchase ? transactionId : undefined);
+  const addUnitMutation = useCreateUnitItem();
+  const updateTemplateMutation = useUpdateUnitTransactionDocumentTemplate();
+
+  const existingItems = isPurchase ? purchaseItems : salesItems;
+  const existingTypeUnitIds = useMemo(
+    () =>
+      (existingItems?.data ?? [])
+        .map((item) => (item.unit_type_id ? String(item.unit_type_id) : ''))
+        .filter((value): value is string => Boolean(value)),
+    [existingItems],
+  );
+
   const handlePersonSelect = (person: UnitTransactionPerson) => {
     setPersonId(String(person.id));
     setSelectedPerson(person);
   };
 
-  const submitPurchase = async (data: UnitTransactionFormValues) => {
+  const submitNewTransactionPurchase = async (data: UnitTransactionFormValues) => {
     const personNumeric = Number(personId);
     const companyNumeric = Number(companyId);
     const qty = toNumber(data.qty);
@@ -170,7 +209,8 @@ export function UnitTransactionCreatePage({ type }: UnitTransactionCreatePagePro
 
     try {
       const response = await createPurchase.mutateAsync(payload);
-      toast.success(`Pembelian berhasil dibuat dengan nomor Transaksi ${response?.code}`);
+      const code = response?.code || generatedCode;
+      toast.success(`Transaksi Pembelian Unit Tipe berhasil ditambahkan dengan kode transaksi ${code}`);
       router.push(`${transactionPath}/${response?.id}`);
     } catch (error) {
       const err = error as any;
@@ -187,7 +227,7 @@ export function UnitTransactionCreatePage({ type }: UnitTransactionCreatePagePro
           });
           const alreadyCreated = probe.data.find((item) => item.code === generatedCode);
           if (alreadyCreated) {
-            toast.success('Pembelian berhasil dibuat');
+            toast.success(`Transaksi Pembelian Unit Tipe berhasil ditambahkan dengan kode transaksi ${generatedCode}`);
             router.push(transactionPath);
             return;
           }
@@ -206,7 +246,7 @@ export function UnitTransactionCreatePage({ type }: UnitTransactionCreatePagePro
     }
   };
 
-  const submitSales = async (data: UnitTransactionFormValues) => {
+  const submitNewTransactionSales = async (data: UnitTransactionFormValues) => {
     const personNumeric = Number(personId);
     const companyNumeric = Number(companyId);
     const qty = toNumber(data.qty);
@@ -258,7 +298,8 @@ export function UnitTransactionCreatePage({ type }: UnitTransactionCreatePagePro
 
     try {
       const response = await createSales.mutateAsync(payload);
-      toast.success('Penjualan unit berhasil ditambahkan');
+      const code = response?.code || generatedCode;
+      toast.success(`Transaksi Penjualan Unit Tipe berhasil ditambahkan dengan kode transaksi ${code}`);
       router.push(response?.id ? `${transactionPath}/${response.id}` : transactionPath);
     } catch (error) {
       const message = readApiErrorMessage(error, 'Gagal menambahkan penjualan unit');
@@ -270,13 +311,172 @@ export function UnitTransactionCreatePage({ type }: UnitTransactionCreatePagePro
     }
   };
 
-  const handleSubmit = (data: UnitTransactionFormValues) => {
+  const handleUnitSubmit = async (data: UnitTransactionFormValues) => {
+    try {
+      if (!transactionId) {
+        toast.error('ID transaksi tidak valid');
+        return;
+      }
+
+      const unitTypeId = String(data.unitTypeId ?? '').trim();
+      const qty = Number(data.qty ?? 0);
+      const price = Number(data.price ?? 0);
+      const bbn = Number(data.bbnPrice ?? 0);
+      const expedition = Number(data.expeditionFee ?? 0);
+      const other = Number(data.otherFee ?? 0);
+
+      if (!unitTypeId) {
+        toast.error('Tipe Unit wajib dipilih');
+        return;
+      }
+
+      if (existingTypeUnitIds.includes(unitTypeId)) {
+        toast.error('Tipe unit sudah ada di transaksi ini. Pilih tipe unit lain.');
+        return;
+      }
+
+      if (qty <= 0) {
+        toast.error('QTY minimal 1');
+        return;
+      }
+
+      if (![price, bbn, expedition, other].every((v) => Number.isFinite(v) && v >= 0)) {
+        toast.error('Harga dan biaya harus berupa angka valid');
+        return;
+      }
+
+      const maxCapacity = Number(transactionDetail?.max_capacity ?? 0);
+      const usedQty = (existingItems?.data ?? []).reduce((acc, item) => acc + Number(item.qty_total ?? 0), 0);
+      const remainingCapacity = Math.max(0, maxCapacity - usedQty);
+
+      if (maxCapacity > 0 && qty > remainingCapacity) {
+        toast.error(`Qty melebihi kapasitas sisa transaksi. Sisa kapasitas: ${remainingCapacity}`);
+        return;
+      }
+
+      const payload = {
+        unit_transaction_id: transactionId,
+        unit_type_id: unitTypeId,
+        qty_total: qty,
+        price,
+        bbn_price: bbn,
+        expedition_fee: expedition,
+        other_fee: other,
+        price_discount: Number(data.price_discount ?? 0) || 0,
+        price_usd_discount: Number(data.price_usd_discount ?? 0) || 0,
+        price_usd: data.priceUsd ? Number(data.priceUsd) : undefined,
+        price_per_unit_usd: data.pricePerUnitUsd ? Number(data.pricePerUnitUsd) : undefined,
+        usd_costs: data.usd_costs && data.usd_costs.length > 0 ? data.usd_costs : undefined,
+        company_id: companyId ? Number(companyId) : undefined,
+        type: type,
+        dpp_tax_id: data.dppTaxVersionId ? Number(data.dppTaxVersionId) : undefined,
+        ppn_tax_id: data.ppnTaxVersionId ? Number(data.ppnTaxVersionId) : undefined,
+      };
+
+      const response = await addUnitMutation.mutateAsync(payload);
+
+      const currentTemplateId = transactionDetail?.documentTemplateId ?? null;
+      if ((data.documentTemplateId ?? null) !== currentTemplateId) {
+        await updateTemplateMutation.mutateAsync({ id: transactionId, documentTemplateId: data.documentTemplateId ?? null });
+      }
+
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ['sales-transaction', transactionId] }),
+        queryClient.invalidateQueries({ queryKey: ['sales-transactions'] }),
+        queryClient.invalidateQueries({ queryKey: ['purchase-by-id', transactionId] }),
+        queryClient.invalidateQueries({ queryKey: ['unit-transaction', transactionId] }),
+        queryClient.invalidateQueries({ queryKey: ['purchase-unit-items', transactionId] }),
+        queryClient.invalidateQueries({ queryKey: ['sales-unit-items', transactionId] }),
+      ]);
+
+      const code = response?.code || transactionDetail?.code || transactionId;
+      toast.success(`Transaksi ${isPurchase ? 'Pembelian' : 'Penjualan'} Unit Tipe berhasil ditambahkan dengan kode transaksi ${code}`);
+      router.push(`${transactionPath}/${transactionId}`);
+    } catch (error: any) {
+      const status = error?.statusCode ?? error?.response?.status;
+      if (status === 422) {
+        toast.error('Stok tidak tersedia di warehouse. Silakan pilih tipe unit lain yang tersedia.');
+        return;
+      }
+
+      const detail = error?.details;
+      const message = typeof detail === 'string' ? detail : error?.message || 'Gagal menambahkan unit.';
+      toast.error(message);
+    }
+  };
+
+  const handleTransactionSubmit = (data: UnitTransactionFormValues) => {
     if (isPurchase) {
-      void submitPurchase(data);
+      void submitNewTransactionPurchase(data);
       return;
     }
-    void submitSales(data);
+    void submitNewTransactionSales(data);
   };
+
+  if (isUnitMode && isLoadingDetail) {
+    return (
+      <DashboardLayout>
+        <LoadingState variant="page" />
+      </DashboardLayout>
+    );
+  }
+
+  if (isUnitMode) {
+    const invoiceCode = transactionDetail?.code ?? '-';
+
+    return (
+      <DashboardLayout>
+        <div className="space-y-6">
+          <PageHeader
+            breadcrumbs={[
+              { label: isPurchase ? 'Pembelian Unit' : 'Penjualan Unit', onClick: () => router.push(transactionPath) },
+              { label: isPurchase ? 'Detail Pembelian' : 'Detail Penjualan', onClick: () => router.push(`${transactionPath}/${transactionId}`) },
+              { label: isPurchase ? 'Tambah Unit Pembelian' : 'Tambah Unit Penjualan' },
+            ]}
+            title={isPurchase ? 'Tambah Unit Pembelian' : 'Tambah Unit Penjualan'}
+            onBack={() => router.push(`${transactionPath}/${transactionId}`)}
+            subtitle={
+              <div className="flex flex-wrap items-center gap-2">
+                <span>{isPurchase ? 'Kode Pembelian:' : 'Kode Penjualan:'}</span>
+                <span className={isPurchase ? 'font-semibold text-orange-600' : 'font-semibold text-orange-600'}>{invoiceCode}</span>
+              </div>
+            }
+          />
+
+          <Card className="rounded-md">
+            <CardContent className="p-6">
+              <UnitTransactionForm
+                type={type}
+                allowCreateTypeUnit
+                defaultValues={{
+                  unitTypeId: '',
+                  qty: 1,
+                  price: 0,
+                  bbnPrice: 0,
+                  expeditionFee: 0,
+                  otherFee: 0,
+                  hppTotal: 0,
+                  dppTotal: 0,
+                  ppnTotal: 0,
+                  hppPerUnit: 0,
+                  dppPerUnit: 0,
+                  ppnPerUnit: 0,
+                  documentTemplateId: transactionDetail?.documentTemplateId ?? null,
+                }}
+                excludedTypeUnitIds={existingTypeUnitIds}
+                onSubmit={handleUnitSubmit}
+                onCancel={() => router.back()}
+                submitDisabled={addUnitMutation.isPending}
+                cancelDisabled={addUnitMutation.isPending}
+                loading={addUnitMutation.isPending}
+                companyId={companyId}
+              />
+            </CardContent>
+          </Card>
+        </div>
+      </DashboardLayout>
+    );
+  }
 
   return (
     <DashboardLayout>
@@ -304,7 +504,7 @@ export function UnitTransactionCreatePage({ type }: UnitTransactionCreatePagePro
           <UnitTransactionForm
             type={type}
             allowCreateTypeUnit
-            onSubmit={handleSubmit}
+            onSubmit={handleTransactionSubmit}
             loading={isPurchase ? createPurchase.isPending : createSales.isPending}
             onCancel={() => router.push(transactionPath)}
             companyId={companyId}

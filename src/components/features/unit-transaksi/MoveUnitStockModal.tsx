@@ -27,16 +27,8 @@ interface MoveUnitStockModalProps {
   onSuccess?: () => void;
 }
 
-const parseApiError = (err: any): string => {
-  const message = err?.response?.data?.message || err?.message || '';
-  const details = err?.details ?? err?.response?.data?.errors;
-  if (typeof details === 'string') return details;
-  if (details && typeof details === 'object') {
-    return Object.entries(details)
-      .map(([field, value]) => `${field}: ${Array.isArray(value) ? value[0] : String(value)}`)
-      .join(', ');
-  }
-  return message || 'Terjadi kesalahan saat memindahkan unit';
+const parseApiError = (_err: any): string => {
+  return 'Stok tidak valid atau terjadi kesalahan sistem';
 };
 
 export function MoveUnitStockModal({
@@ -167,7 +159,14 @@ export function MoveUnitStockModal({
               candidates.map((item: any) => {
                 const targetId = item.id;
                 const isSelected = String(selectedTargetId) === String(targetId);
-                const shortage = item.total_kurang ?? item.total_shortage ?? 0;
+                const shortage =
+                  item.shortage_total ??
+                  item.shortage_qty ??
+                  item.unit_transaction_items?.[0]?.shortage_total ??
+                  item.unit_transaction_items?.[0]?.shortage_qty ??
+                  item.total_kurang ??
+                  item.total_shortage ??
+                  0;
                 const partyName = item.person?.name ?? '-';
                 const warehouseName = item.warehouse?.name ?? '-';
 

@@ -1,316 +1,49 @@
-GET  /wapi/transaction/unit-transaction/unit-transaction-item/1 
-{
-	"status": true,
-	"message": "Unit Transaction Item retrieved successfully",
-	"errors": null,
-	"data": {
-		"id": 1,
-		"uuid": "b7d45f8a-d915-4af5-97d9-ea59ea95c152",
-		"unit_transaction_id": 1,
-		"unit_type_id": 1,
-		"sparepart_id": null,
-		"qty_total": 9,
-		"price": 15000000,
-		"price_per_unit_usd": 1000,
-		"price_usd": 8100,
-		"is_usd_transaction": true,
-		"bbn_price": 1020,
-		"hpp_per_unit_price": 13521020,
-		"dpp_per_unit_price": 12181099,
-		"ppn_per_unit_price": 1339921,
-		"hpp_total_price": 121689180,
-		"dpp_total_price": 109629891,
-		"ppn_total_price": 12059289,
-		"expedition_fee": 10000,
-		"other_fee": 10000,
-		"dpp_tax_id": 2,
-		"dpp_tax_rate": 111,
-		"ppn_tax_id": 1,
-		"ppn_tax_rate": 11,
-		"price_discount": 10,
-		"price_usd_discount": 10,
-		"created_at": "2026-10-09T03:25:32.000000Z",
-		"updated_at": "2026-10-09T03:25:32.000000Z",
-		"total_usd_cost": 802,
-		"usd_cost_freight_total": 100,
-		"usd_cost_box_packing_total": 100,
-		"usd_cost_admin_cost_total": 100,
-		"usd_cost_ckd_processing_cost_total": 100,
-		"usd_cost_bill_of_lading_switch_cost_total": 100,
-		"usd_cost_customs_clearance_cost_total": 100,
-		"usd_cost_other_total": 202,
-		"unit_transaction": {
-			"id": 1,
-			"uuid": "fc8ccbc5-e837-4a1b-9e43-d7e3a17b1880",
-			"warehouse_id": 1,
-			"person_id": 3,
-			"transaction_type": "unit_type",
-			"code": "PBL-WAJ/20261009-13288",
-			"type": "purchase",
-			"invoice_file": null,
-			"is_refunded": false,
-			"document_template_id": 1,
-			"created_at": "2026-10-09T03:25:32.000000Z",
-			"updated_at": "2026-10-09T03:25:32.000000Z",
-			"has_warehouse_activity": true,
-			"has_refund_transaction": false,
-			"expedition_fee_total": "10000.00"
-		},
-		"unit_transaction_usd_costs": [
-			{
-				"id": 1,
-				"unit_transaction_item_id": 1,
-				"cost_type": "freight",
-				"amount": 100,
-				"note": "Freight",
-				"created_at": "2026-10-09T03:25:32.000000Z",
-				"updated_at": "2026-10-09T03:25:32.000000Z"
-			},
-			{
-				"id": 2,
-				"unit_transaction_item_id": 1,
-				"cost_type": "box_packing",
-				"amount": 100,
-				"note": "Box Packing",
-				"created_at": "2026-10-09T03:25:32.000000Z",
-				"updated_at": "2026-10-09T03:25:32.000000Z"
-			},
-			{
-				"id": 3,
-				"unit_transaction_item_id": 1,
-				"cost_type": "admin_cost",
-				"amount": 100,
-				"note": "Admin Cost",
-				"created_at": "2026-10-09T03:25:32.000000Z",
-				"updated_at": "2026-10-09T03:25:32.000000Z"
-			},
-			{
-				"id": 4,
-				"unit_transaction_item_id": 1,
-				"cost_type": "ckd_processing_cost",
-				"amount": 100,
-				"note": "CKD Processing Cost",
-				"created_at": "2026-10-09T03:25:32.000000Z",
-				"updated_at": "2026-10-09T03:25:32.000000Z"
-			},
-			{
-				"id": 5,
-				"unit_transaction_item_id": 1,
-				"cost_type": "bill_of_lading_switch_cost",
-				"amount": 100,
-				"note": "Bill of Lading Switch Cost",
-				"created_at": "2026-10-09T03:25:32.000000Z",
-				"updated_at": "2026-10-09T03:25:32.000000Z"
-			},
-			{
-				"id": 6,
-				"unit_transaction_item_id": 1,
-				"cost_type": "customs_clearance_cost",
-				"amount": 100,
-				"note": "Customs Clearance Cost",
-				"created_at": "2026-10-09T03:25:32.000000Z",
-				"updated_at": "2026-10-09T03:25:32.000000Z"
-			},
-			{
-				"id": 7,
-				"unit_transaction_item_id": 1,
-				"cost_type": "other",
-				"amount": 100,
-				"note": "test A",
-				"created_at": "2026-10-09T03:25:32.000000Z",
-				"updated_at": "2026-10-09T03:25:32.000000Z"
-			},
-			{
-				"id": 8,
-				"unit_transaction_item_id": 1,
-				"cost_type": "other",
-				"amount": 102,
-				"note": "test B",
-				"created_at": "2026-10-09T03:25:32.000000Z",
-				"updated_at": "2026-10-09T03:25:32.000000Z"
-			}
-		],
-		"unit_transaction_item_details": [
-			{
-				"id": 1,
-				"unit_transaction_item_id": 1,
-				"warehouse_sub_block_id": null,
-				"source_transaction_before_id": null,
-				"uuid": "a3586f7e-b057-41d3-9b59-d8c239c0e2e1",
-				"color": "PUTIH MERAH",
-				"machine_number": "JMA1E1228314",
-				"chassis_number": "MH1JMA113TK231595",
-				"in_stock": false,
-				"is_forecast": true,
-				"status": "normal",
-				"stock_state": "purchase_order",
-				"is_sold_unit": false,
-				"is_reserved": false,
-				"created_at": "2026-10-09T03:26:51.000000Z",
-				"updated_at": "2026-10-09T03:29:39.000000Z",
-				"source_transaction_before": null
-			},
-			{
-				"id": 2,
-				"unit_transaction_item_id": 1,
-				"warehouse_sub_block_id": null,
-				"source_transaction_before_id": null,
-				"uuid": "9cd102f6-b93b-4369-99e2-a6c9f6af44c9",
-				"color": "PUTIH MERAH",
-				"machine_number": "JMA1E1228321",
-				"chassis_number": "MH1JMA116TK231591",
-				"in_stock": false,
-				"is_forecast": true,
-				"status": "normal",
-				"stock_state": "purchase_order",
-				"is_sold_unit": false,
-				"is_reserved": false,
-				"created_at": "2026-10-09T03:26:51.000000Z",
-				"updated_at": "2026-10-09T03:29:39.000000Z",
-				"source_transaction_before": null
-			},
-			{
-				"id": 3,
-				"unit_transaction_item_id": 1,
-				"warehouse_sub_block_id": null,
-				"source_transaction_before_id": null,
-				"uuid": "71d2bdf7-f4a3-4193-b613-e518fa71e9c9",
-				"color": "PUTIH MERAH",
-				"machine_number": "JMA1E1228322",
-				"chassis_number": "MH1JMA112TK231586",
-				"in_stock": false,
-				"is_forecast": true,
-				"status": "normal",
-				"stock_state": "purchase_order",
-				"is_sold_unit": false,
-				"is_reserved": false,
-				"created_at": "2026-10-09T03:26:51.000000Z",
-				"updated_at": "2026-10-09T03:29:39.000000Z",
-				"source_transaction_before": null
-			},
-			{
-				"id": 4,
-				"unit_transaction_item_id": 1,
-				"warehouse_sub_block_id": null,
-				"source_transaction_before_id": null,
-				"uuid": "26ef2531-78ce-4a19-864b-1e6ab68eb553",
-				"color": "PUTIH MERAH",
-				"machine_number": "JMA1E1228323",
-				"chassis_number": "MH1JMA114TK231587",
-				"in_stock": false,
-				"is_forecast": true,
-				"status": "normal",
-				"stock_state": "purchase_order",
-				"is_sold_unit": false,
-				"is_reserved": false,
-				"created_at": "2026-10-09T03:26:51.000000Z",
-				"updated_at": "2026-10-09T03:29:39.000000Z",
-				"source_transaction_before": null
-			},
-			{
-				"id": 5,
-				"unit_transaction_item_id": 1,
-				"warehouse_sub_block_id": null,
-				"source_transaction_before_id": null,
-				"uuid": "14f110f2-34a1-442c-a2ee-0225f6b532e7",
-				"color": "PUTIH MERAH",
-				"machine_number": "JMA1E1228324",
-				"chassis_number": "MH1JMA116TK231588",
-				"in_stock": false,
-				"is_forecast": true,
-				"status": "normal",
-				"stock_state": "purchase_order",
-				"is_sold_unit": false,
-				"is_reserved": false,
-				"created_at": "2026-10-09T03:26:51.000000Z",
-				"updated_at": "2026-10-09T03:29:39.000000Z",
-				"source_transaction_before": null
-			},
-			{
-				"id": 6,
-				"unit_transaction_item_id": 1,
-				"warehouse_sub_block_id": null,
-				"source_transaction_before_id": null,
-				"uuid": "826a78a0-27da-449c-bbb4-ff63470463c7",
-				"color": "PUTIH MERAH",
-				"machine_number": "JMA1E1228329",
-				"chassis_number": "MH1JMA115TK231582",
-				"in_stock": false,
-				"is_forecast": true,
-				"status": "normal",
-				"stock_state": "purchase_order",
-				"is_sold_unit": false,
-				"is_reserved": false,
-				"created_at": "2026-10-09T03:26:51.000000Z",
-				"updated_at": "2026-10-09T03:29:39.000000Z",
-				"source_transaction_before": null
-			},
-			{
-				"id": 7,
-				"unit_transaction_item_id": 1,
-				"warehouse_sub_block_id": null,
-				"source_transaction_before_id": null,
-				"uuid": "7eb3e8a8-9da9-4de5-a2fe-c456703dc9fd",
-				"color": "PUTIH MERAH",
-				"machine_number": "JMA1E1228437",
-				"chassis_number": "MH1JMA117TK230157",
-				"in_stock": false,
-				"is_forecast": true,
-				"status": "normal",
-				"stock_state": "purchase_order",
-				"is_sold_unit": false,
-				"is_reserved": false,
-				"created_at": "2026-10-09T03:26:51.000000Z",
-				"updated_at": "2026-10-09T03:29:39.000000Z",
-				"source_transaction_before": null
-			},
-			{
-				"id": 8,
-				"unit_transaction_item_id": 1,
-				"warehouse_sub_block_id": null,
-				"source_transaction_before_id": null,
-				"uuid": "0fec5545-ea7a-4863-b124-317132f55711",
-				"color": "PUTIH MERAH",
-				"machine_number": "JMA1E1228514",
-				"chassis_number": "MH1JMA114TK230214",
-				"in_stock": false,
-				"is_forecast": true,
-				"status": "normal",
-				"stock_state": "purchase_order",
-				"is_sold_unit": false,
-				"is_reserved": false,
-				"created_at": "2026-10-09T03:26:51.000000Z",
-				"updated_at": "2026-10-09T03:29:39.000000Z",
-				"source_transaction_before": null
-			},
-			{
-				"id": 9,
-				"unit_transaction_item_id": 1,
-				"warehouse_sub_block_id": null,
-				"source_transaction_before_id": null,
-				"uuid": "a82f0fc0-5a31-4a37-8c1d-62788a18394b",
-				"color": "PUTIH MERAH",
-				"machine_number": "JMA1E1228561",
-				"chassis_number": "MH1JMA113TK230270",
-				"in_stock": false,
-				"is_forecast": true,
-				"status": "normal",
-				"stock_state": "purchase_order",
-				"is_sold_unit": false,
-				"is_reserved": false,
-				"created_at": "2026-10-09T03:26:51.000000Z",
-				"updated_at": "2026-10-09T03:29:39.000000Z",
-				"source_transaction_before": null
-			}
-		],
-		"unit_transaction_item_sales": [],
-		"unit_type": {
-			"id": 1,
-			"uuid": "439b19b0-6cef-415b-86e0-9ea73270fe93",
-			"code": "Vix012",
-			"name": "Honda VIZ R",
-			"buy_price": 15000000,
-			"sell_price": 16000000
-		}
-	}
-}
+POSTT {{url}}/wapi/finance/cash-flow
+request body:
+{                                                    
+      "company_id": 1,                                   
+      "date": "2026-10-10",                              
+      "note": "Kas harian pembayaran operasional kantor",
+      "cash_flow_cashes": [                              
+        {                                                
+          "cash_id": 1,                                  
+          "amount": 1500000.00,                          
+          "amount_original": 1500000.00,                 
+          "type": "debet"                                
+        },                                               
+        {                                                
+          "cash_id": 2,                                  
+          "amount": 500000.00,                           
+          "amount_original": 500000.00,                  
+          "type": "credit"                               
+        }                                                
+      ]                                                  
+    }      
+
+PUT {{url}}/wapi/finance/cash-flow/:cash_flow_id
+request body:
+{                                                    
+      "company_id": 1,                                   
+      "date": "2026-10-10",                              
+      "note": "Kas harian pembayaran operasional kantor saja",
+      "cash_flow_cashes": [                              
+        {                                                
+          "cash_id": 1,                                  
+          "amount": 300000.00,                          
+          "amount_original": 1500000.00,                 
+          "type": "debet"                                
+        },                                               
+        {                                                
+          "cash_id": 2,                                  
+          "amount": 400.00,                           
+          "amount_original": 500000.00,                  
+          "type": "credit"                               
+        },
+        {                                                
+          "cash_id": 1,                                  
+          "amount": 300000.00,                          
+          "amount_original": 1500000.00,                 
+          "type": "debet"                                
+        }                                                
+      ]                                                  
+    }      
