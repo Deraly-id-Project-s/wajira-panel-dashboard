@@ -3,6 +3,23 @@ import type { NextConfig } from "next";
 const isProduction = process.env.NODE_ENV === "production";
 const objectBucketOrigin = (process.env.OBJECT_BUCKET_URL || 'http://localhost:9000').replace(/\/+$/, '');
 
+const defaultTraccarWsOrigin = 'wss://traccar.wajiracorps.co.id';
+const envTraccarWsOrigin = (() => {
+  const traccarUrl = process.env.NEXT_PUBLIC_TRACCAR_URL?.trim();
+  if (!traccarUrl) return null;
+  try {
+    const parsed = new URL(traccarUrl);
+    const protocol = parsed.protocol === 'https:' || parsed.protocol === 'wss:' ? 'wss:' : 'ws:';
+    return `${protocol}//${parsed.host}`;
+  } catch {
+    return null;
+  }
+})();
+
+const traccarWsSources = Array.from(
+  new Set([defaultTraccarWsOrigin, envTraccarWsOrigin].filter(Boolean) as string[]),
+).join(' ');
+
 const nextConfig: NextConfig = {
   env: {
     OBJECT_BUCKET_URL: process.env.OBJECT_BUCKET_URL || '',
@@ -34,7 +51,7 @@ const nextConfig: NextConfig = {
         "style-src 'self' 'unsafe-inline'",
         "script-src 'self'",
         "font-src 'self' https://fonts.gstatic.com",
-        "connect-src 'self' https:",
+        `connect-src 'self' https: https://www.google-analytics.com ${traccarWsSources}`,
         "frame-ancestors 'none'",
         "base-uri 'self'",
         "form-action 'self'",
