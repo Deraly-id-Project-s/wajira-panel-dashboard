@@ -2,6 +2,9 @@ import type {
   ProfitLossReportFilters,
   ProfitLossReportResponse,
   ProfitLossTemplatePayload,
+  ProfitLossTemplateResponse,
+  ProfitLossTemplateYearResponse,
+  SaveProfitLossTemplateYearPayload,
 } from '@/@types/profit-loss-report.types';
 import { apiClient } from '@/lib/api/client';
 import { ApiResponseError } from '@/lib/api/response';
@@ -16,8 +19,69 @@ export const getProfitLossReport = async (
     params: {
       start_date: filters.start_date || undefined,
       end_date: filters.end_date || undefined,
+      year: filters.year || undefined,
+      month: filters.month || undefined,
+      category: filters.category || undefined,
     },
   });
+  return response.data;
+};
+
+export const getProfitLossTemplate = async (
+  companyId: string | number,
+  year?: number,
+): Promise<ProfitLossTemplateResponse> => {
+  const response = await apiClient.get<ProfitLossTemplateResponse>(
+    `${basePath}/${companyId}/template`,
+    {
+      params: {
+        year: year || undefined,
+      },
+    },
+  );
+  return response.data;
+};
+
+export const getProfitLossTemplateYear = async (
+  companyId: string | number,
+  year: number | string,
+): Promise<ProfitLossTemplateYearResponse> => {
+  const response = await apiClient.get<ProfitLossTemplateYearResponse>(
+    `${basePath}/${companyId}/year/${year}`,
+  );
+  return response.data;
+};
+
+export const createProfitLossTemplateYear = async (
+  companyId: string | number,
+  payload: SaveProfitLossTemplateYearPayload,
+): Promise<ProfitLossTemplateYearResponse> => {
+  const response = await apiClient.post<ProfitLossTemplateYearResponse>(
+    `${basePath}/${companyId}/year`,
+    payload,
+  );
+  return response.data;
+};
+
+export const updateProfitLossTemplateYear = async (
+  companyId: string | number,
+  year: number | string,
+  payload: SaveProfitLossTemplateYearPayload,
+): Promise<ProfitLossTemplateYearResponse> => {
+  const response = await apiClient.put<ProfitLossTemplateYearResponse>(
+    `${basePath}/${companyId}/year/${year}`,
+    payload,
+  );
+  return response.data;
+};
+
+export const deleteProfitLossTemplateYear = async (
+  companyId: string | number,
+  year: number | string,
+): Promise<{ status?: boolean; message?: string }> => {
+  const response = await apiClient.delete<{ status?: boolean; message?: string }>(
+    `${basePath}/${companyId}/year/${year}`,
+  );
   return response.data;
 };
 

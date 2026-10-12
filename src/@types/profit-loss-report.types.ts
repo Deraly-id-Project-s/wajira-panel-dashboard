@@ -5,6 +5,76 @@ export type ProfitLossTemplateKey =
   | 'opex_account_ids'
   | 'noix_account_ids';
 
+export type MonthKey =
+  | 'january'
+  | 'february'
+  | 'march'
+  | 'april'
+  | 'may'
+  | 'june'
+  | 'july'
+  | 'august'
+  | 'september'
+  | 'october'
+  | 'november'
+  | 'december';
+
+export type MonthlyAccounts = Record<MonthKey, number[]>;
+
+export interface ProfitLossYearConfig {
+  revenue_account_ids: MonthlyAccounts;
+  cogs_account_ids: MonthlyAccounts;
+  gross_profit_account_ids: MonthlyAccounts;
+  opex_account_ids: MonthlyAccounts;
+  noix_account_ids: MonthlyAccounts;
+  tax?: number | null;
+}
+
+export interface ProfitLossTemplateYearItem {
+  id: number;
+  profit_template_id: number;
+  year: number;
+  config: ProfitLossYearConfig;
+  created_at?: string;
+  updated_at?: string;
+}
+
+export interface ProfitLossTemplateEntity {
+  id: number;
+  company_id: number;
+  profit_loss_template_years?: ProfitLossTemplateYearItem[];
+  created_at?: string;
+  updated_at?: string;
+}
+
+export interface ProfitLossTemplateResponse {
+  status?: boolean;
+  message?: string;
+  errors?: unknown;
+  data?: {
+    template: ProfitLossTemplateEntity;
+    default_structure: ProfitLossYearConfig;
+  };
+}
+
+export interface ProfitLossTemplateYearResponse {
+  status?: boolean;
+  message?: string;
+  errors?: unknown;
+  data?: ProfitLossTemplateYearItem;
+}
+
+export interface SaveProfitLossTemplateYearPayload {
+  year?: number;
+  tax?: number | null;
+  revenue_account_ids?: Partial<MonthlyAccounts>;
+  cogs_account_ids?: Partial<MonthlyAccounts>;
+  gross_profit_account_ids?: Partial<MonthlyAccounts>;
+  opex_account_ids?: Partial<MonthlyAccounts>;
+  noix_account_ids?: Partial<MonthlyAccounts>;
+  config?: Partial<ProfitLossYearConfig>;
+}
+
 export interface ProfitLossTemplatePayload {
   revenue_account_ids: number[];
   cogs_account_ids: number[];
@@ -12,11 +82,15 @@ export interface ProfitLossTemplatePayload {
   opex_account_ids: number[];
   noix_account_ids: number[];
   tax?: number | string | null;
+  year?: number;
 }
 
 export interface ProfitLossReportFilters {
   start_date?: string | null;
   end_date?: string | null;
+  year?: number | string | null;
+  month?: string | number | null;
+  category?: string | null;
 }
 
 export interface ProfitLossReportLine {

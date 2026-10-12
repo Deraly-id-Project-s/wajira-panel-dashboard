@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/router';
 import { format } from 'date-fns';
-import { Download, Plus, Printer, RefreshCw, RotateCcw, Trash2 } from 'lucide-react';
+import { Download, Printer, RefreshCw, RotateCcw, SlidersHorizontal } from 'lucide-react';
 import type { DateRange } from 'react-day-picker';
 import { toast } from 'sonner';
 
@@ -12,7 +12,6 @@ import type {
   ProfitLossTemplateKey,
   ProfitLossTemplatePayload,
 } from '@/@types/profit-loss-report.types';
-import type { Account } from '@/@types/account.types';
 import { PageHeader } from '@/components/ui/page-header';
 import { Button } from '@/components/ui/button';
 import { DatePickerWithRange, type DateRangePickerMode } from '@/components/ui/date-range-picker';
@@ -20,11 +19,9 @@ import { SearchInput } from '@/components/ui/search-input';
 import { Skeleton } from '@/components/ui/skeleton';
 import { currenciesFormat } from '@/components/ui/currenciesFormat';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
-import { SearchableSelect } from '@/components/features/vehicle-data/SearchableSelect';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useCompany } from '@/contexts/CompanyContext';
-import { useAccounts } from '@/hooks/useAccount';
 import { useProfitLossReport, useUpdateProfitLossTemplate } from '@/hooks/report/useProfitLossReport';
 import { useReportTemplatePrint } from '@/hooks/useReportTemplatePrint';
 import { exportProfitLossReport } from '@/services/report/profitLossReport.service';
@@ -228,70 +225,13 @@ function AmountSummary({
   );
 };
 
-function AccountSelect({
-  value,
-  accounts,
-  expectedType,
-  onChange,
-}: {
-  value: number | null;
-  accounts: Account[];
-  expectedType?: 'debet' | 'credit';
-  onChange: (value: number | null) => void;
-}) {
-  const filteredAccounts = useMemo(() => {
-    if (!expectedType) return accounts;
-    return accounts.filter((account) => {
-      if (value && Number(account.id) === Number(value)) return true;
-      if (!account.type) return true;
-      const normalizedType = account.type === 'debit' ? 'debet' : account.type;
-      return normalizedType === expectedType;
-    });
-  }, [accounts, expectedType, value]);
-
-  const placeholderText = expectedType
-    ? `Pilih akun (${expectedType === 'debet' ? 'Debet' : 'Kredit'})`
-    : 'Pilih akun';
-
-  const searchPlaceholderText = expectedType
-    ? `Cari akun ${expectedType === 'debet' ? 'debet' : 'kredit'}...`
-    : 'Cari akun...';
-  const accountOptions = useMemo(
-    () => filteredAccounts.map((account) => ({
-      value: String(account.id),
-      label: `${account.code} - ${account.name}`,
-    })),
-    [filteredAccounts],
-  );
-
-  return (
-    <SearchableSelect
-      value={value ? String(value) : EMPTY_VALUE}
-      onChange={(nextValue) => onChange(nextValue === EMPTY_VALUE ? null : Number(nextValue))}
-      options={accountOptions}
-      placeholder={placeholderText}
-      searchPlaceholder={searchPlaceholderText}
-      emptyText="Akun tidak ditemukan."
-      className="h-10 rounded-md border-slate-200 bg-white px-3 text-sm shadow-none focus-visible:ring-slate-300"
-    />
-  );
-}
-
-function SectionEditor({
+function SectionViewer({
   config,
-  accountIds,
-  accounts,
   reportSection,
-  onChange,
 }: {
   config: ReportSectionConfig;
-  accountIds: number[];
-  accounts: Account[];
   reportSection: NormalizedSection;
-  onChange: (nextIds: number[]) => void;
 }) {
-  const rows = accountIds.length > 0 ? accountIds : [0];
-
   return (
     <section className="rounded-md border border-slate-200 bg-white">
       <div className="grid gap-4 border-b border-slate-100 p-4 lg:grid-cols-[minmax(260px,1fr)_220px] lg:items-start">
@@ -314,52 +254,7 @@ function SectionEditor({
         </div>
       </div>
 
-      <div className="grid gap-5 p-4 xl:grid-cols-[minmax(280px,420px)_1fr]">
-        <div className="space-y-2">
-          {rows.map((accountId, index) => (
-            <div key={`${config.templateKey}-${index}`} className="grid grid-cols-[1fr_auto] gap-2">
-              <AccountSelect
-                value={accountId || null}
-                accounts={accounts}
-                expectedType={config.expectedType}
-                onChange={(nextValue) => {
-                  const nextIds = [...accountIds];
-                  if (nextValue) {
-                    nextIds[index] = nextValue;
-                  } else {
-                    nextIds.splice(index, 1);
-                  }
-                  onChange(uniqueNumbers(nextIds));
-                }}
-              />
-              <Button
-                type="button"
-                size="icon"
-                aria-label="Hapus akun"
-                onClick={() => {
-                  const nextIds = accountIds.filter((_, itemIndex) => itemIndex !== index);
-                  onChange(uniqueNumbers(nextIds));
-                }}
-                className="btn-outline! h-10 px-2"
-                disabled={accountIds.length === 0}
-              >
-                <Trash2 className="h-4 w-4" />
-              </Button>
-            </div>
-          ))}
-
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={() => onChange([...accountIds, 0])}
-            className="w-full justify-center"
-          >
-            <Plus className="h-4 w-4" />
-            Tambah Akun
-          </Button>
-        </div>
-
+      <div className="p-4">
         <div className="overflow-hidden rounded-md border border-slate-200">
           <div className="grid grid-cols-[1fr_150px_130px] bg-slate-50 px-3 py-2 text-xs font-semibold uppercase text-slate-500">
             <span>Akun</span>
@@ -414,15 +309,6 @@ export default function LaporanLabaRugiPage() {
         ? format(dateRange.from, 'yyyy-MM-dd')
         : null,
   }), [dateRange]);
-
-  const accountQuery = useAccounts({
-    page: 1,
-    perPage: 1000,
-    search: '',
-    company_id: resolvedCompanyId ?? undefined,
-    enabled: Boolean(resolvedCompanyId),
-  });
-  const accounts = useMemo(() => accountQuery.data?.data ?? [], [accountQuery.data?.data]);
 
   const reportQuery = useProfitLossReport(
     resolvedCompanyId,
@@ -623,6 +509,17 @@ export default function LaporanLabaRugiPage() {
                 <RefreshCw className={cn('h-4 w-4', updateTemplateMutation.isPending && 'animate-spin')} />
                 Sinkron
               </Button>
+              <Button
+                type="button"
+                variant="default"
+                onClick={() => {
+                  const slug = router.query.slug ? String(router.query.slug) : '';
+                  void router.push(`/dashboard/${slug}/laporan/laporan-laba-rugi/template`);
+                }}
+              >
+                <SlidersHorizontal className="mr-2 h-4 w-4" />
+                Sesuaikan template
+              </Button>
             </>
           }
         />
@@ -707,7 +604,7 @@ export default function LaporanLabaRugiPage() {
           </div>
         </div>
 
-        {(reportQuery.isLoading || accountQuery.isLoading) ? (
+        {reportQuery.isLoading ? (
           <div className="space-y-3">
             <Skeleton className="h-40 w-full rounded-md" />
             <Skeleton className="h-40 w-full rounded-md" />
@@ -720,18 +617,10 @@ export default function LaporanLabaRugiPage() {
         ) : (
           <div className="space-y-4">
             {REPORT_SECTIONS.map((section) => (
-              <SectionEditor
+              <SectionViewer
                 key={section.key}
                 config={section}
-                accounts={accounts}
-                accountIds={templateState[section.templateKey]}
                 reportSection={filteredSections[section.key]}
-                onChange={(nextIds) => {
-                  setTemplateState((current) => ({
-                    ...current,
-                    [section.templateKey]: nextIds,
-                  }));
-                }}
               />
             ))}
           </div>
