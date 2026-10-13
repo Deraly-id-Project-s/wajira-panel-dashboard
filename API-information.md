@@ -1,173 +1,129 @@
-GET {{url}}/wapi/finance/cash-flow/:cash_flow_id
+GET {{url}}/wapi/report/profit-loss-report/:company_id?year=2026&month=january
 {
     "status": true,
-    "message": "Cash Flow data retrieved successfully",
+    "message": "Profit & Loss report data retrieved successfully",
     "errors": null,
     "data": {
-        "id": 2,
-        "uuid": "c8914652-5740-4864-8b93-09f3f01b84cc",
-        "company_id": 1,
-        "unit_transaction_billing_id": null,
-        "sparepart_transaction_billing_id": null,
-        "goods_transaction_billing_id": null,
-        "driver_cash_advance_billing_id": null,
-        "do_invoice_billing_id": null,
-        "code": "TRX2026101000001",
-        "date": "2026-10-09T17:00:00.000000Z",
-        "note": "Kas harian pembayaran operasional kantor saja",
-        "payment_proof": null,
-        "is_paid": false,
-        "is_valid": true,
-        "created_at": "2026-10-10T03:47:10.000000Z",
-        "updated_at": "2026-10-11T04:22:32.000000Z",
-        "invoice_number": null,
-        "debet_total": 3000000,
-        "credit_total": 500000,
-        "debet_usd_total": 0,
-        "credit_usd_total": 0,
-        "grand_total": 3500000,
-        "grand_total_usd": 0,
-        "remaining_payment": 3500000,
-        "remaining_payment_usd": 0,
-        "dual_remaining_payment": 500000,
-        "dual_remaining_payment_usd": 0,
-        "cash_position": {
-            "debet_idr_total": 3000000,
-            "credit_idr_total": 500000,
-            "debet_usd_total": 0,
-            "credit_usd_total": 0
+        "year": 2026,
+        "month": "january",
+        "summary": {
+            "opening_balance": 0,
+            "ending_balance": 0
         },
-        "cash_summaries": [
-            {
-                "cash_id": 1,
-                "cash": {
-                    "id": 1,
-                    "uuid": "12d452db-f794-48db-b5e5-001de6324664",
-                    "company_id": 1,
-                    "code": "cash_idr",
-                    "cash_name": "Cash IDR",
-                    "currency_type": "idr",
-                    "type": "cash"
-                },
-                "debet_total": 3000000,
-                "credit_total": 0,
-                "debet_usd_total": 0,
-                "credit_usd_total": 0
-            },
-            {
-                "cash_id": 2,
-                "cash": {
-                    "id": 2,
-                    "uuid": "23f9bcb7-4448-42a5-973c-fb183db58246",
-                    "company_id": 1,
-                    "code": "bca_idr",
-                    "cash_name": "BCA IDR",
-                    "currency_type": "idr",
-                    "type": "bank"
-                },
-                "debet_total": 0,
-                "credit_total": 500000,
-                "debet_usd_total": 0,
-                "credit_usd_total": 0
-            }
+        "revenue_account_ids": [
+            156,
+            19,
+            16,
+            67
         ],
-        "company": {
-            "id": 1,
-            "uuid": "0ade6c17-70a1-40e4-bd8a-ff0069c36223",
-            "name": "PT Wajira Morindo"
-        },
-        "cash_flow_cashes": [
-            {
-                "id": 4,
-                "cash_flow_id": 2,
-                "cash_id": 1,
-                "amount": 300000,
-                "amount_original": 1500000,
-                "type": "debet",
-                "created_at": "2026-10-10T03:50:10.000000Z",
-                "updated_at": "2026-10-10T03:50:10.000000Z",
-                "cash": {
-                    "id": 1,
-                    "uuid": "12d452db-f794-48db-b5e5-001de6324664",
-                    "company_id": 1,
-                    "currency_type": "idr",
-                    "cash_name": "Cash IDR",
-                    "type": "cash",
-                    "code": "cash_idr"
-                }
-            },
-            {
-                "id": 5,
-                "cash_flow_id": 2,
-                "cash_id": 2,
-                "amount": 400,
-                "amount_original": 500000,
-                "type": "credit",
-                "created_at": "2026-10-10T03:50:10.000000Z",
-                "updated_at": "2026-10-10T03:50:10.000000Z",
-                "cash": {
-                    "id": 2,
-                    "uuid": "23f9bcb7-4448-42a5-973c-fb183db58246",
-                    "company_id": 1,
-                    "currency_type": "idr",
-                    "cash_name": "BCA IDR",
-                    "type": "bank",
-                    "code": "bca_idr"
-                }
-            },
-            {
-                "id": 6,
-                "cash_flow_id": 2,
-                "cash_id": 1,
-                "amount": 300000,
-                "amount_original": 1500000,
-                "type": "debet",
-                "created_at": "2026-10-10T03:50:10.000000Z",
-                "updated_at": "2026-10-10T03:50:10.000000Z",
-                "cash": {
-                    "id": 1,
-                    "uuid": "12d452db-f794-48db-b5e5-001de6324664",
-                    "company_id": 1,
-                    "currency_type": "idr",
-                    "cash_name": "Cash IDR",
-                    "type": "cash",
-                    "code": "cash_idr"
-                }
-            }
+        "cogs_account_ids": [
+            155,
+            154,
+            121
         ],
-        "finance_billings": [
-            {
-                "id": 5,
-                "uuid": "029d765c-8e85-4d27-bcbd-baf0b0878ab9",
-                "cash_flow_id": 2,
-                "cash_id": 1,
-                "account_id": 156,
-                "amount": 3000000,
-                "amount_original": 3000000,
-                "payment_proof": null,
-                "payment_at": "2026-10-08T17:00:00.000000Z",
-                "note": null,
-                "is_usd_payment": false,
-                "cash_position_before": 0,
-                "cash_position_after": null,
-                "created_at": "2026-10-11T04:22:32.000000Z",
-                "updated_at": "2026-10-11T04:22:32.000000Z",
-                "cash": {
-                    "id": 1,
-                    "uuid": "12d452db-f794-48db-b5e5-001de6324664",
-                    "company_id": 1,
-                    "code": "cash_idr",
-                    "cash_name": "Cash IDR",
-                    "currency_type": "idr"
-                },
-                "account": {
+        "opex_account_ids": [
+            152,
+            38
+        ],
+        "tax": 10,
+        "revenue_calc": {
+            "total": 0,
+            "accounts": [
+                {
                     "id": 156,
-                    "type": "credit"
+                    "account_id": 156,
+                    "account_code": "72000099",
+                    "account_name": "BIAYA LAIN-LAIN",
+                    "account_type": "credit",
+                    "amount": 0,
+                    "type": "IDR"
+                },
+                {
+                    "id": 19,
+                    "account_id": 19,
+                    "account_code": "11410010",
+                    "account_name": "PERSEDIAAN MOTOR HONDA GENIO",
+                    "account_type": "debet",
+                    "amount": 0,
+                    "type": "IDR"
+                },
+                {
+                    "id": 16,
+                    "account_id": 16,
+                    "account_code": "11410007",
+                    "account_name": "PERSEDIAAN MOTOR HONDA CRF",
+                    "account_type": "debet",
+                    "amount": 0,
+                    "type": "IDR"
+                },
+                {
+                    "id": 67,
+                    "account_id": 67,
+                    "account_code": "32000002",
+                    "account_name": "LABA (RUGI) TAHUN BERJALAN",
+                    "account_type": "credit",
+                    "amount": 0,
+                    "type": "IDR"
                 }
-            }
-        ],
-        "unit_transaction_billing": null,
-        "goods_transaction_billing": null,
-        "sparepart_transaction_billing": null
+            ]
+        },
+        "cogs_calc": {
+            "total": 0,
+            "accounts": [
+                {
+                    "id": 155,
+                    "account_id": 155,
+                    "account_code": "72000006",
+                    "account_name": "RUGI SELISIH KURS",
+                    "account_type": "credit",
+                    "amount": 0,
+                    "type": "IDR"
+                },
+                {
+                    "id": 154,
+                    "account_id": 154,
+                    "account_code": "72000005",
+                    "account_name": "BIAYA DENDA PAJAK",
+                    "account_type": "credit",
+                    "amount": 0,
+                    "type": "IDR"
+                },
+                {
+                    "id": 121,
+                    "account_id": 121,
+                    "account_code": "61000004",
+                    "account_name": "BIAYA GAJI PEGAWAI",
+                    "account_type": "credit",
+                    "amount": 0,
+                    "type": "IDR"
+                }
+            ]
+        },
+        "opex_calc": {
+            "total": 0,
+            "accounts": [
+                {
+                    "id": 152,
+                    "account_id": 152,
+                    "account_code": "72000003",
+                    "account_name": "BIAYA TRANSFER ANTAR BANK",
+                    "account_type": "credit",
+                    "amount": 0,
+                    "type": "IDR"
+                },
+                {
+                    "id": 38,
+                    "account_id": 38,
+                    "account_code": "11500003",
+                    "account_name": "UANG MUKA PPH 23",
+                    "account_type": "debet",
+                    "amount": 0,
+                    "type": "IDR"
+                }
+            ]
+        },
+        "profit_loss_before_tax": 0,
+        "tax_amount": 0,
+        "profit_loss_after_tax": 0
     }
-}
+}   

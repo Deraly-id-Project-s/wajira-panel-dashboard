@@ -1,9 +1,7 @@
 export type ProfitLossTemplateKey =
   | 'revenue_account_ids'
   | 'cogs_account_ids'
-  | 'gross_profit_account_ids'
-  | 'opex_account_ids'
-  | 'noix_account_ids';
+  | 'opex_account_ids';
 
 export type MonthKey =
   | 'january'
@@ -24,9 +22,9 @@ export type MonthlyAccounts = Record<MonthKey, number[]>;
 export interface ProfitLossYearConfig {
   revenue_account_ids: MonthlyAccounts;
   cogs_account_ids: MonthlyAccounts;
-  gross_profit_account_ids: MonthlyAccounts;
   opex_account_ids: MonthlyAccounts;
-  noix_account_ids: MonthlyAccounts;
+  gross_profit_account_ids?: MonthlyAccounts;
+  noix_account_ids?: MonthlyAccounts;
   tax?: number | null;
 }
 
@@ -78,9 +76,9 @@ export interface SaveProfitLossTemplateYearPayload {
 export interface ProfitLossTemplatePayload {
   revenue_account_ids: number[];
   cogs_account_ids: number[];
-  gross_profit_account_ids: number[];
+  gross_profit_account_ids?: number[];
   opex_account_ids: number[];
-  noix_account_ids: number[];
+  noix_account_ids?: number[];
   tax?: number | string | null;
   year?: number;
 }
@@ -98,11 +96,16 @@ export interface ProfitLossReportLine {
   account_id?: string | number | null;
   account_code?: string | null;
   account_name?: string | null;
+  account_type?: string | null;
   code?: string | null;
   name?: string | null;
   label?: string | null;
   amount?: number | string | null;
   amount_usd?: number | string | null;
+  debit?: number | string | null;
+  debit_usd?: number | string | null;
+  credit?: number | string | null;
+  credit_usd?: number | string | null;
   total?: number | string | null;
   total_usd?: number | string | null;
   value?: number | string | null;

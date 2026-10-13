@@ -1,28 +1,51 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/router';
-import { format } from 'date-fns';
-import { Download, Printer, RefreshCw, RotateCcw, SlidersHorizontal } from 'lucide-react';
-import type { DateRange } from 'react-day-picker';
+import {
+  Award,
+  Calendar,
+  Download,
+  Printer,
+  RefreshCw,
+  RotateCcw,
+  Scale,
+  SlidersHorizontal,
+  TrendingDown,
+  TrendingUp,
+  Wallet,
+} from 'lucide-react';
 import { toast } from 'sonner';
 
 import type {
+  MonthKey,
   ProfitLossReportData,
+  ProfitLossReportFilters,
   ProfitLossReportLine,
   ProfitLossReportSection,
   ProfitLossTemplateKey,
   ProfitLossTemplatePayload,
 } from '@/@types/profit-loss-report.types';
+import type { Account } from '@/@types/account.types';
 import { PageHeader } from '@/components/ui/page-header';
 import { Button } from '@/components/ui/button';
-import { DatePickerWithRange, type DateRangePickerMode } from '@/components/ui/date-range-picker';
-import { SearchInput } from '@/components/ui/search-input';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { Skeleton } from '@/components/ui/skeleton';
 import { currenciesFormat } from '@/components/ui/currenciesFormat';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useCompany } from '@/contexts/CompanyContext';
-import { useProfitLossReport, useUpdateProfitLossTemplate } from '@/hooks/report/useProfitLossReport';
+import { useAccounts } from '@/hooks/useAccount';
+import {
+  useProfitLossReport,
+  useProfitLossTemplate,
+  useUpdateProfitLossTemplate,
+} from '@/hooks/report/useProfitLossReport';
 import { useReportTemplatePrint } from '@/hooks/useReportTemplatePrint';
 import { exportProfitLossReport } from '@/services/report/profitLossReport.service';
 import { getLetterheadByCompanyId, resolveCompanyId } from '@/lib/print-letterhead';
@@ -33,7 +56,7 @@ import {
   type ProfitLossPrintSection,
 } from '@/components/features/laporan-laba-rugi/LaporanLabaRugiPrintDocument';
 
-type SectionKey = 'revenue' | 'cogs' | 'grossProfit' | 'opex' | 'noix';
+type SectionKey = 'revenue' | 'cogs' | 'opex';
 
 interface ReportSectionConfig {
   key: SectionKey;
@@ -42,7 +65,6 @@ interface ReportSectionConfig {
   templateKey: ProfitLossTemplateKey;
   dataKey: keyof ProfitLossReportData;
   tone: 'positive' | 'negative' | 'neutral';
-  expectedType?: 'debet' | 'credit';
 }
 
 interface NormalizedSection {
@@ -51,18 +73,29 @@ interface NormalizedSection {
   totalUsd: number;
 }
 
-const EMPTY_VALUE = '__empty__';
-
 const DEFAULT_TEMPLATE: ProfitLossTemplatePayload = {
   revenue_account_ids: [80, 183, 186, 181, 180],
   cogs_account_ids: [194, 191],
-  gross_profit_account_ids: [],
   opex_account_ids: [],
-  noix_account_ids: [190],
   tax: 0,
 };
 
 const EMPTY_REPORT_DATA: ProfitLossReportData = {};
+
+const MONTHS: { key: MonthKey; label: string }[] = [
+  { key: 'january', label: 'Januari' },
+  { key: 'february', label: 'Februari' },
+  { key: 'march', label: 'Maret' },
+  { key: 'april', label: 'April' },
+  { key: 'may', label: 'Mei' },
+  { key: 'june', label: 'Juni' },
+  { key: 'july', label: 'Juli' },
+  { key: 'august', label: 'Agustus' },
+  { key: 'september', label: 'September' },
+  { key: 'october', label: 'Oktober' },
+  { key: 'november', label: 'November' },
+  { key: 'december', label: 'Desember' },
+];
 
 const getCompanyName = (companyId?: number | null) => {
   if (companyId === 1) return 'PT WAJIRA JAGRATARA MORINDO';
@@ -79,43 +112,22 @@ const REPORT_SECTIONS: ReportSectionConfig[] = [
     templateKey: 'revenue_account_ids',
     dataKey: 'revenue_calc',
     tone: 'positive',
-    expectedType: 'credit',
   },
   {
     key: 'cogs',
-    title: 'Beban Pokok Usaha',
-    description: 'Akun beban pokok usaha.',
+    title: 'Biaya Atas Pendapatan',
+    description: 'Akun biaya atas pendapatan / beban pokok usaha.',
     templateKey: 'cogs_account_ids',
     dataKey: 'cogs_calc',
     tone: 'negative',
-    expectedType: 'debet',
-  },
-  {
-    key: 'grossProfit',
-    title: 'Laba Kotor Usaha',
-    description: 'Akun penyesuaian laba kotor usaha.',
-    templateKey: 'gross_profit_account_ids',
-    dataKey: 'gross_calc',
-    tone: 'neutral',
-    expectedType: 'debet',
   },
   {
     key: 'opex',
-    title: 'Beban Operasional',
-    description: 'Akun beban operasional.',
+    title: 'Biaya Operasional',
+    description: 'Akun beban dan biaya operasional kantor dan usaha.',
     templateKey: 'opex_account_ids',
     dataKey: 'opex_calc',
     tone: 'negative',
-    expectedType: 'debet',
-  },
-  {
-    key: 'noix',
-    title: 'Pendapatan/Beban Non Operasional',
-    description: 'Akun di luar aktivitas operasional/diluar usaha.',
-    templateKey: 'noix_account_ids',
-    dataKey: 'noix_calc',
-    tone: 'neutral',
-    expectedType: 'debet',
   },
 ];
 
@@ -149,14 +161,19 @@ const getLineIdrAmount = (line: ProfitLossReportLine): number => {
 const getUsdTotal = (rows: ProfitLossReportLine[]) =>
   rows.reduce((sum, line) => sum + getLineUsdAmount(line), 0);
 
-const normalizeSection = (value: unknown): NormalizedSection => {
+const normalizeSection = (
+  value: unknown,
+  accountMap?: Map<number, Account>,
+): NormalizedSection => {
   if (Array.isArray(value)) {
     const rows = value as ProfitLossReportLine[];
-    return {
-      rows,
-      total: rows.reduce((sum, line) => sum + getLineIdrAmount(line), 0),
-      totalUsd: getUsdTotal(rows),
-    };
+    let total = 0;
+    let totalUsd = 0;
+    for (const line of rows) {
+      total += getLineIdrAmount(line);
+      totalUsd += getLineUsdAmount(line);
+    }
+    return { rows, total, totalUsd };
   }
 
   if (typeof value === 'number' || typeof value === 'string') {
@@ -166,25 +183,74 @@ const normalizeSection = (value: unknown): NormalizedSection => {
   if (value && typeof value === 'object') {
     const section = value as ProfitLossReportSection;
     const rows = section.accounts ?? section.rows ?? section.items ?? section.data ?? [];
+    if (rows.length > 0) {
+      let totalUsd = 0;
+      let totalIdr = 0;
+      for (const line of rows) {
+        totalIdr += getLineIdrAmount(line);
+        totalUsd += getLineUsdAmount(line);
+      }
+      const total = section.total !== undefined && section.total !== null
+        ? toNumber(section.total)
+        : totalIdr;
+      return { rows, total, totalUsd };
+    }
+
     const total = section.total ?? section.amount ?? section.value;
     const totalUsd = section.total_usd ?? section.amount_usd ?? section.value_usd;
 
     return {
-      rows,
-      total: total === undefined || total === null
-        ? rows.reduce((sum, line) => sum + getLineIdrAmount(line), 0)
-        : toNumber(total),
-      totalUsd: totalUsd === undefined || totalUsd === null ? getUsdTotal(rows) : toNumber(totalUsd),
+      rows: [],
+      total: total === undefined || total === null ? 0 : toNumber(total),
+      totalUsd: totalUsd === undefined || totalUsd === null ? 0 : toNumber(totalUsd),
     };
   }
 
   return { rows: [], total: 0, totalUsd: 0 };
 };
 
-const getLineLabel = (line: ProfitLossReportLine) => {
-  const code = line.account_code ?? line.code;
-  const name = line.account_name ?? line.name ?? line.label ?? 'Akun';
-  return code ? `${code} - ${name}` : name;
+const getAccountTypeLabel = (
+  line: ProfitLossReportLine,
+  accountMap?: Map<number, Account>,
+): 'DEBIT' | 'KREDIT' => {
+  const accId = Number(line.account_id ?? line.id);
+  if (accId && accountMap?.has(accId)) {
+    const acc = accountMap.get(accId);
+    if (acc?.type === 'credit') return 'KREDIT';
+    if (acc?.type === 'debit' || acc?.type === 'debet') return 'DEBIT';
+  }
+  const rawType =
+    line.account_type ||
+    (line as { account?: { type?: string } }).account?.type ||
+    (line.type && ['debit', 'debet', 'credit', 'kredit'].includes(String(line.type).toLowerCase())
+      ? line.type
+      : undefined);
+  if (rawType) {
+    const lower = String(rawType).toLowerCase();
+    if (lower === 'credit' || lower === 'kredit') return 'KREDIT';
+    if (lower === 'debit' || lower === 'debet') return 'DEBIT';
+  }
+  const code = (line.account_code ?? line.code ?? '').trim();
+  if (code && accountMap) {
+    for (const acc of accountMap.values()) {
+      if (acc.code === code) {
+        if (acc.type === 'credit') return 'KREDIT';
+        if (acc.type === 'debit' || acc.type === 'debet') return 'DEBIT';
+      }
+    }
+  }
+  return 'DEBIT';
+};
+
+const getLineLabel = (
+  line: ProfitLossReportLine,
+  accountMap?: Map<number, Account>,
+) => {
+  const code = (line.account_code ?? line.code ?? '').trim();
+  const name = (line.account_name ?? line.name ?? line.label ?? 'Akun').trim();
+  const typeLabel = getAccountTypeLabel(line, accountMap);
+  const codeStr = code ? ` ${code}` : '';
+  return `[${typeLabel}] ${name}${codeStr}`.trim();
 };
 
 const uniqueNumbers = (values: Array<number | string | null | undefined>) =>
@@ -195,17 +261,13 @@ const uniqueNumbers = (values: Array<number | string | null | undefined>) =>
 const buildTemplateState = (): Record<ProfitLossTemplateKey, number[]> => ({
   revenue_account_ids: [...DEFAULT_TEMPLATE.revenue_account_ids],
   cogs_account_ids: [...DEFAULT_TEMPLATE.cogs_account_ids],
-  gross_profit_account_ids: [...DEFAULT_TEMPLATE.gross_profit_account_ids],
   opex_account_ids: [...DEFAULT_TEMPLATE.opex_account_ids],
-  noix_account_ids: [...DEFAULT_TEMPLATE.noix_account_ids],
 });
 
 const buildTemplateStateFromReport = (reportData: ProfitLossReportData): Record<ProfitLossTemplateKey, number[]> => ({
   revenue_account_ids: uniqueNumbers(reportData.revenue_account_ids ?? DEFAULT_TEMPLATE.revenue_account_ids),
   cogs_account_ids: uniqueNumbers(reportData.cogs_account_ids ?? DEFAULT_TEMPLATE.cogs_account_ids),
-  gross_profit_account_ids: uniqueNumbers(reportData.gross_profit_account_ids ?? DEFAULT_TEMPLATE.gross_profit_account_ids),
   opex_account_ids: uniqueNumbers(reportData.opex_account_ids ?? DEFAULT_TEMPLATE.opex_account_ids),
-  noix_account_ids: uniqueNumbers(reportData.noix_account_ids ?? DEFAULT_TEMPLATE.noix_account_ids),
 });
 
 function AmountSummary({
@@ -228,9 +290,11 @@ function AmountSummary({
 function SectionViewer({
   config,
   reportSection,
+  accountMap,
 }: {
   config: ReportSectionConfig;
   reportSection: NormalizedSection;
+  accountMap?: Map<number, Account>;
 }) {
   return (
     <section className="rounded-md border border-slate-200 bg-white">
@@ -269,7 +333,12 @@ function SectionViewer({
                 key={`${line.id ?? line.account_id ?? index}`}
                 className="grid grid-cols-[1fr_150px_130px] gap-3 border-t border-slate-100 px-3 py-2 text-sm"
               >
-                <span className="min-w-0 truncate text-slate-700">{getLineLabel(line)}</span>
+                <span
+                  className="min-w-0 truncate text-slate-700"
+                  title={getLineLabel(line, accountMap)}
+                >
+                  {getLineLabel(line, accountMap)}
+                </span>
                 <span className="text-right font-medium text-slate-900">
                   {currenciesFormat('idr', getLineIdrAmount(line))}
                 </span>
@@ -297,18 +366,56 @@ export default function LaporanLabaRugiPage() {
   );
   const [taxInput, setTaxInput] = useState<string>('0');
   const [isExporting, setIsExporting] = useState(false);
-  const [searchInput, setSearchInput] = useState('');
-  const [dateRange, setDateRange] = useState<DateRange | undefined>();
-  const [dateMode, setDateMode] = useState<DateRangePickerMode>('date');
+  const [selectedMonth, setSelectedMonth] = useState<string>('all');
+  const [selectedYear, setSelectedYear] = useState<string>('all');
 
-  const reportFilters = useMemo(() => ({
-    start_date: dateRange?.from ? format(dateRange.from, 'yyyy-MM-dd') : null,
-    end_date: dateRange?.to
-      ? format(dateRange.to, 'yyyy-MM-dd')
-      : dateRange?.from
-        ? format(dateRange.from, 'yyyy-MM-dd')
-        : null,
-  }), [dateRange]);
+  // Load template query to obtain configured template years
+  const templateQuery = useProfitLossTemplate(
+    resolvedCompanyId,
+    undefined,
+    Boolean(resolvedCompanyId),
+  );
+
+  const availableYears = useMemo(() => {
+    const currentYear = new Date().getFullYear();
+    const configuredYears =
+      templateQuery.data?.data?.template?.profit_loss_template_years
+        ?.map((item) => Number(item.year))
+        .filter((y) => !isNaN(y) && y > 0) ?? [];
+
+    const defaultYearRange = Array.from({ length: 6 }, (_, i) => currentYear - 3 + i);
+    const merged = Array.from(new Set([...configuredYears, ...defaultYearRange, currentYear]));
+    return merged.sort((a, b) => b - a);
+  }, [templateQuery.data?.data?.template?.profit_loss_template_years]);
+
+  // Load accounts for resolving accurate account type (debit / kredit)
+  const accountQuery = useAccounts({
+    page: 1,
+    perPage: 1000,
+    search: '',
+    company_id: resolvedCompanyId ?? undefined,
+    enabled: Boolean(resolvedCompanyId),
+  });
+  const accounts = useMemo(() => accountQuery.data?.data ?? [], [accountQuery.data?.data]);
+  const accountMap = useMemo(() => {
+    const map = new Map<number, Account>();
+    accounts.forEach((acc) => {
+      map.set(Number(acc.id), acc);
+    });
+    return map;
+  }, [accounts]);
+
+  // API filter: default empty ({}), only add month or year if user specifically selected it
+  const reportFilters = useMemo<ProfitLossReportFilters>(() => {
+    const filters: ProfitLossReportFilters = {};
+    if (selectedYear !== 'all' && selectedYear) {
+      filters.year = Number(selectedYear);
+    }
+    if (selectedMonth !== 'all' && selectedMonth) {
+      filters.month = selectedMonth;
+    }
+    return filters;
+  }, [selectedMonth, selectedYear]);
 
   const reportQuery = useProfitLossReport(
     resolvedCompanyId,
@@ -328,66 +435,45 @@ export default function LaporanLabaRugiPage() {
 
   const normalizedSections = useMemo(() => {
     return REPORT_SECTIONS.reduce<Record<SectionKey, NormalizedSection>>((acc, section) => {
-      acc[section.key] = normalizeSection(reportData[section.dataKey]);
+      acc[section.key] = normalizeSection(reportData[section.dataKey], accountMap);
       return acc;
     }, {} as Record<SectionKey, NormalizedSection>);
-  }, [reportData]);
+  }, [reportData, accountMap]);
 
-  const filteredSections = useMemo(() => {
-    const keyword = searchInput.trim().toLowerCase();
-    if (!keyword) return normalizedSections;
+  // 1. TOTAL PENDAPATAN = sum(dari kategori laporan pendapatan)
+  const totalPendapatan = normalizedSections.revenue.total;
+  const totalPendapatanUsd = normalizedSections.revenue.totalUsd;
 
-    return REPORT_SECTIONS.reduce<Record<SectionKey, NormalizedSection>>((acc, section) => {
-      const currentSection = normalizedSections[section.key];
-      acc[section.key] = {
-        ...currentSection,
-        rows: currentSection.rows.filter((line) => getLineLabel(line).toLowerCase().includes(keyword)),
-      };
-      return acc;
-    }, {} as Record<SectionKey, NormalizedSection>);
-  }, [normalizedSections, searchInput]);
+  // 2. TOTAL BIAYA ATAS PENDAPATAN = sum(dari kategori laporan BIAYA ATAS PENDAPATAN)
+  const totalBiayaAtasPendapatan = normalizedSections.cogs.total;
+  const totalBiayaAtasPendapatanUsd = normalizedSections.cogs.totalUsd;
 
-  const explicitNetIncome = reportData.profit_loss_before_tax ?? reportData.net_income ?? reportData.net_profit ?? reportData.profit_loss;
-  const explicitNetIncomeUsd = reportData.profit_loss_before_tax_usd
-    ?? reportData.net_income_usd
-    ?? reportData.net_profit_usd
-    ?? reportData.profit_loss_usd;
+  // 3. LABA KOTOR = TOTAL PENDAPATAN - TOTAL BIAYA ATAS PENDAPATAN
+  const labaKotor = totalPendapatan - totalBiayaAtasPendapatan;
+  const labaKotorUsd = totalPendapatanUsd - totalBiayaAtasPendapatanUsd;
 
-  const profitBeforeTax = explicitNetIncome !== undefined && explicitNetIncome !== null ? toNumber(explicitNetIncome) : (
-    normalizedSections.revenue.total
-    - normalizedSections.cogs.total
-    - normalizedSections.opex.total
-    + normalizedSections.noix.total
-  );
+  // 4. TOTAL BIAYA OPERASIONAL = sum(dari kategori laporan BIAYA OPERASIONAL)
+  const totalBiayaOperasional = normalizedSections.opex.total;
+  const totalBiayaOperasionalUsd = normalizedSections.opex.totalUsd;
 
-  const profitBeforeTaxUsd = explicitNetIncomeUsd !== undefined && explicitNetIncomeUsd !== null ? toNumber(explicitNetIncomeUsd) : (
-    normalizedSections.revenue.totalUsd
-    - normalizedSections.cogs.totalUsd
-    - normalizedSections.opex.totalUsd
-    + normalizedSections.noix.totalUsd
-  );
-
-  const grossProfitTotal = reportData.gross_calc !== undefined && reportData.gross_calc !== null
-    ? normalizedSections.grossProfit.total
-    : normalizedSections.revenue.total - normalizedSections.cogs.total;
-  const grossProfitUsdTotal = reportData.gross_calc !== undefined && reportData.gross_calc !== null
-    ? normalizedSections.grossProfit.totalUsd
-    : normalizedSections.revenue.totalUsd - normalizedSections.cogs.totalUsd;
+  // 5. LABA PERIODE BERJALAN = LABA KOTOR - TOTAL BIAYA OPERASIONAL
+  const labaPeriodeBerjalan = reportData.profit_loss_before_tax !== undefined && reportData.profit_loss_before_tax !== null
+    ? toNumber(reportData.profit_loss_before_tax)
+    : (labaKotor - totalBiayaOperasional);
+  const labaPeriodeBerjalanUsd = labaKotorUsd - totalBiayaOperasionalUsd;
 
   const taxPercentage = toNumber(taxInput);
   const taxAmount = reportData.tax_amount !== undefined && reportData.tax_amount !== null
     ? toNumber(reportData.tax_amount)
-    : (profitBeforeTax > 0 ? profitBeforeTax * (taxPercentage / 100) : 0);
+    : (labaPeriodeBerjalan > 0 ? labaPeriodeBerjalan * (taxPercentage / 100) : 0);
   const taxAmountUsd = reportData.tax_amount_usd !== undefined && reportData.tax_amount_usd !== null
     ? toNumber(reportData.tax_amount_usd)
-    : (profitBeforeTaxUsd > 0 ? profitBeforeTaxUsd * (taxPercentage / 100) : 0);
+    : (labaPeriodeBerjalanUsd > 0 ? labaPeriodeBerjalanUsd * (taxPercentage / 100) : 0);
 
   const profitAfterTax = reportData.profit_loss_after_tax !== undefined && reportData.profit_loss_after_tax !== null
     ? toNumber(reportData.profit_loss_after_tax)
-    : (profitBeforeTax - taxAmount);
-  const profitAfterTaxUsd = reportData.profit_loss_after_tax_usd !== undefined && reportData.profit_loss_after_tax_usd !== null
-    ? toNumber(reportData.profit_loss_after_tax_usd)
-    : (profitBeforeTaxUsd - taxAmountUsd);
+    : (labaPeriodeBerjalan - taxAmount);
+  const profitAfterTaxUsd = labaPeriodeBerjalanUsd - taxAmountUsd;
 
   const printSections = useMemo<ProfitLossPrintSection[]>(() => [
     {
@@ -399,7 +485,7 @@ export default function LaporanLabaRugiPage() {
     },
     {
       key: 'cogs',
-      title: 'Harga Pokok Penjualan',
+      title: 'Biaya Atas Pendapatan',
       rows: normalizedSections.cogs.rows,
       total: normalizedSections.cogs.total,
       totalUsd: normalizedSections.cogs.totalUsd,
@@ -413,41 +499,32 @@ export default function LaporanLabaRugiPage() {
       totalUsd: normalizedSections.opex.totalUsd,
       deduction: true,
     },
-    {
-      key: 'noix',
-      title: 'Pendapatan/Beban Non Operasional',
-      rows: normalizedSections.noix.rows,
-      total: normalizedSections.noix.total,
-      totalUsd: normalizedSections.noix.totalUsd,
-    },
   ], [normalizedSections]);
 
-  const periodLabel = reportFilters.start_date
-    ? `${dateRange?.from ? format(dateRange.from, 'dd MMM yyyy') : '-'}${reportFilters.end_date !== reportFilters.start_date && dateRange?.to ? ` – ${format(dateRange.to, 'dd MMM yyyy')}` : ''}`
-    : 'Semua periode';
+  const activeMonthLabel = useMemo(() => {
+    const m = selectedMonth !== 'all' ? selectedMonth : reportData.month;
+    if (!m) return null;
+    return MONTHS.find((item) => item.key.toLowerCase() === String(m).toLowerCase())?.label || String(m);
+  }, [selectedMonth, reportData.month]);
 
-  const handleSync = async () => {
-    if (!resolvedCompanyId) {
-      toast.error('Company belum dipilih.');
-      return;
+  const activeYear = useMemo(() => {
+    if (selectedYear !== 'all') return selectedYear;
+    if (reportData.year) return String(reportData.year);
+    return null;
+  }, [selectedYear, reportData.year]);
+
+  const periodLabel = useMemo(() => {
+    if (activeMonthLabel && activeYear) {
+      return `${activeMonthLabel} ${activeYear}`;
     }
-
-    const payload: ProfitLossTemplatePayload = {
-      revenue_account_ids: uniqueNumbers(templateState.revenue_account_ids),
-      cogs_account_ids: uniqueNumbers(templateState.cogs_account_ids),
-      gross_profit_account_ids: uniqueNumbers(templateState.gross_profit_account_ids),
-      opex_account_ids: uniqueNumbers(templateState.opex_account_ids),
-      noix_account_ids: uniqueNumbers(templateState.noix_account_ids),
-      tax: taxInput !== '' ? toNumber(taxInput) : 0,
-    };
-
-    try {
-      await updateTemplateMutation.mutateAsync(payload);
-      toast.success('Template laporan laba rugi berhasil disinkronkan.');
-    } catch (error) {
-      toast.error((error as Error)?.message || 'Gagal sinkron template laporan laba rugi.');
+    if (activeYear) {
+      return `Tahun ${activeYear}`;
     }
-  };
+    if (activeMonthLabel) {
+      return `Bulan ${activeMonthLabel}`;
+    }
+    return 'Periode Berjalan';
+  }, [activeMonthLabel, activeYear]);
 
   const handleExport = async () => {
     if (!resolvedCompanyId) {
@@ -503,14 +580,6 @@ export default function LaporanLabaRugiPage() {
               </Button>
               <Button
                 type="button"
-                onClick={handleSync}
-                disabled={updateTemplateMutation.isPending || !resolvedCompanyId}
-              >
-                <RefreshCw className={cn('h-4 w-4', updateTemplateMutation.isPending && 'animate-spin')} />
-                Sinkron
-              </Button>
-              <Button
-                type="button"
                 variant="default"
                 onClick={() => {
                   const slug = router.query.slug ? String(router.query.slug) : '';
@@ -524,26 +593,37 @@ export default function LaporanLabaRugiPage() {
           }
         />
 
-        <div className="flex flex-col sm:flex-row sm:items-center gap-3 no-print">
-          <SearchInput
-            searchValue={searchInput}
-            onSearchChange={setSearchInput}
-            placeholder="Cari kode atau nama akun"
-            aria-label="Cari akun laporan laba rugi"
-            wrapperClassName="w-full sm:w-[280px]"
-          />
+        <div className="flex flex-wrap items-center gap-3 no-print">
+          <div className="w-full sm:w-[200px]">
+            <Select value={selectedMonth} onValueChange={setSelectedMonth}>
+              <SelectTrigger className="h-9 w-full bg-white">
+                <SelectValue placeholder="Pilih Bulan" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Semua Bulan (Default)</SelectItem>
+                {MONTHS.map((m) => (
+                  <SelectItem key={m.key} value={m.key}>
+                    {m.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
 
-          <div className="w-full sm:w-[320px]">
-            <DatePickerWithRange
-              date={dateRange}
-              onChange={setDateRange}
-              enablePeriodFilter
-              mode={dateMode}
-              onModeChange={(nextMode) => {
-                setDateMode(nextMode);
-                setDateRange(undefined);
-              }}
-            />
+          <div className="w-full sm:w-[180px]">
+            <Select value={selectedYear} onValueChange={setSelectedYear}>
+              <SelectTrigger className="h-9 w-full bg-white">
+                <SelectValue placeholder="Pilih Tahun" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Semua Tahun (Default)</SelectItem>
+                {availableYears.map((year) => (
+                  <SelectItem key={year} value={String(year)}>
+                    {year}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
 
           <Button
@@ -551,55 +631,158 @@ export default function LaporanLabaRugiPage() {
             variant="outline"
             className="h-9 w-full sm:w-auto"
             onClick={() => {
-              setSearchInput('');
-              setDateRange(undefined);
-              setDateMode('date');
+              setSelectedMonth('all');
+              setSelectedYear('all');
             }}
+            disabled={selectedMonth === 'all' && selectedYear === 'all'}
           >
             <RotateCcw className="mr-2 h-4 w-4" />
             Reset
           </Button>
+
+          <div className="ml-auto hidden items-center gap-2 text-xs text-slate-500 sm:flex">
+            <Calendar className="h-3.5 w-3.5 text-slate-400" />
+            <span>
+              Periode aktif:{' '}
+              <strong className="font-semibold text-slate-700">{periodLabel}</strong>
+            </span>
+          </div>
         </div>
 
-        <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
-          <div className="rounded-md border border-slate-200 bg-white p-4">
-            <p className="text-xs font-semibold uppercase text-slate-500">Pendapatan</p>
+        {/* Information Cards Ringkasan Keuangan Utama */}
+        <div className="grid gap-3.5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
+          {/* 1. TOTAL PENDAPATAN */}
+          <div className="flex flex-col justify-between rounded-lg border border-emerald-200/90 bg-linear-to-b from-emerald-50/50 to-white p-4 shadow-2xs transition-shadow hover:shadow-xs">
+            <div className="space-y-1">
+              <div className="flex items-center justify-between gap-2">
+                <span className="text-[11px] font-bold tracking-wider uppercase text-emerald-800">
+                  TOTAL PENDAPATAN
+                </span>
+                <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-emerald-100 text-emerald-700">
+                  <TrendingUp className="h-3.5 w-3.5" />
+                </span>
+              </div>
+              <p className="text-[11px] text-slate-500">
+                Sum kategori pendapatan
+              </p>
+            </div>
             <AmountSummary
-              idrValue={normalizedSections.revenue.total}
-              usdValue={normalizedSections.revenue.totalUsd}
-              className="mt-2 text-emerald-700 [&>p:first-child]:text-xl"
+              idrValue={totalPendapatan}
+              usdValue={totalPendapatanUsd}
+              className="mt-3 text-emerald-700 [&>p:first-child]:text-xl [&>p:first-child]:font-extrabold"
             />
           </div>
-          <div className="rounded-md border border-slate-200 bg-white p-4">
-            <p className="text-xs font-semibold uppercase text-slate-500">Laba Kotor</p>
+
+          {/* 2. TOTAL BIAYA ATAS PENDAPATAN */}
+          <div className="flex flex-col justify-between rounded-lg border border-rose-200/90 bg-linear-to-b from-rose-50/40 to-white p-4 shadow-2xs transition-shadow hover:shadow-xs">
+            <div className="space-y-1">
+              <div className="flex items-center justify-between gap-2">
+                <span className="text-[11px] font-bold tracking-wider uppercase text-rose-800">
+                  TOTAL BIAYA ATAS PENDAPATAN
+                </span>
+                <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-rose-100 text-rose-700">
+                  <TrendingDown className="h-3.5 w-3.5" />
+                </span>
+              </div>
+              <p className="text-[11px] text-slate-500">
+                Sum biaya atas pendapatan (HPP)
+              </p>
+            </div>
             <AmountSummary
-              idrValue={grossProfitTotal}
-              usdValue={grossProfitUsdTotal}
-              className="mt-2 text-slate-900 [&>p:first-child]:text-xl"
+              idrValue={totalBiayaAtasPendapatan}
+              usdValue={totalBiayaAtasPendapatanUsd}
+              className="mt-3 text-rose-700 [&>p:first-child]:text-xl [&>p:first-child]:font-extrabold"
             />
           </div>
-          <div className="rounded-md border border-slate-200 bg-white p-4">
-            <p className="text-xs font-semibold uppercase text-slate-500">Biaya Operasional</p>
+
+          {/* 3. LABA KOTOR */}
+          <div className="flex flex-col justify-between rounded-lg border border-blue-200 bg-linear-to-b from-blue-50/40 to-white p-4 shadow-2xs transition-shadow hover:shadow-xs">
+            <div className="space-y-1">
+              <div className="flex items-center justify-between gap-2">
+                <span className="text-[11px] font-bold tracking-wider uppercase text-blue-900">
+                  LABA KOTOR
+                </span>
+                <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-blue-100 text-blue-700">
+                  <Scale className="h-3.5 w-3.5" />
+                </span>
+              </div>
+              <p className="text-[11px] text-slate-500">
+                Pendapatan − Biaya Pendapatan
+              </p>
+            </div>
             <AmountSummary
-              idrValue={normalizedSections.opex.total}
-              usdValue={normalizedSections.opex.totalUsd}
-              className="mt-2 text-rose-700 [&>p:first-child]:text-xl"
+              idrValue={labaKotor}
+              usdValue={labaKotorUsd}
+              className={cn(
+                'mt-3 [&>p:first-child]:text-xl [&>p:first-child]:font-extrabold',
+                labaKotor < 0 ? 'text-rose-700' : 'text-slate-900',
+              )}
             />
           </div>
-          <div className="rounded-md border border-slate-200 bg-white p-4">
-            <p className="text-xs font-semibold uppercase text-slate-500">Laba Sebelum Pajak</p>
+
+          {/* 4. TOTAL BIAYA OPERASIONAL */}
+          <div className="flex flex-col justify-between rounded-lg border border-amber-200/90 bg-linear-to-b from-amber-50/40 to-white p-4 shadow-2xs transition-shadow hover:shadow-xs">
+            <div className="space-y-1">
+              <div className="flex items-center justify-between gap-2">
+                <span className="text-[11px] font-bold tracking-wider uppercase text-amber-900">
+                  TOTAL BIAYA OPERASIONAL
+                </span>
+                <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-amber-100 text-amber-700">
+                  <Wallet className="h-3.5 w-3.5" />
+                </span>
+              </div>
+              <p className="text-[11px] text-slate-500">
+                Sum biaya operasional
+              </p>
+            </div>
             <AmountSummary
-              idrValue={profitBeforeTax}
-              usdValue={profitBeforeTaxUsd}
-              className={cn('mt-2 [&>p:first-child]:text-xl', profitBeforeTax < 0 ? 'text-rose-700' : 'text-slate-900')}
+              idrValue={totalBiayaOperasional}
+              usdValue={totalBiayaOperasionalUsd}
+              className="mt-3 text-rose-700 [&>p:first-child]:text-xl [&>p:first-child]:font-extrabold"
             />
           </div>
-          <div className="rounded-md border border-slate-200 bg-white p-4">
-            <p className="text-xs font-semibold uppercase text-slate-500">Laba Setelah Pajak</p>
+
+          {/* 5. LABA PERIODE BERJALAN */}
+          <div
+            className={cn(
+              'flex flex-col justify-between rounded-lg p-4 shadow-xs transition-shadow hover:shadow-md border-2',
+              labaPeriodeBerjalan >= 0
+                ? 'border-emerald-500/80 bg-linear-to-b from-emerald-50 to-white'
+                : 'border-rose-400 bg-linear-to-b from-rose-50 to-white',
+            )}
+          >
+            <div className="space-y-1">
+              <div className="flex items-center justify-between gap-2">
+                <span
+                  className={cn(
+                    'text-[11px] font-extrabold tracking-wider uppercase',
+                    labaPeriodeBerjalan >= 0 ? 'text-emerald-900' : 'text-rose-900',
+                  )}
+                >
+                  LABA PERIODE BERJALAN
+                </span>
+                <span
+                  className={cn(
+                    'flex h-6 w-6 shrink-0 items-center justify-center rounded-full',
+                    labaPeriodeBerjalan >= 0
+                      ? 'bg-emerald-500 text-white'
+                      : 'bg-rose-500 text-white',
+                  )}
+                >
+                  <Award className="h-3.5 w-3.5" />
+                </span>
+              </div>
+              <p className="text-[11px] text-slate-500">
+                Laba Kotor − Biaya Operasional
+              </p>
+            </div>
             <AmountSummary
-              idrValue={profitAfterTax}
-              usdValue={profitAfterTaxUsd}
-              className={cn('mt-2 [&>p:first-child]:text-xl', profitAfterTax < 0 ? 'text-rose-700' : 'text-emerald-700')}
+              idrValue={labaPeriodeBerjalan}
+              usdValue={labaPeriodeBerjalanUsd}
+              className={cn(
+                'mt-3 [&>p:first-child]:text-xl [&>p:first-child]:font-extrabold',
+                labaPeriodeBerjalan < 0 ? 'text-rose-700' : 'text-emerald-700',
+              )}
             />
           </div>
         </div>
@@ -620,7 +803,8 @@ export default function LaporanLabaRugiPage() {
               <SectionViewer
                 key={section.key}
                 config={section}
-                reportSection={filteredSections[section.key]}
+                reportSection={normalizedSections[section.key]}
+                accountMap={accountMap}
               />
             ))}
           </div>
@@ -659,12 +843,12 @@ export default function LaporanLabaRugiPage() {
           <div className="grid gap-4 md:grid-cols-3">
             <div className="rounded-lg border border-slate-200 bg-slate-50/60 p-4">
               <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
-                Laba / (Rugi) Bersih Sebelum Pajak
+                Laba / (Rugi) Periode Berjalan (Sebelum Pajak)
               </p>
               <AmountSummary
-                idrValue={profitBeforeTax}
-                usdValue={profitBeforeTaxUsd}
-                className={cn('mt-2 [&>p:first-child]:text-xl', profitBeforeTax < 0 ? 'text-rose-700' : 'text-slate-900')}
+                idrValue={labaPeriodeBerjalan}
+                usdValue={labaPeriodeBerjalanUsd}
+                className={cn('mt-2 [&>p:first-child]:text-xl', labaPeriodeBerjalan < 0 ? 'text-rose-700' : 'text-slate-900')}
               />
             </div>
 
@@ -698,10 +882,10 @@ export default function LaporanLabaRugiPage() {
           companyName={getCompanyName(resolvedCompanyId)}
           periodLabel={periodLabel}
           sections={printSections}
-          grossProfit={grossProfitTotal}
-          grossProfitUsd={grossProfitUsdTotal}
-          profitBeforeTax={profitBeforeTax}
-          profitBeforeTaxUsd={profitBeforeTaxUsd}
+          grossProfit={labaKotor}
+          grossProfitUsd={labaKotorUsd}
+          profitBeforeTax={labaPeriodeBerjalan}
+          profitBeforeTaxUsd={labaPeriodeBerjalanUsd}
           taxPercentage={taxPercentage}
           taxAmount={taxAmount}
           taxAmountUsd={taxAmountUsd}

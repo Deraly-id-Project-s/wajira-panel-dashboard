@@ -7,8 +7,8 @@ import {
   Copy,
   Layers,
   Plus,
+  RotateCcw,
   Save,
-  Trash2,
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -42,13 +42,23 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
+import {
   Tabs,
   TabsContent,
   TabsList,
   TabsTrigger,
 } from '@/components/ui/tabs';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
-import { SearchableSelect } from '@/components/features/vehicle-data/SearchableSelect';
+import { SearchableMultipleSelect } from '@/components/ui/searchable-multiple-select';
 import { useCompany } from '@/contexts/CompanyContext';
 import { useAccounts } from '@/hooks/useAccount';
 import {
@@ -58,8 +68,6 @@ import {
 } from '@/hooks/report/useProfitLossReport';
 import { resolveCompanyId } from '@/lib/print-letterhead';
 import { cn } from '@/lib/utils';
-
-const EMPTY_VALUE = '__empty__';
 
 const MONTHS: { key: MonthKey; label: string }[] = [
   { key: 'january', label: 'Januari' },
@@ -80,8 +88,6 @@ interface CalcGroupMeta {
   key: ProfitLossTemplateKey;
   title: string;
   description: string;
-  badge: string;
-  expectedType?: 'debet' | 'credit';
 }
 
 const CALC_GROUPS: CalcGroupMeta[] = [
@@ -89,36 +95,16 @@ const CALC_GROUPS: CalcGroupMeta[] = [
     key: 'revenue_account_ids',
     title: 'Pendapatan',
     description: 'Penjualan & pendapatan utama.',
-    badge: 'Kredit',
-    expectedType: 'credit',
   },
   {
     key: 'cogs_account_ids',
     title: 'Beban Pokok Usaha',
     description: 'Harga pokok penjualan / HPP.',
-    badge: 'Debet',
-    expectedType: 'debet',
-  },
-  {
-    key: 'gross_profit_account_ids',
-    title: 'Laba Kotor Usaha',
-    description: 'Penyesuaian laba kotor usaha.',
-    badge: 'Debet',
-    expectedType: 'debet',
   },
   {
     key: 'opex_account_ids',
     title: 'Beban Operasional',
     description: 'Beban operasional kantor & logistik.',
-    badge: 'Debet',
-    expectedType: 'debet',
-  },
-  {
-    key: 'noix_account_ids',
-    title: 'Pendapatan/Beban Non Ops',
-    description: 'Aktivitas di luar operasional usaha.',
-    badge: 'Debet',
-    expectedType: 'debet',
   },
 ];
 
@@ -140,59 +126,53 @@ const createEmptyMonthlyAccounts = (): Record<MonthKey, number[]> => ({
 const createEmptyYearConfig = (): ProfitLossYearConfig => ({
   revenue_account_ids: createEmptyMonthlyAccounts(),
   cogs_account_ids: createEmptyMonthlyAccounts(),
-  gross_profit_account_ids: createEmptyMonthlyAccounts(),
   opex_account_ids: createEmptyMonthlyAccounts(),
-  noix_account_ids: createEmptyMonthlyAccounts(),
   tax: null,
 });
 
-function AccountSelect({
-  value,
+function AccountMultipleSelect({
+  values,
   accounts,
-  expectedType,
+  disabledValues,
+  placeholder,
   onChange,
 }: {
-  value: number | null;
+  values: number[];
   accounts: Account[];
-  expectedType?: 'debet' | 'credit';
-  onChange: (value: number | null) => void;
+  disabledValues?: string[];
+  placeholder?: string;
+  onChange: (values: number[]) => void;
 }) {
-  const filteredAccounts = useMemo(() => {
-    if (!expectedType) return accounts;
-    return accounts.filter((account) => {
-      if (value && Number(account.id) === Number(value)) return true;
-      if (!account.type) return true;
-      const normalizedType = account.type === 'debit' ? 'debet' : account.type;
-      return normalizedType === expectedType;
-    });
-  }, [accounts, expectedType, value]);
-
-  const placeholderText = expectedType
-    ? `Pilih akun (${expectedType === 'debet' ? 'Debet' : 'Kredit'})`
-    : 'Pilih akun';
-
-  const searchPlaceholderText = expectedType
-    ? `Cari akun ${expectedType === 'debet' ? 'debet' : 'kredit'}...`
-    : 'Cari akun...';
-
-  const accountOptions = useMemo(
-    () =>
-      filteredAccounts.map((account) => ({
+  const accountOptions = useMemo(() => {
+    return accounts.map((account) => {
+      const isDebet = account.type === 'debit' || account.type === 'debet';
+      const typeLabel = isDebet ? 'DEBIT' : 'KREDIT';
+      const codeStr = account.code ? ` ${account.code}` : '';
+      // Format: [{type}] {name} {code}
+      return {
         value: String(account.id),
-        label: `${account.code} - ${account.name}`,
-      })),
-    [filteredAccounts],
-  );
+        label: `[${typeLabel}] ${account.name}${codeStr}`.trim(),
+      };
+    });
+  }, [accounts]);
+
+  const placeholderText = placeholder || 'Pilih akun...';
+  const searchPlaceholderText = 'Cari akun...';
 
   return (
-    <SearchableSelect
-      value={value ? String(value) : EMPTY_VALUE}
-      onChange={(nextValue) => onChange(nextValue === EMPTY_VALUE ? null : Number(nextValue))}
+    <SearchableMultipleSelect
+      values={values.map(String)}
       options={accountOptions}
+      disabledValues={disabledValues}
+      disabledLabel="Sudah digunakan"
       placeholder={placeholderText}
       searchPlaceholder={searchPlaceholderText}
       emptyText="Akun tidak ditemukan."
-      className="h-9 rounded-md border-slate-200 bg-white px-3 text-xs sm:text-sm shadow-none focus-visible:ring-slate-300"
+      className="bg-white"
+      onChange={(nextValues) => {
+        const nextIds = nextValues.map(Number).filter((id) => !isNaN(id) && id > 0);
+        onChange(nextIds);
+      }}
     />
   );
 }
@@ -215,6 +195,9 @@ export default function LaporanLabaRugiTemplatePage() {
   const [copySourceYear, setCopySourceYear] = useState<string>('');
   const [copySourceMonth, setCopySourceMonth] = useState<MonthKey>('january');
   const [copyTargetMonthMode, setCopyTargetMonthMode] = useState<'all' | MonthKey>('all');
+
+  // Reset month modal state
+  const [resetMonthTarget, setResetMonthTarget] = useState<MonthKey | null>(null);
 
   // Queries
   const templateQuery = useProfitLossTemplate(resolvedCompanyId, undefined, Boolean(resolvedCompanyId));
@@ -262,9 +245,7 @@ export default function LaporanLabaRugiTemplatePage() {
       const merged: ProfitLossYearConfig = {
         revenue_account_ids: { ...createEmptyMonthlyAccounts(), ...(matchedYear.config.revenue_account_ids || {}) },
         cogs_account_ids: { ...createEmptyMonthlyAccounts(), ...(matchedYear.config.cogs_account_ids || {}) },
-        gross_profit_account_ids: { ...createEmptyMonthlyAccounts(), ...(matchedYear.config.gross_profit_account_ids || {}) },
         opex_account_ids: { ...createEmptyMonthlyAccounts(), ...(matchedYear.config.opex_account_ids || {}) },
-        noix_account_ids: { ...createEmptyMonthlyAccounts(), ...(matchedYear.config.noix_account_ids || {}) },
         tax: matchedYear.config.tax ?? null,
       };
       setYearConfig(merged);
@@ -288,7 +269,7 @@ export default function LaporanLabaRugiTemplatePage() {
       ...prev,
       [groupKey]: {
         ...prev[groupKey],
-        [monthKey]: Array.from(new Set(nextIds.filter((id) => id > 0))),
+        [monthKey]: nextIds,
       },
     }));
   };
@@ -315,9 +296,7 @@ export default function LaporanLabaRugiTemplatePage() {
     const cloned: ProfitLossYearConfig = {
       revenue_account_ids: { ...createEmptyMonthlyAccounts(), ...(sourceConfig.revenue_account_ids || {}) },
       cogs_account_ids: { ...createEmptyMonthlyAccounts(), ...(sourceConfig.cogs_account_ids || {}) },
-      gross_profit_account_ids: { ...createEmptyMonthlyAccounts(), ...(sourceConfig.gross_profit_account_ids || {}) },
       opex_account_ids: { ...createEmptyMonthlyAccounts(), ...(sourceConfig.opex_account_ids || {}) },
-      noix_account_ids: { ...createEmptyMonthlyAccounts(), ...(sourceConfig.noix_account_ids || {}) },
       tax: sourceConfig.tax ?? null,
     };
 
@@ -329,17 +308,14 @@ export default function LaporanLabaRugiTemplatePage() {
 
   // Action: Salin template antar bulan
   const handleCopyMonthTemplate = () => {
-    const sourceRev = yearConfig.revenue_account_ids[copySourceMonth] || [];
-    const sourceCogs = yearConfig.cogs_account_ids[copySourceMonth] || [];
-    const sourceGross = yearConfig.gross_profit_account_ids[copySourceMonth] || [];
-    const sourceOpex = yearConfig.opex_account_ids[copySourceMonth] || [];
-    const sourceNoix = yearConfig.noix_account_ids[copySourceMonth] || [];
+    const sanitizeList = (ids?: number[]) => (ids || []).filter((id) => Number(id) > 0);
+    const sourceRev = sanitizeList(yearConfig.revenue_account_ids[copySourceMonth]);
+    const sourceCogs = sanitizeList(yearConfig.cogs_account_ids[copySourceMonth]);
+    const sourceOpex = sanitizeList(yearConfig.opex_account_ids[copySourceMonth]);
 
     const newRev = { ...yearConfig.revenue_account_ids };
     const newCogs = { ...yearConfig.cogs_account_ids };
-    const newGross = { ...yearConfig.gross_profit_account_ids };
     const newOpex = { ...yearConfig.opex_account_ids };
-    const newNoix = { ...yearConfig.noix_account_ids };
 
     const sourceLabel = MONTHS.find((m) => m.key === copySourceMonth)?.label ?? copySourceMonth;
 
@@ -347,18 +323,14 @@ export default function LaporanLabaRugiTemplatePage() {
       MONTHS.forEach(({ key }) => {
         newRev[key] = [...sourceRev];
         newCogs[key] = [...sourceCogs];
-        newGross[key] = [...sourceGross];
         newOpex[key] = [...sourceOpex];
-        newNoix[key] = [...sourceNoix];
       });
       toast.success(`Konfigurasi akun dari bulan ${sourceLabel} berhasil disalin ke seluruh bulan!`);
     } else {
       const targetMonthKey = copyTargetMonthMode;
       newRev[targetMonthKey] = [...sourceRev];
       newCogs[targetMonthKey] = [...sourceCogs];
-      newGross[targetMonthKey] = [...sourceGross];
       newOpex[targetMonthKey] = [...sourceOpex];
-      newNoix[targetMonthKey] = [...sourceNoix];
       const targetLabel = MONTHS.find((m) => m.key === targetMonthKey)?.label ?? targetMonthKey;
       toast.success(`Konfigurasi akun dari bulan ${sourceLabel} berhasil disalin ke bulan ${targetLabel}!`);
     }
@@ -367,18 +339,67 @@ export default function LaporanLabaRugiTemplatePage() {
       ...prev,
       revenue_account_ids: newRev,
       cogs_account_ids: newCogs,
-      gross_profit_account_ids: newGross,
       opex_account_ids: newOpex,
-      noix_account_ids: newNoix,
     }));
 
     setIsCopyDialogOpen(false);
+  };
+
+  // Action: Reset seluruh akun dari masing-masing grup pada bulan tertentu
+  const handleConfirmResetMonth = () => {
+    if (!resetMonthTarget) return;
+
+    const targetLabel = MONTHS.find((m) => m.key === resetMonthTarget)?.label ?? resetMonthTarget;
+
+    setYearConfig((prev) => ({
+      ...prev,
+      revenue_account_ids: { ...prev.revenue_account_ids, [resetMonthTarget]: [] },
+      cogs_account_ids: { ...prev.cogs_account_ids, [resetMonthTarget]: [] },
+      opex_account_ids: { ...prev.opex_account_ids, [resetMonthTarget]: [] },
+    }));
+
+    toast.success(`Seluruh akun pada bulan ${targetLabel} berhasil dikosongkan.`);
+    setResetMonthTarget(null);
+  };
+
+  const sanitizeGroupAccounts = (
+    monthlyData: Record<MonthKey, number[]>,
+  ): Record<MonthKey, number[]> => {
+    const result: Record<MonthKey, number[]> = {} as Record<MonthKey, number[]>;
+    for (const m of MONTHS) {
+      const list = monthlyData[m.key] || [];
+      result[m.key] = Array.from(new Set(list.filter((id) => Number(id) > 0)));
+    }
+    return result;
   };
 
   const handleSave = async () => {
     if (!resolvedCompanyId) {
       toast.error('Perusahaan belum dipilih.');
       return;
+    }
+
+    // Validasi: satu akun tidak boleh masuk ke lebih dari satu grup kalkulasi pada bulan yang sama
+    for (const m of MONTHS) {
+      const seenAccounts = new Map<number, string>();
+      for (const group of CALC_GROUPS) {
+        const list = yearConfig[group.key][m.key] || [];
+        for (const id of list) {
+          const numId = Number(id);
+          if (numId > 0) {
+            if (seenAccounts.has(numId)) {
+              const prevGroupTitle = seenAccounts.get(numId);
+              const accObj = accounts.find((a) => Number(a.id) === numId);
+              const accLabel = accObj ? `${accObj.code} - ${accObj.name}` : `ID ${numId}`;
+              toast.error(
+                `Akun [${accLabel}] tidak boleh digunakan di lebih dari satu grup pada bulan ${m.label} (sudah dipilih di "${prevGroupTitle}" dan "${group.title}").`,
+              );
+              return;
+            }
+            seenAccounts.set(numId, group.title);
+          }
+        }
+      }
     }
 
     const templateData = templateQuery.data?.data?.template;
@@ -391,11 +412,9 @@ export default function LaporanLabaRugiTemplatePage() {
     const payload: SaveProfitLossTemplateYearPayload = {
       year: selectedYear,
       tax: !isNaN(Number(parsedTax)) ? parsedTax : null,
-      revenue_account_ids: yearConfig.revenue_account_ids,
-      cogs_account_ids: yearConfig.cogs_account_ids,
-      gross_profit_account_ids: yearConfig.gross_profit_account_ids,
-      opex_account_ids: yearConfig.opex_account_ids,
-      noix_account_ids: yearConfig.noix_account_ids,
+      revenue_account_ids: sanitizeGroupAccounts(yearConfig.revenue_account_ids),
+      cogs_account_ids: sanitizeGroupAccounts(yearConfig.cogs_account_ids),
+      opex_account_ids: sanitizeGroupAccounts(yearConfig.opex_account_ids),
     };
 
     try {
@@ -489,10 +508,8 @@ export default function LaporanLabaRugiTemplatePage() {
                 </Label>
                 <Button
                   type="button"
-                  variant="ghost"
-                  size="sm"
+                  variant="default"
                   onClick={() => setIsAddYearOpen(true)}
-                  className="h-7 text-xs text-orange-600 hover:text-orange-700 hover:bg-orange-50 px-2"
                 >
                   <Plus className="mr-1 h-3.5 w-3.5" />
                   Tambah Tahun
@@ -521,7 +538,7 @@ export default function LaporanLabaRugiTemplatePage() {
             {/* Input Pajak Tahunan */}
             <div className="space-y-2">
               <Label htmlFor="tax-input" className="text-sm font-semibold text-slate-800">
-                Pajak Global Tahun {selectedYear} (%)
+                Pajak Tahun {selectedYear} (%)
               </Label>
               <div className="relative">
                 <Input
@@ -550,7 +567,7 @@ export default function LaporanLabaRugiTemplatePage() {
                 </span>
               </div>
               <p className="text-xs text-slate-500">
-                Grup kalkulasi di setiap bulan ditampilkan secara ringkas inline.
+                Menampilkan data akun berdasarkan bulan untuk tahun terkait.
               </p>
             </div>
           </div>
@@ -573,11 +590,9 @@ export default function LaporanLabaRugiTemplatePage() {
 
               // Hitung total akun terkonfigurasi di bulan ini
               const totalAccountsInMonth =
-                (yearConfig.revenue_account_ids[monthKey]?.length || 0) +
-                (yearConfig.cogs_account_ids[monthKey]?.length || 0) +
-                (yearConfig.gross_profit_account_ids[monthKey]?.length || 0) +
-                (yearConfig.opex_account_ids[monthKey]?.length || 0) +
-                (yearConfig.noix_account_ids[monthKey]?.length || 0);
+                (yearConfig.revenue_account_ids[monthKey]?.filter((id) => Number(id) > 0).length || 0) +
+                (yearConfig.cogs_account_ids[monthKey]?.filter((id) => Number(id) > 0).length || 0) +
+                (yearConfig.opex_account_ids[monthKey]?.filter((id) => Number(id) > 0).length || 0);
 
               return (
                 <CollapsibleBox
@@ -605,6 +620,25 @@ export default function LaporanLabaRugiTemplatePage() {
                         size="sm"
                         onClick={(e) => {
                           e.stopPropagation();
+                          setResetMonthTarget(monthKey);
+                        }}
+                        disabled={totalAccountsInMonth === 0}
+                        className="h-7 text-xs px-2 text-rose-600 hover:text-rose-700 hover:bg-rose-50 disabled:text-slate-300 hidden sm:inline-flex"
+                        title={
+                          totalAccountsInMonth > 0
+                            ? `Reset seluruh akun pada bulan ${month.label}`
+                            : 'Belum ada akun untuk direset'
+                        }
+                      >
+                        <RotateCcw className="mr-1 h-3 w-3" />
+                        Reset Data Akun
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={(e) => {
+                          e.stopPropagation();
                           setCopySourceMonth(monthKey);
                           setCopyActiveTab('month');
                           setIsCopyDialogOpen(true);
@@ -622,7 +656,14 @@ export default function LaporanLabaRugiTemplatePage() {
                   <div className="divide-y divide-slate-100 bg-white rounded-md border border-slate-100 px-3 sm:px-4">
                     {CALC_GROUPS.map((group) => {
                       const accountIds = yearConfig[group.key][monthKey] || [];
-                      const rows = accountIds.length > 0 ? accountIds : [0];
+                      const activeCount = accountIds.filter((id) => Number(id) > 0).length;
+
+                      // Kumpulkan seluruh ID akun aktif dari grup kalkulasi LAIN pada bulan yang sama
+                      const otherGroupsAccountIds = CALC_GROUPS
+                        .filter((g) => g.key !== group.key)
+                        .flatMap((g) =>
+                          (yearConfig[g.key][monthKey] || []).filter((id) => Number(id) > 0),
+                        );
 
                       return (
                         <div
@@ -631,78 +672,24 @@ export default function LaporanLabaRugiTemplatePage() {
                         >
                           {/* Kolom Kiri: Header Grup Inline */}
                           <div className="w-full lg:w-60 xl:w-64 shrink-0 space-y-1">
-                            <div className="flex items-center gap-2">
-                              <span className="text-sm font-semibold text-slate-900">{group.title}</span>
-                              <Badge
-                                variant="outline"
-                                className={cn(
-                                  'text-[10px] px-1.5 py-0 font-medium',
-                                  group.badge === 'Kredit'
-                                    ? 'border-blue-200 bg-blue-50 text-blue-700'
-                                    : 'border-rose-200 bg-rose-50 text-rose-700',
-                                )}
-                              >
-                                {group.badge}
-                              </Badge>
-                            </div>
+                            <span className="text-sm font-semibold text-slate-900">{group.title}</span>
                             <p className="text-xs text-slate-500">{group.description}</p>
                             <span className="inline-block text-[11px] font-medium text-slate-400">
-                              {accountIds.length} akun aktif
+                              {activeCount} akun aktif
                             </span>
                           </div>
 
-                          {/* Kolom Kanan: Pilihan Akun Inline */}
-                          <div className="flex-1 min-w-0 space-y-2">
-                            {rows.map((accId, accIdx) => (
-                              <div
-                                key={`${monthKey}-${group.key}-${accIdx}`}
-                                className="flex items-center gap-2"
-                              >
-                                <div className="flex-1 min-w-0">
-                                  <AccountSelect
-                                    value={accId || null}
-                                    accounts={accounts}
-                                    expectedType={group.expectedType}
-                                    onChange={(nextVal) => {
-                                      const next = [...accountIds];
-                                      if (nextVal) {
-                                        next[accIdx] = nextVal;
-                                      } else {
-                                        next.splice(accIdx, 1);
-                                      }
-                                      handleAccountChange(group.key, monthKey, next);
-                                    }}
-                                  />
-                                </div>
-                                <Button
-                                  type="button"
-                                  variant="ghost"
-                                  size="icon"
-                                  aria-label="Hapus akun"
-                                  onClick={() => {
-                                    const next = accountIds.filter((_, idx) => idx !== accIdx);
-                                    handleAccountChange(group.key, monthKey, next);
-                                  }}
-                                  disabled={accountIds.length === 0}
-                                  className="h-9 w-9 shrink-0 text-slate-400 hover:text-rose-600 hover:bg-rose-50"
-                                >
-                                  <Trash2 className="h-4 w-4" />
-                                </Button>
-                              </div>
-                            ))}
-
-                            <Button
-                              type="button"
-                              variant="outline"
-                              size="sm"
-                              onClick={() => {
-                                handleAccountChange(group.key, monthKey, [...accountIds, 0]);
+                          {/* Kolom Kanan: Multiple Select Akun */}
+                          <div className="flex-1 min-w-0">
+                            <AccountMultipleSelect
+                              values={accountIds}
+                              accounts={accounts}
+                              disabledValues={otherGroupsAccountIds.map(String)}
+                              placeholder={`Pilih akun ${group.title.toLowerCase()}...`}
+                              onChange={(next) => {
+                                handleAccountChange(group.key, monthKey, next);
                               }}
-                              className="h-8 text-xs border-dashed text-slate-600 hover:text-slate-900 hover:bg-slate-50"
-                            >
-                              <Plus className="mr-1 h-3.5 w-3.5" />
-                              Tambah Akun
-                            </Button>
+                            />
                           </div>
                         </div>
                       );
@@ -925,6 +912,40 @@ export default function LaporanLabaRugiTemplatePage() {
           </Tabs>
         </DialogContent>
       </Dialog>
+
+      {/* Modal Konfirmasi Reset Data Akun Bulan */}
+      <AlertDialog
+        open={Boolean(resetMonthTarget)}
+        onOpenChange={(open) => {
+          if (!open) setResetMonthTarget(null);
+        }}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              Reset Data Akun Bulan {MONTHS.find((m) => m.key === resetMonthTarget)?.label}?
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              Apakah Anda yakin ingin mereset seluruh akun pada bulan{' '}
+              <strong>
+                {MONTHS.find((m) => m.key === resetMonthTarget)?.label} {selectedYear}
+              </strong>
+              ? Tindakan ini akan mengosongkan semua akun dari masing-masing grup kalkulasi di bulan ini.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => setResetMonthTarget(null)}>
+              Batal
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleConfirmResetMonth}
+              className="bg-rose-600 text-white hover:bg-rose-700 focus-visible:ring-rose-500"
+            >
+              Ya, Reset Akun
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </DashboardLayout>
   );
 }

@@ -17,11 +17,8 @@ export const getProfitLossReport = async (
 ): Promise<ProfitLossReportResponse> => {
   const response = await apiClient.get<ProfitLossReportResponse>(`${basePath}/${companyId}`, {
     params: {
-      start_date: filters.start_date || undefined,
-      end_date: filters.end_date || undefined,
       year: filters.year || undefined,
       month: filters.month || undefined,
-      category: filters.category || undefined,
     },
   });
   return response.data;
@@ -103,8 +100,8 @@ export const exportProfitLossReport = async (
 ): Promise<void> => {
   const response = await apiClient.get(`${basePath}/${companyId}/export`, {
     params: {
-      start_date: filters.start_date || undefined,
-      end_date: filters.end_date || undefined,
+      year: filters.year || undefined,
+      month: filters.month || undefined,
     },
     responseType: 'blob',
   });
