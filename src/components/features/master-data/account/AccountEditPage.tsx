@@ -15,6 +15,7 @@ import { ApiValidationError } from '@/lib/api/response';
 import { toast } from 'sonner';
 import type { AccountGroup } from '@/@types/account-group.types';
 import { usePermissionGuard } from '@/hooks/usePermissionGuard';
+import { normalizeAccountCategory } from '@/lib/account';
 
 export const AccountEditPage = () => {
   const router = useRouter();
@@ -91,7 +92,7 @@ export const AccountEditPage = () => {
         type: data.type === 'debit' ? 'debet' : (data.type ?? 'debet'),
         pos_code: data.pos_code ?? data.posCode ?? '',
         description: data.description ?? '',
-        category: (data.category as AccountFormValues['category']) ?? undefined,
+        category: (normalizeAccountCategory(data.category) as AccountFormValues['category']) ?? undefined,
         isActive: data.isActive,
         is_lock: !!data.is_lock,
       });

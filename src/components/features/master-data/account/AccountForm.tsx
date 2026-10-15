@@ -10,7 +10,7 @@ import type { AccountFormValues } from '@/scheme/account-master.schema';
 import type { UseFormReturn } from 'react-hook-form';
 import { SearchableSelect } from '@/components/features/vehicle-data/SearchableSelect';
 import { CreateAccountGroupDialog } from '@/components/features/account/CreateAccountGroupDialog';
-import { ACCOUNT_CATEGORY_OPTIONS, ACCOUNT_TYPE_OPTIONS } from '@/lib/account';
+import { ACCOUNT_CATEGORY_OPTIONS, ACCOUNT_CATEGORY_SEARCHABLE_OPTIONS, ACCOUNT_TYPE_OPTIONS, normalizeAccountCategory } from '@/lib/account';
 import { Plus } from 'lucide-react';
 import RequiredMark from '@/components/ui/required-mark';
 import { cn } from '@/lib/utils';
@@ -182,27 +182,31 @@ export const AccountForm = ({
           <FormField
             control={form.control}
             name="category"
-            render={({ field }) => (
-              <FormItem className="space-y-1.5">
-                <FormLabel className="text-xs font-semibold text-slate-700">Kategori Laporan</FormLabel>
-                <FormControl>
-                  <Select value={field.value ?? 'none'} onValueChange={(val) => field.onChange(val === 'none' ? null : val)} disabled={lockRestricted}>
-                    <SelectTrigger className={cn("h-10 rounded-md border-slate-200 px-3 text-sm shadow-none focus:ring-slate-300 bg-white", lockRestricted && "pointer-events-none opacity-60 bg-slate-50 cursor-not-allowed")} tabIndex={lockRestricted ? -1 : undefined}>
-                      <SelectValue placeholder="Pilih Kategori Laporan (Opsional)" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="none" className="text-sm text-slate-500">Pilih Kategori Laporan (Opsional)</SelectItem>
-                      {ACCOUNT_CATEGORY_OPTIONS.map((option) => (
-                        <SelectItem key={option.value} value={option.value} className="text-sm">
-                          {option.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </FormControl>
-                <FormMessage className="text-xs" />
-              </FormItem>
-            )}
+            render={({ field }) => {
+              const currentValue = field.value ? (normalizeAccountCategory(field.value) ?? field.value) : '';
+
+              return (
+                <FormItem className="space-y-1.5">
+                  <FormLabel className="text-xs font-semibold text-slate-700">Kategori Laporan</FormLabel>
+                  <FormControl>
+                    <SearchableSelect
+                      value={currentValue}
+                      onChange={(value) => field.onChange(!value || value === 'none' ? null : value)}
+                      options={ACCOUNT_CATEGORY_SEARCHABLE_OPTIONS}
+                      placeholder="Pilih Kategori Laporan (Opsional)"
+                      searchPlaceholder="Cari kategori laporan..."
+                      emptyText="Kategori laporan tidak ditemukan."
+                      disabled={lockRestricted}
+                      className={cn(
+                        "h-10 rounded-md border-slate-200 px-3 text-sm shadow-none focus-visible:ring-slate-300 bg-white",
+                        lockRestricted && "pointer-events-none opacity-60 bg-slate-50 cursor-not-allowed"
+                      )}
+                    />
+                  </FormControl>
+                  <FormMessage className="text-xs" />
+                </FormItem>
+              );
+            }}
           />
         </div>
 

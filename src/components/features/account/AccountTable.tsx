@@ -4,7 +4,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip
 import { Button } from '@/components/ui/button';
 import { CopyBox } from '@/components/ui/copy-box';
 import { ReferenceLink } from '@/components/ui/reference-link';
-import { getAccountCategoryLabel } from '@/lib/account';
+import { getAccountCategoryBadgeClass, getAccountCategoryLabel } from '@/lib/account';
 import type { Account } from '@/@types/account.types';
 import { useRouter } from 'next/router';
 import { MoreVertical, Lock } from 'lucide-react';
@@ -141,33 +141,9 @@ export function AccountTable({
         cell: (account) => {
           if (!account.category) return <span className="text-gray-400">-</span>;
 
-          let badgeClass = 'bg-gray-50 text-gray-700 border-gray-200 hover:bg-gray-50';
-          const label = getAccountCategoryLabel(account.category);
-
-          switch (account.category) {
-            case 'general':
-              badgeClass = 'bg-blue-50 text-blue-700 border-blue-200 hover:bg-blue-50';
-              break;
-            case 'operational':
-              badgeClass = 'bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-50';
-              break;
-            case 'director_receivable':
-              badgeClass = 'bg-purple-50 text-purple-700 border-purple-200 hover:bg-purple-50';
-              break;
-            case 'shareholder_receivable':
-              badgeClass = 'bg-indigo-50 text-indigo-700 border-indigo-200 hover:bg-indigo-50';
-              break;
-            case 'receivable':
-              badgeClass = 'bg-amber-50 text-amber-700 border-amber-200 hover:bg-amber-50';
-              break;
-            case 'inventory':
-              badgeClass = 'bg-rose-50 text-rose-700 border-rose-200 hover:bg-rose-50';
-              break;
-          }
-
           return (
-            <Badge variant="outline" className={badgeClass}>
-              {label}
+            <Badge variant="outline" className={getAccountCategoryBadgeClass(account.category)}>
+              {getAccountCategoryLabel(account.category)}
             </Badge>
           );
         },
