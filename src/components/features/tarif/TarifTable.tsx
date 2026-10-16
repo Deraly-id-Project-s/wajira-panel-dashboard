@@ -2,7 +2,7 @@ import { useMemo } from 'react';
 import BaseTable, { ColumnDef } from '@/components/ui/base-table';
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from '@/components/ui/dropdown-menu';
 import { Button } from '@/components/ui/button';
-import { MoreVertical } from 'lucide-react';
+import { MoreVertical, ArrowRight } from 'lucide-react';
 import type { Tarif } from '@/@types/tarif.types';
 import { currenciesFormat } from '@/components/ui/currenciesFormat';
 
@@ -28,23 +28,52 @@ export function TarifTable({
     const columns = useMemo<ColumnDef<Tarif>[]>(
         () => [
             {
-                header: 'LOADING IN',
+                header: 'RUTE (LOADING IN ➔ LOADING OUT)',
                 accessorKey: 'loadingIn',
-                sortable: true,
-                cell: (item) => item.loadingIn || '-',
-            },
-            {
-                header: 'LOADING OUT',
-                accessorKey: 'loadingOut',
-                sortable: true,
-                cell: (item) => item.loadingOut || '-',
+                sortable: false,
+                className: 'min-w-[220px]',
+                cell: (item) => {
+                    const routes = item.routes || [];
+                    if (routes.length > 0) {
+                        return (
+                            <div className="flex flex-wrap items-center gap-1.5 text-xs">
+                                {routes.map((r, idx) => (
+                                    <span key={r.id || idx} className="inline-flex items-center gap-1">
+                                        <span
+                                            className={`font-semibold ${
+                                                r.pivot?.state_at === 'loading_in'
+                                                    ? 'text-blue-700'
+                                                    : r.pivot?.state_at === 'loading_out'
+                                                    ? 'text-emerald-700'
+                                                    : 'text-slate-800'
+                                            }`}
+                                        >
+                                            {r.name}
+                                        </span>
+                                        {idx < routes.length - 1 && (
+                                            <ArrowRight className="h-3.5 w-3.5 text-slate-400 shrink-0" />
+                                        )}
+                                    </span>
+                                ))}
+                            </div>
+                        );
+                    }
+
+                    return (
+                        <div className="flex items-center gap-1.5 text-xs font-semibold text-slate-800">
+                            <span className="text-blue-700">{item.loadingIn || '-'}</span>
+                            <ArrowRight className="h-3.5 w-3.5 text-slate-400" />
+                            <span className="text-emerald-700">{item.loadingOut || '-'}</span>
+                        </div>
+                    );
+                },
             },
             {
                 header: 'JARAK (KM)',
                 accessorKey: 'distance',
                 sortable: true,
                 alignment: 'center',
-                cell: (item) => item.distance ? item.distance + ' Km' : '-',
+                cell: (item) => (item.distance ? item.distance + ' Km' : '-'),
             },
             {
                 header: 'UJ TOWING',
@@ -82,48 +111,44 @@ export function TarifTable({
                 cell: (item) => currenciesFormat('idr', item.invFuso),
             },
             {
-                header: 'ACTION',
+                header: 'Aksi',
                 alignment: 'center',
                 sticky: 'right',
                 cell: (item) => (
-                    <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" className="h-8 w-8 p-0 rounded-full text-slate-600 hover:bg-slate-100 hover:text-slate-900">
-                                <MoreVertical className="h-4 w-4" />
-                            </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end" className="min-w-[150px] rounded-md border-slate-200 p-1.5 shadow-lg">
-                            <DropdownMenuItem
-                                onSelect={(e) => {
-                                    e.preventDefault();
-                                    onVersioning(item);
-                                }}
-                                className="rounded-md px-3 py-2 text-sm text-slate-900 focus:bg-slate-50 cursor-pointer"
-                            >
-                                Detail
-                            </DropdownMenuItem>
-                            <DropdownMenuItem
-                                onSelect={(e) => {
-                                    e.preventDefault();
-                                    onEdit(item);
-                                }}
-                                disabled={!canEdit}
-                                className="rounded-md px-3 py-2 text-sm text-slate-900 focus:bg-slate-50 cursor-pointer"
-                            >
-                                Edit
-                            </DropdownMenuItem>
-                            <DropdownMenuItem
-                                onSelect={(e) => {
-                                    e.preventDefault();
-                                    onDelete(item);
-                                }}
-                                disabled={!canDelete}
-                                className="rounded-md px-3 py-2 text-sm text-red-600 focus:bg-red-50 focus:text-red-600 cursor-pointer"
-                            >
-                                Hapus
-                            </DropdownMenuItem>
-                        </DropdownMenuContent>
-                    </DropdownMenu>
+                    <div className="flex justify-center">
+                        <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                                <Button
+                                    variant="ghost"
+                                    className="h-8 w-8 p-0 rounded-full text-slate-600 hover:bg-slate-100 hover:text-slate-900"
+                                >
+                                    <MoreVertical className="h-4 w-4" />
+                                </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end" className="min-w-[150px] rounded-md border-slate-200 p-1.5 shadow-lg">
+                                <DropdownMenuItem
+                                    onClick={() => onVersioning(item)}
+                                    className="rounded-md px-3 py-2 text-sm text-slate-900 focus:bg-slate-50 cursor-pointer"
+                                >
+                                    Detail
+                                </DropdownMenuItem>
+                                <DropdownMenuItem
+                                    disabled={!canEdit}
+                                    onClick={() => onEdit(item)}
+                                    className="rounded-md px-3 py-2 text-sm text-slate-900 focus:bg-slate-50 cursor-pointer disabled:cursor-not-allowed"
+                                >
+                                    Edit
+                                </DropdownMenuItem>
+                                <DropdownMenuItem
+                                    disabled={!canDelete}
+                                    onClick={() => onDelete(item)}
+                                    className="rounded-md px-3 py-2 text-sm text-red-600 focus:bg-red-50 focus:text-red-600 cursor-pointer disabled:cursor-not-allowed"
+                                >
+                                    Hapus
+                                </DropdownMenuItem>
+                            </DropdownMenuContent>
+                        </DropdownMenu>
+                    </div>
                 ),
             },
         ],
@@ -135,7 +160,7 @@ export function TarifTable({
             data={data}
             columns={columns}
             loading={isLoading}
-            defaultSort={{ key: 'loadingIn', direction: 'asc' }}
+            defaultSort={{ key: 'distance', direction: 'asc' }}
         />
     );
 }

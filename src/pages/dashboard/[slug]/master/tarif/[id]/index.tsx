@@ -45,9 +45,95 @@ export default function TarifDetailPage() {
   };
   const handleDelete = (version: TarifPriceVersion) => { if (!window.confirm(`Hapus versi tarif "${version.name}"?`)) return; deleteMutation.mutate(version.id, { onSuccess: () => toast.success('Versi tarif berhasil dihapus'), onError: (error: any) => toast.error(error?.response?.data?.message || 'Gagal menghapus versi tarif') }); };
   if (isLoading) return <DashboardLayout><LoadingState variant="page" /></DashboardLayout>;
-  if (isError || !tarif) return <DashboardLayout><div className="p-10 text-center text-red-500">Data tarif tidak ditemukan.</div></DashboardLayout>;
-  return <DashboardLayout><div className="space-y-6"><PageHeader title="Versi Tarif" subtitle={`${tarif.loadingIn} - ${tarif.loadingOut} | Jarak ${tarif.distance} KM`} breadcrumbs={[{ label: 'Tarif', onClick: () => router.push(`/dashboard/${slug}/master/tarif`) }, { label: 'Versi Tarif' }]} onBack={() => router.push(`/dashboard/${slug}/master/tarif`)} /><div className="grid grid-cols-1 gap-4 md:grid-cols-3"><div className="rounded-md border bg-white p-4"><p className="text-xs text-slate-500">UJ Towing Saat Ini</p><p className="mt-2 text-lg font-semibold">{currenciesFormat('idr', tarif.ujTowing)}</p></div><div className="rounded-md border bg-white p-4"><p className="text-xs text-slate-500">UJ CDD Saat Ini</p><p className="mt-2 text-lg font-semibold">{currenciesFormat('idr', tarif.ujCdd)}</p></div><div className="rounded-md border bg-white p-4"><p className="text-xs text-slate-500">UJ Fuso Saat Ini</p><p className="mt-2 text-lg font-semibold">{currenciesFormat('idr', tarif.ujFuso)}</p></div></div><div className="rounded-md border border-slate-200 bg-white p-6 shadow-sm"><div className="mb-4 border-b pb-4"><h2 className="text-lg font-bold text-slate-900">Riwayat Versi Tarif</h2><p className="text-sm text-slate-500">Kelola riwayat UJ Towing, UJ CDD, dan UJ Fuso.</p></div>
-    <SearchPagination searchValue={search} onSearchChange={setSearch} searchPlaceholder="Cari versi tarif..." searchAriaLabel="Cari versi tarif" page={page} perPage={perPage} total={versions.data?.total ?? 0} lastPage={versions.data?.last_page ?? 1} onPageChange={setPage} onPerPageChange={setPerPage} actions={canCreate && <Button onClick={() => { setSelected(undefined); setFormOpen(true); }} className="btn-primary!"><Plus className="mr-2 h-4 w-4" /> Tambah Versi</Button>}>
-    <TarifPriceVersionTable data={versions.data?.data || []} isLoading={versions.isLoading} onEdit={(version) => { setSelected(version); setFormOpen(true); }} onDelete={handleDelete} canEdit={canEdit} canDelete={canDelete} /></SearchPagination></div></div>
-    <TarifPriceVersionForm open={formOpen} onOpenChange={setFormOpen} initialData={selected} onSubmit={handleSubmit} isSubmitting={createMutation.isPending || updateMutation.isPending} /></DashboardLayout>;
+  if (isError || !tarif) {
+    return (
+      <DashboardLayout>
+        <div className="p-6 text-center text-red-500">Gagal memuat detail tarif</div>
+      </DashboardLayout>
+    );
+  }
+  const routeTitle =
+    tarif.routes && tarif.routes.length > 0
+      ? tarif.routes.map((r) => r.name).join(' ➔ ')
+      : [tarif.loadingIn, tarif.loadingOut].filter(Boolean).join(' ➔ ') || '-';
+
+  return (
+    <DashboardLayout>
+      <div className="space-y-6">
+        <PageHeader
+          title="Versi Tarif"
+          subtitle={`${routeTitle} | Jarak ${tarif.distance} KM`}
+          breadcrumbs={[
+            { label: 'Tarif', onClick: () => router.push(`/dashboard/${slug}/master/tarif`) },
+            { label: 'Versi Tarif' },
+          ]}
+          onBack={() => router.push(`/dashboard/${slug}/master/tarif`)}
+        />
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+          <div className="rounded-md border bg-white p-4">
+            <p className="text-xs text-slate-500">UJ Towing Saat Ini</p>
+            <p className="mt-2 text-lg font-semibold">{currenciesFormat('idr', tarif.ujTowing)}</p>
+          </div>
+          <div className="rounded-md border bg-white p-4">
+            <p className="text-xs text-slate-500">UJ CDD Saat Ini</p>
+            <p className="mt-2 text-lg font-semibold">{currenciesFormat('idr', tarif.ujCdd)}</p>
+          </div>
+          <div className="rounded-md border bg-white p-4">
+            <p className="text-xs text-slate-500">UJ Fuso Saat Ini</p>
+            <p className="mt-2 text-lg font-semibold">{currenciesFormat('idr', tarif.ujFuso)}</p>
+          </div>
+        </div>
+        <div className="rounded-md border border-slate-200 bg-white p-6 shadow-sm">
+          <div className="mb-4 border-b pb-4">
+            <h2 className="text-lg font-bold text-slate-900">Riwayat Versi Tarif</h2>
+            <p className="text-sm text-slate-500">Kelola riwayat UJ Towing, UJ CDD, dan UJ Fuso.</p>
+          </div>
+          <SearchPagination
+            searchValue={search}
+            onSearchChange={setSearch}
+            searchPlaceholder="Cari versi tarif..."
+            searchAriaLabel="Cari versi tarif"
+            page={page}
+            perPage={perPage}
+            total={versions.data?.total ?? 0}
+            lastPage={versions.data?.last_page ?? 1}
+            onPageChange={setPage}
+            onPerPageChange={setPerPage}
+            actions={
+              canCreate && (
+                <Button
+                  onClick={() => {
+                    setSelected(undefined);
+                    setFormOpen(true);
+                  }}
+                  className="btn-primary!"
+                >
+                  <Plus className="mr-2 h-4 w-4" /> Tambah Versi
+                </Button>
+              )
+            }
+          >
+            <TarifPriceVersionTable
+              data={versions.data?.data || []}
+              isLoading={versions.isLoading}
+              onEdit={(version) => {
+                setSelected(version);
+                setFormOpen(true);
+              }}
+              onDelete={handleDelete}
+              canEdit={canEdit}
+              canDelete={canDelete}
+            />
+          </SearchPagination>
+        </div>
+      </div>
+      <TarifPriceVersionForm
+        open={formOpen}
+        onOpenChange={setFormOpen}
+        initialData={selected}
+        onSubmit={handleSubmit}
+        isSubmitting={createMutation.isPending || updateMutation.isPending}
+      />
+    </DashboardLayout>
+  );
 }
