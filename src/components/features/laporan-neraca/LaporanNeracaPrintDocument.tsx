@@ -101,16 +101,6 @@ export function LaporanNeracaPrintDocument({
   totalPassivaIdr,
   totalPassivaUsd,
 }: LaporanNeracaPrintDocumentProps) {
-  if (!template) return null;
-
-  const backgroundUrl = template.documentTemplate
-    ? getObjectStorageUrl(template.documentTemplate)
-    : fallbackBackground;
-  const signatureUrl = getObjectStorageUrl(template.personSignature);
-  const tableColor = /^#[0-9a-f]{6}$/i.test(template.tableColor) ? template.tableColor : '#1f4163';
-  const headerInformation = htmlToPlainText(template.headerInformation);
-  const footerInformation = htmlToPlainText(template.footerInformation);
-
   // Chunking for A4 page isolation
   const pages = useMemo(() => {
     const assetCount = currentAssets.accounts.length + fixedAssets.accounts.length;
@@ -179,6 +169,16 @@ export function LaporanNeracaPrintDocument({
 
     return result;
   }, [currentAssets.accounts, fixedAssets.accounts, liabilities.accounts, equity.accounts]);
+
+  if (!template) return null;
+
+  const backgroundUrl = template.documentTemplate
+    ? getObjectStorageUrl(template.documentTemplate)
+    : fallbackBackground;
+  const signatureUrl = getObjectStorageUrl(template.personSignature);
+  const tableColor = /^#[0-9a-f]{6}$/i.test(template.tableColor) ? template.tableColor : '#1f4163';
+  const headerInformation = htmlToPlainText(template.headerInformation);
+  const footerInformation = htmlToPlainText(template.footerInformation);
 
   return (
     <div className="accounting-print-root laporan-neraca-print-root" aria-hidden="true">
