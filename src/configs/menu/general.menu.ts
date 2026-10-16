@@ -119,7 +119,7 @@ export const getGeneralMenus = (slug: string): MenuItem[] => {
           children: [
             {
               label: 'Order List',
-              href: base('/administrasi/order-list'),
+              href: base('/order-list'),
             },
             {
               label: 'DO Ekspedisi',
@@ -127,7 +127,7 @@ export const getGeneralMenus = (slug: string): MenuItem[] => {
             },
             {
               label: 'DO Invoice',
-              href: base('/administrasi/do-invoice'),
+              href: base('/do-invoice'),
             },
           ]
         },
@@ -146,7 +146,7 @@ export const getGeneralMenus = (slug: string): MenuItem[] => {
         },
         {
           label: 'Bukti Potong',
-          href: base('/administrasi/bukti-potong'),
+          href: base('/bukti-potong'),
         },
       ],
     },

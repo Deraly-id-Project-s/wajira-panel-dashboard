@@ -96,7 +96,7 @@ export const getYanotamaMenus = (slug: string): MenuItem[] => {
                 // },
                 {
                     label: 'Bukti Potong',
-                    href: base('/administrasi/bukti-potong'),
+                    href: base('/bukti-potong'),
                 },
             ],
         },

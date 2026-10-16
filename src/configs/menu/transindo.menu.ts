@@ -45,6 +45,10 @@ export const getTransindoMenus = (slug: string): MenuItem[] => {
           href: base('/master/tarif'),
         },
         {
+          label: 'Rute',
+          href: base('/master/rute'),
+        },
+        {
           label: 'Driver',
           href: base('/master/driver'),
         },
@@ -75,7 +79,7 @@ export const getTransindoMenus = (slug: string): MenuItem[] => {
           children: [
             {
               label: 'Order List',
-              href: base('/administrasi/order-list'),
+              href: base('/order-list'),
             },
             {
               label: 'DO Ekspedisi',
@@ -83,7 +87,7 @@ export const getTransindoMenus = (slug: string): MenuItem[] => {
             },
             {
               label: 'DO Invoice',
-              href: base('/administrasi/do-invoice'),
+              href: base('/do-invoice'),
             },
           ]
         },
@@ -93,7 +97,7 @@ export const getTransindoMenus = (slug: string): MenuItem[] => {
         },
         {
           label: 'Bukti Potong',
-          href: base('/administrasi/bukti-potong'),
+          href: base('/bukti-potong'),
         },
       ],
     },

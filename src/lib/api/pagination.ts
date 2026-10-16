@@ -5,7 +5,8 @@ export const buildLaravelPaginationQuery = (params: PaginationParams) => ({
   per_page: params.perPage ?? 10,
   search: params.search?.trim() ? params.search.trim() : undefined,
   sort_by: params.sort_by,
-  sort_order: params.sort_order,
+  order_by: 'created_at',
+  sort_order: 'desc',
 });
 
 export const getVisiblePageNumbers = (totalPages: number, currentPage: number, windowSize = 5): number[] => {
