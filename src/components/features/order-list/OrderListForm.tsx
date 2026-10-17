@@ -28,6 +28,7 @@ import {
   formatOrderCurrency,
 } from './order-list.utils';
 import { getOrderListFormula } from '@/services/order-list.service';
+import { formatTarifRouteName } from '@/lib/tarif-route-helper';
 import { SelectAdd } from '@/components/ui/select-add';
 import { CustomerFormModal } from '@/components/features/customer/CustomerFormModal';
 import { TarifFormModal } from '@/components/features/tarif/TarifFormModal';
@@ -364,9 +365,12 @@ export function OrderListForm({
       .filter((item) => item.tarifId || item.tarif?.id)
       .map((item) => {
         const id = item.tarifId || item.tarif?.id;
+        const routeLabel = item.tarif
+          ? formatTarifRouteName(item.tarif)
+          : [item.loadingIn, item.loadingOut].filter(Boolean).join(' ➔ ') || `Tarif #${id}`;
         return {
           value: String(id),
-          label: [item.tarif?.loadingIn || item.loadingIn, item.tarif?.loadingOut || item.loadingOut].filter(Boolean).join(' - ') || `Tarif #${id}`,
+          label: routeLabel,
           subtitle: item.tarif?.customer?.name,
         };
       });
@@ -400,7 +404,7 @@ export function OrderListForm({
     () =>
       localTarifRecords.map((item) => ({
         value: String(item.id),
-        label: [item.loadingIn, item.loadingOut].filter(Boolean).join(' - ') || `Tarif #${item.id}`,
+        label: formatTarifRouteName(item) || `Tarif #${item.id}`,
         subtitle: item.customer?.name,
       })),
     [localTarifRecords],
@@ -647,7 +651,7 @@ export function OrderListForm({
     <div className="space-y-6">
       <PageHeader
         breadcrumbs={[
-          { label: 'Order List', onClick: () => router.push(`/dashboard/${slug}/administrasi/order-list`) },
+          { label: 'Order List', onClick: () => router.push(`/dashboard/${slug}/order-list`) },
           { label: mode === 'create' ? 'Tambah Order List' : 'Edit Order List' }
         ]}
         title={mode === 'create' ? 'Tambah Data Order List' : 'Edit Data Order List'}
@@ -656,7 +660,7 @@ export function OrderListForm({
             ? 'Buat pesanan baru dan tentukan rute serta muatan terkait.'
             : 'Perbarui informasi pesanan, rute, dan muatan terkait.'
         }
-        onBack={() => router.push(`/dashboard/${slug}/administrasi/order-list`)}
+        onBack={() => router.push(`/dashboard/${slug}/order-list`)}
       />
 
       <Form {...form}>
@@ -938,7 +942,7 @@ export function OrderListForm({
 
                     {tarif && (
                       <div className="rounded-md border border-dashed border-slate-200 bg-slate-50/50 px-4 py-2.5 text-xs text-slate-500 font-medium">
-                        Rute Terpilih: {tarif.loadingIn || '-'} ke {tarif.loadingOut || '-'}
+                        Rute Terpilih: {formatTarifRouteName(tarif)}
                       </div>
                     )}
 

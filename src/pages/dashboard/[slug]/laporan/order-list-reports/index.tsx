@@ -94,7 +94,7 @@ export default function OrderListReportsPage() {
       cell: (item) => item.order_list_code ? (
         <CopyBox
           text={item.order_list_code}
-          href={`/dashboard/${slugParam}/administrasi/order-list/detail/${item.id || item.order_list_code}`}
+          href={`/dashboard/${slugParam}/order-list/detail/${item.id || item.order_list_code}`}
         />
       ) : '-',
     },

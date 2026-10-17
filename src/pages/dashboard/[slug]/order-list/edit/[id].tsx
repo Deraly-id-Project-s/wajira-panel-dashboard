@@ -3,6 +3,7 @@ import { useRouter } from 'next/router';
 import { ChevronLeft } from 'lucide-react';
 import { toast } from 'sonner';
 import type { Tarif } from '@/@types/tarif.types';
+import { formatTarifRouteName } from '@/lib/tarif-route-helper';
 import type { SearchableSelectOption } from '@/components/features/vehicle-data/SearchableSelect';
 import { OrderListForm, type OrderListFormItemValue, type OrderListFormValues } from '@/components/features/order-list/OrderListForm';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
@@ -122,6 +123,7 @@ export default function EditOrderListPage() {
         customerId: Number(item.tarif.customerId ?? 0),
         loadingIn: item.tarif.loadingIn,
         loadingOut: item.tarif.loadingOut,
+        routes: item.tarif.routes,
         distance: Number(item.tarif.distance ?? 0),
         ujTowing: item.tarif.ujTowing ?? null,
         ujCdd: item.tarif.ujCdd ?? null,
@@ -147,7 +149,7 @@ export default function EditOrderListPage() {
     () =>
       tarifRecords.map((item) => ({
         value: String(item.id),
-        label: `${item.loadingIn || '-'} - ${item.loadingOut || '-'}`,
+        label: formatTarifRouteName(item) || `Tarif #${item.id}`,
         subtitle: item.customer?.name,
       })),
     [tarifRecords],
@@ -291,7 +293,7 @@ export default function EditOrderListPage() {
       }
 
       toast.success('Order list berhasil diperbarui');
-      await router.push(`/dashboard/${slug}/administrasi/order-list/detail/${id}`);
+      await router.push(`/dashboard/${slug}/order-list/detail/${id}`);
     } catch (error: any) {
       if (error instanceof ApiValidationError) {
         toast.error(error.message || 'Validasi update order list gagal');
@@ -315,7 +317,7 @@ export default function EditOrderListPage() {
         <div className="space-y-4">
           <div className="flex items-start gap-3">
             <button
-              onClick={() => router.push(`/dashboard/${slug}/administrasi/order-list`)}
+              onClick={() => router.push(`/dashboard/${slug}/order-list`)}
               className="rounded-md p-1 transition-colors hover:bg-slate-100"
             >
               <ChevronLeft className="h-5 w-5 text-slate-500" />
@@ -350,7 +352,7 @@ export default function EditOrderListPage() {
         <div className="space-y-4">
           <div className="flex items-start gap-3">
             <button
-              onClick={() => router.push(`/dashboard/${slug}/administrasi/order-list`)}
+              onClick={() => router.push(`/dashboard/${slug}/order-list`)}
               className="rounded-md p-1 transition-colors hover:bg-slate-100"
             >
               <ChevronLeft className="h-5 w-5 text-slate-500" />
@@ -363,7 +365,7 @@ export default function EditOrderListPage() {
           <div className="rounded-md border border-yellow-200 bg-yellow-50 p-6 text-center">
             <p className="mb-4 text-yellow-700">Data order list tidak ditemukan.</p>
             <button
-              onClick={() => router.push(`/dashboard/${slug}/administrasi/order-list`)}
+              onClick={() => router.push(`/dashboard/${slug}/order-list`)}
               className="inline-flex items-center gap-2 rounded-md bg-yellow-600 px-4 py-2 text-white transition-colors hover:bg-yellow-700"
             >
               Kembali ke Daftar
@@ -392,7 +394,7 @@ export default function EditOrderListPage() {
         onTarifSearch={setTarifSearch}
         onVehicleSearch={setVehicleSearch}
         onDriverSearch={setDriverSearch}
-        onCancel={() => router.push(`/dashboard/${slug}/administrasi/order-list`)}
+        onCancel={() => router.push(`/dashboard/${slug}/order-list`)}
         onSubmit={handleSubmit}
         isSubmitting={
           updateOrderMutation.isPending ||

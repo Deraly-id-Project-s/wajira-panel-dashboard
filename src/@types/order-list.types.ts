@@ -22,8 +22,17 @@ export interface OrderListTarifReference {
   id: number;
   uuid?: string;
   customerId?: number;
-  loadingIn: string;
-  loadingOut: string;
+  loadingIn?: string;
+  loadingOut?: string;
+  routes?: Array<{
+    id: number;
+    name: string;
+    address?: string | null;
+    pivot?: {
+      order?: number;
+      state_at?: 'loading_in' | 'loading_out';
+    };
+  }>;
   distance?: number;
   ujTowing?: number | null;
   ujCdd?: number | null;

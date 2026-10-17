@@ -55,7 +55,7 @@ export default function OrderListDetailPage() {
       setInvoiceConfirmOpen(false);
       const invoiceId = result.invoice.uuid || result.invoice.id;
       if (invoiceId) {
-        await router.push(`/dashboard/${slug}/administrasi/do-invoice/detail/${encodeURIComponent(String(invoiceId))}`);
+        await router.push(`/dashboard/${slug}/do-invoice/detail/${encodeURIComponent(String(invoiceId))}`);
       }
     } catch (error: any) {
       toast.error(error.message || 'Gagal memproses DO invoice');
@@ -76,7 +76,7 @@ export default function OrderListDetailPage() {
         <div className="space-y-4">
           <div className="flex items-start gap-3">
             <button
-              onClick={() => router.push(`/dashboard/${slug}/administrasi/order-list`)}
+              onClick={() => router.push(`/dashboard/${slug}/order-list`)}
               className="rounded-md p-1 transition-colors hover:bg-slate-100"
             >
               <ChevronLeft className="h-5 w-5 text-slate-500" />
@@ -111,7 +111,7 @@ export default function OrderListDetailPage() {
         <div className="space-y-4">
           <div className="flex items-start gap-3">
             <button
-              onClick={() => router.push(`/dashboard/${slug}/administrasi/order-list`)}
+              onClick={() => router.push(`/dashboard/${slug}/order-list`)}
               className="rounded-md p-1 transition-colors hover:bg-slate-100"
             >
               <ChevronLeft className="h-5 w-5 text-slate-500" />
@@ -124,7 +124,7 @@ export default function OrderListDetailPage() {
           <div className="rounded-md border border-yellow-200 bg-yellow-50 p-6 text-center">
             <p className="mb-4 text-yellow-700">Data order list tidak ditemukan.</p>
             <button
-              onClick={() => router.push(`/dashboard/${slug}/administrasi/order-list`)}
+              onClick={() => router.push(`/dashboard/${slug}/order-list`)}
               className="inline-flex items-center gap-2 rounded-md bg-yellow-600 px-4 py-2 text-white transition-colors hover:bg-yellow-700"
             >
               Kembali ke Daftar
@@ -139,7 +139,7 @@ export default function OrderListDetailPage() {
     <DashboardLayout>
       <OrderListDetailView
         data={effectiveData}
-        onBack={() => router.push(`/dashboard/${slug}/administrasi/order-list`)}
+        onBack={() => router.push(`/dashboard/${slug}/order-list`)}
         canUpdateStatus={canEdit}
         isUpdatingStatus={updateStateMutation.isPending}
         onUpdateStatus={setNextStatus}

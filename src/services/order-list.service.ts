@@ -146,6 +146,19 @@ const mapTarifReference = (item: any): OrderListTarifReference | undefined => {
     customerId: item.customer_id != null ? Number(item.customer_id) : undefined,
     loadingIn: item.loading_in ?? '',
     loadingOut: item.loading_out ?? '',
+    routes: Array.isArray(item.routes)
+      ? item.routes.map((r: any) => ({
+          id: Number(r.id),
+          name: r.name,
+          address: r.address ?? null,
+          pivot: r.pivot
+            ? {
+                order: r.pivot.order != null ? Number(r.pivot.order) : undefined,
+                state_at: r.pivot.state_at,
+              }
+            : undefined,
+        }))
+      : undefined,
     distance: item.distance != null ? toNumber(item.distance) : undefined,
     ujTowing: item.uj_towing != null ? toNumber(item.uj_towing) : null,
     ujCdd: item.uj_cdd != null ? toNumber(item.uj_cdd) : null,

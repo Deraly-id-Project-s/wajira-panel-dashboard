@@ -119,7 +119,7 @@ export default function OrderListPage() {
 
   const handleAdd = React.useCallback(() => {
     if (!slug) return;
-    void router.push(`/dashboard/${slug}/administrasi/order-list/create`);
+    void router.push(`/dashboard/${slug}/order-list/create`);
   }, [slug, router]);
 
   const navigateTo = React.useCallback(
@@ -132,14 +132,14 @@ export default function OrderListPage() {
 
   const handleDetail = React.useCallback(
     (item: OrderList) => {
-      navigateTo(`/dashboard/${slug}/administrasi/order-list/detail/${item.id}`);
+      navigateTo(`/dashboard/${slug}/order-list/detail/${item.id}`);
     },
     [navigateTo, slug],
   );
 
   const handleEdit = React.useCallback(
     (item: OrderList) => {
-      navigateTo(`/dashboard/${slug}/administrasi/order-list/edit/${item.id}`);
+      navigateTo(`/dashboard/${slug}/order-list/edit/${item.id}`);
     },
     [navigateTo, slug],
   );
@@ -160,7 +160,7 @@ export default function OrderListPage() {
       setInvoiceTarget(null);
       const invoiceId = result.invoice.uuid || result.invoice.id;
       if (invoiceId) {
-        void router.push(`/dashboard/${slug}/administrasi/do-invoice/detail/${encodeURIComponent(String(invoiceId))}`);
+        void router.push(`/dashboard/${slug}/do-invoice/detail/${encodeURIComponent(String(invoiceId))}`);
       }
     } catch (error: any) {
       toast.error(error.message || 'Gagal memproses DO invoice');

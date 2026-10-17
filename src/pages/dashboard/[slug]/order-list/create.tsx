@@ -12,6 +12,7 @@ import { useTarifs } from '@/hooks/useTarif';
 import { useDrivers } from '@/hooks/useDriver';
 import { useVehicleFleetLookups } from '@/hooks/useVehicleFleetLookups';
 import { ApiValidationError } from '@/lib/api/response';
+import { formatTarifRouteName } from '@/lib/tarif-route-helper';
 
 export default function CreateOrderListPage() {
   const router = useRouter();
@@ -59,7 +60,7 @@ export default function CreateOrderListPage() {
     () =>
       tarifRecords.map((item) => ({
         value: String(item.id),
-        label: `${item.loadingIn || '-'} - ${item.loadingOut || '-'}`,
+        label: formatTarifRouteName(item) || `Tarif #${item.id}`,
         subtitle: item.customer?.name,
       })),
     [tarifRecords],
@@ -107,7 +108,7 @@ export default function CreateOrderListPage() {
       }
 
       toast.success('Order list berhasil ditambahkan');
-      await router.push(`/dashboard/${slug}/administrasi/order-list/detail/${created.id}`);
+      await router.push(`/dashboard/${slug}/order-list/detail/${created.id}`);
     } catch (error: any) {
       if (error instanceof ApiValidationError) {
         toast.error(error.message || 'Validasi data order list gagal');
@@ -134,7 +135,7 @@ export default function CreateOrderListPage() {
         onTarifSearch={setTarifSearch}
         onVehicleSearch={setVehicleSearch}
         onDriverSearch={setDriverSearch}
-        onCancel={() => router.push(`/dashboard/${slug}/administrasi/order-list`)}
+        onCancel={() => router.push(`/dashboard/${slug}/order-list`)}
         onSubmit={handleSubmit}
         isSubmitting={createOrderMutation.isPending || createTarifMutation.isPending || createTarifItemMutation.isPending}
       />

@@ -28,6 +28,7 @@ import { OrderListDetailPrintDocument } from './OrderListDetailPrintDocument';
 import { ReportTemplatePrintDialog } from '@/components/ui/report-template-print-dialog';
 import { useReportTemplatePrint } from '@/hooks/useReportTemplatePrint';
 import { getCompanyName, getLetterheadByCompanyId, resolveCompanyId } from '@/lib/print-letterhead';
+import { formatTarifRouteName } from '@/lib/tarif-route-helper';
 
 import type { OrderList, OrderListStatus, OrderListTarifItem, OrderListVehicleType } from '@/@types/order-list.types';
 import { Badge } from '@/components/ui/badge';
@@ -169,6 +170,126 @@ function CurrencyRow({ label, value, emphasized = false }: { label: string; valu
       <span className={cn('font-semibold text-slate-900', emphasized && 'text-base text-orange-700')}>
         {formatOrderCurrency(value)}
       </span>
+    </div>
+  );
+}
+
+function RouteFlowIllustration({ route }: { route: OrderListTarifItem }) {
+  const tarif = route.tarif;
+  const stops = React.useMemo(() => {
+    if (tarif?.routes && tarif.routes.length > 0) {
+      const sorted = [...tarif.routes].sort((a, b) => (a.pivot?.order ?? 0) - (b.pivot?.order ?? 0));
+      return sorted.map((r, i) => {
+        const isFirst = i === 0;
+        const isLast = i === sorted.length - 1;
+        const isOrigin = r.pivot?.state_at === 'loading_in' || isFirst;
+        return {
+          id: r.id,
+          name: r.name,
+          address: r.address,
+          stateAt: r.pivot?.state_at ?? (isOrigin ? 'loading_in' : 'loading_out'),
+          type: isOrigin ? 'origin' : isLast ? 'destination' : 'transit',
+        };
+      });
+    }
+
+    const fallbackOrigin = route.loadingIn || tarif?.loadingIn;
+    const fallbackDest = route.loadingOut || tarif?.loadingOut;
+    const list: Array<{ id: number; name: string; address?: string | null; stateAt: string; type: string }> = [];
+    if (fallbackOrigin) {
+      list.push({ id: 1, name: fallbackOrigin, stateAt: 'loading_in', type: 'origin' });
+    }
+    if (fallbackDest) {
+      list.push({ id: 2, name: fallbackDest, stateAt: 'loading_out', type: 'destination' });
+    }
+    return list;
+  }, [tarif, route.loadingIn, route.loadingOut]);
+
+  if (!stops.length) return null;
+
+  return (
+    <div className="border-b border-slate-100 bg-slate-50/60 px-4 py-3">
+      <div className="flex items-center justify-between mb-2">
+        <span className="text-[11px] font-semibold uppercase tracking-wider text-slate-500 flex items-center gap-1.5">
+          <Route className="h-3.5 w-3.5 text-orange-600" />
+          Ilustrasi Alur Rute ({stops.length} Titik)
+        </span>
+        {tarif?.distance ? (
+          <span className="text-[11px] font-medium text-slate-500">
+            Jarak: <strong className="text-slate-800">{Number(tarif.distance).toLocaleString('id-ID')} KM</strong>
+          </span>
+        ) : null}
+      </div>
+
+      <div className="overflow-x-auto pb-1 pt-1 scrollbar-thin">
+        <div className="flex items-center gap-2 min-w-max">
+          {stops.map((stop, sIdx) => {
+            const isFirst = sIdx === 0;
+            const isLast = sIdx === stops.length - 1;
+            const isTransit = !isFirst && !isLast;
+
+            return (
+              <React.Fragment key={stop.id || sIdx}>
+                <div
+                  className={cn(
+                    'flex items-center gap-2.5 rounded-lg border px-3 py-2 shadow-xs transition-colors',
+                    isFirst
+                      ? 'border-blue-200 bg-blue-50/80 text-blue-950'
+                      : isLast
+                      ? 'border-emerald-200 bg-emerald-50/80 text-emerald-950'
+                      : 'border-amber-200 bg-amber-50/80 text-amber-950'
+                  )}
+                >
+                  <div
+                    className={cn(
+                      'flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-xs font-bold text-white shadow-xs',
+                      isFirst
+                        ? 'bg-blue-600'
+                        : isLast
+                        ? 'bg-emerald-600'
+                        : 'bg-amber-600'
+                    )}
+                  >
+                    {sIdx + 1}
+                  </div>
+                  <div className="min-w-0">
+                    <div className="flex items-center gap-1.5">
+                      <p className="text-xs font-bold leading-tight">{stop.name}</p>
+                      <span
+                        className={cn(
+                          'rounded px-1.5 py-0.2 text-[10px] font-semibold uppercase',
+                          isFirst
+                            ? 'bg-blue-200/80 text-blue-800'
+                            : isLast
+                            ? 'bg-emerald-200/80 text-emerald-800'
+                            : 'bg-amber-200/80 text-amber-800'
+                        )}
+                      >
+                        {isFirst ? 'Origin / Muat' : isLast ? 'Tujuan Akhir' : 'Transit'}
+                      </span>
+                    </div>
+                    {stop.address ? (
+                      <p className="text-[11px] text-slate-500 truncate max-w-[200px]" title={stop.address}>
+                        {stop.address}
+                      </p>
+                    ) : (
+                      <p className="text-[10px] text-slate-400 capitalize">
+                        {stop.stateAt === 'loading_in' ? 'Muat (Loading In)' : 'Bongkar (Loading Out)'}
+                      </p>
+                    )}
+                  </div>
+                </div>
+
+                {!isLast && (
+                  <div className="flex items-center px-1 text-slate-400">
+                    <ArrowRight className="h-4 w-4 text-orange-500 shrink-0" />
+                  </div>
+                )}
+              </React.Fragment>
+            );
+          })}
+        </div>
+      </div>
     </div>
   );
 }
@@ -392,7 +513,7 @@ export function OrderListDetailView({
     return [
       {
         value: String(selectedRoute.tarifId),
-        label: `${selectedRoute.tarif.loadingIn || '-'} - ${selectedRoute.tarif.loadingOut || '-'}`,
+        label: formatTarifRouteName(selectedRoute.tarif),
         subtitle: selectedRoute.tarif.customer?.name,
       },
       ...tarifOptions,
@@ -762,7 +883,9 @@ export function OrderListDetailView({
                       <div className="flex items-center gap-3">
                         <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-orange-300 text-sm font-bold text-orange-950">{index + 1}</span>
                         <div>
-                          <p className="font-semibold text-slate-950">{tarif?.loadingIn || route.loadingIn || '-'} <ArrowRight className="inline h-4 w-4" /> {tarif?.loadingOut || route.loadingOut || '-'}</p>
+                          <p className="font-semibold text-slate-950">
+                            {formatTarifRouteName(tarif, [route.loadingIn, route.loadingOut].filter(Boolean).join(' ➔ ') || '-')}
+                          </p>
                           <p className="mt-0.5 text-xs text-slate-500">Tarif #{route.tarifId} · Rute #{route.id} · {cargoCount} jenis muatan</p>
                         </div>
                       </div>
@@ -794,6 +917,8 @@ export function OrderListDetailView({
                         )}
                       </div>
                     </div>
+
+                    <RouteFlowIllustration route={route} />
 
                     <div className="grid gap-5 border-b border-slate-100 p-4 sm:grid-cols-2 lg:grid-cols-4">
                       <Field label="Jarak" value={`${Number(tarif?.distance ?? 0).toLocaleString('id-ID')} KM`} icon={Route} />
