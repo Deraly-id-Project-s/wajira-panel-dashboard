@@ -26,8 +26,8 @@ export default function BuktiPotongDetailPage() {
   const itemId = typeof rawId === 'string' ? rawId : undefined;
   const basePath =
     typeof slug === 'string'
-      ? `/dashboard/${slug}/administrasi/bukti-potong`
-      : '/administrasi/bukti-potong';
+      ? `/dashboard/${slug}/bukti-potong`
+      : '/bukti-potong';
 
   const { hasPermission } = usePermissionGuard();
   const canEdit = hasPermission('finance:edit');
@@ -43,8 +43,8 @@ export default function BuktiPotongDetailPage() {
     if (!itemId) return;
     void router.push(
       typeof slug === 'string'
-        ? `/dashboard/${slug}/administrasi/bukti-potong/${itemId}/edit`
-        : `/administrasi/bukti-potong/${itemId}/edit`
+        ? `/dashboard/${slug}/bukti-potong/${itemId}/edit`
+        : `/bukti-potong/${itemId}/edit`
     );
   };
 

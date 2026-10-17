@@ -126,15 +126,15 @@ export default function BuktiPotongPage() {
   };
 
   const handleCreate = () => {
-    void router.push(base('/administrasi/bukti-potong/create'));
+    void router.push(base('/bukti-potong/create'));
   };
 
   const handleEdit = (item: WithholdingTaxItem) => {
-    void router.push(base(`/administrasi/bukti-potong/${item.id}/edit`));
+    void router.push(base(`/bukti-potong/${item.id}/edit`));
   };
 
   const handleView = (item: WithholdingTaxItem) => {
-    void router.push(base(`/administrasi/bukti-potong/${item.id}`));
+    void router.push(base(`/bukti-potong/${item.id}`));
   };
 
   const handleDelete = (item: WithholdingTaxItem) => {

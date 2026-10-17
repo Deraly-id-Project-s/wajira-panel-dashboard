@@ -94,7 +94,7 @@ export default function LaporanInvoicePage() {
       cell: (item) => item.invoice_code ? (
         <CopyBox
           text={item.invoice_code}
-          href={`/dashboard/${slugParam}/administrasi/do-invoice/detail/${item.id || item.invoice_code}`}
+          href={`/dashboard/${slugParam}/do-invoice/detail/${item.id || item.invoice_code}`}
         />
       ) : '-',
     },
@@ -104,7 +104,7 @@ export default function LaporanInvoicePage() {
       cell: (item) => item.order_list_code ? (
         <CopyBox
           text={item.order_list_code}
-          href={`/dashboard/${slugParam}/administrasi/order-list/detail/${item.order_list_id || item.order_list_code}`}
+          href={`/dashboard/${slugParam}/order-list/detail/${item.order_list_id || item.order_list_code}`}
         />
       ) : '-',
     },

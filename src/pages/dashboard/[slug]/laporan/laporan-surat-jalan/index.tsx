@@ -104,7 +104,7 @@ export default function LaporanSuratJalanPage() {
       cell: (item) => item.order_list_code ? (
         <CopyBox
           text={item.order_list_code}
-          href={`/dashboard/${slugParam}/administrasi/order-list/detail/${item.order_list_id || item.order_list_code}`}
+          href={`/dashboard/${slugParam}/order-list/detail/${item.order_list_id || item.order_list_code}`}
         />
       ) : '-',
     },

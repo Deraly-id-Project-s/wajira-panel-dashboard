@@ -18,7 +18,7 @@ export default function BuktiPotongFormPage({ mode }: Props) {
   const { slug, id: rawId } = router.query;
   const { companyId } = useCompany();
   const safeCompanyId = companyId || '4';
-  const basePath = typeof slug === 'string' ? `/dashboard/${slug}/administrasi/bukti-potong` : '/administrasi/bukti-potong';
+  const basePath = typeof slug === 'string' ? `/dashboard/${slug}/bukti-potong` : '/bukti-potong';
   const itemId = mode === 'edit' && typeof rawId === 'string' ? rawId : undefined;
   const isEdit = mode === 'edit';
 

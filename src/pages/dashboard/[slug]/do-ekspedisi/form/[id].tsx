@@ -16,6 +16,7 @@ import { getApiErrorMessage } from '@/utils/apiErrorHandler';
 import { LoadingState } from '@/components/ui/loading-state';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { doEkspedisiEditSchema, type DoEkspedisiEditSchema } from '@/schema/do-ekspedisi.schema';
+import { formatTarifRouteName } from '@/lib/tarif-route-helper';
 import RequiredMark from '@/components/ui/required-mark';
 
 const toApiDateTime = (value?: Date | null) => {
@@ -71,11 +72,15 @@ export default function EditDOEkspedisiFormPage() {
   }, [detailQuery.data, reset]);
 
   const tarifOptions = React.useMemo(() => {
-    return (tarifQuery.data?.data ?? []).map((tarif) => ({
-      value: String(tarif.id),
-      label: `[${(tarif.vehicleType || '').toUpperCase()}] ${tarif.deliveryDestination || '-'}`,
-      subtitle: `${tarif.vehicle?.registrationNumber || 'Tanpa Kendaraan'} - ${tarif.driver?.name || 'Tanpa Driver'}`,
-    }));
+    return (tarifQuery.data?.data ?? []).map((tarif) => {
+      const routeName = formatTarifRouteName(tarif.tarif, [tarif.loadingIn, tarif.loadingOut].filter(Boolean).join(' ➔ ') || '');
+      const destinationText = tarif.deliveryDestination ? ` (${tarif.deliveryDestination})` : '';
+      return {
+        value: String(tarif.id),
+        label: `[${(tarif.vehicleType || '').toUpperCase()}] ${routeName ? routeName + destinationText : tarif.deliveryDestination || '-'}`,
+        subtitle: `${tarif.vehicle?.registrationNumber || 'Tanpa Kendaraan'} - ${tarif.driver?.name || 'Tanpa Driver'}`,
+      };
+    });
   }, [tarifQuery.data?.data]);
 
   const mergedTarifOptions = React.useMemo(() => {
@@ -86,9 +91,13 @@ export default function EditDOEkspedisiFormPage() {
     const currentIdStr = String(currentTarifId);
     if (tarifOptions.some((opt) => opt.value === currentIdStr)) return tarifOptions;
 
+    const currentRouteName = formatTarifRouteName(
+      currentTarif?.tarif,
+      [currentTarif?.loadingIn || currentTarif?.loading_in, currentTarif?.loadingOut || currentTarif?.loading_out].filter(Boolean).join(' ➔ ') || ''
+    );
     const extraOption = {
       value: currentIdStr,
-      label: currentTarif?.deliveryDestination || currentTarif?.delivery_destination || `Tarif #${currentTarifId}`,
+      label: currentRouteName || currentTarif?.deliveryDestination || currentTarif?.delivery_destination || `Tarif #${currentTarifId}`,
       subtitle: currentTarif?.vehicleType || currentTarif?.vehicle_type || '',
     };
     return [extraOption, ...tarifOptions];

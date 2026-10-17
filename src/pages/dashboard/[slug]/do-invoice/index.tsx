@@ -34,7 +34,7 @@ export default function DoInvoiceListPage() {
   });
   const data = listQuery.data?.data ?? [];
   const detailHref = React.useCallback((invoice: { id: number; uuid?: string }) =>
-    `/dashboard/${slug}/administrasi/do-invoice/detail/${encodeURIComponent(String(invoice.uuid || invoice.id))}`, [slug]);
+    `/dashboard/${slug}/do-invoice/detail/${encodeURIComponent(String(invoice.uuid || invoice.id))}`, [slug]);
 
   return (
     <DashboardLayout>

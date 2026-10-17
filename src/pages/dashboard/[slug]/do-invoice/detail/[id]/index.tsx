@@ -144,7 +144,7 @@ export default function DoInvoiceDetailPage() {
   const invoice = detailQuery.data;
   const billing = invoice?.billing;
 
-  const backToList = () => void router.push(`/dashboard/${slug}/administrasi/do-invoice`);
+  const backToList = () => void router.push(`/dashboard/${slug}/do-invoice`);
 
   const handleOpenCreatePayment = () => {
     const remaining = Number(billing?.remainingPayment ?? invoice?.billingRemainingNominal ?? 0);

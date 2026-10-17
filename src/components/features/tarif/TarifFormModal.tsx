@@ -7,7 +7,8 @@ import { MoneyInput } from '@/components/ui/money-input';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { SelectAdd } from '@/components/ui/select-add';
-import { Plus, Trash2, MapPin } from 'lucide-react';
+import { Plus, Trash2, MapPin, ArrowUp, ArrowDown } from 'lucide-react';
+import RequiredMark from '@/components/ui/required-mark';
 import { RouteFormModal } from '@/components/features/route/RouteFormModal';
 import { useRouteOptions, useCreateRoute } from '@/hooks/useRoute';
 import type { TarifPayload, TarifRouteInput } from '@/@types/tarif.types';
@@ -59,7 +60,7 @@ export function TarifFormModal({ isOpen, onClose, onSave, isSubmitting = false }
         },
     });
 
-    const { fields, append, remove } = useFieldArray({
+    const { fields, append, remove, move } = useFieldArray({
         control: form.control,
         name: 'routes',
     });
@@ -239,17 +240,43 @@ export function TarifFormModal({ isOpen, onClose, onSave, isSubmitting = false }
                                             />
                                         </div>
 
-                                        {fields.length > 2 && (
+                                        <div className="flex items-center gap-1 shrink-0">
                                             <Button
                                                 type="button"
                                                 variant="ghost"
                                                 size="icon"
-                                                onClick={() => remove(index)}
-                                                className="text-red-500 hover:text-red-700 h-8 w-8 shrink-0"
+                                                onClick={() => move(index, index - 1)}
+                                                disabled={index === 0}
+                                                className="text-slate-500 hover:text-slate-800 h-7 w-7 disabled:opacity-30 disabled:cursor-not-allowed"
+                                                title="Pindah ke Atas"
                                             >
-                                                <Trash2 className="h-4 w-4" />
+                                                <ArrowUp className="h-3.5 w-3.5" />
                                             </Button>
-                                        )}
+                                            <Button
+                                                type="button"
+                                                variant="ghost"
+                                                size="icon"
+                                                onClick={() => move(index, index + 1)}
+                                                disabled={index === fields.length - 1}
+                                                className="text-slate-500 hover:text-slate-800 h-7 w-7 disabled:opacity-30 disabled:cursor-not-allowed"
+                                                title="Pindah ke Bawah"
+                                            >
+                                                <ArrowDown className="h-3.5 w-3.5" />
+                                            </Button>
+
+                                            {fields.length > 2 && (
+                                                <Button
+                                                    type="button"
+                                                    variant="ghost"
+                                                    size="icon"
+                                                    onClick={() => remove(index)}
+                                                    className="text-red-500 hover:text-red-700 h-7 w-7 shrink-0"
+                                                    title="Hapus Titik"
+                                                >
+                                                    <Trash2 className="h-3.5 w-3.5" />
+                                                </Button>
+                                            )}
+                                        </div>
                                     </div>
                                 ))}
                             </div>
@@ -260,11 +287,14 @@ export function TarifFormModal({ isOpen, onClose, onSave, isSubmitting = false }
                             <FormField
                                 control={form.control}
                                 name="distance"
-                                rules={{ required: 'Jarak wajib diisi' }}
+                                rules={{
+                                    required: 'Jarak total wajib diisi',
+                                    min: { value: 0, message: 'Jarak tidak boleh negatif' },
+                                }}
                                 render={({ field }) => (
                                     <FormItem>
                                         <FormLabel className="text-sm font-medium text-gray-700">
-                                            Jarak (KM) <span className="text-red-500">*</span>
+                                            Jarak (KM) <RequiredMark />
                                         </FormLabel>
                                         <FormControl>
                                             <Input
@@ -285,15 +315,18 @@ export function TarifFormModal({ isOpen, onClose, onSave, isSubmitting = false }
                             <FormField
                                 control={form.control}
                                 name="ujTowing"
+                                rules={{ required: 'UJ Towing wajib diisi' }}
                                 render={({ field }) => (
                                     <FormItem>
-                                        <FormLabel className="text-sm font-medium text-gray-700">UJ Towing</FormLabel>
+                                        <FormLabel className="text-sm font-medium text-gray-700">
+                                            UJ Towing <RequiredMark />
+                                        </FormLabel>
                                         <FormControl>
                                             <MoneyInput
                                                 placeholder="Masukkan data"
                                                 value={field.value}
                                                 onChangeValue={field.onChange}
-                                                className="bg-white"
+                                                className={`bg-white ${form.formState.errors.ujTowing ? 'border-red-500' : ''}`}
                                             />
                                         </FormControl>
                                         <FormMessage />
@@ -303,15 +336,18 @@ export function TarifFormModal({ isOpen, onClose, onSave, isSubmitting = false }
                             <FormField
                                 control={form.control}
                                 name="ujCdd"
+                                rules={{ required: 'UJ CDD wajib diisi' }}
                                 render={({ field }) => (
                                     <FormItem>
-                                        <FormLabel className="text-sm font-medium text-gray-700">UJ CDD</FormLabel>
+                                        <FormLabel className="text-sm font-medium text-gray-700">
+                                            UJ CDD <RequiredMark />
+                                        </FormLabel>
                                         <FormControl>
                                             <MoneyInput
                                                 placeholder="Masukkan data"
                                                 value={field.value}
                                                 onChangeValue={field.onChange}
-                                                className="bg-white"
+                                                className={`bg-white ${form.formState.errors.ujCdd ? 'border-red-500' : ''}`}
                                             />
                                         </FormControl>
                                         <FormMessage />
@@ -321,15 +357,18 @@ export function TarifFormModal({ isOpen, onClose, onSave, isSubmitting = false }
                             <FormField
                                 control={form.control}
                                 name="ujFuso"
+                                rules={{ required: 'UJ Fuso wajib diisi' }}
                                 render={({ field }) => (
                                     <FormItem>
-                                        <FormLabel className="text-sm font-medium text-gray-700">UJ Fuso</FormLabel>
+                                        <FormLabel className="text-sm font-medium text-gray-700">
+                                            UJ Fuso <RequiredMark />
+                                        </FormLabel>
                                         <FormControl>
                                             <MoneyInput
                                                 placeholder="Masukkan data"
                                                 value={field.value}
                                                 onChangeValue={field.onChange}
-                                                className="bg-white"
+                                                className={`bg-white ${form.formState.errors.ujFuso ? 'border-red-500' : ''}`}
                                             />
                                         </FormControl>
                                         <FormMessage />
@@ -343,15 +382,18 @@ export function TarifFormModal({ isOpen, onClose, onSave, isSubmitting = false }
                             <FormField
                                 control={form.control}
                                 name="invTowing"
+                                rules={{ required: 'Invoice Towing wajib diisi' }}
                                 render={({ field }) => (
                                     <FormItem>
-                                        <FormLabel className="text-sm font-medium text-gray-700">Invoice Towing</FormLabel>
+                                        <FormLabel className="text-sm font-medium text-gray-700">
+                                            Invoice Towing <RequiredMark />
+                                        </FormLabel>
                                         <FormControl>
                                             <MoneyInput
                                                 placeholder="Masukkan data"
                                                 value={field.value}
                                                 onChangeValue={field.onChange}
-                                                className="bg-white"
+                                                className={`bg-white ${form.formState.errors.invTowing ? 'border-red-500' : ''}`}
                                             />
                                         </FormControl>
                                         <FormMessage />
@@ -361,15 +403,18 @@ export function TarifFormModal({ isOpen, onClose, onSave, isSubmitting = false }
                             <FormField
                                 control={form.control}
                                 name="invCdd"
+                                rules={{ required: 'Invoice CDD wajib diisi' }}
                                 render={({ field }) => (
                                     <FormItem>
-                                        <FormLabel className="text-sm font-medium text-gray-700">Invoice CDD</FormLabel>
+                                        <FormLabel className="text-sm font-medium text-gray-700">
+                                            Invoice CDD <RequiredMark />
+                                        </FormLabel>
                                         <FormControl>
                                             <MoneyInput
                                                 placeholder="Masukkan data"
                                                 value={field.value}
                                                 onChangeValue={field.onChange}
-                                                className="bg-white"
+                                                className={`bg-white ${form.formState.errors.invCdd ? 'border-red-500' : ''}`}
                                             />
                                         </FormControl>
                                         <FormMessage />
@@ -379,15 +424,18 @@ export function TarifFormModal({ isOpen, onClose, onSave, isSubmitting = false }
                             <FormField
                                 control={form.control}
                                 name="invFuso"
+                                rules={{ required: 'Invoice Fuso wajib diisi' }}
                                 render={({ field }) => (
                                     <FormItem>
-                                        <FormLabel className="text-sm font-medium text-gray-700">Invoice Fuso</FormLabel>
+                                        <FormLabel className="text-sm font-medium text-gray-700">
+                                            Invoice Fuso <RequiredMark />
+                                        </FormLabel>
                                         <FormControl>
                                             <MoneyInput
                                                 placeholder="Masukkan data"
                                                 value={field.value}
                                                 onChangeValue={field.onChange}
-                                                className="bg-white"
+                                                className={`bg-white ${form.formState.errors.invFuso ? 'border-red-500' : ''}`}
                                             />
                                         </FormControl>
                                         <FormMessage />

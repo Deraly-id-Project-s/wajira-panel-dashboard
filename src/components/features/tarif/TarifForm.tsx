@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
 import { useForm, Controller, useFieldArray } from 'react-hook-form';
-import { ArrowLeft, Save, Plus, Trash2 } from 'lucide-react';
+import { ArrowLeft, Save, Plus, Trash2, ArrowUp, ArrowDown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -9,6 +9,7 @@ import { Card } from '@/components/ui/card';
 import { MoneyInput } from '@/components/ui/money-input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { SelectAdd } from '@/components/ui/select-add';
+import RequiredMark from '@/components/ui/required-mark';
 import { RouteFormModal } from '@/components/features/route/RouteFormModal';
 import { useRouteOptions, useCreateRoute } from '@/hooks/useRoute';
 import type { TarifPayload, Tarif, TarifRouteInput } from '@/@types/tarif.types';
@@ -70,7 +71,7 @@ export function TarifForm({ initialData, onSubmit, isSubmitting, title }: TarifF
         },
     });
 
-    const { fields, append, remove } = useFieldArray({
+    const { fields, append, remove, move } = useFieldArray({
         control,
         name: 'routes',
     });
@@ -288,18 +289,43 @@ export function TarifForm({ initialData, onSubmit, isSubmitting, title }: TarifF
                                             </div>
                                         </div>
 
-                                        {fields.length > 2 && (
+                                        <div className="flex items-center gap-1 shrink-0 self-end md:self-auto">
                                             <Button
                                                 type="button"
                                                 variant="ghost"
                                                 size="icon"
-                                                onClick={() => remove(index)}
-                                                className="text-red-500 hover:text-red-700 hover:bg-red-50 shrink-0 self-end md:self-auto"
-                                                title="Hapus Titik Rute"
+                                                onClick={() => move(index, index - 1)}
+                                                disabled={index === 0}
+                                                className="h-8 w-8 text-slate-500 hover:text-slate-800 hover:bg-slate-200/60 disabled:opacity-30 disabled:cursor-not-allowed"
+                                                title="Pindah ke Atas"
                                             >
-                                                <Trash2 className="h-4 w-4" />
+                                                <ArrowUp className="h-4 w-4" />
                                             </Button>
-                                        )}
+                                            <Button
+                                                type="button"
+                                                variant="ghost"
+                                                size="icon"
+                                                onClick={() => move(index, index + 1)}
+                                                disabled={index === fields.length - 1}
+                                                className="h-8 w-8 text-slate-500 hover:text-slate-800 hover:bg-slate-200/60 disabled:opacity-30 disabled:cursor-not-allowed"
+                                                title="Pindah ke Bawah"
+                                            >
+                                                <ArrowDown className="h-4 w-4" />
+                                            </Button>
+
+                                            {fields.length > 2 && (
+                                                <Button
+                                                    type="button"
+                                                    variant="ghost"
+                                                    size="icon"
+                                                    onClick={() => remove(index)}
+                                                    className="h-8 w-8 text-red-500 hover:text-red-700 hover:bg-red-50"
+                                                    title="Hapus Titik Rute"
+                                                >
+                                                    <Trash2 className="h-4 w-4" />
+                                                </Button>
+                                            )}
+                                        </div>
                                     </div>
                                 );
                             })}
@@ -310,14 +336,14 @@ export function TarifForm({ initialData, onSubmit, isSubmitting, title }: TarifF
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-2 border-t border-gray-100">
                         <div className="space-y-1.5">
                             <Label htmlFor="distance" className="text-sm font-medium text-gray-700">
-                                Jarak Total (KM) <span className="text-red-500">*</span>
+                                Jarak Total (KM) <RequiredMark />
                             </Label>
                             <Input
                                 id="distance"
                                 type="number"
                                 placeholder="Masukkan jarak dalam KM"
                                 {...register('distance', {
-                                    required: 'Jarak wajib diisi',
+                                    required: 'Jarak total wajib diisi',
                                     min: { value: 0, message: 'Jarak tidak boleh negatif' },
                                 })}
                                 className={`bg-white ${errors.distance ? 'border-red-500' : ''}`}
@@ -336,59 +362,71 @@ export function TarifForm({ initialData, onSubmit, isSubmitting, title }: TarifF
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                             <div className="space-y-1.5">
                                 <Label htmlFor="ujTowing" className="text-sm font-medium text-gray-700">
-                                    UJ Towing
+                                    UJ Towing <RequiredMark />
                                 </Label>
                                 <Controller
                                     control={control}
                                     name="ujTowing"
+                                    rules={{ required: 'UJ Towing wajib diisi' }}
                                     render={({ field }) => (
                                         <MoneyInput
                                             id="ujTowing"
                                             placeholder="Masukkan data"
                                             value={field.value}
                                             onChangeValue={field.onChange}
-                                            className="bg-white"
+                                            className={`bg-white ${errors.ujTowing ? 'border-red-500' : ''}`}
                                         />
                                     )}
                                 />
+                                {errors.ujTowing && (
+                                    <p className="text-red-500 text-xs">{errors.ujTowing.message}</p>
+                                )}
                             </div>
 
                             <div className="space-y-1.5">
                                 <Label htmlFor="ujCdd" className="text-sm font-medium text-gray-700">
-                                    UJ CDD
+                                    UJ CDD <RequiredMark />
                                 </Label>
                                 <Controller
                                     control={control}
                                     name="ujCdd"
+                                    rules={{ required: 'UJ CDD wajib diisi' }}
                                     render={({ field }) => (
                                         <MoneyInput
                                             id="ujCdd"
                                             placeholder="Masukkan data"
                                             value={field.value}
                                             onChangeValue={field.onChange}
-                                            className="bg-white"
+                                            className={`bg-white ${errors.ujCdd ? 'border-red-500' : ''}`}
                                         />
                                     )}
                                 />
+                                {errors.ujCdd && (
+                                    <p className="text-red-500 text-xs">{errors.ujCdd.message}</p>
+                                )}
                             </div>
 
                             <div className="space-y-1.5">
                                 <Label htmlFor="ujFuso" className="text-sm font-medium text-gray-700">
-                                    UJ Fuso
+                                    UJ Fuso <RequiredMark />
                                 </Label>
                                 <Controller
                                     control={control}
                                     name="ujFuso"
+                                    rules={{ required: 'UJ Fuso wajib diisi' }}
                                     render={({ field }) => (
                                         <MoneyInput
                                             id="ujFuso"
                                             placeholder="Masukkan data"
                                             value={field.value}
                                             onChangeValue={field.onChange}
-                                            className="bg-white"
+                                            className={`bg-white ${errors.ujFuso ? 'border-red-500' : ''}`}
                                         />
                                     )}
                                 />
+                                {errors.ujFuso && (
+                                    <p className="text-red-500 text-xs">{errors.ujFuso.message}</p>
+                                )}
                             </div>
                         </div>
                     </div>
@@ -401,59 +439,71 @@ export function TarifForm({ initialData, onSubmit, isSubmitting, title }: TarifF
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                             <div className="space-y-1.5">
                                 <Label htmlFor="invTowing" className="text-sm font-medium text-gray-700">
-                                    Invoice Towing
+                                    Invoice Towing <RequiredMark />
                                 </Label>
                                 <Controller
                                     control={control}
                                     name="invTowing"
+                                    rules={{ required: 'Invoice Towing wajib diisi' }}
                                     render={({ field }) => (
                                         <MoneyInput
                                             id="invTowing"
                                             placeholder="Masukkan data"
                                             value={field.value}
                                             onChangeValue={field.onChange}
-                                            className="bg-white"
+                                            className={`bg-white ${errors.invTowing ? 'border-red-500' : ''}`}
                                         />
                                     )}
                                 />
+                                {errors.invTowing && (
+                                    <p className="text-red-500 text-xs">{errors.invTowing.message}</p>
+                                )}
                             </div>
 
                             <div className="space-y-1.5">
                                 <Label htmlFor="invCdd" className="text-sm font-medium text-gray-700">
-                                    Invoice CDD
+                                    Invoice CDD <RequiredMark />
                                 </Label>
                                 <Controller
                                     control={control}
                                     name="invCdd"
+                                    rules={{ required: 'Invoice CDD wajib diisi' }}
                                     render={({ field }) => (
                                         <MoneyInput
                                             id="invCdd"
                                             placeholder="Masukkan data"
                                             value={field.value}
                                             onChangeValue={field.onChange}
-                                            className="bg-white"
+                                            className={`bg-white ${errors.invCdd ? 'border-red-500' : ''}`}
                                         />
                                     )}
                                 />
+                                {errors.invCdd && (
+                                    <p className="text-red-500 text-xs">{errors.invCdd.message}</p>
+                                )}
                             </div>
 
                             <div className="space-y-1.5">
                                 <Label htmlFor="invFuso" className="text-sm font-medium text-gray-700">
-                                    Invoice Fuso
+                                    Invoice Fuso <RequiredMark />
                                 </Label>
                                 <Controller
                                     control={control}
                                     name="invFuso"
+                                    rules={{ required: 'Invoice Fuso wajib diisi' }}
                                     render={({ field }) => (
                                         <MoneyInput
                                             id="invFuso"
                                             placeholder="Masukkan data"
                                             value={field.value}
                                             onChangeValue={field.onChange}
-                                            className="bg-white"
+                                            className={`bg-white ${errors.invFuso ? 'border-red-500' : ''}`}
                                         />
                                     )}
                                 />
+                                {errors.invFuso && (
+                                    <p className="text-red-500 text-xs">{errors.invFuso.message}</p>
+                                )}
                             </div>
                         </div>
                     </div>

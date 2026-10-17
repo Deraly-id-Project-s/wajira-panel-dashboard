@@ -33,7 +33,7 @@ export function BuktiPotongDetailCards({ data }: Props) {
 
   const invoiceCode = data.no_invoice || data.do_invoice?.code || '-';
   const invoiceLink = data.do_invoice?.id
-    ? `/dashboard/${slug}/administrasi/do-invoice/detail/${data.do_invoice.id}`
+    ? `/dashboard/${slug}/do-invoice/detail/${data.do_invoice.id}`
     : undefined;
 
   return (

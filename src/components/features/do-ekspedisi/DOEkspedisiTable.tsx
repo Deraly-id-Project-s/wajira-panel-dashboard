@@ -71,7 +71,7 @@ export const DOEkspedisiTable = React.memo(function DOEkspedisiTable({
       {
         header: 'Kode Order',
         alignment: 'center',
-        cell: (item) => item?.orderCode ? <CopyBox text={item?.orderCode} href={item.orderList?.id ? `/dashboard/${slug}/administrasi/order-list/detail/${item.orderList.id}` : undefined} /> : '-',
+        cell: (item) => item?.orderCode ? <CopyBox text={item?.orderCode} href={item.orderList?.id ? `/dashboard/${slug}/order-list/detail/${item.orderList.id}` : undefined} /> : '-',
       },
       {
         header: 'Status',
