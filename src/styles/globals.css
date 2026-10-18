@@ -51,6 +51,50 @@
   --font-geist-mono: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
 }
 
+@keyframes hash-loader-lat-anim {
+  0% {
+    width: var(--hl-thickness, 4px);
+    box-shadow: var(--hl-offset, 10px) calc(-1 * var(--hl-offset, 10px)) var(--hl-color, currentColor),
+      calc(-1 * var(--hl-offset, 10px)) var(--hl-offset, 10px) var(--hl-color, currentColor);
+  }
+  35% {
+    width: var(--hl-size, 20px);
+    box-shadow: 0 calc(-1 * var(--hl-offset, 10px)) var(--hl-color, currentColor),
+      0 var(--hl-offset, 10px) var(--hl-color, currentColor);
+  }
+  70% {
+    width: var(--hl-thickness, 4px);
+    box-shadow: calc(-1 * var(--hl-offset, 10px)) calc(-1 * var(--hl-offset, 10px)) var(--hl-color, currentColor),
+      var(--hl-offset, 10px) var(--hl-offset, 10px) var(--hl-color, currentColor);
+  }
+  100% {
+    box-shadow: var(--hl-offset, 10px) calc(-1 * var(--hl-offset, 10px)) var(--hl-color, currentColor),
+      calc(-1 * var(--hl-offset, 10px)) var(--hl-offset, 10px) var(--hl-color, currentColor);
+  }
+}
+
+@keyframes hash-loader-lon-anim {
+  0% {
+    height: var(--hl-thickness, 4px);
+    box-shadow: var(--hl-offset, 10px) var(--hl-offset, 10px) var(--hl-color, currentColor),
+      calc(-1 * var(--hl-offset, 10px)) calc(-1 * var(--hl-offset, 10px)) var(--hl-color, currentColor);
+  }
+  35% {
+    height: var(--hl-size, 20px);
+    box-shadow: var(--hl-offset, 10px) 0 var(--hl-color, currentColor),
+      calc(-1 * var(--hl-offset, 10px)) 0 var(--hl-color, currentColor);
+  }
+  70% {
+    height: var(--hl-thickness, 4px);
+    box-shadow: var(--hl-offset, 10px) calc(-1 * var(--hl-offset, 10px)) var(--hl-color, currentColor),
+      calc(-1 * var(--hl-offset, 10px)) var(--hl-offset, 10px) var(--hl-color, currentColor);
+  }
+  100% {
+    box-shadow: var(--hl-offset, 10px) var(--hl-offset, 10px) var(--hl-color, currentColor),
+      calc(-1 * var(--hl-offset, 10px)) calc(-1 * var(--hl-offset, 10px)) var(--hl-color, currentColor);
+  }
+}
+
 @utility hero-box {
   background-image: linear-gradient(to right, #ed333b 0%, #fb923c 50%, #dc2626 100%);
   background-size: 200% auto;

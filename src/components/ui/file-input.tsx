@@ -1,5 +1,4 @@
 import React from 'react';
-import Image from 'next/image';
 import { Crop, Upload, X } from 'lucide-react';
 import ReactCrop, { centerCrop, makeAspectCrop, type Crop as CropArea, type PixelCrop } from 'react-image-crop';
 import 'react-image-crop/dist/ReactCrop.css';
@@ -35,7 +34,11 @@ export function FileInput({
   const [crop, setCrop] = React.useState<CropArea>();
   const [completedCrop, setCompletedCrop] = React.useState<PixelCrop>();
 
-  const isImage = Boolean(value && (/^image\/(png|jpe?g)$/i.test(value.type) || /\.(png|jpe?g)$/i.test(value.name)));
+  const isImage = Boolean(
+    value &&
+      (value.type?.startsWith('image/') ||
+        /\.(png|jpe?g|webp|gif|svg|avif|bmp|ico)$/i.test(value.name || '')),
+  );
 
   React.useEffect(() => {
     if (!isImage || !value) {
@@ -111,7 +114,12 @@ export function FileInput({
       </button>
       {isImage && previewUrl ? (
         <div className="mt-3 flex items-start gap-3 rounded-md border border-slate-200 bg-white p-3">
-          <Image src={previewUrl} alt={`Preview ${value?.name ?? 'gambar'}`} width={80} height={80} unoptimized className="h-20 w-20 rounded object-cover" />
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={previewUrl}
+            alt={`Preview ${value?.name ?? 'gambar'}`}
+            className="h-20 w-20 rounded object-cover border border-slate-100"
+          />
           <div className="min-w-0 flex-1">
             <p className="truncate text-sm font-medium text-slate-700">{value?.name}</p>
             <p className="mt-1 text-xs text-slate-500">Preview gambar yang akan diunggah</p>
@@ -130,10 +138,19 @@ export function FileInput({
             </div>
             <div className="max-h-[65vh] overflow-auto text-center">
               <ReactCrop crop={crop} onChange={(_, percentCrop) => setCrop(percentCrop)} onComplete={(pixelCrop) => setCompletedCrop(pixelCrop)}>
-                <Image ref={imageRef} src={previewUrl} alt="Gambar untuk dicrop" width={1600} height={1200} unoptimized className="mx-auto max-h-[60vh] max-w-full" onLoad={(event) => {
-                  const { width, height } = event.currentTarget;
-                  setCrop(centerCrop(makeAspectCrop({ unit: '%', width: 80 }, width / height, width, height), width, height));
-                }} />
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  ref={imageRef}
+                  src={previewUrl}
+                  alt="Gambar untuk dicrop"
+                  className="mx-auto max-h-[60vh] max-w-full"
+                  onLoad={(event) => {
+                    const { naturalWidth, naturalHeight } = event.currentTarget;
+                    const width = naturalWidth || 100;
+                    const height = naturalHeight || 100;
+                    setCrop(centerCrop(makeAspectCrop({ unit: '%', width: 80 }, width / height, width, height), width, height));
+                  }}
+                />
               </ReactCrop>
             </div>
             <div className="mt-5 flex justify-end gap-2">

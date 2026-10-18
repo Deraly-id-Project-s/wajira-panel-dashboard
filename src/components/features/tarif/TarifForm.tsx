@@ -523,9 +523,10 @@ export function TarifForm({ initialData, onSubmit, isSubmitting, title }: TarifF
                     <Button
                         type="submit"
                         disabled={isSubmitting}
+                        loading={isSubmitting}
                         className="min-w-[130px] gap-2 btn-primary!"
                     >
-                        <Save className="h-4 w-4" />
+                        {!isSubmitting && <Save className="h-4 w-4" />}
                         {isSubmitting ? 'Menyimpan...' : 'Simpan'}
                     </Button>
                 </div>

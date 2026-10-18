@@ -6,20 +6,23 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import RequiredMark from '@/components/ui/required-mark';
 import { ReferenceLink } from '@/components/ui/reference-link';
+import { LeafletCoordinateInput } from '@/components/ui/leaflet-coordinate-input';
 import type { RouteModel, CreateRoutePayload } from '@/@types/route.types';
 
 export interface RouteFormData {
   name: string;
   address: string;
   link: string;
+  coordinat: string | null;
   other_information: string;
   description: string;
 }
 
 const defaultValues: RouteFormData = {
   name: '',
-  address: '',
+  address: '',  
   link: '',
+  coordinat: null,
   other_information: '',
   description: '',
 };
@@ -50,6 +53,7 @@ export function RouteFormModal({
           name: initialData.name || '',
           address: initialData.address || '',
           link: initialData.link || '',
+          coordinat: initialData.coordinat || null,
           other_information: initialData.other_information || initialData.otherInformation || '',
           description: initialData.description || '',
         });
@@ -64,6 +68,7 @@ export function RouteFormModal({
       name: values.name.trim(),
       address: values.address.trim() || null,
       link: values.link.trim() || null,
+      coordinat: values.coordinat || null,
       other_information: values.other_information.trim() || null,
       description: values.description.trim() || null,
     });
@@ -148,6 +153,23 @@ export function RouteFormModal({
                     className="bg-white"
                   />
                 </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="coordinat"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel className="text-sm font-medium text-gray-700">Koordinat Lokasi</FormLabel>
+                <LeafletCoordinateInput
+                  id="route-map-coordinate"
+                  value={field.value}
+                  onChange={field.onChange}
+                  disabled={isSubmitting}
+                />
                 <FormMessage />
               </FormItem>
             )}

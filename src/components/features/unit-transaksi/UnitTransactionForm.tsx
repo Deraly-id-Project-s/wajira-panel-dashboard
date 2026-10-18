@@ -965,18 +965,17 @@ export function UnitTransactionForm({
           )}
 
           <div className="flex justify-center items-center gap-6 pt-10">
-            <Button type="button" variant="outline" onClick={onCancel} disabled={loading || cancelDisabled}>
+            <Button type="button" variant="outline" onClick={onCancel} disabled={loading || form.formState.isSubmitting || cancelDisabled}>
               Batal
             </Button>
             {!readOnly && (
-              <Button type="submit" disabled={loading || submitDisabled} variant="default">
-                {loading ? (
-                  'Menyimpan...'
-                ) : (
-                  <>
-                    Simpan
-                  </>
-                )}
+              <Button
+                type="submit"
+                disabled={loading || form.formState.isSubmitting || submitDisabled}
+                loading={loading || form.formState.isSubmitting}
+                variant="default"
+              >
+                {loading || form.formState.isSubmitting ? 'Menyimpan...' : 'Simpan'}
               </Button>
             )}
           </div>

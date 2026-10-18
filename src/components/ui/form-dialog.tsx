@@ -72,15 +72,10 @@ export function FormDialog({
             <Button
               type="submit"
               disabled={isSubmitting}
+              loading={isSubmitting}
               variant="default"
             >
-              {isSubmitting ? (
-                "Menyimpan..."
-              ) : (
-                <>
-                  {submitLabel}
-                </>
-              )}
+              {isSubmitting ? "Menyimpan..." : submitLabel}
             </Button>
           </div>
         </form>

@@ -62,14 +62,16 @@ export function RouteTable({
         header: 'MAPS',
         accessorKey: 'link',
         sortable: false,
-        cell: (item) =>
-          item.link ? (
-            <ReferenceLink href={item.link} target="_blank">
+        cell: (item) => {
+          const mapHref = item.link || (item.coordinat || item.coordinate ? `https://www.google.com/maps?q=${item.coordinat || item.coordinate}` : null);
+          return mapHref ? (
+            <ReferenceLink href={mapHref} target="_blank">
               Buka Maps
             </ReferenceLink>
           ) : (
             '-'
-          ),
+          );
+        },
       },
       {
         header: 'Aksi',

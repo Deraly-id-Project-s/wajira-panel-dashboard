@@ -1,5 +1,6 @@
 import * as React from 'react';
 import { Loader2 } from 'lucide-react';
+import { HashLoader } from './hash-loader';
 import { cn } from '@/lib/utils';
 
 export interface LoadingStateProps {
@@ -12,6 +13,11 @@ export interface LoadingStateProps {
    * @default "page"
    */
   variant?: 'page' | 'section' | 'inline' | 'fullscreen';
+  /**
+   * Tipe loader icon: 'spin' (Loader2) atau 'hash' (HashLoader).
+   * @default "spin"
+   */
+  loaderType?: 'spin' | 'hash';
   /**
    * Teks yang ditampilkan di bawah atau di samping spinner.
    * Berikan nilai `null` untuk menyembunyikan teks.
@@ -30,11 +36,13 @@ export interface LoadingStateProps {
 
 export function LoadingState({
   variant = 'page',
+  loaderType,
   text,
   className,
   iconClassName,
 }: LoadingStateProps) {
   const isInline = variant === 'inline';
+  const effectiveLoaderType = loaderType ?? (variant === 'fullscreen' ? 'hash' : 'spin');
 
   // Set default text jika tidak secara eksplisit di-set null
   const defaultText = text === undefined && !isInline ? 'Memuat data...' : text;
@@ -68,9 +76,27 @@ export function LoadingState({
     }
   };
 
+  const getHashSize = () => {
+    switch (variant) {
+      case 'fullscreen':
+      case 'page':
+        return 36;
+      case 'section':
+        return 28;
+      case 'inline':
+        return 16;
+      default:
+        return 24;
+    }
+  };
+
   return (
     <div className={cn(getContainerClassName(), className)}>
-      <Loader2 className={cn('animate-spin', getIconClassName(), iconClassName)} />
+      {effectiveLoaderType === 'hash' ? (
+        <HashLoader size={getHashSize()} className={iconClassName} />
+      ) : (
+        <Loader2 className={cn('animate-spin', getIconClassName(), iconClassName)} />
+      )}
       {defaultText !== null && (
         <p className={cn('text-sm text-muted-foreground animate-pulse', isInline && 'text-xs')}>
           {defaultText}

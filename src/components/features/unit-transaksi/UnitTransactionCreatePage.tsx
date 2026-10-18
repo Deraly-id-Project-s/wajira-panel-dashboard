@@ -18,6 +18,7 @@ import {
 import { useCreatePurchase } from '@/hooks/usePurchase';
 import { useCreateSales } from '@/hooks/useSales';
 import { useCompany } from '@/contexts/CompanyContext';
+import { usePageLoading } from '@/contexts/PageLoadingContext';
 import type { CreatePurchaseRequest } from '@/@types/purchase.types';
 import type { UnitTransactionFormValues, UnitTransactionKind } from '@/types/unit-transaction.types';
 import { apiClient } from '@/lib/api/client';
@@ -114,6 +115,7 @@ export function UnitTransactionCreatePage({ type, mode }: UnitTransactionCreateP
   const router = useRouter();
   const { companyId } = useCompany();
   const queryClient = useQueryClient();
+  const { showLoading, hideLoading } = usePageLoading();
 
   const slug = getSlug(router.query.slug);
   const rawId = router.query.id;
@@ -208,11 +210,13 @@ export function UnitTransactionCreatePage({ type, mode }: UnitTransactionCreateP
     };
 
     try {
+      showLoading('Menyimpan data pembelian unit...');
       const response = await createPurchase.mutateAsync(payload);
       const code = response?.code || generatedCode;
       toast.success(`Transaksi Pembelian Unit Tipe berhasil ditambahkan dengan kode transaksi ${code}`);
       router.push(`${transactionPath}/${response?.id}`);
     } catch (error) {
+      hideLoading();
       const err = error as any;
       const statusCode = err?.statusCode ?? err?.response?.status;
       const apiMessage = err?.message;
@@ -297,11 +301,13 @@ export function UnitTransactionCreatePage({ type, mode }: UnitTransactionCreateP
     };
 
     try {
+      showLoading('Menyimpan data penjualan unit...');
       const response = await createSales.mutateAsync(payload);
       const code = response?.code || generatedCode;
       toast.success(`Transaksi Penjualan Unit Tipe berhasil ditambahkan dengan kode transaksi ${code}`);
       router.push(response?.id ? `${transactionPath}/${response.id}` : transactionPath);
     } catch (error) {
+      hideLoading();
       const message = readApiErrorMessage(error, 'Gagal menambahkan penjualan unit');
       if (message.toLowerCase().includes('no stock available')) {
         toast.error('Stok untuk tipe unit ini tidak tersedia di warehouse. Silakan pilih tipe unit lain yang tersedia.');
@@ -373,6 +379,7 @@ export function UnitTransactionCreatePage({ type, mode }: UnitTransactionCreateP
         ppn_tax_id: data.ppnTaxVersionId ? Number(data.ppnTaxVersionId) : undefined,
       };
 
+      showLoading(`Menyimpan ${isPurchase ? 'pembelian' : 'penjualan'} unit tipe...`);
       const response = await addUnitMutation.mutateAsync(payload);
 
       const currentTemplateId = transactionDetail?.documentTemplateId ?? null;
@@ -393,6 +400,7 @@ export function UnitTransactionCreatePage({ type, mode }: UnitTransactionCreateP
       toast.success(`Transaksi ${isPurchase ? 'Pembelian' : 'Penjualan'} Unit Tipe berhasil ditambahkan dengan kode transaksi ${code}`);
       router.push(`${transactionPath}/${transactionId}`);
     } catch (error: any) {
+      hideLoading();
       const status = error?.statusCode ?? error?.response?.status;
       if (status === 422) {
         toast.error('Stok tidak tersedia di warehouse. Silakan pilih tipe unit lain yang tersedia.');

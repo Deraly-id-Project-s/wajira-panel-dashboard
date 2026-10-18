@@ -12,6 +12,8 @@ export const mapRouteItem = (item: any): RouteModel => ({
     name: item.name || '',
     address: item.address || null,
     link: item.link || null,
+    coordinat: item.coordinat || item.coordinate || null,
+    coordinate: item.coordinat || item.coordinate || null,
     other_information: item.other_information || null,
     otherInformation: item.other_information || null,
     description: item.description || null,

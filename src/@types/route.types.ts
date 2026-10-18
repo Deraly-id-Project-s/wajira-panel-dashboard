@@ -7,6 +7,8 @@ export interface RouteModel {
     name: string;
     address?: string | null;
     link?: string | null;
+    coordinat?: string | null;
+    coordinate?: string | null;
     other_information?: string | null;
     otherInformation?: string | null;
     description?: string | null;
@@ -23,6 +25,7 @@ export interface CreateRoutePayload {
     name: string;
     address?: string | null;
     link?: string | null;
+    coordinat?: string | null;
     other_information?: string | null;
     description?: string | null;
 }

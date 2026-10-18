@@ -199,7 +199,6 @@ export function DOEkspedisiDriverNotes({ data, onRefresh }: DOEkspedisiDriverNot
         description="Catatan tambahan untuk Driver"
         icon={<FileText />}
         onAdd={openCreate}
-        addDisabled={data?.status !== 'draft'}
       >
         <BaseTable
           data={data.driverNotes ?? []}
