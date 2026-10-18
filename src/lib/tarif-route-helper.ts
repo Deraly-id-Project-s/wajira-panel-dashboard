@@ -1,6 +1,8 @@
 import type { Tarif } from '@/@types/tarif.types';
 
-export function formatTarifRouteName(tarif?: Tarif | null, fallback = '-'): string {
+export type TarifRouteLike = Partial<Tarif> | null;
+
+export function formatTarifRouteName(tarif?: TarifRouteLike, fallback = '-'): string {
   if (!tarif) return fallback;
 
   if (tarif.routes && tarif.routes.length > 0) {
@@ -16,7 +18,7 @@ export function formatTarifRouteName(tarif?: Tarif | null, fallback = '-'): stri
   return fallback;
 }
 
-export function formatTarifShortLabel(tarif?: Tarif | null, fallback = '-'): { origin: string; destination: string } {
+export function formatTarifShortLabel(tarif?: TarifRouteLike, fallback = '-'): { origin: string; destination: string } {
   if (!tarif) return { origin: fallback, destination: fallback };
 
   if (tarif.routes && tarif.routes.length > 0) {

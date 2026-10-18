@@ -1,5 +1,6 @@
 import type { Customer } from './customer.types';
 import type { PaginatedResult, PaginationParams } from './pagination.types';
+import type { RouteModel } from './route.types';
 
 export type OrderListStatus = 'draft' | 'deliver' | 'process' | 'done' | 'reject';
 export type OrderListVehicleType = 'towing' | 'cdd' | 'fuso';
@@ -24,15 +25,7 @@ export interface OrderListTarifReference {
   customerId?: number;
   loadingIn?: string;
   loadingOut?: string;
-  routes?: Array<{
-    id: number;
-    name: string;
-    address?: string | null;
-    pivot?: {
-      order?: number;
-      state_at?: 'loading_in' | 'loading_out';
-    };
-  }>;
+  routes?: RouteModel[];
   distance?: number;
   ujTowing?: number | null;
   ujCdd?: number | null;

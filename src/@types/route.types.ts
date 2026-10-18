@@ -1,4 +1,5 @@
 import type { PaginatedResult } from './pagination.types';
+import type { TarifRoutePivot } from './tarif.types';
 
 export interface RouteModel {
     id: number;
