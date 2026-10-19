@@ -244,7 +244,7 @@ export default function TransaksiRefundBeliPage() {
                     className="btn-primary-orange!"
                   >
                     <Plus className="h-4 w-4 mr-2" />
-                    Tambah Data Data Refund Pembelian
+                    Tambah Data Refund
                   </Button>
                 )}
               </div>

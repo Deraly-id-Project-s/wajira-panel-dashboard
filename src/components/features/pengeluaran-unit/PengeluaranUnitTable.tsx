@@ -283,8 +283,8 @@ export default function PengeluaranUnitTable({
             </div>
           </div>
 
-          <DialogFooter className="gap-2 sm:gap-0 border-t pt-4">
-            <Button variant="outline" className="rounded-md" onClick={() => setEditingActivity(null)}>
+          <DialogFooter className="gap-2 sm:gap-0 border-t pt-4 flex flex-row">
+            <Button variant="outline" className="rounded-md mr-2" onClick={() => setEditingActivity(null)}>
               Batal
             </Button>
             <Button

@@ -290,23 +290,21 @@ export default function PurchaseRefundDetailPageContent({ transactionId, refundI
 
         {/* Tabel Pembayaran Refund */}
         <div className="space-y-4">
+          <div>
+            <h2 className="text-base font-semibold text-slate-800">Riwayat Pembayaran Refund</h2>
+            <p className="text-xs text-slate-500">Daftar transaksi pembayaran refund yang telah dicatat</p>
+          </div>
           <BaseTable
             data={refund.payments ?? []}
             columns={columns}
             headerRowClassName="bg-[#f8f9fa] border-b border-gray-200"
             defaultSort={{ key: 'payment_date', direction: 'desc' }}
             headerActions={
-              <div className="flex flex-col gap-2 md:flex-row md:items-center justify-between">
-                <div>
-                  <h2 className="text-base font-semibold text-slate-800">Riwayat Pembayaran Refund</h2>
-                  <p className="text-xs text-slate-500">Daftar transaksi pembayaran refund yang telah dicatat</p>
-                </div>
-                <div className="flex flex-col sm:flex-row items-center gap-2 w-full sm:w-auto">
-                  <Button onClick={() => setIsAddDetailOpen(true)} disabled={lessPayment === 0} className="btn-primary!">
-                    <Plus className="h-4 w-4 mr-2" />
-                    Tambah Data Pembayaran Refund
-                  </Button>
-                </div>
+              <div className="flex flex-col sm:flex-row items-center gap-2 w-full sm:w-auto">
+                <Button onClick={() => setIsAddDetailOpen(true)} disabled={lessPayment === 0} className="btn-primary!">
+                  <Plus className="h-4 w-4 mr-2" />
+                  Tambah Data Pembayaran
+                </Button>
               </div>
             }
           />

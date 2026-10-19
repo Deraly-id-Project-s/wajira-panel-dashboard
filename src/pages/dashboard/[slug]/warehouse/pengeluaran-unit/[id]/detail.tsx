@@ -277,8 +277,8 @@ export default function PengeluaranUnitDetailPage() {
             </div>
           </div>
 
-          <DialogFooter className="gap-2 sm:gap-0 border-t pt-4">
-            <Button variant="outline" className="rounded-md" onClick={() => setIsUpdateStateDialogOpen(false)}>
+          <DialogFooter className="gap-2 sm:gap-0 border-t pt-4 flex flex-row">
+            <Button variant="outline" className="rounded-md mr-2" onClick={() => setIsUpdateStateDialogOpen(false)}>
               Batal
             </Button>
             <Button
