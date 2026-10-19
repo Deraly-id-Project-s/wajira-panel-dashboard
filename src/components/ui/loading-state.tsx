@@ -107,7 +107,7 @@ export function LoadingState({
 
   const renderLoader = () => {
     if (effectiveLoaderType === 'bounce') {
-      return <BounceLoader size={getBounceSize()} className={cn('text-primary', iconClassName)} />;
+      return <BounceLoader size={getBounceSize()} className={iconClassName} />;
     }
     if (effectiveLoaderType === 'hash') {
       return <HashLoader size={getHashSize()} className={iconClassName} />;

@@ -4,7 +4,7 @@ import { cn } from '@/lib/utils';
 export interface BounceLoaderProps extends React.HTMLAttributes<HTMLDivElement> {
   /** Size in pixels (default: 60) */
   size?: number;
-  /** Color of the loader (default: currentColor) */
+  /** Color of the loader (default: rgba(237, 51, 59, 0.75) - soft red) */
   color?: string;
   /** Speed multiplier (default: 1) */
   speedMultiplier?: number;
@@ -24,7 +24,7 @@ export function BounceLoader({
 }: BounceLoaderProps) {
   const duration = `${2.1 / speedMultiplier}s`;
   const delay = `-${1.05 / speedMultiplier}s`;
-  const resolvedColor = color || 'currentColor';
+  const resolvedColor = color || 'rgba(237, 51, 59, 0.75)';
 
   const containerStyle = {
     '--bl-size': `${size}px`,
