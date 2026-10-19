@@ -7,7 +7,7 @@ import { getObjectStorageUrl } from '@/components/ui/storage-image';
 import { cn } from '@/lib/utils';
 
 export interface ProfitLossPrintSection {
-  key: 'revenue' | 'cogs' | 'opex' | 'noix';
+  key: 'revenue' | 'cogs' | 'opex' | 'non_opex' | 'noix';
   title: string;
   rows: ProfitLossReportLine[];
   total: number;

@@ -106,6 +106,11 @@ const CALC_GROUPS: CalcGroupMeta[] = [
     title: 'Beban Operasional',
     description: 'Beban operasional kantor & logistik.',
   },
+  {
+    key: 'non_opex_account_ids',
+    title: 'Beban Non-Operasional',
+    description: 'Beban di luar kegiatan operasional utama (bunga pinjaman, dsb).',
+  },
 ];
 
 const createEmptyMonthlyAccounts = (): Record<MonthKey, number[]> => ({
@@ -127,6 +132,7 @@ const createEmptyYearConfig = (): ProfitLossYearConfig => ({
   revenue_account_ids: createEmptyMonthlyAccounts(),
   cogs_account_ids: createEmptyMonthlyAccounts(),
   opex_account_ids: createEmptyMonthlyAccounts(),
+  non_opex_account_ids: createEmptyMonthlyAccounts(),
   tax: null,
 });
 
@@ -246,6 +252,7 @@ export default function LaporanLabaRugiTemplatePage() {
         revenue_account_ids: { ...createEmptyMonthlyAccounts(), ...(matchedYear.config.revenue_account_ids || {}) },
         cogs_account_ids: { ...createEmptyMonthlyAccounts(), ...(matchedYear.config.cogs_account_ids || {}) },
         opex_account_ids: { ...createEmptyMonthlyAccounts(), ...(matchedYear.config.opex_account_ids || {}) },
+        non_opex_account_ids: { ...createEmptyMonthlyAccounts(), ...(matchedYear.config.non_opex_account_ids || {}) },
         tax: matchedYear.config.tax ?? null,
       };
       setYearConfig(merged);
@@ -268,7 +275,7 @@ export default function LaporanLabaRugiTemplatePage() {
     setYearConfig((prev) => ({
       ...prev,
       [groupKey]: {
-        ...prev[groupKey],
+        ...(prev[groupKey] || createEmptyMonthlyAccounts()),
         [monthKey]: nextIds,
       },
     }));
@@ -297,6 +304,7 @@ export default function LaporanLabaRugiTemplatePage() {
       revenue_account_ids: { ...createEmptyMonthlyAccounts(), ...(sourceConfig.revenue_account_ids || {}) },
       cogs_account_ids: { ...createEmptyMonthlyAccounts(), ...(sourceConfig.cogs_account_ids || {}) },
       opex_account_ids: { ...createEmptyMonthlyAccounts(), ...(sourceConfig.opex_account_ids || {}) },
+      non_opex_account_ids: { ...createEmptyMonthlyAccounts(), ...(sourceConfig.non_opex_account_ids || {}) },
       tax: sourceConfig.tax ?? null,
     };
 
@@ -312,10 +320,12 @@ export default function LaporanLabaRugiTemplatePage() {
     const sourceRev = sanitizeList(yearConfig.revenue_account_ids[copySourceMonth]);
     const sourceCogs = sanitizeList(yearConfig.cogs_account_ids[copySourceMonth]);
     const sourceOpex = sanitizeList(yearConfig.opex_account_ids[copySourceMonth]);
+    const sourceNonOpex = sanitizeList(yearConfig.non_opex_account_ids?.[copySourceMonth]);
 
     const newRev = { ...yearConfig.revenue_account_ids };
     const newCogs = { ...yearConfig.cogs_account_ids };
     const newOpex = { ...yearConfig.opex_account_ids };
+    const newNonOpex = { ...(yearConfig.non_opex_account_ids || createEmptyMonthlyAccounts()) };
 
     const sourceLabel = MONTHS.find((m) => m.key === copySourceMonth)?.label ?? copySourceMonth;
 
@@ -324,6 +334,7 @@ export default function LaporanLabaRugiTemplatePage() {
         newRev[key] = [...sourceRev];
         newCogs[key] = [...sourceCogs];
         newOpex[key] = [...sourceOpex];
+        newNonOpex[key] = [...sourceNonOpex];
       });
       toast.success(`Konfigurasi akun dari bulan ${sourceLabel} berhasil disalin ke seluruh bulan!`);
     } else {
@@ -331,6 +342,7 @@ export default function LaporanLabaRugiTemplatePage() {
       newRev[targetMonthKey] = [...sourceRev];
       newCogs[targetMonthKey] = [...sourceCogs];
       newOpex[targetMonthKey] = [...sourceOpex];
+      newNonOpex[targetMonthKey] = [...sourceNonOpex];
       const targetLabel = MONTHS.find((m) => m.key === targetMonthKey)?.label ?? targetMonthKey;
       toast.success(`Konfigurasi akun dari bulan ${sourceLabel} berhasil disalin ke bulan ${targetLabel}!`);
     }
@@ -340,6 +352,7 @@ export default function LaporanLabaRugiTemplatePage() {
       revenue_account_ids: newRev,
       cogs_account_ids: newCogs,
       opex_account_ids: newOpex,
+      non_opex_account_ids: newNonOpex,
     }));
 
     setIsCopyDialogOpen(false);
@@ -356,6 +369,7 @@ export default function LaporanLabaRugiTemplatePage() {
       revenue_account_ids: { ...prev.revenue_account_ids, [resetMonthTarget]: [] },
       cogs_account_ids: { ...prev.cogs_account_ids, [resetMonthTarget]: [] },
       opex_account_ids: { ...prev.opex_account_ids, [resetMonthTarget]: [] },
+      non_opex_account_ids: { ...(prev.non_opex_account_ids || createEmptyMonthlyAccounts()), [resetMonthTarget]: [] },
     }));
 
     toast.success(`Seluruh akun pada bulan ${targetLabel} berhasil dikosongkan.`);
@@ -363,11 +377,11 @@ export default function LaporanLabaRugiTemplatePage() {
   };
 
   const sanitizeGroupAccounts = (
-    monthlyData: Record<MonthKey, number[]>,
+    monthlyData?: Record<MonthKey, number[]>,
   ): Record<MonthKey, number[]> => {
     const result: Record<MonthKey, number[]> = {} as Record<MonthKey, number[]>;
     for (const m of MONTHS) {
-      const list = monthlyData[m.key] || [];
+      const list = monthlyData?.[m.key] || [];
       result[m.key] = Array.from(new Set(list.filter((id) => Number(id) > 0)));
     }
     return result;
@@ -383,7 +397,7 @@ export default function LaporanLabaRugiTemplatePage() {
     for (const m of MONTHS) {
       const seenAccounts = new Map<number, string>();
       for (const group of CALC_GROUPS) {
-        const list = yearConfig[group.key][m.key] || [];
+        const list = yearConfig[group.key]?.[m.key] || [];
         for (const id of list) {
           const numId = Number(id);
           if (numId > 0) {
@@ -415,6 +429,7 @@ export default function LaporanLabaRugiTemplatePage() {
       revenue_account_ids: sanitizeGroupAccounts(yearConfig.revenue_account_ids),
       cogs_account_ids: sanitizeGroupAccounts(yearConfig.cogs_account_ids),
       opex_account_ids: sanitizeGroupAccounts(yearConfig.opex_account_ids),
+      non_opex_account_ids: sanitizeGroupAccounts(yearConfig.non_opex_account_ids),
     };
 
     try {
@@ -592,7 +607,8 @@ export default function LaporanLabaRugiTemplatePage() {
               const totalAccountsInMonth =
                 (yearConfig.revenue_account_ids[monthKey]?.filter((id) => Number(id) > 0).length || 0) +
                 (yearConfig.cogs_account_ids[monthKey]?.filter((id) => Number(id) > 0).length || 0) +
-                (yearConfig.opex_account_ids[monthKey]?.filter((id) => Number(id) > 0).length || 0);
+                (yearConfig.opex_account_ids[monthKey]?.filter((id) => Number(id) > 0).length || 0) +
+                (yearConfig.non_opex_account_ids?.[monthKey]?.filter((id) => Number(id) > 0).length || 0);
 
               return (
                 <CollapsibleBox
@@ -655,14 +671,14 @@ export default function LaporanLabaRugiTemplatePage() {
                   {/* Container Grup Kalkulasi Inline Ringkas */}
                   <div className="divide-y divide-slate-100 bg-white rounded-md border border-slate-100 px-3 sm:px-4">
                     {CALC_GROUPS.map((group) => {
-                      const accountIds = yearConfig[group.key][monthKey] || [];
+                      const accountIds = yearConfig[group.key]?.[monthKey] || [];
                       const activeCount = accountIds.filter((id) => Number(id) > 0).length;
 
                       // Kumpulkan seluruh ID akun aktif dari grup kalkulasi LAIN pada bulan yang sama
                       const otherGroupsAccountIds = CALC_GROUPS
                         .filter((g) => g.key !== group.key)
                         .flatMap((g) =>
-                          (yearConfig[g.key][monthKey] || []).filter((id) => Number(id) > 0),
+                          (yearConfig[g.key]?.[monthKey] || []).filter((id) => Number(id) > 0),
                         );
 
                       return (

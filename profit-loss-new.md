@@ -8,12 +8,11 @@ Dokumen ini ditujukan sebagai panduan integrasi bagi Frontend Developer / AI Fro
 
 1. **`ProfitLossTemplate`** adalah template utama per perusahaan (`company_id`).
 2. **`ProfitLossTemplateYear`** menyimpan konfigurasi per tahun (`year`) untuk template tersebut.
-3. Konfigurasi (`config`) mencakup 5 grup akun per bulan (Januari–Desember) dan nilai pajak (`tax`) tahunan:
+3. Konfigurasi (`config`) mencakup 4 grup akun per bulan (Januari–Desember) dan nilai pajak (`tax`) tahunan:
    - `revenue_account_ids` (Pendapatan)
-   - `cogs_account_ids` (Beban Pokok Penjualan / HPP)
-   - `gross_profit_account_ids` (Laba Kotor Usaha)
+   - `cogs_account_ids` (Beban Pokok Usaha / HPP)
    - `opex_account_ids` (Beban Operasional)
-   - `noix_account_ids` (Pendapatan & Beban di Luar Usaha)
+   - `non_opex_account_ids` (Beban Non Operasional)
    - `tax` (Persentase pajak tahunan, berupa desimal/float atau `null`)
 4. Setiap bulan pada grup akun secara default berisi array kosong `[]` (nullable/tanpa akun otomatis terpilih), dan `tax` default `null`.
 5. Duplikasi kombinasi `company_id` (template) dan `year` dicegah pada level database & validasi (HTTP 422).
@@ -76,12 +75,7 @@ Mengambil data ringkasan dan rincian transaksi laporan laba rugi untuk perusahaa
 - **Endpoint**: `/wapi/profit-loss-report/{company_id}`
 - **Query Parameters**:
   - `year` *(optional, integer)*: Tahun laporan (contoh: `2026`). Jika tidak diisi, mengambil dari parameter tanggal atau default tahun berjalan.
-  - `month` *(optional, string/integer)*: Bulan laporan (contoh: `1`, `01`, atau `january`). Jika tidak diisi, data akun akan menggabungkan seluruh akun aktif dalam tahun tersebut.
-  - `start_date` / `end_date` *(optional, date: YYYY-MM-DD)*: Rentang tanggal transaksi `payment_at`.
-  - `date` / `payment_at` *(optional, date: YYYY-MM-DD)*: Tanggal spesifik transaksi.
-  - `category` *(optional, enum: `revenue`, `cogs`, `gross_profit`, `opex`, `noix`)*: Filter transaksi hanya untuk kategori tertentu.
-  - `account_id` *(optional, integer)*: Filter ID akun spesifik.
-  - `search` *(optional, string)*: Pencarian teks pada catatan/nominal/arus kas.
+  - `month` *(optional, string/integer)*: Bulan laporan (contoh: `1`, `01`, atau `january`). Jika tidak diisi, default bulan berjalan.
 
 #### Response:
 ```json
@@ -98,15 +92,18 @@ Mengambil data ringkasan dan rincian transaksi laporan laba rugi untuk perusahaa
     },
     "revenue_account_ids": [12, 15],
     "cogs_account_ids": [20, 21],
-    "gross_profit_account_ids": [],
     "opex_account_ids": [30, 31],
-    "noix_account_ids": [],
+    "non_opex_account_ids": [40],
     "tax": 11,
     "revenue_calc": {
       "total": 50000000,
       "accounts": [
         {
+          "id": 12,
+          "account_id": 12,
+          "account_code": "4-100",
           "account_name": "Pendapatan Jasa Angkut",
+          "account_type": null,
           "amount": 50000000,
           "type": "IDR"
         }
@@ -116,33 +113,47 @@ Mengambil data ringkasan dan rincian transaksi laporan laba rugi untuk perusahaa
       "total": 20000000,
       "accounts": [
         {
+          "id": 20,
+          "account_id": 20,
+          "account_code": "5-100",
           "account_name": "Biaya Bahan Bakar",
+          "account_type": null,
           "amount": 20000000,
           "type": "IDR"
         }
       ]
     },
-    "gross_calc": {
-      "total": 0,
-      "accounts": []
-    },
     "opex_calc": {
       "total": 5000000,
       "accounts": [
         {
+          "id": 30,
+          "account_id": 30,
+          "account_code": "6-100",
           "account_name": "Beban Gaji Kantor",
+          "account_type": null,
           "amount": 5000000,
           "type": "IDR"
         }
       ]
     },
-    "noix_calc": {
-      "total": 0,
-      "accounts": []
+    "non_opex_calc": {
+      "total": 1000000,
+      "accounts": [
+        {
+          "id": 40,
+          "account_id": 40,
+          "account_code": "7-100",
+          "account_name": "Beban Bunga Pinjaman",
+          "account_type": null,
+          "amount": 1000000,
+          "type": "IDR"
+        }
+      ]
     },
-    "profit_loss_before_tax": 25000000,
-    "tax_amount": 2750000,
-    "profit_loss_after_tax": 22250000
+    "profit_loss_before_tax": 24000000,
+    "tax_amount": 2640000,
+    "profit_loss_after_tax": 21360000
   }
 }
 ```
@@ -203,9 +214,8 @@ Mengambil entitas template laba rugi perusahaan beserta seluruh daftar konfigura
               "november": [],
               "december": []
             },
-            "gross_profit_account_ids": { ... },
             "opex_account_ids": { ... },
-            "noix_account_ids": { ... },
+            "non_opex_account_ids": { ... },
             "tax": 11
           },
           "created_at": "2026-10-12T10:00:00.000000Z",
@@ -219,9 +229,8 @@ Mengambil entitas template laba rugi perusahaan beserta seluruh daftar konfigura
         "july": [], "august": [], "september": [], "october": [], "november": [], "december": []
       },
       "cogs_account_ids": { ... },
-      "gross_profit_account_ids": { ... },
       "opex_account_ids": { ... },
-      "noix_account_ids": { ... },
+      "non_opex_account_ids": { ... },
       "tax": null
     }
   }
@@ -263,9 +272,8 @@ Mengambil detail konfigurasi akun untuk tahun tertentu.
         "december": []
       },
       "cogs_account_ids": { ... },
-      "gross_profit_account_ids": { ... },
       "opex_account_ids": { ... },
-      "noix_account_ids": { ... },
+      "non_opex_account_ids": { ... },
       "tax": 11
     },
     "created_at": "2026-10-12T10:00:00.000000Z",
@@ -297,11 +305,12 @@ Membuat konfigurasi baru untuk kombinasi template perusahaan dan tahun yang belu
   "cogs_account_ids": {
     "january": [20, 21]
   },
-  "gross_profit_account_ids": {},
   "opex_account_ids": {
     "january": [30]
   },
-  "noix_account_ids": {}
+  "non_opex_account_ids": {
+    "january": [40]
+  }
 }
 ```
 
@@ -346,10 +355,6 @@ Membuat konfigurasi baru untuk kombinasi template perusahaan dan tahun yang belu
         "november": [],
         "december": []
       },
-      "gross_profit_account_ids": {
-        "january": [], "february": [], "march": [], "april": [], "may": [], "june": [],
-        "july": [], "august": [], "september": [], "october": [], "november": [], "december": []
-      },
       "opex_account_ids": {
         "january": [30],
         "february": [],
@@ -364,9 +369,19 @@ Membuat konfigurasi baru untuk kombinasi template perusahaan dan tahun yang belu
         "november": [],
         "december": []
       },
-      "noix_account_ids": {
-        "january": [], "february": [], "march": [], "april": [], "may": [], "june": [],
-        "july": [], "august": [], "september": [], "october": [], "november": [], "december": []
+      "non_opex_account_ids": {
+        "january": [40],
+        "february": [],
+        "march": [],
+        "april": [],
+        "may": [],
+        "june": [],
+        "july": [],
+        "august": [],
+        "september": [],
+        "october": [],
+        "november": [],
+        "december": []
       },
       "tax": 11
     },
