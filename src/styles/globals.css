@@ -95,6 +95,15 @@
   }
 }
 
+@keyframes bounce-loader-anim {
+  0%, 100% {
+    transform: scale(0);
+  }
+  50% {
+    transform: scale(1);
+  }
+}
+
 @utility hero-box {
   background-image: linear-gradient(to right, #ed333b 0%, #fb923c 50%, #dc2626 100%);
   background-size: 200% auto;

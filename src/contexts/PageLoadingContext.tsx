@@ -59,7 +59,7 @@ export function PageLoadingProvider({ children }: { children: React.ReactNode })
       {loadingCount > 0 && (
         <LoadingState
           variant="fullscreen"
-          loaderType="hash"
+          loaderType="bounce"
           text={loadingText}
           className="z-[9999]"
         />

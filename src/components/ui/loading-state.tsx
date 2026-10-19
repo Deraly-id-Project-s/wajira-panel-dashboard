@@ -1,5 +1,6 @@
 import * as React from 'react';
 import { Loader2 } from 'lucide-react';
+import { BounceLoader } from './bounce-loader';
 import { HashLoader } from './hash-loader';
 import { cn } from '@/lib/utils';
 
@@ -14,10 +15,10 @@ export interface LoadingStateProps {
    */
   variant?: 'page' | 'section' | 'inline' | 'fullscreen';
   /**
-   * Tipe loader icon: 'spin' (Loader2) atau 'hash' (HashLoader).
-   * @default "spin"
+   * Tipe loader icon: 'bounce' (BounceLoader), 'spin' (Loader2), atau 'hash' (HashLoader).
+   * @default "bounce"
    */
-  loaderType?: 'spin' | 'hash';
+  loaderType?: 'bounce' | 'spin' | 'hash';
   /**
    * Teks yang ditampilkan di bawah atau di samping spinner.
    * Berikan nilai `null` untuk menyembunyikan teks.
@@ -36,13 +37,13 @@ export interface LoadingStateProps {
 
 export function LoadingState({
   variant = 'page',
-  loaderType,
+  loaderType = 'bounce',
   text,
   className,
   iconClassName,
 }: LoadingStateProps) {
   const isInline = variant === 'inline';
-  const effectiveLoaderType = loaderType ?? (variant === 'fullscreen' ? 'hash' : 'spin');
+  const effectiveLoaderType = loaderType;
 
   // Set default text jika tidak secara eksplisit di-set null
   const defaultText = text === undefined && !isInline ? 'Memuat data...' : text;
@@ -76,6 +77,20 @@ export function LoadingState({
     }
   };
 
+  const getBounceSize = () => {
+    switch (variant) {
+      case 'fullscreen':
+      case 'page':
+        return 48;
+      case 'section':
+        return 36;
+      case 'inline':
+        return 18;
+      default:
+        return 32;
+    }
+  };
+
   const getHashSize = () => {
     switch (variant) {
       case 'fullscreen':
@@ -90,13 +105,19 @@ export function LoadingState({
     }
   };
 
+  const renderLoader = () => {
+    if (effectiveLoaderType === 'bounce') {
+      return <BounceLoader size={getBounceSize()} className={cn('text-primary', iconClassName)} />;
+    }
+    if (effectiveLoaderType === 'hash') {
+      return <HashLoader size={getHashSize()} className={iconClassName} />;
+    }
+    return <Loader2 className={cn('animate-spin', getIconClassName(), iconClassName)} />;
+  };
+
   return (
     <div className={cn(getContainerClassName(), className)}>
-      {effectiveLoaderType === 'hash' ? (
-        <HashLoader size={getHashSize()} className={iconClassName} />
-      ) : (
-        <Loader2 className={cn('animate-spin', getIconClassName(), iconClassName)} />
-      )}
+      {renderLoader()}
       {defaultText !== null && (
         <p className={cn('text-sm text-muted-foreground animate-pulse', isInline && 'text-xs')}>
           {defaultText}
