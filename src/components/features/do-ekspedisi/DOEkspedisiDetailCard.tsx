@@ -1,6 +1,6 @@
 import React from 'react';
 import { format } from 'date-fns';
-import { CalendarClock, CalendarDays, CheckCircle2, CircleUserRound, ClipboardList, Clock3, MapPin, Pencil, ReceiptText, Truck, WalletCards } from 'lucide-react';
+import { CalendarClock, CalendarDays, CheckCircle2, CircleUserRound, ClipboardList, Clock3, MapPin, Pencil, ReceiptText, RefreshCw, Truck, WalletCards } from 'lucide-react';
 import type { DoEkspedisi, DoEkspedisiOrderTarifItem } from '@/@types/do-ekspedisi.types';
 import BaseTable, { type ColumnDef } from '@/components/ui/base-table';
 import { useRouter } from 'next/router';
@@ -10,6 +10,12 @@ import { CopyBox } from '@/components/ui/copy-box';
 import { Button } from '@/components/ui/button';
 import { DateTimeRangeDialog } from '@/components/ui/date-time-range-dialog';
 import { useUpdateDoEkspedisi } from '@/hooks/useDoEkspedisi';
+import { useDrivers } from '@/hooks/useDriver';
+import { useCompany } from '@/contexts/CompanyContext';
+import { useDebouncedValue } from '@/hooks/useDebouncedValue';
+import { FormDialog } from '@/components/ui/form-dialog';
+import { SearchableSelect } from '@/components/features/vehicle-data/SearchableSelect';
+import RequiredMark from '@/components/ui/required-mark';
 import { toast } from 'sonner';
 import { getApiErrorMessage } from '@/utils/apiErrorHandler';
 import { CollapsibleBox } from '@/components/ui/collapsible-box';
@@ -195,8 +201,72 @@ const cargoColumns: ColumnDef<CargoRow>[] = [
 export function DOEkspedisiDetailCard({ data }: DOEkspedisiDetailCardProps) {
   const router = useRouter();
   const slug = typeof router.query.slug === 'string' ? router.query.slug : '';
+  const { companyId } = useCompany();
   const [targetDialogOpen, setTargetDialogOpen] = React.useState(false);
+  const [replaceDriverOpen, setReplaceDriverOpen] = React.useState(false);
+  const [selectedDriverId, setSelectedDriverId] = React.useState<string>('');
+  const [driverSearch, setDriverSearch] = React.useState('');
+  const debouncedDriverSearch = useDebouncedValue(driverSearch, 350);
+
+  const isDraft = String(data.status).toLowerCase() === 'draft';
+
+  const driverQuery = useDrivers({
+    page: 1,
+    perPage: 100,
+    search: debouncedDriverSearch,
+    company_id: companyId ?? undefined,
+    enabled: isDraft,
+  });
+
+  const driverOptions = React.useMemo(() => {
+    return (driverQuery.data?.data ?? []).map((item) => ({
+      value: String(item.id),
+      label: item.name,
+      subtitle: item.code,
+    }));
+  }, [driverQuery.data?.data]);
+
+  const mergedDriverOptions = React.useMemo(() => {
+    if (!data.driver?.id) return driverOptions;
+    const currentIdStr = String(data.driver.id);
+    if (driverOptions.some((opt) => opt.value === currentIdStr)) return driverOptions;
+    return [
+      {
+        value: currentIdStr,
+        label: data.driver.name,
+        subtitle: data.driver.code,
+      },
+      ...driverOptions,
+    ];
+  }, [data.driver, driverOptions]);
+
   const updateMutation = useUpdateDoEkspedisi();
+
+  const handleOpenReplaceDriver = () => {
+    setSelectedDriverId(data.driverId ? String(data.driverId) : '');
+    setReplaceDriverOpen(true);
+  };
+
+  const handleConfirmReplaceDriver = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedDriverId) {
+      toast.error('Driver wajib dipilih');
+      return;
+    }
+
+    try {
+      await updateMutation.mutateAsync({
+        id: data.id,
+        payload: {
+          driver_id: Number(selectedDriverId),
+        },
+      });
+      toast.success('Driver berhasil diperbarui');
+      setReplaceDriverOpen(false);
+    } catch (error) {
+      toast.error(getApiErrorMessage(error));
+    }
+  };
 
   const handleUpdateTarget = async ({ start, end }: { start: Date; end: Date }) => {
     try {
@@ -248,19 +318,33 @@ export function DOEkspedisiDetailCard({ data }: DOEkspedisiDetailCardProps) {
           <DetailField label="Potongan Claim" value={<span className="text-rose-700">-{formatCurrency(data.claimDeductionNominal)}</span>} icon={ReceiptText} />
           <DetailField label="Potongan Kas Bon" value={<span className="text-rose-700">-{formatCurrency(data.cashAdvanceDeductionNominal)}</span>} icon={WalletCards} />
           <DetailField label="UJ Diterima Driver" value={<span className="text-emerald-700">{formatCurrency(data.ujNominal)}</span>} icon={WalletCards} />
-          <DetailField
-            label="Nama Driver"
-            value={
-              driverName ? (
-                <ReferenceLink href={`/dashboard/${slug}/master/driver?search=${driverName}`}>
-                  {driverName}
-                </ReferenceLink>
-              ) : (
-                '-'
-              )
-            }
-            icon={CircleUserRound}
-          />
+          <div className="space-y-1.5">
+            <p className="text-xs font-medium uppercase tracking-wide text-slate-500">Nama Driver</p>
+            <div className="flex items-center gap-2 text-sm font-semibold text-slate-950">
+              <CircleUserRound className="h-4 w-4 shrink-0 text-slate-400" />
+              <span>
+                {driverName ? (
+                  <ReferenceLink href={`/dashboard/${slug}/master/driver?search=${driverName}`}>
+                    {driverName}
+                  </ReferenceLink>
+                ) : (
+                  '-'
+                )}
+              </span>
+              {isDraft && (
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon-xs"
+                  className="h-6 w-6 text-slate-500 hover:text-slate-900 hover:bg-slate-100"
+                  onClick={handleOpenReplaceDriver}
+                  tooltip="Ganti Driver"
+                >
+                  <RefreshCw className="h-3.5 w-3.5" />
+                </Button>
+              )}
+            </div>
+          </div>
           <DetailField label="Tipe Armada" value={data.vehicle?.type || '-'} icon={Truck} />
           <DetailField
             label="Nomor Polisi"
@@ -302,6 +386,33 @@ export function DOEkspedisiDetailCard({ data }: DOEkspedisiDetailCardProps) {
         onSubmit={handleUpdateTarget}
         isSubmitting={updateMutation.isPending}
       />
+
+      <FormDialog
+        open={replaceDriverOpen}
+        onOpenChange={setReplaceDriverOpen}
+        title="Ganti Driver Ekspedisi"
+        description="Pilih driver baru yang akan ditugaskan untuk DO Ekspedisi ini."
+        onSubmit={handleConfirmReplaceDriver}
+        isSubmitting={updateMutation.isPending}
+        submitLabel="Ganti Driver"
+      >
+        <div className="space-y-4 pt-2">
+          <div className="space-y-2">
+            <label className="text-sm font-medium text-slate-700">
+              Pilih Driver<RequiredMark />
+            </label>
+            <SearchableSelect
+              value={selectedDriverId}
+              onChange={setSelectedDriverId}
+              options={mergedDriverOptions}
+              placeholder="Pilih driver"
+              searchPlaceholder="Cari nama atau kode driver..."
+              loading={driverQuery.isLoading}
+              onSearchChange={setDriverSearch}
+            />
+          </div>
+        </div>
+      </FormDialog>
 
       <CollapsibleBox title="Informasi Customer" description="Identitas customer dan rincian rute pengiriman" icon={ClipboardList} defaultExpanded>
         <div className="grid grid-cols-1 gap-x-12 gap-y-6 md:grid-cols-3">

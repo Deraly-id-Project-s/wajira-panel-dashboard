@@ -1,12 +1,11 @@
 import React from 'react';
 import { useRouter } from 'next/router';
 import { toast } from 'sonner';
-import { useForm, Controller } from 'react-hook-form';
+import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { PageHeader } from '@/components/ui/page-header';
 import { Button } from '@/components/ui/button';
-import { Label } from '@/components/ui/label';
 import { DateTimePicker } from '@/components/ui/date-time-picker';
 import { MoneyInput } from '@/components/ui/money-input';
 import { SearchableSelect } from '@/components/features/vehicle-data/SearchableSelect';
@@ -168,14 +167,20 @@ export default function EditDOEkspedisiFormPage() {
         <PageHeader
           breadcrumbs={[
             { label: 'DO Ekspedisi', onClick: () => router.push(`/dashboard/${slug}/do-ekspedisi`) },
-            { label: 'Form DO' },
+            { label: 'Edit DO Ekspedisi' },
           ]}
-          title="Form Edit DO Ekspedisi"
+          title="Edit DO Ekspedisi"
           subtitle={`Ubah rincian pengiriman untuk kode DO: ${detailQuery.data.doCode}`}
-          onBack={() => router.back()}
+          onBack={() => router.push(`/dashboard/${slug}/do-ekspedisi`)}
         />
 
-        <div className="rounded-md border border-slate-200 bg-white p-5 md:p-8 shadow-sm space-y-6">
+        <div className="rounded-md border border-slate-200 bg-white p-5 md:p-8 shadow-sm space-y-8">
+          <div>
+            <h2 className="text-lg font-semibold text-foreground tracking-tight">Informasi Pengiriman DO</h2>
+            <p className="text-sm text-gray-500 mt-1">Ubah rute order list, nominal uang jalan driver, serta target jadwal pengiriman</p>
+            <div className="mt-4 h-px bg-muted/60" />
+          </div>
+
           <Form {...formMethods}>
             <form onSubmit={handleSubmit(handleSave)} className="space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -192,7 +197,7 @@ export default function EditDOEkspedisiFormPage() {
                           options={mergedTarifOptions}
                           placeholder="Pilih rute ekspedisi"
                           searchPlaceholder="Cari rute..."
-                          className="rounded-md"
+                          className="bg-transparent"
                         />
                       </FormControl>
                       <FormMessage className="absolute bottom-0 text-[11px] leading-none text-red-500" />
@@ -211,7 +216,7 @@ export default function EditDOEkspedisiFormPage() {
                           value={field.value}
                           onChangeValue={field.onChange}
                           placeholder="Nominal uang jalan"
-                          className="rounded-md"
+                          className="bg-transparent"
                         />
                       </FormControl>
                       <FormMessage className="absolute bottom-0 text-[11px] leading-none text-red-500" />
@@ -230,7 +235,7 @@ export default function EditDOEkspedisiFormPage() {
                           value={field.value || undefined}
                           onChange={field.onChange}
                           placeholder="Pilih tanggal & waktu mulai"
-                          className="rounded-md"
+                          className="bg-transparent"
                         />
                       </FormControl>
                       <FormMessage className="absolute bottom-0 text-[11px] leading-none text-red-500" />
@@ -249,7 +254,7 @@ export default function EditDOEkspedisiFormPage() {
                           value={field.value || undefined}
                           onChange={field.onChange}
                           placeholder="Pilih tanggal & waktu selesai"
-                          className="rounded-md"
+                          className="bg-transparent"
                         />
                       </FormControl>
                       <FormMessage className="absolute bottom-0 text-[11px] leading-none text-red-500" />
@@ -258,20 +263,22 @@ export default function EditDOEkspedisiFormPage() {
                 />
               </div>
 
-              <div className="flex items-center justify-end gap-4 pt-4 border-t border-slate-100">
+              <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-100">
                 <Button
                   type="button"
                   variant="outline"
                   className="min-w-[120px]"
-                  onClick={() => router.back()}
+                  onClick={() => router.push(`/dashboard/${slug}/do-ekspedisi`)}
                   disabled={updateMutation.isPending}
                 >
                   Batal
                 </Button>
                 <Button
                   type="submit"
-                  className="min-w-[120px] bg-[#1e3a5f] hover:bg-[#152e4d] text-white"
+                  variant="default"
+                  className="min-w-[120px]"
                   disabled={updateMutation.isPending}
+                  loading={updateMutation.isPending}
                 >
                   {updateMutation.isPending ? 'Menyimpan...' : 'Simpan'}
                 </Button>
