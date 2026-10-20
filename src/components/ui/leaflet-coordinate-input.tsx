@@ -192,7 +192,6 @@ export function LeafletCoordinateInput({
           <Button
             type="button"
             variant="outline"
-            size="icon"
             disabled={disabled}
             aria-label="Bersihkan data map"
             title="Bersihkan data map"
