@@ -6,6 +6,7 @@ import { id as localeId } from 'date-fns/locale';
 import { Calendar as CalendarIcon, X } from 'lucide-react';
 
 import { cn } from '@/lib/utils';
+import { getTodayWIB } from '@/lib/utils/date';
 import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -25,6 +26,8 @@ export interface InputDateProps extends Omit<React.InputHTMLAttributes<HTMLInput
   displayFormat?: string;
   outputFormat?: string;
   clearable?: boolean;
+  isEdit?: boolean;
+  defaultToday?: boolean;
 }
 
 const parseDateValue = (val: Date | string | null | undefined): Date | undefined => {
@@ -63,13 +66,44 @@ export const InputDate = React.forwardRef<HTMLInputElement, InputDateProps>(
       displayFormat = 'dd MMM yyyy',
       outputFormat = 'yyyy-MM-dd',
       clearable = false,
+      isEdit = false,
+      defaultToday = true,
       ...props
     },
     ref
   ) => {
     const [open, setOpen] = React.useState(false);
 
-    const dateValue = React.useMemo(() => parseDateValue(value), [value]);
+    const isInitialMount = React.useRef(true);
+
+    const parsedDate = React.useMemo(() => parseDateValue(value), [value]);
+
+    const dateValue = React.useMemo(() => {
+      if (parsedDate) return parsedDate;
+      if (!isEdit && defaultToday && (value === undefined || value === null || value === '')) {
+        return getTodayWIB();
+      }
+      return undefined;
+    }, [parsedDate, isEdit, defaultToday, value]);
+
+    // Sinkronisasi otomatis ke form/state jika bukan edit dan value masih kosong
+    React.useEffect(() => {
+      if (isInitialMount.current) {
+        isInitialMount.current = false;
+        if (!isEdit && defaultToday && (value === undefined || value === null || value === '')) {
+          const todayWIB = getTodayWIB();
+          const formattedStr = format(todayWIB, outputFormat);
+          onValueChange?.(formattedStr, todayWIB);
+          if (onChange) {
+            const syntheticEvent = {
+              target: { name: name || '', value: formattedStr, id: id || '' },
+              currentTarget: { name: name || '', value: formattedStr, id: id || '' },
+            } as React.ChangeEvent<HTMLInputElement>;
+            onChange(syntheticEvent);
+          }
+        }
+      }
+    }, [isEdit, defaultToday, value, outputFormat, name, id, onChange, onValueChange]);
 
     const formattedDisplay = React.useMemo(() => {
       if (!dateValue) return '';

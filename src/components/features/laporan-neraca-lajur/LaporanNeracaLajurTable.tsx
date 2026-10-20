@@ -17,7 +17,7 @@ interface LaporanNeracaLajurTableProps {
 
 const formatCurrency = (
   value: number | null | undefined,
-  currency: 'idr' | 'usd',
+  currency: 'idr' | 'usd' = 'idr',
 ) => currenciesFormat(currency, Number(value) || 0);
 
 export function LaporanNeracaLajurTable({
@@ -32,13 +32,11 @@ export function LaporanNeracaLajurTable({
       result.openingBalance += Number(item.opening_balance) || 0;
       result.debit += Number(item.debit) || 0;
       result.credit += Number(item.credit) || 0;
-      result.debitUsd += Number(item.debit_usd) || 0;
-      result.creditUsd += Number(item.credit_usd) || 0;
       result.endingBalance += Number(item.ending_balance) || 0;
       result.total += Number(item.total) || 0;
       return result;
     },
-    { openingBalance: 0, debit: 0, credit: 0, debitUsd: 0, creditUsd: 0, endingBalance: 0, total: 0 },
+    { openingBalance: 0, debit: 0, credit: 0, endingBalance: 0, total: 0 },
   ), [data]);
 
   const columns = useMemo<ColumnDef<BalanceColumnReportItem>[]>(() => [
@@ -81,49 +79,35 @@ export function LaporanNeracaLajurTable({
       header: 'Saldo Awal (IDR)',
       accessorKey: 'opening_balance',
       sortable: true,
-      alignment: 'right',
+      alignment: 'left',
       cell: (item) => formatCurrency(item.opening_balance, 'idr'),
     },
     {
       header: 'Debit (IDR)',
       accessorKey: 'debit',
       sortable: true,
-      alignment: 'right',
+      alignment: 'left',
       cell: (item) => <span className="font-semibold text-emerald-700">{formatCurrency(item.debit, 'idr')}</span>,
     },
     {
       header: 'Kredit (IDR)',
       accessorKey: 'credit',
       sortable: true,
-      alignment: 'right',
+      alignment: 'left',
       cell: (item) => <span className="font-semibold text-rose-700">{formatCurrency(item.credit, 'idr')}</span>,
-    },
-    {
-      header: 'Debit (USD)',
-      accessorKey: 'debit_usd',
-      sortable: true,
-      alignment: 'right',
-      cell: (item) => <span className="font-semibold text-emerald-700">{formatCurrency(item.debit_usd, 'usd')}</span>,
-    },
-    {
-      header: 'Kredit (USD)',
-      accessorKey: 'credit_usd',
-      sortable: true,
-      alignment: 'right',
-      cell: (item) => <span className="font-semibold text-rose-700">{formatCurrency(item.credit_usd, 'usd')}</span>,
     },
     {
       header: 'Saldo Akhir (IDR)',
       accessorKey: 'ending_balance',
       sortable: true,
-      alignment: 'right',
+      alignment: 'left',
       cell: (item) => formatCurrency(item.ending_balance, 'idr'),
     },
     {
       header: 'Total (IDR)',
       accessorKey: 'total',
       sortable: true,
-      alignment: 'right',
+      alignment: 'left',
       cell: (item) => <span className="font-bold text-slate-900">{formatCurrency(item.total, 'idr')}</span>,
     },
   ], []);
@@ -137,8 +121,6 @@ export function LaporanNeracaLajurTable({
         { value: totals.openingBalance, currency: 'idr' as const },
         { value: totals.debit, currency: 'idr' as const },
         { value: totals.credit, currency: 'idr' as const },
-        { value: totals.debitUsd, currency: 'usd' as const },
-        { value: totals.creditUsd, currency: 'usd' as const },
         { value: totals.endingBalance, currency: 'idr' as const },
         { value: totals.total, currency: 'idr' as const },
       ].map(({ value, currency }, index) => (

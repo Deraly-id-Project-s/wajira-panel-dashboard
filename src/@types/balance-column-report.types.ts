@@ -11,8 +11,6 @@ export interface BalanceColumnReportItem {
   opening_balance: number | null;
   debit: number | null;
   credit: number | null;
-  debit_usd: number | null;
-  credit_usd: number | null;
   ending_balance: number | null;
   total: number | null;
 }
