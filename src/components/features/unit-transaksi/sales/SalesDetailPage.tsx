@@ -406,8 +406,7 @@ export default function SalesDetailPage() {
               <Button
                 type="button"
                 variant="success"
-                disabled={isPaid || isRefunded || updateBillingIsPaid.isPending || sales?.unit_transaction_billing == null || !canCreate || !sales?.isUnitTypeDetailValid}
-                tooltip="tombol lunasi pembayaran akan aktif apabila unit tipe detail sudah lengkap pada masing-masing unit tipe pada unit transaksi ini"
+                disabled={isPaid || isRefunded || updateBillingIsPaid.isPending || sales?.unit_transaction_billing == null || (!canCreate && !canEdit)}
                 onClick={() => setIsMarkAsPaidDialogOpen(true)}
               >
                 <CheckCircle2 className="mr-2 h-4 w-4" />
@@ -502,7 +501,7 @@ export default function SalesDetailPage() {
               type="button"
               className="bg-emerald-600 hover:bg-emerald-700 text-white"
               onClick={handleMarkAsPaid}
-              disabled={updateBillingIsPaid.isPending || !canCreate}
+              disabled={updateBillingIsPaid.isPending || (!canCreate && !canEdit)}
             >
               {updateBillingIsPaid.isPending ? 'Memproses...' : 'Ya, Tandai Lunas'}
             </Button>
