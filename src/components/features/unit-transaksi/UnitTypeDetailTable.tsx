@@ -40,12 +40,6 @@ export function UnitTypeDetailTable({
   const router = useRouter();
   const slug = typeof router.query.slug === 'string' ? router.query.slug : '';
 
-  const isSales =
-    transactionType === 'sales' ||
-    router.pathname.includes('penjualan') ||
-    router.asPath.includes('penjualan');
-  const personColumnHeader = isSales ? 'Supplier' : 'Customer';
-
   const columns = useMemo<ColumnDef<UnitTransactionTypeDetail>[]>(
     () => [
       {
@@ -85,7 +79,7 @@ export function UnitTypeDetailTable({
         cell: (item) => item?.chassis_number ? <CopyBox text={item.chassis_number} /> : '-',
       },
       {
-        header: personColumnHeader,
+        header: 'Supplier',
         accessorKey: 'person.name',
         sortable: true,
         cell: (item) =>
@@ -153,7 +147,7 @@ export function UnitTypeDetailTable({
         },
       },
     ],
-    [data?.meta.currentPage, data?.meta.perPage, page, perPage, slug, personColumnHeader],
+    [data?.meta.currentPage, data?.meta.perPage, page, perPage, slug],
   );
 
   return (
