@@ -30,11 +30,15 @@ type UnitTypeDetailTableProps = {
 export function UnitTypeDetailTable({
   transactionId,
   transactionCode,
-  transactionType,
 }: UnitTypeDetailTableProps) {
   const [page, setPage] = useState(1);
+  const [search, setSearch] = useState('');
   const perPage = 10;
-  const { data, isLoading, isFetching } = useUnitTransactionTypeDetails(transactionId, { page, perPage });
+  const { data, isLoading, isFetching } = useUnitTransactionTypeDetails(transactionId, {
+    page,
+    perPage,
+    search: search || undefined,
+  });
   const { handleExport, isExporting } = useExportUnitTypeDetails();
 
   const router = useRouter();
@@ -160,7 +164,7 @@ export function UnitTypeDetailTable({
           variant="outline"
           size="sm"
           disabled={isExporting}
-          onClick={() => handleExport(transactionId, transactionCode)}
+          onClick={() => handleExport(transactionId, transactionCode, { search: search || undefined })}
           className="gap-2 cursor-pointer"
         >
           <Download className="h-4 w-4" />
@@ -173,6 +177,12 @@ export function UnitTypeDetailTable({
           data={data?.data ?? []}
           columns={columns}
           loading={isLoading || isFetching}
+          search={search}
+          onSearchChange={(val) => {
+            setSearch(val);
+            setPage(1);
+          }}
+          searchPlaceholder="Cari nomor mesin, nomor rangka, warna, supplier..."
           meta={data?.meta}
           onPageChange={setPage}
         />
