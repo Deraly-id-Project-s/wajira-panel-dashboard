@@ -14,6 +14,7 @@ import { toast } from 'sonner';
 import { ReferenceLink } from '@/components/ui/reference-link';
 import BaseTable, { ColumnDef } from '@/components/ui/base-table';
 import { CollapsibleBox } from '@/components/ui/collapsible-box';
+import { UnitTransactionSummaryFooter } from '@/components/features/unit-transaksi/UnitTransactionSummaryFooter';
 
 interface Props {
   lineItems: SalesLineItem[];
@@ -244,6 +245,13 @@ export function SalesUnitTable({ lineItems, salesId, onAddUnit, canCreate, canEd
               total: items.length,
             }}
             onPageChange={setCurrentPage}
+            footer={
+              <UnitTransactionSummaryFooter
+                items={items}
+                showCheckbox={!isPaid}
+                hasActions
+              />
+            }
             headerActions={
               <div className="flex flex-col sm:flex-row items-center gap-2 w-full sm:w-auto">
                 {canDelete && (

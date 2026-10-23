@@ -16,6 +16,7 @@ import { FilteredCurrency } from '@/components/ui/filtered-currency';
 import { ReferenceLink } from '@/components/ui/reference-link';
 import BaseTable, { ColumnDef } from '@/components/ui/base-table';
 import { CollapsibleBox } from '@/components/ui/collapsible-box';
+import { UnitTransactionSummaryFooter } from '@/components/features/unit-transaksi/UnitTransactionSummaryFooter';
 
 interface Props {
   purchaseId: string;
@@ -262,6 +263,13 @@ export default function PurchaseUnitTable({ purchaseId, slug, isPaid, canEdit, c
                 total: items.length,
               }}
               onPageChange={setCurrentPage}
+              footer={
+                <UnitTransactionSummaryFooter
+                  items={items}
+                  showCheckbox
+                  hasActions
+                />
+              }
               headerActions={
                 <div className="flex flex-col sm:flex-row items-center gap-2 w-full sm:w-auto">
                   <Button
