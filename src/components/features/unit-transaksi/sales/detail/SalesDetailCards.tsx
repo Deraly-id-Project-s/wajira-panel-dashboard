@@ -8,6 +8,7 @@ import { getHistoryTotalIdrEquivalent, getHistoryUsdAmount, getHistoryBcaIdrAmou
 import { CopyBox } from '@/components/ui/copy-box';
 import { ReferenceLink } from '@/components/ui/reference-link';
 import { TypeUnit } from '@/@types/type-unit.types';
+import { cn } from '@/lib/utils';
 
 interface Props {
   data: SalesItem;
@@ -99,8 +100,21 @@ export function SalesDetailCards({ data, billingHistories = [], unitType, stockQ
   const activeUnitTypeName = unitType?.name ?? (data as any)?.unit_type?.name ?? (items.length === 1 ? (items[0] as any)?.unit_type?.name : undefined);
   const activeStockQty = stockQty ?? (data as any)?.stockQty ?? (data as any)?.qty_total ?? (items.length === 1 ? items[0]?.qty : undefined);
 
+  const hasUsdDetails =
+    freightCost > 0 ||
+    boxPackingCost > 0 ||
+    adminCost > 0 ||
+    ckdCost > 0 ||
+    blSwitchCost > 0 ||
+    customsCost > 0 ||
+    otherCost > 0 ||
+    totalUsdCost > 0 ||
+    totalDiscountUsd > 0 ||
+    totalUsd > 0 ||
+    Number(data.price_per_unit_usd ?? 0) > 0;
+
   return (
-    <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
+    <div className={cn("grid gap-4 grid-cols-1 sm:grid-cols-2", hasUsdDetails ? "lg:grid-cols-4" : "lg:grid-cols-3")}>
       {/* Card 1: Informasi Invoice */}
       <Card className="rounded-md border border-slate-200 shadow-sm h-full">
         <CardContent className="p-5 flex flex-col h-full gap-4">
@@ -214,75 +228,97 @@ export function SalesDetailCards({ data, billingHistories = [], unitType, stockQ
       </Card>
 
       {/* Card 3: Detail Penjualan (USD) */}
-      <Card className="rounded-md border border-slate-200 shadow-sm h-full">
-        <CardContent className="p-5 flex flex-col h-full gap-4">
-          <div className="flex items-center gap-3">
-            <div className="p-2 rounded-md bg-amber-50">
-              <DollarSign className="h-5 w-5 text-amber-600" />
+      {hasUsdDetails && (
+        <Card className="rounded-md border border-slate-200 shadow-sm h-full">
+          <CardContent className="p-5 flex flex-col h-full gap-4">
+            <div className="flex items-center gap-3">
+              <div className="p-2 rounded-md bg-amber-50">
+                <DollarSign className="h-5 w-5 text-amber-600" />
+              </div>
+              <h3 className="text-sm font-semibold text-slate-700">Detail Penjualan (USD)</h3>
             </div>
-            <h3 className="text-sm font-semibold text-slate-700">Detail Penjualan (USD)</h3>
-          </div>
 
-          <div className="space-y-2.5 text-xs text-slate-500">
-            <div className="flex items-center justify-between">
-              <span>Biaya Freight (Pengiriman)</span>
-              <span className="text-sm font-semibold text-slate-900">{currenciesFormat('usd', freightCost)}</span>
+            <div className="space-y-2.5 text-xs text-slate-500">
+              {freightCost > 0 && (
+                <div className="flex items-center justify-between">
+                  <span>Biaya Freight (Pengiriman)</span>
+                  <span className="text-sm font-semibold text-slate-900">{currenciesFormat('usd', freightCost)}</span>
+                </div>
+              )}
+              {boxPackingCost > 0 && (
+                <div className="flex items-center justify-between">
+                  <span>Biaya Box Packing (Peti)</span>
+                  <span className="text-sm font-semibold text-slate-900">{currenciesFormat('usd', boxPackingCost)}</span>
+                </div>
+              )}
+              {adminCost > 0 && (
+                <div className="flex items-center justify-between">
+                  <span>Biaya Administrasi</span>
+                  <span className="text-sm font-semibold text-slate-900">{currenciesFormat('usd', adminCost)}</span>
+                </div>
+              )}
+              {ckdCost > 0 && (
+                <div className="flex items-center justify-between">
+                  <span>Biaya Pemrosesan CKD</span>
+                  <span className="text-sm font-semibold text-slate-900">{currenciesFormat('usd', ckdCost)}</span>
+                </div>
+              )}
+              {blSwitchCost > 0 && (
+                <div className="flex items-center justify-between">
+                  <span>Biaya Switch B/L</span>
+                  <span className="text-sm font-semibold text-slate-900">{currenciesFormat('usd', blSwitchCost)}</span>
+                </div>
+              )}
+              {customsCost > 0 && (
+                <div className="flex items-center justify-between">
+                  <span>Biaya Bea Cukai</span>
+                  <span className="text-sm font-semibold text-slate-900">{currenciesFormat('usd', customsCost)}</span>
+                </div>
+              )}
+              {otherCost > 0 && (
+                <div className="flex items-center justify-between">
+                  <span>Biaya USD Lainnya</span>
+                  <span className="text-sm font-semibold text-slate-900">{currenciesFormat('usd', otherCost)}</span>
+                </div>
+              )}
+              {totalUsdCost > 0 && (
+                <>
+                  <div className="border-t border-slate-100 my-1"></div>
+                  <div className="flex items-center justify-between text-slate-900">
+                    <span className="font-bold text-sm">Total Biaya USD</span>
+                    <span className="text-sm font-bold text-amber-700">{currenciesFormat('usd', totalUsdCost)}</span>
+                  </div>
+                </>
+              )}
+              {totalDiscountUsd > 0 && (
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-1.5">
+                    <span>Diskon (USD)</span>
+                    {resolvedDiscountUsdPercent !== null && resolvedDiscountUsdPercent > 0 && (
+                      <Badge variant="outline" className="border-amber-300 bg-amber-100 text-amber-800 font-semibold text-[10px] px-1.5 py-0">
+                        {resolvedDiscountUsdPercent}%
+                      </Badge>
+                    )}
+                  </div>
+                  <span className="text-sm font-semibold text-slate-900">{currenciesFormat('usd', totalDiscountUsd)}</span>
+                </div>
+              )}
+              {totalUsd > 0 && (
+                <div className="flex items-center justify-between text-slate-900 pt-1">
+                  <span className="font-bold uppercase text-sm">TOTAL PENJUALAN (USD)</span>
+                  <span className="text-sm font-bold text-amber-600">{currenciesFormat('usd', totalUsd)}</span>
+                </div>
+              )}
+              {data.price_per_unit_usd && Number(data.price_per_unit_usd) > 0 ? (
+                <div className="flex items-center justify-between text-xs text-amber-800 bg-amber-50/50 px-2 py-1 rounded border border-amber-100 mt-1">
+                  <span className="font-medium">Harga Satuan (USD)</span>
+                  <span className="font-bold">{currenciesFormat('usd', data.price_per_unit_usd)}</span>
+                </div>
+              ) : null}
             </div>
-            <div className="flex items-center justify-between">
-              <span>Biaya Box Packing (Peti)</span>
-              <span className="text-sm font-semibold text-slate-900">{currenciesFormat('usd', boxPackingCost)}</span>
-            </div>
-            <div className="flex items-center justify-between">
-              <span>Biaya Administrasi</span>
-              <span className="text-sm font-semibold text-slate-900">{currenciesFormat('usd', adminCost)}</span>
-            </div>
-            <div className="flex items-center justify-between">
-              <span>Biaya Pemrosesan CKD</span>
-              <span className="text-sm font-semibold text-slate-900">{currenciesFormat('usd', ckdCost)}</span>
-            </div>
-            <div className="flex items-center justify-between">
-              <span>Biaya Switch B/L</span>
-              <span className="text-sm font-semibold text-slate-900">{currenciesFormat('usd', blSwitchCost)}</span>
-            </div>
-            <div className="flex items-center justify-between">
-              <span>Biaya Bea Cukai</span>
-              <span className="text-sm font-semibold text-slate-900">{currenciesFormat('usd', customsCost)}</span>
-            </div>
-            <div className="flex items-center justify-between">
-              <span>Biaya USD Lainnya</span>
-              <span className="text-sm font-semibold text-slate-900">{currenciesFormat('usd', otherCost)}</span>
-            </div>
-            <div className="border-t border-slate-100 my-1"></div>
-            <div className="flex items-center justify-between text-slate-900">
-              <span className="font-bold text-sm">Total Biaya USD</span>
-              <span className="text-sm font-bold text-amber-700">{currenciesFormat('usd', totalUsdCost)}</span>
-            </div>
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-1.5">
-                <span>Diskon (USD)</span>
-                {resolvedDiscountUsdPercent !== null && resolvedDiscountUsdPercent > 0 && (
-                  <Badge variant="outline" className="border-amber-300 bg-amber-100 text-amber-800 font-semibold text-[10px] px-1.5 py-0">
-                    {resolvedDiscountUsdPercent}%
-                  </Badge>
-                )}
-              </div>
-              <span className="text-sm font-semibold text-slate-900">{currenciesFormat('usd', totalDiscountUsd)}</span>
-            </div>
-            {totalUsd > 0 && (
-              <div className="flex items-center justify-between text-slate-900 pt-1">
-                <span className="font-bold uppercase text-sm">TOTAL PENJUALAN (USD)</span>
-                <span className="text-sm font-bold text-amber-600">{currenciesFormat('usd', totalUsd)}</span>
-              </div>
-            )}
-            {data.price_per_unit_usd ? (
-              <div className="flex items-center justify-between text-xs text-amber-800 bg-amber-50/50 px-2 py-1 rounded border border-amber-100 mt-1">
-                <span className="font-medium">Harga Satuan (USD)</span>
-                <span className="font-bold">{currenciesFormat('usd', data.price_per_unit_usd)}</span>
-              </div>
-            ) : null}
-          </div>
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Card 4: Riwayat Pembayaran */}
       <Card className="rounded-md border border-slate-200 shadow-sm h-full">
@@ -295,11 +331,13 @@ export function SalesDetailCards({ data, billingHistories = [], unitType, stockQ
           </div>
 
           <div className="space-y-3 text-xs text-slate-500 flex-1 flex flex-col">
-            <div className="flex items-center justify-between">
-              <span>Debet Bank USD</span>
-              <span className="text-sm font-semibold text-slate-900">{currenciesFormat('usd', debetBankUsd)}</span>
-            </div>
-            {(totalUsd > 0 || (billingSummary?.remaining_payment_usd !== undefined && Number(billingSummary.remaining_payment_usd) > 0) || debetBankUsd > 0) && (
+            {(hasUsdDetails || debetBankUsd > 0) && (
+              <div className="flex items-center justify-between">
+                <span>Debet Bank USD</span>
+                <span className="text-sm font-semibold text-slate-900">{currenciesFormat('usd', debetBankUsd)}</span>
+              </div>
+            )}
+            {(hasUsdDetails || debetBankUsd > 0) && (totalUsd > 0 || (billingSummary?.remaining_payment_usd !== undefined && Number(billingSummary.remaining_payment_usd) > 0) || debetBankUsd > 0) && (
               <div className="flex items-center justify-between text-amber-800 bg-amber-50/50 px-2 py-1 rounded border border-amber-200/60 font-medium">
                 <span>Kurang Bayar USD</span>
                 <span className="font-semibold">{currenciesFormat('usd', kurangBayarUsd)}</span>
