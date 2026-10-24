@@ -109,6 +109,10 @@ export const getYanotamaMenus = (slug: string): MenuItem[] => {
                     href: base('/finance/transaksi-kas-harian'),
                 },
                 {
+                    label: 'Jurnal Umum',
+                    href: base('/finance/jurnal-umum'),
+                },
+                {
                     label: 'Aset',
                     href: base('/finance/asset'),
                 },

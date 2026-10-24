@@ -132,6 +132,10 @@ export const getTransindoMenus = (slug: string): MenuItem[] => {
           href: base('/finance/transaksi-kas-harian'),
         },
         {
+          label: 'Jurnal Umum',
+          href: base('/finance/jurnal-umum'),
+        },
+        {
           label: 'Linimasa Driver',
           href: base('/finance/uj-driver'),
         },

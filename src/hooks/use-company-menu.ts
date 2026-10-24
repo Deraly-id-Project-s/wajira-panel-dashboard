@@ -85,6 +85,7 @@ const FEATURE_MAP: Record<string, { path: string; label?: string; group?: string
 
   // Finance
   'daily-cash-transactions': { path: '/finance/transaksi-kas-harian', label: 'Kas Harian' },
+  'general-journals': { path: '/finance/jurnal-umum', label: 'Jurnal Umum' },
   'purchase-vat-records': { path: '/finance/data-ppn-pembelian', label: 'Data PPN Pembelian' },
   'sales-vat-records': { path: '/finance/data-ppn-penjualan', label: 'Data PPN Penjualan' },
   'purchase-refunds': { path: '/finance/refund-beli', label: 'Data Refund Pembelian' },

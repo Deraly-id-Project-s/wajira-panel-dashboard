@@ -138,6 +138,10 @@ export const getNavItems = (slug: string): NavItemConfig[] => {
           href: base('/finance/transaksi-kas-harian'),
         },
         {
+          label: 'Jurnal Umum',
+          href: base('/finance/jurnal-umum'),
+        },
+        {
           label: 'Data PPN Pembelian',
           href: base('/finance/data-ppn-pembelian'),
         },
