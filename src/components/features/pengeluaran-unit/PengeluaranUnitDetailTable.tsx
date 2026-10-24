@@ -15,7 +15,7 @@ import {
   DialogTitle,
   DialogFooter,
 } from '@/components/ui/dialog';
-import { useBulkUpdateUnitItemDetails, useWarehouseSubBlocks } from '@/hooks/useUnitItemDetail';
+import { useBulkUpdateUnitItemDetails } from '@/hooks/useUnitItemDetail';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 
@@ -39,9 +39,7 @@ export default function PengeluaranUnitDetailTable({ data, isRefundActivity, act
   // Modal State
   const [isOpenProcessModal, setIsOpenProcessModal] = useState(false);
   const [stockState, setStockState] = useState<string>('receipt');
-  const [warehouseSubBlockId, setWarehouseSubBlockId] = useState<string>('');
 
-  const { data: subBlocksResponse, isLoading: subBlocksLoading } = useWarehouseSubBlocks({ is_active: true });
   const bulkUpdateMutation = useBulkUpdateUnitItemDetails();
 
   const rows = useMemo(() => {
@@ -121,7 +119,7 @@ export default function PengeluaranUnitDetailTable({ data, isRefundActivity, act
         unit_transaction_item_details_ids: selected,
         stock_state: stockState,
         transaction_type: 'sales',
-        warehouse_sub_block_id: warehouseSubBlockId ? Number(warehouseSubBlockId) : null,
+        warehouse_sub_block_id: null,
       });
       toast.success('Berhasil memproses status dan sub-blok unit');
       setSelected([]);
@@ -183,7 +181,7 @@ export default function PengeluaranUnitDetailTable({ data, isRefundActivity, act
         sortable: true,
         alignment: 'center',
         tooltip: 'Lokasi sub-blok penyimpanan unit di dalam gudang',
-        cell: (item) => item.warehouseSubBlock ? <CopyBox text={item.warehouseSubBlock} /> : <Badge variant='outline' className={`font-semibold bg-white`}>Belum Ditambahkan</Badge>
+        cell: (item) => item.state === 'deducted' ? <Badge variant='outline' className="font-semibold bg-white">-</Badge> : item.warehouseSubBlock ? <CopyBox text={item.warehouseSubBlock} /> : <Badge variant='outline' className={`font-semibold bg-white`}>Belum Ditambahkan</Badge>
       },
       {
         header: 'Status Stok',
@@ -253,7 +251,7 @@ export default function PengeluaranUnitDetailTable({ data, isRefundActivity, act
 
           return (
             <Badge variant="outline" className={cn('capitalize font-semibold', match.className)}>
-              {item?.state === 'receipt' ? (isRefundActivity ? 'Dikembalikan' : (item?.isSoldUnit ? 'Dikirim' : 'Diterima')) : match.label}
+              {item?.state === 'receipt' ? (isRefundActivity ? 'Dikembalikan' : (item?.isSoldUnit ? 'Dikirim' : 'Diterima')) : match.name}
             </Badge>
           );
         }
@@ -314,7 +312,9 @@ export default function PengeluaranUnitDetailTable({ data, isRefundActivity, act
         sortable: true,
         alignment: 'center',
         cell: (item) =>
-          item.warehouseSubBlock ? (
+          item.state === 'deducted' ? (
+            <Badge variant="outline" className="font-semibold bg-white">-</Badge>
+          ) : item.warehouseSubBlock ? (
             <CopyBox text={item.warehouseSubBlock} />
           ) : (
             <Badge variant="outline" className="font-semibold bg-white">
@@ -398,7 +398,7 @@ export default function PengeluaranUnitDetailTable({ data, isRefundActivity, act
             />
 
             {/* Inputs Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 gap-6">
               <div className="space-y-2">
                 <label className="text-sm font-semibold text-slate-700">Posisi Stok</label>
                 <Select value={stockState} onValueChange={setStockState}>
@@ -406,34 +406,13 @@ export default function PengeluaranUnitDetailTable({ data, isRefundActivity, act
                     <SelectValue placeholder="Pilih posisi stok" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="purchase_order">Purchase Order (PO)</SelectItem>
-                    <SelectItem value="in_transit">In Transit (Dalam Perjalanan)</SelectItem>
-                    <SelectItem value="receipt">Receipt (Diterima / Tersedia)</SelectItem>
+                    <SelectItem maxLength={100} value="purchase_order">Purchase Order (PO)</SelectItem>
+                    <SelectItem maxLength={100} value="in_transit">In Transit (Dalam Perjalanan)</SelectItem>
+                    <SelectItem maxLength={100} value="receipt">Deducted (Keluarkan dari Gudang)</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
 
-              <div className="space-y-2">
-                <label className="text-sm font-semibold text-slate-700">Sub Blok Gudang</label>
-                <Select value={warehouseSubBlockId} onValueChange={setWarehouseSubBlockId}>
-                  <SelectTrigger className="w-full bg-white border-slate-200 h-10 rounded-md">
-                    <SelectValue placeholder={subBlocksLoading ? "Memuat sub blok..." : "Pilih sub blok gudang"} />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {subBlocksResponse?.data?.data && subBlocksResponse.data.data.length > 0 ? (
-                      subBlocksResponse.data.data.map((sb: any) => (
-                        <SelectItem key={sb.id} value={String(sb.id)}>
-                          {sb.name}
-                        </SelectItem>
-                      ))
-                    ) : (
-                      <SelectItem value="none" disabled>
-                        Sub blok gudang tidak ditemukan.
-                      </SelectItem>
-                    )}
-                  </SelectContent>
-                </Select>
-              </div>
             </div>
           </div>
 
