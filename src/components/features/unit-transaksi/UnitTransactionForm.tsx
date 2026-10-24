@@ -172,6 +172,7 @@ export function UnitTransactionForm({
   );
 
   const [isUsd, setIsUsd] = useState(hasUsdData);
+  const showIdrFields = !isUsd;
   const [otherCosts, setOtherCosts] = useState<Array<{ id?: number; note: string; amount: number }>>(initialCosts.otherList);
 
   const [selectedDppTaxVersionId, setSelectedDppTaxVersionId] = useState<string | number | null>(defaultValues?.dppTaxVersionId ?? null);
@@ -353,11 +354,11 @@ export function UnitTransactionForm({
 
   const { formula } = useUnitFormula({
     qty_total: qty,
-    price,
-    bbn_price: bbnPrice,
-    expedition_fee: expeditionFee,
-    other_fee: otherFee,
-    price_discount: priceDiscount,
+    price: isUsd ? 0 : price,
+    bbn_price: isUsd ? 0 : bbnPrice,
+    expedition_fee: isUsd ? 0 : expeditionFee,
+    other_fee: isUsd ? 0 : otherFee,
+    price_discount: isUsd ? 0 : priceDiscount,
     price_usd_discount: isUsd ? priceUsdDiscount : 0,
     dpp_tax_id: selectedDppTaxVersionId ?? undefined,
     ppn_tax_id: selectedPpnTaxVersionId ?? undefined,
@@ -392,21 +393,32 @@ export function UnitTransactionForm({
 
   const selectTypeUnit = (typeUnit: TypeUnit) => {
     form.setValue('unitTypeId', String(typeUnit.id), { shouldDirty: true, shouldValidate: true });
-    const preferredPrice = type === 'purchase' ? typeUnit.buyPrice : typeUnit.sellPrice;
+    const preferredPrice = isUsd
+      ? (type === 'purchase' ? typeUnit.buyPriceUsd : typeUnit.sellPriceUsd)
+      : (type === 'purchase' ? typeUnit.buyPrice : typeUnit.sellPrice);
     if (preferredPrice !== undefined && preferredPrice !== null) {
-      form.setValue('price', Number(preferredPrice), { shouldDirty: true });
+      if (isUsd) {
+        form.setValue('pricePerUnitUsd', Number(preferredPrice), { shouldDirty: true });
+      } else {
+        form.setValue('price', Number(preferredPrice), { shouldDirty: true });
+      }
     }
   };
 
   const handleFormSubmit = (values: UnitTransactionFormValues) => {
     onSubmit({
       ...values,
-      price_discount: Number(values.price_discount ?? 0) || 0,
+      price: isUsd ? 0 : (Number(values.price ?? 0) || 0),
+      bbnPrice: isUsd ? 0 : (Number(values.bbnPrice ?? 0) || 0),
+      expeditionFee: isUsd ? 0 : (Number(values.expeditionFee ?? 0) || 0),
+      otherFee: isUsd ? 0 : (Number(values.otherFee ?? 0) || 0),
+      price_discount: isUsd ? 0 : (Number(values.price_discount ?? 0) || 0),
       price_usd_discount: isUsd ? (Number(values.price_usd_discount ?? 0) || 0) : 0,
       priceUsd: isUsd ? Number(values.priceUsd) || 0 : 0,
       pricePerUnitUsd: isUsd ? Number(values.pricePerUnitUsd) || 0 : 0,
       price_usd: isUsd ? Number(values.priceUsd) || 0 : 0,
       price_per_unit_usd: isUsd ? Number(values.pricePerUnitUsd) || 0 : 0,
+      is_usd_transaction: isUsd,
       usd_costs: isUsd ? compiledUsdCosts : [],
       dppTaxVersionId: selectedDppTaxVersionId ?? undefined,
       ppnTaxVersionId: selectedPpnTaxVersionId ?? undefined,
@@ -429,6 +441,35 @@ export function UnitTransactionForm({
 
           {!hideItemFields && (
             <>
+              {/* USD Transaction Toggle */}
+              <div className="flex items-center space-x-2 py-1">
+                <Checkbox
+                  id={`${type}_is_usd`}
+                  checked={isUsd}
+                  onCheckedChange={(checked) => {
+                    const nextValue = checked === true;
+                    setIsUsd(nextValue);
+                    if (nextValue) {
+                      form.setValue('price', 0);
+                      form.setValue('bbnPrice', 0);
+                      form.setValue('expeditionFee', 0);
+                      form.setValue('otherFee', 0);
+                      form.setValue('price_discount', 0);
+                    }
+                    if (!nextValue) {
+                      form.setValue('priceUsd', 0);
+                      form.setValue('pricePerUnitUsd', 0);
+                      setOtherCosts([]);
+                    }
+                  }}
+                  disabled={readOnly}
+                  className="cursor-pointer"
+                />
+                <Label htmlFor={`${type}_is_usd`} className="text-sm font-medium cursor-pointer">
+                  Transaksi USD (Gunakan mata uang asing USD)
+                </Label>
+              </div>
+
               {/* Row Type Unit / Qty / Harga */}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <FormField
@@ -510,7 +551,7 @@ export function UnitTransactionForm({
                   )}
                 />
 
-                <FormField
+                {showIdrFields && <FormField
                   control={form.control}
                   name="price"
                   render={({ field }) => (
@@ -522,29 +563,7 @@ export function UnitTransactionForm({
                       <FormMessage />
                     </FormItem>
                   )}
-                />
-              </div>
-
-              {/* USD Transaction Toggle */}
-              <div className="flex items-center space-x-2 py-1">
-                <Checkbox
-                  id={`${type}_is_usd`}
-                  checked={isUsd}
-                  onCheckedChange={(checked) => {
-                    const nextValue = checked === true;
-                    setIsUsd(nextValue);
-                    if (!nextValue) {
-                      form.setValue('priceUsd', 0);
-                      form.setValue('pricePerUnitUsd', 0);
-                      setOtherCosts([]);
-                    }
-                  }}
-                  disabled={readOnly}
-                  className="cursor-pointer"
-                />
-                <Label htmlFor={`${type}_is_usd`} className="text-sm font-medium cursor-pointer">
-                  Transaksi USD (Gunakan mata uang asing USD)
-                </Label>
+                />}
               </div>
 
               {/* USD Inputs */}
@@ -762,7 +781,7 @@ export function UnitTransactionForm({
                             className="h-8 border-amber-300 bg-white text-amber-900 hover:bg-amber-100/60"
                             onClick={() => setOtherCosts((prev) => [...prev, { note: '', amount: 0 }])}
                           >
-                            <Plus className="mr-1 h-3.5 w-3.5" /> Tambah List Other
+                            <Plus className="mr-1 h-3.5 w-3.5" /> Tambah List Biaya Lain
                           </Button>
                         )}
                       </div>
@@ -838,7 +857,7 @@ export function UnitTransactionForm({
                 </TooltipProvider>
               )}
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
+              {showIdrFields && <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
                 <FormField
                   control={form.control}
                   name="bbnPrice"
@@ -914,9 +933,9 @@ export function UnitTransactionForm({
                     </FormItem>
                   )}
                 />
-              </div>
+              </div>}
 
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {showIdrFields && <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <FormItem>
                   <FormLabel className="text-sm font-medium">HPP Satuan</FormLabel>
                   <FormControl>
@@ -937,9 +956,9 @@ export function UnitTransactionForm({
                     <Input value={formatCurrency(ppnPerUnit)} className="bg-muted/50" disabled readOnly />
                   </FormControl>
                 </FormItem>
-              </div>
+              </div>}
 
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {showIdrFields && <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <FormItem>
                   <FormLabel className="text-sm font-medium">HPP Total</FormLabel>
                   <FormControl>
@@ -960,7 +979,7 @@ export function UnitTransactionForm({
                     <Input value={formatCurrency(ppnTotal)} className="bg-muted/50" disabled readOnly />
                   </FormControl>
                 </FormItem>
-              </div>
+              </div>}
             </>
           )}
 

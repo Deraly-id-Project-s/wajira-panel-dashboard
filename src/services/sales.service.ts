@@ -13,6 +13,7 @@ export type SalesPayload = {
   person_id: number;
   code: string;
   type: 'sales';
+  is_usd_transaction?: boolean;
   max_capacity: number;
   stock_state: string;
   warehouse_id?: number;
@@ -63,6 +64,7 @@ const appendPayload = (form: FormData, payload: SalesPayload) => {
   appendIfDefined(form, 'transaction_date', payload.transaction_date);
   appendIfDefined(form, 'price_usd', payload.price_usd);
   appendIfDefined(form, 'price_per_unit_usd', payload.price_per_unit_usd);
+  if (payload.is_usd_transaction !== undefined) form.append('is_usd_transaction', payload.is_usd_transaction ? '1' : '0');
   if (payload.usd_costs && payload.usd_costs.length > 0) {
     payload.usd_costs.forEach((cost, index) => {
       form.append(`usd_costs[${index}][cost_type]`, cost.cost_type);
@@ -120,6 +122,9 @@ const toUrlEncodedPayload = (payload: SalesPayload): URLSearchParams => {
   }
   if (payload.price_per_unit_usd !== undefined && payload.price_per_unit_usd !== null) {
     params.append('price_per_unit_usd', String(payload.price_per_unit_usd));
+  }
+  if (payload.is_usd_transaction !== undefined) {
+    params.append('is_usd_transaction', payload.is_usd_transaction ? '1' : '0');
   }
   if (payload.usd_costs && payload.usd_costs.length > 0) {
     payload.usd_costs.forEach((cost, index) => {

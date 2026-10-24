@@ -139,19 +139,23 @@ export default function TransactionForm({ defaultValues, onSubmit, onCancel, isB
             <h2 className="text-sm font-semibold uppercase tracking-wider text-slate-700">Informasi Tambahan</h2>
             <p className="mt-1 text-sm text-slate-500">Tambahkan keterangan pendukung dan bukti transaksi bila ada.</p>
           </div>
-          <div className="grid gap-5 md:grid-cols-2 items-start">
+          <div className="grid gap-5 md:grid-cols-2 items-stretch">
             <FormField control={form.control} name="description" render={({ field }) => (
-              <FormItem>
+              <FormItem className="flex flex-col">
                 <FormLabel>Keterangan</FormLabel>
-                <FormControl><Textarea placeholder="Masukkan keterangan transaksi" className="min-h-24 resize-none" {...field} value={field.value ?? ''} disabled={isBusy} /></FormControl>
+                <FormControl className="flex-1 flex flex-col">
+                  <Textarea placeholder="Masukkan keterangan transaksi" className="flex-1 min-h-32 resize-none" {...field} value={field.value ?? ''} disabled={isBusy} />
+                </FormControl>
                 <FormMessage />
               </FormItem>
             )} />
             <FormField control={form.control} name="transactionProof" render={({ field }) => (
-              <FormItem>
+              <FormItem className="flex flex-col">
                 <FormLabel>Bukti Transaksi (Payment Proof)</FormLabel>
-                <FormControl>
+                <FormControl className="flex-1 flex flex-col">
                   <FileInput
+                    className="flex-1 flex flex-col"
+                    triggerClassName="flex-1 min-h-32"
                     accept="image/jpeg,image/png,application/pdf"
                     value={field.value instanceof File ? field.value : null}
                     onFileChange={(file) => field.onChange(file)}

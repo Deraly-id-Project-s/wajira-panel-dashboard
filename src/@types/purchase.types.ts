@@ -80,6 +80,7 @@ export interface CreatePurchaseRequest {
   company_id: number;
   code?: string;
   type: UnitTransactionType;
+  is_usd_transaction?: boolean;
   max_capacity: string;
   stock_state: 'draft';
   unit_type_id?: number;
