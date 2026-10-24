@@ -112,7 +112,6 @@ export function CustomerFormModal({
                 <Input
                   {...field}
                   placeholder="Tambahkan NPWP"
-                  maxLength={16}
                   className={`bg-white ${form.formState.errors.npwp ? 'border-red-500' : ''}`}
                   onChange={(e) => {
                     field.onChange(e.target.value.replace(/[^\d]/g, ''));
