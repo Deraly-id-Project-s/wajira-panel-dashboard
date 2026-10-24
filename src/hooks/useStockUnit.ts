@@ -22,4 +22,5 @@ export const useStockUnits = (
     queryKey: ['stock-unit', companyId, params],
     queryFn: () => getStockUnits(companyId!, params),
     enabled: !!companyId,
+    placeholderData: (previous) => previous,
   });

@@ -72,7 +72,7 @@ export const getStockUnits = async (
     ...buildLaravelPaginationQuery(params),
     page: params.page,
     per_page: params.perPage,
-    search: params.search,
+    search: params.search?.trim() ? params.search.trim() : undefined,
     stock_state: params.stock_state,
     machine_number: params.machine_number,
     chassis_number: params.chassis_number,

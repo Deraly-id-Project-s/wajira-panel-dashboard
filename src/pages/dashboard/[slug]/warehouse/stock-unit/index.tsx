@@ -1,4 +1,3 @@
-import { LoadingState } from '@/components/ui/loading-state';
 import { useState, useMemo, useEffect } from 'react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { PageHeader } from '@/components/ui/page-header';
@@ -20,6 +19,22 @@ export default function StockUnitPage() {
   const { companyId } = useCompany();
 
   const { page, perPage, search, setPage, setPerPage, setSearch } = useQueryParamsTable({ defaultPerPage: 25 });
+  const [searchInput, setSearchInput] = useState(search);
+
+  // Sync internal search input with URL search state
+  useEffect(() => {
+    setSearchInput(search);
+  }, [search]);
+
+  // Debounce search update to avoid firing query navigation and reload on every keystroke
+  useEffect(() => {
+    const timeout = window.setTimeout(() => {
+      if (search !== searchInput.trim()) {
+        setSearch(searchInput.trim());
+      }
+    }, 400);
+    return () => window.clearTimeout(timeout);
+  }, [searchInput, search, setSearch]);
 
   // Primary Query Parameters
   const [stockState, setStockState] = useState<StockStatus | undefined>(undefined);
@@ -115,30 +130,6 @@ export default function StockUnitPage() {
 
   const isDataLoading = isLoading || isFetching;
 
-  if (isLoading) {
-    return (
-      <DashboardLayout>
-        <div className="space-y-6">
-          <PageHeader title="Data Unit Stok" subtitle="Kelola dan lacak semua unit stok" />
-          <LoadingState variant="page" />
-        </div>
-      </DashboardLayout>
-    );
-  }
-
-  if (isError) {
-    return (
-      <DashboardLayout>
-        <div className="space-y-6">
-          <PageHeader title="Data Unit Stok" subtitle="Kelola dan lacak semua unit stok" />
-          <Card className="rounded-md p-6">
-            <div className="text-center text-destructive">Gagal memuat data</div>
-          </Card>
-        </div>
-      </DashboardLayout>
-    );
-  }
-
   const filters = (
     <div className="flex flex-col sm:flex-row items-center gap-2 w-full">
       <Select
@@ -177,24 +168,30 @@ export default function StockUnitPage() {
     <DashboardLayout>
       <div className="space-y-6">
         <PageHeader title="Data Unit Stok" subtitle="Kelola dan lacak semua unit stok" />
-        <SearchPagination
-          searchValue={search}
-          onSearchChange={setSearch}
-          searchPlaceholder="Search here"
-          searchAriaLabel="Cari unit stok"
-          page={page}
-          perPage={perPage}
-          total={data?.meta?.total}
-          lastPage={data?.meta?.lastPage}
-          onPageChange={setPage}
-          onPerPageChange={setPerPage}
-          actions={filters}
-        >
-          <StockUnitTable
-            data={data?.data || []}
-            isLoading={isDataLoading}
-          />
-        </SearchPagination>
+        {isError ? (
+          <Card className="rounded-md p-6">
+            <div className="text-center text-destructive">Gagal memuat data</div>
+          </Card>
+        ) : (
+          <SearchPagination
+            searchValue={searchInput}
+            onSearchChange={setSearchInput}
+            searchPlaceholder="Search here"
+            searchAriaLabel="Cari unit stok"
+            page={page}
+            perPage={perPage}
+            total={data?.meta?.total}
+            lastPage={data?.meta?.lastPage}
+            onPageChange={setPage}
+            onPerPageChange={setPerPage}
+            actions={filters}
+          >
+            <StockUnitTable
+              data={data?.data || []}
+              isLoading={isDataLoading}
+            />
+          </SearchPagination>
+        )}
       </div>
 
       <Dialog open={isFilterModalOpen} onOpenChange={setIsFilterModalOpen}>
