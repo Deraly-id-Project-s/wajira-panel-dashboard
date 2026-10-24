@@ -85,6 +85,7 @@ export interface UnitTransaction {
   paymentAt: string | null;
   remainingPayment: number;
   isUnitTypeDetailValid?: boolean;
+  is_usd_transaction?: boolean;
   billing_summary?: UnitTransactionBillingSummary | null;
   documentTemplateId?: string | null;
 }
@@ -182,6 +183,7 @@ export interface UnitTransactionDetail {
   unit_transaction_adjustments?: any[];
   unit_transaction_items?: any[];
   isUnitTypeDetailValid?: boolean;
+  is_usd_transaction?: boolean;
   documentTemplateId?: string | null;
   unit_transaction_price_usd_total?: number;
   unit_transaction_price_usd_total_actual?: number;

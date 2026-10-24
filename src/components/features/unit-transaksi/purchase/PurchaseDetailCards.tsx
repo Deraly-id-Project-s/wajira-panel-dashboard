@@ -14,7 +14,7 @@ interface Props {
   billingHistories?: any[];
   unitItems?: UnitTransactionItem[];
   unitItem?: UnitTransactionItem | any;
-  unitType?: { code?: string; name?: string; [key: string]: any } | null;
+  unitType?: { code?: string; name?: string;[key: string]: any } | null;
   stockQty?: number;
 }
 
@@ -106,20 +106,35 @@ export function PurchaseDetailCards({ data, billingHistories = [], unitItems, un
   const activeUnitTypeName = activeUnitType?.name ?? unitItem?.unit_type_name ?? (items.length === 1 ? items[0]?.unit_type_name : undefined);
   const activeStockQty = stockQty ?? unitItem?.qty_total ?? (items.length === 1 ? items[0]?.qty_total : undefined);
 
-  const hasUsdDetails =
-    freightCost > 0 ||
-    boxPackingCost > 0 ||
-    adminCost > 0 ||
-    ckdCost > 0 ||
-    blSwitchCost > 0 ||
-    customsCost > 0 ||
-    otherCost > 0 ||
-    totalUsdCost > 0 ||
-    totalDiscountUsd > 0 ||
-    totalUsd > 0;
+  const hasAnyUsdData = freightCost > 0
+    || boxPackingCost > 0
+    || adminCost > 0
+    || ckdCost > 0
+    || blSwitchCost > 0
+    || customsCost > 0
+    || otherCost > 0
+    || totalUsdCost > 0
+    || totalDiscountUsd > 0
+    || totalUsd > 0;
+
+  const isUsdTransaction = Boolean(
+    data.is_usd_transaction === true ||
+    (data as any).is_usd_transaction === 1 ||
+    String((data as any).is_usd_transaction) === 'true'
+  );
+
+  const hasUsdDetails = isUsdTransaction || hasAnyUsdData;
+
+  const visibleCardsCount = 1 + (!isUsdTransaction ? 1 : 0) + (hasAnyUsdData ? 1 : 0) + 1;
+  const gridColsClass = visibleCardsCount >= 4
+    ? "lg:grid-cols-4"
+    : (visibleCardsCount === 3 ? "lg:grid-cols-3" : "lg:grid-cols-2");
 
   return (
-    <div className={cn("grid gap-4 grid-cols-1 sm:grid-cols-2", hasUsdDetails ? "lg:grid-cols-4" : "lg:grid-cols-3")}>
+    <div className={cn(
+      "grid gap-4 grid-cols-1 sm:grid-cols-2",
+      gridColsClass
+    )}>
       {/* Card 1: Informasi Invoice */}
       <Card className="rounded-md border border-slate-200 shadow-sm h-full">
         <CardContent className="p-5 flex flex-col h-full gap-4">
@@ -184,55 +199,57 @@ export function PurchaseDetailCards({ data, billingHistories = [], unitItems, un
       </Card>
 
       {/* Card 2: Detail Pembelian (IDR) */}
-      <Card className="rounded-md border border-slate-200 shadow-sm h-full">
-        <CardContent className="p-5 flex flex-col h-full gap-4">
-          <div className="flex items-center gap-3">
-            <div className="p-2 rounded-md bg-emerald-50">
-              <DollarSign className="h-5 w-5 text-emerald-500" />
-            </div>
-            <h3 className="text-sm font-semibold text-slate-700">Detail Pembelian (IDR)</h3>
-          </div>
-
-          <div className="space-y-3 text-xs text-slate-500">
-            <div className="flex items-center justify-between">
-              <span>Total DPP</span>
-              <span className="text-sm font-semibold text-slate-900">{currenciesFormat('idr', totalDpp)}</span>
-            </div>
-            <div className="flex items-center justify-between">
-              <span>Total PPN</span>
-              <span className="text-sm font-semibold text-slate-900">{currenciesFormat('idr', totalPpn)}</span>
-            </div>
-            <div className="border-t border-slate-100 my-1"></div>
-            <div className="flex items-center justify-between text-slate-900">
-              <span className="font-bold text-sm">Total HPP</span>
-              <span className="text-sm font-bold">{currenciesFormat('idr', totalHpp)}</span>
-            </div>
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-1.5">
-                <span>Diskon (IDR)</span>
-                {resolvedDiscountIdrPercent !== null && resolvedDiscountIdrPercent > 0 && (
-                  <Badge variant="outline" className="border-amber-300 bg-amber-100 text-amber-800 font-semibold text-[10px] px-1.5 py-0">
-                    {resolvedDiscountIdrPercent}%
-                  </Badge>
-                )}
+      {!isUsdTransaction && (
+        <Card className="rounded-md border border-slate-200 shadow-sm h-full">
+          <CardContent className="p-5 flex flex-col h-full gap-4">
+            <div className="flex items-center gap-3">
+              <div className="p-2 rounded-md bg-emerald-50">
+                <DollarSign className="h-5 w-5 text-emerald-500" />
               </div>
-              <span className="text-sm font-semibold text-slate-900">{currenciesFormat('idr', totalDiscountIdr)}</span>
+              <h3 className="text-sm font-semibold text-slate-700">Detail Pembelian (IDR)</h3>
             </div>
-            <div className="flex items-center justify-between">
-              <span>Total Biaya</span>
-              <span className="text-sm font-semibold text-slate-900">{currenciesFormat('idr', totalBiaya)}</span>
+
+            <div className="space-y-3 text-xs text-slate-500">
+              <div className="flex items-center justify-between">
+                <span>Total DPP</span>
+                <span className="text-sm font-semibold text-slate-900">{currenciesFormat('idr', totalDpp)}</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span>Total PPN</span>
+                <span className="text-sm font-semibold text-slate-900">{currenciesFormat('idr', totalPpn)}</span>
+              </div>
+              <div className="border-t border-slate-100 my-1"></div>
+              <div className="flex items-center justify-between text-slate-900">
+                <span className="font-bold text-sm">Total HPP</span>
+                <span className="text-sm font-bold">{currenciesFormat('idr', totalHpp)}</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-1.5">
+                  <span>Diskon (IDR)</span>
+                  {resolvedDiscountIdrPercent !== null && resolvedDiscountIdrPercent > 0 && (
+                    <Badge variant="outline" className="border-amber-300 bg-amber-100 text-amber-800 font-semibold text-[10px] px-1.5 py-0">
+                      {resolvedDiscountIdrPercent}%
+                    </Badge>
+                  )}
+                </div>
+                <span className="text-sm font-semibold text-slate-900">{currenciesFormat('idr', totalDiscountIdr)}</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span>Total Biaya</span>
+                <span className="text-sm font-semibold text-slate-900">{currenciesFormat('idr', totalBiaya)}</span>
+              </div>
+              <div className="border-t border-slate-100 my-1"></div>
+              <div className="flex items-center justify-between text-slate-900">
+                <span className="font-bold uppercase text-sm">TOTAL PEMBELIAN</span>
+                <span className="text-sm font-bold">{currenciesFormat('idr', totalPembelian)}</span>
+              </div>
             </div>
-            <div className="border-t border-slate-100 my-1"></div>
-            <div className="flex items-center justify-between text-slate-900">
-              <span className="font-bold uppercase text-sm">TOTAL PEMBELIAN</span>
-              <span className="text-sm font-bold">{currenciesFormat('idr', totalPembelian)}</span>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Card 3: Detail Pembelian (USD) */}
-      {hasUsdDetails && (
+      {hasAnyUsdData && (
         <Card className="rounded-md border border-slate-200 shadow-sm h-full">
           <CardContent className="p-5 flex flex-col h-full gap-4">
             <div className="flex items-center gap-3">

@@ -19,6 +19,7 @@ interface UnitTransactionPaymentPageViewProps {
   totalDpp?: number;
   totalTagihanUsd?: number;
   totalTagihanUsdActual?: number;
+  isUsdTransaction?: boolean;
   billing: UnitBilling | null;
   histories: UnitBillingHistory[];
   onSubmitPayment: (data: PaymentFormData) => Promise<void>;
@@ -36,6 +37,7 @@ export function UnitTransactionPaymentPageView({
   totalDpp,
   totalTagihanUsd,
   totalTagihanUsdActual,
+  isUsdTransaction,
   billing,
   histories,
   onSubmitPayment,
@@ -83,6 +85,7 @@ export function UnitTransactionPaymentPageView({
               totalDpp={totalDpp}
               totalTagihanUsd={totalTagihanUsd}
               totalTagihanUsdActual={totalTagihanUsdActual}
+              isUsdTransaction={isUsdTransaction}
               billing={billing}
               histories={histories}
               onSubmitPayment={onSubmitPayment}

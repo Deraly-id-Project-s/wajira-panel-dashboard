@@ -112,6 +112,7 @@ export type SalesApiModel = {
     created_at?: string;
   }>;
   is_unit_type_detail_valid?: boolean | string | number;
+  is_usd_transaction?: boolean | string | number;
   unit_transaction_price_usd_total?: string | number;
   unit_transaction_price_usd_total_actual?: string | number;
 };
@@ -341,6 +342,7 @@ export const mapSalesDetailToUI = (item: SalesApiModel): SalesItem => {
     customer: item.person?.name ?? '-',
     stockState: String(item.stock_state ?? '').toLowerCase(),
     isRefunded: String(item.stock_state ?? '').toLowerCase() === 'outbound_return',
+    is_usd_transaction: toBool((item as any).is_usd_transaction),
     warehouse: item.warehouse?.name ?? '-',
     tipeUnit: item.unit_transaction_items?.[0]?.unit_type?.name ?? '-',
     hargaSatuan: toNumber(item.unit_transaction_items?.[0]?.price),

@@ -104,6 +104,7 @@ type UnitTransactionApiModel = {
     is_system_sync?: boolean | number | string;
   };
   is_unit_type_detail_valid?: boolean | string | number;
+  is_usd_transaction?: boolean | string | number;
   unit_transaction_price_usd_total?: string | number;
   unit_transaction_price_usd_total_actual?: string | number;
   total_usd_cost?: string | number;
@@ -357,6 +358,7 @@ const mapUnitTransaction = (item: UnitTransactionApiModel): UnitTransaction => (
   isRefunded: item?.has_returned_data ?? null,
   remainingPayment: toNumber(item.billing_summary?.remaining_payment),
   isUnitTypeDetailValid: item.is_unit_type_detail_valid === true || item.is_unit_type_detail_valid === 1 || String(item.is_unit_type_detail_valid) === 'true',
+  is_usd_transaction: item.is_usd_transaction === true || item.is_usd_transaction === 1 || String(item.is_usd_transaction) === 'true',
   billing_summary: item.billing_summary
     ? {
       grand_total: toNumber(item.billing_summary.grand_total),
@@ -660,6 +662,7 @@ const mapUnitTransactionDetail = (item: UnitTransactionApiModel): UnitTransactio
       : null,
     unit_transaction_items: item.unit_transaction_items,
     isUnitTypeDetailValid: item.is_unit_type_detail_valid === true || item.is_unit_type_detail_valid === 1 || String(item.is_unit_type_detail_valid) === 'true',
+    is_usd_transaction: item.is_usd_transaction === true || item.is_usd_transaction === 1 || String(item.is_usd_transaction) === 'true',
     documentTemplateId: item.document_template_id != null ? String(item.document_template_id) : item.document_template?.id != null ? String(item.document_template.id) : item.document_template?.uuid ?? null,
     unit_transaction_price_usd_total: item.unit_transaction_price_usd_total !== undefined ? toNumber(item.unit_transaction_price_usd_total) : undefined,
     unit_transaction_price_usd_total_actual: item.unit_transaction_price_usd_total_actual !== undefined ? toNumber(item.unit_transaction_price_usd_total_actual) : undefined,

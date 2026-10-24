@@ -56,6 +56,7 @@ interface Props {
     totalDpp?: number;
     totalTagihanUsd?: number;
     totalTagihanUsdActual?: number;
+    isUsdTransaction?: boolean;
     billing: UnitBilling | null;
     histories: UnitBillingHistory[];
     onSubmitPayment: (data: PaymentFormData) => Promise<void>;
@@ -74,6 +75,7 @@ export function UnitTransactionPaymentForm({
     totalDpp,
     totalTagihanUsd,
     totalTagihanUsdActual,
+    isUsdTransaction,
     billing,
     histories,
     onSubmitPayment,
@@ -106,7 +108,6 @@ export function UnitTransactionPaymentForm({
     const totalPaid = Math.max(totalPaidFromBilling, historyPaid);
     const billingRemaining = Number(billing?.remaining_payment ?? 0);
     const remainingPayment = billing?.is_paid ? 0 : billingRemaining > 0 ? billingRemaining : Math.max(0, totalTagihan - totalPaid);
-    const isPaidAndValid = billing ? billing?.is_paid : false;
 
     const paymentBca = Number(form.watch('bcaPayment') ?? 0); // BCA USD
     const paymentCash = Number(form.watch('cashPayment') ?? 0); // CASH IDR
@@ -130,10 +131,28 @@ export function UnitTransactionPaymentForm({
 
     const displayDpp = totalDpp !== undefined ? totalDpp : Math.max(0, totalTagihan - totalPpn);
 
+    const isIdrFullyPaid = totalTagihan > 0 ? remainingPayment === 0 : true;
+    const isUsdFullyPaid = totalTagihanUsdVal > 0 ? remainingPaymentUsd === 0 : true;
+    const isFullyPaid = Boolean(
+        billing?.is_paid ||
+        (
+            isIdrFullyPaid &&
+            isUsdFullyPaid &&
+            (totalTagihan > 0 || totalTagihanUsdVal > 0)
+        )
+    );
+
+    const disableUsdInput = isFullyPaid || (totalTagihanUsdVal > 0 && remainingPaymentUsd === 0);
+    const disableIdrInput = isFullyPaid || (totalTagihan > 0 && remainingPayment === 0) || (Boolean(isUsdTransaction) && totalTagihan === 0);
+    const disableGeneral = isFullyPaid || (disableUsdInput && disableIdrInput);
+
     useEffect(() => {
-        const autoIsPaid = projectedTotalPaid >= totalTagihan && totalTagihan > 0;
+        const idrSatisfied = totalTagihan > 0 ? projectedTotalPaid >= totalTagihan : true;
+        const usdSatisfied = totalTagihanUsdVal > 0 ? projectedTotalPaidUsd >= totalTagihanUsdVal : true;
+        const hasAnyBill = totalTagihan > 0 || totalTagihanUsdVal > 0;
+        const autoIsPaid = hasAnyBill && idrSatisfied && usdSatisfied;
         form.setValue('isPaid', autoIsPaid);
-    }, [form, projectedTotalPaid, totalTagihan]);
+    }, [form, projectedTotalPaid, totalTagihan, projectedTotalPaidUsd, totalTagihanUsdVal]);
 
     const resetForm = () => {
         form.reset({
@@ -142,7 +161,7 @@ export function UnitTransactionPaymentForm({
             bcaPayment2: 0,
             paymentDate: new Date().toISOString().slice(0, 10),
             note: '',
-            isPaid: projectedTotalPaid >= totalTagihan && totalTagihan > 0,
+            isPaid: false,
         });
     };
 
@@ -152,6 +171,16 @@ export function UnitTransactionPaymentForm({
 
         if (bcaPaymentUsd <= 0 && totalIdr <= 0) {
             toast.error('Minimal salah satu nominal pembayaran harus lebih dari 0.');
+            return;
+        }
+
+        if (totalTagihan === 0 && totalIdr > 0) {
+            toast.error('Transaksi USD ini tidak memiliki tagihan IDR.');
+            return;
+        }
+
+        if (totalTagihanUsdVal === 0 && bcaPaymentUsd > 0) {
+            toast.error('Transaksi ini tidak memiliki tagihan USD.');
             return;
         }
 
@@ -258,56 +287,114 @@ export function UnitTransactionPaymentForm({
             <div className="space-y-6">
                 {/* ── Section: Biaya ── */}
                 <CollapsibleBox title="Biaya" description="Informasi ringkasan biaya transaksi" defaultExpanded={true}>
-                    <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-                        <div className="space-y-2">
-                            <p className="text-sm font-medium">{isPurchase ? 'Total Beli' : 'Total Jual'}</p>
-                            <Input value={currenciesFormat('idr', displayDpp)} disabled />
+                    {isUsdTransaction ? (
+                        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                            <div className="space-y-2">
+                                <p className="text-sm font-medium">{isPurchase ? 'Total Pembelian (USD)' : 'Total Penjualan (USD)'}</p>
+                                <Input value={currenciesFormat('usd', totalTagihanUsdVal)} disabled />
+                            </div>
+                            {totalTagihan > 0 && (
+                                <div className="space-y-2">
+                                    <p className="text-sm font-medium">Total Biaya (IDR)</p>
+                                    <Input value={currenciesFormat('idr', totalTagihan)} disabled />
+                                </div>
+                            )}
                         </div>
-                        <div className="space-y-2">
-                            <p className="text-sm font-medium">Total PPN</p>
-                            <Input value={currenciesFormat('idr', totalPpn)} disabled />
+                    ) : (
+                        <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+                            <div className="space-y-2">
+                                <p className="text-sm font-medium">{isPurchase ? 'Total Beli' : 'Total Jual'}</p>
+                                <Input value={currenciesFormat('idr', displayDpp)} disabled />
+                            </div>
+                            <div className="space-y-2">
+                                <p className="text-sm font-medium">Total PPN</p>
+                                <Input value={currenciesFormat('idr', totalPpn)} disabled />
+                            </div>
+                            <div className="space-y-2">
+                                <p className="text-sm font-medium">Total Biaya</p>
+                                <Input value={currenciesFormat('idr', totalTagihan)} disabled />
+                            </div>
+                            {totalTagihanUsdVal > 0 && (
+                                <div className="space-y-2 md:col-span-3">
+                                    <p className="text-sm font-medium">{isPurchase ? 'Total Pembelian (USD)' : 'Total Penjualan (USD)'}</p>
+                                    <Input value={currenciesFormat('usd', totalTagihanUsdVal)} disabled />
+                                </div>
+                            )}
                         </div>
-                        <div className="space-y-2">
-                            <p className="text-sm font-medium">Total Biaya</p>
-                            <Input value={currenciesFormat('idr', totalTagihan)} disabled />
-                        </div>
-                    </div>
+                    )}
                 </CollapsibleBox>
 
                 {/* ── Section: Invoice ── */}
                 <CollapsibleBox title="Biaya Invoice" description="Rincian status pembayaran dan sisa tagihan" defaultExpanded={true}>
-                    <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-                        {/* Tanggal */}
-                        <div className="space-y-2">
-                            <p className="text-sm font-medium">Tanggal</p>
-                            <InputDate
-                                value={form.watch('paymentDate')}
-                                disabled
-                            />
-                        </div>
-                        {/* Total Bayar */}
-                        <div className="space-y-2">
-                            <p className="text-sm font-medium">Total Bayar</p>
-                            <Input value={currenciesFormat('idr', projectedTotalPaid)} disabled />
-                        </div>
-                        {/* Kurang Bayar */}
-                        <div className="space-y-2">
-                            <p className="text-sm font-medium">Kurang Bayar</p>
-                            <Input value={currenciesFormat('idr', projectedRemaining)} disabled />
-                        </div>
-                        <div className="col-span-1 grid w-full grid-cols-1 gap-4 border-t pt-4 sm:grid-cols-2 md:col-span-3">
+                    {isUsdTransaction ? (
+                        <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+                            {/* Tanggal */}
+                            <div className="space-y-2">
+                                <p className="text-sm font-medium">Tanggal</p>
+                                <InputDate
+                                    value={form.watch('paymentDate')}
+                                    disabled
+                                />
+                            </div>
                             {/* Total Bayar USD */}
-                            <div className="space-y-2 w-full">
+                            <div className="space-y-2">
                                 <p className="text-sm font-medium">Total Bayar (USD)</p>
-                                <Input value={currenciesFormat('usd', projectedTotalPaidUsd)} disabled className="w-full" />
+                                <Input value={currenciesFormat('usd', projectedTotalPaidUsd)} disabled />
                             </div>
                             {/* Kurang Bayar USD */}
-                            <div className="space-y-2 w-full">
+                            <div className="space-y-2">
                                 <p className="text-sm font-medium">Kurang Bayar (USD)</p>
-                                <Input value={currenciesFormat('usd', projectedRemainingUsd)} disabled className="w-full" />
+                                <Input value={currenciesFormat('usd', projectedRemainingUsd)} disabled />
                             </div>
+                            {totalTagihan > 0 && (
+                                <div className="col-span-1 grid w-full grid-cols-1 gap-4 border-t pt-4 sm:grid-cols-2 md:col-span-3">
+                                    <div className="space-y-2 w-full">
+                                        <p className="text-sm font-medium">Total Bayar (IDR)</p>
+                                        <Input value={currenciesFormat('idr', projectedTotalPaid)} disabled className="w-full" />
+                                    </div>
+                                    <div className="space-y-2 w-full">
+                                        <p className="text-sm font-medium">Kurang Bayar (IDR)</p>
+                                        <Input value={currenciesFormat('idr', projectedRemaining)} disabled className="w-full" />
+                                    </div>
+                                </div>
+                            )}
                         </div>
-                    </div>
+                    ) : (
+                        <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+                            {/* Tanggal */}
+                            <div className="space-y-2">
+                                <p className="text-sm font-medium">Tanggal</p>
+                                <InputDate
+                                    value={form.watch('paymentDate')}
+                                    disabled
+                                />
+                            </div>
+                            {/* Total Bayar */}
+                            <div className="space-y-2">
+                                <p className="text-sm font-medium">Total Bayar</p>
+                                <Input value={currenciesFormat('idr', projectedTotalPaid)} disabled />
+                            </div>
+                            {/* Kurang Bayar */}
+                            <div className="space-y-2">
+                                <p className="text-sm font-medium">Kurang Bayar</p>
+                                <Input value={currenciesFormat('idr', projectedRemaining)} disabled />
+                            </div>
+                            {totalTagihanUsdVal > 0 && (
+                                <div className="col-span-1 grid w-full grid-cols-1 gap-4 border-t pt-4 sm:grid-cols-2 md:col-span-3">
+                                    {/* Total Bayar USD */}
+                                    <div className="space-y-2 w-full">
+                                        <p className="text-sm font-medium">Total Bayar (USD)</p>
+                                        <Input value={currenciesFormat('usd', projectedTotalPaidUsd)} disabled className="w-full" />
+                                    </div>
+                                    {/* Kurang Bayar USD */}
+                                    <div className="space-y-2 w-full">
+                                        <p className="text-sm font-medium">Kurang Bayar (USD)</p>
+                                        <Input value={currenciesFormat('usd', projectedRemainingUsd)} disabled className="w-full" />
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                    )}
                 </CollapsibleBox>
 
                 {/* Validation warning */}
@@ -327,7 +414,7 @@ export function UnitTransactionPaymentForm({
                                         <p className="text-sm font-medium">Tanggal Bayar</p>
                                         <InputDate
                                             value={form.watch('paymentDate')}
-                                            disabled={billing && billingRemaining === 0 || isPaidAndValid}
+                                            disabled={disableGeneral}
                                             onChange={(e) => form.setValue('paymentDate', e.target.value)}
                                         />
                                     </div>
@@ -335,14 +422,14 @@ export function UnitTransactionPaymentForm({
                                         control={form.control}
                                         name="bcaPayment"
                                         render={({ field }) => (
-                                            <FormItem className="space-y-2">
+                                            <FormItem className={`space-y-2 ${isUsdTransaction && totalTagihan === 0 ? 'md:col-span-3' : ''}`}>
                                                 <FormLabel className="text-sm font-medium">BCA USD</FormLabel>
                                                 <FormControl>
                                                     <MoneyInput
                                                         name={field.name}
                                                         currency="USD"
                                                         value={Number(field.value) || 0}
-                                                        disabled={billing && billingRemaining === 0 || isPaidAndValid}
+                                                        disabled={disableUsdInput}
                                                         onChangeValue={(val) => {
                                                             const maxBca = remainingPaymentUsd;
                                                             const capped = parseAndClampMoneyInput(val, maxBca, 'USD');
@@ -355,50 +442,54 @@ export function UnitTransactionPaymentForm({
                                             </FormItem>
                                         )}
                                     />
-                                    <FormField
-                                        control={form.control}
-                                        name="bcaPayment2"
-                                        render={({ field }) => (
-                                            <FormItem className="space-y-2">
-                                                <FormLabel className="text-sm font-medium">BCA IDR</FormLabel>
-                                                <FormControl>
-                                                    <MoneyInput
-                                                        name={field.name}
-                                                        value={Number(field.value) || 0}
-                                                        disabled={billing && billingRemaining === 0 || isPaidAndValid}
-                                                        onChangeValue={(val) => {
-                                                            const capped = parseAndClampMoneyInput(val, maxBca2);
-                                                            field.onChange(capped);
-                                                        }}
-                                                        onBlur={field.onBlur}
-                                                    />
-                                                </FormControl>
-                                                <FormMessage />
-                                            </FormItem>
-                                        )}
-                                    />
-                                    <FormField
-                                        control={form.control}
-                                        name="cashPayment"
-                                        render={({ field }) => (
-                                            <FormItem className="space-y-2">
-                                                <FormLabel className="text-sm font-medium">CASH IDR</FormLabel>
-                                                <FormControl>
-                                                    <MoneyInput
-                                                        name={field.name}
-                                                        value={Number(field.value) || 0}
-                                                        disabled={billing && billingRemaining === 0 || isPaidAndValid}
-                                                        onChangeValue={(val) => {
-                                                            const capped = parseAndClampMoneyInput(val, maxCash);
-                                                            field.onChange(capped);
-                                                        }}
-                                                        onBlur={field.onBlur}
-                                                    />
-                                                </FormControl>
-                                                <FormMessage />
-                                            </FormItem>
-                                        )}
-                                    />
+                                    {(!isUsdTransaction || totalTagihan > 0) && (
+                                        <>
+                                            <FormField
+                                                control={form.control}
+                                                name="bcaPayment2"
+                                                render={({ field }) => (
+                                                    <FormItem className="space-y-2">
+                                                        <FormLabel className="text-sm font-medium">BCA IDR</FormLabel>
+                                                        <FormControl>
+                                                            <MoneyInput
+                                                                name={field.name}
+                                                                value={Number(field.value) || 0}
+                                                                disabled={disableIdrInput}
+                                                                onChangeValue={(val) => {
+                                                                    const capped = parseAndClampMoneyInput(val, maxBca2);
+                                                                    field.onChange(capped);
+                                                                }}
+                                                                onBlur={field.onBlur}
+                                                            />
+                                                        </FormControl>
+                                                        <FormMessage />
+                                                    </FormItem>
+                                                )}
+                                            />
+                                            <FormField
+                                                control={form.control}
+                                                name="cashPayment"
+                                                render={({ field }) => (
+                                                    <FormItem className="space-y-2">
+                                                        <FormLabel className="text-sm font-medium">CASH IDR</FormLabel>
+                                                        <FormControl>
+                                                            <MoneyInput
+                                                                name={field.name}
+                                                                value={Number(field.value) || 0}
+                                                                disabled={disableIdrInput}
+                                                                onChangeValue={(val) => {
+                                                                    const capped = parseAndClampMoneyInput(val, maxCash);
+                                                                    field.onChange(capped);
+                                                                }}
+                                                                onBlur={field.onBlur}
+                                                            />
+                                                        </FormControl>
+                                                        <FormMessage />
+                                                    </FormItem>
+                                                )}
+                                            />
+                                        </>
+                                    )}
                                 </div>
 
                                 {/* Note */}
@@ -413,7 +504,7 @@ export function UnitTransactionPaymentForm({
                                                     <Textarea
                                                         placeholder="Catatan pembayaran (opsional)"
                                                         {...field}
-                                                        disabled={billing && billingRemaining === 0 || isPaidAndValid}
+                                                        disabled={disableGeneral}
                                                         value={field.value ?? ''}
                                                     />
                                                 </FormControl>
@@ -437,7 +528,7 @@ export function UnitTransactionPaymentForm({
                             </Button>
                             <Button
                                 type="submit"
-                                disabled={loading || !canSubmit || billing && billingRemaining === 0 || isPaidAndValid}
+                                disabled={loading || !canSubmit || disableGeneral}
                                 className="bg-green-600 hover:bg-green-700 text-white min-w-[120px]"
                             >
                                 {loading ? (

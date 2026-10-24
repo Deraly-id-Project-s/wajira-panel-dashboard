@@ -256,6 +256,7 @@ export default function SalesPaymentPage() {
       totalDpp={totalDpp}
       totalTagihanUsd={totalTagihanUsd}
       totalTagihanUsdActual={totalTagihanUsdActual}
+      isUsdTransaction={salesData?.is_usd_transaction ?? (salesDetail?.raw as any)?.is_usd_transaction}
       billing={existingBilling ?? null}
       histories={billingHistories}
       onSubmitPayment={handleSubmitPayment}

@@ -66,3 +66,87 @@ export function getExchangeRateDisplay(pivot?: { original_amount?: number; excha
   if (!pivot || !isUsdPayment(pivot)) return '-';
   return `${formatCurrencyBase(pivot.exchange_amount || 0, 'IDR')} / USD`;
 }
+
+export interface UsdCostsBreakdown {
+  freight: number;
+  boxPacking: number;
+  admin: number;
+  ckd: number;
+  blSwitch: number;
+  customs: number;
+  other: number;
+  totalUsdCost: number;
+}
+
+export function getUsdCostsFromItem(item: any): UsdCostsBreakdown {
+  if (!item) {
+    return {
+      freight: 0,
+      boxPacking: 0,
+      admin: 0,
+      ckd: 0,
+      blSwitch: 0,
+      customs: 0,
+      other: 0,
+      totalUsdCost: 0,
+    };
+  }
+
+  const freight = Number(item.usd_cost_freight_total ?? 0);
+  const boxPacking = Number(item.usd_cost_box_packing_total ?? 0);
+  const admin = Number(item.usd_cost_admin_cost_total ?? 0);
+  const ckd = Number(item.usd_cost_ckd_processing_cost_total ?? 0);
+  const blSwitch = Number(item.usd_cost_bill_of_lading_switch_cost_total ?? 0);
+  const customs = Number(item.usd_cost_customs_clearance_cost_total ?? 0);
+  const other = Number(item.usd_cost_other_total ?? 0);
+
+  const rawCosts: any[] = item.unit_transaction_usd_costs || item.usd_costs || [];
+  let freightRaw = 0;
+  let boxRaw = 0;
+  let adminRaw = 0;
+  let ckdRaw = 0;
+  let blRaw = 0;
+  let customsRaw = 0;
+  let otherRaw = 0;
+
+  if (Array.isArray(rawCosts) && rawCosts.length > 0) {
+    rawCosts.forEach((c) => {
+      const amt = Number(c.amount ?? 0);
+      const type = String(c.cost_type ?? '').toLowerCase();
+      if (type === 'freight') freightRaw += amt;
+      else if (type === 'box_packing') boxRaw += amt;
+      else if (type === 'admin_cost' || type === 'admin') adminRaw += amt;
+      else if (type === 'ckd_processing_cost' || type === 'ckd') ckdRaw += amt;
+      else if (type === 'bill_of_lading_switch_cost' || type === 'bl_switch') blRaw += amt;
+      else if (type === 'customs_clearance_cost' || type === 'customs') customsRaw += amt;
+      else otherRaw += amt;
+    });
+  }
+
+  const resolvedFreight = freight || freightRaw;
+  const resolvedBox = boxPacking || boxRaw;
+  const resolvedAdmin = admin || adminRaw;
+  const resolvedCkd = ckd || ckdRaw;
+  const resolvedBl = blSwitch || blRaw;
+  const resolvedCustoms = customs || customsRaw;
+  const resolvedOther = other || otherRaw;
+
+  const sumOfParts = resolvedFreight + resolvedBox + resolvedAdmin + resolvedCkd + resolvedBl + resolvedCustoms + resolvedOther;
+  const totalCost = Number(
+    item.total_usd_cost ??
+    item.transaction_usd_cost_total ??
+    item.price_usd_additional_total ??
+    sumOfParts
+  );
+
+  return {
+    freight: resolvedFreight,
+    boxPacking: resolvedBox,
+    admin: resolvedAdmin,
+    ckd: resolvedCkd,
+    blSwitch: resolvedBl,
+    customs: resolvedCustoms,
+    other: resolvedOther,
+    totalUsdCost: totalCost > 0 ? totalCost : sumOfParts,
+  };
+}

@@ -39,6 +39,7 @@ export interface SalesItem {
   customer: string;
   stockState?: string;
   isRefunded?: boolean;
+  is_usd_transaction?: boolean;
   warehouse?: string;
   tipeUnit: string;
   hargaSatuan: number;

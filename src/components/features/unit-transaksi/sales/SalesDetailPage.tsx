@@ -450,7 +450,16 @@ export default function SalesDetailPage() {
 
         <SalesDetailCards data={salesData} billingHistories={resolvedBillingHistories} />
 
-        <SalesUnitTable lineItems={salesData.lineItems} salesId={sales.id} onAddUnit={handleCreateUnit} canEdit={canEdit} canDelete={canDelete} canCreate={canCreate} isPaid={isPaid} />
+        <SalesUnitTable
+          lineItems={salesData.lineItems}
+          salesId={sales.id}
+          onAddUnit={handleCreateUnit}
+          canEdit={canEdit}
+          canDelete={canDelete}
+          canCreate={canCreate}
+          isPaid={isPaid}
+          isUsdTransaction={salesData?.is_usd_transaction ?? (sales as any)?.is_usd_transaction}
+        />
 
         <UnitTypeDetailTable
           transactionId={sales.id}

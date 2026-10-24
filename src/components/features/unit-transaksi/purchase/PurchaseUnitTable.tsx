@@ -16,7 +16,8 @@ import { FilteredCurrency } from '@/components/ui/filtered-currency';
 import { ReferenceLink } from '@/components/ui/reference-link';
 import BaseTable, { ColumnDef } from '@/components/ui/base-table';
 import { CollapsibleBox } from '@/components/ui/collapsible-box';
-import { UnitTransactionSummaryFooter } from '@/components/features/unit-transaksi/UnitTransactionSummaryFooter';
+import { getUsdCostsFromItem } from '@/utils/payment-helpers';
+import UnitTransactionSummaryFooter from '../UnitTransactionSummaryFooter';
 
 interface Props {
   purchaseId: string;
@@ -24,9 +25,10 @@ interface Props {
   isPaid?: boolean;
   canEdit: boolean;
   canDelete: boolean;
+  isUsdTransaction?: boolean;
 }
 
-export default function PurchaseUnitTable({ purchaseId, slug, isPaid, canEdit, canDelete }: Props) {
+export default function PurchaseUnitTable({ purchaseId, slug, isPaid, canEdit, canDelete, isUsdTransaction }: Props) {
   const router = useRouter();
   const { data, isLoading, isError } = usePurchaseUnitItems(purchaseId);
   const { data: typeUnits } = useTypeUnits();
@@ -97,123 +99,258 @@ export default function PurchaseUnitTable({ purchaseId, slug, isPaid, canEdit, c
     router.push(`/dashboard/${slug}/transaksi/pembelian-unit/${purchaseId}/unit/${unitId}/edit`);
   }, [router, slug, purchaseId]);
 
-  const columns: ColumnDef<UnitTransactionItem>[] = useMemo(() => [
-    {
-      header: 'Tipe Unit',
-      cell: (item) => (
-        <ReferenceLink target='_blank' href={`/dashboard/${slug}/master-data/tipe-unit?search=${getUnitTypeName(item.unit_type_id)}`}>
-          {getUnitTypeName(item.unit_type_id)}
-        </ReferenceLink>
-      ),
-    },
-    {
-      header: 'QTY',
-      alignment: 'center',
-      className: 'w-[100px] font-semibold',
-      cell: (item) => item.qty_total + " Unit",
-    },
-    {
-      header: 'Harga Beli',
-      alignment: 'center',
-      cell: (item) => {
-        const idrPrice = Number(item.price ?? 0);
-        const usdPrice = Number(item.price_per_unit_usd ?? 0) > 0
-          ? Number(item.price_per_unit_usd)
-          : Number(item.price_usd ?? 0);
+  const isUsd = Boolean(
+    isUsdTransaction ??
+    (items.length > 0 && items.some(item => (item as any).is_usd_transaction || (item.price_usd && Number(item.price_usd) > 0) || (item.price_per_unit_usd && Number(item.price_per_unit_usd) > 0)))
+  );
 
-        return (
-          <div>
-            <FilteredCurrency idr={idrPrice} usd={usdPrice} />
-            {Number(item.price_discount ?? 0) > 0 && (
-              <span className="block text-[11px] text-emerald-600 font-medium">
-                Diskon: {item.price_discount}%
-              </span>
-            )}
-            {Number(item.price_usd_discount ?? 0) > 0 && (
-              <span className="block text-[11px] text-amber-600 font-medium">
-                Diskon USD: {item.price_usd_discount}%
-              </span>
-            )}
-          </div>
-        );
+  const columns: ColumnDef<UnitTransactionItem>[] = useMemo(() => {
+    if (isUsd) {
+      return [
+        {
+          header: 'Tipe Unit',
+          cell: (item) => (
+            <ReferenceLink target='_blank' href={`/dashboard/${slug}/master-data/tipe-unit?search=${getUnitTypeName(item.unit_type_id)}`}>
+              {getUnitTypeName(item.unit_type_id)}
+            </ReferenceLink>
+          ),
+        },
+        {
+          header: 'QTY',
+          alignment: 'center',
+          className: 'w-[100px] font-semibold',
+          cell: (item) => item.qty_total + " Unit",
+        },
+        {
+          header: 'Harga Beli (USD)',
+          alignment: 'right',
+          cell: (item) => {
+            const usdPrice = Number(item.price_per_unit_usd ?? 0) > 0
+              ? Number(item.price_per_unit_usd)
+              : (Number(item.price_usd ?? 0) > 0 ? Number(item.price_usd) / Math.max(1, Number(item.qty_total ?? 1)) : 0);
+            const discountUsdPercent = Number(item.price_usd_discount ?? (item as any).price_discount_usd ?? 0);
+
+            return (
+              <div className="text-right">
+                <span>{currenciesFormat('usd', usdPrice)}</span>
+                {discountUsdPercent > 0 && (
+                  <span className="block text-[11px] text-amber-600 font-medium">
+                    Diskon: {discountUsdPercent}%
+                  </span>
+                )}
+              </div>
+            );
+          },
+        },
+        {
+          header: 'Biaya Freight',
+          alignment: 'right',
+          cell: (item) => currenciesFormat('usd', getUsdCostsFromItem(item).freight),
+        },
+        {
+          header: 'Biaya Box Packing',
+          alignment: 'right',
+          cell: (item) => currenciesFormat('usd', getUsdCostsFromItem(item).boxPacking),
+        },
+        {
+          header: 'Biaya Administrasi',
+          alignment: 'right',
+          cell: (item) => currenciesFormat('usd', getUsdCostsFromItem(item).admin),
+        },
+        {
+          header: 'Biaya Pemrosesan CKD',
+          alignment: 'right',
+          cell: (item) => currenciesFormat('usd', getUsdCostsFromItem(item).ckd),
+        },
+        {
+          header: 'Biaya Switch B/L',
+          alignment: 'right',
+          cell: (item) => currenciesFormat('usd', getUsdCostsFromItem(item).blSwitch),
+        },
+        {
+          header: 'Biaya Bea Cukai',
+          alignment: 'right',
+          cell: (item) => currenciesFormat('usd', getUsdCostsFromItem(item).customs),
+        },
+        {
+          header: 'Biaya USD Lainnya',
+          alignment: 'right',
+          cell: (item) => currenciesFormat('usd', getUsdCostsFromItem(item).other),
+        },
+        {
+          header: 'Total Biaya USD',
+          alignment: 'right',
+          className: 'font-semibold',
+          cell: (item) => currenciesFormat('usd', getUsdCostsFromItem(item).totalUsdCost),
+        },
+        {
+          header: 'Sub Total (USD)',
+          alignment: 'right',
+          className: 'font-semibold text-slate-900',
+          cell: (item) => {
+            const costs = getUsdCostsFromItem(item);
+            const usdPrice = Number(item.price_per_unit_usd ?? 0) > 0
+              ? Number(item.price_per_unit_usd)
+              : (Number(item.price_usd ?? 0) > 0 ? Number(item.price_usd) / Math.max(1, Number(item.qty_total ?? 1)) : 0);
+            const qty = Number(item.qty_total ?? 1);
+            const discountUsdPercent = Number(item.price_usd_discount ?? (item as any).price_discount_usd ?? 0);
+            const baseTotal = usdPrice * qty;
+            const discountedBase = discountUsdPercent > 0 ? baseTotal * (1 - discountUsdPercent / 100) : baseTotal;
+            const subtotalUsd = Number(item.price_usd_total ?? item.price_total_usd ?? (discountedBase + costs.totalUsdCost));
+
+            return currenciesFormat('usd', subtotalUsd);
+          },
+        },
+        {
+          header: 'Aksi',
+          alignment: 'center',
+          sticky: 'right',
+          cell: (item) => (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" className="h-8 w-8 p-0">
+                  <MoreVertical className="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={() => !isPaid && handleEdit(item.id)} disabled={!canEdit || isPaid}>
+                  Edit
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => handleDetail(item.id)}>
+                  Detail / Kelola Unit
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  className="text-red-600 focus:text-red-600 focus:bg-red-50"
+                  onClick={() => !isPaid && setUnitToDelete(item.id)}
+                  disabled={!canDelete || isPaid}
+                >
+                  Hapus
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          ),
+        },
+      ];
+    }
+
+    return [
+      {
+        header: 'Tipe Unit',
+        cell: (item) => (
+          <ReferenceLink target='_blank' href={`/dashboard/${slug}/master-data/tipe-unit?search=${getUnitTypeName(item.unit_type_id)}`}>
+            {getUnitTypeName(item.unit_type_id)}
+          </ReferenceLink>
+        ),
       },
-    },
-    {
-      header: 'Biaya BBN',
-      alignment: 'center',
-      cell: (item) => currenciesFormat('idr', item.bbn_price),
-    },
-    {
-      header: 'Biaya Ekspedisi',
-      alignment: 'center',
-      cell: (item) => currenciesFormat('idr', item.expedition_fee),
-    },
-    {
-      header: 'Biaya Lainnya',
-      alignment: 'center',
-      cell: (item) => currenciesFormat('idr', item.other_fee),
-    },
-    {
-      header: 'DPP Total',
-      alignment: 'center',
-      className: 'font-semibold',
-      cell: (item) => currenciesFormat('idr', item.dpp_total_price),
-    },
-    {
-      header: 'PPN Total',
-      alignment: 'center',
-      cell: (item) => currenciesFormat('idr', item.ppn_total_price),
-    },
-    {
-      header: 'Sub Total',
-      alignment: 'center',
-      className: 'font-semibold text-slate-900',
-      cell: (item) => {
-        const idrSubtotal = Number(
-          item.price_total ??
+      {
+        header: 'QTY',
+        alignment: 'center',
+        className: 'w-[100px] font-semibold',
+        cell: (item) => item.qty_total + " Unit",
+      },
+      {
+        header: 'Harga Beli',
+        alignment: 'center',
+        cell: (item) => {
+          const idrPrice = Number(item.price ?? 0);
+          const usdPrice = Number(item.price_per_unit_usd ?? 0) > 0
+            ? Number(item.price_per_unit_usd)
+            : Number(item.price_usd ?? 0);
+
+          return (
+            <div>
+              <FilteredCurrency idr={idrPrice} usd={usdPrice} />
+              {Number(item.price_discount ?? 0) > 0 && (
+                <span className="block text-[11px] text-emerald-600 font-medium">
+                  Diskon: {item.price_discount}%
+                </span>
+              )}
+              {Number(item.price_usd_discount ?? 0) > 0 && (
+                <span className="block text-[11px] text-amber-600 font-medium">
+                  Diskon USD: {item.price_usd_discount}%
+                </span>
+              )}
+            </div>
+          );
+        },
+      },
+      {
+        header: 'Biaya BBN',
+        alignment: 'center',
+        cell: (item) => currenciesFormat('idr', item.bbn_price),
+      },
+      {
+        header: 'Biaya Ekspedisi',
+        alignment: 'center',
+        cell: (item) => currenciesFormat('idr', item.expedition_fee),
+      },
+      {
+        header: 'Biaya Lainnya',
+        alignment: 'center',
+        cell: (item) => currenciesFormat('idr', item.other_fee),
+      },
+      {
+        header: 'DPP Total',
+        alignment: 'center',
+        className: 'font-semibold',
+        cell: (item) => currenciesFormat('idr', item.dpp_total_price),
+      },
+      {
+        header: 'PPN Total',
+        alignment: 'center',
+        cell: (item) => currenciesFormat('idr', item.ppn_total_price),
+      },
+      {
+        header: 'Sub Total',
+        alignment: 'center',
+        className: 'font-semibold text-slate-900',
+        cell: (item) => {
+          const idrSubtotal = Number(
+            item.price_total ??
             (Number(item.dpp_total_price ?? 0) +
               Number(item.ppn_total_price ?? 0) +
               Number(item.bbn_price ?? 0) +
               Number(item.expedition_fee ?? 0) +
               Number(item.other_fee ?? 0))
-        );
-        const usdSubtotal = Number(item.price_usd ?? 0) > 0
-          ? Number(item.price_usd)
-          : (Number(item.price_per_unit_usd ?? 0) * Number(item.qty_total ?? 1));
+          );
+          const usdSubtotal = Number(item.price_usd ?? 0) > 0
+            ? Number(item.price_usd)
+            : (Number(item.price_per_unit_usd ?? 0) * Number(item.qty_total ?? 1));
 
-        return <FilteredCurrency idr={idrSubtotal} usd={usdSubtotal} />;
+          return <FilteredCurrency idr={idrSubtotal} usd={usdSubtotal} />;
+        },
       },
-    },
-    {
-      header: 'Aksi',
-      alignment: 'center',
-      sticky: 'right',
-      cell: (item) => (
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" className="h-8 w-8 p-0">
-              <MoreVertical className="h-4 w-4" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuItem onClick={() => !isPaid && handleEdit(item.id)} disabled={!canEdit || isPaid}>
-              Edit
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => handleDetail(item.id)}>
-              Detail / Kelola Unit
-            </DropdownMenuItem>
-            <DropdownMenuItem
-              className="text-red-600 focus:text-red-600 focus:bg-red-50"
-              onClick={() => !isPaid && setUnitToDelete(item.id)}
-              disabled={!canDelete || isPaid}
-            >
-              Hapus
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      ),
-    },
-  ], [slug, canEdit, canDelete, isPaid, getUnitTypeName, handleDetail, handleEdit]);
+      {
+        header: 'Aksi',
+        alignment: 'center',
+        sticky: 'right',
+        cell: (item) => (
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" className="h-8 w-8 p-0">
+                <MoreVertical className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={() => !isPaid && handleEdit(item.id)} disabled={!canEdit || isPaid}>
+                Edit
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => handleDetail(item.id)}>
+                Detail / Kelola Unit
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                className="text-red-600 focus:text-red-600 focus:bg-red-50"
+                onClick={() => !isPaid && setUnitToDelete(item.id)}
+                disabled={!canDelete || isPaid}
+              >
+                Hapus
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        ),
+      },
+    ];
+  }, [isUsd, slug, canEdit, canDelete, isPaid, getUnitTypeName, handleDetail, handleEdit]);
 
   return (
     <div className="space-y-4">

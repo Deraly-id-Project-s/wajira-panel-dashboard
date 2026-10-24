@@ -442,7 +442,7 @@ export default function PurchaseDetailPage() {
 
         <PurchaseDetailCards data={purchase} billingHistories={resolvedBillingHistories} unitItems={unitItems} />
 
-        <PurchaseUnitTable purchaseId={purchase.id} slug={slug as string} isPaid={isPaid} canEdit={canEdit} canDelete={canDelete} />
+        <PurchaseUnitTable purchaseId={purchase.id} slug={slug as string} isPaid={isPaid} canEdit={canEdit} canDelete={canDelete} isUsdTransaction={purchase.is_usd_transaction} />
 
         <UnitTypeDetailTable
           transactionId={purchase.id}

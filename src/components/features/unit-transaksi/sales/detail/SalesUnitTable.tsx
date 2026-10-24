@@ -7,6 +7,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Eye, MoreVertical, Pencil, Plus, Trash2 } from 'lucide-react';
 import { currenciesFormat } from '@/components/ui/currenciesFormat';
 import { FilteredCurrency } from '@/components/ui/filtered-currency';
+import { getUsdCostsFromItem } from '@/utils/payment-helpers';
 import { SalesLineItem } from '../sales.data';
 import { useBulkDeleteUnitItem, useDeleteUnitItem, useSalesUnitItems } from '@/hooks/useUnitTransactionItem';
 import { useTypeUnits } from '@/hooks/useTypeUnit';
@@ -24,9 +25,10 @@ interface Props {
   canEdit?: boolean;
   canDelete?: boolean;
   isPaid?: boolean;
+  isUsdTransaction?: boolean;
 }
 
-export function SalesUnitTable({ lineItems, salesId, onAddUnit, canCreate, canEdit, canDelete, isPaid }: Props) {
+export function SalesUnitTable({ lineItems, salesId, onAddUnit, canCreate, canEdit, canDelete, isPaid, isUsdTransaction }: Props) {
   const router = useRouter();
   const { data: unitItemsData, isLoading, isError } = useSalesUnitItems(salesId);
   const { data: typeUnits } = useTypeUnits();
@@ -44,9 +46,10 @@ export function SalesUnitTable({ lineItems, salesId, onAddUnit, canCreate, canEd
 
   const items = useMemo(() => {
     return unitItemsData?.data ?? lineItems.map((item) => ({
+      ...item,
       id: String(item.id),
       unit_transaction_id: String(salesId),
-      unit_type_id: undefined,
+      unit_type_id: (item as any).unit_type_id ?? undefined,
       qty_total: Number(item.qty ?? 0),
       price: Number(item.hargaJual ?? 0),
       bbn_price: Number(item.biayaBbn ?? 0),
@@ -59,7 +62,7 @@ export function SalesUnitTable({ lineItems, salesId, onAddUnit, canCreate, canEd
       price_usd: item.price_usd ? Number(item.price_usd) : undefined,
       price_per_unit_usd: item.price_per_unit_usd ? Number(item.price_per_unit_usd) : undefined,
       price_discount: item.price_discount !== undefined ? Number(item.price_discount) : undefined,
-      price_usd_discount: item.price_usd_discount !== undefined ? Number(item.price_usd_discount) : undefined,
+      price_usd_discount: item.price_usd_discount !== undefined ? Number(item.price_usd_discount) : (item.price_discount_usd !== undefined ? Number(item.price_discount_usd) : undefined),
     }));
   }, [unitItemsData?.data, lineItems, salesId]);
   const totalPages = Math.max(1, Math.ceil(items.length / perPage));
@@ -67,6 +70,14 @@ export function SalesUnitTable({ lineItems, salesId, onAddUnit, canCreate, canEd
     const start = (currentPage - 1) * perPage;
     return items.slice(start, start + perPage);
   }, [currentPage, perPage, items]);
+
+  const isUsd = Boolean(
+    isUsdTransaction ?? (
+      items.length > 0 && items.some((item) =>
+        Boolean((item as any).is_usd_transaction || (item.price_usd && Number(item.price_usd) > 0) || (item.price_per_unit_usd && Number(item.price_per_unit_usd) > 0))
+      )
+    )
+  );
 
   const getUnitTypeName = useCallback((id?: string) => {
     if (!id) return '-';
@@ -101,125 +112,247 @@ export function SalesUnitTable({ lineItems, salesId, onAddUnit, canCreate, canEd
     }
   };
 
-  const columns: ColumnDef<any>[] = useMemo(() => [
-    {
-      header: 'Tipe Unit',
-      cell: (item) => (
-        <ReferenceLink href={`/dashboard/${slug}/master/unit-type?search=${getUnitTypeName(item.unit_type_id)}`}>
-          {getUnitTypeName(item.unit_type_id)}
-        </ReferenceLink>
-      ),
-    },
-    {
-      header: 'QTY',
-      alignment: 'center',
-      className: 'w-[80px]',
-      cell: (item) => item.qty_total + ' Unit',
-    },
-    {
-      header: 'Harga Jual',
-      alignment: 'center',
-      cell: (item) => {
-        const idrPrice = Number(item.price ?? 0);
-        const usdPrice = Number(item.price_per_unit_usd ?? 0) > 0
-          ? Number(item.price_per_unit_usd)
-          : Number(item.price_usd ?? 0);
+  const columns: ColumnDef<any>[] = useMemo(() => {
+    if (isUsd) {
+      return [
+        {
+          header: 'Tipe Unit',
+          cell: (item) => (
+            <ReferenceLink href={`/dashboard/${slug}/master/unit-type?search=${getUnitTypeName(item.unit_type_id)}`}>
+              {getUnitTypeName(item.unit_type_id)}
+            </ReferenceLink>
+          ),
+        },
+        {
+          header: 'QTY',
+          alignment: 'center',
+          className: 'w-[80px]',
+          cell: (item) => item.qty_total + ' Unit',
+        },
+        {
+          header: 'Harga Jual (USD)',
+          alignment: 'right',
+          cell: (item) => {
+            const usdPrice = Number(item.price_per_unit_usd ?? 0) > 0
+              ? Number(item.price_per_unit_usd)
+              : (Number(item.price_usd ?? 0) > 0 ? Number(item.price_usd) / Math.max(1, Number(item.qty_total ?? 1)) : 0);
+            const discountUsdPercent = Number(item.price_usd_discount ?? item.price_discount_usd ?? 0);
 
-        return (
-          <div>
-            <FilteredCurrency idr={idrPrice} usd={usdPrice} />
-            {Number(item.price_discount ?? 0) > 0 && (
-              <span className="block text-[11px] text-emerald-600 font-medium">
-                Diskon: {item.price_discount}%
-              </span>
-            )}
-            {Number(item.price_usd_discount ?? 0) > 0 && (
-              <span className="block text-[11px] text-amber-600 font-medium">
-                Diskon USD: {item.price_usd_discount}%
-              </span>
-            )}
-          </div>
-        );
-      },
-    },
-    {
-      header: 'Biaya BBN',
-      alignment: 'center',
-      cell: (item) => currenciesFormat('idr', item.bbn_price),
-    },
-    {
-      header: 'Biaya Ekspedisi',
-      alignment: 'center',
-      cell: (item) => currenciesFormat('idr', item.expedition_fee),
-    },
-    {
-      header: 'Biaya Lainnya',
-      alignment: 'center',
-      cell: (item) => currenciesFormat('idr', item.other_fee),
-    },
-    {
-      header: 'DPP Total',
-      alignment: 'center',
-      cell: (item) => currenciesFormat('idr', item.dpp_total_price),
-    },
-    {
-      header: 'PPN Total',
-      alignment: 'center',
-      cell: (item) => currenciesFormat('idr', item.ppn_total_price),
-    },
-    {
-      header: 'Sub Total',
-      alignment: 'center',
-      className: 'font-semibold text-slate-900',
-      cell: (item) => {
-        const idrSubtotal = Number(
-          item.price_total ??
-            ((item.dpp_total_price ?? 0) +
-              (item.ppn_total_price ?? 0) +
-              (item.bbn_price ?? 0) +
-              (item.expedition_fee ?? 0) +
-              (item.other_fee ?? 0))
-        );
-        const usdSubtotal = Number(item.price_usd ?? 0) > 0
-          ? Number(item.price_usd)
-          : (Number(item.price_per_unit_usd ?? 0) * Number(item.qty_total ?? 1));
+            return (
+              <div className="text-right">
+                <span>{currenciesFormat('usd', usdPrice)}</span>
+                {discountUsdPercent > 0 && (
+                  <span className="block text-[11px] text-amber-600 font-medium">
+                    Diskon: {discountUsdPercent}%
+                  </span>
+                )}
+              </div>
+            );
+          },
+        },
+        {
+          header: 'Biaya Freight',
+          alignment: 'right',
+          cell: (item) => currenciesFormat('usd', getUsdCostsFromItem(item).freight),
+        },
+        {
+          header: 'Biaya Box Packing',
+          alignment: 'right',
+          cell: (item) => currenciesFormat('usd', getUsdCostsFromItem(item).boxPacking),
+        },
+        {
+          header: 'Biaya Administrasi',
+          alignment: 'right',
+          cell: (item) => currenciesFormat('usd', getUsdCostsFromItem(item).admin),
+        },
+        {
+          header: 'Biaya Pemrosesan CKD',
+          alignment: 'right',
+          cell: (item) => currenciesFormat('usd', getUsdCostsFromItem(item).ckd),
+        },
+        {
+          header: 'Biaya Switch B/L',
+          alignment: 'right',
+          cell: (item) => currenciesFormat('usd', getUsdCostsFromItem(item).blSwitch),
+        },
+        {
+          header: 'Biaya Bea Cukai',
+          alignment: 'right',
+          cell: (item) => currenciesFormat('usd', getUsdCostsFromItem(item).customs),
+        },
+        {
+          header: 'Biaya USD Lainnya',
+          alignment: 'right',
+          cell: (item) => currenciesFormat('usd', getUsdCostsFromItem(item).other),
+        },
+        {
+          header: 'Total Biaya USD',
+          alignment: 'right',
+          className: 'font-semibold',
+          cell: (item) => currenciesFormat('usd', getUsdCostsFromItem(item).totalUsdCost),
+        },
+        {
+          header: 'Sub Total (USD)',
+          alignment: 'right',
+          className: 'font-semibold text-slate-900',
+          cell: (item) => {
+            const costs = getUsdCostsFromItem(item);
+            const usdPrice = Number(item.price_per_unit_usd ?? 0) > 0
+              ? Number(item.price_per_unit_usd)
+              : (Number(item.price_usd ?? 0) > 0 ? Number(item.price_usd) / Math.max(1, Number(item.qty_total ?? 1)) : 0);
+            const qty = Number(item.qty_total ?? 1);
+            const discountUsdPercent = Number(item.price_usd_discount ?? item.price_discount_usd ?? 0);
+            const baseTotal = usdPrice * qty;
+            const discountedBase = discountUsdPercent > 0 ? baseTotal * (1 - discountUsdPercent / 100) : baseTotal;
+            const subtotalUsd = Number(item.price_usd_total ?? item.price_total_usd ?? (discountedBase + costs.totalUsdCost));
 
-        return <FilteredCurrency idr={idrSubtotal} usd={usdSubtotal} />;
+            return currenciesFormat('usd', subtotalUsd);
+          },
+        },
+        {
+          header: 'Aksi',
+          alignment: 'center',
+          sticky: 'right',
+          cell: (item) => (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" className="h-8 w-8 p-0">
+                  <MoreVertical className="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                {!isPaid && (
+                  <DropdownMenuItem onClick={() => router.push(`${basePath}/${salesId}/unit/${item.id}/edit`)} disabled={!canEdit && isPaid}>
+                    Edit
+                  </DropdownMenuItem>
+                )}
+                <DropdownMenuItem onClick={() => router.push(`${basePath}/${salesId}/unit/${item.id}`)}>
+                  Detail
+                </DropdownMenuItem>
+                {!isPaid && (
+                  <DropdownMenuItem
+                    className="text-red-600 focus:bg-red-50 focus:text-red-600"
+                    onClick={() => !isPaid && setDeleteId(item.id)}
+                    disabled={!canDelete && isPaid}
+                  >
+                    Hapus
+                  </DropdownMenuItem>
+                )}
+              </DropdownMenuContent>
+            </DropdownMenu>
+          ),
+        },
+      ];
+    }
+
+    return [
+      {
+        header: 'Tipe Unit',
+        cell: (item) => (
+          <ReferenceLink href={`/dashboard/${slug}/master/unit-type?search=${getUnitTypeName(item.unit_type_id)}`}>
+            {getUnitTypeName(item.unit_type_id)}
+          </ReferenceLink>
+        ),
       },
-    },
-    {
-      header: 'Aksi',
-      alignment: 'center',
-      sticky: 'right',
-      cell: (item) => (
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" className="h-8 w-8 p-0">
-              <MoreVertical className="h-4 w-4" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            {!isPaid && (
-              <DropdownMenuItem onClick={() => router.push(`${basePath}/${salesId}/unit/${item.id}/edit`)} disabled={!canEdit && isPaid}>
-                Edit
+      {
+        header: 'QTY',
+        alignment: 'center',
+        className: 'w-[80px]',
+        cell: (item) => item.qty_total + ' Unit',
+      },
+      {
+        header: 'Harga Jual',
+        alignment: 'center',
+        cell: (item) => {
+          const idrPrice = Number(item.price ?? 0);
+          return (
+            <div>
+              <span>{currenciesFormat('idr', idrPrice)}</span>
+              {Number(item.price_discount ?? 0) > 0 && (
+                <span className="block text-[11px] text-emerald-600 font-medium">
+                  Diskon: {item.price_discount}%
+                </span>
+              )}
+            </div>
+          );
+        },
+      },
+      {
+        header: 'Biaya BBN',
+        alignment: 'center',
+        cell: (item) => currenciesFormat('idr', item.bbn_price),
+      },
+      {
+        header: 'Biaya Ekspedisi',
+        alignment: 'center',
+        cell: (item) => currenciesFormat('idr', item.expedition_fee),
+      },
+      {
+        header: 'Biaya Lainnya',
+        alignment: 'center',
+        cell: (item) => currenciesFormat('idr', item.other_fee),
+      },
+      {
+        header: 'DPP Total',
+        alignment: 'center',
+        cell: (item) => currenciesFormat('idr', item.dpp_total_price),
+      },
+      {
+        header: 'PPN Total',
+        alignment: 'center',
+        cell: (item) => currenciesFormat('idr', item.ppn_total_price),
+      },
+      {
+        header: 'Sub Total',
+        alignment: 'center',
+        className: 'font-semibold text-slate-900',
+        cell: (item) => {
+          const idrSubtotal = Number(
+            item.price_total ??
+              ((item.dpp_total_price ?? 0) +
+                (item.ppn_total_price ?? 0) +
+                (item.bbn_price ?? 0) +
+                (item.expedition_fee ?? 0) +
+                (item.other_fee ?? 0))
+          );
+          return currenciesFormat('idr', idrSubtotal);
+        },
+      },
+      {
+        header: 'Aksi',
+        alignment: 'center',
+        sticky: 'right',
+        cell: (item) => (
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" className="h-8 w-8 p-0">
+                <MoreVertical className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              {!isPaid && (
+                <DropdownMenuItem onClick={() => router.push(`${basePath}/${salesId}/unit/${item.id}/edit`)} disabled={!canEdit && isPaid}>
+                  Edit
+                </DropdownMenuItem>
+              )}
+              <DropdownMenuItem onClick={() => router.push(`${basePath}/${salesId}/unit/${item.id}`)}>
+                Detail
               </DropdownMenuItem>
-            )}
-            <DropdownMenuItem onClick={() => router.push(`${basePath}/${salesId}/unit/${item.id}`)}>
-              Detail
-            </DropdownMenuItem>
-            {!isPaid && (<DropdownMenuItem
-              className="text-red-600 focus:bg-red-50 focus:text-red-600"
-              onClick={() => !isPaid && setDeleteId(item.id)}
-              disabled={!canDelete && isPaid}
-            >
-              Hapus
-            </DropdownMenuItem>
-            )}
-          </DropdownMenuContent>
-        </DropdownMenu>
-      ),
-    },
-  ], [slug, canEdit, canDelete, basePath, salesId, router, getUnitTypeName, isPaid]);
+              {!isPaid && (
+                <DropdownMenuItem
+                  className="text-red-600 focus:bg-red-50 focus:text-red-600"
+                  onClick={() => !isPaid && setDeleteId(item.id)}
+                  disabled={!canDelete && isPaid}
+                >
+                  Hapus
+                </DropdownMenuItem>
+              )}
+            </DropdownMenuContent>
+          </DropdownMenu>
+        ),
+      },
+    ];
+  }, [isUsd, slug, canEdit, canDelete, basePath, salesId, router, getUnitTypeName, isPaid]);
 
   return (
     <div className="space-y-4">

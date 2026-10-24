@@ -265,6 +265,7 @@ export default function PurchasePaymentPage() {
       totalPpn={totalPpn}
       totalTagihanUsd={totalTagihanUsd}
       totalTagihanUsdActual={totalTagihanUsdActual}
+      isUsdTransaction={purchase.is_usd_transaction}
       billing={currentBilling ?? null}
       histories={billingHistories}
       onSubmitPayment={handleSubmitPayment}
