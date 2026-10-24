@@ -109,8 +109,6 @@ export function SupplierFormModal({
                 <Input
                   {...field}
                   placeholder="Tambahkan NPWP"
-                  maxLength={16}
-                  minLength={15}
                   className="bg-transparent"
                   onChange={(e) => {
                     field.onChange(e.target.value.replace(/[^\d]/g, ''));

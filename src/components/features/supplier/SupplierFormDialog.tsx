@@ -93,7 +93,6 @@ export function SupplierFormDialog({ open, onOpenChange, form, onSubmit, title, 
                     <FormControl>
                       <Input
                         placeholder="Tambahkan NPWP"
-                        maxLength={16}
                         className="h-12 rounded-md border-[#E4E4E7] px-4 text-[15px] placeholder:text-[#A1A1AA]"
                         {...field}
                         onChange={(e) => {
