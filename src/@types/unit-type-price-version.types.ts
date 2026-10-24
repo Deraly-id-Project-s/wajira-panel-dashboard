@@ -6,7 +6,9 @@ export interface UnitTypePriceVersion {
   unit_type_id: number;
   name: string;
   buy_price: number;
+  buy_price_usd?: number | null;
   sell_price: number;
+  sell_price_usd?: number | null;
   effective_from: string | null;
   effective_until: string | null;
   is_default: boolean | number;
@@ -34,7 +36,9 @@ export interface UnitTypePriceVersionListResponse {
 export const UnitTypePriceVersionSchema = z.object({
   name: z.string().min(1, 'Nama versi wajib diisi'),
   buy_price: z.number().min(0, 'Harga beli tidak boleh kurang dari 0'),
+  buy_price_usd: z.number().min(0, 'Harga beli USD tidak boleh kurang dari 0').nullable().optional(),
   sell_price: z.number().min(0, 'Harga jual tidak boleh kurang dari 0'),
+  sell_price_usd: z.number().min(0, 'Harga jual USD tidak boleh kurang dari 0').nullable().optional(),
   effective_from: z.string().optional().nullable(),
   effective_until: z.string().optional().nullable(),
   is_default: z.boolean(),

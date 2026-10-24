@@ -145,6 +145,20 @@ export function TypeUnitFormFields({ form, disabled = false }: TypeUnitFormField
             <FormMessage />
           </FormItem>
         )} />
+        <FormField control={form.control} name="buyPriceUsd" render={({ field: { onChange, value, ...field } }) => (
+          <FormItem className="flex flex-col min-w-0">
+            <FormLabel className="text-sm font-medium">Harga Beli (USD)</FormLabel>
+            <FormControl><MoneyInput {...field} currency="USD" value={value ?? 0} disabled={disabled} onChangeValue={onChange} className="bg-transparent" /></FormControl>
+            <FormMessage />
+          </FormItem>
+        )} />
+        <FormField control={form.control} name="sellPriceUsd" render={({ field: { onChange, value, ...field } }) => (
+          <FormItem className="flex flex-col min-w-0">
+            <FormLabel className="text-sm font-medium">Harga Jual (USD)</FormLabel>
+            <FormControl><MoneyInput {...field} currency="USD" value={value ?? 0} disabled={disabled} onChangeValue={onChange} className="bg-transparent" /></FormControl>
+            <FormMessage />
+          </FormItem>
+        )} />
       </div>
 
       <CreateBrandDialog open={createBrandOpen} onOpenChange={setCreateBrandOpen} onCreated={(brandId) => form.setValue('brandId', brandId, { shouldValidate: true })} />

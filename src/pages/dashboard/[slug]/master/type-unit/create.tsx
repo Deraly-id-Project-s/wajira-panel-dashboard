@@ -29,6 +29,8 @@ export default function CreateTypeUnitPage() {
       image: null,
       sellPrice: undefined,
       buyPrice: undefined,
+      sellPriceUsd: undefined,
+      buyPriceUsd: undefined,
     },
   });
 

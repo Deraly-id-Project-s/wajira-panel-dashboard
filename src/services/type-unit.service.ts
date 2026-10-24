@@ -15,7 +15,9 @@ interface TypeUnitApiModel {
   netto_weight?: number | string | null;
   bruto_weight?: number | string | null;
   buy_price?: number | string | null;
+  buy_price_usd?: number | string | null;
   sell_price?: number | string | null;
+  sell_price_usd?: number | string | null;
   available_stock?: number | string | null;
   created_at?: string;
   updated_at?: string;
@@ -71,7 +73,9 @@ const mapTypeUnit = (payload: TypeUnitApiModel): TypeUnit => ({
   nettoWeight: payload.netto_weight === undefined || payload.netto_weight === null ? null : Number(payload.netto_weight),
   brutoWeight: payload.bruto_weight === undefined || payload.bruto_weight === null ? null : Number(payload.bruto_weight),
   buyPrice: payload.buy_price === undefined || payload.buy_price === null ? null : Number(payload.buy_price),
+  buyPriceUsd: payload.buy_price_usd === undefined || payload.buy_price_usd === null ? null : Number(payload.buy_price_usd),
   sellPrice: payload.sell_price === undefined || payload.sell_price === null ? null : Number(payload.sell_price),
+  sellPriceUsd: payload.sell_price_usd === undefined || payload.sell_price_usd === null ? null : Number(payload.sell_price_usd),
   availableStock: payload.available_stock === undefined || payload.available_stock === null ? null : Number(payload.available_stock),
   createdAt: payload.created_at,
   updatedAt: payload.updated_at,
@@ -207,6 +211,8 @@ const buildPayload = (payload: TypeUnitPayload, opts?: { asUpdate?: boolean }) =
   // Preserve 'buy_price' and 'sell_price' for create and as fallback for update
   if (payload.sellPrice !== undefined && payload.sellPrice !== null) body.append('sell_price', String(payload.sellPrice));
   if (payload.buyPrice !== undefined && payload.buyPrice !== null) body.append('buy_price', String(payload.buyPrice));
+  if (payload.sellPriceUsd !== undefined && payload.sellPriceUsd !== null) body.append('sell_price_usd', String(payload.sellPriceUsd));
+  if (payload.buyPriceUsd !== undefined && payload.buyPriceUsd !== null) body.append('buy_price_usd', String(payload.buyPriceUsd));
   if (payload.image) body.append('image', payload.image);
 
   return body;

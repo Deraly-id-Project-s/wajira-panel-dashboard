@@ -105,6 +105,20 @@ export function TypeUnitTable({
             : '-',
       },
       {
+        header: 'HARGA BELI (USD)',
+        accessorKey: 'buyPriceUsd',
+        sortable: true,
+        alignment: 'center',
+        cell: (item) => item.buyPriceUsd != null ? currenciesFormat('usd', item.buyPriceUsd) : '-',
+      },
+      {
+        header: 'HARGA JUAL (USD)',
+        accessorKey: 'sellPriceUsd',
+        sortable: true,
+        alignment: 'center',
+        cell: (item) => item.sellPriceUsd != null ? currenciesFormat('usd', item.sellPriceUsd) : '-',
+      },
+      {
         header: 'Aksi',
         alignment: 'center',
         sticky: 'right',

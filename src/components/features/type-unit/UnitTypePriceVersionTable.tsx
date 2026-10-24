@@ -61,6 +61,18 @@ export const UnitTypePriceVersionTable = ({
         cell: (item) => <span className="text-sm text-gray-900">{currenciesFormat('idr', item.sell_price)}</span>,
       },
       {
+        header: 'HARGA BELI (USD)',
+        accessorKey: 'buy_price_usd',
+        sortable: true,
+        cell: (item) => <span className="text-sm text-gray-900">{item.buy_price_usd != null ? currenciesFormat('usd', item.buy_price_usd) : '-'}</span>,
+      },
+      {
+        header: 'HARGA JUAL (USD)',
+        accessorKey: 'sell_price_usd',
+        sortable: true,
+        cell: (item) => <span className="text-sm text-gray-900">{item.sell_price_usd != null ? currenciesFormat('usd', item.sell_price_usd) : '-'}</span>,
+      },
+      {
         header: 'BERLAKU DARI',
         accessorKey: 'effective_from',
         sortable: true,

@@ -35,7 +35,9 @@ export function UnitTypePriceVersionForm({
     defaultValues: {
       name: '',
       buy_price: 0,
+      buy_price_usd: null,
       sell_price: 0,
+      sell_price_usd: null,
       effective_from: '',
       effective_until: '',
       is_default: false,
@@ -48,7 +50,9 @@ export function UnitTypePriceVersionForm({
         form.reset({
           name: initialData.name,
           buy_price: Number(initialData.buy_price ?? 0),
+          buy_price_usd: initialData.buy_price_usd == null ? null : Number(initialData.buy_price_usd),
           sell_price: Number(initialData.sell_price ?? 0),
+          sell_price_usd: initialData.sell_price_usd == null ? null : Number(initialData.sell_price_usd),
           effective_from: initialData.effective_from || '',
           effective_until: initialData.effective_until || '',
           is_default: initialData.is_default === 1 || initialData.is_default === true,
@@ -57,7 +61,9 @@ export function UnitTypePriceVersionForm({
         form.reset({
           name: '',
           buy_price: 0,
+          buy_price_usd: null,
           sell_price: 0,
+          sell_price_usd: null,
           effective_from: '',
           effective_until: '',
           is_default: false,
@@ -102,9 +108,7 @@ export function UnitTypePriceVersionForm({
                   <FormLabel>Harga Beli</FormLabel>
                   <FormControl>
                     <div className="relative">
-                      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-slate-500">Rp.</span>
                       <MoneyInput
-                        className="pl-9"
                         placeholder="Masukkan harga beli"
                         value={field.value}
                         onChangeValue={field.onChange}
@@ -119,21 +123,47 @@ export function UnitTypePriceVersionForm({
 
             <FormField
               control={form.control}
+              name="buy_price_usd"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Harga Beli (USD)</FormLabel>
+                  <FormControl>
+                    <MoneyInput currency="USD" placeholder="$ 0.00" value={field.value ?? 0} onChangeValue={field.onChange} disabled={isSubmitting} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
               name="sell_price"
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Harga Jual</FormLabel>
                   <FormControl>
                     <div className="relative">
-                      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-slate-500">Rp.</span>
                       <MoneyInput
-                        className="pl-9"
                         placeholder="Masukkan harga jual"
                         value={field.value}
                         onChangeValue={field.onChange}
                         disabled={isSubmitting}
                       />
                     </div>
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="sell_price_usd"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Harga Jual (USD)</FormLabel>
+                  <FormControl>
+                    <MoneyInput currency="USD" placeholder="$ 0.00" value={field.value ?? 0} onChangeValue={field.onChange} disabled={isSubmitting} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>

@@ -12,6 +12,8 @@ export const typeUnitSchema = z.object({
   image: z.any().optional().nullable(),
   sellPrice: z.number().optional().nullable(),
   buyPrice: z.number().optional().nullable(),
+  sellPriceUsd: z.number().optional().nullable(),
+  buyPriceUsd: z.number().optional().nullable(),
 });
 
 export type TypeUnitFormValues = z.infer<typeof typeUnitSchema>;

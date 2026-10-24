@@ -23,6 +23,8 @@ export interface TypeUnit {
   brutoWeight?: number | null;
   sellPrice?: number | null;
   buyPrice?: number | null;
+  sellPriceUsd?: number | null;
+  buyPriceUsd?: number | null;
   availableStock?: number | null;
   createdAt?: string;
   updatedAt?: string;
@@ -40,6 +42,8 @@ export interface TypeUnitPayload {
   brutoWeight?: number | null;
   sellPrice?: number | null;
   buyPrice?: number | null;
+  sellPriceUsd?: number | null;
+  buyPriceUsd?: number | null;
   image?: File | null;
 }
 

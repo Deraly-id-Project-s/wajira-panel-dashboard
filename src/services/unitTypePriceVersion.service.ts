@@ -23,7 +23,9 @@ export const createUnitTypePriceVersion = async (data: any): Promise<UnitTypePri
   formData.append('unit_type_id', String(data.unit_type_id));
   formData.append('name', data.name);
   formData.append('buy_price', String(data.buy_price));
+  if (data.buy_price_usd !== undefined && data.buy_price_usd !== null) formData.append('buy_price_usd', String(data.buy_price_usd));
   formData.append('sell_price', String(data.sell_price));
+  if (data.sell_price_usd !== undefined && data.sell_price_usd !== null) formData.append('sell_price_usd', String(data.sell_price_usd));
   if (data.effective_from) formData.append('effective_from', data.effective_from);
   if (data.effective_until) formData.append('effective_until', data.effective_until);
   formData.append('is_default', data.is_default ? '1' : '0');
@@ -37,7 +39,9 @@ export const updateUnitTypePriceVersion = async (id: number | string, data: any)
   formData.append('unit_type_id', String(data.unit_type_id));
   formData.append('name', data.name);
   formData.append('buy_price', String(data.buy_price));
+  if (data.buy_price_usd !== undefined && data.buy_price_usd !== null) formData.append('buy_price_usd', String(data.buy_price_usd));
   formData.append('sell_price', String(data.sell_price));
+  if (data.sell_price_usd !== undefined && data.sell_price_usd !== null) formData.append('sell_price_usd', String(data.sell_price_usd));
   if (data.effective_from) formData.append('effective_from', data.effective_from);
   if (data.effective_until) formData.append('effective_until', data.effective_until);
   formData.append('is_default', data.is_default ? '1' : '0');
