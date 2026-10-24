@@ -18,6 +18,9 @@ export interface Transaction {
 
   transactionProof?: File | string | null;
 
+  is_lock?: boolean;
+  isLock?: boolean;
+
   createdAt?: string;
   updatedAt?: string;
 }

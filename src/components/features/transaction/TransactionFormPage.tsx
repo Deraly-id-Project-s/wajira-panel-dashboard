@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import Head from 'next/head';
 import { useRouter } from 'next/router';
+import { Lock } from 'lucide-react';
 import { toast } from 'sonner';
 import type { Transaction } from '@/@types/transaction.types';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
@@ -31,6 +32,7 @@ export default function TransactionFormPage({ mode }: Props) {
   const createMutation = useCreateTransaction(safeCompanyId);
   const updateMutation = useUpdateTransaction(safeCompanyId);
   const isBusy = createMutation.isPending || updateMutation.isPending;
+  const isLocked = Boolean(transaction?.is_lock || transaction?.isLock);
 
   useEffect(() => {
     if (mode !== 'edit' || !transactionId) return;
@@ -53,6 +55,11 @@ export default function TransactionFormPage({ mode }: Props) {
   }, [mode, transactionId]);
 
   const handleSubmit = async (values: TransactionFormValues) => {
+    if (mode === 'edit' && isLocked) {
+      toast.error('Data transaksi terkunci dan tidak dapat diubah');
+      return;
+    }
+
     const payload = {
       companyId: safeCompanyId,
       unitTransactionId: values.unitTransactionId ?? null,
@@ -107,10 +114,23 @@ export default function TransactionFormPage({ mode }: Props) {
         <PageHeader
           breadcrumbs={[
             { label: 'Arus Transaksi', onClick: () => void router.push(basePath) },
-            { label: isEdit ? 'Edit Transaksi' : 'Tambah Transaksi' },
+            { label: isLocked ? 'Detail Transaksi' : isEdit ? 'Edit Transaksi' : 'Tambah Transaksi' },
           ]}
-          title={isEdit ? 'Edit Arus Transaksi' : 'Tambah Arus Transaksi'}
-          subtitle={isEdit ? 'Perbarui detail transaksi operasional yang sudah ada' : 'Masukkan detail transaksi operasional baru'}
+          title={isLocked ? 'Detail Arus Transaksi' : isEdit ? 'Edit Arus Transaksi' : 'Tambah Arus Transaksi'}
+          subtitle={
+            isLocked ? (
+              <div className="flex items-center gap-2">
+                <span>Detail arus transaksi operasional</span>
+                <span className="inline-flex items-center gap-1 rounded-full border border-amber-200 bg-amber-50 px-2.5 py-0.5 text-xs font-semibold text-amber-700">
+                  <Lock className="h-3 w-3" /> Terkunci
+                </span>
+              </div>
+            ) : isEdit ? (
+              'Perbarui detail transaksi operasional yang sudah ada'
+            ) : (
+              'Masukkan detail transaksi operasional baru'
+            )
+          }
           onBack={() => void router.push(basePath)}
         />
 
@@ -133,6 +153,7 @@ export default function TransactionFormPage({ mode }: Props) {
               onSubmit={handleSubmit}
               onCancel={() => void router.push(basePath)}
               isBusy={isBusy}
+              isLocked={isLocked}
               submitLabel={isEdit ? 'Perbahrui' : 'Simpan'}
             />
           </CardContent>

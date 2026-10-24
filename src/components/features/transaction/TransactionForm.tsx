@@ -1,7 +1,7 @@
 import { format } from 'date-fns';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
-import { ArrowDownLeft, ArrowUpRight, Banknote, Landmark, Save, WalletCards } from 'lucide-react';
+import { ArrowDownLeft, ArrowUpRight, Banknote, Landmark, Lock, Save, WalletCards } from 'lucide-react';
 import { transactionSchema, type TransactionFormValues } from '@/scheme/transaction.schema';
 import { Button } from '@/components/ui/button';
 import { InputDate } from '@/components/ui/input-date';
@@ -18,6 +18,7 @@ interface Props {
   onSubmit: (data: TransactionFormValues) => Promise<void>;
   onCancel: () => void;
   isBusy?: boolean;
+  isLocked?: boolean;
   submitLabel?: string;
 }
 
@@ -37,11 +38,20 @@ const emptyValues: TransactionFormValues = {
 
 type AmountField = 'debitUSD' | 'creditUSD' | 'debitIDR' | 'creditIDR' | 'debitCash' | 'creditCash';
 
-export default function TransactionForm({ defaultValues, onSubmit, onCancel, isBusy = false, submitLabel = 'Simpan' }: Props) {
+export default function TransactionForm({
+  defaultValues,
+  onSubmit,
+  onCancel,
+  isBusy = false,
+  isLocked = false,
+  submitLabel = 'Simpan',
+}: Props) {
   const form = useForm<TransactionFormValues>({
     resolver: zodResolver(transactionSchema),
     defaultValues: { ...emptyValues, ...defaultValues },
   });
+
+  const isDisabled = isBusy || isLocked;
 
   const hasDebit = Number(form.watch('debitUSD') || 0) > 0
     || Number(form.watch('debitIDR') || 0) > 0
@@ -65,6 +75,16 @@ export default function TransactionForm({ defaultValues, onSubmit, onCancel, isB
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+        {isLocked && (
+          <div className="flex items-center gap-3 rounded-md border border-amber-200 bg-amber-50 p-4 text-amber-800">
+            <Lock className="h-5 w-5 shrink-0 text-amber-600" />
+            <div className="text-sm">
+              <p className="font-semibold">Data Transaksi Terkunci</p>
+              <p className="text-xs text-amber-700">Data arus transaksi ini berstatus terkunci (is_lock: true) sehingga tidak dapat diubah atau dihapus.</p>
+            </div>
+          </div>
+        )}
+
         <section className="space-y-5">
           <div>
             <h2 className="text-sm font-semibold uppercase tracking-wider text-slate-700">Informasi Transaksi</h2>
@@ -75,7 +95,7 @@ export default function TransactionForm({ defaultValues, onSubmit, onCancel, isB
               <FormItem className="flex flex-col">
                 <FormLabel>Tanggal Transaksi</FormLabel>
                 <FormControl>
-                  <InputDate value={field.value} onChange={(e) => field.onChange(e.target.value)} disabled={isBusy} placeholder="Pilih tanggal transaksi" className="w-full" />
+                  <InputDate value={field.value} onChange={(e) => field.onChange(e.target.value)} disabled={isDisabled} placeholder="Pilih tanggal transaksi" className="w-full" />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -83,7 +103,7 @@ export default function TransactionForm({ defaultValues, onSubmit, onCancel, isB
             <FormField control={form.control} name="name" render={({ field }) => (
               <FormItem>
                 <FormLabel>Nama Transaksi</FormLabel>
-                <FormControl><Input placeholder="Masukkan nama transaksi" {...field} disabled={isBusy} /></FormControl>
+                <FormControl><Input placeholder="Masukkan nama transaksi" {...field} disabled={isDisabled} /></FormControl>
                 <FormMessage />
               </FormItem>
             )} />
@@ -104,13 +124,13 @@ export default function TransactionForm({ defaultValues, onSubmit, onCancel, isB
                 <div><h3 className="font-semibold text-emerald-900">Debet</h3><p className="text-xs text-emerald-700">Penerimaan atau uang masuk</p></div>
               </div>
               <FormField control={form.control} name="debitUSD" render={({ field }) => (
-                <FormItem><FormLabel className="flex items-center gap-2"><Landmark className="h-4 w-4 text-slate-400" />Bank USD</FormLabel><FormControl><MoneyInput currency="USD" value={field.value ?? 0} onChangeValue={(value) => setAmount('debitUSD', value)} disabled={isBusy || hasCredit} placeholder="0" /></FormControl><FormMessage /></FormItem>
+                <FormItem><FormLabel className="flex items-center gap-2"><Landmark className="h-4 w-4 text-slate-400" />Bank USD</FormLabel><FormControl><MoneyInput currency="USD" value={field.value ?? 0} onChangeValue={(value) => setAmount('debitUSD', value)} disabled={isDisabled || hasCredit} placeholder="0" /></FormControl><FormMessage /></FormItem>
               )} />
               <FormField control={form.control} name="debitIDR" render={({ field }) => (
-                <FormItem><FormLabel className="flex items-center gap-2"><Landmark className="h-4 w-4 text-slate-400" />Bank IDR</FormLabel><FormControl><MoneyInput value={field.value ?? 0} onChangeValue={(value) => setAmount('debitIDR', value)} disabled={isBusy || hasCredit} placeholder="0" /></FormControl><FormMessage /></FormItem>
+                <FormItem><FormLabel className="flex items-center gap-2"><Landmark className="h-4 w-4 text-slate-400" />Bank IDR</FormLabel><FormControl><MoneyInput value={field.value ?? 0} onChangeValue={(value) => setAmount('debitIDR', value)} disabled={isDisabled || hasCredit} placeholder="0" /></FormControl><FormMessage /></FormItem>
               )} />
               <FormField control={form.control} name="debitCash" render={({ field }) => (
-                <FormItem><FormLabel className="flex items-center gap-2"><Banknote className="h-4 w-4 text-slate-400" />Cash IDR</FormLabel><FormControl><MoneyInput value={field.value ?? 0} onChangeValue={(value) => setAmount('debitCash', value)} disabled={isBusy || hasCredit} placeholder="0" /></FormControl><FormMessage /></FormItem>
+                <FormItem><FormLabel className="flex items-center gap-2"><Banknote className="h-4 w-4 text-slate-400" />Cash IDR</FormLabel><FormControl><MoneyInput value={field.value ?? 0} onChangeValue={(value) => setAmount('debitCash', value)} disabled={isDisabled || hasCredit} placeholder="0" /></FormControl><FormMessage /></FormItem>
               )} />
             </div>
 
@@ -120,13 +140,13 @@ export default function TransactionForm({ defaultValues, onSubmit, onCancel, isB
                 <div><h3 className="font-semibold text-rose-900">Kredit</h3><p className="text-xs text-rose-700">Pengeluaran atau uang keluar</p></div>
               </div>
               <FormField control={form.control} name="creditUSD" render={({ field }) => (
-                <FormItem><FormLabel className="flex items-center gap-2"><Landmark className="h-4 w-4 text-slate-400" />Bank USD</FormLabel><FormControl><MoneyInput currency="USD" value={field.value ?? 0} onChangeValue={(value) => setAmount('creditUSD', value)} disabled={isBusy || hasDebit} placeholder="0" /></FormControl><FormMessage /></FormItem>
+                <FormItem><FormLabel className="flex items-center gap-2"><Landmark className="h-4 w-4 text-slate-400" />Bank USD</FormLabel><FormControl><MoneyInput currency="USD" value={field.value ?? 0} onChangeValue={(value) => setAmount('creditUSD', value)} disabled={isDisabled || hasDebit} placeholder="0" /></FormControl><FormMessage /></FormItem>
               )} />
               <FormField control={form.control} name="creditIDR" render={({ field }) => (
-                <FormItem><FormLabel className="flex items-center gap-2"><WalletCards className="h-4 w-4 text-slate-400" />Bank IDR</FormLabel><FormControl><MoneyInput value={field.value ?? 0} onChangeValue={(value) => setAmount('creditIDR', value)} disabled={isBusy || hasDebit} placeholder="0" /></FormControl><FormMessage /></FormItem>
+                <FormItem><FormLabel className="flex items-center gap-2"><WalletCards className="h-4 w-4 text-slate-400" />Bank IDR</FormLabel><FormControl><MoneyInput value={field.value ?? 0} onChangeValue={(value) => setAmount('creditIDR', value)} disabled={isDisabled || hasDebit} placeholder="0" /></FormControl><FormMessage /></FormItem>
               )} />
               <FormField control={form.control} name="creditCash" render={({ field }) => (
-                <FormItem><FormLabel className="flex items-center gap-2"><Banknote className="h-4 w-4 text-slate-400" />Cash IDR</FormLabel><FormControl><MoneyInput value={field.value ?? 0} onChangeValue={(value) => setAmount('creditCash', value)} disabled={isBusy || hasDebit} placeholder="0" /></FormControl><FormMessage /></FormItem>
+                <FormItem><FormLabel className="flex items-center gap-2"><Banknote className="h-4 w-4 text-slate-400" />Cash IDR</FormLabel><FormControl><MoneyInput value={field.value ?? 0} onChangeValue={(value) => setAmount('creditCash', value)} disabled={isDisabled || hasDebit} placeholder="0" /></FormControl><FormMessage /></FormItem>
               )} />
             </div>
           </div>
@@ -144,7 +164,7 @@ export default function TransactionForm({ defaultValues, onSubmit, onCancel, isB
               <FormItem className="flex flex-col">
                 <FormLabel>Keterangan</FormLabel>
                 <FormControl className="flex-1 flex flex-col">
-                  <Textarea placeholder="Masukkan keterangan transaksi" className="flex-1 min-h-32 resize-none" {...field} value={field.value ?? ''} disabled={isBusy} />
+                  <Textarea placeholder="Masukkan keterangan transaksi" className="flex-1 min-h-32 resize-none" {...field} value={field.value ?? ''} disabled={isDisabled} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -160,7 +180,7 @@ export default function TransactionForm({ defaultValues, onSubmit, onCancel, isB
                     value={field.value instanceof File ? field.value : null}
                     onFileChange={(file) => field.onChange(file)}
                     helperText="Format JPG, PNG, atau PDF maksimal 2MB"
-                    disabled={isBusy}
+                    disabled={isDisabled}
                   />
                 </FormControl>
                 {typeof field.value === 'string' && field.value ? (
@@ -175,9 +195,20 @@ export default function TransactionForm({ defaultValues, onSubmit, onCancel, isB
         </section>
 
         <div className="flex flex-col-reverse gap-3 border-t border-slate-200 pt-6 sm:flex-row sm:justify-end">
-          <Button type="button" variant="outline" onClick={onCancel} disabled={isBusy}>Batal</Button>
-          <Button type="submit" className="btn-primary" disabled={isBusy}>
-            {isBusy ? <LoadingState variant="inline" text="Menyimpan..." iconClassName="text-white" /> : <>{submitLabel}</>}
+          <Button type="button" variant="outline" onClick={onCancel} disabled={isBusy}>
+            {isLocked ? 'Kembali' : 'Batal'}
+          </Button>
+          <Button
+            type="submit"
+            className="btn-primary disabled:cursor-not-allowed"
+            disabled={isDisabled}
+            title={isLocked ? 'Data transaksi terkunci' : undefined}
+          >
+            {isBusy ? (
+              <LoadingState variant="inline" text="Menyimpan..." iconClassName="text-white" />
+            ) : (
+              <>{isLocked ? 'Terkunci' : submitLabel}</>
+            )}
           </Button>
         </div>
       </form>

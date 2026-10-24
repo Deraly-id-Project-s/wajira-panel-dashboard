@@ -44,10 +44,18 @@ export default function TransactionListPage() {
 
     // Handlers
     const handleEdit = (trx: Transaction) => {
+        if (trx.is_lock || trx.isLock) {
+            toast.warning('Data transaksi terkunci dan tidak dapat diedit');
+            return;
+        }
         router.push(`${basePath}/${trx.id}/edit`);
     };
 
     const handleDelete = (trx: Transaction) => {
+        if (trx.is_lock || trx.isLock) {
+            toast.warning('Data transaksi terkunci dan tidak dapat dihapus');
+            return;
+        }
         setSelectedTrx(trx);
         setOpenDelete(true);
     };

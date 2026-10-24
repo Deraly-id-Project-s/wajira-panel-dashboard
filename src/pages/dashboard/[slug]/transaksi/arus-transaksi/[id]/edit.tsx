@@ -2,6 +2,7 @@
 
 import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
+import { Lock } from 'lucide-react';
 import { toast } from 'sonner';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import TransactionForm from '@/components/features/transaction/TransactionForm';
@@ -24,6 +25,7 @@ export default function EditTransactionPage() {
   const [isFetching, setIsFetching] = useState(true);
 
   const updateMutation = useUpdateTransaction(safeCompanyId);
+  const isLocked = Boolean(transaction?.is_lock || transaction?.isLock);
 
   // Fetch Data Manually or via Query
   // Since we're in 'pages' dir, standard way is useEffect or getServerSideProps.
@@ -51,7 +53,12 @@ export default function EditTransactionPage() {
   }, [id, router, basePath]);
 
   const handleSubmit = async (values: TransactionFormValues) => {
-    if (!id) return;
+    if (!id || isLocked) {
+      if (isLocked) {
+        toast.error('Data transaksi terkunci dan tidak dapat diubah');
+      }
+      return;
+    }
 
     try {
       await updateMutation.mutateAsync({
@@ -94,10 +101,21 @@ export default function EditTransactionPage() {
         <PageHeader
           breadcrumbs={[
             { label: 'Arus Transaksi', onClick: () => router.push(basePath) },
-            { label: 'Edit Transaksi' }
+            { label: isLocked ? 'Detail Transaksi' : 'Edit Transaksi' }
           ]}
-          title="Edit Transaksi"
-          subtitle="Ubah detail transaksi yang sudah ada"
+          title={isLocked ? 'Detail Transaksi' : 'Edit Transaksi'}
+          subtitle={
+            isLocked ? (
+              <div className="flex items-center gap-2">
+                <span>Detail arus transaksi operasional</span>
+                <span className="inline-flex items-center gap-1 rounded-full border border-amber-200 bg-amber-50 px-2.5 py-0.5 text-xs font-semibold text-amber-700">
+                  <Lock className="h-3 w-3" /> Terkunci
+                </span>
+              </div>
+            ) : (
+              'Ubah detail transaksi yang sudah ada'
+            )
+          }
           onBack={() => router.push(basePath)}
         />
 
@@ -109,6 +127,7 @@ export default function EditTransactionPage() {
             onSubmit={handleSubmit}
             onCancel={() => router.push(basePath)}
             isBusy={updateMutation.isPending}
+            isLocked={isLocked}
           />
         </div>
       </div>

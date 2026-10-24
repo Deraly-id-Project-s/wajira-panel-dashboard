@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
 import type { Transaction } from '@/@types/transaction.types';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { MoreVertical } from 'lucide-react';
+import { Lock, MoreVertical } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { formatDate } from '@/lib/utils/format';
 import { currenciesFormat } from '@/components/ui/currenciesFormat';
@@ -34,7 +34,22 @@ export function TransactionTable({ data, onEdit, onDelete, canEdit, canDelete }:
         accessorKey: 'name',
         sortable: true,
         alignment: 'left',
-        cell: (trx) => <CopyBox text={trx.name || '-'} />,
+        cell: (trx) => {
+          const isLocked = Boolean(trx.is_lock || trx.isLock);
+          return (
+            <div className="flex items-center gap-1.5">
+              <CopyBox text={trx.name || '-'} />
+              {isLocked && (
+                <span
+                  className="inline-flex items-center text-amber-600 shrink-0"
+                  title="Data terkunci (tidak dapat diubah atau dihapus)"
+                >
+                  <Lock className="h-3.5 w-3.5" />
+                </span>
+              )}
+            </div>
+          );
+        },
       },
       {
         header: 'Debet BCA USD',
@@ -150,25 +165,45 @@ export function TransactionTable({ data, onEdit, onDelete, canEdit, canDelete }:
         id: 'action',
         alignment: 'center',
         sticky: 'right',
-        cell: (trx) => (
-          <div className="flex justify-center">
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" className="h-8 w-8 p-0 rounded-full text-slate-600 hover:bg-slate-100 hover:text-slate-900 cursor-pointer">
-                  <MoreVertical className="h-4 w-4" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="min-w-[150px] rounded-md border-slate-200 p-1.5 shadow-lg">
-                <DropdownMenuItem onClick={() => onEdit(trx)} disabled={!canEdit} className="rounded-md px-3 py-2 text-sm text-slate-900 focus:bg-slate-50 cursor-pointer">
-                  Edit
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => onDelete(trx)} disabled={!canDelete} className="rounded-md px-3 py-2 text-sm text-red-600 focus:bg-red-50 focus:text-red-600 cursor-pointer">
-                  Hapus
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </div>
-        ),
+        cell: (trx) => {
+          const isLocked = Boolean(trx.is_lock || trx.isLock);
+          const isEditDisabled = !canEdit || isLocked;
+          const isDeleteDisabled = !canDelete || isLocked;
+          const isActionDisabled = isLocked || (isEditDisabled && isDeleteDisabled);
+
+          return (
+            <div className="flex justify-center">
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    className="h-8 w-8 p-0 rounded-full text-slate-600 hover:bg-slate-100 hover:text-slate-900 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+                    disabled={isActionDisabled}
+                    title={isLocked ? 'Data transaksi terkunci' : undefined}
+                  >
+                    <MoreVertical className="h-4 w-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="min-w-[150px] rounded-md border-slate-200 p-1.5 shadow-lg">
+                  <DropdownMenuItem
+                    onClick={() => onEdit(trx)}
+                    disabled={isEditDisabled}
+                    className="rounded-md px-3 py-2 text-sm text-slate-900 focus:bg-slate-50 cursor-pointer"
+                  >
+                    Edit
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    onClick={() => onDelete(trx)}
+                    disabled={isDeleteDisabled}
+                    className="rounded-md px-3 py-2 text-sm text-red-600 focus:bg-red-50 focus:text-red-600 cursor-pointer"
+                  >
+                    Hapus
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
+          );
+        },
       },
     ],
     [canDelete, canEdit, onDelete, onEdit]

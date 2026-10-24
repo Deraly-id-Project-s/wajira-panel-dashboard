@@ -19,6 +19,7 @@ type TransactionFlowApiModel = {
   cash_idr_debit: string | number | null;
   cash_idr_credit: string | number | null;
   transaction_proof?: string | null;
+  is_lock?: boolean | number | string | null;
   created_at?: string;
   updated_at?: string;
   unit_transaction?: unknown;
@@ -33,24 +34,30 @@ type PaginatedResponse = LaravelApiResponse<{
 
 type ItemResponse = LaravelApiResponse<TransactionFlowApiModel>;
 
-const mapTransaction = (item: TransactionFlowApiModel): Transaction => ({
-  id: String(item.id),
-  uuid: item.uuid,
-  companyId: String(item.company_id),
-  unitTransactionId: item.unit_transaction_id,
-  date: item.transaction_date,
-  name: item.name ?? '',
-  description: item.description ?? '',
-  debitUSD: Number(item.bank_usd_debit || 0),
-  creditUSD: Number(item.bank_usd_credit || 0),
-  debitIDR: Number(item.bank_idr_debit || 0),
-  creditIDR: Number(item.bank_idr_credit || 0),
-  debitCash: Number(item.cash_idr_debit || 0),
-  creditCash: Number(item.cash_idr_credit || 0),
-  transactionProof: item.transaction_proof ?? null,
-  createdAt: item.created_at,
-  updatedAt: item.updated_at,
-});
+const mapTransaction = (item: TransactionFlowApiModel): Transaction => {
+  const isLock = item.is_lock === true || item.is_lock === 1 || item.is_lock === '1' || item.is_lock === 'true';
+
+  return {
+    id: String(item.id),
+    uuid: item.uuid,
+    companyId: String(item.company_id),
+    unitTransactionId: item.unit_transaction_id,
+    date: item.transaction_date,
+    name: item.name ?? '',
+    description: item.description ?? '',
+    debitUSD: Number(item.bank_usd_debit || 0),
+    creditUSD: Number(item.bank_usd_credit || 0),
+    debitIDR: Number(item.bank_idr_debit || 0),
+    creditIDR: Number(item.bank_idr_credit || 0),
+    debitCash: Number(item.cash_idr_debit || 0),
+    creditCash: Number(item.cash_idr_credit || 0),
+    transactionProof: item.transaction_proof ?? null,
+    is_lock: isLock,
+    isLock: isLock,
+    createdAt: item.created_at,
+    updatedAt: item.updated_at,
+  };
+};
 
 export const getTransactions = async (companyId: string, page = 1, limit = 25, search = '', startDate?: string, endDate?: string) => {
   const response = await apiClient.get<PaginatedResponse>(basePath, {
