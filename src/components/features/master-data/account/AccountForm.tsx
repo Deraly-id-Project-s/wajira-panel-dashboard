@@ -10,7 +10,7 @@ import type { AccountFormValues } from '@/scheme/account-master.schema';
 import type { UseFormReturn } from 'react-hook-form';
 import { SearchableSelect } from '@/components/features/vehicle-data/SearchableSelect';
 import { CreateAccountGroupDialog } from '@/components/features/account/CreateAccountGroupDialog';
-import { ACCOUNT_CATEGORY_OPTIONS, ACCOUNT_CATEGORY_SEARCHABLE_OPTIONS, ACCOUNT_TYPE_OPTIONS, normalizeAccountCategory } from '@/lib/account';
+import { ACCOUNT_CATEGORY_OPTIONS, ACCOUNT_CATEGORY_SEARCHABLE_OPTIONS, ACCOUNT_POS_CODE_OPTIONS, ACCOUNT_TYPE_OPTIONS, normalizeAccountCategory } from '@/lib/account';
 import { Plus } from 'lucide-react';
 import RequiredMark from '@/components/ui/required-mark';
 import { cn } from '@/lib/utils';
@@ -163,16 +163,35 @@ export const AccountForm = ({
             name="pos_code"
             render={({ field }) => (
               <FormItem className="space-y-1.5">
-                <FormLabel className="text-xs font-semibold text-slate-700">Kode Pos</FormLabel>
+                <FormLabel className="text-xs font-semibold text-slate-700">Kategori Pos</FormLabel>
                 <FormControl>
-                  <Input
-                    readOnly={lockRestricted}
-                    placeholder="Masukkan kode pos (opsional)"
-                    maxLength={50}
-                    className={cn("h-10 rounded-md border-slate-200 px-3 text-sm shadow-none focus-visible:ring-slate-300 bg-white", lockRestricted && "bg-slate-50 text-slate-500 cursor-not-allowed")}
-                    value={field.value ?? ''}
-                    onChange={(e) => field.onChange(e.target.value || null)}
-                  />
+                  <Select
+                    value={field.value || undefined}
+                    onValueChange={(val) => field.onChange(val || null)}
+                    disabled={lockRestricted}
+                  >
+                    <SelectTrigger
+                      className={cn(
+                        "h-10 rounded-md border-slate-200 px-3 text-sm shadow-none focus:ring-slate-300 bg-white",
+                        lockRestricted && "pointer-events-none opacity-60 bg-slate-50 cursor-not-allowed"
+                      )}
+                      tabIndex={lockRestricted ? -1 : undefined}
+                    >
+                      <SelectValue placeholder="Pilih Kategori Pos" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {ACCOUNT_POS_CODE_OPTIONS.map((option) => (
+                        <SelectItem key={option.value} value={option.value} className="text-sm">
+                          {option.label}
+                        </SelectItem>
+                      ))}
+                      {field.value && !ACCOUNT_POS_CODE_OPTIONS.some((opt) => opt.value === field.value) && (
+                        <SelectItem value={field.value} className="text-sm">
+                          {field.value}
+                        </SelectItem>
+                      )}
+                    </SelectContent>
+                  </Select>
                 </FormControl>
                 <FormMessage className="text-xs" />
               </FormItem>

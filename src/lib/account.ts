@@ -11,6 +11,21 @@ export const ACCOUNT_TYPE_OPTIONS = [
 
 export type AccountTypeValue = (typeof ACCOUNT_TYPE_OPTIONS)[number]['value'];
 
+export const ACCOUNT_POS_CODE_OPTIONS = [
+  {
+    value: 'LR',
+    label: 'LR (Laba Rugi)',
+  },
+  {
+    value: 'NRC',
+    label: 'NRC (Neraca)',
+  },
+] as const;
+
+export const ACCOUNT_POS_CATEGORY_OPTIONS = ACCOUNT_POS_CODE_OPTIONS;
+
+export type AccountPosCodeValue = (typeof ACCOUNT_POS_CODE_OPTIONS)[number]['value'];
+
 export const ACCOUNT_CATEGORY_VALUES = [
   'cash_and_bank',
   'accounts_receivable',

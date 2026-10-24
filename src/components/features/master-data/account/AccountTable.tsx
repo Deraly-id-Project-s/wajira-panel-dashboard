@@ -86,7 +86,7 @@ export const AccountTable = ({ data, meta, search, page, perPage, isLoading = fa
         },
       },
       {
-        header: 'KODE POS',
+        header: 'KATEGORI POS',
         accessorKey: 'pos_code',
         sortable: true,
         alignment: 'center',

@@ -99,7 +99,7 @@ export const AccountCreatePage = () => {
     if (msg.includes('may not be greater than') || msg.includes('max')) {
       if (field === 'code') return 'Kode akun maksimal 50 karakter.';
       if (field === 'name') return 'Nama akun maksimal 255 karakter.';
-      if (field === 'pos_code') return 'Kode pos maksimal 50 karakter.';
+      if (field === 'pos_code') return 'Kategori pos maksimal 50 karakter.';
     }
     return message;
   };
