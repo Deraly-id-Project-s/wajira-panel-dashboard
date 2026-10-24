@@ -123,7 +123,7 @@ export default function PurchaseUnitTable({ purchaseId, slug, isPaid, canEdit, c
         },
         {
           header: 'Harga Beli (USD)',
-          alignment: 'right',
+          alignment: 'center',
           cell: (item) => {
             const usdPrice = Number(item.price_per_unit_usd ?? 0) > 0
               ? Number(item.price_per_unit_usd)
@@ -131,7 +131,7 @@ export default function PurchaseUnitTable({ purchaseId, slug, isPaid, canEdit, c
             const discountUsdPercent = Number(item.price_usd_discount ?? (item as any).price_discount_usd ?? 0);
 
             return (
-              <div className="text-right">
+              <div className="text-center">
                 <span>{currenciesFormat('usd', usdPrice)}</span>
                 {discountUsdPercent > 0 && (
                   <span className="block text-[11px] text-amber-600 font-medium">
@@ -144,48 +144,48 @@ export default function PurchaseUnitTable({ purchaseId, slug, isPaid, canEdit, c
         },
         {
           header: 'Biaya Freight',
-          alignment: 'right',
+          alignment: 'center',
           cell: (item) => currenciesFormat('usd', getUsdCostsFromItem(item).freight),
         },
         {
           header: 'Biaya Box Packing',
-          alignment: 'right',
+          alignment: 'center',
           cell: (item) => currenciesFormat('usd', getUsdCostsFromItem(item).boxPacking),
         },
         {
           header: 'Biaya Administrasi',
-          alignment: 'right',
+          alignment: 'center',
           cell: (item) => currenciesFormat('usd', getUsdCostsFromItem(item).admin),
         },
         {
           header: 'Biaya Pemrosesan CKD',
-          alignment: 'right',
+          alignment: 'center',
           cell: (item) => currenciesFormat('usd', getUsdCostsFromItem(item).ckd),
         },
         {
           header: 'Biaya Switch B/L',
-          alignment: 'right',
+          alignment: 'center',
           cell: (item) => currenciesFormat('usd', getUsdCostsFromItem(item).blSwitch),
         },
         {
           header: 'Biaya Bea Cukai',
-          alignment: 'right',
+          alignment: 'center',
           cell: (item) => currenciesFormat('usd', getUsdCostsFromItem(item).customs),
         },
         {
           header: 'Biaya USD Lainnya',
-          alignment: 'right',
+          alignment: 'center',
           cell: (item) => currenciesFormat('usd', getUsdCostsFromItem(item).other),
         },
         {
           header: 'Total Biaya USD',
-          alignment: 'right',
+          alignment: 'center',
           className: 'font-semibold',
           cell: (item) => currenciesFormat('usd', getUsdCostsFromItem(item).totalUsdCost),
         },
         {
           header: 'Sub Total (USD)',
-          alignment: 'right',
+          alignment: 'center',
           className: 'font-semibold text-slate-900',
           cell: (item) => {
             const costs = getUsdCostsFromItem(item);
@@ -405,6 +405,7 @@ export default function PurchaseUnitTable({ purchaseId, slug, isPaid, canEdit, c
                   items={items}
                   showCheckbox
                   hasActions
+                  isUsd={isUsd}
                 />
               }
               headerActions={

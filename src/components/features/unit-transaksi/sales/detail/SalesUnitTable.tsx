@@ -126,12 +126,12 @@ export function SalesUnitTable({ lineItems, salesId, onAddUnit, canCreate, canEd
         {
           header: 'QTY',
           alignment: 'center',
-          className: 'w-[80px]',
+          className: 'w-[100px] font-semibold',
           cell: (item) => item.qty_total + ' Unit',
         },
         {
           header: 'Harga Jual (USD)',
-          alignment: 'right',
+          alignment: 'center',
           cell: (item) => {
             const usdPrice = Number(item.price_per_unit_usd ?? 0) > 0
               ? Number(item.price_per_unit_usd)
@@ -139,7 +139,7 @@ export function SalesUnitTable({ lineItems, salesId, onAddUnit, canCreate, canEd
             const discountUsdPercent = Number(item.price_usd_discount ?? item.price_discount_usd ?? 0);
 
             return (
-              <div className="text-right">
+              <div className="text-center">
                 <span>{currenciesFormat('usd', usdPrice)}</span>
                 {discountUsdPercent > 0 && (
                   <span className="block text-[11px] text-amber-600 font-medium">
@@ -152,48 +152,48 @@ export function SalesUnitTable({ lineItems, salesId, onAddUnit, canCreate, canEd
         },
         {
           header: 'Biaya Freight',
-          alignment: 'right',
+          alignment: 'center',
           cell: (item) => currenciesFormat('usd', getUsdCostsFromItem(item).freight),
         },
         {
           header: 'Biaya Box Packing',
-          alignment: 'right',
+          alignment: 'center',
           cell: (item) => currenciesFormat('usd', getUsdCostsFromItem(item).boxPacking),
         },
         {
           header: 'Biaya Administrasi',
-          alignment: 'right',
+          alignment: 'center',
           cell: (item) => currenciesFormat('usd', getUsdCostsFromItem(item).admin),
         },
         {
           header: 'Biaya Pemrosesan CKD',
-          alignment: 'right',
+          alignment: 'center',
           cell: (item) => currenciesFormat('usd', getUsdCostsFromItem(item).ckd),
         },
         {
           header: 'Biaya Switch B/L',
-          alignment: 'right',
+          alignment: 'center',
           cell: (item) => currenciesFormat('usd', getUsdCostsFromItem(item).blSwitch),
         },
         {
           header: 'Biaya Bea Cukai',
-          alignment: 'right',
+          alignment: 'center',
           cell: (item) => currenciesFormat('usd', getUsdCostsFromItem(item).customs),
         },
         {
           header: 'Biaya USD Lainnya',
-          alignment: 'right',
+          alignment: 'center',
           cell: (item) => currenciesFormat('usd', getUsdCostsFromItem(item).other),
         },
         {
           header: 'Total Biaya USD',
-          alignment: 'right',
+          alignment: 'center',
           className: 'font-semibold',
           cell: (item) => currenciesFormat('usd', getUsdCostsFromItem(item).totalUsdCost),
         },
         {
           header: 'Sub Total (USD)',
-          alignment: 'right',
+          alignment: 'center',
           className: 'font-semibold text-slate-900',
           cell: (item) => {
             const costs = getUsdCostsFromItem(item);
@@ -383,6 +383,7 @@ export function SalesUnitTable({ lineItems, salesId, onAddUnit, canCreate, canEd
                 items={items}
                 showCheckbox={!isPaid}
                 hasActions
+                isUsd={isUsd}
               />
             }
             headerActions={

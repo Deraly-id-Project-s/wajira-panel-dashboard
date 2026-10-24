@@ -1,6 +1,7 @@
 import { TableRow, TableCell } from '@/components/ui/table';
 import { currenciesFormat } from '@/components/ui/currenciesFormat';
 import { FilteredCurrency } from '@/components/ui/filtered-currency';
+import { getUsdCostsFromItem } from '@/utils/payment-helpers';
 
 export interface SummaryItem {
   id?: string | number;
@@ -10,6 +11,10 @@ export interface SummaryItem {
   hargaJual?: number;
   price_usd?: number;
   price_per_unit_usd?: number;
+  price_usd_discount?: number;
+  price_discount_usd?: number;
+  price_total_usd?: number;
+  price_usd_total?: number;
   bbn_price?: number;
   biayaBbn?: number;
   expedition_fee?: number;
@@ -22,6 +27,8 @@ export interface SummaryItem {
   ppn?: number;
   price_total?: number;
   jumlah?: number;
+  is_usd_transaction?: boolean;
+  [key: string]: any;
 }
 
 interface UnitTransactionSummaryFooterProps {
@@ -29,6 +36,7 @@ interface UnitTransactionSummaryFooterProps {
   showCheckbox?: boolean;
   hasActions?: boolean;
   label?: string;
+  isUsd?: boolean;
 }
 
 export function UnitTransactionSummaryFooter({
@@ -36,13 +44,146 @@ export function UnitTransactionSummaryFooter({
   showCheckbox = false,
   hasActions = true,
   label = 'Total',
+  isUsd,
 }: UnitTransactionSummaryFooterProps) {
   if (!items || items.length === 0) return null;
+
+  const isUsdMode = Boolean(
+    isUsd ??
+    (items.length > 0 &&
+      items.some(
+        (item: any) =>
+          item.is_usd_transaction ||
+          (item.price_usd && Number(item.price_usd) > 0) ||
+          (item.price_per_unit_usd && Number(item.price_per_unit_usd) > 0),
+      ))
+  );
 
   const totalQty = items.reduce(
     (sum, item) => sum + Number(item.qty_total ?? item.qty ?? 0),
     0,
   );
+
+  if (isUsdMode) {
+    const totalPriceUsd = items.reduce((sum, item) => {
+      const usdPrice =
+        Number(item.price_per_unit_usd ?? 0) > 0
+          ? Number(item.price_per_unit_usd)
+          : (Number(item.price_usd ?? 0) > 0
+            ? Number(item.price_usd) / Math.max(1, Number(item.qty_total ?? item.qty ?? 1))
+            : 0);
+      const qty = Number(item.qty_total ?? item.qty ?? 1);
+      const baseTotal = Number(item.price_usd ?? 0) > 0 ? Number(item.price_usd) : usdPrice * qty;
+      return sum + baseTotal;
+    }, 0);
+
+    const totalFreightUsd = items.reduce(
+      (sum, item) => sum + getUsdCostsFromItem(item).freight,
+      0,
+    );
+    const totalBoxPackingUsd = items.reduce(
+      (sum, item) => sum + getUsdCostsFromItem(item).boxPacking,
+      0,
+    );
+    const totalAdminUsd = items.reduce(
+      (sum, item) => sum + getUsdCostsFromItem(item).admin,
+      0,
+    );
+    const totalCkdUsd = items.reduce(
+      (sum, item) => sum + getUsdCostsFromItem(item).ckd,
+      0,
+    );
+    const totalBlSwitchUsd = items.reduce(
+      (sum, item) => sum + getUsdCostsFromItem(item).blSwitch,
+      0,
+    );
+    const totalCustomsUsd = items.reduce(
+      (sum, item) => sum + getUsdCostsFromItem(item).customs,
+      0,
+    );
+    const totalOtherUsd = items.reduce(
+      (sum, item) => sum + getUsdCostsFromItem(item).other,
+      0,
+    );
+    const totalAllUsdCost = items.reduce(
+      (sum, item) => sum + getUsdCostsFromItem(item).totalUsdCost,
+      0,
+    );
+
+    const totalSubTotalUsd = items.reduce((sum, item) => {
+      const costs = getUsdCostsFromItem(item);
+      const usdPrice =
+        Number(item.price_per_unit_usd ?? 0) > 0
+          ? Number(item.price_per_unit_usd)
+          : (Number(item.price_usd ?? 0) > 0
+            ? Number(item.price_usd) / Math.max(1, Number(item.qty_total ?? item.qty ?? 1))
+            : 0);
+      const qty = Number(item.qty_total ?? item.qty ?? 1);
+      const discountUsdPercent = Number(
+        item.price_usd_discount ?? item.price_discount_usd ?? 0,
+      );
+      const baseTotal = usdPrice * qty;
+      const discountedBase =
+        discountUsdPercent > 0
+          ? baseTotal * (1 - discountUsdPercent / 100)
+          : baseTotal;
+      const subtotalUsd = Number(
+        item.price_usd_total ??
+          item.price_total_usd ??
+          discountedBase + costs.totalUsdCost,
+      );
+      return sum + subtotalUsd;
+    }, 0);
+
+    return (
+      <tfoot className="border-t-2 border-slate-300 bg-slate-50 font-semibold text-slate-900">
+        <TableRow className="hover:bg-slate-50 border-none">
+          {showCheckbox && (
+            <TableCell className="sticky left-0 z-10 w-[44px] min-w-[44px] max-w-[44px] border-r border-slate-200 bg-slate-50 shadow-[4px_0_6px_-4px_rgba(0,0,0,0.05)] px-3 py-3 text-center sm:w-[50px] sm:min-w-[50px] sm:max-w-[50px] sm:px-4 sm:py-3.5" />
+          )}
+          <TableCell className="px-2.5 py-3 text-left font-bold text-slate-900 sm:px-4 sm:py-3.5">
+            {label}
+          </TableCell>
+          <TableCell className="w-[100px] px-2.5 py-3 text-center font-bold text-slate-900 sm:px-4 sm:py-3.5">
+            {totalQty} Unit
+          </TableCell>
+          <TableCell className="px-2.5 py-3 text-center font-bold text-slate-900 sm:px-4 sm:py-3.5">
+            {currenciesFormat('usd', totalPriceUsd)}
+          </TableCell>
+          <TableCell className="px-2.5 py-3 text-center font-bold text-slate-900 sm:px-4 sm:py-3.5">
+            {currenciesFormat('usd', totalFreightUsd)}
+          </TableCell>
+          <TableCell className="px-2.5 py-3 text-center font-bold text-slate-900 sm:px-4 sm:py-3.5">
+            {currenciesFormat('usd', totalBoxPackingUsd)}
+          </TableCell>
+          <TableCell className="px-2.5 py-3 text-center font-bold text-slate-900 sm:px-4 sm:py-3.5">
+            {currenciesFormat('usd', totalAdminUsd)}
+          </TableCell>
+          <TableCell className="px-2.5 py-3 text-center font-bold text-slate-900 sm:px-4 sm:py-3.5">
+            {currenciesFormat('usd', totalCkdUsd)}
+          </TableCell>
+          <TableCell className="px-2.5 py-3 text-center font-bold text-slate-900 sm:px-4 sm:py-3.5">
+            {currenciesFormat('usd', totalBlSwitchUsd)}
+          </TableCell>
+          <TableCell className="px-2.5 py-3 text-center font-bold text-slate-900 sm:px-4 sm:py-3.5">
+            {currenciesFormat('usd', totalCustomsUsd)}
+          </TableCell>
+          <TableCell className="px-2.5 py-3 text-center font-bold text-slate-900 sm:px-4 sm:py-3.5">
+            {currenciesFormat('usd', totalOtherUsd)}
+          </TableCell>
+          <TableCell className="px-2.5 py-3 text-center font-bold text-slate-900 sm:px-4 sm:py-3.5">
+            {currenciesFormat('usd', totalAllUsdCost)}
+          </TableCell>
+          <TableCell className="px-2.5 py-3 text-center font-bold text-slate-900 sm:px-4 sm:py-3.5">
+            {currenciesFormat('usd', totalSubTotalUsd)}
+          </TableCell>
+          {hasActions && (
+            <TableCell className="sticky right-0 z-10 w-[80px] min-w-[80px] max-w-[80px] border-l border-slate-200 bg-slate-50 shadow-[-4px_0_6px_-4px_rgba(0,0,0,0.05)] px-2.5 py-3 sm:px-4 sm:py-3.5" />
+          )}
+        </TableRow>
+      </tfoot>
+    );
+  }
 
   const totalPriceIdr = items.reduce(
     (sum, item) =>
