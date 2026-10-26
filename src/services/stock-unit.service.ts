@@ -28,6 +28,14 @@ interface StockUnitApiModel {
     id: number;
     name: string;
   } | null;
+  customer?: {
+    id?: number | null;
+    name?: string | null;
+  } | null;
+  supplier?: {
+    id?: number | null;
+    name?: string | null;
+  } | null;
 }
 
 const mapStockUnit = (payload: StockUnitApiModel): StockUnit => ({
@@ -40,6 +48,8 @@ const mapStockUnit = (payload: StockUnitApiModel): StockUnit => ({
   inStock: (payload.stock_available),
   stockStatus: (payload.stock_state) as StockStatus,
   warehouseSubBlock: payload.warehouse_sub_block,
+  customer: payload.customer ?? null,
+  supplier: payload.supplier ?? null,
   isForecast: payload?.is_forecast === true || payload?.is_forecast === 1 || payload?.is_forecast === '1',
   isSoldUnit: payload?.is_sold_unit === true || payload?.is_sold_unit === 1 || payload?.is_sold_unit === '1',
 });

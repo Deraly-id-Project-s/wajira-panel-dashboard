@@ -58,6 +58,8 @@ export default function PengeluaranUnitDetailTable({ data, isRefundActivity, act
       state: item?.stockState,
       warehouseSubBlock: item?.warehouseSubBlock,
       isSoldUnit: item.isSoldUnit,
+      customer: item.customer,
+      supplier: item.supplier,
     }));
   }, [data]);
 
@@ -72,7 +74,7 @@ export default function PengeluaranUnitDetailTable({ data, isRefundActivity, act
 
     if (term) {
       result = result.filter((row) =>
-        [row.salesCode, row.unitTypeName, row.color, row.machineNumber, row.chassisNumber]
+        [row.salesCode, row.unitTypeName, row.color, row.machineNumber, row.chassisNumber, row.customer?.name, row.supplier?.name]
           .map((val) => String(val ?? '').toLowerCase())
           .some((val) => val.includes(term))
       );
@@ -174,6 +176,42 @@ export default function PengeluaranUnitDetailTable({ data, isRefundActivity, act
         cell: (item) => (
           <CopyBox text={item?.chassisNumber || ""} />
         )
+      },
+      {
+        header: 'Customer',
+        accessorKey: 'customer.name',
+        sortable: true,
+        alignment: 'left',
+        cell: (item) =>
+          item.customer?.name ? (
+            slug ? (
+              <ReferenceLink href={`/dashboard/${slug}/master/customer?search=${item.customer.name}`}>
+                {item.customer.name}
+              </ReferenceLink>
+            ) : (
+              item.customer.name
+            )
+          ) : (
+            '-'
+          ),
+      },
+      {
+        header: 'Supplier',
+        accessorKey: 'supplier.name',
+        sortable: true,
+        alignment: 'left',
+        cell: (item) =>
+          item.supplier?.name ? (
+            slug ? (
+              <ReferenceLink href={`/dashboard/${slug}/master/supplier?search=${item.supplier.name}`}>
+                {item.supplier.name}
+              </ReferenceLink>
+            ) : (
+              item.supplier.name
+            )
+          ) : (
+            '-'
+          ),
       },
       {
         header: 'Sub Blok',

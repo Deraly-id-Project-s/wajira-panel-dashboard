@@ -58,6 +58,18 @@ type WarehouseActivityUnitDetailApiModel = {
   warehouse_sub_block?: {
     name?: string;
   };
+  customer?: {
+    id?: number | string | null;
+    name?: string | null;
+    type?: string | null;
+    code?: string | null;
+  } | null;
+  supplier?: {
+    id?: number | string | null;
+    name?: string | null;
+    type?: string | null;
+    code?: string | null;
+  } | null;
 };
 
 type WarehouseActivityApiModel = {
@@ -205,6 +217,8 @@ const mapDetail = (activityId: string, detail: WarehouseActivityUnitDetailApiMod
     warehouseSubBlock,
     diterima,
     isSoldUnit,
+    customer: detail.customer ?? null,
+    supplier: detail.supplier ?? null,
   };
 };
 
@@ -396,6 +410,8 @@ export const getWarehouseActivityById = async (id: string): Promise<WarehouseAct
         warehouseSubBlock,
         isSoldUnit,
         diterima,
+        customer: detail.customer ?? null,
+        supplier: detail.supplier ?? null,
       };
     });
   } else {

@@ -62,6 +62,8 @@ export default function PenerimaanUnitDetailTable({ data, activityState, isRefun
       warehouseSubBlock: item?.warehouseSubBlock,
       received: item.diterima,
       isSoldUnit: item.isSoldUnit,
+      customer: item.customer,
+      supplier: item.supplier,
     }));
   }, [data]);
 
@@ -76,7 +78,7 @@ export default function PenerimaanUnitDetailTable({ data, activityState, isRefun
 
     if (term) {
       result = result.filter((row) =>
-        [row.purchaseCode, row.unitTypeName, row.color, row.machineNumber, row.chassisNumber]
+        [row.purchaseCode, row.unitTypeName, row.color, row.machineNumber, row.chassisNumber, row.supplier?.name, row.customer?.name]
           .map((val) => String(val ?? '').toLowerCase())
           .some((val) => val.includes(term))
       );
@@ -177,6 +179,42 @@ export default function PenerimaanUnitDetailTable({ data, activityState, isRefun
         cell: (item) => (
           <CopyBox text={item?.chassisNumber || ""} />
         )
+      },
+      {
+        header: 'Supplier',
+        accessorKey: 'supplier.name',
+        sortable: true,
+        alignment: 'left',
+        cell: (item) =>
+          item.supplier?.name ? (
+            slug ? (
+              <ReferenceLink href={`/dashboard/${slug}/master/supplier?search=${item.supplier.name}`}>
+                {item.supplier.name}
+              </ReferenceLink>
+            ) : (
+              item.supplier.name
+            )
+          ) : (
+            '-'
+          ),
+      },
+      {
+        header: 'Customer',
+        accessorKey: 'customer.name',
+        sortable: true,
+        alignment: 'left',
+        cell: (item) =>
+          item.customer?.name ? (
+            slug ? (
+              <ReferenceLink href={`/dashboard/${slug}/master/customer?search=${item.customer.name}`}>
+                {item.customer.name}
+              </ReferenceLink>
+            ) : (
+              item.customer.name
+            )
+          ) : (
+            '-'
+          ),
       },
       {
         header: 'Sub Blok',

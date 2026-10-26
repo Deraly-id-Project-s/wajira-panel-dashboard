@@ -5,6 +5,13 @@ export interface WarehouseActivityPerson {
   name: string;
 }
 
+export interface WarehouseActivityPersonDetail {
+  id?: number | string | null;
+  name?: string | null;
+  type?: string | null;
+  code?: string | null;
+}
+
 export interface WarehouseActivityUnitDetail {
   id: number;
   penerimaanId: string;
@@ -19,6 +26,8 @@ export interface WarehouseActivityUnitDetail {
   stockState: string;
   warehouseSubBlock?: string;
   isSoldUnit?: boolean;
+  customer?: WarehouseActivityPersonDetail | null;
+  supplier?: WarehouseActivityPersonDetail | null;
 }
 
 export interface WarehouseActivity {

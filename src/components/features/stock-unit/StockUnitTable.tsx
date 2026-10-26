@@ -90,6 +90,42 @@ export default function StockUnitTable({
       cell: (item) => <CopyBox text={item.noRangka} />,
     },
     {
+      header: 'Supplier',
+      accessorKey: 'supplier.name',
+      sortable: true,
+      alignment: 'left',
+      cell: (item) =>
+        item.supplier?.name ? (
+          slugStr ? (
+            <ReferenceLink href={`/dashboard/${slugStr}/master/supplier?search=${item.supplier.name}`}>
+              {item.supplier.name}
+            </ReferenceLink>
+          ) : (
+            item.supplier.name
+          )
+        ) : (
+          '-'
+        ),
+    },
+    {
+      header: 'Customer',
+      accessorKey: 'customer.name',
+      sortable: true,
+      alignment: 'left',
+      cell: (item) =>
+        item.customer?.name ? (
+          slugStr ? (
+            <ReferenceLink href={`/dashboard/${slugStr}/master/customer?search=${item.customer.name}`}>
+              {item.customer.name}
+            </ReferenceLink>
+          ) : (
+            item.customer.name
+          )
+        ) : (
+          '-'
+        ),
+    },
+    {
       header: 'Sub Blok',
       accessorKey: 'warehouseSubBlock',
       alignment: 'center',

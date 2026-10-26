@@ -29,4 +29,12 @@ export interface StockUnit {
     id: number;
     name: string;
   } | null;
+  customer?: {
+    id?: number | null;
+    name?: string | null;
+  } | null;
+  supplier?: {
+    id?: number | null;
+    name?: string | null;
+  } | null;
 }
