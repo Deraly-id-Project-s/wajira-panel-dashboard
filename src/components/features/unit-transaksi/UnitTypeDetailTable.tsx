@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react';
 
 import type { UnitTransactionTypeDetail } from '@/@types/unit-transaction.types';
 import BaseTable, { type ColumnDef } from '@/components/ui/base-table';
+import { TableFooter, TableRow, TableCell } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { useExportUnitTypeDetails, useUnitTransactionTypeDetails } from '@/hooks/useUnitTransaction';
@@ -154,6 +155,30 @@ export function UnitTypeDetailTable({
     [data?.meta.currentPage, data?.meta.perPage, page, perPage, slug],
   );
 
+  const totalUnits = data?.meta?.total ?? data?.data?.length ?? 0;
+
+  const tableFooter = useMemo(() => {
+    if (isLoading || !data?.data || data.data.length === 0) return null;
+
+    return (
+      <TableFooter className="bg-[#f8f9fa] border-t border-slate-200">
+        <TableRow className="hover:bg-transparent">
+          <TableCell colSpan={columns.length} className="py-3 px-4 text-left">
+            <div className="flex items-center gap-2">
+              <span className="text-xs font-semibold uppercase tracking-wider text-slate-500">
+                Total Unit:
+              </span>
+              <span className="inline-flex items-baseline gap-1 text-sm font-bold text-slate-900 bg-white border border-slate-200 px-3 py-1 rounded-md shadow-xs">
+                <span>{totalUnits.toLocaleString('id-ID')}</span>
+                <span className="text-xs font-medium text-slate-600">Unit</span>
+              </span>
+            </div>
+          </TableCell>
+        </TableRow>
+      </TableFooter>
+    );
+  }, [columns.length, data?.data, isLoading, totalUnits]);
+
   return (
     <CollapsibleBox
       title="Daftar Detail Unit Tipe"
@@ -185,6 +210,7 @@ export function UnitTypeDetailTable({
           searchPlaceholder="Cari nomor mesin, nomor rangka, warna, supplier..."
           meta={data?.meta}
           onPageChange={setPage}
+          footer={tableFooter}
         />
       </div>
     </CollapsibleBox>
