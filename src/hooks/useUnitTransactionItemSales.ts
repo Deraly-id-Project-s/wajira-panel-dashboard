@@ -36,15 +36,77 @@ export const useAssignUnitItemSales = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (payload: { unitTransactionItemId: string; unitTransactionDetails: number[]; isUpdate?: boolean }) => unitTransactionItemSalesService.assignStock(payload),
+    mutationFn: (payload: { unitTransactionItemId: string | number; unitTransactionDetails: number[]; isUpdate?: boolean }) =>
+      unitTransactionItemSalesService.assignStock(payload),
     onSuccess: (_data, variables) => {
-      queryClient.invalidateQueries({ queryKey: ['stock-units', variables.unitTransactionItemId] });
-      queryClient.invalidateQueries({ queryKey: ['unit-transaction-item', variables.unitTransactionItemId] });
+      queryClient.invalidateQueries({ queryKey: ['stock-units', String(variables.unitTransactionItemId)] });
+      queryClient.invalidateQueries({ queryKey: ['unit-transaction-item', String(variables.unitTransactionItemId)] });
+      queryClient.invalidateQueries({ queryKey: ['unassigned-stock-units'] });
       queryClient.invalidateQueries({
         predicate: (query) => Array.isArray(query.queryKey) && query.queryKey.includes('sales-transactions'),
       });
       queryClient.invalidateQueries({ queryKey: ['purchase-unit-items'] });
     },
+  });
+};
+
+export const useBulkDeleteUnitItemSales = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (payload: { salesIds: number[]; unitTransactionItemId?: string | number }) =>
+      unitTransactionItemSalesService.bulkDeleteSales(payload.salesIds),
+    onSuccess: (_data, variables) => {
+      if (variables.unitTransactionItemId) {
+        queryClient.invalidateQueries({ queryKey: ['unit-transaction-item', String(variables.unitTransactionItemId)] });
+        queryClient.invalidateQueries({ queryKey: ['stock-units', String(variables.unitTransactionItemId)] });
+      } else {
+        queryClient.invalidateQueries({ queryKey: ['unit-transaction-item'] });
+        queryClient.invalidateQueries({ queryKey: ['stock-units'] });
+      }
+      queryClient.invalidateQueries({ queryKey: ['unassigned-stock-units'] });
+      queryClient.invalidateQueries({
+        predicate: (query) => Array.isArray(query.queryKey) && query.queryKey.includes('sales-transactions'),
+      });
+      queryClient.invalidateQueries({ queryKey: ['purchase-unit-items'] });
+    },
+  });
+};
+
+export const useUnassignedStockUnits = (params: {
+  unitTypeId?: string | number;
+  companyId?: string | number;
+  unitTransactionItemId?: string | number;
+  search?: string;
+  page?: number;
+  perPage?: number;
+  enabled?: boolean;
+}) => {
+  const isEnabled = (params.enabled ?? true) && Boolean(params.unitTypeId) && Boolean(params.unitTransactionItemId);
+
+  return useQuery({
+    queryKey: [
+      'unassigned-stock-units',
+      String(params.unitTypeId ?? ''),
+      String(params.companyId ?? '1'),
+      String(params.unitTransactionItemId ?? ''),
+      params.search ?? '',
+      params.page ?? 1,
+      params.perPage ?? 10,
+    ],
+    queryFn: async () => {
+      const response = await unitTransactionItemSalesService.getUnassignedStockByUnitType({
+        unitTypeId: params.unitTypeId!,
+        companyId: params.companyId ?? '1',
+        unitTransactionItemId: params.unitTransactionItemId!,
+        search: params.search,
+        page: params.page ?? 1,
+        perPage: params.perPage ?? 10,
+      });
+      return response?.data ?? response;
+    },
+    enabled: isEnabled,
+    staleTime: 1000 * 15,
   });
 };
 

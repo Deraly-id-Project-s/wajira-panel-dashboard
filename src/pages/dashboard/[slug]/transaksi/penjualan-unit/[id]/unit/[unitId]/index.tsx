@@ -1,26 +1,30 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useRouter } from 'next/router';
-import { Info, CheckCircle2, ListTodo as ListTodoIcon, ArrowRightLeft } from 'lucide-react';
+import { CheckCircle2, ListTodo as ListTodoIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { toast } from 'sonner';
-import { WarehouseStockUnit } from '@/@types/unit-transaction.types';
-import { StockPickerTable } from '@/components/features/unit-transaksi/sales/detail/StockPickerTable';
+import { AssignedStockTable } from '@/components/features/unit-transaksi/sales/detail/AssignedStockTable';
+import { AssignStockModal } from '@/components/features/unit-transaksi/sales/detail/AssignStockModal';
 import { SalesDetailCards } from '@/components/features/unit-transaksi/sales/detail/SalesDetailCards';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { PageHeader } from '@/components/ui/page-header';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { useSalesDetail } from '@/hooks/useSales';
-import { useStockUnits, useAssignUnitItemSales, useDispatchStockLifecycle } from '@/hooks/useUnitTransactionItemSales';
-import { useUpdateUnitTransactionState } from '@/hooks/useUnitTransaction';
+import {
+  useStockUnits,
+  useBulkDeleteUnitItemSales,
+} from '@/hooks/useUnitTransactionItemSales';
 import { useTypeUnit } from '@/hooks/useTypeUnit';
 import { LoadingState } from '@/components/ui/loading-state';
 import { useCompany } from '@/contexts/CompanyContext';
@@ -54,12 +58,7 @@ const readApiError = (error: any): string => {
     if (text) return text;
   }
 
-  return error?.message || 'Validation failed';
-};
-
-const toNumberId = (value: unknown): number => {
-  const normalized = Number(value ?? 0);
-  return Number.isFinite(normalized) ? normalized : 0;
+  return error?.message || 'Terjadi kesalahan saat memproses data';
 };
 
 const toBoolean = (value: unknown): boolean => {
@@ -67,12 +66,6 @@ const toBoolean = (value: unknown): boolean => {
   if (typeof value === 'number') return value === 1;
   if (typeof value === 'string') return value === '1' || value.toLowerCase() === 'true';
   return false;
-};
-
-const getReservationTransactionId = (item: WarehouseStockUnit) => {
-  return item.unit_transaction_item_sales?.unit_transaction_item?.unit_transaction_id
-    ?? item.unit_transaction_item_sales?.unit_transaction_item?.unit_transaction?.id
-    ?? null;
 };
 
 export default function SalesUnitDetailPage() {
@@ -105,25 +98,14 @@ export default function SalesUnitDetailPage() {
       unit_transaction_id: String(salesId ?? ''),
       unit_type_id: String(hit.unit_type_id ?? ''),
       qty_total: Number(hit.qty_total ?? 0),
-      unit_transaction_item_details: (hit.unit_transaction_item_details ?? []).map((detail: any) => ({
-        id: Number(detail?.id ?? 0),
-        color: String(detail?.color ?? '-'),
-        machine_number: String(detail?.machine_number ?? '-'),
-        chassis_number: String(detail?.chassis_number ?? '-'),
-        in_stock: true,
-        status: String(detail?.status ?? ''),
-        warehouse_sub_block: detail?.warehouse_sub_block,
-        stock_state: detail?.stock_state ?? null,
-        is_reserved: detail?.is_reserved === true || detail?.is_reserved === 1 || detail?.is_reserved === '1',
-        source_transaction_before_id: detail?.source_transaction_before_id ?? null,
-        source_transaction_before: detail?.source_transaction_before ?? null,
-        unit_transaction_item_sales: detail?.unit_transaction_item_sales ?? null,
-      })),
+      unit_transaction_item_details: hit.unit_transaction_item_details ?? [],
       unit_transaction_item_sales: (hit.unit_transaction_item_sales ?? []).map((item: any) => ({
         id: Number(item?.id ?? 0),
         unit_transaction_item_id: Number(hit.id ?? 0),
         unit_transaction_item_detail_id: Number(item?.unit_transaction_item_detail_id ?? 0),
+        unit_transaction_item_detail: item?.unit_transaction_item_detail,
       })),
+      unit_type: hit.unit_type,
     };
   }, [salesData?.raw?.unit_transaction_items, selectedUnitId, salesId]);
 
@@ -133,25 +115,24 @@ export default function SalesUnitDetailPage() {
 
   const {
     unitItem,
-    stockUnits,
     isUnitItemLoading,
-    isStockLoading,
     isUnitItemError,
-    isStockError,
-    stockError,
   } = useStockUnits(selectedUnitId, { companyId, unitTypeIdFallback: fallbackUnitTypeId });
 
   const effectiveUnitItem = unitItem ?? fallbackUnitItemFromSales;
 
-  const {
-    data: unitTypeData,
-  } = useTypeUnit(fallbackUnitTypeId);
+  const { data: unitTypeData } = useTypeUnit(fallbackUnitTypeId);
 
   const isPaid = useMemo(() => {
     const raw = salesData?.raw;
     if (!raw) return false;
     const billingSummary = raw.billing_summary;
-    const totalTagihan = Number(billingSummary?.grand_total ?? raw.unit_transaction_bruto_total ?? raw.unit_transaction_item_bruto_total ?? 0);
+    const totalTagihan = Number(
+      billingSummary?.grand_total ??
+      raw.unit_transaction_bruto_total ??
+      raw.unit_transaction_item_bruto_total ??
+      0
+    );
     const totalPaid = Number(billingSummary?.total_paid ?? 0);
     const isPaidVal = billingSummary?.is_paid ?? (totalPaid >= totalTagihan && totalTagihan > 0);
 
@@ -161,264 +142,55 @@ export default function SalesUnitDetailPage() {
     return Boolean(isPaidVal);
   }, [salesData]);
 
-  const [search, setSearch] = useState('');
-  const [currentPage, setCurrentPage] = useState(1);
-  const [perPage, setPerPage] = useState(25);
-  const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
-  const [isAssignDialogOpen, setIsAssignDialogOpen] = useState(false);
+  const [selectedSalesIds, setSelectedSalesIds] = useState<Set<number>>(new Set());
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [isBulkDeleteAlertOpen, setIsBulkDeleteAlertOpen] = useState(false);
   const [isMoveModalOpen, setIsMoveModalOpen] = useState(false);
 
-  const assignMutation = useAssignUnitItemSales();
-  const dispatchMutation = useDispatchStockLifecycle();
-  const updateStateMutation = useUpdateUnitTransactionState();
+  const bulkDeleteMutation = useBulkDeleteUnitItemSales();
 
   const requiredQty = Number(effectiveUnitItem?.qty_total ?? 0);
 
-  const assignedDetailRows = useMemo<WarehouseStockUnit[]>(() => {
-    const salesItems = effectiveUnitItem?.unit_transaction_item_sales?.map((item: any) => item.unit_transaction_item_detail);
-    const mappedFromItemDetails = (isPaid ? salesItems : effectiveUnitItem?.unit_transaction_item_details ?? []).map((detail: any) => ({
-      id: toNumberId(detail?.id),
-      color: String(detail?.color ?? '-'),
-      machine_number: String(detail?.machine_number ?? '-'),
-      chassis_number: String(detail?.chassis_number ?? '-'),
-      in_stock: detail?.in_stock,
-      status: String(detail?.status ?? ''),
-      warehouse_sub_block: detail?.warehouse_sub_block,
-      stock_state: detail?.stock_state ?? null,
-      is_reserved: detail?.is_reserved === true || detail?.is_reserved === 1 || detail?.is_reserved === '1',
-      source_transaction_before_id: detail?.source_transaction_before_id ?? null,
-      source_transaction_before: detail?.source_transaction_before ?? null,
-      unit_transaction_item_sales: detail?.unit_transaction_item_sales ?? null,
+  const assignedSalesList = useMemo(() => {
+    const list = effectiveUnitItem?.unit_transaction_item_sales ?? [];
+    return list.map((item: any) => ({
+      id: Number(item?.id ?? 0),
+      uuid: item?.uuid,
+      unit_transaction_item_id: Number(item?.unit_transaction_item_id ?? effectiveUnitItem?.id ?? 0),
+      unit_transaction_item_detail_id: Number(
+        item?.unit_transaction_item_detail_id ?? item?.unit_transaction_item_detail?.id ?? 0
+      ),
+      unit_transaction_item_detail: item?.unit_transaction_item_detail,
     }));
+  }, [effectiveUnitItem]);
 
-    const detailLookup = new Map<number, WarehouseStockUnit>();
-    stockUnits.forEach((detail: WarehouseStockUnit) => {
-      detailLookup.set(detail.id, detail);
-    });
-    mappedFromItemDetails.forEach((detail: any) => {
-      const existing = detailLookup.get(detail.id);
-      detailLookup.set(detail.id, {
-        ...existing,
-        ...detail,
-        source_transaction_before_id: detail?.source_transaction_before_id ?? existing?.source_transaction_before_id ?? null,
-        source_transaction_before: detail?.source_transaction_before ?? existing?.source_transaction_before ?? null,
-      });
-    });
+  const selectedDetailIds = useMemo(() => {
+    return assignedSalesList
+      .filter((item: any) => selectedSalesIds.has(item.id))
+      .map((item: any) => item.unit_transaction_item_detail_id || item.unit_transaction_item_detail?.id)
+      .filter(Boolean);
+  }, [assignedSalesList, selectedSalesIds]);
 
-    const assignedBySales = (effectiveUnitItem?.unit_transaction_item_sales ?? [])
-      .map((row: any) => toNumberId(row?.unit_transaction_item_detail_id))
-      .filter((detailId: number) => detailId > 0)
-      .map((detailId: number) =>
-        detailLookup.get(detailId) ?? {
-          id: detailId,
-          color: '-',
-          machine_number: '-',
-          chassis_number: '-',
-          in_stock: false,
-          status: '',
-          warehouse_sub_block: undefined,
-          stock_state: null,
-          is_reserved: false,
-          unit_transaction_item_sales: null,
-        },
-      );
-
-    if (mappedFromItemDetails.length > 0) {
-      return mappedFromItemDetails;
-    }
-
-    return assignedBySales;
-  }, [stockUnits, effectiveUnitItem?.unit_transaction_item_details, effectiveUnitItem?.unit_transaction_item_sales, isPaid]);
-
-  const assignedIds = useMemo(() => {
-    return assignedDetailRows.map((item: any) => item.id).filter((item: number) => item > 0);
-  }, [assignedDetailRows]);
-
-  const pickerRows = useMemo(() => {
-    const merged = new Map<number, WarehouseStockUnit>();
-
-    stockUnits.forEach((item: any) => {
-      merged.set(item.id, item);
-    });
-
-    assignedDetailRows.forEach((item: any) => {
-      if (!merged.has(item.id)) {
-        merged.set(item.id, item);
-      }
-    });
-
-    return Array.from(merged.values());
-  }, [stockUnits, assignedDetailRows]);
-
-  useEffect(() => {
-    const next = new Set(assignedIds);
-    setSelectedIds((prev) => {
-      if (prev.size === next.size) {
-        let isSame = true;
-        for (const id of prev) {
-          if (!next.has(id)) {
-            isSame = false;
-            break;
-          }
-        }
-        if (isSame) return prev;
-      }
-
-      return next;
-    });
-  }, [assignedIds]);
-
-  useEffect(() => {
-    if (!isStockError) return;
-    toast.error(readApiError(stockError));
-  }, [isStockError, stockError]);
-
-  const selectedCount = selectedIds.size;
-  const canAssignStock = requiredQty > 0 && selectedCount === requiredQty;
-
-  const isSelectionMatchingSaved = useMemo(() => {
-    if (selectedIds.size !== assignedIds.length) return false;
-    return Array.from(selectedIds).every((id) => assignedIds.includes(id));
-  }, [selectedIds, assignedIds]);
+  const remainingQty = Math.max(0, requiredQty - assignedSalesList.length);
 
   const salesCode = salesData?.raw?.code ?? '-';
   const slugValue = Array.isArray(slug) ? slug[0] : slug || '';
   const salesPath = slugValue ? `/dashboard/${slugValue}/transaksi/penjualan-unit` : '/transaksi/penjualan-unit';
   const hasRequiredRouteParams = Boolean(salesId && selectedUnitId);
   const isStockSelectionLocked = Boolean(salesData?.raw?.warehouse_activity) || toBoolean((salesData?.raw as any)?.has_warehouse_activity);
-  const isReservedByOtherTransaction = (item?: WarehouseStockUnit) => {
-    if (!item?.is_reserved) return false;
 
-    const reservationTransactionId = getReservationTransactionId(item);
-    if (reservationTransactionId == null) return true;
-
-    return String(reservationTransactionId) !== String(salesId ?? '');
-  };
-
-  const toggleOne = (stockId: number, checked: boolean) => {
-    if (isStockSelectionLocked) {
-      toast.error('Unit tidak dapat diubah karena transaksi sudah dipproses barang');
-      return;
-    }
-
-    const target = pickerRows.find((item) => item.id === stockId);
-    if (checked && isReservedByOtherTransaction(target)) {
-      toast.error('Stock yang sudah reservasi tidak dapat dipilih');
-      return;
-    }
-
-    if (checked && selectedIds.size >= requiredQty) {
-      toast.error(`Maksimal ${requiredQty} unit yang dapat dipilih`);
-      return;
-    }
-    setSelectedIds((prev) => {
-      const next = new Set(prev);
-      if (checked) {
-        next.add(stockId);
-      } else {
-        next.delete(stockId);
-      }
-      return next;
-    });
-  };
-
-  const toggleAllPage = (checked: boolean) => {
-    if (isStockSelectionLocked) {
-      toast.error('Unit tidak dapat diubah karena transaksi sudah diproses barang');
-      return;
-    }
-
-    if (checked && selectedIds.size >= requiredQty) {
-      toast.error(`Maksimal ${requiredQty} unit yang dapat dipilih`);
-      return;
-    }
-    setSelectedIds((prev) => {
-      const next = new Set(prev);
-      const filteredRows = pickerRows.filter((item: any) => {
-        const query = search.trim().toLowerCase();
-        if (!query) return true;
-
-        return [item.color, item.machine_number, item.chassis_number].some((field) =>
-          String(field ?? '')
-            .toLowerCase()
-            .includes(query),
-        );
-      });
-
-      const start = (currentPage - 1) * perPage;
-      const pageRows = filteredRows.slice(start, start + perPage);
-
-      if (checked) {
-        let remaining = requiredQty - next.size;
-        pageRows.forEach((item) => {
-          if (!isReservedByOtherTransaction(item) && !next.has(item.id) && remaining > 0) {
-            next.add(item.id);
-            remaining--;
-          }
-        });
-        if (remaining === 0 && pageRows.length > 0 && next.size === requiredQty) {
-          toast.success(`Berhasil memilih ${requiredQty} unit (maksimal)`);
-        }
-      } else {
-        pageRows.forEach((item) => next.delete(item.id));
-      }
-
-      return next;
-    });
-  };
-
-  const handleAssignStock = async () => {
-    if (isStockSelectionLocked) {
-      toast.error('Unit tidak dapat diubah karena transaksi sudah diproses barang');
-      setIsAssignDialogOpen(false);
-      return;
-    }
-
-    if (!selectedUnitId) {
-      toast.error('Unit transaction item tidak valid');
-      setIsAssignDialogOpen(false);
-      return;
-    }
-
-    if (!requiredQty || requiredQty <= 0) {
-      toast.error('Qty item tidak valid');
-      setIsAssignDialogOpen(false);
-      return;
-    }
-
-    const ids = Array.from(selectedIds);
-    const hasReservedSelection = ids.some((stockId) => pickerRows.some((item) => item.id === stockId && isReservedByOtherTransaction(item)));
-    if (hasReservedSelection) {
-      toast.error('Stock yang sudah reservasi tidak dapat dipilih');
-      setIsAssignDialogOpen(false);
-      return;
-    }
-
-    if (ids.length === 0) {
-      toast.error('Pilih minimal 1 stock unit');
-      setIsAssignDialogOpen(false);
-      return;
-    }
-
-    if (ids.length !== requiredQty) {
-      toast.error(`Jumlah unit yang dipilih harus sama dengan qty item (${requiredQty})`);
-      setIsAssignDialogOpen(false);
-      return;
-    }
-
+  const handleConfirmBulkDelete = async () => {
+    if (selectedSalesIds.size === 0) return;
     try {
-      const isUpdate = assignedIds.length > 0;
-      await assignMutation.mutateAsync({
+      await bulkDeleteMutation.mutateAsync({
+        salesIds: Array.from(selectedSalesIds),
         unitTransactionItemId: selectedUnitId,
-        unitTransactionDetails: ids,
-        isUpdate,
       });
-
-      toast.success('Stock berhasil di-assign ke item sales');
-      setIsAssignDialogOpen(false);
+      toast.success(`Berhasil membatalkan ${selectedSalesIds.size} unit dari penjualan`);
+      setSelectedSalesIds(new Set());
+      setIsBulkDeleteAlertOpen(false);
     } catch (error: any) {
       toast.error(readApiError(error));
-      setIsAssignDialogOpen(false);
     }
   };
 
@@ -501,126 +273,105 @@ export default function SalesUnitDetailPage() {
         />
 
         <Card className="border border-slate-200 shadow-sm">
-          <CollapsibleBox title="Data Penjualan Detail Unit Tipe" description="Pilih stock unit yang tersedia untuk dijual">
+          <CollapsibleBox
+            title="Data Penjualan Detail Unit Tipe"
+            description="Daftar unit yang telah di-assign untuk transaksi penjualan ini"
+          >
             <CardContent className="p-4 space-y-4">
               <div className="flex flex-col md:items-end justify-between border-b border-slate-100 pb-4 gap-4">
-
-                <div className={cn(
-                  "flex items-center gap-4 px-4 py-2.5 rounded-md border",
-                  selectedCount >= requiredQty
-                    ? "bg-emerald-50/50 border-emerald-100"
-                    : "bg-blue-50/50 border-blue-100"
-                )}>
+                <div
+                  className={cn(
+                    'flex items-center gap-4 px-4 py-2.5 rounded-md border',
+                    assignedSalesList.length >= requiredQty && requiredQty > 0
+                      ? 'bg-emerald-50/50 border-emerald-100'
+                      : 'bg-blue-50/50 border-blue-100'
+                  )}
+                >
                   <div>
-                    <p className={cn(
-                      "text-[11px] font-semibold uppercase tracking-wider mb-0.5",
-                      selectedCount >= requiredQty ? "text-emerald-600" : "text-blue-600"
-                    )}>
+                    <p
+                      className={cn(
+                        'text-[11px] font-semibold uppercase tracking-wider mb-0.5',
+                        assignedSalesList.length >= requiredQty && requiredQty > 0
+                          ? 'text-emerald-600'
+                          : 'text-blue-600'
+                      )}
+                    >
                       Status Pemilihan Unit
                     </p>
                     <div className="flex items-baseline gap-1.5">
-                      <span className="text-xl font-bold text-slate-800 leading-none">{selectedCount}</span>
+                      <span className="text-xl font-bold text-slate-800 leading-none">
+                        {assignedSalesList.length}
+                      </span>
                       <span className="text-sm font-medium text-slate-500">/ {requiredQty}</span>
                       <span className="text-xs text-slate-500 ml-0.5">Unit</span>
                     </div>
                   </div>
-                  <div className={cn(
-                    "flex items-center justify-center h-10 w-10 rounded-md",
-                    selectedCount >= requiredQty ? "bg-emerald-100 text-emerald-600" : "bg-blue-100 text-blue-600"
-                  )}>
-                    {selectedCount >= requiredQty ? <CheckCircle2 className="h-5 w-5" /> : <ListTodoIcon className="h-5 w-5" />}
+                  <div
+                    className={cn(
+                      'flex items-center justify-center h-10 w-10 rounded-md',
+                      assignedSalesList.length >= requiredQty && requiredQty > 0
+                        ? 'bg-emerald-100 text-emerald-600'
+                        : 'bg-blue-100 text-blue-600'
+                    )}
+                  >
+                    {assignedSalesList.length >= requiredQty && requiredQty > 0 ? (
+                      <CheckCircle2 className="h-5 w-5" />
+                    ) : (
+                      <ListTodoIcon className="h-5 w-5" />
+                    )}
                   </div>
                 </div>
               </div>
 
-              <StockPickerTable
-                units={pickerRows}
-                selectedIds={selectedIds}
+              <AssignedStockTable
+                assignedSales={assignedSalesList}
+                selectedSalesIds={selectedSalesIds}
+                onSelectedSalesIdsChange={setSelectedSalesIds}
+                onOpenAddModal={() => setIsAddModalOpen(true)}
+                onBulkDelete={() => setIsBulkDeleteAlertOpen(true)}
+                onMoveUnit={() => setIsMoveModalOpen(true)}
                 requiredQty={requiredQty}
-                unitType={unitTypeData}
                 isPaid={isPaid}
-                currentTransactionId={salesId}
                 isSelectionLocked={isStockSelectionLocked}
-                onToggleOne={toggleOne}
-                onToggleAllPage={toggleAllPage}
-                currentPage={currentPage}
-                perPage={perPage}
-                onPageChange={setCurrentPage}
-                onPerPageChange={setPerPage}
-                isLoading={isStockLoading}
-                isError={isStockError}
-                searchValue={search}
-                searchAction={(
-                  <div className="flex items-center gap-2">
-                    {selectedIds.size > 0 && !isPaid && !isStockSelectionLocked && (
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        className="border-blue-600 text-blue-600 hover:bg-blue-50"
-                        onClick={() => setIsMoveModalOpen(true)}
-                      >
-                        <ArrowRightLeft className="mr-2 h-4 w-4" />
-                        Pindahkan Unit ({selectedIds.size})
-                      </Button>
-                    )}
-                    <Button
-                      size="sm"
-                      className="bg-primary text-primary-foreground hover:bg-primary/90"
-                      disabled={!canAssignStock || isSelectionMatchingSaved || assignMutation.isPending || dispatchMutation.isPending || updateStateMutation.isPending || isPaid || isStockSelectionLocked}
-                      onClick={() => setIsAssignDialogOpen(true)}
-                    >
-                      {assignMutation.isPending ? 'Menyimpan...' : `Unit Terjual (${selectedCount}/${requiredQty})`}
-                    </Button>
-                  </div>
-                )}
-                onSearchChange={(value) => {
-                  setSearch(value);
-                  setCurrentPage(1);
-                }}
+                isDeleting={bulkDeleteMutation.isPending}
+                isLoading={salesLoading || isUnitItemLoading}
               />
             </CardContent>
           </CollapsibleBox>
         </Card>
       </div>
 
-      <Dialog open={isAssignDialogOpen} onOpenChange={setIsAssignDialogOpen}>
-        <DialogContent className="sm:max-w-[425px]">
-          <DialogHeader>
-            <DialogTitle>Konfirmasi Unit Terjual</DialogTitle>
-            <DialogDescription className="pt-2">
-              Apakah Anda yakin ingin menetapkan unit ini sebagai barang terjual?
-            </DialogDescription>
-            <div className="border border-slate-200 bg-slate-50 text-slate-700 text-sm rounded-md p-2 text-justify">
-              <div className="flex gap-2">
-                <span>
-                  <Info />
-                </span>
-                <span>
-                  Dengan memilih <b>Unit Terjual</b>, unit stock ini akan dialokasikan untuk transaksi ini dan tidak bisa dipilih oleh transaksi penjualan lainnya.
-                </span>
-              </div>
-            </div>
-          </DialogHeader>
-          <DialogFooter className="mt-4 flex justify-end gap-2">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => setIsAssignDialogOpen(false)}
-              disabled={assignMutation.isPending}
+      <AssignStockModal
+        open={isAddModalOpen}
+        onOpenChange={setIsAddModalOpen}
+        unitTypeId={fallbackUnitTypeId}
+        unitTypeName={unitTypeData?.name ?? effectiveUnitItem?.unit_type?.name}
+        unitTransactionItemId={selectedUnitId}
+        companyId={companyId}
+        remainingQty={remainingQty}
+        onSuccess={() => setSelectedSalesIds(new Set())}
+      />
+
+      <AlertDialog open={isBulkDeleteAlertOpen} onOpenChange={setIsBulkDeleteAlertOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Batalkan Unit Terjual</AlertDialogTitle>
+            <AlertDialogDescription>
+              Apakah Anda yakin ingin membatalkan/menghapus {selectedSalesIds.size} unit yang dipilih dari penjualan ini? Unit akan kembali tersedia pada stok gudang.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={bulkDeleteMutation.isPending}>Batal</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-rose-600 hover:bg-rose-700 text-white"
+              onClick={handleConfirmBulkDelete}
+              disabled={bulkDeleteMutation.isPending}
             >
-              Batal
-            </Button>
-            <Button
-              type="button"
-              className="bg-blue-600 hover:bg-blue-700 text-white"
-              onClick={handleAssignStock}
-              disabled={assignMutation.isPending}
-            >
-              {assignMutation.isPending ? 'Memproses...' : 'Ya, Tetapkan Unit'}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+              {bulkDeleteMutation.isPending ? 'Membatalkan...' : 'Ya, Batalkan Unit'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       <MoveUnitStockModal
         open={isMoveModalOpen}
@@ -630,8 +381,8 @@ export default function SalesUnitDetailPage() {
         transactionType="sales"
         unitTypeId={fallbackUnitTypeId}
         unitTypeName={unitTypeData?.name}
-        selectedDetailIds={Array.from(selectedIds)}
-        onSuccess={() => setSelectedIds(new Set())}
+        selectedDetailIds={selectedDetailIds}
+        onSuccess={() => setSelectedSalesIds(new Set())}
       />
     </DashboardLayout>
   );

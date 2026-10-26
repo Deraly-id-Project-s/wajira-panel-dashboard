@@ -39,12 +39,49 @@ export const unitTransactionItemSalesService = {
     }));
   },
 
-  async assignStock(payload: { unitTransactionItemId: string; unitTransactionDetails: number[]; isUpdate?: boolean }) {
+  async assignStock(payload: { unitTransactionItemId: string | number; unitTransactionDetails: number[]; isUpdate?: boolean }) {
     const response = await apiClient.post<LaravelApiResponse<any>>(
       `/wapi/transaction/unit-transaction/unit-transaction-item-sales`,
       {
         unit_transaction_item_id: Number(payload.unitTransactionItemId),
         unit_transaction_details: payload.unitTransactionDetails,
+      }
+    );
+    return ensureSuccess(response.data);
+  },
+
+  async bulkDeleteSales(salesIds: number[]) {
+    const response = await apiClient.delete<LaravelApiResponse<any>>(
+      `/wapi/transaction/unit-transaction/unit-transaction-item-sales/bulk-delete`,
+      {
+        data: {
+          unit_transaction_item_sales_id: salesIds,
+        },
+      }
+    );
+    return ensureSuccess(response.data);
+  },
+
+  async getUnassignedStockByUnitType(params: {
+    unitTypeId: string | number;
+    companyId: string | number;
+    unitTransactionItemId: string | number;
+    search?: string;
+    page?: number;
+    perPage?: number;
+  }) {
+    const response = await apiClient.get<LaravelApiResponse<any>>(
+      `/wapi/master-data/unit-type/${params.unitTypeId}`,
+      {
+        params: {
+          company_id: String(params.companyId),
+          in_stock: 'true',
+          unit_transaction_item_id: String(params.unitTransactionItemId),
+          transaction_item_type: 'unassigned',
+          search: params.search || undefined,
+          page: params.page || 1,
+          per_page: params.perPage || 10,
+        },
       }
     );
     return ensureSuccess(response.data);
