@@ -1,6 +1,10 @@
 import { formatCurrency as formatCurrencyBase } from '@/lib/utils/currency';
 import { UnitBillingHistory } from '@/@types/unit-billing.types';
 
+export function calculateTotalAfterDiscount(total: number, discount: number): number {
+  return Math.max(0, Number(total || 0) - Number(discount || 0));
+}
+
 export function getHistoryUsdAmount(history: UnitBillingHistory): number {
   const fromCashes = history.cashes?.filter(c => c.code === 'bca_usd').reduce((sum, c) => sum + Number(c.amount ?? c.pivot?.amount ?? 0), 0) ?? 0;
   return Math.max(fromCashes, Number(history.bca_payment_usd_amount ?? 0));

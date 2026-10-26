@@ -3,6 +3,7 @@ import type { KasHarianListItem } from '@/@types/kas-harian.types';
 import type { PaginationMeta } from '@/@types/pagination.types';
 import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { currenciesFormat } from '@/components/ui/currenciesFormat';
 import { format } from 'date-fns';
 import { MoreVertical, Info, CheckCircle } from 'lucide-react';
@@ -11,6 +12,45 @@ import { TextTruncate } from '@/components/ui/text-truncate';
 import { cn } from '@/lib/utils';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import BaseTable, { ColumnDef } from '@/components/ui/base-table';
+import {
+  KAS_HARIAN_MONTHS,
+  filterKasHarianByMonth,
+  sortKasHarianByMonthDescDayAsc,
+} from '@/services/cashFlowService';
+
+export { KAS_HARIAN_MONTHS, filterKasHarianByMonth, sortKasHarianByMonthDescDayAsc };
+
+export interface KasHarianMonthFilterProps {
+  value: string;
+  onChange: (value: string) => void;
+  className?: string;
+  disabled?: boolean;
+}
+
+export function KasHarianMonthFilter({
+  value,
+  onChange,
+  className,
+  disabled = false,
+}: KasHarianMonthFilterProps) {
+  return (
+    <Select value={value} onValueChange={onChange} disabled={disabled}>
+      <SelectTrigger
+        className={cn('w-full sm:w-[160px] bg-white cursor-pointer h-9 text-xs sm:text-sm border-slate-300', className)}
+        aria-label="Filter Bulan"
+      >
+        <SelectValue placeholder="Pilih Bulan" />
+      </SelectTrigger>
+      <SelectContent>
+        {KAS_HARIAN_MONTHS.map((month) => (
+          <SelectItem key={month.value} value={month.value}>
+            {month.label}
+          </SelectItem>
+        ))}
+      </SelectContent>
+    </Select>
+  );
+}
 
 interface Props {
   data: KasHarianListItem[];
@@ -30,9 +70,13 @@ interface Props {
   onPageChange?: (page: number) => void;
   canEdit?: boolean;
   canDelete?: boolean;
+  selectedMonth?: string;
+  onMonthChange?: (month: string) => void;
+  showMonthFilter?: boolean;
 }
 
-const formatDate = (value: string) => {
+const formatDate = (value?: string | null) => {
+  if (!value) return '-';
   const parsed = new Date(value);
   return Number.isNaN(parsed.getTime()) ? value : format(parsed, 'dd MMM yyyy');
 };
@@ -59,14 +103,41 @@ export default function KasHarianTable({
   onPageChange,
   canEdit = true,
   canDelete = true,
+  selectedMonth,
+  onMonthChange,
+  showMonthFilter = false,
 }: Props) {
   const page = meta.currentPage;
   const [sortBy, setSortBy] = useState<string>('date');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
+  const [internalMonth, setInternalMonth] = useState<string>('all');
+
+  const activeMonth = selectedMonth !== undefined ? selectedMonth : internalMonth;
+
+  const handleMonthChange = (month: string) => {
+    if (onMonthChange) {
+      onMonthChange(month);
+    } else {
+      setInternalMonth(month);
+    }
+  };
+
+  const filteredData = useMemo(() => {
+    // If controlled by parent, parent already filtered data before pagination
+    if (selectedMonth !== undefined || activeMonth === 'all') {
+      return data;
+    }
+    return filterKasHarianByMonth(data, activeMonth);
+  }, [data, selectedMonth, activeMonth]);
 
   const sortedData = useMemo(() => {
-    if (!sortBy) return data;
-    return [...data].sort((a, b) => {
+    if (!sortBy) return filteredData;
+    if (sortBy === 'date') {
+      return [...filteredData].sort((a, b) =>
+        sortKasHarianByMonthDescDayAsc(a, b, sortDirection)
+      );
+    }
+    return [...filteredData].sort((a, b) => {
       let aVal = (a as any)[sortBy];
       let bVal = (b as any)[sortBy];
 
@@ -79,7 +150,7 @@ export default function KasHarianTable({
       if (aVal > bVal) return sortDirection === 'asc' ? 1 : -1;
       return 0;
     });
-  }, [data, sortBy, sortDirection]);
+  }, [filteredData, sortBy, sortDirection]);
 
   const columns = useMemo<ColumnDef<KasHarianListItem>[]>(
     () => [
@@ -136,7 +207,7 @@ export default function KasHarianTable({
         accessorKey: 'date',
         sortable: true,
         alignment: 'center',
-        cell: (item) => formatDate(item.date),
+        cell: (item) => formatDate(item.last_payment_at || item.date),
       },
       {
         header: 'KETERANGAN',
@@ -325,6 +396,14 @@ export default function KasHarianTable({
         data={sortedData}
         columns={columns}
         loading={isLoading}
+        headerActions={
+          showMonthFilter ? (
+            <div className="flex items-center gap-2">
+              <span className="text-xs font-medium text-slate-600 sm:text-sm whitespace-nowrap">Filter Bulan:</span>
+              <KasHarianMonthFilter value={activeMonth} onChange={handleMonthChange} />
+            </div>
+          ) : undefined
+        }
         meta={{
           currentPage: page,
           perPage: meta.perPage,

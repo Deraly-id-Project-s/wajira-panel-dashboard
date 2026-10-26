@@ -142,6 +142,7 @@ export interface KasHarian {
   is_valid?: boolean;
   created_at?: string;
   updated_at?: string;
+  last_payment_at?: string | null;
   grand_total?: number;
   grand_total_usd?: number;
   invoice_number?: string | null;
@@ -220,6 +221,7 @@ export interface KasHarianListItem {
   id: number;
   source: KasHarianSource;
   date: string;
+  last_payment_at?: string | null;
   code: string;
   invoiceNumber?: string | null;
   note: string;

@@ -4,7 +4,13 @@ import { FileText, DollarSign, CreditCard, Calendar, User, Motorbike } from 'luc
 import { SalesItem } from '../sales.data';
 import { useRouter } from 'next/router';
 import { currenciesFormat } from '@/components/ui/currenciesFormat';
-import { getHistoryTotalIdrEquivalent, getHistoryUsdAmount, getHistoryBcaIdrAmount, getHistoryCashIdrAmount } from '@/utils/payment-helpers';
+import {
+  getHistoryTotalIdrEquivalent,
+  getHistoryUsdAmount,
+  getHistoryBcaIdrAmount,
+  getHistoryCashIdrAmount,
+  calculateTotalAfterDiscount,
+} from '@/utils/payment-helpers';
 import { CopyBox } from '@/components/ui/copy-box';
 import { ReferenceLink } from '@/components/ui/reference-link';
 import { TypeUnit } from '@/@types/type-unit.types';
@@ -29,44 +35,6 @@ export function SalesDetailCards({ data, billingHistories = [], unitType, stockQ
 
   const slugQuery = router.query.slug;
   const slug = Array.isArray(slugQuery) ? slugQuery[0] : slugQuery || '';
-
-  const billingSummary = data.billing_summary;
-
-  const historyPaid = billingHistories.reduce((sum, item) => sum + getHistoryTotalIdrEquivalent(item), 0);
-  const debetBankUsd = billingSummary?.total_paid_usd !== undefined
-    ? Number(billingSummary.total_paid_usd)
-    : (billingSummary?.total_usd_payment !== undefined
-      ? Number(billingSummary.total_usd_payment)
-      : billingHistories.reduce((sum, item) => sum + getHistoryUsdAmount(item), 0));
-
-  const debetBankIdr = billingSummary?.total_bca_payment !== undefined
-    ? Number(billingSummary.total_bca_payment)
-    : billingHistories.reduce((sum, item) => sum + getHistoryBcaIdrAmount(item), 0);
-
-  const debetCashIdr = billingSummary?.total_cash_payment !== undefined
-    ? Number(billingSummary.total_cash_payment)
-    : billingHistories.reduce((sum, item) => sum + getHistoryCashIdrAmount(item), 0);
-
-  const kurangBayarIdr = billingSummary?.remaining_payment !== undefined
-    ? Number(billingSummary.remaining_payment)
-    : Math.max(0, totalJual - historyPaid);
-
-  const totalUsd = Number(data.unit_transaction_price_usd_total_actual && Number(data.unit_transaction_price_usd_total_actual) > 0
-    ? data.unit_transaction_price_usd_total_actual
-    : (data.unit_transaction_price_usd_total ?? data.price_usd ?? 0));
-
-  const kurangBayarUsd = billingSummary?.remaining_payment_usd !== undefined
-    ? Number(billingSummary.remaining_payment_usd)
-    : Math.max(0, totalUsd - debetBankUsd);
-
-  const freightCost = Number(data.usd_cost_freight_total ?? 0);
-  const boxPackingCost = Number(data.usd_cost_box_packing_total ?? 0);
-  const adminCost = Number(data.usd_cost_admin_cost_total ?? 0);
-  const ckdCost = Number(data.usd_cost_ckd_processing_cost_total ?? 0);
-  const blSwitchCost = Number(data.usd_cost_bill_of_lading_switch_cost_total ?? 0);
-  const customsCost = Number(data.usd_cost_customs_clearance_cost_total ?? 0);
-  const otherCost = Number(data.usd_cost_other_total ?? 0);
-  const totalUsdCost = Number(data.total_usd_cost ?? data.transaction_usd_cost_total ?? (freightCost + boxPackingCost + adminCost + ckdCost + blSwitchCost + customsCost + otherCost));
 
   const items = data.lineItems ?? [];
   const totalDiscountIdr = items.reduce((sum, item) => {
@@ -96,6 +64,55 @@ export function SalesDetailCards({ data, billingHistories = [], unitType, stockQ
     ? discountUsdPercentages[0]
     : (discountUsdPercentages.length === 0 ? (fallbackSingleUsdDiscount > 0 ? fallbackSingleUsdDiscount : 0) : null);
 
+  const totalItemsUsd = items.reduce((sum, item) => {
+    const itemPriceUsd = Number(item.price_usd && Number(item.price_usd) > 0
+      ? item.price_usd
+      : (Number(item.price_per_unit_usd ?? 0) * Number(item.qty ?? 1)));
+    return sum + itemPriceUsd;
+  }, 0);
+
+  const totalUsd = Number(data.unit_transaction_price_usd_total_actual && Number(data.unit_transaction_price_usd_total_actual) > 0
+    ? data.unit_transaction_price_usd_total_actual
+    : (data.unit_transaction_price_usd_total ?? data.price_usd ?? 0));
+
+  const resolvedTotalUsd = totalUsd > 0 ? totalUsd : totalItemsUsd;
+  const totalPenjualanSetelahDiskon = calculateTotalAfterDiscount(totalJual, totalDiscountIdr);
+  const totalPenjualanSetelahDiskonUsd = calculateTotalAfterDiscount(resolvedTotalUsd, totalDiscountUsd);
+
+  const billingSummary = data.billing_summary;
+
+  const historyPaid = billingHistories.reduce((sum, item) => sum + getHistoryTotalIdrEquivalent(item), 0);
+  const debetBankUsd = billingSummary?.total_paid_usd !== undefined
+    ? Number(billingSummary.total_paid_usd)
+    : (billingSummary?.total_usd_payment !== undefined
+      ? Number(billingSummary.total_usd_payment)
+      : billingHistories.reduce((sum, item) => sum + getHistoryUsdAmount(item), 0));
+
+  const debetBankIdr = billingSummary?.total_bca_payment !== undefined
+    ? Number(billingSummary.total_bca_payment)
+    : billingHistories.reduce((sum, item) => sum + getHistoryBcaIdrAmount(item), 0);
+
+  const debetCashIdr = billingSummary?.total_cash_payment !== undefined
+    ? Number(billingSummary.total_cash_payment)
+    : billingHistories.reduce((sum, item) => sum + getHistoryCashIdrAmount(item), 0);
+
+  const kurangBayarIdr = billingSummary?.remaining_payment !== undefined
+    ? Number(billingSummary.remaining_payment)
+    : Math.max(0, totalPenjualanSetelahDiskon - historyPaid);
+
+  const kurangBayarUsd = billingSummary?.remaining_payment_usd !== undefined
+    ? Number(billingSummary.remaining_payment_usd)
+    : Math.max(0, totalPenjualanSetelahDiskonUsd - debetBankUsd);
+
+  const freightCost = Number(data.usd_cost_freight_total ?? 0);
+  const boxPackingCost = Number(data.usd_cost_box_packing_total ?? 0);
+  const adminCost = Number(data.usd_cost_admin_cost_total ?? 0);
+  const ckdCost = Number(data.usd_cost_ckd_processing_cost_total ?? 0);
+  const blSwitchCost = Number(data.usd_cost_bill_of_lading_switch_cost_total ?? 0);
+  const customsCost = Number(data.usd_cost_customs_clearance_cost_total ?? 0);
+  const otherCost = Number(data.usd_cost_other_total ?? 0);
+  const totalUsdCost = Number(data.total_usd_cost ?? data.transaction_usd_cost_total ?? (freightCost + boxPackingCost + adminCost + ckdCost + blSwitchCost + customsCost + otherCost));
+
   const activeUnitTypeCode = unitType?.code ?? (data as any)?.unit_type?.code ?? (items.length === 1 ? (items[0] as any)?.unit_type?.code : undefined);
   const activeUnitTypeName = unitType?.name ?? (data as any)?.unit_type?.name ?? (items.length === 1 ? (items[0] as any)?.unit_type?.name : undefined);
   const activeStockQty = stockQty ?? (data as any)?.stockQty ?? (data as any)?.qty_total ?? (items.length === 1 ? items[0]?.qty : undefined);
@@ -109,7 +126,7 @@ export function SalesDetailCards({ data, billingHistories = [], unitType, stockQ
     || otherCost > 0
     || totalUsdCost > 0
     || totalDiscountUsd > 0
-    || totalUsd > 0
+    || resolvedTotalUsd > 0
     || Boolean(data.price_per_unit_usd && Number(data.price_per_unit_usd) > 0);
 
   const isUsdTransaction = Boolean(
@@ -239,6 +256,10 @@ export function SalesDetailCards({ data, billingHistories = [], unitType, stockQ
                 <span className="font-bold uppercase text-sm">TOTAL PENJUALAN</span>
                 <span className="text-sm font-bold">{currenciesFormat('idr', totalJual)}</span>
               </div>
+              <div className="flex items-center justify-between text-slate-900">
+                <span className="font-bold uppercase text-sm">TOTAL PENJUALAN SETELAH DISKON</span>
+                <span className="text-sm font-bold text-emerald-700">{currenciesFormat('idr', totalPenjualanSetelahDiskon)}</span>
+              </div>
             </div>
           </CardContent>
         </Card>
@@ -320,11 +341,17 @@ export function SalesDetailCards({ data, billingHistories = [], unitType, stockQ
                   <span className="text-sm font-semibold text-slate-900">{currenciesFormat('usd', totalDiscountUsd)}</span>
                 </div>
               )}
-              {totalUsd > 0 && (
-                <div className="flex items-center justify-between text-slate-900 pt-1">
-                  <span className="font-bold uppercase text-sm">TOTAL PENJUALAN (USD)</span>
-                  <span className="text-sm font-bold text-amber-600">{currenciesFormat('usd', totalUsd)}</span>
-                </div>
+              {resolvedTotalUsd > 0 && (
+                <>
+                  <div className="flex items-center justify-between text-slate-900 pt-1">
+                    <span className="font-bold uppercase text-sm">TOTAL PENJUALAN (USD)</span>
+                    <span className="text-sm font-bold text-amber-600">{currenciesFormat('usd', resolvedTotalUsd)}</span>
+                  </div>
+                  <div className="flex items-center justify-between text-slate-900 pt-0.5">
+                    <span className="font-bold uppercase text-sm">TOTAL PENJUALAN SETELAH DISKON (USD)</span>
+                    <span className="text-sm font-bold text-emerald-700">{currenciesFormat('usd', totalPenjualanSetelahDiskonUsd)}</span>
+                  </div>
+                </>
               )}
               {data.price_per_unit_usd ? (
                 <div className="flex items-center justify-between text-xs text-amber-800 bg-amber-50/50 px-2 py-1 rounded border border-amber-100 mt-1">

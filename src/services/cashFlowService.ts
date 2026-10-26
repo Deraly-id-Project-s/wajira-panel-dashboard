@@ -23,6 +23,111 @@ const toBoolean = (value: unknown): boolean => {
   return false;
 };
 
+export const getKasHarianPaymentDate = (item: {
+  date: string;
+  last_payment_at?: string | null;
+  unit_transaction_billing?: { last_payment_at?: string } | null;
+  goods_transaction_billing?: { last_payment_at?: string } | null;
+}): string => {
+  return (
+    item.last_payment_at?.trim() ||
+    item.unit_transaction_billing?.last_payment_at?.trim() ||
+    item.goods_transaction_billing?.last_payment_at?.trim() ||
+    item.date
+  );
+};
+
+export const KAS_HARIAN_MONTHS = [
+  { value: 'all', label: 'Semua Bulan' },
+  { value: '1', label: 'Januari' },
+  { value: '2', label: 'Februari' },
+  { value: '3', label: 'Maret' },
+  { value: '4', label: 'April' },
+  { value: '5', label: 'Mei' },
+  { value: '6', label: 'Juni' },
+  { value: '7', label: 'Juli' },
+  { value: '8', label: 'Agustus' },
+  { value: '9', label: 'September' },
+  { value: '10', label: 'Oktober' },
+  { value: '11', label: 'November' },
+  { value: '12', label: 'Desember' },
+] as const;
+
+export const getKasHarianEffectiveDate = (item: {
+  date?: string | null;
+  last_payment_at?: string | null;
+}): Date | null => {
+  const rawDate = item?.last_payment_at?.trim() || item?.date?.trim();
+  if (!rawDate) return null;
+  const parsed = new Date(rawDate);
+  return Number.isNaN(parsed.getTime()) ? null : parsed;
+};
+
+export const filterKasHarianByMonth = <T extends { date?: string | null; last_payment_at?: string | null }>(
+  items: T[],
+  selectedMonth?: string | null
+): T[] => {
+  if (!selectedMonth || selectedMonth === 'all') return items;
+  const monthNumber = Number(selectedMonth);
+  if (!Number.isInteger(monthNumber) || monthNumber < 1 || monthNumber > 12) {
+    return items;
+  }
+
+  return items.filter((item) => {
+    const d = getKasHarianEffectiveDate(item);
+    if (!d) return false;
+    return d.getMonth() + 1 === monthNumber;
+  });
+};
+
+export const sortKasHarianByMonthDescDayAsc = <
+  T extends { date?: string | null; last_payment_at?: string | null; id?: number | string }
+>(
+  a: T,
+  b: T,
+  direction: 'asc' | 'desc' = 'desc'
+): number => {
+  const da = getKasHarianEffectiveDate(a);
+  const db = getKasHarianEffectiveDate(b);
+
+  if (!da && !db) return 0;
+  if (!da) return 1;
+  if (!db) return -1;
+
+  // Year descending (latest year first for 'desc')
+  const yearDiff = db.getFullYear() - da.getFullYear();
+  if (yearDiff !== 0) {
+    return direction === 'asc' ? -yearDiff : yearDiff;
+  }
+
+  // Month descending (largest month first for 'desc': Bulan 12 down to Bulan 1)
+  const monthDiff = db.getMonth() - da.getMonth();
+  if (monthDiff !== 0) {
+    return direction === 'asc' ? -monthDiff : monthDiff;
+  }
+
+  // Tanggal termuda / Day ascending (earliest day first for 'desc': Day 1 up to Day 31)
+  const dayDiff = da.getDate() - db.getDate();
+  if (dayDiff !== 0) {
+    return direction === 'asc' ? -dayDiff : dayDiff;
+  }
+
+  // Same day: chronological by time
+  const timeDiff = da.getTime() - db.getTime();
+  if (timeDiff !== 0) {
+    return direction === 'asc' ? -timeDiff : timeDiff;
+  }
+
+  // Stable fallback by id if available
+  const idA = Number(a.id ?? 0);
+  const idB = Number(b.id ?? 0);
+  if (!Number.isNaN(idA) && !Number.isNaN(idB) && idA !== idB) {
+    return direction === 'asc' ? idA - idB : idB - idA;
+  }
+
+  return 0;
+};
+
 const normalizeCashFlow = (payload: Partial<KasHarian>): KasHarian => ({
   id: toNumber(payload.id),
   uuid: payload.uuid,
@@ -66,6 +171,7 @@ const normalizeCashFlow = (payload: Partial<KasHarian>): KasHarian => ({
   is_valid: payload.is_valid !== undefined ? toBoolean(payload.is_valid) : undefined,
   created_at: payload.created_at ?? '',
   updated_at: payload.updated_at ?? '',
+  last_payment_at: payload.last_payment_at || payload.unit_transaction_billing?.last_payment_at || payload.goods_transaction_billing?.last_payment_at || null,
   cash_position: payload.cash_position
     ? {
         debet_idr_total: toNumber(payload.cash_position.debet_idr_total),

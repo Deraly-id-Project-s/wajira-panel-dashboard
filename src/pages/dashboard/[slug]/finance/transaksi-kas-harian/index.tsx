@@ -13,16 +13,22 @@ import { SearchPagination } from '@/components/ui/search-pagination';
 import { DatePickerWithRange } from '@/components/ui/date-range-picker';
 import DeleteKasHarianDialog from '@/components/features/kas-harian/DeleteKasHarianDialog';
 import TogglePaymentStatusDialog from '@/components/features/kas-harian/TogglePaymentStatusDialog';
-import KasHarianTable from '@/components/features/kas-harian/KasHarianTable';
+import KasHarianTable, { KasHarianMonthFilter } from '@/components/features/kas-harian/KasHarianTable';
 import { useCompany } from '@/contexts/CompanyContext';
 import { useKasHarian, useSyncKasHarianPpnData } from '@/hooks/useKasHarian';
 import { usePermissionGuard } from '@/hooks/usePermissionGuard';
 import { getApiErrorMessage } from '@/utils/apiErrorHandler';
+import {
+  filterKasHarianByMonth,
+  getKasHarianPaymentDate,
+  sortKasHarianByMonthDescDayAsc,
+} from '@/services/cashFlowService';
 
 const mapManualCashFlow = (item: KasHarian): KasHarianListItem => ({
   id: item.id,
   source: (item.finance_billings ?? []).length > 0 ? 'billing' : 'manual',
-  date: item.date,
+  date: getKasHarianPaymentDate(item),
+  last_payment_at: item.last_payment_at || item.unit_transaction_billing?.last_payment_at || item.goods_transaction_billing?.last_payment_at || null,
   code: item.code,
   invoiceNumber: item.invoice_number ?? null,
   note: item.note || 'Transaksi kas harian',
@@ -58,6 +64,7 @@ export default function KasHarianPage() {
   const [page, setPage] = useState(1);
   const [perPage, setPerPage] = useState(25);
   const [date, setDate] = useState<DateRange | undefined>();
+  const [selectedMonth, setSelectedMonth] = useState<string>('all');
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
   const [isToggleOpen, setIsToggleOpen] = useState(false);
   const [targetStatus, setTargetStatus] = useState(false);
@@ -75,6 +82,11 @@ export default function KasHarianPage() {
 
   const handleDateChange = (next?: DateRange) => {
     setDate(next);
+    setPage(1);
+  };
+
+  const handleMonthChange = (nextMonth: string) => {
+    setSelectedMonth(nextMonth);
     setPage(1);
   };
 
@@ -114,15 +126,17 @@ export default function KasHarianPage() {
   }, [errorMessage, kasHarianQuery.isError]);
 
   const mergedData = useMemo(() => {
-    return (kasHarianQuery.data?.data ?? [])
-      .map(mapManualCashFlow)
+    const rawItems = (kasHarianQuery.data?.data ?? []).map(mapManualCashFlow);
+    const monthFiltered = filterKasHarianByMonth(rawItems, selectedMonth);
+
+    return monthFiltered
       .filter((item) => {
         if (!searchValue) return true;
         const query = searchValue.toLowerCase();
         return [item.code, item.invoiceNumber ?? '', item.note, item.accountName, item.cashName ?? ''].some((value) => value.toLowerCase().includes(query));
       })
-      .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
-  }, [kasHarianQuery.data?.data, searchValue]);
+      .sort((a, b) => sortKasHarianByMonthDescDayAsc(a, b, 'desc'));
+  }, [kasHarianQuery.data?.data, searchValue, selectedMonth]);
 
   const paginatedData = useMemo(() => {
     const start = (page - 1) * perPage;
@@ -206,12 +220,18 @@ export default function KasHarianPage() {
           searchPlaceholder="Search here"
           searchAriaLabel="Cari transaksi kas harian"
           filters={
-            <DatePickerWithRange
-              date={date}
-              onChange={handleDateChange}
-              placeholder="Pilih rentang tanggal"
-              className="w-full sm:w-[260px]"
-            />
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+              <DatePickerWithRange
+                date={date}
+                onChange={handleDateChange}
+                placeholder="Pilih rentang tanggal"
+                className="w-full sm:w-[260px]"
+              />
+              <KasHarianMonthFilter
+                value={selectedMonth}
+                onChange={handleMonthChange}
+              />
+            </div>
           }
           page={page}
           perPage={perPage}
@@ -250,6 +270,8 @@ export default function KasHarianPage() {
             onToggleStatus={handleToggleStatus}
             canEdit={canEdit}
             canDelete={canDelete}
+            selectedMonth={selectedMonth}
+            onMonthChange={handleMonthChange}
           />
         </SearchPagination>
       </div>
