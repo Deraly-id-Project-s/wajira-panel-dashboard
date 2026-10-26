@@ -27,6 +27,17 @@ interface AssignStockModalProps {
   onSuccess?: () => void;
 }
 
+interface UnassignedStockRow {
+  id: number;
+  color: string;
+  machine_number: string;
+  chassis_number: string;
+  in_stock: boolean;
+  status: string;
+  warehouse_sub_block: any;
+  stock_state: string;
+}
+
 const statusConfig: Record<string, { label: string; className: string }> = {
   normal: { label: 'Normal', className: 'border-emerald-200 bg-emerald-50 text-emerald-700 font-semibold' },
   minor_damage: { label: 'Minor Damage', className: 'border-amber-200 bg-amber-50 text-amber-700 font-semibold' },
@@ -107,7 +118,7 @@ export function AssignStockModal({
   const assignMutation = useAssignUnitItemSales();
 
   const detailsContainer = stockData?.unit_item_details;
-  const rows = useMemo(() => {
+  const rows = useMemo<UnassignedStockRow[]>(() => {
     return (detailsContainer?.data ?? []).map((detail: any) => ({
       id: Number(detail?.id ?? 0),
       color: String(detail?.color ?? '-'),
@@ -130,7 +141,7 @@ export function AssignStockModal({
   const isLimitReached = remainingQty > 0 && selectedDetailIds.size >= remainingQty;
 
   const isCheckboxDisabled = useCallback(
-    (item: any) => {
+    (item: UnassignedStockRow) => {
       if (isLimitReached && !selectedDetailIds.has(item.id)) {
         return true;
       }
@@ -142,11 +153,11 @@ export function AssignStockModal({
   const handleSelectedIdsChange = useCallback(
     (newStringIds: Set<string>) => {
       const newNumIds = new Set<number>(Array.from(newStringIds).map(Number));
-      const allCurrentPageIds = new Set(rows.map((r: any) => r.id));
+      const allCurrentPageIds = new Set<number>(rows.map((r) => r.id));
 
-      const added = Array.from(newNumIds).filter((id) => !selectedDetailIds.has(id));
+      const added = Array.from(newNumIds).filter((id: number) => !selectedDetailIds.has(id));
       const removed = Array.from(allCurrentPageIds).filter(
-        (id) => selectedDetailIds.has(id) && !newNumIds.has(id)
+        (id: number) => selectedDetailIds.has(id) && !newNumIds.has(id)
       );
 
       setSelectedDetailIds((prev) => {
@@ -194,7 +205,7 @@ export function AssignStockModal({
     }
   };
 
-  const columns = useMemo<ColumnDef<any>[]>(
+  const columns = useMemo<ColumnDef<UnassignedStockRow>[]>(
     () => [
       {
         header: 'Warna',
@@ -325,11 +336,6 @@ export function AssignStockModal({
               total,
             }}
             onPageChange={setCurrentPage}
-            emptyMessage={
-              debouncedSearch
-                ? `Tidak ada stok unit unassigned yang cocok dengan "${debouncedSearch}"`
-                : 'Tidak ada stok unit unassigned yang tersedia untuk tipe unit ini'
-            }
           />
         </div>
 

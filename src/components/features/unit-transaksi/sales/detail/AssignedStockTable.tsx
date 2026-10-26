@@ -111,11 +111,11 @@ export function AssignedStockTable({
   const handleSelectedIdsChange = useCallback(
     (newStringIds: Set<string>) => {
       const newNumIds = new Set<number>(Array.from(newStringIds).map(Number));
-      const allCurrentPageIds = new Set(pagedRows.map((r) => r.id));
+      const allCurrentPageIds = new Set<number>(pagedRows.map((r) => r.id));
 
-      const added = Array.from(newNumIds).filter((id) => !selectedSalesIds.has(id));
+      const added = Array.from(newNumIds).filter((id: number) => !selectedSalesIds.has(id));
       const removed = Array.from(allCurrentPageIds).filter(
-        (id) => selectedSalesIds.has(id) && !newNumIds.has(id)
+        (id: number) => selectedSalesIds.has(id) && !newNumIds.has(id)
       );
 
       const next = new Set(selectedSalesIds);
@@ -324,11 +324,6 @@ export function AssignedStockTable({
         }}
         onPageChange={setCurrentPage}
         headerActions={headerActionsNode}
-        emptyMessage={
-          search
-            ? `Tidak ada unit yang cocok dengan pencarian "${search}"`
-            : 'Belum ada unit yang di-assign untuk transaksi penjualan ini. Klik "Tambah Unit" untuk menetapkan unit stok.'
-        }
       />
     </div>
   );
