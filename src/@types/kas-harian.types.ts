@@ -195,6 +195,20 @@ export interface CashFlowFilterParams {
   end_date?: string;
 }
 
+export interface CashFlowExportParams {
+  company_id?: number;
+  is_paid?: boolean;
+  is_valid?: boolean;
+  search?: string;
+  date?: string;
+  start_date?: string;
+  end_date?: string;
+  month?: number | string;
+  year?: number | string;
+  sort_by?: string;
+  sort_order?: 'asc' | 'desc' | string;
+}
+
 export interface CashFlowListResponse {
   status: boolean;
   message?: string;

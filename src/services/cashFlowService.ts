@@ -1,4 +1,5 @@
 import type {
+  CashFlowExportParams,
   CashFlowFilterParams,
   CashFlowItemResponse,
   CashFlowListResponse,
@@ -7,7 +8,8 @@ import type {
   KasHarian,
 } from '@/@types/kas-harian.types';
 import { apiClient } from '@/lib/api/client';
-import { ensureSuccess, mapLaravelPaginationMeta, type LaravelApiResponse } from '@/lib/api/response';
+import { ApiResponseError, ensureSuccess, mapLaravelPaginationMeta, type LaravelApiResponse } from '@/lib/api/response';
+import { downloadFileFromResponse, extractBlobErrorMessage } from '@/utils/download';
 
 const BASE_PATH = '/wapi/finance/cash-flow';
 
@@ -451,4 +453,29 @@ export async function syncCashFlowPpnData(id: number | string) {
   await apiClient.post(`${BASE_PATH}/sync-ppn-data`, {
     cash_flow_id: id,
   });
+}
+
+export async function exportCashFlow(params: CashFlowExportParams = {}): Promise<void> {
+  const entries = Object.entries(params).filter(
+    ([, value]) => value !== undefined && value !== null && value !== '' && value !== 'all',
+  );
+  const cleanParams = Object.fromEntries(entries);
+
+  try {
+    const response = await apiClient.get(`${BASE_PATH}/export`, {
+      params: cleanParams,
+      responseType: 'blob',
+      headers: {
+        Accept: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      },
+    });
+
+    await downloadFileFromResponse(response, 'wajira_cash_flow_data.xlsx');
+  } catch (error: any) {
+    if (error instanceof ApiResponseError) {
+      throw error;
+    }
+    const message = await extractBlobErrorMessage(error, 'Gagal export data transaksi kas harian');
+    throw new ApiResponseError(message);
+  }
 }

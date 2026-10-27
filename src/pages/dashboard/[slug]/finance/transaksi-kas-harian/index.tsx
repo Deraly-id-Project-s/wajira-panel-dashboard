@@ -1,8 +1,9 @@
 import { useEffect, useMemo, useState } from 'react';
 import Head from 'next/head';
 import { useRouter } from 'next/router';
-import { Plus } from 'lucide-react';
+import { Download, Plus } from 'lucide-react';
 import { toast } from 'sonner';
+import { format } from 'date-fns';
 import type { DateRange } from 'react-day-picker';
 import type { KasHarian, KasHarianListItem } from '@/@types/kas-harian.types';
 import type { PaginationMeta } from '@/@types/pagination.types';
@@ -19,6 +20,7 @@ import { useKasHarian, useSyncKasHarianPpnData } from '@/hooks/useKasHarian';
 import { usePermissionGuard } from '@/hooks/usePermissionGuard';
 import { getApiErrorMessage } from '@/utils/apiErrorHandler';
 import {
+  exportCashFlow,
   filterKasHarianByMonth,
   getKasHarianPaymentDate,
   sortKasHarianByMonthDescDayAsc,
@@ -69,6 +71,7 @@ export default function KasHarianPage() {
   const [isToggleOpen, setIsToggleOpen] = useState(false);
   const [targetStatus, setTargetStatus] = useState(false);
   const [selectedItem, setSelectedItem] = useState<KasHarian | null>(null);
+  const [isExporting, setIsExporting] = useState(false);
   const syncPpnMutation = useSyncKasHarianPpnData();
 
   useEffect(() => {
@@ -90,8 +93,8 @@ export default function KasHarianPage() {
     setPage(1);
   };
 
-  const startDate = date?.from ? date.from.toISOString().split('T')[0] : undefined;
-  const endDate = date?.to ? date.to.toISOString().split('T')[0] : undefined;
+  const startDate = date?.from ? format(date.from, 'yyyy-MM-dd') : undefined;
+  const endDate = date?.to ? format(date.to, 'yyyy-MM-dd') : undefined;
 
   const kasHarianQuery = useKasHarian(
     {
@@ -202,6 +205,31 @@ export default function KasHarianPage() {
     void router.push(`/dashboard/${slug}/finance/transaksi-kas-harian/${targetId}?source=${item.source}`);
   };
 
+  const handleExport = async () => {
+    if (!companyNumber) {
+      toast.error('Pilih perusahaan terlebih dahulu');
+      return;
+    }
+
+    setIsExporting(true);
+    try {
+      await exportCashFlow({
+        company_id: companyNumber,
+        search: (searchInput.trim() || searchValue) || undefined,
+        start_date: startDate,
+        end_date: endDate || (date?.from ? startDate : undefined),
+        month: selectedMonth !== 'all' ? selectedMonth : undefined,
+        sort_by: 'date',
+        sort_order: 'desc',
+      });
+      toast.success('Data transaksi kas harian berhasil diexport');
+    } catch (error: any) {
+      toast.error(error?.message || 'Gagal export data transaksi kas harian');
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
   return (
     <DashboardLayout>
       <Head>
@@ -212,6 +240,20 @@ export default function KasHarianPage() {
         <PageHeader
           title="Arus Transaksi Kas Harian"
           subtitle="Kelola arus transaksi kas harian"
+          actions={
+            <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={handleExport}
+                disabled={isLoading || isFetching || isExporting}
+                className="w-full sm:w-auto"
+              >
+                <Download className="mr-2 h-4 w-4" />
+                {isExporting ? 'Exporting...' : 'Export'}
+              </Button>
+            </div>
+          }
         />
 
         <SearchPagination
