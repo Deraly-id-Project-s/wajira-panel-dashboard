@@ -109,7 +109,7 @@ export const getYanotamaMenus = (slug: string): MenuItem[] => {
                     href: base('/finance/transaksi-kas-harian'),
                 },
                 {
-                    label: 'Jurnal Umum',
+                    label: 'Transaksi Jurnal Umum',
                     href: base('/finance/jurnal-umum'),
                 },
                 {
@@ -140,6 +140,10 @@ export const getYanotamaMenus = (slug: string): MenuItem[] => {
             label: 'Laporan',
             icon: ScrollText,
             children: [
+                {
+                    label: 'Laporan Jurnal Umum',
+                    href: base('/laporan/laporan-jurnal-umum'),
+                },
                 {
                     label: 'LP Jumlah Daftar',
                     href: base('/laporan/lp-jumlah-daftar'),

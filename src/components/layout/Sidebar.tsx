@@ -110,12 +110,14 @@ const ensureReportFallbackSidebarMenus = (menus: MenuItem[], slug: string): Menu
     if (menu.label !== 'Laporan' || !menu.children) return menu;
 
     const journalHref = slug ? `/dashboard/${slug}/laporan/laporan-jurnal` : '/laporan/laporan-jurnal';
+    const generalJournalHref = slug ? `/dashboard/${slug}/laporan/laporan-jurnal-umum` : '/laporan/laporan-jurnal-umum';
     const ledgerHref = slug ? `/dashboard/${slug}/laporan/laporan-buku-besar` : '/laporan/laporan-buku-besar';
     const balanceColumnHref = slug ? `/dashboard/${slug}/laporan/laporan-neraca-lajur` : '/laporan/laporan-neraca-lajur';
     const profitLossHref = slug ? `/dashboard/${slug}/laporan/laporan-laba-rugi` : '/laporan/laporan-laba-rugi';
     const balanceReportHref = slug ? `/dashboard/${slug}/laporan/ballance-report` : '/laporan/ballance-report';
     const children = [...menu.children];
     const hasJournal = menu.children.some((child) => child.href === journalHref || child.label === 'Laporan Jurnal');
+    const hasGeneralJournal = menu.children.some((child) => child.href === generalJournalHref || child.label === 'Laporan Jurnal Umum');
     const hasLedger = menu.children.some((child) => child.href === ledgerHref || child.label === 'Laporan Buku Besar');
     const hasBalanceColumn = menu.children.some((child) => child.href === balanceColumnHref || child.label === 'Laporan Neraca Lajur');
     const hasProfitLoss = menu.children.some((child) => child.href === profitLossHref || child.label === 'Laporan Laba Rugi');
@@ -129,6 +131,17 @@ const ensureReportFallbackSidebarMenus = (menus: MenuItem[], slug: string): Menu
       children.splice(insertIndex, 0, {
         label: 'Laporan Jurnal',
         href: journalHref,
+      });
+    }
+
+    if (!hasGeneralJournal) {
+      const journalIndex = children.findIndex((child) => child.label === 'Laporan Jurnal');
+      const purchaseIndex = children.findIndex((child) => child.label === 'Laporan Pembelian');
+      const insertIndex = journalIndex >= 0 ? journalIndex + 1 : purchaseIndex >= 0 ? purchaseIndex : children.length;
+
+      children.splice(insertIndex, 0, {
+        label: 'Laporan Jurnal Umum',
+        href: generalJournalHref,
       });
     }
 

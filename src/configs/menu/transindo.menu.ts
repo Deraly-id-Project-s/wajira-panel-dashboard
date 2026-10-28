@@ -132,7 +132,7 @@ export const getTransindoMenus = (slug: string): MenuItem[] => {
           href: base('/finance/transaksi-kas-harian'),
         },
         {
-          label: 'Jurnal Umum',
+          label: 'Transaksi Jurnal Umum',
           href: base('/finance/jurnal-umum'),
         },
         {
@@ -157,6 +157,10 @@ export const getTransindoMenus = (slug: string): MenuItem[] => {
         {
           label: 'Laporan Transaksi Kas',
           href: base('/laporan/laporan-transaksi-kas'),
+        },
+        {
+          label: 'Laporan Jurnal Umum',
+          href: base('/laporan/laporan-jurnal-umum'),
         },
         {
           label: 'Laporan Surat Jalan',

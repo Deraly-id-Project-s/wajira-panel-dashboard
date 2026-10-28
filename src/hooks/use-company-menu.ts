@@ -85,7 +85,8 @@ const FEATURE_MAP: Record<string, { path: string; label?: string; group?: string
 
   // Finance
   'daily-cash-transactions': { path: '/finance/transaksi-kas-harian', label: 'Kas Harian' },
-  'general-journals': { path: '/finance/jurnal-umum', label: 'Jurnal Umum' },
+  'general-journals': { path: '/finance/jurnal-umum', label: 'Transaksi Jurnal Umum' },
+  'general-journal-transactions': { path: '/finance/jurnal-umum', label: 'Transaksi Jurnal Umum' },
   'purchase-vat-records': { path: '/finance/data-ppn-pembelian', label: 'Data PPN Pembelian' },
   'sales-vat-records': { path: '/finance/data-ppn-penjualan', label: 'Data PPN Penjualan' },
   'purchase-refunds': { path: '/finance/refund-beli', label: 'Data Refund Pembelian' },
@@ -102,6 +103,8 @@ const FEATURE_MAP: Record<string, { path: string; label?: string; group?: string
   'cash-transaction-reports': { path: '/laporan/laporan-transaksi-kas', label: 'Laporan Transaksi Kas' },
   'journal-reports': { path: '/laporan/laporan-jurnal', label: 'Laporan Jurnal' },
   'journal-report': { path: '/laporan/laporan-jurnal', label: 'Laporan Jurnal' },
+  'general-journal-reports': { path: '/laporan/laporan-jurnal-umum', label: 'Laporan Jurnal Umum' },
+  'general-journal-report': { path: '/laporan/laporan-jurnal-umum', label: 'Laporan Jurnal Umum' },
   'ledger-reports': { path: '/laporan/laporan-buku-besar', label: 'Laporan Buku Besar' },
   'ledger-report': { path: '/laporan/laporan-buku-besar', label: 'Laporan Buku Besar' },
   'balance-column-reports': { path: '/laporan/laporan-neraca-lajur', label: 'Laporan Neraca Lajur' },
@@ -184,6 +187,7 @@ const resolvePath = (path: string, slug: string) => {
 const REPORT_MENU_ORDER = [
   'Laporan Transaksi Kas',
   'Laporan Jurnal',
+  'Laporan Jurnal Umum',
   'Laporan Buku Besar',
   'Laporan Neraca Lajur',
   'Laporan Laba Rugi',

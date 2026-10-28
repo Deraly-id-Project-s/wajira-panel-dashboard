@@ -137,12 +137,12 @@ export default function GeneralJournalPage() {
   return (
     <DashboardLayout>
       <Head>
-        <title>Jurnal Umum - Wajira Dashboard</title>
+        <title>Transaksi Jurnal Umum - Wajira Dashboard</title>
       </Head>
 
       <div className="space-y-6">
         <PageHeader
-          title="Jurnal Umum"
+          title="Transaksi Jurnal Umum"
           subtitle="Pencatatan memorial jurnal penyesuaian non-kas. Transaksi hanya akan muncul di Laporan Jurnal Umum setelah diposting."
           actions={
             canCreate ? (

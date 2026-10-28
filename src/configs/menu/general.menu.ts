@@ -216,7 +216,7 @@ export const getGeneralMenus = (slug: string): MenuItem[] => {
           href: base('/finance/transaksi-kas-harian'),
         },
         {
-          label: 'Jurnal Umum',
+          label: 'Transaksi Jurnal Umum',
           href: base('/finance/jurnal-umum'),
         },
         {
@@ -268,6 +268,10 @@ export const getGeneralMenus = (slug: string): MenuItem[] => {
         {
           label: 'Laporan Jurnal',
           href: base('/laporan/laporan-jurnal'),
+        },
+        {
+          label: 'Laporan Jurnal Umum',
+          href: base('/laporan/laporan-jurnal-umum'),
         },
         {
           label: 'Laporan Buku Besar',
