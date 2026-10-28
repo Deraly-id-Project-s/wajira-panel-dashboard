@@ -70,6 +70,44 @@ export interface KasHarianUnitTransactionUsdCost {
   updated_at?: string;
 }
 
+export type CashFlowTransactionOf = 'unit_type' | 'sparepart' | 'goods' | 'cash_advance' | 'other';
+
+export interface KasHarianUnitTypeItem {
+  id?: number;
+  code?: string;
+  name?: string;
+  unit_type?: string;
+  unit_model?: string;
+}
+
+export interface KasHarianUnitTransactionItemDetail {
+  unit_type?: KasHarianUnitTypeItem | null;
+  unit_type_name?: string | null;
+  total_qty?: number;
+  dpp_per_unit?: number;
+  total_dpp?: number;
+}
+
+export interface KasHarianSparepartItem {
+  id?: number;
+  code?: string;
+  name?: string;
+  unit_type?: string;
+}
+
+export interface KasHarianAdditionalInformation {
+  transaction_of?: CashFlowTransactionOf | string;
+  unit_type?: KasHarianUnitTypeItem | null;
+  unit_type_name?: string | null;
+  dpp_per_unit?: number;
+  total_dpp?: number;
+  items?: KasHarianUnitTransactionItemDetail[];
+  sparepart?: KasHarianSparepartItem | null;
+  sparepart_name?: string | null;
+  total_qty?: number;
+  [key: string]: unknown;
+}
+
 export interface KasHarianUnitTransaction {
   id: number;
   code?: string;
@@ -82,6 +120,23 @@ export interface KasHarianUnitTransaction {
   has_refund_transaction?: boolean;
   expedition_fee_total?: number;
   unit_transaction_usd_costs?: KasHarianUnitTransactionUsdCost[];
+  additional_information?: KasHarianAdditionalInformation | null;
+}
+
+export interface KasHarianSparepartTransactionBilling {
+  id: number;
+  uuid?: string;
+  sparepart_transaction_id?: number;
+  grand_total?: number;
+  is_paid?: boolean;
+  sparepart_transaction?: {
+    id: number;
+    type?: string;
+    sparepart_id?: number;
+    qty?: number;
+    sparepart?: KasHarianSparepartItem | null;
+    additional_information?: KasHarianAdditionalInformation | null;
+  } | null;
 }
 
 export interface KasHarianUnitTransactionBilling {
@@ -120,6 +175,7 @@ export interface KasHarian {
   goods_transaction_billing_id?: number | null;
   driver_cash_advance_billing_id?: number | null;
   do_invoice_billing_id?: number | null;
+  transaction_of?: CashFlowTransactionOf | string | null;
   cash_flow_type?: 'debet' | 'credit' | string;
   code: string;
   date: string;
@@ -159,6 +215,8 @@ export interface KasHarian {
   finance_billings?: FinanceBilling[];
   unit_transaction_billing?: KasHarianUnitTransactionBilling | null;
   goods_transaction_billing?: KasHarianGoodsTransactionBilling | null;
+  sparepart_transaction_billing?: KasHarianSparepartTransactionBilling | null;
+  additional_information?: KasHarianAdditionalInformation | null;
 }
 
 export interface CashFlowCashPayloadItem {
@@ -173,6 +231,7 @@ export interface CashFlowPayload {
   company_id: number;
   cash_id?: number;
   account_id?: number;
+  transaction_of?: CashFlowTransactionOf | string | null;
   date: string;
   note: string;
   debet?: number;

@@ -7,12 +7,14 @@ import {
   ArrowUpRight,
   Building2,
   CalendarDays,
+  Car,
   CheckCircle2,
   CircleDollarSign,
   Coins,
   ExternalLink,
   FileCheck2,
   Info,
+  Package,
   Pencil,
   Percent,
   ReceiptText,
@@ -20,6 +22,7 @@ import {
   ShieldCheck,
   Truck,
   WalletCards,
+  Wrench,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import FinanceBillingTable from '@/components/features/kas-harian/FinanceBillingTable';
@@ -111,6 +114,43 @@ function DetailItem({ label, children, icon }: DetailItemProps) {
   );
 }
 
+const TRANSACTION_OF_CONFIG: Record<string, { label: string; tone: string; icon: React.ReactNode }> = {
+  unit_type: {
+    label: 'Unit Kendaraan',
+    tone: 'border-blue-200 bg-blue-50 text-blue-700',
+    icon: <Car className="mr-1 h-3.5 w-3.5" />,
+  },
+  sparepart: {
+    label: 'Sparepart',
+    tone: 'border-amber-200 bg-amber-50 text-amber-700',
+    icon: <Wrench className="mr-1 h-3.5 w-3.5" />,
+  },
+  goods: {
+    label: 'Barang',
+    tone: 'border-emerald-200 bg-emerald-50 text-emerald-700',
+    icon: <Package className="mr-1 h-3.5 w-3.5" />,
+  },
+  cash_advance: {
+    label: 'Kas Bon Supir',
+    tone: 'border-violet-200 bg-violet-50 text-violet-700',
+    icon: <Coins className="mr-1 h-3.5 w-3.5" />,
+  },
+  other: {
+    label: 'Lainnya',
+    tone: 'border-slate-200 bg-slate-50 text-slate-700',
+    icon: <ReceiptText className="mr-1 h-3.5 w-3.5" />,
+  },
+};
+
+const getTransactionOfConfig = (type?: string | null) => {
+  if (!type) return null;
+  return TRANSACTION_OF_CONFIG[type] ?? {
+    label: type.replace(/_/g, ' ').toUpperCase(),
+    tone: 'border-slate-200 bg-slate-50 text-slate-700',
+    icon: <ReceiptText className="mr-1 h-3.5 w-3.5" />,
+  };
+};
+
 export default function KasHarianDetailPage() {
   const router = useRouter();
   const { slug, id: rawId } = router.query;
@@ -141,13 +181,55 @@ export default function KasHarianDetailPage() {
 
   const financeBillings = useMemo(() => cashFlowDetail?.finance_billings ?? [], [cashFlowDetail?.finance_billings]);
   const hasBillings = financeBillings.length > 0;
+
+  const additionalInfo = cashFlowDetail?.additional_information
+    ?? cashFlowDetail?.unit_transaction_billing?.unit_transaction?.additional_information
+    ?? cashFlowDetail?.sparepart_transaction_billing?.sparepart_transaction?.additional_information;
+
+  const transactionOf = cashFlowDetail?.transaction_of
+    || additionalInfo?.transaction_of
+    || (cashFlowDetail?.unit_transaction_billing_id || cashFlowDetail?.unit_transaction_billing ? 'unit_type' : undefined)
+    || (cashFlowDetail?.sparepart_transaction_billing_id || cashFlowDetail?.sparepart_transaction_billing ? 'sparepart' : undefined)
+    || (cashFlowDetail?.goods_transaction_billing_id || cashFlowDetail?.goods_transaction_billing ? 'goods' : undefined)
+    || (cashFlowDetail?.driver_cash_advance_billing_id ? 'cash_advance' : undefined)
+    || (cashFlowDetail?.do_invoice_billing_id ? 'other' : undefined);
+
+  const transactionOfConfig = getTransactionOfConfig(transactionOf);
+
   const isLinkedTransaction = Boolean(
     cashFlowDetail?.unit_transaction_billing_id
     || cashFlowDetail?.goods_transaction_billing_id
+    || cashFlowDetail?.sparepart_transaction_billing_id
+    || cashFlowDetail?.driver_cash_advance_billing_id
+    || cashFlowDetail?.do_invoice_billing_id
     || cashFlowDetail?.unit_transaction_billing
-    || cashFlowDetail?.goods_transaction_billing,
+    || cashFlowDetail?.goods_transaction_billing
+    || cashFlowDetail?.sparepart_transaction_billing
+    || (transactionOf && transactionOf !== 'other'),
   );
   const unitTransaction = cashFlowDetail?.unit_transaction_billing?.unit_transaction;
+
+  const unitItems = useMemo(() => {
+    if (additionalInfo?.items && additionalInfo.items.length > 0) {
+      return additionalInfo.items;
+    }
+    if (additionalInfo?.unit_type_name || additionalInfo?.unit_type) {
+      return [
+        {
+          unit_type: additionalInfo.unit_type,
+          unit_type_name: additionalInfo.unit_type_name,
+          total_qty: additionalInfo.total_qty,
+          dpp_per_unit: additionalInfo.dpp_per_unit,
+          total_dpp: additionalInfo.total_dpp,
+        },
+      ];
+    }
+    return [];
+  }, [additionalInfo]);
+
+  const isSparepart = additionalInfo?.transaction_of === 'sparepart'
+    || Boolean(additionalInfo?.sparepart)
+    || Boolean(additionalInfo?.sparepart_name);
 
   const usdCostsList = useMemo(() => {
     const rawCosts = unitTransaction?.unit_transaction_usd_costs ?? [];
@@ -541,6 +623,12 @@ export default function KasHarianDetailPage() {
                 {isMarkedPaid ? <CheckCircle2 className="mr-1 h-3.5 w-3.5" /> : null}
                 {isMarkedPaid ? 'Lunas' : 'Belum Lunas'}
               </Badge>
+              {transactionOfConfig && (
+                <Badge variant="outline" className={transactionOfConfig.tone}>
+                  {transactionOfConfig.icon}
+                  {transactionOfConfig.label}
+                </Badge>
+              )}
             </>
           }
           onBack={() => void router.push(basePath)}
@@ -572,26 +660,156 @@ export default function KasHarianDetailPage() {
                 <CardTitle>Informasi Transaksi</CardTitle>
                 <CardDescription className="mt-1">Identitas dan referensi transaksi kas harian</CardDescription>
               </div>
-              {isLinkedTransaction ? (
-                <TooltipProvider>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Badge variant="outline" className="border-blue-200 bg-blue-50 text-blue-700 mt-2"><Info />Terhubung Administrasi</Badge>
-                    </TooltipTrigger>
-                    <TooltipContent>Transaksi ini dibuat dari data administrasi.</TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
-              ) : (
-                <Badge variant="outline" className="border-slate-200 bg-slate-50 text-slate-600">Transaksi Manual</Badge>
-              )}
+              <div className="flex flex-wrap items-center gap-2">
+                {transactionOfConfig && (
+                  <Badge variant="outline" className={transactionOfConfig.tone}>
+                    {transactionOfConfig.icon}
+                    {transactionOfConfig.label}
+                  </Badge>
+                )}
+                {isLinkedTransaction ? (
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Badge variant="outline" className="border-blue-200 bg-blue-50 text-blue-700">
+                          <Info className="mr-1 h-3.5 w-3.5" />
+                          Terhubung Administrasi
+                        </Badge>
+                      </TooltipTrigger>
+                      <TooltipContent>Transaksi ini dibuat dari data administrasi.</TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                ) : (
+                  <Badge variant="outline" className="border-slate-200 bg-slate-50 text-slate-600">Transaksi Manual</Badge>
+                )}
+              </div>
             </div>
           </CardHeader>
-          <CardContent className="grid gap-6 p-4 sm:grid-cols-2 sm:p-6 xl:grid-cols-4">
+          <CardContent className="grid gap-6 p-4 sm:grid-cols-2 sm:p-6 lg:grid-cols-3 xl:grid-cols-5">
             <DetailItem label="Kode Transaksi" icon={<ReceiptText className="h-4 w-4" />}><CopyBox text={cashFlowDetail.code || '-'} /></DetailItem>
             <DetailItem label="Tanggal Transaksi" icon={<CalendarDays className="h-4 w-4" />}>{formatDate(cashFlowDetail.date)}</DetailItem>
             <DetailItem label="Perusahaan" icon={<Building2 className="h-4 w-4" />}>{cashFlowDetail.company?.name || '-'}</DetailItem>
             <DetailItem label="Nomor Invoice" icon={<FileCheck2 className="h-4 w-4" />}>{cashFlowDetail.invoice_number || '-'}</DetailItem>
+            <DetailItem label="Jenis Transaksi" icon={transactionOfConfig ? transactionOfConfig.icon : <ReceiptText className="h-4 w-4" />}>
+              {transactionOfConfig ? transactionOfConfig.label : '-'}
+            </DetailItem>
           </CardContent>
+
+          {unitItems.length > 0 && (
+            <>
+              <Separator />
+              <div className="p-4 sm:p-6">
+                <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
+                  <div>
+                    <h4 className="text-xs font-semibold uppercase tracking-wider text-slate-500">
+                      Rincian Unit Transaksi
+                    </h4>
+                    <p className="mt-0.5 text-xs text-slate-400">
+                      Informasi tipe unit, kuantitas, dan nilai DPP transaksi
+                    </p>
+                  </div>
+                  <Badge variant="outline" className="border-blue-200 bg-blue-50 text-blue-700">
+                    Total: {additionalInfo?.total_qty ?? unitItems.reduce((acc, it) => acc + (it.total_qty ?? 0), 0)} Unit
+                  </Badge>
+                </div>
+
+                <div className="overflow-x-auto rounded-md border border-slate-200">
+                  <table className="w-full text-left text-sm">
+                    <thead className="border-b border-slate-200 bg-slate-50 text-xs font-semibold text-slate-600 uppercase tracking-wider">
+                      <tr>
+                        <th className="px-4 py-3">Nama Unit</th>
+                        <th className="px-4 py-3">Tipe / Model</th>
+                        <th className="px-4 py-3 text-right">Kuantitas</th>
+                        <th className="px-4 py-3 text-right">DPP / Unit</th>
+                        <th className="px-4 py-3 text-right">Total DPP</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-100 bg-white">
+                      {unitItems.map((item, idx) => {
+                        const typeModel = [item.unit_type?.unit_type, item.unit_type?.unit_model].filter(Boolean).join(' / ');
+                        return (
+                          <tr key={item.unit_type?.id ?? idx} className="hover:bg-slate-50/50">
+                            <td className="px-4 py-3">
+                              <div className="font-medium text-slate-900">{item.unit_type_name || item.unit_type?.name || '-'}</div>
+                              {item.unit_type?.code && (
+                                <div className="text-xs text-slate-400 font-mono">{item.unit_type.code}</div>
+                              )}
+                            </td>
+                            <td className="px-4 py-3 text-xs text-slate-600">
+                              {typeModel || '-'}
+                            </td>
+                            <td className="px-4 py-3 text-right font-medium text-slate-800">
+                              {item.total_qty ?? 0} Unit
+                            </td>
+                            <td className="px-4 py-3 text-right text-slate-700">
+                              {currenciesFormat('idr', item.dpp_per_unit ?? 0)}
+                            </td>
+                            <td className="px-4 py-3 text-right font-semibold text-slate-900">
+                              {currenciesFormat('idr', item.total_dpp ?? 0)}
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                    {(additionalInfo?.total_dpp !== undefined || additionalInfo?.total_qty !== undefined) && (
+                      <tfoot className="border-t border-slate-200 bg-slate-50/80 font-medium text-slate-700 text-xs">
+                        <tr>
+                          <td colSpan={2} className="px-4 py-2.5 font-semibold text-slate-900">
+                            Total Keseluruhan
+                          </td>
+                          <td className="px-4 py-2.5 text-right font-bold text-slate-900">
+                            {additionalInfo?.total_qty ?? unitItems.reduce((acc, it) => acc + (it.total_qty ?? 0), 0)} Unit
+                          </td>
+                          <td className="px-4 py-2.5 text-right">-</td>
+                          <td className="px-4 py-2.5 text-right font-bold text-slate-900">
+                            {currenciesFormat(
+                              'idr',
+                              additionalInfo?.total_dpp ?? unitItems.reduce((acc, it) => acc + (it.total_dpp ?? 0), 0),
+                            )}
+                          </td>
+                        </tr>
+                      </tfoot>
+                    )}
+                  </table>
+                </div>
+              </div>
+            </>
+          )}
+
+          {isSparepart && (
+            <>
+              <Separator />
+              <div className="p-4 sm:p-6">
+                <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
+                  <div>
+                    <h4 className="text-xs font-semibold uppercase tracking-wider text-slate-500">
+                      Rincian Sparepart Transaksi
+                    </h4>
+                    <p className="mt-0.5 text-xs text-slate-400">
+                      Informasi item sparepart dan kuantitas transaksi
+                    </p>
+                  </div>
+                  <Badge variant="outline" className="border-amber-200 bg-amber-50 text-amber-700">
+                    Total: {additionalInfo?.total_qty ?? 0} Pcs
+                  </Badge>
+                </div>
+                <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+                  <DetailItem label="Nama Sparepart" icon={<Wrench className="h-4 w-4" />}>
+                    {additionalInfo?.sparepart_name || additionalInfo?.sparepart?.name || '-'}
+                  </DetailItem>
+                  <DetailItem label="Kode Sparepart" icon={<ReceiptText className="h-4 w-4" />}>
+                    <span className="font-mono">{additionalInfo?.sparepart?.code || '-'}</span>
+                  </DetailItem>
+                  <DetailItem label="Tipe / Kompatibilitas" icon={<Package className="h-4 w-4" />}>
+                    {additionalInfo?.sparepart?.unit_type || '-'}
+                  </DetailItem>
+                  <DetailItem label="Total Kuantitas" icon={<Coins className="h-4 w-4" />}>
+                    <span className="font-semibold text-slate-900">{additionalInfo?.total_qty ?? 0} Pcs</span>
+                  </DetailItem>
+                </div>
+              </div>
+            </>
+          )}
           {unitTransaction && (
             <>
               <Separator />
