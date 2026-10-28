@@ -229,6 +229,16 @@ export function LeafletCoordinateInput({
       </div>
       {locationError && <p className="text-xs text-red-600">{locationError}</p>}
 
+      <div className="flex items-center justify-between rounded-md border border-slate-200 bg-slate-50 px-3 py-2 text-xs">
+        <span className="flex items-center gap-1.5 font-medium text-slate-600">
+          <MapPin className="h-3.5 w-3.5 text-orange-600" />
+          Koordinat Saat Ini:
+        </span>
+        <span className="font-mono font-semibold text-slate-800">
+          {parsedCoordinate ? serializeMapCoordinate(parsedCoordinate) : 'Belum dipilih'}
+        </span>
+      </div>
+
       <ShowMapLeaflet
         value={parsedCoordinate}
         onCoordinateChange={disabled ? undefined : commitCoordinate}
