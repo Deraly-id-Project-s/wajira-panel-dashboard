@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { MoreVertical } from 'lucide-react';
+import { AlertTriangle, MoreVertical } from 'lucide-react';
 import { format } from 'date-fns';
 import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
@@ -11,6 +11,7 @@ import { ReferenceLink } from '@/components/ui/reference-link';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import { currenciesFormat } from '@/components/ui/currenciesFormat';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { getDoEkspedisiStatusBadgeClassName, getDoEkspedisiStatusLabel } from './do-ekspedisi-status';
 
 interface DOEkspedisiTableProps {
@@ -66,7 +67,29 @@ export const DOEkspedisiTable = React.memo(function DOEkspedisiTable({
         accessorKey: 'doCode',
         alignment: 'center',
         className: 'font-medium text-slate-800',
-        cell: (item) => item?.doCode ? <CopyBox text={item?.doCode} /> : '-',
+        cell: (item) => (
+          <div className="flex items-center justify-center gap-1.5">
+            {item.hasRejectRequest ? (
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <button
+                      type="button"
+                      className="cursor-help text-red-600 hover:text-red-700 transition-colors flex items-center shrink-0"
+                      aria-label="Terdapat request tolak dari driver"
+                    >
+                      <AlertTriangle className="h-4 w-4" />
+                    </button>
+                  </TooltipTrigger>
+                  <TooltipContent side="top" align="center" className="max-w-xs bg-slate-900 text-white rounded-md p-2 text-xs shadow-md">
+                    Terdapat permintaan tolak / reject dari driver
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            ) : null}
+            {item?.doCode ? <CopyBox text={item?.doCode} /> : '-'}
+          </div>
+        ),
       },
       {
         header: 'Kode Order',
@@ -78,9 +101,25 @@ export const DOEkspedisiTable = React.memo(function DOEkspedisiTable({
         accessorKey: 'status',
         alignment: 'center',
         cell: (item) => (
-          <Badge variant="outline" className={cn('rounded-full px-2.5 py-0.5 text-xs', getDoEkspedisiStatusBadgeClassName(item.status))}>
-            {getDoEkspedisiStatusLabel(item.status)}
-          </Badge>
+          <div className="flex flex-col items-center gap-1">
+            <Badge variant="outline" className={cn('rounded-full px-2.5 py-0.5 text-xs', getDoEkspedisiStatusBadgeClassName(item.status))}>
+              {getDoEkspedisiStatusLabel(item.status)}
+            </Badge>
+            {item.hasRejectRequest && (
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Badge variant="outline" className="border-red-200 bg-red-50 text-red-700 rounded-full px-2 py-0.5 text-[10px] font-semibold cursor-help">
+                      Request Tolak
+                    </Badge>
+                  </TooltipTrigger>
+                  <TooltipContent side="top" align="center" className="max-w-xs bg-slate-900 text-white rounded-md p-2 text-xs shadow-md">
+                    Driver mengajukan penolakan terhadap DO ini
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            )}
+          </div>
         ),
       },
       {
@@ -222,6 +261,7 @@ export const DOEkspedisiTable = React.memo(function DOEkspedisiTable({
       data={data}
       columns={columns}
       loading={isLoading}
+      getRowMark={(item) => (item.hasRejectRequest ? 'alert' : undefined)}
     />
   );
 });

@@ -98,6 +98,11 @@ export default function DetailDOEkspedisiPage() {
               {getDoEkspedisiStatusLabel(detailQuery.data.status)}
             </Badge>
           )}
+          {detailQuery.data?.hasRejectRequest && (
+            <Badge variant="outline" className="border-red-300 bg-red-50 text-red-700 font-semibold px-2.5 py-0.5 text-xs">
+              Request Tolak Driver
+            </Badge>
+          )}
           <span className="text-xs text-slate-500">Ditambahkan {detailQuery.data?.createdAt ? formatDate(detailQuery.data.createdAt) : ''}</span>
         </div>
       )}
@@ -254,6 +259,19 @@ export default function DetailDOEkspedisiPage() {
           </>,
         )}
 
+        {detailQuery.data.hasRejectRequest && (
+          <Alert variant="destructive" className="border-red-300 bg-red-50 text-red-900 shadow-xs">
+            <AlertTriangle className="h-5 w-5 text-red-600" />
+            <AlertTitle className="font-semibold text-red-800">Terdapat Permintaan Tolak / Reject dari Driver</AlertTitle>
+            <AlertDescription className="text-red-700">
+              Driver telah mengajukan penolakan terhadap DO Ekspedisi ini. Tinjau alasan penolakan pada panel di bawah dan proses approval penggantian driver serta armada.
+            </AlertDescription>
+          </Alert>
+        )}
+
+        {/* Informasi Request Reject diletakkan paling atas sebelum seluruh komponen lain */}
+        <DOEkspedisiRejectApproval data={detailQuery.data} onApproved={() => void detailQuery.refetch()} />
+
         {(!detailQuery.data.driver || !detailQuery.data.vehicle) && (
           <Alert variant="warning">
             <AlertTriangle />
@@ -265,7 +283,6 @@ export default function DetailDOEkspedisiPage() {
         )}
 
         <DOEkspedisiDetailCard data={detailQuery.data} />
-        <DOEkspedisiRejectApproval data={detailQuery.data} onApproved={() => void detailQuery.refetch()} />
         <DOEkspedisiRelatedData data={detailQuery.data} onRefresh={() => void detailQuery.refetch()} />
 
         {/* <div className="flex flex-col items-start justify-between gap-4 lg:flex-row lg:items-center">
