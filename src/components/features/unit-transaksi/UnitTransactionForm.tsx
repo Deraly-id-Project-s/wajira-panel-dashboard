@@ -153,23 +153,27 @@ export function UnitTransactionForm({
   const [createdTypeUnit, setCreatedTypeUnit] = useState<TypeUnit | null>(null);
 
   const initialCosts = useMemo(() => extractInitialUsdCosts(defaultValues), [defaultValues]);
-  const hasUsdData = Boolean(
-    (defaultValues?.priceUsd && Number(defaultValues.priceUsd) > 0) ||
-    (defaultValues?.pricePerUnitUsd && Number(defaultValues.pricePerUnitUsd) > 0) ||
-    ((defaultValues as any)?.price_usd && Number((defaultValues as any).price_usd) > 0) ||
-    ((defaultValues as any)?.price_per_unit_usd && Number((defaultValues as any).price_per_unit_usd) > 0) ||
-    (defaultValues as any)?.is_usd_transaction ||
-    (defaultValues as any)?.isUsd ||
-    (defaultValues?.unit_transaction_usd_costs && defaultValues.unit_transaction_usd_costs.length > 0) ||
-    (defaultValues?.usd_costs && defaultValues.usd_costs.length > 0) ||
-    initialCosts.usdCostsFreight > 0 ||
-    initialCosts.usdCostsBoxPacking > 0 ||
-    initialCosts.usdCostsAdminCost > 0 ||
-    initialCosts.usdCostsCkdProcessingCost > 0 ||
-    initialCosts.usdCostsBillOfLadingSwitchCost > 0 ||
-    initialCosts.usdCostsCustomsClearanceCost > 0 ||
-    initialCosts.otherList.length > 0
-  );
+  const isExplicitUsdInitial = defaultValues?.is_usd_transaction !== undefined
+    ? Boolean(defaultValues.is_usd_transaction)
+    : ((defaultValues as any)?.isUsd !== undefined ? Boolean((defaultValues as any).isUsd) : undefined);
+
+  const hasUsdData = isExplicitUsdInitial !== undefined
+    ? isExplicitUsdInitial
+    : Boolean(
+        (defaultValues?.priceUsd && Number(defaultValues.priceUsd) > 0) ||
+        (defaultValues?.pricePerUnitUsd && Number(defaultValues.pricePerUnitUsd) > 0) ||
+        ((defaultValues as any)?.price_usd && Number((defaultValues as any).price_usd) > 0) ||
+        ((defaultValues as any)?.price_per_unit_usd && Number((defaultValues as any).price_per_unit_usd) > 0) ||
+        (defaultValues?.unit_transaction_usd_costs && defaultValues.unit_transaction_usd_costs.length > 0) ||
+        (defaultValues?.usd_costs && defaultValues.usd_costs.length > 0) ||
+        initialCosts.usdCostsFreight > 0 ||
+        initialCosts.usdCostsBoxPacking > 0 ||
+        initialCosts.usdCostsAdminCost > 0 ||
+        initialCosts.usdCostsCkdProcessingCost > 0 ||
+        initialCosts.usdCostsBillOfLadingSwitchCost > 0 ||
+        initialCosts.usdCostsCustomsClearanceCost > 0 ||
+        initialCosts.otherList.length > 0
+      );
 
   const [isUsd, setIsUsd] = useState(hasUsdData);
   const showIdrFields = !isUsd;
@@ -230,26 +234,29 @@ export function UnitTransactionForm({
   useEffect(() => {
     if (defaultValues) {
       const nextCosts = extractInitialUsdCosts(defaultValues);
-      const nextHasUsd = Boolean(
-        (defaultValues.priceUsd && Number(defaultValues.priceUsd) > 0) ||
-        (defaultValues.pricePerUnitUsd && Number(defaultValues.pricePerUnitUsd) > 0) ||
-        ((defaultValues as any)?.price_usd && Number((defaultValues as any).price_usd) > 0) ||
-        ((defaultValues as any)?.price_per_unit_usd && Number((defaultValues as any).price_per_unit_usd) > 0) ||
-        (defaultValues as any)?.is_usd_transaction ||
-        (defaultValues as any)?.isUsd ||
-        (defaultValues.unit_transaction_usd_costs && defaultValues.unit_transaction_usd_costs.length > 0) ||
-        (defaultValues.usd_costs && defaultValues.usd_costs.length > 0) ||
-        nextCosts.usdCostsFreight > 0 ||
-        nextCosts.usdCostsBoxPacking > 0 ||
-        nextCosts.usdCostsAdminCost > 0 ||
-        nextCosts.usdCostsCkdProcessingCost > 0 ||
-        nextCosts.usdCostsBillOfLadingSwitchCost > 0 ||
-        nextCosts.usdCostsCustomsClearanceCost > 0 ||
-        nextCosts.otherList.length > 0
-      );
-      if (nextHasUsd) {
-        setIsUsd(true);
-      }
+      const isExplicitUsd = defaultValues.is_usd_transaction !== undefined
+        ? Boolean(defaultValues.is_usd_transaction)
+        : ((defaultValues as any)?.isUsd !== undefined ? Boolean((defaultValues as any).isUsd) : undefined);
+
+      const nextHasUsd = isExplicitUsd !== undefined
+        ? isExplicitUsd
+        : Boolean(
+            (defaultValues.priceUsd && Number(defaultValues.priceUsd) > 0) ||
+            (defaultValues.pricePerUnitUsd && Number(defaultValues.pricePerUnitUsd) > 0) ||
+            ((defaultValues as any)?.price_usd && Number((defaultValues as any).price_usd) > 0) ||
+            ((defaultValues as any)?.price_per_unit_usd && Number((defaultValues as any).price_per_unit_usd) > 0) ||
+            (defaultValues.unit_transaction_usd_costs && defaultValues.unit_transaction_usd_costs.length > 0) ||
+            (defaultValues.usd_costs && defaultValues.usd_costs.length > 0) ||
+            nextCosts.usdCostsFreight > 0 ||
+            nextCosts.usdCostsBoxPacking > 0 ||
+            nextCosts.usdCostsAdminCost > 0 ||
+            nextCosts.usdCostsCkdProcessingCost > 0 ||
+            nextCosts.usdCostsBillOfLadingSwitchCost > 0 ||
+            nextCosts.usdCostsCustomsClearanceCost > 0 ||
+            nextCosts.otherList.length > 0
+          );
+
+      setIsUsd(nextHasUsd);
       if (nextCosts.otherList.length > 0) {
         setOtherCosts(nextCosts.otherList);
       }

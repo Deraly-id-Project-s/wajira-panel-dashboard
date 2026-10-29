@@ -49,6 +49,14 @@ export default function EditPurchaseUnitPage() {
   const unit = singleUnitItem ?? unitItems?.data?.find((item) => item.id === String(unitId));
   const parentTransactionId = String(unit?.unit_transaction_id ?? id ?? '');
 
+  const isUsd = Boolean(
+    unit?.is_usd_transaction ??
+    (unit as any)?.unit_transaction?.is_usd_transaction ??
+    purchase?.is_usd_transaction ??
+    ((Number((unit as any)?.price_usd ?? 0) > 0) ||
+    (Number((unit as any)?.price_per_unit_usd ?? 0) > 0))
+  );
+
   const excludedTypeUnitIds = (unitItems?.data ?? [])
     .filter((item) => item.id !== String(unitId) && item.unit_type_id)
     .map((item) => String(item.unit_type_id));
@@ -214,10 +222,15 @@ export default function EditPurchaseUnitPage() {
           ]}
           title="Data Pembelian Unit Tipe"
           subtitle={
-            <>
+            <div className="flex flex-wrap items-center gap-2">
               <span>Kode Beli:</span>
               <span className="inline-flex items-center gap-1.5 font-semibold text-orange-600 hover:text-orange-700">{purchase.code}</span>
-            </>
+              {isUsd && (
+                <span className="inline-flex items-center rounded-full bg-amber-100 px-2.5 py-0.5 text-xs font-semibold text-amber-800 border border-amber-300">
+                  Transaksi USD
+                </span>
+              )}
+            </div>
           }
           onBack={() => router.back()}
         />
@@ -241,7 +254,7 @@ export default function EditPurchaseUnitPage() {
                 pricePerUnitUsd: unit.price_per_unit_usd,
                 unit_transaction_usd_costs: (unit as any).unit_transaction_usd_costs || (unit as any).usd_costs || [],
                 usd_costs: (unit as any).unit_transaction_usd_costs || (unit as any).usd_costs || [],
-                is_usd_transaction: (unit as any).is_usd_transaction,
+                is_usd_transaction: isUsd,
                 usd_cost_freight_total: (unit as any).usd_cost_freight_total,
                 usd_cost_box_packing_total: (unit as any).usd_cost_box_packing_total,
                 usd_cost_admin_cost_total: (unit as any).usd_cost_admin_cost_total,

@@ -215,6 +215,7 @@ export interface UnitTransactionItem {
   unit_transaction_id: string;
   unit_type_id?: string;
   sparepart_id?: string;
+  is_usd_transaction?: boolean;
   qty_total: number;
   price: number;
   price_discount?: number;
@@ -374,6 +375,18 @@ export interface UnitTransactionItemSummary {
   price_total?: number;
   dpp_tax?: TaxInfo | null;
   ppn_tax?: TaxInfo | null;
+  is_usd_transaction?: boolean;
+  total_usd_cost?: number;
+  usd_cost_freight_total?: number;
+  usd_cost_box_packing_total?: number;
+  usd_cost_admin_cost_total?: number;
+  usd_cost_ckd_processing_cost_total?: number;
+  usd_cost_bill_of_lading_switch_cost_total?: number;
+  usd_cost_customs_clearance_cost_total?: number;
+  usd_cost_other_total?: number;
+  unit_transaction_usd_costs?: any[];
+  usd_costs?: any[];
+  unit_transaction?: any;
   unit_type?: {
     id?: string | number;
     name?: string;

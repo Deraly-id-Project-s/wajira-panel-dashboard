@@ -63,7 +63,14 @@ export default function EditSalesUnitPage() {
             price_usd_discount: Number((item as any).price_discount_usd ?? item.price_usd_discount ?? 0) || 0,
             unit_transaction_usd_costs: (item as any).unit_transaction_usd_costs || (item as any).usd_costs || [],
             usd_costs: (item as any).unit_transaction_usd_costs || (item as any).usd_costs || [],
-            is_usd_transaction: (item as any).is_usd_transaction,
+            is_usd_transaction: Boolean(
+                item?.is_usd_transaction ??
+                (item as any)?.unit_transaction?.is_usd_transaction ??
+                salesDetail?.ui?.is_usd_transaction ??
+                (salesDetail?.raw as any)?.is_usd_transaction ??
+                ((Number((item as any)?.price_usd ?? 0) > 0) ||
+                (Number((item as any)?.price_per_unit_usd ?? 0) > 0))
+            ),
             usd_cost_freight_total: (item as any).usd_cost_freight_total,
             usd_cost_box_packing_total: (item as any).usd_cost_box_packing_total,
             usd_cost_admin_cost_total: (item as any).usd_cost_admin_cost_total,
@@ -75,7 +82,7 @@ export default function EditSalesUnitPage() {
             ppnTaxVersionId: item.ppn_tax_id ?? undefined,
             documentTemplateId: salesDetail?.ui?.documentTemplateId ?? null,
         };
-    }, [item, salesDetail?.ui?.documentTemplateId]);
+    }, [item, salesDetail?.ui?.documentTemplateId, salesDetail?.ui?.is_usd_transaction, salesDetail?.raw]);
 
     const handleSubmit = async (values: UnitTransactionFormValues) => {
         try {
