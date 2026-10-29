@@ -10,6 +10,7 @@ import { ensureSuccess, LaravelApiResponse, toPaginatedResult } from '@/lib/api/
 
 type UnitBillingApiModel = {
   id?: string | number;
+  uuid?: string;
   company_id?: string | number;
   unit_transaction_id?: string | number;
   unitTransactionId?: string | number;
@@ -17,6 +18,9 @@ type UnitBillingApiModel = {
   remaining_payment?: string | number;
   remaining_payment_usd?: string | number;
   last_payment_at?: string;
+  is_usd_transaction?: boolean | number | string;
+  usd_payment_set?: boolean | number | string;
+  total_payment_count?: string | number;
   bca_payment?: string | number;
   bca_payment_amount?: string | number;
   bca_payment_idr?: string | number;
@@ -46,6 +50,8 @@ type UnitBillingApiModel = {
   updated_at?: string;
   unit_transaction?: {
     id?: string | number;
+    code?: string;
+    is_usd_transaction?: boolean | number | string;
   };
   data?: UnitBillingApiModel;
 };
@@ -137,15 +143,22 @@ const toSafeNumber = (value: unknown): number => {
 const mapBilling = (raw: UnitBillingApiModel): UnitBilling => {
   const item = unwrapBilling(raw);
   const isPaid = toBool(item.is_paid);
+  const isUsd = toBool(
+    item.is_usd_transaction ??
+    item.unit_transaction?.is_usd_transaction ??
+    (item as any).isUsd
+  );
 
   let bcaPayment = pickNumber(item.bca_payment, item.bca_payment_amount, item.bca_payment_idr, item.bca_payment_idr_amount);
   const cashPayment = pickNumber(item.cash_payment, item.cash_payment_amount, item.cash_amount);
-  const bcaPayment2 = pickNumber(item.bca_payment_2, item.bca_payment_usd_amount, item.bca_usd_payment, item.usd_payment_amount);
-  const totalPaidFromComponents =
-    toSafeNumber(item.total_cash_payment) +
-    toSafeNumber(item.total_bca_cash_payment) +
-    toSafeNumber(item.total_bca_payment) +
-    toSafeNumber(item.total_usd_payment);
+  let bcaPayment2 = pickNumber(item.bca_payment_2, item.bca_payment_usd_amount, item.bca_usd_payment, item.usd_payment_amount);
+  const totalUsdPayment = toSafeNumber(item.total_usd_payment);
+  const totalCashPayment = toSafeNumber(item.total_cash_payment);
+  const totalBcaPayment = toSafeNumber(item.total_bca_payment ?? item.total_bca_cash_payment);
+
+  const totalPaidFromComponents = isUsd
+    ? totalUsdPayment
+    : (totalCashPayment + totalBcaPayment);
   const totalPaid = pickNumber(item.total_paid, item.paid_total, totalPaidFromComponents);
   const rawGrandTotal = toSafeNumber(item.grand_total);
   const rawRemaining = toSafeNumber(item.remaining_payment);
@@ -153,19 +166,40 @@ const mapBilling = (raw: UnitBillingApiModel): UnitBilling => {
   const computedRemaining = Math.max(0, grandTotal - totalPaid);
   const remainingPayment = rawRemaining > 0 ? rawRemaining : isPaid ? 0 : computedRemaining;
 
+  const remainingPaymentUsd = isUsd
+    ? (toSafeNumber(item.remaining_payment_usd) || remainingPayment)
+    : toSafeNumber(item.remaining_payment_usd);
+
   if (bcaPayment === 0 && cashPayment === 0 && bcaPayment2 === 0 && totalPaid > 0) {
-    bcaPayment = totalPaid;
+    if (isUsd) {
+      bcaPayment2 = totalPaid;
+    } else {
+      bcaPayment = totalPaid;
+    }
   }
 
   return {
     id: String(item.id ?? ''),
+    uuid: item.uuid ? String(item.uuid) : undefined,
     company_id: String(item.company_id ?? ''),
     unit_transaction_id: String(item.unit_transaction_id ?? item.unitTransactionId ?? item.unit_transaction?.id ?? ''),
     grand_total: grandTotal,
     total_paid: totalPaid,
     remaining_payment: remainingPayment,
-    remaining_payment_usd: toSafeNumber(item.remaining_payment_usd),
+    remaining_payment_usd: remainingPaymentUsd,
     last_payment_at: item.last_payment_at,
+    is_usd_transaction: isUsd,
+    total_cash_payment: totalCashPayment,
+    total_bca_payment: totalBcaPayment,
+    total_bca_cash_payment: totalBcaPayment,
+    total_usd_payment: isUsd ? (totalUsdPayment || totalPaid) : totalUsdPayment,
+    usd_payment_set: toBool(item.usd_payment_set ?? isUsd),
+    total_payment_count: toSafeNumber(item.total_payment_count),
+    unit_transaction: item.unit_transaction ? {
+      id: item.unit_transaction.id,
+      code: item.unit_transaction.code,
+      is_usd_transaction: toBool(item.unit_transaction.is_usd_transaction),
+    } : undefined,
     bca_payment: bcaPayment,
     cash_payment: cashPayment,
     bca_payment_2: bcaPayment2,

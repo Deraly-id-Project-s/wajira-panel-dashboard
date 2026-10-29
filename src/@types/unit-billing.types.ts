@@ -1,5 +1,6 @@
 export interface UnitBilling {
   id: string;
+  uuid?: string;
   company_id: string;
   unit_transaction_id: string;
   grand_total?: number;
@@ -7,6 +8,18 @@ export interface UnitBilling {
   remaining_payment?: number;
   remaining_payment_usd?: number;
   last_payment_at?: string;
+  is_usd_transaction?: boolean;
+  total_cash_payment?: number;
+  total_bca_payment?: number;
+  total_bca_cash_payment?: number;
+  total_usd_payment?: number;
+  usd_payment_set?: boolean;
+  total_payment_count?: number;
+  unit_transaction?: {
+    id?: number | string;
+    code?: string;
+    is_usd_transaction?: boolean;
+  };
   bca_payment: number;
   cash_payment: number;
   bca_payment_2: number;
