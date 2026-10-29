@@ -26,6 +26,9 @@ export interface GeneralJournalReportItem {
     date: string;
     is_paid: boolean;
     is_valid: boolean;
+    amount?: number | string | null;
+    amount_original?: number | string | null;
+    is_usd_transaction?: boolean;
   };
 }
 

@@ -34,6 +34,9 @@ const emptyValues = (companyId: number): GeneralJournalFormInput => ({
   date: new Date(),
   note: '',
   payment_proof: null,
+  is_usd_transaction: false,
+  amount: 0,
+  amount_original: 0,
   billings: [
     {
       account_id: 0,
@@ -104,19 +107,23 @@ export default function GeneralJournalFormPage({ mode }: Props) {
   useEffect(() => {
     if (mode !== 'edit' || !journalDetail) return;
 
+    const isUsd = Boolean(journalDetail.is_usd_transaction);
+
     const initialBillings = (journalDetail.billings && journalDetail.billings.length > 0)
       ? journalDetail.billings.map((b) => ({
           id: b.id,
           account_id: Number(b.account_id),
           type: (b.type === 'credit' ? 'credit' : 'debet') as 'debet' | 'credit',
           amount: Number(b.amount || 0),
-          amount_original: b.amount_original ? Number(b.amount_original) : undefined,
+          amount_original: b.amount_original !== undefined && b.amount_original !== null
+            ? Number(b.amount_original)
+            : (isUsd ? undefined : Number(b.amount || 0)),
           payment_at: b.payment_at || undefined,
           note: b.note ?? '',
         }))
       : [
-          { account_id: 0, type: 'debet' as const, amount: 0, note: '' },
-          { account_id: 0, type: 'credit' as const, amount: 0, note: '' },
+          { account_id: 0, type: 'debet' as const, amount: 0, amount_original: isUsd ? 0 : undefined, note: '' },
+          { account_id: 0, type: 'credit' as const, amount: 0, amount_original: isUsd ? 0 : undefined, note: '' },
         ];
 
     form.reset({
@@ -124,22 +131,37 @@ export default function GeneralJournalFormPage({ mode }: Props) {
       date: journalDetail.date ? new Date(journalDetail.date) : new Date(),
       note: journalDetail.note ?? '',
       payment_proof: null,
+      is_usd_transaction: isUsd,
+      amount: journalDetail.amount !== null && journalDetail.amount !== undefined ? Number(journalDetail.amount) : undefined,
+      amount_original: journalDetail.amount_original !== null && journalDetail.amount_original !== undefined ? Number(journalDetail.amount_original) : undefined,
       billings: initialBillings,
     });
   }, [journalDetail, form, mode]);
 
   const handleSubmit = async (values: GeneralJournalFormValues) => {
+    const isUsd = Boolean(values.is_usd_transaction);
+    const debetBillings = values.billings.filter((b) => b.type === 'debet');
+    const computedAmount = debetBillings.reduce((acc, curr) => acc + Number(curr.amount || 0), 0);
+    const computedAmountOriginal = isUsd
+      ? debetBillings.reduce((acc, curr) => acc + Number(curr.amount_original || 0), 0)
+      : computedAmount;
+
     const payload = {
       company_id: values.company_id,
       date: format(values.date, 'yyyy-MM-dd'),
       note: values.note,
       payment_proof: values.payment_proof,
+      is_usd_transaction: isUsd,
+      amount: values.amount !== undefined && values.amount !== null && values.amount > 0 ? values.amount : computedAmount,
+      amount_original: isUsd
+        ? (values.amount_original !== undefined && values.amount_original !== null && values.amount_original > 0 ? values.amount_original : computedAmountOriginal)
+        : (values.amount !== undefined && values.amount !== null && values.amount > 0 ? values.amount : computedAmount),
       billings: values.billings.map((item) => ({
         id: item.id,
         account_id: item.account_id,
         type: item.type,
         amount: item.amount,
-        amount_original: item.amount_original ?? item.amount,
+        amount_original: isUsd ? (item.amount_original ?? item.amount) : item.amount,
         payment_at: item.payment_at || format(values.date, 'yyyy-MM-dd'),
         note: item.note ?? null,
       })),

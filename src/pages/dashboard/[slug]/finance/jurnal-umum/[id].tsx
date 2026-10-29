@@ -74,8 +74,10 @@ export default function GeneralJournalDetailPage() {
 
   const billings = useMemo(() => journal?.billings ?? [], [journal?.billings]);
 
-  const billingColumns = useMemo<ColumnDef<GeneralJournalBilling>[]>(
-    () => [
+  const billingColumns = useMemo<ColumnDef<GeneralJournalBilling>[]>(() => {
+    const isUsd = Boolean(journal?.is_usd_transaction);
+
+    const baseColumns: ColumnDef<GeneralJournalBilling>[] = [
       {
         header: 'KODE AKUN',
         alignment: 'left',
@@ -115,44 +117,77 @@ export default function GeneralJournalDetailPage() {
           </span>
         ),
       },
-      {
-        header: 'NOMINAL DEBET',
-        alignment: 'right',
-        cell: (item) => (
-          item.type === 'debet' ? (
-            <span className="font-semibold text-emerald-600">
-              {currenciesFormat('idr', item.amount)}
+    ];
+
+    if (isUsd) {
+      baseColumns.push(
+        {
+          header: 'NOMINAL USD',
+          alignment: 'right',
+          cell: (item) => (
+            <span
+              className={cn(
+                'font-semibold',
+                item.type === 'debet' ? 'text-emerald-600' : 'text-rose-600',
+              )}
+            >
+              {currenciesFormat('usd', item.amount)}
             </span>
-          ) : (
-            <span className="text-slate-300">-</span>
-          )
-        ),
-      },
-      {
-        header: 'NOMINAL KREDIT',
-        alignment: 'right',
-        cell: (item) => (
-          item.type === 'credit' ? (
-            <span className="font-semibold text-rose-600">
-              {currenciesFormat('idr', item.amount)}
+          ),
+        },
+        {
+          header: 'EKUIVALEN IDR',
+          alignment: 'right',
+          cell: (item) => (
+            <span className="font-medium text-slate-700">
+              {currenciesFormat('idr', item.amount_original || item.amount)}
             </span>
-          ) : (
-            <span className="text-slate-300">-</span>
-          )
-        ),
-      },
-      {
-        header: 'KETERANGAN BARIS',
-        alignment: 'left',
-        cell: (item) => (
-          <span className="text-xs text-slate-600">
-            {item.note || '-'}
-          </span>
-        ),
-      },
-    ],
-    [],
-  );
+          ),
+        },
+      );
+    } else {
+      baseColumns.push(
+        {
+          header: 'NOMINAL DEBET',
+          alignment: 'right',
+          cell: (item) => (
+            item.type === 'debet' ? (
+              <span className="font-semibold text-emerald-600">
+                {currenciesFormat('idr', item.amount)}
+              </span>
+            ) : (
+              <span className="text-slate-300">-</span>
+            )
+          ),
+        },
+        {
+          header: 'NOMINAL KREDIT',
+          alignment: 'right',
+          cell: (item) => (
+            item.type === 'credit' ? (
+              <span className="font-semibold text-rose-600">
+                {currenciesFormat('idr', item.amount)}
+              </span>
+            ) : (
+              <span className="text-slate-300">-</span>
+            )
+          ),
+        },
+      );
+    }
+
+    baseColumns.push({
+      header: 'KETERANGAN BARIS',
+      alignment: 'left',
+      cell: (item) => (
+        <span className="text-xs text-slate-600">
+          {item.note || '-'}
+        </span>
+      ),
+    });
+
+    return baseColumns;
+  }, [journal?.is_usd_transaction]);
 
   if (detailQuery.isLoading || !router.isReady) {
     return (
@@ -209,6 +244,16 @@ export default function GeneralJournalDetailPage() {
                 {isPaid ? <CheckCircle2 className="mr-1 h-3.5 w-3.5" /> : null}
                 {isPaid ? 'Posted (Laporan Diakui)' : 'Draft (Belum Diposting)'}
               </Badge>
+              <Badge
+                variant="outline"
+                className={cn(
+                  journal.is_usd_transaction
+                    ? 'border-blue-200 bg-blue-50 text-blue-700 font-semibold'
+                    : 'border-slate-200 bg-slate-50 text-slate-700 font-medium',
+                )}
+              >
+                {journal.is_usd_transaction ? 'Transaksi USD ($)' : 'Transaksi IDR (Rp)'}
+              </Badge>
             </div>
           }
           onBack={() => void router.push(basePath)}
@@ -248,8 +293,13 @@ export default function GeneralJournalDetailPage() {
             <CardContent className="p-4 flex items-center justify-between">
               <div>
                 <p className="text-xs uppercase font-medium text-slate-400">Kode Jurnal</p>
-                <div className="mt-1">
+                <div className="mt-1 flex items-center gap-1.5">
                   <CopyBox text={journal.code} />
+                  {journal.is_usd_transaction ? (
+                    <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-blue-100 text-blue-700 border border-blue-200">
+                      USD
+                    </span>
+                  ) : null}
                 </div>
               </div>
               <FileText className="h-6 w-6 text-slate-400" />
@@ -259,17 +309,28 @@ export default function GeneralJournalDetailPage() {
           <Card className="rounded-md border-slate-200 shadow-none">
             <CardContent className="p-4 flex items-center justify-between">
               <div>
-                <p className="text-xs uppercase font-medium text-slate-400">Tanggal Transaksi</p>
-                <p className="mt-1 text-sm font-semibold text-slate-800">{formatDate(journal.date)}</p>
+                <p className="text-xs uppercase font-medium text-slate-400">Nominal Transaksi</p>
+                <p className={cn("mt-1 text-base font-bold", journal.is_usd_transaction ? "text-blue-700" : "text-slate-800")}>
+                  {journal.is_usd_transaction
+                    ? currenciesFormat('usd', journal.amount)
+                    : currenciesFormat('idr', journal.amount || journal.total_debit)}
+                </p>
+                {journal.is_usd_transaction && journal.amount_original ? (
+                  <p className="text-[11px] text-slate-400">
+                    ~ {currenciesFormat('idr', journal.amount_original)}
+                  </p>
+                ) : null}
               </div>
-              <CalendarDays className="h-6 w-6 text-slate-400" />
+              <Scale className={cn("h-6 w-6", journal.is_usd_transaction ? "text-blue-500" : "text-slate-400")} />
             </CardContent>
           </Card>
 
           <Card className="rounded-md border-emerald-100 bg-emerald-50/30 shadow-none">
             <CardContent className="p-4 flex items-center justify-between">
               <div>
-                <p className="text-xs uppercase font-medium text-emerald-700">Total Debet</p>
+                <p className="text-xs uppercase font-medium text-emerald-700">
+                  Total Debet {journal.is_usd_transaction ? '(IDR)' : ''}
+                </p>
                 <p className="mt-1 text-base font-bold text-emerald-800">
                   {currenciesFormat('idr', journal.total_debit)}
                 </p>
@@ -281,7 +342,9 @@ export default function GeneralJournalDetailPage() {
           <Card className="rounded-md border-rose-100 bg-rose-50/30 shadow-none">
             <CardContent className="p-4 flex items-center justify-between">
               <div>
-                <p className="text-xs uppercase font-medium text-rose-700">Total Kredit</p>
+                <p className="text-xs uppercase font-medium text-rose-700">
+                  Total Kredit {journal.is_usd_transaction ? '(IDR)' : ''}
+                </p>
                 <p className="mt-1 text-base font-bold text-rose-800">
                   {currenciesFormat('idr', journal.total_credit)}
                 </p>

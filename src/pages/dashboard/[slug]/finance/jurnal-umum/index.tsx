@@ -31,6 +31,9 @@ const mapJournalToListItem = (item: GeneralJournal): GeneralJournalListItem => (
   is_paid: Boolean(item.is_paid),
   is_valid: Boolean(item.is_valid),
   is_balanced: Boolean(item.is_balanced),
+  amount: Number(item.amount ?? item.total_debit ?? 0),
+  amount_original: Number(item.amount_original ?? item.total_debit ?? 0),
+  is_usd_transaction: Boolean(item.is_usd_transaction),
   total_debit: Number(item.total_debit ?? 0),
   total_credit: Number(item.total_credit ?? 0),
   billingsCount: (item.billings ?? []).length,
@@ -54,6 +57,7 @@ export default function GeneralJournalPage() {
   const [perPage, setPerPage] = useState(25);
   const [date, setDate] = useState<DateRange | undefined>();
   const [statusFilter, setStatusFilter] = useState<'all' | 'posted' | 'draft'>('all');
+  const [currencyFilter, setCurrencyFilter] = useState<'all' | 'idr' | 'usd'>('all');
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
   const [isToggleOpen, setIsToggleOpen] = useState(false);
   const [targetStatus, setTargetStatus] = useState(false);
@@ -90,9 +94,11 @@ export default function GeneralJournalPage() {
 
     if (statusFilter === 'posted') params.is_paid = true;
     if (statusFilter === 'draft') params.is_paid = false;
+    if (currencyFilter === 'usd') params.is_usd_transaction = true;
+    if (currencyFilter === 'idr') params.is_usd_transaction = false;
 
     return params;
-  }, [page, perPage, searchValue, companyNumber, startDate, endDate, statusFilter]);
+  }, [page, perPage, searchValue, companyNumber, startDate, endDate, statusFilter, currencyFilter]);
 
   const { data: response, isLoading, isFetching } = useGeneralJournals(queryParams, {
     enabled: !isCompanyLoading && companyNumber > 0,
@@ -179,6 +185,25 @@ export default function GeneralJournalPage() {
                     <SelectItem value="all">Semua Status</SelectItem>
                     <SelectItem value="posted">Posted (Lunas)</SelectItem>
                     <SelectItem value="draft">Draft</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="w-full sm:w-44">
+                <Select
+                  value={currencyFilter}
+                  onValueChange={(val: 'all' | 'idr' | 'usd') => {
+                    setCurrencyFilter(val);
+                    setPage(1);
+                  }}
+                >
+                  <SelectTrigger className="h-9 bg-white">
+                    <SelectValue placeholder="Mata Uang" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Semua Mata Uang</SelectItem>
+                    <SelectItem value="idr">IDR (Rupiah)</SelectItem>
+                    <SelectItem value="usd">USD (Dollar)</SelectItem>
                   </SelectContent>
                 </Select>
               </div>

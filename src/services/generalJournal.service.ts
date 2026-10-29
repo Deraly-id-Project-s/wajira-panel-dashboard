@@ -20,6 +20,18 @@ const buildFormData = (payload: GeneralJournalPayload): FormData => {
   formData.append('date', payload.date);
   if (payload.note) formData.append('note', payload.note);
 
+  if (payload.amount !== undefined && payload.amount !== null) {
+    formData.append('amount', String(payload.amount));
+  }
+
+  if (payload.amount_original !== undefined && payload.amount_original !== null) {
+    formData.append('amount_original', String(payload.amount_original));
+  }
+
+  if (payload.is_usd_transaction !== undefined) {
+    formData.append('is_usd_transaction', payload.is_usd_transaction ? '1' : '0');
+  }
+
   if (payload.payment_proof instanceof File) {
     formData.append('payment_proof', payload.payment_proof);
   }
@@ -30,8 +42,10 @@ const buildFormData = (payload: GeneralJournalPayload): FormData => {
       formData.append(`billings[${index}][account_id]`, String(billing.account_id));
       formData.append(`billings[${index}][type]`, billing.type);
       formData.append(`billings[${index}][amount]`, String(billing.amount));
-      if (billing.amount_original !== undefined) {
+      if (billing.amount_original !== undefined && billing.amount_original !== null) {
         formData.append(`billings[${index}][amount_original]`, String(billing.amount_original));
+      } else if (!payload.is_usd_transaction) {
+        formData.append(`billings[${index}][amount_original]`, String(billing.amount));
       }
       if (billing.payment_at) formData.append(`billings[${index}][payment_at]`, billing.payment_at);
       if (billing.note) formData.append(`billings[${index}][note]`, billing.note);

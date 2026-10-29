@@ -28,6 +28,9 @@ export interface GeneralJournal {
   payment_proof: string | null;
   is_paid: boolean;
   is_valid: boolean;
+  amount?: number | string | null;
+  amount_original?: number | string | null;
+  is_usd_transaction?: boolean;
   total_debit: number;
   total_credit: number;
   is_balanced: boolean;
@@ -50,6 +53,9 @@ export interface GeneralJournalListItem {
   is_paid: boolean;
   is_valid: boolean;
   is_balanced: boolean;
+  amount?: number;
+  amount_original?: number;
+  is_usd_transaction?: boolean;
   total_debit: number;
   total_credit: number;
   billingsCount: number;
@@ -64,6 +70,9 @@ export interface GeneralJournalFilterParams {
   company_id?: number | string;
   is_paid?: boolean | string;
   is_valid?: boolean | string;
+  is_usd_transaction?: boolean | string;
+  min_amount?: number | string;
+  max_amount?: number | string;
   date?: string;
   start_date?: string;
   end_date?: string;
@@ -76,6 +85,9 @@ export interface GeneralJournalPayload {
   date: string;
   note?: string | null;
   payment_proof?: File | null;
+  amount?: number | null;
+  amount_original?: number | null;
+  is_usd_transaction?: boolean;
   billings?: Array<{
     id?: number;
     account_id: number;
