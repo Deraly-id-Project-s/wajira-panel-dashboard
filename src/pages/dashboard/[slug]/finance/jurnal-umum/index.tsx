@@ -149,7 +149,7 @@ export default function GeneralJournalPage() {
       <div className="space-y-6">
         <PageHeader
           title="Transaksi Jurnal Umum"
-          subtitle="Pencatatan memorial jurnal penyesuaian non-kas. Transaksi hanya akan muncul di Laporan Jurnal Umum setelah diposting."
+          subtitle="Pencatatan Transaksi jurnal umum."
           actions={
             canCreate ? (
               <Button
@@ -158,7 +158,7 @@ export default function GeneralJournalPage() {
                 className="w-full sm:w-auto btn-primary"
               >
                 <Plus className="mr-2 h-4 w-4" />
-                Tambah Jurnal
+                Tambah Jurnal Umum
               </Button>
             ) : null
           }

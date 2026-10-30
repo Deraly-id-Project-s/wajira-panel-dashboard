@@ -111,20 +111,20 @@ export default function GeneralJournalFormPage({ mode }: Props) {
 
     const initialBillings = (journalDetail.billings && journalDetail.billings.length > 0)
       ? journalDetail.billings.map((b) => ({
-          id: b.id,
-          account_id: Number(b.account_id),
-          type: (b.type === 'credit' ? 'credit' : 'debet') as 'debet' | 'credit',
-          amount: Number(b.amount || 0),
-          amount_original: b.amount_original !== undefined && b.amount_original !== null
-            ? Number(b.amount_original)
-            : (isUsd ? undefined : Number(b.amount || 0)),
-          payment_at: b.payment_at || undefined,
-          note: b.note ?? '',
-        }))
+        id: b.id,
+        account_id: Number(b.account_id),
+        type: (b.type === 'credit' ? 'credit' : 'debet') as 'debet' | 'credit',
+        amount: Number(b.amount || 0),
+        amount_original: b.amount_original !== undefined && b.amount_original !== null
+          ? Number(b.amount_original)
+          : (isUsd ? undefined : Number(b.amount || 0)),
+        payment_at: b.payment_at || undefined,
+        note: b.note ?? '',
+      }))
       : [
-          { account_id: 0, type: 'debet' as const, amount: 0, amount_original: isUsd ? 0 : undefined, note: '' },
-          { account_id: 0, type: 'credit' as const, amount: 0, amount_original: isUsd ? 0 : undefined, note: '' },
-        ];
+        { account_id: 0, type: 'debet' as const, amount: 0, amount_original: isUsd ? 0 : undefined, note: '' },
+        { account_id: 0, type: 'credit' as const, amount: 0, amount_original: isUsd ? 0 : undefined, note: '' },
+      ];
 
     form.reset({
       company_id: journalDetail.company_id,
@@ -244,8 +244,8 @@ export default function GeneralJournalFormPage({ mode }: Props) {
           title={isEdit ? 'Edit Jurnal Umum' : 'Tambah Jurnal Umum'}
           subtitle={
             isEdit
-              ? `Perbarui entri jurnal memorial ${journalDetail?.code ?? ''}`
-              : 'Pencatatan transaksi memorial debet dan kredit non-kas'
+              ? `Update data Transaksi jurnal Umum ${journalDetail?.code ?? ''}`
+              : 'Tambah data Transaksi jurnal Umum'
           }
           onBack={() => void router.push(basePath)}
         />
