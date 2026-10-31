@@ -3,6 +3,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { Button } from '@/components/ui/button';
 import { useDeleteGeneralJournal } from '@/hooks/useGeneralJournal';
 import type { GeneralJournalListItem } from '@/@types/general-journal.types';
+import { getApiErrorMessage } from '@/utils/apiErrorHandler';
 
 interface Props {
   open: boolean;
@@ -21,8 +22,7 @@ export default function DeleteGeneralJournalDialog({ open, onOpenChange, data }:
       toast.success('Jurnal umum berhasil dihapus');
       onOpenChange(false);
     } catch (error) {
-      const message = error && typeof error === 'object' && 'message' in error ? String(error.message) : 'Gagal menghapus jurnal umum';
-      toast.error(message);
+      toast.error(getApiErrorMessage(error) || 'Gagal menghapus jurnal umum');
       onOpenChange(false);
     }
   };

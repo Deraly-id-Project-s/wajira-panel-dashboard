@@ -3,6 +3,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { Button } from '@/components/ui/button';
 import { useToggleGeneralJournalPaidStatus } from '@/hooks/useGeneralJournal';
 import type { GeneralJournal, GeneralJournalListItem } from '@/@types/general-journal.types';
+import { getApiErrorMessage } from '@/utils/apiErrorHandler';
 
 interface Props {
   open: boolean;
@@ -31,8 +32,7 @@ export default function ToggleGeneralJournalPostingDialog({
       );
       onOpenChange(false);
     } catch (error) {
-      const message = error && typeof error === 'object' && 'message' in error ? String(error.message) : 'Gagal mengubah status posting jurnal';
-      toast.error(message);
+      toast.error(getApiErrorMessage(error) || 'Gagal mengubah status posting jurnal');
       onOpenChange(false);
     }
   };

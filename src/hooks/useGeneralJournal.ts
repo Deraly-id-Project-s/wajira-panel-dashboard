@@ -2,14 +2,19 @@ import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tansta
 import type {
   GeneralJournalFilterParams,
   GeneralJournalPayload,
+  GeneralJournalBillingPaymentPayload,
+  GeneralJournalBillingPaymentUpdatePayload,
 } from '@/@types/general-journal.types';
 import {
   createGeneralJournal,
+  createGeneralJournalBillingPayment,
   deleteGeneralJournal,
+  deleteGeneralJournalBillingPayment,
   fetchGeneralJournalDetail,
   fetchGeneralJournals,
   toggleGeneralJournalPaidStatus,
   updateGeneralJournal,
+  updateGeneralJournalBillingPayment,
 } from '@/services/generalJournal.service';
 
 const GENERAL_JOURNAL_KEY = 'general-journal';
@@ -99,6 +104,59 @@ export function useToggleGeneralJournalPaidStatus() {
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: generalJournalKeys.all });
       queryClient.invalidateQueries({ queryKey: generalJournalKeys.detail(variables.id) });
+    },
+  });
+}
+
+// ==========================================
+// Billing Payments Hooks
+// ==========================================
+
+export function useCreateGeneralJournalBillingPayment(journalId?: number | string) {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (payload: GeneralJournalBillingPaymentPayload) =>
+      createGeneralJournalBillingPayment(payload),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: generalJournalKeys.all });
+      if (journalId) {
+        queryClient.invalidateQueries({ queryKey: generalJournalKeys.detail(journalId) });
+      }
+    },
+  });
+}
+
+export function useUpdateGeneralJournalBillingPayment(journalId?: number | string) {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({
+      id,
+      payload,
+    }: {
+      id: number | string;
+      payload: GeneralJournalBillingPaymentUpdatePayload;
+    }) => updateGeneralJournalBillingPayment(id, payload),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: generalJournalKeys.all });
+      if (journalId) {
+        queryClient.invalidateQueries({ queryKey: generalJournalKeys.detail(journalId) });
+      }
+    },
+  });
+}
+
+export function useDeleteGeneralJournalBillingPayment(journalId?: number | string) {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (id: number | string) => deleteGeneralJournalBillingPayment(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: generalJournalKeys.all });
+      if (journalId) {
+        queryClient.invalidateQueries({ queryKey: generalJournalKeys.detail(journalId) });
+      }
     },
   });
 }

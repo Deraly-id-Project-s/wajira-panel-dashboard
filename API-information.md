@@ -1,3 +1,199 @@
-GET http://localhost:8000/wapi/transaction/unit-transaction/unit-transaction-item/2
+1. menambah data general journal (jurnal umum)
+POST {{url}}/wapi/finance/general-journal
 
-{"status":true,"message":"Unit Transaction Item retrieved successfully","errors":null,"data":{"id":2,"uuid":"c17bbcf8-8d5c-4709-a2ec-f449e615b131","unit_transaction_id":2,"unit_type_id":1,"sparepart_id":null,"qty_total":2,"price":0,"price_per_unit_usd":800,"price_usd":1600,"is_usd_transaction":true,"bbn_price":0,"hpp_per_unit_price":0,"dpp_per_unit_price":0,"ppn_per_unit_price":0,"hpp_total_price":0,"dpp_total_price":0,"ppn_total_price":0,"expedition_fee":0,"other_fee":0,"dpp_tax_id":2,"dpp_tax_rate":111,"ppn_tax_id":1,"ppn_tax_rate":11,"price_discount":0,"price_usd_discount":0,"created_at":"2026-10-29T13:24:24.000000Z","updated_at":"2026-10-29T13:24:24.000000Z","total_usd_cost":199,"usd_cost_freight_total":0,"usd_cost_box_packing_total":199,"usd_cost_admin_cost_total":0,"usd_cost_ckd_processing_cost_total":0,"usd_cost_bill_of_lading_switch_cost_total":0,"usd_cost_customs_clearance_cost_total":0,"usd_cost_other_total":0,"unit_transaction":{"id":2,"uuid":"e4dc1438-74f8-49ff-9073-c76d8bab13d8","warehouse_id":1,"person_id":3,"transaction_type":"unit_type","code":"PBL-WAJ\/20261029-59219","type":"purchase","invoice_file":null,"is_refunded":false,"is_usd_transaction":true,"document_template_id":1,"created_at":"2026-10-29T13:24:24.000000Z","updated_at":"2026-10-29T13:24:24.000000Z","has_warehouse_activity":false,"has_refund_transaction":false,"expedition_fee_total":"0.00"},"unit_transaction_usd_costs":[{"id":4,"unit_transaction_item_id":2,"cost_type":"box_packing","amount":199,"note":"Box Packing","created_at":"2026-10-29T13:24:24.000000Z","updated_at":"2026-10-29T13:24:24.000000Z"}],"unit_transaction_item_details":[],"unit_transaction_item_sales":[],"unit_type":{"id":1,"uuid":"8d9873de-6d8e-40ec-a222-5f21adfee78c","code":"HNDHSK","name":"HONDA HSK","buy_price":23000000,"sell_price":25000000,"buy_price_usd":"1000.00","sell_price_usd":"1200.00"}}}
+request body:
+  {
+      "company_id": 1,
+      "date": "2026-10-30",
+      "note": "Pengeluaran operasional cabang",          
+      "billings": [                                      
+        {
+          "date": "2026-10-30",
+          "note": "Operasional logistik minggu ke-4",    
+          "cashes": [
+            {
+              "cash_id": 1,                              
+              "amount": 1500000.00                       
+            },
+            {
+              "cash_id": 2,
+              "amount": 1000000.00
+            }
+          ]
+        }
+      ]
+    }
+  
+
+response:
+{
+  "status": true,
+  "message": "General Journal created successfully",
+  "errors": null,
+  "data": {
+    "id": 2,
+    "uuid": "7ada9e25-ff2c-43ec-821f-600ffe2ab67d",
+    "company_id": 1,
+    "code": "JRN2026103000002",
+    "date": "2026-10-29T17:00:00.000000Z",
+    "note": "Pengeluaran operasional cabang",
+    "payment_proof": null,
+    "is_paid": false,
+    "amount": "2500000.00",
+    "amount_original": "2500000.00",
+    "is_usd_transaction": false,
+    "is_valid": false,
+    "created_at": "2026-10-30T15:40:33.000000Z",
+    "updated_at": "2026-10-30T15:40:33.000000Z",
+    "total_amount": 2500000,
+    "total_paid": 0,
+    "remaining_amount": 2500000,
+    "is_balanced": false,
+    "total_debit": 2500000,
+    "total_credit": 0,
+    "company": {
+      "id": 1,
+      "uuid": "8510767b-8ec4-455e-b486-c068e5f0fcd1",
+      "slug": "wajira-morindo",
+      "name": "PT Wajira Morindo"
+    },
+    "billings": [
+      {
+        "id": 3,
+        "uuid": "018e6e0d-535a-48ee-a916-5dcbc3a3f879",
+        "general_journal_id": 2,
+        "note": "Operasional logistik minggu ke-4",
+        "is_paid": false,
+        "is_valid": false,
+        "date": "2026-10-29T17:00:00.000000Z",
+        "created_at": "2026-10-30T15:40:33.000000Z",
+        "updated_at": "2026-10-30T15:40:33.000000Z",
+        "total_amount": 2500000,
+        "total_paid": 0,
+        "remaining_amount": 2500000,
+        "cashes": [
+          {
+            "id": 1,
+            "general_journal_billing_id": 3,
+            "cash_id": 1,
+            "amount": "1500000.00",
+            "created_at": "2026-10-30T15:40:33.000000Z",
+            "updated_at": "2026-10-30T15:40:33.000000Z",
+            "cash": {
+              "id": 1,
+              "uuid": "9df21425-1418-4c58-b441-5363cf791171",
+              "company_id": 1,
+              "currency_type": "idr",
+              "cash_name": "Cash IDR",
+              "code": "cash_idr",
+              "type": "cash"
+            }
+          },
+          {
+            "id": 2,
+            "general_journal_billing_id": 3,
+            "cash_id": 2,
+            "amount": "1000000.00",
+            "created_at": "2026-10-30T15:40:33.000000Z",
+            "updated_at": "2026-10-30T15:40:33.000000Z",
+            "cash": {
+              "id": 2,
+              "uuid": "b16a5b48-b727-4652-b2a1-7d43c7911c9a",
+              "company_id": 1,
+              "currency_type": "idr",
+              "cash_name": "BCA IDR",
+              "code": "bca_idr",
+              "type": "bank"
+            }
+          }
+        ],
+        "payments": []
+      }
+    ]
+  }
+}
+
+2. menambah data general journal billing payment
+
+POST {{url}}/wapi/finance/general-journal-billing-payment
+
+request body:
+{
+    "general_journal_billing_id": 3,
+    "account_id": 2,
+    "amount": 1000000,
+    "amount_original": 0,
+    "note": "Biaya operasional gudang"
+}
+
+response:
+{
+    "status": true,
+    "message": "General Journal billing payment created successfully",
+    "errors": null,
+    "data": {
+        "id": 5,
+        "general_journal_billing_id": 3,
+        "account_id": 2,
+        "amount": "1000000.00",
+        "amount_original": "0.00",
+        "note": "Biaya operasional gudang",
+        "transaction_proof": null,
+        "account": {
+            "id": 2,
+            "uuid": "09e53e47-c77d-4176-abac-074aa0e15cf4",
+            "code": "11100002",
+            "name": "KAS KECIL"
+        },
+        "billing": {
+            "id": 3,
+            "uuid": "018e6e0d-535a-48ee-a916-5dcbc3a3f879",
+            "general_journal_id": 2,
+            "note": "Operasional logistik minggu ke-4",
+            "is_paid": true,
+            "is_valid": true,
+            "date": "2026-10-29T17:00:00.000000Z",
+            "created_at": "2026-10-30T15:40:33.000000Z",
+            "updated_at": "2026-10-30T16:02:21.000000Z",
+            "total_amount": 2500000,
+            "total_paid": 2500000,
+            "remaining_amount": 0,
+            "cashes": [
+                {
+                    "id": 1,
+                    "general_journal_billing_id": 3,
+                    "cash_id": 1,
+                    "amount": "1500000.00",
+                    "created_at": "2026-10-30T15:40:33.000000Z",
+                    "updated_at": "2026-10-30T15:40:33.000000Z",
+                    "cash": {
+                        "id": 1,
+                        "uuid": "9df21425-1418-4c58-b441-5363cf791171",
+                        "company_id": 1,
+                        "currency_type": "idr",
+                        "cash_name": "Cash IDR",
+                        "code": "cash_idr",
+                        "type": "cash"
+                    }
+                },
+                {
+                    "id": 2,
+                    "general_journal_billing_id": 3,
+                    "cash_id": 2,
+                    "amount": "1000000.00",
+                    "created_at": "2026-10-30T15:40:33.000000Z",
+                    "updated_at": "2026-10-30T15:40:33.000000Z",
+                    "cash": {
+                        "id": 2,
+                        "uuid": "b16a5b48-b727-4652-b2a1-7d43c7911c9a",
+                        "company_id": 1,
+                        "currency_type": "idr",
+                        "cash_name": "BCA IDR",
+                        "code": "bca_idr",
+                        "type": "bank"
+                    }
+                }
+            ]
+        }
+    }
+}
