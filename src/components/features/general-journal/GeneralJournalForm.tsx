@@ -1,9 +1,17 @@
-import { useMemo } from 'react';
-import { useFieldArray, type UseFormReturn } from 'react-hook-form';
-import { CalendarDays, FileText, Plus, Trash2, Scale, AlertCircle, CheckCircle2 } from 'lucide-react';
+import { useEffect, useMemo } from 'react';
+import { useFieldArray, useWatch, type UseFormReturn } from 'react-hook-form';
+import {
+  CalendarDays,
+  FileText,
+  Plus,
+  Trash2,
+  Wallet,
+  AlertCircle,
+  Coins,
+} from 'lucide-react';
 import type { Company } from '@/services/company.service';
-import type { Account } from '@/@types/account.types';
-import type { GeneralJournalFormInput, GeneralJournalFormValues } from '@/scheme/general-journal.schema';
+import type { Kas } from '@/@types/kas.types';
+import type { GeneralJournalFormValues } from '@/scheme/general-journal.schema';
 import { Button } from '@/components/ui/button';
 import { DatePicker } from '@/components/ui/date-picker';
 import { FileInput } from '@/components/ui/file-input';
@@ -12,9 +20,7 @@ import { LoadingState } from '@/components/ui/loading-state';
 import { MoneyInput } from '@/components/ui/money-input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
-import { Input } from '@/components/ui/input';
 import { CollapsibleBox } from '@/components/ui/collapsible-box';
-import { LedgerAccountSelect } from '@/components/features/laporan-buku-besar/LedgerAccountSelect';
 import RequiredMark from '@/components/ui/required-mark';
 import { currenciesFormat } from '@/components/ui/currenciesFormat';
 import { cn } from '@/lib/utils';
@@ -22,9 +28,9 @@ import { cn } from '@/lib/utils';
 interface Props {
   form: UseFormReturn<GeneralJournalFormValues, any, any>;
   onSubmit: (data: GeneralJournalFormValues) => void | Promise<void>;
-  companies: Company[];
-  accountOptions: Account[];
-  isAccountsLoading?: boolean;
+  companies?: Company[];
+  kasOptions: Kas[];
+  isKasLoading?: boolean;
   isBusy?: boolean;
   onCancel?: () => void;
   submitLabel?: string;
@@ -35,455 +41,427 @@ interface Props {
 export default function GeneralJournalForm({
   form,
   onSubmit,
-  companies,
-  accountOptions,
-  isAccountsLoading = false,
+  companies = [],
+  kasOptions,
+  isKasLoading = false,
   isBusy = false,
   onCancel,
   submitLabel = 'Simpan Jurnal',
   existingPaymentProof,
   wrapWithForm = true,
 }: Props) {
-  const selectedCompanyId = form.watch('company_id');
   const paymentProof = form.watch('payment_proof');
-  const isUsd = Boolean(form.watch('is_usd_transaction'));
+  const billings = useWatch({
+    control: form.control,
+    name: 'billings',
+    defaultValue: form.getValues('billings'),
+  });
+  const transactionType = useWatch({
+    control: form.control,
+    name: 'type',
+    defaultValue: form.getValues('type') || 'debit',
+  });
+  const isCredit = transactionType === 'credit' || transactionType === 'kredit';
 
-  const { fields, append, remove } = useFieldArray({
+  const { fields: billingFields } = useFieldArray({
     control: form.control,
     name: 'billings',
   });
 
-  const billings = form.watch('billings');
+  // Collect all selected cash IDs across all billings to enforce uniqueness
+  const selectedCashIds = useMemo(() => {
+    const ids = new Set<number>();
+    (billings || []).forEach((b) => {
+      (b?.cashes || []).forEach((c) => {
+        const id = Number(c?.cash_id);
+        if (id && id > 0) {
+          ids.add(id);
+        }
+      });
+    });
+    return ids;
+  }, [billings]);
 
+  // Auto-detect if any selected cash is USD
+  const hasUsdCash = useMemo(() => {
+    return (billings || []).some((b) =>
+      (b?.cashes || []).some((c) => {
+        const k = kasOptions.find((opt) => Number(opt.id) === Number(c?.cash_id));
+        return String(k?.currency_type || '').toLowerCase() === 'usd';
+      }),
+    );
+  }, [billings, kasOptions]);
+
+  // Keep is_usd_transaction synchronized with whether any selected cash is USD
+  useEffect(() => {
+    form.setValue('is_usd_transaction', hasUsdCash, { shouldValidate: true, shouldDirty: true });
+  }, [hasUsdCash, form]);
+
+  // Calculate grand total cash across all billings
   const summary = useMemo(() => {
-    let totalDebit = 0;
-    let totalCredit = 0;
-    let totalDebitOriginal = 0;
-    let totalCreditOriginal = 0;
+    let grandTotalCash = 0;
+    let totalCashEntries = 0;
 
-    (billings || []).forEach((item) => {
-      const amount = Number(item.amount || 0);
-      const amountOriginal = item.amount_original !== undefined && item.amount_original !== null
-        ? Number(item.amount_original)
-        : (isUsd ? 0 : amount);
-
-      if (item.type === 'debet') {
-        totalDebit += amount;
-        totalDebitOriginal += amountOriginal;
-      } else if (item.type === 'credit') {
-        totalCredit += amount;
-        totalCreditOriginal += amountOriginal;
-      }
+    (billings || []).forEach((b) => {
+      (b?.cashes || []).forEach((c) => {
+        const amt = Number(c?.amount || 0);
+        grandTotalCash += amt;
+        if (c?.cash_id && amt > 0) {
+          totalCashEntries += 1;
+        }
+      });
     });
 
-    const difference = Math.abs(totalDebit - totalCredit);
-    const differenceOriginal = Math.abs(totalDebitOriginal - totalCreditOriginal);
-
-    const isPrimaryBalanced = difference <= 0.01 && (totalDebit > 0 || totalCredit > 0);
-    const isOriginalBalanced = !isUsd || (differenceOriginal <= 0.01 && (totalDebitOriginal > 0 || totalCreditOriginal > 0));
-
-    const isBalanced = isPrimaryBalanced && isOriginalBalanced;
+    const isValid = grandTotalCash > 0 && totalCashEntries > 0;
 
     return {
-      totalDebit,
-      totalCredit,
-      difference,
-      totalDebitOriginal,
-      totalCreditOriginal,
-      differenceOriginal,
-      isBalanced,
-      isPrimaryBalanced,
-      isOriginalBalanced,
+      grandTotalCash,
+      totalCashEntries,
+      isValid,
     };
-  }, [billings, isUsd]);
+  }, [billings]);
 
   const formContent = (
     <div className="space-y-6">
-      <FormField control={form.control} name="company_id" render={({ field }) => <input type="hidden" value={field.value} onChange={field.onChange} />} />
+      <FormField
+        control={form.control}
+        name="company_id"
+        render={({ field }) => (
+          <input type="hidden" value={field.value} onChange={field.onChange} />
+        )}
+      />
 
-      {/* Section 1: Informasi Header Jurnal */}
+      {/* Section Utama: Rincian Transaksi Jurnal Umum dan alokasi Kas */}
       <CollapsibleBox
-        title="Informasi Header Jurnal"
-        description="Pilih tanggal pencatatan jurnal umum memorial"
+        title="Rincian Transaksi Jurnal Umum dan alokasi Kas"
+        description="Tentukan tanggal transaksi jurnal dan alokasi sumber kas/bank pengeluaran atau penerimaan."
         icon={CalendarDays}
         defaultExpanded={true}
       >
-        <div className="grid gap-5 sm:grid-cols-2">
-          <FormField
-            control={form.control}
-            name="date"
-            render={({ field }) => (
-              <FormItem className="flex flex-col">
-                <FormLabel className="text-sm font-medium">
-                  Tanggal Jurnal <RequiredMark />
-                </FormLabel>
-                <FormControl>
-                  <DatePicker
-                    value={field.value instanceof Date ? field.value : null}
-                    onChange={(date) => field.onChange(date || new Date())}
-                    disabled={isBusy}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="is_usd_transaction"
-            render={({ field }) => (
-              <FormItem className="flex flex-col">
-                <FormLabel className="text-sm font-medium">
-                  Mata Uang Transaksi <RequiredMark />
-                </FormLabel>
-                <Select
-                  value={field.value ? 'usd' : 'idr'}
-                  onValueChange={(val) => {
-                    const isUsdMode = val === 'usd';
-                    field.onChange(isUsdMode);
-                    if (!isUsdMode) {
-                      const billingsList = form.getValues('billings') || [];
-                      billingsList.forEach((b, idx) => {
-                        form.setValue(`billings.${idx}.amount_original`, b.amount, { shouldDirty: true });
-                      });
-                    }
-                  }}
-                  disabled={isBusy}
-                >
+        <div className="space-y-5">
+          {/* Tanggal Transaksi Jurnal & Jenis Transaksi Umum */}
+          <div className="grid gap-4 sm:grid-cols-2 rounded-lg border border-slate-100 bg-slate-50/70 p-4">
+            <FormField
+              control={form.control}
+              name="date"
+              render={({ field }) => (
+                <FormItem className="flex flex-col">
+                  <FormLabel className="text-sm font-semibold text-slate-700">
+                    Tanggal Jurnal <RequiredMark />
+                  </FormLabel>
                   <FormControl>
-                    <SelectTrigger className="h-9 bg-white">
-                      <SelectValue placeholder="Pilih Mata Uang" />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    <SelectItem value="idr">IDR (Indonesian Rupiah - Rp)</SelectItem>
-                    <SelectItem value="usd">USD (US Dollar - $)</SelectItem>
-                  </SelectContent>
-                </Select>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <div className="space-y-2 sm:col-span-2">
-            <label className="text-sm font-medium text-slate-700">Perusahaan</label>
-            <div className="flex h-9 w-full items-center rounded-md border border-slate-200 bg-slate-50 px-3 text-sm text-slate-700">
-              {companies.find((c) => Number(c.id) === Number(selectedCompanyId))?.name || 'Perusahaan Aktif'}
-            </div>
-            <p className="text-xs text-slate-400">Jurnal dicatat untuk perusahaan aktif yang dipilih</p>
-          </div>
-
-          {isUsd ? (
-            <div className="sm:col-span-2 rounded-md border border-blue-200 bg-blue-50/70 p-3 text-xs text-blue-800 flex items-start gap-2.5">
-              <AlertCircle className="h-4 w-4 text-blue-600 mt-0.5 shrink-0" />
-              <div>
-                <p className="font-semibold text-blue-900">Mode Transaksi USD Aktif</p>
-                <p className="text-blue-700 mt-0.5 leading-relaxed">
-                  Setiap baris akun membutuhkan input nominal transaksi dalam <strong>USD ($)</strong> serta nominal ekuivalen dalam <strong>IDR (Rp)</strong> untuk pencatatan buku besar IDR.
-                </p>
-              </div>
-            </div>
-          ) : null}
-        </div>
-      </CollapsibleBox>
-
-      {/* Section 2: Baris Transaksi Debet & Kredit */}
-      <CollapsibleBox
-        title="Rincian Baris Jurnal (Debet & Kredit)"
-        description="Masukkan baris akun debet dan kredit. Total debet dan kredit harus bernilai sama (seimbang)."
-        icon={Scale}
-        defaultExpanded={true}
-      >
-        <div className="space-y-4">
-          <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-            <div>
-              <p className="text-sm font-semibold text-slate-800">Daftar Akun Transaksi</p>
-              <p className="text-xs text-slate-500">Minimal 2 baris transaksi untuk memenuhi kaidah double-entry bookkeeping</p>
-            </div>
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={() =>
-                append({
-                  account_id: 0,
-                  type: 'debet',
-                  amount: 0,
-                  amount_original: isUsd ? 0 : undefined,
-                  payment_at: undefined,
-                  note: '',
-                })
-              }
-              disabled={isBusy}
-              className="btn-outline h-8 gap-1.5 text-xs"
-            >
-              <Plus className="h-3.5 w-3.5" />
-              Tambah Baris
-            </Button>
-          </div>
-
-          <div className="space-y-3">
-            {fields.map((fieldItem, index) => {
-              const currentAccountId = form.watch(`billings.${index}.account_id`);
-              const currentType = form.watch(`billings.${index}.type`);
-
-              return (
-                <div
-                  key={fieldItem.id}
-                  className={cn(
-                    'rounded-lg border p-4 transition-colors',
-                    currentType === 'debet'
-                      ? 'border-emerald-100 bg-emerald-50/20'
-                      : 'border-rose-100 bg-rose-50/20',
-                  )}
-                >
-                  <div className="grid gap-3 sm:grid-cols-12 items-start">
-                    {/* Akun COA */}
-                    <div className={cn(isUsd ? 'sm:col-span-4' : 'sm:col-span-5', 'space-y-1')}>
-                      <label className="text-xs font-semibold text-slate-700 flex items-center justify-between">
-                        <span>Akun (COA) <RequiredMark /></span>
-                        <span className="text-[10px] text-slate-400">Baris #{index + 1}</span>
-                      </label>
-                      <LedgerAccountSelect
-                        value={currentAccountId ? Number(currentAccountId) : null}
-                        onValueChange={(val) => {
-                          form.setValue(`billings.${index}.account_id`, val || 0, {
-                            shouldValidate: true,
-                            shouldDirty: true,
-                          });
-                        }}
-                        options={accountOptions}
-                        disabled={isBusy || isAccountsLoading}
-                      />
-                    </div>
-
-                    {/* Posisi: Debet / Kredit */}
-                    <div className="sm:col-span-2 space-y-1">
-                      <label className="text-xs font-semibold text-slate-700">
-                        Posisi <RequiredMark />
-                      </label>
-                      <Select
-                        value={currentType}
-                        onValueChange={(val: 'debet' | 'credit') => {
-                          form.setValue(`billings.${index}.type`, val, {
-                            shouldValidate: true,
-                            shouldDirty: true,
-                          });
-                        }}
-                        disabled={isBusy}
-                      >
-                        <SelectTrigger className="h-9 bg-white">
-                          <SelectValue placeholder="Pilih posisi" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="debet" className="text-emerald-700 font-semibold">
-                            Debet
-                          </SelectItem>
-                          <SelectItem value="credit" className="text-rose-700 font-semibold">
-                            Kredit
-                          </SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-
-                    {isUsd ? (
-                      <>
-                        {/* Nominal USD */}
-                        <div className="sm:col-span-3 space-y-1">
-                          <label className="text-xs font-semibold text-blue-800">
-                            Nominal USD ($) <RequiredMark />
-                          </label>
-                          <MoneyInput
-                            currency="USD"
-                            value={form.watch(`billings.${index}.amount`) || 0}
-                            onChangeValue={(val) => {
-                              form.setValue(`billings.${index}.amount`, val, {
-                                shouldValidate: true,
-                                shouldDirty: true,
-                              });
-                            }}
-                            placeholder="0.00"
-                            disabled={isBusy}
-                            className="bg-white border-blue-200 focus-visible:ring-blue-400"
-                          />
-                        </div>
-
-                        {/* Ekuivalen IDR */}
-                        <div className="sm:col-span-2 space-y-1">
-                          <label className="text-xs font-semibold text-slate-700">
-                            Ekuivalen IDR (Rp) <RequiredMark />
-                          </label>
-                          <MoneyInput
-                            currency="IDR"
-                            value={form.watch(`billings.${index}.amount_original`) || 0}
-                            onChangeValue={(val) => {
-                              form.setValue(`billings.${index}.amount_original`, val, {
-                                shouldValidate: true,
-                                shouldDirty: true,
-                              });
-                            }}
-                            placeholder="0"
-                            disabled={isBusy}
-                            className="bg-white"
-                          />
-                        </div>
-                      </>
-                    ) : (
-                      /* Nominal IDR */
-                      <div className="sm:col-span-4 space-y-1">
-                        <label className="text-xs font-semibold text-slate-700">
-                          Nominal (IDR) <RequiredMark />
-                        </label>
-                        <MoneyInput
-                          currency="IDR"
-                          value={form.watch(`billings.${index}.amount`) || 0}
-                          onChangeValue={(val) => {
-                            form.setValue(`billings.${index}.amount`, val, {
-                              shouldValidate: true,
-                              shouldDirty: true,
-                            });
-                            form.setValue(`billings.${index}.amount_original`, val, {
-                              shouldDirty: true,
-                            });
-                          }}
-                          placeholder="0"
-                          disabled={isBusy}
-                          className="bg-white"
-                        />
-                      </div>
-                    )}
-
-                    {/* Tombol Hapus Baris */}
-                    <div className="sm:col-span-1 flex justify-end pt-5 sm:pt-6">
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="icon"
-                        className="h-8 w-8 text-slate-400 hover:text-rose-600 disabled:opacity-30"
-                        onClick={() => remove(index)}
-                        disabled={isBusy || fields.length <= 2}
-                        title={fields.length <= 2 ? 'Minimal 2 baris transaksi' : 'Hapus baris'}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </div>
-
-                  {/* Keterangan per Baris (Opsional) */}
-                  <div className="mt-2 pt-2 border-t border-slate-100">
-                    <Input
-                      placeholder="Keterangan per baris (opsional)..."
-                      className="h-8 text-xs bg-white/80"
-                      value={form.watch(`billings.${index}.note`) ?? ''}
-                      onChange={(e) => {
-                        form.setValue(`billings.${index}.note`, e.target.value, {
-                          shouldDirty: true,
-                        });
-                      }}
+                    <DatePicker
+                      value={field.value instanceof Date ? field.value : null}
+                      onChange={(date) => field.onChange(date || new Date())}
                       disabled={isBusy}
                     />
-                  </div>
-                </div>
-              );
-            })}
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="type"
+              render={({ field }) => (
+                <FormItem className="flex flex-col">
+                  <FormLabel className="text-sm font-semibold text-slate-700">
+                    Jenis Transaksi Umum <RequiredMark />
+                  </FormLabel>
+                  <Select
+                    value={field.value === 'credit' || field.value === 'kredit' ? 'credit' : 'debit'}
+                    onValueChange={(val: 'debit' | 'credit') => {
+                      field.onChange(val);
+                      // Update all cashes type across billing to match this transaction type
+                      const currentBillings = form.getValues('billings') || [];
+                      const updated = currentBillings.map((b) => ({
+                        ...b,
+                        cashes: (b.cashes || []).map((c) => ({
+                          ...c,
+                          type: val,
+                        })),
+                      }));
+                      form.setValue('billings', updated, {
+                        shouldValidate: true,
+                        shouldDirty: true,
+                      });
+                    }}
+                    disabled={isBusy}
+                  >
+                    <FormControl>
+                      <SelectTrigger className="h-9 bg-white text-sm">
+                        <SelectValue placeholder="Pilih Jenis Transaksi Umum..." />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="debit">
+                        <span className="font-medium text-emerald-700">Debet</span>
+                      </SelectItem>
+                      <SelectItem value="credit">
+                        <span className="font-medium text-rose-700">Kredit</span>
+                      </SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
           </div>
 
-          {/* Balance Indicator & Live Calculation */}
+          {/* Billings & Cashes List */}
+          {billingFields.map((billingField, bIndex) => {
+            const currentBillingCashes = billings?.[bIndex]?.cashes || [];
+            const isMaxKasReached =
+              kasOptions.length > 0 && currentBillingCashes.length >= kasOptions.length;
+
+            return (
+              <div
+                key={billingField.id}
+                className="rounded-lg border border-slate-200 bg-white p-4 shadow-xs space-y-4"
+              >
+                {/* Multiple Cash Rows */}
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className=" font-semibold text-slate-800 flex items-center gap-1.5">
+                        <Coins className="h-3.5 w-3.5 text-emerald-600" />
+                        Daftar Alokasi Kas / Bank
+                      </p>
+                      <p className="text-slate-400">
+                        Pilih kas/bank dan masukkan nominal transaksi (Posisi: {isCredit ? 'Kredit' : 'Debet'})
+                      </p>
+                    </div>
+
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        const existingCashes = form.getValues(`billings.${bIndex}.cashes`) || [];
+                        if (kasOptions.length > 0 && existingCashes.length >= kasOptions.length) {
+                          return;
+                        }
+                        const rawType = form.getValues('type');
+                        const currentType: 'credit' | 'debit' =
+                          rawType === 'credit' || rawType === 'kredit' ? 'credit' : 'debit';
+                        form.setValue(
+                          `billings.${bIndex}.cashes`,
+                          [
+                            ...existingCashes,
+                            { cash_id: 0, amount: 0, type: currentType },
+                          ],
+                          { shouldValidate: true, shouldDirty: true },
+                        );
+                      }}
+                      disabled={
+                        isBusy ||
+                        isKasLoading ||
+                        kasOptions.length === 0 ||
+                        isMaxKasReached
+                      }
+                      title={
+                        isMaxKasReached
+                          ? `Maksimal ${kasOptions.length} kas telah dipilih`
+                          : 'Tambah alokasi kas'
+                      }
+                      className="h-7  gap-1 border-dashed border-emerald-400 text-emerald-700 hover:bg-emerald-50 disabled:cursor-not-allowed disabled:opacity-50"
+                    >
+                      <Plus className="h-3.5 w-3.5" />
+                      Tambah Kas
+                    </Button>
+                  </div>
+
+                  {/* Cash Inputs List */}
+                  <div className="space-y-2.5">
+                    {currentBillingCashes.map((cashItem, cIndex) => {
+                      const selectedCashId = cashItem?.cash_id;
+                      const currentAmount = cashItem?.amount;
+
+                      const selectedCash = kasOptions.find((k) => Number(k.id) === Number(selectedCashId));
+                      const rowCurrency: 'IDR' | 'USD' =
+                        String(selectedCash?.currency_type || 'idr').toLowerCase() === 'usd' ? 'USD' : 'IDR';
+
+                      return (
+                        <div
+                          key={cIndex}
+                          className="grid gap-3 sm:grid-cols-12 items-center rounded-md border border-slate-100 bg-slate-50/60 p-3 transition-colors hover:border-slate-200"
+                        >
+                          {/* 1. Kas Selector (Unique across journal) */}
+                          <div className="sm:col-span-6 space-y-1">
+                            <label className="text-xs font-semibold text-slate-700 flex items-center justify-between">
+                              <span>
+                                Kas #{cIndex + 1} <RequiredMark />
+                              </span>
+                            </label>
+                            <Select
+                              value={selectedCashId ? String(selectedCashId) : ''}
+                              onValueChange={(val) => {
+                                form.setValue(
+                                  `billings.${bIndex}.cashes.${cIndex}.cash_id`,
+                                  Number(val),
+                                  { shouldValidate: true, shouldDirty: true },
+                                );
+                              }}
+                              disabled={isBusy || isKasLoading}
+                            >
+                              <SelectTrigger className="h-9 bg-white">
+                                <SelectValue placeholder="Pilih Kas / Bank..." />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {kasOptions.length === 0 ? (
+                                  <div className="p-2 text-slate-400 text-center text-xs">
+                                    {isKasLoading ? 'Memuat data kas...' : 'Belum ada data kas/bank'}
+                                  </div>
+                                ) : (
+                                  kasOptions.map((kas) => {
+                                    const isSelectedElsewhere =
+                                      Number(kas.id) !== Number(selectedCashId) &&
+                                      selectedCashIds.has(Number(kas.id));
+
+                                    const kasCurrencyLabel = (kas.currency_type || 'idr').toUpperCase();
+
+                                    return (
+                                      <SelectItem
+                                        key={kas.id}
+                                        value={String(kas.id)}
+                                        disabled={isSelectedElsewhere}
+                                        className={cn(
+                                          isSelectedElsewhere && 'opacity-50 cursor-not-allowed bg-slate-50',
+                                        )}
+                                      >
+                                        <div className="flex items-center justify-between w-full gap-2">
+                                          <div className="flex items-center gap-2 truncate">
+                                            <span
+                                              className={cn(
+                                                'font-medium',
+                                                isSelectedElsewhere ? 'text-slate-400' : 'text-slate-900',
+                                              )}
+                                            >
+                                              {kas.cash_name || kas.code}
+                                            </span>
+                                            <span className="text-[10px] text-slate-400">
+                                              ({kas.type === 'bank' ? 'Bank' : 'Kas'} - {kas.code} - {kasCurrencyLabel})
+                                            </span>
+                                          </div>
+                                          {isSelectedElsewhere ? (
+                                            <span className="text-[10px] text-amber-700 font-medium whitespace-nowrap bg-amber-50 px-1.5 py-0.5 rounded border border-amber-200">
+                                              Sudah dipilih
+                                            </span>
+                                          ) : null}
+                                        </div>
+                                      </SelectItem>
+                                    );
+                                  })
+                                )}
+                              </SelectContent>
+                            </Select>
+                          </div>
+
+                          {/* 2. Nominal Kas (Otomatis mengikuti currency_type kas) */}
+                          <div className="sm:col-span-5 space-y-1">
+                            <label className="text-xs font-semibold text-slate-700">
+                              Nominal ({rowCurrency}) <RequiredMark />
+                            </label>
+                            <MoneyInput
+                              currency={rowCurrency}
+                              value={currentAmount || 0}
+                              onChangeValue={(val) => {
+                                form.setValue(
+                                  `billings.${bIndex}.cashes.${cIndex}.amount`,
+                                  val,
+                                  { shouldValidate: true, shouldDirty: true },
+                                );
+                              }}
+                              placeholder="0"
+                              disabled={isBusy}
+                              className="bg-white h-9"
+                            />
+                          </div>
+
+                          {/* 3. Tombol Hapus Baris Kas */}
+                          <div className="sm:col-span-1 flex justify-start pt-4 sm:pt-4">
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="icon"
+                              className="h-9 w-9 text-slate-400 hover:text-rose-600 hover:bg-rose-50"
+                              onClick={() => {
+                                const updatedCashes = currentBillingCashes.filter(
+                                  (_, idx) => idx !== cIndex,
+                                );
+                                form.setValue(
+                                  `billings.${bIndex}.cashes`,
+                                  updatedCashes,
+                                  { shouldValidate: true, shouldDirty: true },
+                                );
+                              }}
+                              disabled={isBusy || currentBillingCashes.length <= 1}
+                              title={
+                                currentBillingCashes.length <= 1
+                                  ? 'Minimal 1 alokasi kas'
+                                  : 'Hapus alokasi kas'
+                              }
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+
+          {/* Live Total Kas (Debet / Kredit) Indicator */}
           <div
             className={cn(
               'rounded-lg border p-4 transition-all',
-              summary.isBalanced
+              summary.isValid
                 ? 'border-emerald-200 bg-emerald-50/50'
                 : 'border-amber-200 bg-amber-50/40',
             )}
           >
-            <div className="flex flex-col gap-3 text-xs">
-              <div className="flex flex-wrap items-center justify-between gap-4">
-                <div className="flex flex-wrap items-center gap-4">
-                  <div>
-                    <span className="text-slate-500">
-                      Total Debet {isUsd ? '(USD)' : ''}:{' '}
-                    </span>
-                    <span className="font-semibold text-emerald-700 sm:text-sm">
-                      {currenciesFormat(isUsd ? 'usd' : 'idr', summary.totalDebit)}
-                    </span>
-                  </div>
-                  <div>
-                    <span className="text-slate-500">
-                      Total Kredit {isUsd ? '(USD)' : ''}:{' '}
-                    </span>
-                    <span className="font-semibold text-rose-700 sm:text-sm">
-                      {currenciesFormat(isUsd ? 'usd' : 'idr', summary.totalCredit)}
-                    </span>
-                  </div>
-                  <div>
-                    <span className="text-slate-500">
-                      Selisih {isUsd ? '(USD)' : ''}:{' '}
-                    </span>
-                    <span
-                      className={cn(
-                        'font-semibold',
-                        summary.difference <= 0.01 ? 'text-emerald-700' : 'text-amber-700',
-                      )}
-                    >
-                      {currenciesFormat(isUsd ? 'usd' : 'idr', summary.difference)}
-                    </span>
-                  </div>
-                </div>
-
-                <div className="flex items-center gap-1.5 font-semibold">
-                  {summary.isBalanced ? (
-                    <span className="inline-flex items-center gap-1 text-emerald-700 bg-emerald-100/80 px-2.5 py-1 rounded-full text-xs">
-                      <CheckCircle2 className="h-3.5 w-3.5" />
-                      SEIMBANG (BALANCED)
-                    </span>
-                  ) : (
-                    <span className="inline-flex items-center gap-1 text-amber-800 bg-amber-100/80 px-2.5 py-1 rounded-full text-xs">
-                      <AlertCircle className="h-3.5 w-3.5" />
-                      BELUM SEIMBANG
-                    </span>
-                  )}
+            <div className="flex flex-wrap items-center justify-between gap-3 ">
+              <div className="flex flex-wrap items-center gap-4">
+                <div>
+                  <span className="text-slate-500 font-medium">
+                    Total Kas ({isCredit ? 'Kredit' : 'Debet'}):{' '}
+                  </span>
+                  <span
+                    className={cn(
+                      'text-base font-bold ml-1',
+                      isCredit ? 'text-rose-700' : 'text-emerald-700',
+                    )}
+                  >
+                    {currenciesFormat(hasUsdCash ? 'usd' : 'idr', summary.grandTotalCash)}
+                  </span>
                 </div>
               </div>
 
-              {isUsd ? (
-                <div className="flex flex-wrap items-center gap-4 border-t border-slate-200/60 pt-2 text-slate-600">
-                  <span className="font-medium text-slate-500">Ekuivalen IDR:</span>
-                  <div>
-                    <span className="text-slate-500">Debet: </span>
-                    <span className="font-semibold text-emerald-700">
-                      {currenciesFormat('idr', summary.totalDebitOriginal)}
-                    </span>
-                  </div>
-                  <div>
-                    <span className="text-slate-500">Kredit: </span>
-                    <span className="font-semibold text-rose-700">
-                      {currenciesFormat('idr', summary.totalCreditOriginal)}
-                    </span>
-                  </div>
-                  <div>
-                    <span className="text-slate-500">Selisih: </span>
-                    <span
-                      className={cn(
-                        'font-semibold',
-                        summary.differenceOriginal <= 0.01 ? 'text-emerald-700' : 'text-amber-700',
-                      )}
-                    >
-                      {currenciesFormat('idr', summary.differenceOriginal)}
-                    </span>
-                  </div>
-                </div>
-              ) : null}
+              <div>
+                {summary.isValid ? (
+                  <span className="inline-flex items-center gap-1 text-emerald-700 font-semibold bg-emerald-100/70 px-2.5 py-1 rounded-full ">
+                    {summary.totalCashEntries} kas teralokasi ({isCredit ? 'Kredit' : 'Debet'})
+                  </span>
+                ) : (
+                  <span className="inline-flex items-center gap-1 text-amber-800 font-semibold bg-amber-100/70 px-2.5 py-1 rounded-full ">
+                    <AlertCircle className="h-3.5 w-3.5" />
+                    Tentukan minimal 1 kas dengan nominal &gt; 0
+                  </span>
+                )}
+              </div>
             </div>
           </div>
         </div>
       </CollapsibleBox>
 
-      {/* Section 3: Informasi Tambahan & Bukti */}
+      {/* Section 2: Keterangan & Bukti Dokumen */}
       <CollapsibleBox
-        title="Informasi Tambahan & Bukti Dokumen"
-        description="Tambahkan keterangan umum jurnal dan lampiran dokumen pendukung bila ada."
+        title="Keterangan & Bukti Dokumen"
+        description="Tambahkan catatan jurnal dan lampiran dokumen bila ada."
         icon={FileText}
         defaultExpanded={true}
       >
@@ -498,7 +476,7 @@ export default function GeneralJournalForm({
                 </FormLabel>
                 <FormControl className="flex-1 flex flex-col">
                   <Textarea
-                    placeholder="Masukkan keterangan jurnal penyesuaian/memorial..."
+                    placeholder="Contoh: Pengeluaran operasional logistik cabang..."
                     className="flex-1 min-h-32 resize-none bg-white"
                     disabled={isBusy}
                     {...field}
@@ -514,7 +492,9 @@ export default function GeneralJournalForm({
             name="payment_proof"
             render={() => (
               <FormItem className="flex flex-col">
-                <FormLabel className="text-sm font-medium">Bukti Dokumen Pendukung (opsional)</FormLabel>
+                <FormLabel className="text-sm font-medium">
+                  Bukti Dokumen Pendukung (Opsional)
+                </FormLabel>
                 <FormControl className="flex-1 flex flex-col">
                   <FileInput
                     className="flex-1 flex flex-col"
@@ -533,7 +513,7 @@ export default function GeneralJournalForm({
                   />
                 </FormControl>
                 {existingPaymentProof && !paymentProof ? (
-                  <p className="text-xs text-slate-500 mt-1">
+                  <p className=" text-slate-500 mt-1">
                     Bukti dokumen tersimpan tetap digunakan jika tidak diganti.
                   </p>
                 ) : null}
@@ -554,9 +534,13 @@ export default function GeneralJournalForm({
         <Button
           type="submit"
           className="btn-primary"
-          disabled={isBusy || !summary.isBalanced}
+          disabled={isBusy || !summary.isValid}
         >
-          {isBusy ? <LoadingState variant="inline" text="Menyimpan..." iconClassName="text-white" /> : submitLabel}
+          {isBusy ? (
+            <LoadingState variant="inline" text="Menyimpan..." iconClassName="text-white" />
+          ) : (
+            submitLabel
+          )}
         </Button>
       </div>
     </div>

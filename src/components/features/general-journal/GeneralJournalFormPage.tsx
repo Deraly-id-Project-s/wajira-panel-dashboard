@@ -15,7 +15,7 @@ import {
   useGeneralJournalDetail,
   useUpdateGeneralJournal,
 } from '@/hooks/useGeneralJournal';
-import { useAccounts } from '@/hooks/useAccount';
+import { useKas } from '@/hooks/useKas';
 import {
   generalJournalSchema,
   type GeneralJournalFormInput,
@@ -24,6 +24,7 @@ import {
 import { fetchUserCompanies } from '@/services/company.service';
 import { getApiErrorMessage } from '@/utils/apiErrorHandler';
 import GeneralJournalForm from './GeneralJournalForm';
+import type { GeneralJournalPayload } from '@/@types/general-journal.types';
 
 interface Props {
   mode: 'create' | 'edit';
@@ -32,6 +33,7 @@ interface Props {
 const emptyValues = (companyId: number): GeneralJournalFormInput => ({
   company_id: companyId,
   date: new Date(),
+  type: 'debit',
   note: '',
   payment_proof: null,
   is_usd_transaction: false,
@@ -39,20 +41,14 @@ const emptyValues = (companyId: number): GeneralJournalFormInput => ({
   amount_original: 0,
   billings: [
     {
-      account_id: 0,
-      type: 'debet',
-      amount: 0,
-      amount_original: undefined,
-      payment_at: undefined,
       note: '',
-    },
-    {
-      account_id: 0,
-      type: 'credit',
-      amount: 0,
-      amount_original: undefined,
-      payment_at: undefined,
-      note: '',
+      cashes: [
+        {
+          cash_id: 0,
+          amount: 0,
+          type: 'debit',
+        },
+      ],
     },
   ],
 });
@@ -83,15 +79,9 @@ export default function GeneralJournalFormPage({ mode }: Props) {
     refetchInterval: false,
   });
 
-  const accountQuery = useAccounts({
-    page: 1,
-    perPage: 1000,
-    search: '',
-    company_id: selectedCompanyId,
-    enabled: Boolean(selectedCompanyId),
-  });
-
-  const accountOptions = useMemo(() => accountQuery.data?.data ?? [], [accountQuery.data?.data]);
+  // Fetch Kas / Bank accounts for the selected company
+  const kasQuery = useKas(selectedCompanyId);
+  const kasOptions = useMemo(() => kasQuery.data?.data ?? [], [kasQuery.data?.data]);
 
   const createMutation = useCreateGeneralJournal();
   const updateMutation = useUpdateGeneralJournal();
@@ -107,28 +97,44 @@ export default function GeneralJournalFormPage({ mode }: Props) {
   useEffect(() => {
     if (mode !== 'edit' || !journalDetail) return;
 
-    const isUsd = Boolean(journalDetail.is_usd_transaction);
+    const firstBilling = journalDetail.billings?.[0];
+    const rawType = String(
+      firstBilling?.cashes?.[0]?.type ||
+      (journalDetail as any)?.type ||
+      (Number(journalDetail.total_credit || 0) > 0 && Number(journalDetail.total_debit || 0) === 0 ? 'credit' : '') ||
+      ''
+    ).toLowerCase();
+    const existingType: 'credit' | 'debit' = rawType === 'credit' || rawType === 'kredit' ? 'credit' : 'debit';
 
-    const initialBillings = (journalDetail.billings && journalDetail.billings.length > 0)
-      ? journalDetail.billings.map((b) => ({
-        id: b.id,
-        account_id: Number(b.account_id),
-        type: (b.type === 'credit' ? 'credit' : 'debet') as 'debet' | 'credit',
-        amount: Number(b.amount || 0),
-        amount_original: b.amount_original !== undefined && b.amount_original !== null
-          ? Number(b.amount_original)
-          : (isUsd ? undefined : Number(b.amount || 0)),
-        payment_at: b.payment_at || undefined,
-        note: b.note ?? '',
-      }))
-      : [
-        { account_id: 0, type: 'debet' as const, amount: 0, amount_original: isUsd ? 0 : undefined, note: '' },
-        { account_id: 0, type: 'credit' as const, amount: 0, amount_original: isUsd ? 0 : undefined, note: '' },
-      ];
+    const hasUsdInDetail = (firstBilling?.cashes || []).some((c) => {
+      const k = kasOptions.find((opt) => Number(opt.id) === Number(c.cash_id));
+      return String(k?.currency_type || c.cash?.currency_type || '').toLowerCase() === 'usd';
+    });
+    const isUsd = hasUsdInDetail;
+
+    const initialBillings: GeneralJournalFormValues['billings'] = firstBilling
+      ? [
+          {
+            id: firstBilling.id,
+            date: firstBilling.date ? new Date(firstBilling.date) : new Date(journalDetail.date),
+            note: firstBilling.note ?? '',
+            cashes:
+              firstBilling.cashes && firstBilling.cashes.length > 0
+                ? firstBilling.cashes.map((c) => ({
+                    id: c.id,
+                    cash_id: Number(c.cash_id),
+                    amount: Number(c.amount || 0),
+                    type: existingType,
+                  }))
+                : [{ cash_id: 0, amount: 0, type: existingType }],
+          },
+        ]
+      : [{ note: '', cashes: [{ cash_id: 0, amount: 0, type: existingType }] }];
 
     form.reset({
       company_id: journalDetail.company_id,
       date: journalDetail.date ? new Date(journalDetail.date) : new Date(),
+      type: existingType,
       note: journalDetail.note ?? '',
       payment_proof: null,
       is_usd_transaction: isUsd,
@@ -136,34 +142,45 @@ export default function GeneralJournalFormPage({ mode }: Props) {
       amount_original: journalDetail.amount_original !== null && journalDetail.amount_original !== undefined ? Number(journalDetail.amount_original) : undefined,
       billings: initialBillings,
     });
-  }, [journalDetail, form, mode]);
+  }, [journalDetail, kasOptions, form, mode]);
 
   const handleSubmit = async (values: GeneralJournalFormValues) => {
-    const isUsd = Boolean(values.is_usd_transaction);
-    const debetBillings = values.billings.filter((b) => b.type === 'debet');
-    const computedAmount = debetBillings.reduce((acc, curr) => acc + Number(curr.amount || 0), 0);
-    const computedAmountOriginal = isUsd
-      ? debetBillings.reduce((acc, curr) => acc + Number(curr.amount_original || 0), 0)
-      : computedAmount;
+    const hasUsdCash = values.billings.some((b) =>
+      (b.cashes || []).some((c) => {
+        const k = kasOptions.find((opt) => Number(opt.id) === Number(c.cash_id));
+        return String(k?.currency_type || '').toLowerCase() === 'usd';
+      }),
+    );
+    const isUsd = hasUsdCash;
+    const grandTotalCash = values.billings.reduce(
+      (bAcc, b) => bAcc + (b.cashes || []).reduce((cAcc, c) => cAcc + Number(c.amount || 0), 0),
+      0,
+    );
 
-    const payload = {
+    const transactionType: 'credit' | 'debit' =
+      String(values.type).toLowerCase() === 'credit' || String(values.type).toLowerCase() === 'kredit'
+        ? 'credit'
+        : 'debit';
+
+    const payload: GeneralJournalPayload = {
       company_id: values.company_id,
       date: format(values.date, 'yyyy-MM-dd'),
+      type: transactionType,
       note: values.note,
       payment_proof: values.payment_proof,
       is_usd_transaction: isUsd,
-      amount: values.amount !== undefined && values.amount !== null && values.amount > 0 ? values.amount : computedAmount,
-      amount_original: isUsd
-        ? (values.amount_original !== undefined && values.amount_original !== null && values.amount_original > 0 ? values.amount_original : computedAmountOriginal)
-        : (values.amount !== undefined && values.amount !== null && values.amount > 0 ? values.amount : computedAmount),
-      billings: values.billings.map((item) => ({
-        id: item.id,
-        account_id: item.account_id,
-        type: item.type,
-        amount: item.amount,
-        amount_original: isUsd ? (item.amount_original ?? item.amount) : item.amount,
-        payment_at: item.payment_at || format(values.date, 'yyyy-MM-dd'),
-        note: item.note ?? null,
+      amount: grandTotalCash,
+      amount_original: isUsd ? (values.amount_original || grandTotalCash) : grandTotalCash,
+      billings: values.billings.slice(0, 1).map((b) => ({
+        id: b.id,
+        date: b.date ? format(b.date, 'yyyy-MM-dd') : format(values.date, 'yyyy-MM-dd'),
+        note: b.note || values.note,
+        cashes: b.cashes.map((c) => ({
+          id: c.id,
+          cash_id: Number(c.cash_id),
+          amount: Number(c.amount),
+          type: transactionType,
+        })),
       })),
     };
 
@@ -244,8 +261,8 @@ export default function GeneralJournalFormPage({ mode }: Props) {
           title={isEdit ? 'Edit Jurnal Umum' : 'Tambah Jurnal Umum'}
           subtitle={
             isEdit
-              ? `Update data Transaksi jurnal Umum ${journalDetail?.code ?? ''}`
-              : 'Tambah data Transaksi jurnal Umum'
+              ? `Update data transaksi jurnal umum ${journalDetail?.code ?? ''}`
+              : 'Pencatatan data transaksi jurnal umum baru'
           }
           onBack={() => void router.push(basePath)}
         />
@@ -254,8 +271,8 @@ export default function GeneralJournalFormPage({ mode }: Props) {
           form={form}
           onSubmit={handleSubmit}
           companies={companyQuery.data ?? []}
-          accountOptions={accountOptions}
-          isAccountsLoading={accountQuery.isLoading}
+          kasOptions={kasOptions}
+          isKasLoading={kasQuery.isLoading}
           isBusy={isBusy}
           onCancel={() => void router.push(basePath)}
           submitLabel={isEdit ? 'Perbarui Jurnal' : 'Simpan Jurnal'}
