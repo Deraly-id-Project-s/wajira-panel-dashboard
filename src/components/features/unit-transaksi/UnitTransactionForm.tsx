@@ -398,17 +398,36 @@ export function UnitTransactionForm({
     return [createdTypeUnit, ...list];
   }, [createdTypeUnit, suppliedTypeUnitOptions, typeUnitData?.data]);
 
+  const getUnitPrice = (typeUnit: TypeUnit | any, isUsdActive: boolean): number => {
+    if (!typeUnit) return 0;
+    let rawVal: any;
+    if (isUsdActive) {
+      rawVal = type === 'purchase'
+        ? (typeUnit.buyPriceUsd ?? typeUnit.buy_price_usd)
+        : (typeUnit.sellPriceUsd ?? typeUnit.sell_price_usd);
+    } else {
+      rawVal = type === 'purchase'
+        ? (typeUnit.buyPrice ?? typeUnit.buy_price)
+        : (typeUnit.sellPrice ?? typeUnit.sell_price);
+    }
+    const num = Number(rawVal ?? 0);
+    return Number.isFinite(num) ? num : 0;
+  };
+
   const selectTypeUnit = (typeUnit: TypeUnit) => {
     form.setValue('unitTypeId', String(typeUnit.id), { shouldDirty: true, shouldValidate: true });
-    const preferredPrice = isUsd
-      ? (type === 'purchase' ? typeUnit.buyPriceUsd : typeUnit.sellPriceUsd)
-      : (type === 'purchase' ? typeUnit.buyPrice : typeUnit.sellPrice);
-    if (preferredPrice !== undefined && preferredPrice !== null) {
-      if (isUsd) {
-        form.setValue('pricePerUnitUsd', Number(preferredPrice), { shouldDirty: true });
-      } else {
-        form.setValue('price', Number(preferredPrice), { shouldDirty: true });
-      }
+    const currentQty = Number(form.getValues('qty') || 1);
+
+    if (isUsd) {
+      const usdPrice = getUnitPrice(typeUnit, true);
+      form.setValue('pricePerUnitUsd', usdPrice, { shouldDirty: true, shouldValidate: true });
+      form.setValue('priceUsd', usdPrice * currentQty, { shouldDirty: true, shouldValidate: true });
+      form.setValue('price', 0, { shouldDirty: true });
+    } else {
+      const idrPrice = getUnitPrice(typeUnit, false);
+      form.setValue('price', idrPrice, { shouldDirty: true, shouldValidate: true });
+      form.setValue('pricePerUnitUsd', 0, { shouldDirty: true });
+      form.setValue('priceUsd', 0, { shouldDirty: true });
     }
   };
 
@@ -456,17 +475,39 @@ export function UnitTransactionForm({
                   onCheckedChange={(checked) => {
                     const nextValue = checked === true;
                     setIsUsd(nextValue);
+
+                    const currentUnitTypeId = form.getValues('unitTypeId');
+                    const selectedTypeUnit = currentUnitTypeId
+                      ? typeUnitOptions.find((opt) => String(opt.id) === String(currentUnitTypeId))
+                      : null;
+                    const currentQty = Number(form.getValues('qty') || 1);
+
                     if (nextValue) {
-                      form.setValue('price', 0);
-                      form.setValue('bbnPrice', 0);
-                      form.setValue('expeditionFee', 0);
-                      form.setValue('otherFee', 0);
-                      form.setValue('price_discount', 0);
-                    }
-                    if (!nextValue) {
-                      form.setValue('priceUsd', 0);
-                      form.setValue('pricePerUnitUsd', 0);
+                      form.setValue('price', 0, { shouldDirty: true, shouldValidate: true });
+                      form.setValue('bbnPrice', 0, { shouldDirty: true });
+                      form.setValue('expeditionFee', 0, { shouldDirty: true });
+                      form.setValue('otherFee', 0, { shouldDirty: true });
+                      form.setValue('price_discount', 0, { shouldDirty: true });
+
+                      if (selectedTypeUnit) {
+                        const usdPrice = getUnitPrice(selectedTypeUnit, true);
+                        form.setValue('pricePerUnitUsd', usdPrice, { shouldDirty: true, shouldValidate: true });
+                        form.setValue('priceUsd', usdPrice * currentQty, { shouldDirty: true, shouldValidate: true });
+                      } else {
+                        form.setValue('pricePerUnitUsd', 0, { shouldDirty: true });
+                        form.setValue('priceUsd', 0, { shouldDirty: true });
+                      }
+                    } else {
+                      form.setValue('priceUsd', 0, { shouldDirty: true });
+                      form.setValue('pricePerUnitUsd', 0, { shouldDirty: true });
                       setOtherCosts([]);
+
+                      if (selectedTypeUnit) {
+                        const idrPrice = getUnitPrice(selectedTypeUnit, false);
+                        form.setValue('price', idrPrice, { shouldDirty: true, shouldValidate: true });
+                      } else {
+                        form.setValue('price', 0, { shouldDirty: true, shouldValidate: true });
+                      }
                     }
                   }}
                   disabled={readOnly}

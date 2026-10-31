@@ -471,6 +471,7 @@ export function UnitTransactionCreatePage({ type, mode }: UnitTransactionCreateP
                   hppPerUnit: 0,
                   dppPerUnit: 0,
                   ppnPerUnit: 0,
+                  is_usd_transaction: Boolean(transactionDetail?.is_usd_transaction),
                   documentTemplateId: transactionDetail?.documentTemplateId ?? null,
                 }}
                 excludedTypeUnitIds={existingTypeUnitIds}
