@@ -27,12 +27,12 @@ export default function ToggleGeneralJournalPostingDialog({
       await toggleStatus({ id: data.id, isPaid: targetStatus });
       toast.success(
         targetStatus
-          ? 'Jurnal umum berhasil diposting dan akan muncul di Laporan Jurnal Umum'
-          : 'Status posting jurnal umum berhasil dibatalkan (unposted)',
+          ? `Jurnal umum ${data.code} berhasil ditandai lunas dan diposting ke Laporan Jurnal Umum.`
+          : `Status lunas jurnal umum ${data.code} berhasil dibatalkan (unposted).`,
       );
       onOpenChange(false);
     } catch (error) {
-      toast.error(getApiErrorMessage(error) || 'Gagal mengubah status posting jurnal');
+      toast.error(getApiErrorMessage(error) || 'Gagal mengubah status lunas jurnal');
       onOpenChange(false);
     }
   };
@@ -42,17 +42,17 @@ export default function ToggleGeneralJournalPostingDialog({
       <DialogContent className="max-w-sm rounded-md">
         <DialogHeader>
           <DialogTitle className="text-xl font-semibold text-slate-950">
-            {targetStatus ? 'Posting Jurnal Umum?' : 'Batal Posting Jurnal?'}
+            {targetStatus ? 'Tandai Lunas Jurnal Umum?' : 'Batal Tandai Lunas Jurnal?'}
           </DialogTitle>
           <DialogDescription className="text-sm text-slate-500 mt-2">
             {targetStatus ? (
               <>
-                Jurnal <strong>{data?.code}</strong> akan diposting dan otomatis diakui pada{' '}
-                <strong>Laporan Jurnal Umum</strong>. Posting jurnal ini <em>tidak mempengaruhi saldo kas riil</em>.
+                Jurnal <strong>{data?.code}</strong> akan ditandai lunas dan resmi dibukukan ke{' '}
+                <strong>Laporan Jurnal Umum</strong>. Form dan alokasi pembayaran akan terkunci (read-only).
               </>
             ) : (
               <>
-                Status jurnal <strong>{data?.code}</strong> akan dikembalikan ke Draft sehingga dapat diedit kembali.
+                Status lunas jurnal <strong>{data?.code}</strong> akan dibatalkan sehingga data dan alokasi pembayaran dapat diedit kembali.
               </>
             )}
           </DialogDescription>
@@ -70,11 +70,11 @@ export default function ToggleGeneralJournalPostingDialog({
           </Button>
           <Button
             type="button"
-            className="btn-primary"
+            className={targetStatus ? 'btn-success' : 'btn-primary'}
             onClick={() => void handleToggle()}
             loading={isPending}
           >
-            {targetStatus ? 'Posting Sekarang' : 'Ya, Batal Posting'}
+            {targetStatus ? 'Ya, Tandai Lunas' : 'Ya, Batal Lunas'}
           </Button>
         </div>
       </DialogContent>

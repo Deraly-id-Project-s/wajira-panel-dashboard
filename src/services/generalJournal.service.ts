@@ -150,10 +150,20 @@ export const toggleGeneralJournalPaidStatus = async ({
   id: number | string;
   isPaid: boolean;
 }): Promise<GeneralJournal> => {
-  const response = await apiClient.put<LaravelApiResponse<GeneralJournal>>(`${BASE_PATH}/${id}/paid-status`, {
-    is_paid: isPaid,
-  });
-  return ensureSuccess(response.data);
+  try {
+    const response = await apiClient.put<LaravelApiResponse<GeneralJournal>>(`${BASE_PATH}/${id}/paid-status`, {
+      is_paid: isPaid,
+    });
+    return ensureSuccess(response.data);
+  } catch (error: any) {
+    if (error?.statusCode === 404 || error?.response?.status === 404) {
+      const response = await apiClient.put<LaravelApiResponse<GeneralJournal>>(`/wapi/general-journal/${id}/paid-status`, {
+        is_paid: isPaid,
+      });
+      return ensureSuccess(response.data);
+    }
+    throw error;
+  }
 };
 
 export const deleteGeneralJournal = async (id: number | string): Promise<void> => {

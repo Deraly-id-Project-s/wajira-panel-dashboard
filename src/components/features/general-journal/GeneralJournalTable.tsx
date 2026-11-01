@@ -233,7 +233,7 @@ export default function GeneralJournalTable({
                   className="rounded-md px-3 py-2 text-sm text-slate-900 focus:bg-slate-50 cursor-pointer font-medium"
                   disabled={!item.is_paid && (!item.is_balanced || item.total_debit <= 0)}
                 >
-                  {item.is_paid ? 'Batal Posting Jurnal' : 'Posting Jurnal'}
+                  {item.is_paid ? 'Batal Tandai Lunas' : 'Tandai Lunas'}
                 </DropdownMenuItem>
               ) : null}
 
