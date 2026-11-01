@@ -3,11 +3,11 @@ import { useRouter } from 'next/router';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { PageHeader } from '@/components/ui/page-header';
 import { LaporanKasTable } from '@/components/features/laporan-kas/LaporanKasTable';
-import { Printer } from 'lucide-react';
+import { Download, Printer } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { DatePickerWithRange } from '@/components/ui/date-range-picker';
 import { DateRange } from 'react-day-picker';
-import { addDays, format } from 'date-fns';
+import { format } from 'date-fns';
 import { useLaporanKas } from '@/hooks/useLaporanKas';
 import { useCompany } from '@/contexts/CompanyContext';
 import { resolveCompanyId, getLetterheadByCompanyId } from '@/lib/print-letterhead';
@@ -25,10 +25,8 @@ export default function LaporanTransaksiKasPage() {
     data,
     pagination,
     isLoading,
-    totalDebetIdr,
-    totalCreditIdr,
-    totalDebetUsd,
-    totalCreditUsd,
+    isFetching,
+    totals,
     setPage,
     setPerPage,
     setDateRange,
@@ -36,6 +34,8 @@ export default function LaporanTransaksiKasPage() {
     setSort,
     sortKey,
     sortOrder,
+    handleExport,
+    isExporting,
   } = useLaporanKas();
 
   const router = useRouter();
@@ -91,10 +91,26 @@ export default function LaporanTransaksiKasPage() {
             title="Laporan Transaksi Kas"
             subtitle="Pantau semua pemasukan dan pengeluaran"
             actions={
-              <Button onClick={handlePrint} variant="outline" className="w-full sm:w-auto" disabled={isLoading}>
-                <Printer className="h-4 w-4 mr-2" />
-                Print
-              </Button>
+              <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row">
+                <Button
+                  onClick={handleExport}
+                  variant="outline"
+                  className="w-full sm:w-auto"
+                  disabled={isFetching || isExporting}
+                >
+                  <Download className="h-4 w-4 mr-2" />
+                  {isExporting ? 'Exporting...' : 'Export'}
+                </Button>
+                <Button
+                  onClick={handlePrint}
+                  variant="outline"
+                  className="w-full sm:w-auto"
+                  disabled={isLoading}
+                >
+                  <Printer className="h-4 w-4 mr-2" />
+                  Print
+                </Button>
+              </div>
             }
           />
         </div>
@@ -152,13 +168,16 @@ export default function LaporanTransaksiKasPage() {
 
                   <LaporanKasTable
                     data={data}
-                    totalDebetIdr={totalDebetIdr}
-                    totalCreditIdr={totalCreditIdr}
-                    totalDebetUsd={totalDebetUsd}
-                    totalCreditUsd={totalCreditUsd}
-                    onSort={(key) => setSort(key, sortKey === key && sortOrder === 'asc' ? 'desc' : 'asc')}
+                    totalDebitCashIdr={totals.debitCashIdr}
+                    totalKreditCashIdr={totals.kreditCashIdr}
+                    totalDebitBankIdr={totals.debitBankIdr}
+                    totalKreditBankIdr={totals.kreditBankIdr}
+                    totalDebitBankUsd={totals.debitBankUsd}
+                    totalKreditBankUsd={totals.kreditBankUsd}
+                    onSort={setSort}
                     sortKey={sortKey}
                     sortOrder={sortOrder}
+                    isLoading={isLoading}
                   />
 
                   <DocumentTemplatePrintFooter template={templatePrint.selectedTemplate} />

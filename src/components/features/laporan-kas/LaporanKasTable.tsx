@@ -1,83 +1,114 @@
 import React, { useMemo } from 'react';
-import { CashFlowItem } from '@/services/cashFlow.service';
-import { TableRow, TableCell } from '@/components/ui/table';
 import { format } from 'date-fns';
 import { id } from 'date-fns/locale';
+import type { CashFlowReportItem } from '@/@types/cash-flow-report.types';
 import BaseTable, { ColumnDef } from '@/components/ui/base-table';
+import { TableRow, TableCell } from '@/components/ui/table';
 import { TextTruncate } from '@/components/ui/text-truncate';
 import { CopyBox } from '@/components/ui/copy-box';
 import { currenciesFormat } from '@/components/ui/currenciesFormat';
 
-interface LaporanKasTableProps {
-  data: CashFlowItem[];
-  totalPemasukan?: number;
-  totalPengeluaran?: number;
-  totalDebetIdr?: number;
-  totalCreditIdr?: number;
-  totalDebetUsd?: number;
-  totalCreditUsd?: number;
-  onSort?: (key: string) => void;
+export interface LaporanKasTableProps {
+  data: CashFlowReportItem[];
+  totalDebitCashIdr?: number;
+  totalKreditCashIdr?: number;
+  totalDebitBankIdr?: number;
+  totalKreditBankIdr?: number;
+  totalDebitBankUsd?: number;
+  totalKreditBankUsd?: number;
+  onSort?: (key: string, direction: 'asc' | 'desc') => void;
   sortKey?: string;
   sortOrder?: 'asc' | 'desc';
+  isLoading?: boolean;
 }
 
-const formatDate = (dateString: string) => {
+const formatDate = (dateString?: string | null) => {
+  if (!dateString) return '-';
   const date = new Date(dateString);
   if (Number.isNaN(date.getTime())) return dateString;
-  return format(date, 'dd MMMM yyyy', { locale: id });
+  return format(date, 'dd MMM yyyy', { locale: id });
 };
 
 export function LaporanKasTable({
   data,
-  totalPemasukan,
-  totalPengeluaran,
-  totalDebetIdr,
-  totalCreditIdr,
-  totalDebetUsd,
-  totalCreditUsd,
+  totalDebitCashIdr,
+  totalKreditCashIdr,
+  totalDebitBankIdr,
+  totalKreditBankIdr,
+  totalDebitBankUsd,
+  totalKreditBankUsd,
   onSort,
   sortKey,
   sortOrder,
+  isLoading = false,
 }: LaporanKasTableProps) {
   const totals = useMemo(() => {
     return {
-      debitIdr: totalDebetIdr !== undefined ? totalDebetIdr : (totalPemasukan !== undefined ? totalPemasukan : data.reduce((sum, item) => sum + (Number(item.debet_total ?? item.debet) || 0), 0)),
-      creditIdr: totalCreditIdr !== undefined ? totalCreditIdr : (totalPengeluaran !== undefined ? totalPengeluaran : data.reduce((sum, item) => sum + (Number(item.kredit_total ?? item.credit_total ?? item.credit) || 0), 0)),
-      debitUsd: totalDebetUsd !== undefined ? totalDebetUsd : data.reduce((sum, item) => sum + (Number(item.debet_usd_total ?? item.debet_usd) || 0), 0),
-      creditUsd: totalCreditUsd !== undefined ? totalCreditUsd : data.reduce((sum, item) => sum + (Number(item.kredit_usd_total ?? item.credit_usd_total ?? item.credit_usd) || 0), 0),
+      debitCashIdr:
+        totalDebitCashIdr !== undefined
+          ? totalDebitCashIdr
+          : data.reduce((sum, item) => sum + (Number(item.debit_cash_idr ?? item['DEBIT (CASH IDR)']) || 0), 0),
+      kreditCashIdr:
+        totalKreditCashIdr !== undefined
+          ? totalKreditCashIdr
+          : data.reduce((sum, item) => sum + (Number(item.kredit_cash_idr ?? item['KREDIT (CASH IDR)']) || 0), 0),
+      debitBankIdr:
+        totalDebitBankIdr !== undefined
+          ? totalDebitBankIdr
+          : data.reduce((sum, item) => sum + (Number(item.debit_bank_idr ?? item['DEBIT (BANK IDR)']) || 0), 0),
+      kreditBankIdr:
+        totalKreditBankIdr !== undefined
+          ? totalKreditBankIdr
+          : data.reduce((sum, item) => sum + (Number(item.kredit_bank_idr ?? item['KREDIT (BANK IDR)']) || 0), 0),
+      debitBankUsd:
+        totalDebitBankUsd !== undefined
+          ? totalDebitBankUsd
+          : data.reduce((sum, item) => sum + (Number(item.debit_bank_usd ?? item['DEBIT (BANK USD)']) || 0), 0),
+      kreditBankUsd:
+        totalKreditBankUsd !== undefined
+          ? totalKreditBankUsd
+          : data.reduce((sum, item) => sum + (Number(item.kredit_bank_usd ?? item['KREDIT (BANK USD)']) || 0), 0),
     };
-  }, [data, totalDebetIdr, totalCreditIdr, totalDebetUsd, totalCreditUsd, totalPemasukan, totalPengeluaran]);
+  }, [
+    data,
+    totalDebitCashIdr,
+    totalKreditCashIdr,
+    totalDebitBankIdr,
+    totalKreditBankIdr,
+    totalDebitBankUsd,
+    totalKreditBankUsd,
+  ]);
 
-  const columns = useMemo<ColumnDef<CashFlowItem>[]>(
+  const columns = useMemo<ColumnDef<CashFlowReportItem>[]>(
     () => [
       {
         header: 'Tanggal',
-        accessorKey: 'date',
+        accessorKey: 'tanggal',
         sortable: true,
         alignment: 'center',
-        cell: (item) => formatDate(item.date),
+        cell: (item) => formatDate(item.tanggal),
       },
       {
-        header: 'Nota Reff',
-        accessorKey: 'code',
+        header: 'Nota / Ref',
+        accessorKey: 'nota_ref',
         sortable: true,
         alignment: 'left',
-        cell: (item) => <CopyBox text={item?.code} />,
+        cell: (item) => <CopyBox text={item.nota_ref || '-'} />,
       },
       {
         header: 'Keterangan',
-        accessorKey: 'note',
+        accessorKey: 'keterangan',
         sortable: true,
         alignment: 'left',
-        cell: (item) => <TextTruncate text={item.note || '-'} maxLength={20} />,
+        cell: (item) => <TextTruncate text={item.keterangan || '-'} maxLength={30} />,
       },
       {
-        header: 'Debit (IDR)',
-        accessorKey: 'debet_total',
+        header: 'DEBIT (CASH IDR)',
+        accessorKey: 'debit_cash_idr',
         sortable: true,
-        alignment: 'right',
+        alignment: 'left',
         cell: (item) => {
-          const val = Number(item.debet_total ?? item.debet ?? 0);
+          const val = Number(item.debit_cash_idr ?? item['DEBIT (CASH IDR)'] ?? 0);
           return (
             <span className="font-semibold tabular-nums text-emerald-700">
               {val > 0 ? currenciesFormat('idr', val) : '-'}
@@ -86,12 +117,12 @@ export function LaporanKasTable({
         },
       },
       {
-        header: 'Kredit (IDR)',
-        accessorKey: 'credit_total',
+        header: 'KREDIT (CASH IDR)',
+        accessorKey: 'kredit_cash_idr',
         sortable: true,
-        alignment: 'right',
+        alignment: 'left',
         cell: (item) => {
-          const val = Number(item.kredit_total ?? item.credit_total ?? item.credit ?? 0);
+          const val = Number(item.kredit_cash_idr ?? item['KREDIT (CASH IDR)'] ?? 0);
           return (
             <span className="font-semibold tabular-nums text-rose-700">
               {val > 0 ? currenciesFormat('idr', val) : '-'}
@@ -100,12 +131,40 @@ export function LaporanKasTable({
         },
       },
       {
-        header: 'Debit (USD)',
-        accessorKey: 'debet_usd_total',
+        header: 'DEBIT (BANK IDR)',
+        accessorKey: 'debit_bank_idr',
         sortable: true,
-        alignment: 'right',
+        alignment: 'left',
         cell: (item) => {
-          const val = Number(item.debet_usd_total ?? item.debet_usd ?? 0);
+          const val = Number(item.debit_bank_idr ?? item['DEBIT (BANK IDR)'] ?? 0);
+          return (
+            <span className="font-semibold tabular-nums text-emerald-700">
+              {val > 0 ? currenciesFormat('idr', val) : '-'}
+            </span>
+          );
+        },
+      },
+      {
+        header: 'KREDIT (BANK IDR)',
+        accessorKey: 'kredit_bank_idr',
+        sortable: true,
+        alignment: 'left',
+        cell: (item) => {
+          const val = Number(item.kredit_bank_idr ?? item['KREDIT (BANK IDR)'] ?? 0);
+          return (
+            <span className="font-semibold tabular-nums text-rose-700">
+              {val > 0 ? currenciesFormat('idr', val) : '-'}
+            </span>
+          );
+        },
+      },
+      {
+        header: 'DEBIT (BANK USD)',
+        accessorKey: 'debit_bank_usd',
+        sortable: true,
+        alignment: 'left',
+        cell: (item) => {
+          const val = Number(item.debit_bank_usd ?? item['DEBIT (BANK USD)'] ?? 0);
           return (
             <span className="font-semibold tabular-nums text-emerald-700">
               {val > 0 ? currenciesFormat('usd', val) : '-'}
@@ -114,12 +173,12 @@ export function LaporanKasTable({
         },
       },
       {
-        header: 'Kredit (USD)',
-        accessorKey: 'credit_usd_total',
+        header: 'KREDIT (BANK USD)',
+        accessorKey: 'kredit_bank_usd',
         sortable: true,
-        alignment: 'right',
+        alignment: 'left',
         cell: (item) => {
-          const val = Number(item.kredit_usd_total ?? item.credit_usd_total ?? item.credit_usd ?? 0);
+          const val = Number(item.kredit_bank_usd ?? item['KREDIT (BANK USD)'] ?? 0);
           return (
             <span className="font-semibold tabular-nums text-rose-700">
               {val > 0 ? currenciesFormat('usd', val) : '-'}
@@ -133,21 +192,27 @@ export function LaporanKasTable({
 
   const footerRow = useMemo(
     () => (
-      <TableRow className="group bg-slate-50/50 hover:bg-slate-50/50 border-t border-slate-200">
-        <TableCell colSpan={3} className="px-4 py-4 text-right">
-          <span className="text-sm font-semibold text-slate-900 pr-12">Grand Total</span>
+      <TableRow className="group bg-slate-50/70 hover:bg-slate-50/70 border-t-2 border-slate-300 font-bold">
+        <TableCell colSpan={3} className="px-4 py-3 text-right">
+          <span className="text-xs uppercase tracking-wider font-semibold text-slate-700">Grand Total</span>
         </TableCell>
-        <TableCell className="px-4 py-4 text-sm font-bold text-slate-900 text-right tabular-nums">
-          {currenciesFormat('idr', totals.debitIdr)}
+        <TableCell className="px-4 py-3 text-xs font-bold text-slate-900 text-left tabular-nums">
+          {currenciesFormat('idr', totals.debitCashIdr)}
         </TableCell>
-        <TableCell className="px-4 py-4 text-sm font-bold text-slate-900 text-right tabular-nums">
-          {currenciesFormat('idr', totals.creditIdr)}
+        <TableCell className="px-4 py-3 text-xs font-bold text-slate-900 text-left tabular-nums">
+          {currenciesFormat('idr', totals.kreditCashIdr)}
         </TableCell>
-        <TableCell className="px-4 py-4 text-sm font-bold text-slate-900 text-right tabular-nums">
-          {currenciesFormat('usd', totals.debitUsd)}
+        <TableCell className="px-4 py-3 text-xs font-bold text-slate-900 text-left tabular-nums">
+          {currenciesFormat('idr', totals.debitBankIdr)}
         </TableCell>
-        <TableCell className="px-4 py-4 text-sm font-bold text-slate-900 text-right tabular-nums">
-          {currenciesFormat('usd', totals.creditUsd)}
+        <TableCell className="px-4 py-3 text-xs font-bold text-slate-900 text-left tabular-nums">
+          {currenciesFormat('idr', totals.kreditBankIdr)}
+        </TableCell>
+        <TableCell className="px-4 py-3 text-xs font-bold text-slate-900 text-left tabular-nums">
+          {currenciesFormat('usd', totals.debitBankUsd)}
+        </TableCell>
+        <TableCell className="px-4 py-3 text-xs font-bold text-slate-900 text-left tabular-nums">
+          {currenciesFormat('usd', totals.kreditBankUsd)}
         </TableCell>
       </TableRow>
     ),
@@ -161,7 +226,8 @@ export function LaporanKasTable({
       footer={footerRow}
       sortBy={sortKey}
       sortDirection={sortOrder}
-      onSortChange={onSort ? (key, direction) => onSort(key) : undefined}
+      onSortChange={onSort ? (key, direction) => onSort(key, direction) : undefined}
+      loading={isLoading}
     />
   );
 }

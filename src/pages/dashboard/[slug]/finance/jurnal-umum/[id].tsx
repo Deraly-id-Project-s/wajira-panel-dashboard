@@ -320,6 +320,18 @@ export default function GeneralJournalDetailPage() {
   const totalDebit = Number(journal.total_debit ?? journal.total_amount ?? journal.amount ?? 0);
   const totalCredit = Number(journal.total_credit ?? journal.total_paid ?? 0);
   const remainingAmount = Number(journal.remaining_amount ?? (totalDebit - totalCredit));
+  const hasBillings = billings.length > 0;
+  const canMarkPaid = canEdit && !isPaid && isBalanced && totalDebit > 0 && hasBillings;
+
+  const markPaidDisabledReason = useMemo(() => {
+    if (!canEdit) return 'Anda tidak memiliki hak akses untuk mengubah status jurnal.';
+    if (isPaid) return 'Jurnal ini sudah ditandai lunas.';
+    if (!hasBillings) return 'Jurnal tidak dapat ditandai lunas tanpa item billing.';
+    if (!isBalanced || totalDebit <= 0) {
+      return `Jurnal belum seimbang (Debet: ${currenciesFormat(isUsd ? 'usd' : 'idr', totalDebit)}, Kredit: ${currenciesFormat(isUsd ? 'usd' : 'idr', totalCredit)}).`;
+    }
+    return '';
+  }, [canEdit, hasBillings, isBalanced, isPaid, isUsd, totalCredit, totalDebit]);
 
   return (
     <DashboardLayout>
@@ -399,12 +411,13 @@ export default function GeneralJournalDetailPage() {
                   <Button
                     type="button"
                     variant="outline"
+                    className="border-slate-300 text-slate-700 hover:bg-slate-50"
                     onClick={() => {
                       setTargetStatus(false);
                       setIsToggleOpen(true);
                     }}
                   >
-                    Batal Posting Jurnal
+                    Batal Tandai Lunas
                   </Button>
                 ) : (
                   <Tooltip>
@@ -412,23 +425,23 @@ export default function GeneralJournalDetailPage() {
                       <span className="inline-block">
                         <Button
                           type="button"
-                          className="btn-primary"
-                          disabled={!isBalanced || totalDebit <= 0}
+                          variant="success"
+                          disabled={!canMarkPaid}
                           onClick={() => {
                             setTargetStatus(true);
                             setIsToggleOpen(true);
                           }}
                         >
                           <CheckCircle2 className="mr-2 h-4 w-4" />
-                          Posting Jurnal
+                          Tandai Lunas
                         </Button>
                       </span>
                     </TooltipTrigger>
-                    {!isBalanced || totalDebit <= 0 ? (
-                      <TooltipContent side="bottom" className="max-w-xs text-center text-xs">
-                        Jurnal hanya dapat diposting jika status sudah seimbang (Total Debet = Total Kredit dan &gt; 0).
-                      </TooltipContent>
-                    ) : null}
+                    <TooltipContent side="bottom" className="max-w-xs text-center text-xs">
+                      {canMarkPaid
+                        ? 'Menandai jurnal sebagai lunas akan membukukan transaksi ke laporan keuangan dan mengunci rincian jurnal.'
+                        : markPaidDisabledReason}
+                    </TooltipContent>
                   </Tooltip>
                 )
               ) : null}
@@ -578,7 +591,7 @@ export default function GeneralJournalDetailPage() {
               <div className="rounded-md border border-emerald-200 bg-emerald-50/60 p-3 text-xs text-emerald-800 flex items-center gap-2">
                 <CheckCircle2 className="h-4 w-4 text-emerald-600 shrink-0" />
                 <span>
-                  Jurnal umum telah diposting. Rincian alokasi pembayaran berada dalam status terkunci (Read-Only).
+                  Jurnal umum telah ditandai lunas. Rincian alokasi pembayaran berada dalam status terkunci (Read-Only).
                 </span>
               </div>
             ) : null}
