@@ -21,6 +21,7 @@ interface AccountApiModel {
   type?: 'credit' | 'debet' | 'debit';
   pos_code?: string | null;
   category?: string;
+  class?: 'assets' | 'liabilities' | 'equity' | 'revenue' | 'expenses' | string | null;
   is_active?: boolean | number;
   is_lock?: boolean | number;
   created_at?: string;
@@ -36,6 +37,7 @@ const mapAccount = (payload: AccountApiModel): Account => ({
   accountGroupCode: payload.account_group?.group_code ?? payload.account_group_name ?? undefined,
   group: payload.account_group?.group_code ?? payload.account_group_name ?? payload.account_group?.name,
   category: payload.category ?? undefined,
+  class: payload.class ?? null,
   type: payload.type === 'debit' ? 'debet' : payload.type, // normalize to debet
   pos_code: payload.pos_code ?? null,
   posCode: payload.pos_code ?? null,
@@ -116,6 +118,7 @@ export const createAccount = async (payload: AccountPayload): Promise<Account> =
     body.append('type', type);
     if (posCode !== undefined && posCode !== null && posCode !== '') body.append('pos_code', posCode);
     if (payload.category) body.append('category', payload.category);
+    if (payload.class !== undefined && payload.class !== null && payload.class !== '') body.append('class', payload.class);
     if (payload.is_lock !== undefined) body.append('is_lock', payload.is_lock ? '1' : '0');
 
     const response = await apiClient.post<AccountItemResponse>(basePath, body);
@@ -143,6 +146,7 @@ export const updateAccount = async (id: number | string, payload: AccountUpdateP
     if (payload.type !== undefined) body.append('type', type);
     if (posCode !== undefined) body.append('pos_code', posCode ?? '');
     if (payload.category !== undefined && payload.category !== null) body.append('category', payload.category);
+    if (payload.class !== undefined) body.append('class', payload.class ?? '');
     if (payload.is_lock !== undefined) body.append('is_lock', payload.is_lock ? '1' : '0');
 
     const response = await apiClient.put<AccountItemResponse>(`${basePath}/${id}`, body, {

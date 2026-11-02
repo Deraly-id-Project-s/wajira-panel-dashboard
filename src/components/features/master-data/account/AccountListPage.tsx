@@ -4,6 +4,7 @@ import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { PageHeader } from '@/components/ui/page-header';
 import { AccountTable } from '@/components/features/account/AccountTable';
 import { AccountImportModal } from '@/components/features/account/AccountImportModal';
+import { AccountDetailModal } from '@/components/features/master-data/account/AccountDetailModal';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -73,6 +74,8 @@ export const AccountListPage = () => {
   const router = useRouter();
 
   const [selectedAccount, setSelectedAccount] = useState<Account | null>(null);
+  const [detailAccountId, setDetailAccountId] = useState<string | number | null>(null);
+  const [openDetail, setOpenDetail] = useState(false);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [openImport, setOpenImport] = useState(false);
   const [openBulkUpdate, setOpenBulkUpdate] = useState(false);
@@ -164,6 +167,11 @@ export const AccountListPage = () => {
       const basePath = router.query.slug ? `/dashboard/${router.query.slug}/master/account` : '/master-data/account';
       router.push(`${basePath}/${account.id}/edit`);
     }
+  };
+
+  const handleDetail = (account: Account) => {
+    setDetailAccountId(account.id);
+    setOpenDetail(true);
   };
 
   const handleDelete = async () => {
@@ -419,6 +427,7 @@ export const AccountListPage = () => {
               onToggleRow={toggleRow}
               onEdit={handleEdit}
               onDelete={setSelectedAccount}
+              onDetail={handleDetail}
             />
           )}
         </SearchPagination>
@@ -543,6 +552,17 @@ export const AccountListPage = () => {
       </AlertDialog>
 
       <AccountImportModal open={openImport} onOpenChange={setOpenImport} companyId={companyId ?? ''} />
+
+      <AccountDetailModal
+        accountId={detailAccountId}
+        open={openDetail}
+        onOpenChange={setOpenDetail}
+        canEdit={canEdit}
+        onEdit={(id) => {
+          const basePath = router.query.slug ? `/dashboard/${router.query.slug}/master/account` : '/master-data/account';
+          router.push(`${basePath}/${id}/edit`);
+        }}
+      />
     </DashboardLayout>
   );
 };

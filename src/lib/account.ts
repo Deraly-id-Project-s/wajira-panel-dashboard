@@ -11,6 +11,69 @@ export const ACCOUNT_TYPE_OPTIONS = [
 
 export type AccountTypeValue = (typeof ACCOUNT_TYPE_OPTIONS)[number]['value'];
 
+export const ACCOUNT_CLASS_VALUES = [
+  'assets',
+  'liabilities',
+  'equity',
+  'revenue',
+  'expenses',
+] as const;
+
+export type AccountClassValue = (typeof ACCOUNT_CLASS_VALUES)[number];
+
+export interface AccountClassOption {
+  value: AccountClassValue;
+  label: string;
+}
+
+export const ACCOUNT_CLASS_OPTIONS: readonly AccountClassOption[] = [
+  {
+    value: 'assets',
+    label: 'Aset (Assets)',
+  },
+  {
+    value: 'liabilities',
+    label: 'Liabilitas (Liabilities)',
+  },
+  {
+    value: 'equity',
+    label: 'Ekuitas (Equity)',
+  },
+  {
+    value: 'revenue',
+    label: 'Pendapatan (Revenue)',
+  },
+  {
+    value: 'expenses',
+    label: 'Beban (Expenses)',
+  },
+] as const;
+
+export const getAccountClassLabel = (accountClass?: string | null): string => {
+  if (!accountClass) return '-';
+  const match = ACCOUNT_CLASS_OPTIONS.find((item) => item.value === accountClass);
+  return match?.label ?? accountClass;
+};
+
+export const getAccountClassBadgeClass = (accountClass?: string | null): string => {
+  if (!accountClass) return 'bg-gray-50 text-gray-700 border-gray-200 hover:bg-gray-50';
+
+  switch (accountClass) {
+    case 'assets':
+      return 'bg-blue-50 text-blue-700 border-blue-200 hover:bg-blue-50';
+    case 'liabilities':
+      return 'bg-purple-50 text-purple-700 border-purple-200 hover:bg-purple-50';
+    case 'equity':
+      return 'bg-indigo-50 text-indigo-700 border-indigo-200 hover:bg-indigo-50';
+    case 'revenue':
+      return 'bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-50';
+    case 'expenses':
+      return 'bg-rose-50 text-rose-700 border-rose-200 hover:bg-rose-50';
+    default:
+      return 'bg-gray-50 text-gray-700 border-gray-200 hover:bg-gray-50';
+  }
+};
+
 export const ACCOUNT_POS_CODE_OPTIONS = [
   {
     value: 'LR',

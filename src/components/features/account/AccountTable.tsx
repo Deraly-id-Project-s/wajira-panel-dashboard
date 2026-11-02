@@ -4,7 +4,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip
 import { Button } from '@/components/ui/button';
 import { CopyBox } from '@/components/ui/copy-box';
 import { ReferenceLink } from '@/components/ui/reference-link';
-import { getAccountCategoryBadgeClass, getAccountCategoryLabel } from '@/lib/account';
+import { getAccountCategoryBadgeClass, getAccountCategoryLabel, getAccountClassBadgeClass, getAccountClassLabel } from '@/lib/account';
 import type { Account } from '@/@types/account.types';
 import { useRouter } from 'next/router';
 import { MoreVertical, Lock } from 'lucide-react';
@@ -22,6 +22,7 @@ interface AccountTableProps {
   onToggleRow: (id: string, checked: boolean) => void;
   onEdit: (account: Account) => void;
   onDelete: (account: Account) => void;
+  onDetail?: (account: Account) => void;
 }
 
 export function AccountTable({
@@ -32,6 +33,7 @@ export function AccountTable({
   onToggleRow,
   onEdit,
   onDelete,
+  onDetail,
   canEdit,
   canDelete,
   canManageLock,
@@ -135,6 +137,20 @@ export function AccountTable({
         ),
       },
       {
+        header: 'KLASIFIKASI',
+        accessorKey: 'class',
+        sortable: true,
+        cell: (account) => {
+          if (!account.class) return <span className="text-gray-400">-</span>;
+
+          return (
+            <Badge variant="outline" className={getAccountClassBadgeClass(account.class)}>
+              {getAccountClassLabel(account.class)}
+            </Badge>
+          );
+        },
+      },
+      {
         header: 'KATEGORI AKUN',
         accessorKey: 'category',
         sortable: true,
@@ -160,6 +176,14 @@ export function AccountTable({
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="min-w-[150px] rounded-md border-slate-200 p-1.5 shadow-lg">
+              {onDetail && (
+                <DropdownMenuItem
+                  className="rounded-md px-3 py-2 text-sm text-slate-900 focus:bg-slate-50 cursor-pointer"
+                  onClick={() => onDetail(account)}
+                >
+                  Detail
+                </DropdownMenuItem>
+              )}
               <DropdownMenuItem
                 className="rounded-md px-3 py-2 text-sm text-slate-900 focus:bg-slate-50 cursor-pointer disabled:cursor-not-allowed"
                 disabled={!canEdit}
@@ -179,7 +203,7 @@ export function AccountTable({
         ),
       },
     ],
-    [canEdit, canDelete, onEdit, onDelete, slugStr]
+    [canEdit, canDelete, onEdit, onDelete, onDetail, slugStr]
   );
 
   return (

@@ -29,6 +29,7 @@ export const AccountCreatePage = () => {
       pos_code: '',
       description: '',
       category: undefined,
+      class: undefined,
       isActive: true,
       is_lock: false,
     } satisfies Partial<AccountFormValues>,
@@ -93,6 +94,7 @@ export const AccountCreatePage = () => {
     if (msg.includes('invalid') || msg.includes('must be') || msg.includes('in:')) {
       if (field === 'type') return 'Tipe akun yang dipilih tidak valid (harus Debet atau Kredit).';
       if (field === 'category') return 'Kategori laporan yang dipilih tidak valid.';
+      if (field === 'class') return 'Klasifikasi akun yang dipilih tidak valid.';
       if (field === 'account_group_id' || field === 'accountGroupId') return 'Grup akun yang dipilih tidak valid.';
       return 'Nilai yang dimasukkan tidak valid.';
     }
@@ -123,6 +125,7 @@ export const AccountCreatePage = () => {
         pos_code: values.pos_code ? values.pos_code.trim() : null,
         description: values.description ? values.description.trim() : null,
         category: values.category || null,
+        class: values.class || null,
         // isActive: values.isActive,
       });
       toast.success('Akun berhasil dibuat');

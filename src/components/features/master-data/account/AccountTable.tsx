@@ -7,7 +7,7 @@ import { MoreVertical, Plus, Lock } from 'lucide-react';
 import type { Account } from '@/@types/account.types';
 import type { PaginationMeta } from '@/@types/pagination.types';
 import { Badge } from '@/components/ui/badge';
-import { getAccountCategoryBadgeClass, getAccountCategoryLabel } from '@/lib/account';
+import { getAccountCategoryBadgeClass, getAccountCategoryLabel, getAccountClassBadgeClass, getAccountClassLabel } from '@/lib/account';
 
 interface AccountTableProps {
   data: Account[];
@@ -20,13 +20,14 @@ interface AccountTableProps {
   onAdd: () => void;
   onEdit: (account: Account) => void;
   onDelete: (account: Account) => void;
+  onDetail?: (account: Account) => void;
   onPageChange: (page: number) => void;
   onPerPageChange: (perPage: number) => void;
   canEdit: boolean;
   canDelete: boolean;
 }
 
-export const AccountTable = ({ data, meta, search, page, perPage, isLoading = false, onSearchChange, onAdd, onEdit, onDelete, onPageChange, onPerPageChange, canEdit, canDelete }: AccountTableProps) => {
+export const AccountTable = ({ data, meta, search, page, perPage, isLoading = false, onSearchChange, onAdd, onEdit, onDelete, onDetail, onPageChange, onPerPageChange, canEdit, canDelete }: AccountTableProps) => {
   const columns = useMemo<ColumnDef<Account>[]>(
     () => [
       {
@@ -97,6 +98,20 @@ export const AccountTable = ({ data, meta, search, page, perPage, isLoading = fa
         ),
       },
       {
+        header: 'KLASIFIKASI',
+        accessorKey: 'class',
+        sortable: true,
+        cell: (item) => {
+          if (!item.class) return <span className="text-gray-400">-</span>;
+
+          return (
+            <Badge variant="outline" className={getAccountClassBadgeClass(item.class)}>
+              {getAccountClassLabel(item.class)}
+            </Badge>
+          );
+        },
+      },
+      {
         header: 'DESKRIPSI',
         accessorKey: 'description',
         sortable: true,
@@ -139,6 +154,14 @@ export const AccountTable = ({ data, meta, search, page, perPage, isLoading = fa
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="min-w-[150px] rounded-md border-slate-200 p-1.5 shadow-lg">
+              {onDetail && (
+                <DropdownMenuItem
+                  onClick={() => onDetail(item)}
+                  className="rounded-md px-3 py-2 text-sm text-slate-900 focus:bg-slate-50 cursor-pointer"
+                >
+                  Detail
+                </DropdownMenuItem>
+              )}
               <DropdownMenuItem
                 onClick={() => onEdit(item)}
                 disabled={!canEdit}
@@ -158,7 +181,7 @@ export const AccountTable = ({ data, meta, search, page, perPage, isLoading = fa
         ),
       },
     ],
-    [onEdit, onDelete, canEdit, canDelete],
+    [onEdit, onDelete, onDetail, canEdit, canDelete],
   );
 
   return (

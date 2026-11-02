@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { ACCOUNT_CATEGORY_VALUES } from '@/lib/account';
+import { ACCOUNT_CATEGORY_VALUES, ACCOUNT_CLASS_VALUES } from '@/lib/account';
 
 export const accountSchema = z.object({
   accountGroupId: z.number({ required_error: 'Grup akun wajib dipilih' }).positive('Grup akun wajib dipilih'),
@@ -10,6 +10,9 @@ export const accountSchema = z.object({
   pos_code: z.string().max(50, 'Kategori pos maksimal 50 karakter').optional().nullable(),
   category: z.enum(ACCOUNT_CATEGORY_VALUES, {
     invalid_type_error: 'Kategori laporan tidak valid',
+  }).optional().nullable(),
+  class: z.enum(ACCOUNT_CLASS_VALUES, {
+    invalid_type_error: 'Klasifikasi akun tidak valid',
   }).optional().nullable(),
   isActive: z.boolean().optional(),
   is_lock: z.boolean().optional(),

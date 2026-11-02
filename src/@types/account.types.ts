@@ -1,8 +1,9 @@
 import type { AccountGroup } from './account-group.types';
 import type { PaginatedResult } from './pagination.types';
-import type { AccountCategoryValue } from '@/lib/account';
+import type { AccountCategoryValue, AccountClassValue } from '@/lib/account';
 
 export type AccountCategory = AccountCategoryValue | string;
+export type AccountClass = AccountClassValue | string;
 // Backend may spell "debet"; keep both for compatibility but prefer "debet" when sending
 export type AccountTypeValue = 'credit' | 'debet' | 'debit';
 export type AccountType = 'AKTIVA' | 'PASIVA';
@@ -29,6 +30,7 @@ export interface Account {
   type?: AccountTypeValue;
   pos_code?: string | null;
   posCode?: string | null;
+  class?: AccountClass | null;
 
   // Legacy fields (soft-deprecated)
   group?: string;
@@ -52,6 +54,7 @@ export interface AccountPayload {
   pos_code?: string | null;
   posCode?: string | null;
   category?: AccountCategory | null;
+  class?: AccountClass | null;
   is_lock?: boolean;
 }
 
