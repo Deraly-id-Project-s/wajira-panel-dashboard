@@ -289,6 +289,22 @@ export default function GeneralJournalDetailPage() {
     [canEdit, isPaid, isUsd],
   );
 
+  const totalDebit = Number(journal?.total_debit ?? journal?.total_amount ?? journal?.amount ?? 0);
+  const totalCredit = Number(journal?.total_credit ?? journal?.total_paid ?? 0);
+  const remainingAmount = Number(journal?.remaining_amount ?? (totalDebit - totalCredit));
+  const hasBillings = billings.length > 0;
+  const canMarkPaid = canEdit && !isPaid && isBalanced && totalDebit > 0 && hasBillings;
+
+  const markPaidDisabledReason = useMemo(() => {
+    if (!canEdit) return 'Anda tidak memiliki hak akses untuk mengubah status jurnal.';
+    if (isPaid) return 'Jurnal ini sudah ditandai lunas.';
+    if (!hasBillings) return 'Jurnal tidak dapat ditandai lunas tanpa item billing.';
+    if (!isBalanced || totalDebit <= 0) {
+      return `Jurnal belum seimbang (Debet: ${currenciesFormat(isUsd ? 'usd' : 'idr', totalDebit)}, Kredit: ${currenciesFormat(isUsd ? 'usd' : 'idr', totalCredit)}).`;
+    }
+    return '';
+  }, [canEdit, hasBillings, isBalanced, isPaid, isUsd, totalCredit, totalDebit]);
+
   if (detailQuery.isLoading || !router.isReady) {
     return (
       <DashboardLayout>
@@ -316,22 +332,6 @@ export default function GeneralJournalDetailPage() {
       </DashboardLayout>
     );
   }
-
-  const totalDebit = Number(journal.total_debit ?? journal.total_amount ?? journal.amount ?? 0);
-  const totalCredit = Number(journal.total_credit ?? journal.total_paid ?? 0);
-  const remainingAmount = Number(journal.remaining_amount ?? (totalDebit - totalCredit));
-  const hasBillings = billings.length > 0;
-  const canMarkPaid = canEdit && !isPaid && isBalanced && totalDebit > 0 && hasBillings;
-
-  const markPaidDisabledReason = useMemo(() => {
-    if (!canEdit) return 'Anda tidak memiliki hak akses untuk mengubah status jurnal.';
-    if (isPaid) return 'Jurnal ini sudah ditandai lunas.';
-    if (!hasBillings) return 'Jurnal tidak dapat ditandai lunas tanpa item billing.';
-    if (!isBalanced || totalDebit <= 0) {
-      return `Jurnal belum seimbang (Debet: ${currenciesFormat(isUsd ? 'usd' : 'idr', totalDebit)}, Kredit: ${currenciesFormat(isUsd ? 'usd' : 'idr', totalCredit)}).`;
-    }
-    return '';
-  }, [canEdit, hasBillings, isBalanced, isPaid, isUsd, totalCredit, totalDebit]);
 
   return (
     <DashboardLayout>
