@@ -53,12 +53,15 @@ const mapRefundPayment = (payment: any) => ({
 
 const mapRefund = (item: any): UnitTransactionRefund => ({
   id: toString(item.id),
+  uuid: item.uuid ? String(item.uuid) : undefined,
   code: item.code || '-',
   unit_transaction_id: toString(item.unit_transaction_id),
   refund_date: item.refund_date || '',
   refund_amount: toNumber(item.refund_amount),
   note: item.note || '',
   status: item.status || 'waiting',
+  is_paid: item.is_paid === true || item.is_paid === 1 || item.is_paid === '1',
+  is_with_stock: item.is_with_stock === true || item.is_with_stock === 1 || item.is_with_stock === '1',
   created_at: item.created_at || '',
   total_paid: toNumber(item.total_paid ?? item.total_terbayar),
   total_qty: toNumber(item.total_qty),
@@ -219,6 +222,24 @@ export const refundAdministrasiService = {
   async deleteRefundPayment(id: string): Promise<void> {
     const response = await apiClient.delete<LaravelApiResponse<any>>(`${PAYMENT_PATH}/${id}`);
     ensureSuccess(response.data);
+  },
+
+  /**
+   * PUT Update Refund Paid Status (Tandai Lunas)
+   */
+  async updatePaidStatus(id: string, payload: { is_paid: boolean; note?: string }): Promise<UnitTransactionRefund> {
+    let response;
+    try {
+      response = await apiClient.put<LaravelApiResponse<any>>(`${BASE_PATH}/${id}/paid-status`, payload);
+    } catch (error: any) {
+      if (error?.statusCode === 404 || error?.response?.status === 404) {
+        response = await apiClient.put<LaravelApiResponse<any>>(`/api/v1/unit-transaction-refund/${id}/paid-status`, payload);
+      } else {
+        throw error;
+      }
+    }
+    const result = ensureSuccess(response.data);
+    return mapRefund(result);
   },
 
   /**

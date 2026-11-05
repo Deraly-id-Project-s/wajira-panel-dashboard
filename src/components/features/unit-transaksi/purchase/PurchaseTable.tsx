@@ -323,9 +323,35 @@ export default function PurchaseTable({
                   <DropdownMenuItem onClick={() => router.push(`/dashboard/${slug}/transaksi/pembelian-unit/${item.id}/edit`)}>
                     Edit
                   </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => router.push(`/dashboard/${slug}/transaksi/refund-beli?unit_transaction_id=${item.id}`)}>
-                    Refund Beli
-                  </DropdownMenuItem>
+                  {(() => {
+                    const isPaidInduk = Boolean(item.isPaid || item.billing_summary?.is_paid || item.unit_transaction_billing?.is_paid);
+                    if (!isPaidInduk) {
+                      return (
+                        <TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <span className="block w-full">
+                                <DropdownMenuItem
+                                  disabled
+                                  className="opacity-50 cursor-not-allowed text-slate-400"
+                                >
+                                  Refund Beli
+                                </DropdownMenuItem>
+                              </span>
+                            </TooltipTrigger>
+                            <TooltipContent side="left">
+                              Transaksi ini belum lunas
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
+                      );
+                    }
+                    return (
+                      <DropdownMenuItem onClick={() => router.push(`/dashboard/${slug}/transaksi/refund-beli?unit_transaction_id=${item.id}`)}>
+                        Refund Beli
+                      </DropdownMenuItem>
+                    );
+                  })()}
                   <TooltipProvider>
                     <Tooltip>
                       <TooltipTrigger asChild>

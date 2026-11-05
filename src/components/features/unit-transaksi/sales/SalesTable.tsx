@@ -358,13 +358,39 @@ export function SalesTable({
                   >
                     Edit
                   </DropdownMenuItem>
-                  <DropdownMenuItem
-                    className="rounded-md px-3 py-2 text-sm text-slate-900 focus:bg-slate-50 cursor-pointer"
-                    onClick={() => router.push(slug ? `/dashboard/${slug}/transaksi/penjualan-unit/${item.id}/refund` : `/transaksi/penjualan-unit/${item.id}/refund`)}
-                    disabled={isRefunded(item) || !canEdit}
-                  >
-                    Refund Jual
-                  </DropdownMenuItem>
+                  {(() => {
+                    const isPaidInduk = Boolean(item.isPaid || item.billing_summary?.is_paid || item.unit_transaction_billing?.is_paid);
+                    if (!isPaidInduk) {
+                      return (
+                        <TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <span className="block w-full">
+                                <DropdownMenuItem
+                                  disabled
+                                  className="rounded-md px-3 py-2 text-sm text-slate-400 opacity-50 cursor-not-allowed"
+                                >
+                                  Refund Jual
+                                </DropdownMenuItem>
+                              </span>
+                            </TooltipTrigger>
+                            <TooltipContent side="left">
+                              Transaksi ini belum lunas
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
+                      );
+                    }
+                    return (
+                      <DropdownMenuItem
+                        className="rounded-md px-3 py-2 text-sm text-slate-900 focus:bg-slate-50 cursor-pointer"
+                        onClick={() => router.push(slug ? `/dashboard/${slug}/transaksi/penjualan-unit/${item.id}/refund` : `/transaksi/penjualan-unit/${item.id}/refund`)}
+                        disabled={isRefunded(item) || !canEdit}
+                      >
+                        Refund Jual
+                      </DropdownMenuItem>
+                    );
+                  })()}
                   <DropdownMenuItem
                     className="rounded-md px-3 py-2 text-sm text-slate-900 focus:bg-slate-50 cursor-pointer"
                     disabled={!item.documentTemplateId}

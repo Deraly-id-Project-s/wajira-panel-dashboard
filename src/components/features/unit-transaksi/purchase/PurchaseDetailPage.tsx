@@ -16,7 +16,8 @@ import { usePurchaseUnitItems } from '@/hooks/useUnitTransactionItem';
 import { useTypeUnits } from '@/hooks/useTypeUnit';
 import { unitItemDetailService } from '@/services/unitItemDetail.service';
 import { warehouseActivityService } from '@/services/warehouseActivity.service';
-import { CreditCard, AlertTriangle, CheckCircle2, Info, Edit, Warehouse, Printer } from 'lucide-react';
+import { CreditCard, AlertTriangle, CheckCircle2, Info, Edit, Warehouse, Printer, RotateCcw } from 'lucide-react';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { toast } from 'sonner';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { usePermissionGuard } from '@/hooks/usePermissionGuard';
@@ -426,6 +427,42 @@ export default function PurchaseDetailPage() {
                 <Edit className="mr-2 h-4 w-4" />
                 Edit Data
               </Button>
+              {(() => {
+                const isTransactionPaid = Boolean(purchase?.unit_transaction_billing?.is_paid || isPaid);
+                if (!isTransactionPaid) {
+                  return (
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <span className="inline-block">
+                            <Button
+                              variant="outline"
+                              disabled
+                              className="pointer-events-none opacity-50 border-rose-200 text-rose-700 bg-rose-50"
+                            >
+                              <RotateCcw className="mr-2 h-4 w-4" />
+                              Refund
+                            </Button>
+                          </span>
+                        </TooltipTrigger>
+                        <TooltipContent side="bottom">
+                          Transaksi ini belum lunas
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                  );
+                }
+                return (
+                  <Button
+                    variant="outline"
+                    className="border-amber-300 text-amber-700 hover:bg-amber-50"
+                    onClick={() => router.push(`/dashboard/${slug}/transaksi/pembelian-unit/${purchase.id}/refund`)}
+                  >
+                    <RotateCcw className="mr-2 h-4 w-4" />
+                    Refund
+                  </Button>
+                );
+              })()}
             </>
           }
         />

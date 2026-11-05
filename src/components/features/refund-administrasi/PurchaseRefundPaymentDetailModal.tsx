@@ -6,6 +6,7 @@ import type { UnitTransactionRefund, UnitTransactionRefundPayment } from '@/@typ
 import { useCreateRefundPayment, useUpdateRefundPayment } from '@/hooks/useRefundAdministrasi';
 import { createRefundPaymentSchema, type CreateRefundPaymentFormValues } from '@/schemas/refund.schema';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { InputDate } from '@/components/ui/input-date';
@@ -84,10 +85,9 @@ export default function PurchaseRefundPaymentDetailModal({ open, onClose, refund
     const kasList = kasQuery?.data ?? [];
     const cashIdrAccount = kasList.find((cash) => {
       const code = String(cash.code ?? '').toLowerCase();
-      const desc = String(cash.description ?? '').toLowerCase();
       return (code === 'cash_idr' || code === 'cash' || code.includes('cash_idr') || code.includes('cash') || code.includes('kas')) && !code.includes('bca') && !code.includes('usd');
     });
-    const resolvedCashId = cashIdrAccount?.id;
+    const resolvedCashId = values.cash_id ? Number(values.cash_id) : (cashIdrAccount?.id ?? kasList[0]?.id);
 
     try {
       if (payment) {
@@ -134,6 +134,28 @@ export default function PurchaseRefundPaymentDetailModal({ open, onClose, refund
               <span className="text-[#6B7280]">Sisa Bayar</span>
               <span className="font-medium text-[#B45309]">{formatCurrency(remainingAmount)}</span>
             </div>
+          </div>
+
+          <div>
+            <Label className={refundLabelClassName}>Akun Kas / Bank</Label>
+            <Controller
+              control={form.control}
+              name="cash_id"
+              render={({ field }) => (
+                <Select value={field.value ? String(field.value) : ''} onValueChange={field.onChange}>
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Pilih akun kas/bank" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {(kasQuery?.data ?? []).map((k) => (
+                      <SelectItem key={k.id} value={String(k.id)}>
+                        {k.cash_name || `${k.code} - ${k.description}`}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
+            />
           </div>
 
           <div>

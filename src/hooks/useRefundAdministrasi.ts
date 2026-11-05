@@ -91,6 +91,25 @@ export const useDeleteRefund = () => {
   });
 };
 
+export const useUpdateRefundPaidStatus = () => {
+  const queryClient = useQueryClient();
+  const { companyId } = useCompany();
+
+  return useMutation({
+    mutationFn: ({ id, payload }: { id: string; payload: { is_paid: boolean; note?: string } }) =>
+      refundAdministrasiService.updatePaidStatus(id, payload),
+    onSuccess: () => {
+      if (companyId) {
+        queryClient.invalidateQueries({ queryKey: companyQueryKeys.companyScope(companyId) });
+      } else {
+        queryClient.invalidateQueries({ queryKey: ['administrasi-refund-list'] });
+        queryClient.invalidateQueries({ queryKey: ['administrasi-refund-detail'] });
+      }
+      queryClient.invalidateQueries({ queryKey: ['finance-refunds'] });
+    },
+  });
+};
+
 export const useCreateRefundPayment = () => {
   const queryClient = useQueryClient();
   const { companyId } = useCompany();

@@ -52,6 +52,8 @@ export function useCreateFinanceBillingItem() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: financeBillingKeys.all });
       queryClient.invalidateQueries({ queryKey: ['cash-flow'] });
+      queryClient.invalidateQueries({ queryKey: ['finance-refunds'] });
+      queryClient.invalidateQueries({ queryKey: ['finance-refund-detail'] });
     },
   });
 }
@@ -64,6 +66,8 @@ export function useUpdateFinanceBillingItem() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: financeBillingKeys.all });
       queryClient.invalidateQueries({ queryKey: ['cash-flow'] });
+      queryClient.invalidateQueries({ queryKey: ['finance-refunds'] });
+      queryClient.invalidateQueries({ queryKey: ['finance-refund-detail'] });
     },
   });
 }
@@ -76,6 +80,8 @@ export function useDeleteFinanceBillingItem() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: financeBillingKeys.all });
       queryClient.invalidateQueries({ queryKey: ['cash-flow'] });
+      queryClient.invalidateQueries({ queryKey: ['finance-refunds'] });
+      queryClient.invalidateQueries({ queryKey: ['finance-refund-detail'] });
     },
   });
 }
@@ -88,6 +94,8 @@ export function useCreateFinanceBilling() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: financeBillingKeys.all });
       queryClient.invalidateQueries({ queryKey: ['cash-flow'] });
+      queryClient.invalidateQueries({ queryKey: ['finance-refunds'] });
+      queryClient.invalidateQueries({ queryKey: ['finance-refund-detail'] });
     },
   });
 }
@@ -100,6 +108,8 @@ export function useUpdateFinanceBilling() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: financeBillingKeys.all });
       queryClient.invalidateQueries({ queryKey: ['cash-flow'] });
+      queryClient.invalidateQueries({ queryKey: ['finance-refunds'] });
+      queryClient.invalidateQueries({ queryKey: ['finance-refund-detail'] });
     },
   });
 }
@@ -112,6 +122,8 @@ export function useDeleteFinanceBilling() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: financeBillingKeys.all });
       queryClient.invalidateQueries({ queryKey: ['cash-flow'] });
+      queryClient.invalidateQueries({ queryKey: ['finance-refunds'] });
+      queryClient.invalidateQueries({ queryKey: ['finance-refund-detail'] });
     },
   });
 }

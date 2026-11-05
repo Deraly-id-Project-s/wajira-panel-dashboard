@@ -29,7 +29,7 @@ const refundFormSchema = z.object({
   refund_date: z.string().min(1, 'Tanggal refund harus diisi'),
   refund_amount: z.number().min(1, 'Nominal refund harus lebih dari 0'),
   note: z.string().min(1, 'Catatan / Alasan refund harus diisi'),
-  unit_transaction_item_detail_ids: z.array(z.number()).min(1, 'Pilih minimal satu unit untuk direfund'),
+  unit_transaction_item_detail_ids: z.array(z.number()).optional().default([]),
 });
 
 type RefundFormValues = z.infer<typeof refundFormSchema>;

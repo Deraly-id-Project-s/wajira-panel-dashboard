@@ -36,7 +36,8 @@ export interface FinanceBilling {
 }
 
 export interface FinanceBillingPayload {
-  cash_flow_id: number;
+  cash_flow_id?: number;
+  finance_refund_id?: number;
   cash_id: number;
   account_id: number;
   amount: number;

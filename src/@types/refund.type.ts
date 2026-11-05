@@ -9,12 +9,15 @@ export interface RefundStatus {
 
 export interface UnitTransactionRefund {
   id: string;
+  uuid?: string;
   code: string;
   unit_transaction_id: string;
   refund_date: string;
   refund_amount: number;
   note: string;
   status: 'waiting' | 'approve' | 'reject' | string;
+  is_paid?: boolean;
+  is_with_stock?: boolean;
   created_at: string;
   total_paid?: number;
   total_qty?: number;
@@ -81,4 +84,9 @@ export interface UpdateRefundPaymentPayload {
   payment_date?: string;
   note?: string;
   cash_id?: string | number;
+}
+
+export interface UpdateRefundPaidStatusPayload {
+  is_paid: boolean;
+  note?: string;
 }

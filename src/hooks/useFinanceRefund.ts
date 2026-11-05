@@ -13,6 +13,44 @@ const financeRefundKeys = {
       status: params.status,
       transactionType: params.transactionType,
     }),
+  detail: (companyId: string | number, id: number | string) =>
+    companyQueryKeys.detail(companyId, 'finance-refund-detail', id),
+};
+
+export const useFinanceRefundDetail = (id?: number | string) => {
+  const { companyId } = useCompany();
+
+  return useQuery({
+    queryKey: companyId && id ? financeRefundKeys.detail(companyId, id) : ['finance-refund-detail', 'unscoped', id],
+    queryFn: () => financeRefundService.getFinanceRefundDetail(id as number | string),
+    enabled: Boolean(companyId) && Boolean(id),
+    staleTime: 1000 * 60 * 2,
+    refetchOnWindowFocus: false,
+  });
+};
+
+export const useUpdateFinanceRefundPaidStatus = () => {
+  const queryClient = useQueryClient();
+  const { companyId } = useCompany();
+
+  return useMutation({
+    mutationFn: async ({ id, payload }: { id: number | string; payload: { is_paid: boolean; note?: string } }) => {
+      return await financeRefundService.updatePaidStatus(id, payload);
+    },
+    onSuccess: () => {
+      if (companyId) {
+        queryClient.invalidateQueries({
+          predicate: (query) =>
+            Array.isArray(query.queryKey) &&
+            query.queryKey[0] === 'company' &&
+            query.queryKey[1] === String(companyId),
+        });
+      } else {
+        queryClient.invalidateQueries({ queryKey: ['finance-refunds'] });
+        queryClient.invalidateQueries({ queryKey: ['finance-refund-detail'] });
+      }
+    },
+  });
 };
 
 export const useFinanceRefundList = (params: FinanceRefundQueryParams) => {

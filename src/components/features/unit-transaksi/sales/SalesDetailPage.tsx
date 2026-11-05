@@ -28,7 +28,8 @@ import {
 import { formatDate } from '@/lib/utils/format';
 import { LoadingState } from '@/components/ui/loading-state';
 import { useCompany } from '@/contexts/CompanyContext';
-import { CreditCard, AlertTriangle, CheckCircle2, Info, Edit, Printer } from 'lucide-react';
+import { CreditCard, AlertTriangle, CheckCircle2, Info, Edit, Printer, RotateCcw } from 'lucide-react';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { TextTruncate } from '@/components/ui/text-truncate';
 import { UnitTypeDetailTable } from '@/components/features/unit-transaksi/UnitTypeDetailTable';
 import { useDocumentTemplate } from '@/hooks/useDocumentTemplate';
@@ -434,6 +435,42 @@ export default function SalesDetailPage() {
                 <Edit className="mr-2 h-4 w-4" />
                 Edit Data
               </Button>
+              {(() => {
+                const isTransactionPaid = Boolean(sales?.unit_transaction_billing?.is_paid || isPaid);
+                if (!isTransactionPaid) {
+                  return (
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <span className="inline-block">
+                            <Button
+                              variant="outline"
+                              disabled
+                              className="pointer-events-none opacity-50 border-rose-200 text-rose-700 bg-rose-50"
+                            >
+                              <RotateCcw className="mr-2 h-4 w-4" />
+                              Refund
+                            </Button>
+                          </span>
+                        </TooltipTrigger>
+                        <TooltipContent side="bottom">
+                          Transaksi ini belum lunas
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                  );
+                }
+                return (
+                  <Button
+                    variant="outline"
+                    className="border-amber-300 text-amber-700 hover:bg-amber-50"
+                    onClick={() => router.push(`/dashboard/${slug}/transaksi/penjualan-unit/${sales.id}/refund`)}
+                  >
+                    <RotateCcw className="mr-2 h-4 w-4" />
+                    Refund
+                  </Button>
+                );
+              })()}
             </>
           }
         />

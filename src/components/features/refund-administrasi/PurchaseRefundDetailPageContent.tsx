@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react';
 import { useRouter } from 'next/router';
-import { ChevronRight, MoreVertical, Plus, ArrowLeft, FileText, DollarSign, Package } from 'lucide-react';
+import { ChevronRight, MoreVertical, Plus, ArrowLeft, FileText, DollarSign, Package, CheckCircle2 } from 'lucide-react';
 import type { UnitTransactionRefundPayment } from '@/@types/refund.type';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { Button } from '@/components/ui/button';
@@ -8,7 +8,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import BaseTable, { ColumnDef } from '@/components/ui/base-table';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
-import { useDeleteRefundPayment, useRefundDetail } from '@/hooks/useRefundAdministrasi';
+import { useDeleteRefundPayment, useRefundDetail, useUpdateRefundPaidStatus } from '@/hooks/useRefundAdministrasi';
 import { toast } from 'sonner';
 import PurchaseRefundPaymentDetailModal from './PurchaseRefundPaymentDetailModal';
 import { RefundPaymentProgressBadge } from '@/components/features/refund/RefundPaymentProgressBadge';
@@ -32,14 +32,34 @@ export default function PurchaseRefundDetailPageContent({ transactionId, refundI
   const [isAddDetailOpen, setIsAddDetailOpen] = useState(false);
   const [editingPayment, setEditingPayment] = useState<UnitTransactionRefundPayment | null>(null);
   const [deletingPayment, setDeletingPayment] = useState<UnitTransactionRefundPayment | null>(null);
+  const [isMarkAsPaidOpen, setIsMarkAsPaidOpen] = useState(false);
   const deletePaymentMutation = useDeleteRefundPayment();
+  const updatePaidStatusMutation = useUpdateRefundPaidStatus();
 
   const refundQuery = useRefundDetail(refundId);
   const refund = refundQuery.data;
 
   const totalPaid = (refund?.payments ?? []).reduce((total, item) => total + Number(item.amount), 0);
   const lessPayment = Math.max(0, Number(refund?.refund_amount || 0) - totalPaid);
+  const isPaid = Boolean(refund?.is_paid || (lessPayment === 0 && Number(refund?.refund_amount || 0) > 0));
   const qty = refund?.items?.length ?? 0;
+
+  const handleTogglePaidStatus = async () => {
+    if (!refund) return;
+    try {
+      await updatePaidStatusMutation.mutateAsync({
+        id: refund.id,
+        payload: {
+          is_paid: !refund.is_paid,
+          note: !refund.is_paid ? 'Pelunasan penuh refund unit' : 'Batal pelunasan refund unit',
+        },
+      });
+      toast.success(!refund.is_paid ? 'Refund berhasil ditandai lunas' : 'Status lunas refund berhasil dibatalkan');
+      setIsMarkAsPaidOpen(false);
+    } catch (error: any) {
+      toast.error(error?.message || 'Gagal mengubah status lunas refund');
+    }
+  };
 
   const unitColumns = useMemo<ColumnDef<any>[]>(
     () => [
@@ -201,8 +221,30 @@ export default function PurchaseRefundDetailPageContent({ transactionId, refundI
               <div className="text-sm text-muted-foreground flex items-center gap-2">
                 <span>Kode Refund:</span>
                 <span className="inline-flex items-center gap-1.5 font-semibold text-orange-600 hover:text-orange-700">{refund.code}</span>
+                <Badge
+                  variant="outline"
+                  className={
+                    refund.is_paid
+                      ? 'border-emerald-200 bg-emerald-50 text-emerald-700 font-semibold'
+                      : 'border-rose-200 bg-rose-50 text-rose-700 font-semibold'
+                  }
+                >
+                  {refund.is_paid ? 'Lunas' : 'Belum Lunas'}
+                </Badge>
               </div>
             </div>
+          </div>
+          <div className="flex items-center gap-2">
+            <Button
+              type="button"
+              variant={refund.is_paid ? 'outline' : 'default'}
+              className={refund.is_paid ? 'border-emerald-300 text-emerald-700 hover:bg-emerald-50' : 'bg-emerald-600 text-white hover:bg-emerald-700'}
+              disabled={updatePaidStatusMutation.isPending || (!refund.is_paid && lessPayment > 0)}
+              onClick={() => setIsMarkAsPaidOpen(true)}
+            >
+              <CheckCircle2 className="mr-2 h-4 w-4" />
+              {refund.is_paid ? 'Sudah Lunas' : 'Tandai Lunas'}
+            </Button>
           </div>
         </div>
 
@@ -323,6 +365,30 @@ export default function PurchaseRefundDetailPageContent({ transactionId, refundI
               <AlertDialogCancel>Batal</AlertDialogCancel>
               <AlertDialogAction className="bg-red-600 hover:bg-red-700" onClick={handleDeletePayment}>
                 Hapus
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+
+        {/* Modal Konfirmasi Tandai Lunas */}
+        <AlertDialog open={isMarkAsPaidOpen} onOpenChange={setIsMarkAsPaidOpen}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>{refund.is_paid ? 'Batal Tandai Lunas Refund?' : 'Tandai Lunas Refund?'}</AlertDialogTitle>
+              <AlertDialogDescription>
+                {refund.is_paid
+                  ? 'Status lunas refund akan dibatalkan dan pencatatan Finance Refund terkait akan disesuaikan.'
+                  : 'Menandai lunas refund akan otomatis membuat record Finance Refund & Finance Refund Cash di modul finance.'}
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel disabled={updatePaidStatusMutation.isPending}>Batal</AlertDialogCancel>
+              <AlertDialogAction
+                className={refund.is_paid ? 'bg-amber-600 hover:bg-amber-700' : 'bg-emerald-600 hover:bg-emerald-700'}
+                disabled={updatePaidStatusMutation.isPending}
+                onClick={handleTogglePaidStatus}
+              >
+                {updatePaidStatusMutation.isPending ? 'Memproses...' : refund.is_paid ? 'Ya, Batal Lunas' : 'Ya, Tandai Lunas'}
               </AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>

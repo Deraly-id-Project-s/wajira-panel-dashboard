@@ -1,4 +1,11 @@
-import type { FinanceRefundListResponse, FinanceRefundQueryParams, FinanceRefundRecord, UpdateFinanceRefundPayload } from '@/@types/finance-refund.types';
+import type {
+  FinanceRefundDetail,
+  FinanceRefundListResponse,
+  FinanceRefundQueryParams,
+  FinanceRefundRecord,
+  UpdateFinanceRefundPaidStatusPayload,
+  UpdateFinanceRefundPayload,
+} from '@/@types/finance-refund.types';
 import type { UnitTransactionRefundPayment } from '@/@types/refund.type';
 import { apiClient } from '@/lib/api/client';
 import { ensureSuccess, LaravelApiResponse } from '@/lib/api/response';
@@ -29,6 +36,7 @@ const mapFinanceRefund = (item: any): FinanceRefundRecord => {
 
   return {
     id: toString(item.id),
+    uuid: item.uuid ? String(item.uuid) : undefined,
     code: refundDetail.code || item.code || `FR-${toString(item.id)}`,
     refundCode: refundDetail.refund_number || refundDetail.code || item.code || '-',
     refundDate: refundDetail.refund_date || refundDetail.date || item.refund_date || item.date || '',
@@ -47,8 +55,10 @@ const mapFinanceRefund = (item: any): FinanceRefundRecord => {
       item.refund_amount ??
       item.total_refund
     ),
+    remainingPayment: item.remaining_payment !== undefined ? toNumber(item.remaining_payment) : undefined,
     note: refundDetail.note || item.note || '',
     status: normalizeRefundStatus(item.status),
+    isPaid: item.is_paid === true || item.is_paid === 1 || item.is_paid === '1',
     cashId: item.cash_id ? toString(item.cash_id) : undefined,
     cashName: item.cash?.cash_name || undefined,
     transactionId: toString(refundDetail.unit_transaction_id ?? transaction?.id),
@@ -56,7 +66,71 @@ const mapFinanceRefund = (item: any): FinanceRefundRecord => {
     transactionType,
     partnerName: partner?.name || '-',
     payments: Array.isArray(item.payments) ? item.payments.map(mapPayment) : [],
+    financeRefundCashes: Array.isArray(item.financeRefundCashes) ? item.financeRefundCashes : [],
     createdAt: item.created_at || '',
+  };
+};
+
+const mapFinanceRefundDetail = (item: any): FinanceRefundDetail => {
+  return {
+    id: toNumber(item?.id),
+    uuid: item?.uuid ? String(item.uuid) : undefined,
+    code: item?.code || '',
+    transaction_of: item?.transaction_of || 'unit_type',
+    date: item?.date || '',
+    note: item?.note || '',
+    is_paid: item?.is_paid === true || item?.is_paid === 1 || item?.is_paid === '1',
+    is_valid: item?.is_valid === true || item?.is_valid === 1 || item?.is_valid === '1',
+    remaining_payment: toNumber(item?.remaining_payment),
+    cash_position: item?.cash_position ? {
+      debet_idr_total: toNumber(item.cash_position.debet_idr_total),
+      credit_idr_total: toNumber(item.cash_position.credit_idr_total),
+      debet_usd_total: toNumber(item.cash_position.debet_usd_total),
+      credit_usd_total: toNumber(item.cash_position.credit_usd_total),
+    } : undefined,
+    financeRefundCashes: Array.isArray(item?.financeRefundCashes) ? item.financeRefundCashes.map((c: any) => ({
+      id: toNumber(c.id),
+      finance_refund_id: c.finance_refund_id ? toNumber(c.finance_refund_id) : undefined,
+      cash_id: toNumber(c.cash_id),
+      amount: toNumber(c.amount),
+      amount_original: c.amount_original !== undefined ? toNumber(c.amount_original) : undefined,
+      type: c.type || 'credit',
+      cash: c.cash ? {
+        id: toNumber(c.cash.id),
+        cash_name: c.cash.cash_name || '',
+        currency_type: c.cash.currency_type || 'idr',
+        code: c.cash.code || '',
+      } : undefined,
+    })) : [],
+    financeBillings: Array.isArray(item?.financeBillings) ? item.financeBillings.map((b: any) => ({
+      id: toNumber(b.id),
+      uuid: b.uuid,
+      cash_flow_id: toNumber(b.cash_flow_id || b.finance_refund_id),
+      cash_id: toNumber(b.cash_id),
+      account_id: toNumber(b.account_id),
+      amount: toNumber(b.amount),
+      amount_original: toNumber(b.amount_original),
+      payment_proof: b.payment_proof ?? null,
+      payment_at: b.payment_at ?? '',
+      note: b.note ?? '',
+      created_at: b.created_at ?? '',
+      updated_at: b.updated_at ?? '',
+      cash: {
+        id: toNumber(b.cash?.id),
+        uuid: b.cash?.uuid,
+        company_id: b.cash?.company_id ? toNumber(b.cash.company_id) : undefined,
+        code: b.cash?.code ?? '-',
+        cash_name: b.cash?.cash_name ?? '-',
+      },
+      account: b.account ? {
+        id: toNumber(b.account.id),
+        uuid: b.account.uuid,
+        code: b.account.code,
+        name: b.account.name,
+        type: b.account.type,
+      } : null,
+      remaining_payment: b.remaining_payment !== undefined ? toNumber(b.remaining_payment) : undefined,
+    })) : [],
   };
 };
 
@@ -106,6 +180,36 @@ export const financeRefundService = {
     });
 
     return ensureSuccess(response.data);
+  },
+
+  async getFinanceRefundDetail(id: number | string): Promise<FinanceRefundDetail> {
+    let response;
+    try {
+      response = await apiClient.get<LaravelApiResponse<any>>(`${BASE_PATH}/${id}`);
+    } catch (error: any) {
+      if (error?.statusCode === 404 || error?.response?.status === 404) {
+        response = await apiClient.get<LaravelApiResponse<any>>(`/api/v1/finance-refund/${id}`);
+      } else {
+        throw error;
+      }
+    }
+    const payload = ensureSuccess(response.data);
+    return mapFinanceRefundDetail(payload);
+  },
+
+  async updatePaidStatus(id: number | string, payload: UpdateFinanceRefundPaidStatusPayload): Promise<FinanceRefundDetail> {
+    let response;
+    try {
+      response = await apiClient.put<LaravelApiResponse<any>>(`${BASE_PATH}/${id}/paid-status`, payload);
+    } catch (error: any) {
+      if (error?.statusCode === 404 || error?.response?.status === 404) {
+        response = await apiClient.put<LaravelApiResponse<any>>(`/api/v1/finance-refund/${id}/paid-status`, payload);
+      } else {
+        throw error;
+      }
+    }
+    const payloadResult = ensureSuccess(response.data);
+    return mapFinanceRefundDetail(payloadResult);
   },
 
   async deleteRefund(id: string, deleteFinanceRefund: boolean = true) {

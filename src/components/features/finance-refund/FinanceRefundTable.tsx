@@ -10,7 +10,7 @@ import { currenciesFormat } from '@/components/ui/currenciesFormat';
 import { TextTruncate } from '@/components/ui/text-truncate';
 import BaseTable, { ColumnDef } from '@/components/ui/base-table';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { Trash2 } from 'lucide-react';
+import { Eye, Trash2 } from 'lucide-react';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useDeleteFinanceRefund } from '@/hooks/useFinanceRefund';
 import { toast } from 'sonner';
@@ -115,7 +115,11 @@ export default function FinanceRefundTable({ data, isLoading = false, transactio
         accessorKey: 'refundCode',
         sortable: true,
         alignment: 'left',
-        cell: (item) => <CopyBox text={item.refundCode} />,
+        cell: (item) => (
+          <ReferenceLink href={`/dashboard/${slugStr}/finance/${transactionType === 'sales' ? 'refund-jual' : 'refund-beli'}/${item.id}`}>
+            {item.refundCode}
+          </ReferenceLink>
+        ),
       },
       {
         header: transactionType === 'sales' ? 'NO PENJUALAN' : 'NO PEMBELIAN',
@@ -192,23 +196,18 @@ export default function FinanceRefundTable({ data, isLoading = false, transactio
         className: 'w-[140px] min-w-[140px] max-w-[140px]',
         headerClassName: 'w-[140px] min-w-[140px] max-w-[140px]',
         cell: (item) => (
-          <div className="flex flex-col items-center justify-center gap-2 py-1 min-w-[120px]">
+          <div className="flex items-center justify-center gap-1.5 py-1">
             <Button
               size="sm"
-              disabled={!canEdit}
-              variant={item.status === 'approve' ? 'outline' : 'default'}
-              className={cn(
-                "h-8 text-xs font-semibold w-full font-sans transition-colors shadow-none whitespace-nowrap",
-                item.status === 'approve'
-                  ? "border-emerald-200 text-emerald-700 bg-emerald-50 hover:bg-emerald-100 hover:text-emerald-800"
-                  : "bg-blue-600 hover:bg-blue-700 text-white"
-              )}
+              variant="outline"
+              className="h-8 px-2 text-xs text-slate-700 hover:text-slate-900 border-slate-200"
               onClick={(e) => {
                 e.stopPropagation();
-                setSelectedRefund(item);
+                router.push(`/dashboard/${slugStr}/finance/${transactionType === 'sales' ? 'refund-jual' : 'refund-beli'}/${item.id}`);
               }}
             >
-              {item.status === 'approve' ? 'Sudah disetujui' : 'Setujui'}
+              <Eye className="mr-1 h-3.5 w-3.5" />
+              Detail
             </Button>
             {canDelete && <DeleteFinanceRefundAction item={item} transactionType={transactionType} />}
           </div>
@@ -225,7 +224,9 @@ export default function FinanceRefundTable({ data, isLoading = false, transactio
         columns={columns}
         loading={isLoading}
         defaultSort={{ key: 'refundDate', direction: 'desc' }}
-        onRowClick={(item) => setSelectedRefund(item)}
+        onRowClick={(item) => {
+          router.push(`/dashboard/${slugStr}/finance/${transactionType === 'sales' ? 'refund-jual' : 'refund-beli'}/${item.id}`);
+        }}
       />
 
       {selectedRefund ? (

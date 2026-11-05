@@ -241,7 +241,12 @@ const normalizeFinanceBilling = (item: any): FinanceBilling => ({
 
 export async function createFinanceBilling(payload: FinanceBillingPayload): Promise<FinanceBilling> {
   const formData = new FormData();
-  formData.append('cash_flow_id', String(payload.cash_flow_id));
+  if (payload.cash_flow_id != null) {
+    formData.append('cash_flow_id', String(payload.cash_flow_id));
+  }
+  if (payload.finance_refund_id != null) {
+    formData.append('finance_refund_id', String(payload.finance_refund_id));
+  }
   formData.append('cash_id', String(payload.cash_id));
   formData.append('account_id', String(payload.account_id));
   formData.append('amount', String(payload.amount));
@@ -266,7 +271,12 @@ export async function createFinanceBilling(payload: FinanceBillingPayload): Prom
 export async function updateFinanceBilling(id: number | string, payload: FinanceBillingPayload): Promise<FinanceBilling> {
   const formData = new FormData();
   formData.append('_method', 'PUT');
-  formData.append('cash_flow_id', String(payload.cash_flow_id));
+  if (payload.cash_flow_id != null) {
+    formData.append('cash_flow_id', String(payload.cash_flow_id));
+  }
+  if (payload.finance_refund_id != null) {
+    formData.append('finance_refund_id', String(payload.finance_refund_id));
+  }
   formData.append('cash_id', String(payload.cash_id));
   formData.append('account_id', String(payload.account_id));
   formData.append('amount', String(payload.amount));
