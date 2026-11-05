@@ -23,6 +23,7 @@ export interface UnitTransactionRefund {
   total_qty?: number;
   total_payable?: number;
   remaining_payment?: number;
+  cash_id?: string | number;
   items?: UnitTransactionDetail[];
   payments?: UnitTransactionRefundPayment[];
   transaction?: {
@@ -59,6 +60,7 @@ export interface CreateRefundPayload {
   refund_amount: number;
   note?: string;
   unit_transaction_item_detail_ids: Array<string | number>;
+  cash_id?: string | number;
 }
 
 export interface UpdateRefundPayload {
@@ -68,6 +70,7 @@ export interface UpdateRefundPayload {
   refund_amount?: number;
   note?: string;
   unit_transaction_item_detail_ids?: Array<string | number>;
+  cash_id?: string | number;
 }
 
 export interface CreateRefundPaymentPayload {

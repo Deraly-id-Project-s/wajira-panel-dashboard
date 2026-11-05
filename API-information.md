@@ -693,3 +693,155 @@ GET {{url}}/wapi/transaction/unit-transaction/unit-transaction/:unit_transaction
         "warehouse_activity": null
     }
 }
+
+GET {{url}}/wapi/finance/finance-refund/:finance_refund_id
+{
+    "status": true,
+    "message": "Finance Refund retrieved successfully",
+    "errors": null,
+    "data": {
+        "id": 4,
+        "uuid": "44cf76ac-7ce4-43ed-af04-0d38d7317c06",
+        "code": "PBL-WAJ/20261105-54049-refund",
+        "company_id": 1,
+        "unit_transaction_refund_id": 1,
+        "goods_transaction_refund_id": null,
+        "transaction_of": "unit_type",
+        "date": "2026-11-03T17:00:00.000000Z",
+        "note": "test",
+        "is_paid": false,
+        "is_valid": true,
+        "created_at": "2026-11-05T13:36:17.000000Z",
+        "updated_at": "2026-11-05T13:38:32.000000Z",
+        "remaining_payment": 0,
+        "cash_position": {
+            "debet_idr_total": 0,
+            "credit_idr_total": 0,
+            "debet_usd_total": 23423423,
+            "credit_usd_total": 0
+        },
+        "last_payment_at": "2026-10-10",
+        "company": {
+            "id": 1,
+            "uuid": "7a245b28-aa2d-492e-83e9-c729a59b049d",
+            "name": "PT Wajira Morindo"
+        },
+        "finance_refund_cashes": [
+            {
+                "id": 4,
+                "finance_refund_id": 4,
+                "cash_id": 3,
+                "amount": 23423423,
+                "amount_original": 23423423,
+                "type": "debet",
+                "created_at": "2026-11-05T13:36:17.000000Z",
+                "updated_at": "2026-11-05T13:36:17.000000Z",
+                "cash": {
+                    "id": 3,
+                    "uuid": "e87bf836-7e1d-450a-bd90-44d0e86c32d2",
+                    "company_id": 1,
+                    "currency_type": "usd",
+                    "cash_name": "BCA USD",
+                    "type": "bank",
+                    "code": "bca_usd"
+                }
+            }
+        ],
+        "finance_billings": [
+            {
+                "id": 1,
+                "uuid": "caa9d2cb-a759-4cf4-bf8d-f5baaacdc25a",
+                "cash_flow_id": null,
+                "finance_refund_id": 4,
+                "cash_id": 3,
+                "account_id": 1,
+                "type": "debet",
+                "amount": 14000,
+                "amount_original": 224000000,
+                "payment_proof": null,
+                "payment_at": "2026-10-09T17:00:00.000000Z",
+                "note": "pembayaran termin 1 cash",
+                "is_usd_payment": true,
+                "cash_position_before": 0,
+                "cash_position_after": null,
+                "created_at": "2026-11-05T13:38:16.000000Z",
+                "updated_at": "2026-11-05T13:38:16.000000Z",
+                "cash": {
+                    "id": 3,
+                    "uuid": "e87bf836-7e1d-450a-bd90-44d0e86c32d2",
+                    "company_id": 1,
+                    "code": "bca_usd",
+                    "cash_name": "BCA USD",
+                    "currency_type": "usd"
+                },
+                "account": {
+                    "id": 1,
+                    "type": "debet"
+                }
+            },
+            {
+                "id": 2,
+                "uuid": "b4b2c0f4-4fc0-4d27-b957-c55f26da04dd",
+                "cash_flow_id": null,
+                "finance_refund_id": 4,
+                "cash_id": 3,
+                "account_id": 1,
+                "type": "debet",
+                "amount": 23409423,
+                "amount_original": 374550768000,
+                "payment_proof": null,
+                "payment_at": "2026-10-09T17:00:00.000000Z",
+                "note": "pembayaran termin 1 cash",
+                "is_usd_payment": true,
+                "cash_position_before": 0,
+                "cash_position_after": null,
+                "created_at": "2026-11-05T13:38:32.000000Z",
+                "updated_at": "2026-11-05T13:38:32.000000Z",
+                "cash": {
+                    "id": 3,
+                    "uuid": "e87bf836-7e1d-450a-bd90-44d0e86c32d2",
+                    "company_id": 1,
+                    "code": "bca_usd",
+                    "cash_name": "BCA USD",
+                    "currency_type": "usd"
+                },
+                "account": {
+                    "id": 1,
+                    "type": "debet"
+                }
+            }
+        ],
+        "unit_transaction_refund": {
+            "id": 1,
+            "uuid": "93e3ad45-5635-4eb4-871c-2aee220eba6e",
+            "unit_transaction_id": 1,
+            "code": "RFB-WJM/20261105-0001",
+            "refund_date": "2026-11-04T17:00:00.000000Z",
+            "refund_amount": 23423423,
+            "note": null,
+            "is_paid": true,
+            "is_with_stock": false,
+            "remaining_payment": 0,
+            "unit_transaction_item_details": [],
+            "unit_transaction": {
+                "id": 1,
+                "uuid": "fdda6a0a-676f-469e-bceb-efa4406cf692",
+                "person_id": 1,
+                "code": "PBL-WAJ/20261105-54049",
+                "type": "purchase",
+                "has_warehouse_activity": false,
+                "has_refund_transaction": true,
+                "expedition_fee_total": "0.00",
+                "person": {
+                    "id": 1,
+                    "uuid": "06e7969a-4732-4ca5-8fbe-213938f39233",
+                    "name": "Mansurin",
+                    "type": "supplier",
+                    "company_list": "",
+                    "company": null
+                }
+            }
+        },
+        "goods_transaction_refund": null
+    }
+}

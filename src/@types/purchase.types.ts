@@ -53,6 +53,7 @@ export interface Purchase {
   warehouseId?: string;
   transaction_date?: string;
   documentTemplateId?: string | null;
+  is_usd_transaction?: boolean;
 
   totalDpp: number;
   totalPpn: number;

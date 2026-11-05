@@ -214,7 +214,7 @@ export default function FinanceRefundTable({ data, isLoading = false, transactio
         ),
       }
     ],
-    [transactionType, slugStr, canDelete, canEdit],
+    [transactionType, slugStr, canDelete, router],
   );
 
   return (

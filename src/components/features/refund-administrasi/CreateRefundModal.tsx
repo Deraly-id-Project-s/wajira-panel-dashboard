@@ -49,7 +49,8 @@ export default function CreateRefundModal({ open, onClose, transactionId }: Crea
     },
   });
 
-  const selectedIds = watch('unit_transaction_item_detail_ids');
+  const rawSelectedIds = watch('unit_transaction_item_detail_ids');
+  const selectedIds = useMemo(() => rawSelectedIds ?? [], [rawSelectedIds]);
   const selectedItems = useMemo(
     () => items.filter((item) => selectedIds.includes(Number(item.id))),
     [items, selectedIds],
@@ -247,10 +248,10 @@ export default function CreateRefundModal({ open, onClose, transactionId }: Crea
           ) : null}
 
           <DialogFooter>
-            <Button type="button" variant="outline" onClick={onClose} disabled={createRefundMutation.isPending}>
+            <Button size="sm" type="button" variant="outline" onClick={onClose} disabled={createRefundMutation.isPending}>
               Batal
             </Button>
-            <Button type="submit" className="min-w-36" disabled={createRefundMutation.isPending || isLoading}>
+            <Button size="sm" type="submit" className="min-w-36" disabled={createRefundMutation.isPending || isLoading}>
               {createRefundMutation.isPending ? <LoadingState variant="inline" text={null} /> : null}
               Simpan Refund
             </Button>

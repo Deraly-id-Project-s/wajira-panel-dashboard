@@ -212,8 +212,8 @@ export default function SalesRefundDetailPageContent({ transactionId, refundId }
         {/* HEADLINE & ACTIONS */}
         <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
           <div className="flex items-center gap-4">
-            <Button onClick={() => router.push(`/dashboard/${slug}/transaksi/penjualan-unit/${transactionId}/refund`)} variant="ghost" size="icon" className="h-10 w-10 rounded-md border border-slate-200 hover:bg-slate-50 cursor-pointer">
-              <ArrowLeft className="h-5 w-5 text-slate-700" />
+            <Button onClick={() => router.push(`/dashboard/${slug}/transaksi/penjualan-unit/${transactionId}/refund`)} variant="ghost" size="sm" className="h-9 w-9 rounded-md border border-slate-200 hover:bg-slate-50 cursor-pointer p-0">
+              <ArrowLeft className="h-4 w-4 text-slate-700" />
             </Button>
             <div className="space-y-1">
               <h1 className="text-2xl font-semibold text-slate-900">Detail Data Refund Penjualan</h1>
@@ -235,6 +235,7 @@ export default function SalesRefundDetailPageContent({ transactionId, refundId }
           </div>
           <div className="flex items-center gap-2">
             <Button
+              size="sm"
               type="button"
               variant={refund.is_paid ? 'outline' : 'default'}
               className={refund.is_paid ? 'border-emerald-300 text-emerald-700 hover:bg-emerald-50' : 'bg-emerald-600 text-white hover:bg-emerald-700'}
@@ -245,7 +246,6 @@ export default function SalesRefundDetailPageContent({ transactionId, refundId }
               {refund.is_paid ? 'Sudah Lunas' : 'Tandai Lunas'}
             </Button>
           </div>
-        </div>
         </div>
 
         <div className="flex flex-wrap items-center gap-3 rounded-[12px] border border-slate-200 bg-slate-50 px-4 py-3">
@@ -344,7 +344,7 @@ export default function SalesRefundDetailPageContent({ transactionId, refundId }
                   <p className="text-xs text-slate-500">Daftar transaksi pembayaran refund yang telah dicatat</p>
                 </div>
                 <div className="flex flex-col sm:flex-row items-center gap-2 w-full sm:w-auto">
-                  <Button onClick={() => setIsAddDetailOpen(true)} disabled={lessPayment === 0} className="btn-primary!">
+                  <Button size="sm" onClick={() => setIsAddDetailOpen(true)} disabled={lessPayment === 0} className="btn-primary!">
                     <Plus className="h-4 w-4 mr-2" />
                     Tambah Data Pembayaran Refund
                   </Button>

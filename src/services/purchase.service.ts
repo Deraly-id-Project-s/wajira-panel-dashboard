@@ -192,6 +192,7 @@ const mapDetailToPurchase = (detail: UnitTransactionDetailApiModel): Purchase =>
     totalPaid: billingTotals.totalPaid ?? 0,
     createdAt: detail.created_at ?? '',
     updatedAt: detail.updated_at ?? '',
+    is_usd_transaction: Boolean((detail as any).is_usd_transaction),
   };
 };
 
@@ -227,6 +228,7 @@ const mapListItemToPurchase = (item: UnitTransactionListApiModel): Purchase => {
     warehouseId: item.warehouse?.id ? String(item.warehouse.id) : undefined,
     transaction_date: (item as any).transaction_date ?? item.created_at ?? '',
     documentTemplateId: item.document_template_id != null ? String(item.document_template_id) : item.document_template?.id != null ? String(item.document_template.id) : item.document_template?.uuid ?? null,
+    is_usd_transaction: Boolean((item as any).is_usd_transaction),
     ...billingTotals,
     units: [],
     unit_transaction_items: (item as any).unit_transaction_items ?? [],

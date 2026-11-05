@@ -454,8 +454,7 @@ export default function FinanceRefundDetailPageView({ id, transactionType }: Fin
           title="Tambah Pembayaran Finance Refund"
           description={`Sisa tagihan yang harus dibayar: ${currenciesFormat('idr', remainingPayment)}`}
           onSubmit={() => void handleSaveBilling()}
-          loading={createBillingMutation.isPending}
-          disabled={createBillingMutation.isPending}
+          isSubmitting={createBillingMutation.isPending}
         >
           <div className="space-y-4">
             <div className="space-y-2">

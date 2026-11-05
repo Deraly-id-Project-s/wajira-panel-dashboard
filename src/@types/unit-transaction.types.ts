@@ -86,6 +86,20 @@ export interface UnitTransaction {
   remainingPayment: number;
   isUnitTypeDetailValid?: boolean;
   is_usd_transaction?: boolean;
+  unit_transaction_price_usd_total?: number;
+  transaction_price_usd_total?: number;
+  unit_transaction_price_usd_total_actual?: number;
+  total_usd_cost?: number;
+  transaction_usd_cost_total?: number;
+  usd_cost_freight_total?: number;
+  usd_cost_box_packing_total?: number;
+  usd_cost_admin_cost_total?: number;
+  usd_cost_ckd_processing_cost_total?: number;
+  usd_cost_bill_of_lading_switch_cost_total?: number;
+  usd_cost_customs_clearance_cost_total?: number;
+  usd_cost_other_total?: number;
+  unit_transaction_usd_costs?: any[];
+  unit_transaction_items?: any[];
   billing_summary?: UnitTransactionBillingSummary | null;
   documentTemplateId?: string | null;
 }
@@ -186,6 +200,7 @@ export interface UnitTransactionDetail {
   is_usd_transaction?: boolean;
   documentTemplateId?: string | null;
   unit_transaction_price_usd_total?: number;
+  transaction_price_usd_total?: number;
   unit_transaction_price_usd_total_actual?: number;
   total_usd_cost?: number;
   transaction_usd_cost_total?: number;
@@ -373,6 +388,8 @@ export interface UnitTransactionItemSummary {
   dpp_total_price?: number;
   ppn_total_price?: number;
   price_total?: number;
+  price_total_usd?: number;
+  price_usd_total?: number;
   dpp_tax?: TaxInfo | null;
   ppn_tax?: TaxInfo | null;
   is_usd_transaction?: boolean;

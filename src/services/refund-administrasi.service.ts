@@ -136,6 +136,9 @@ export const refundAdministrasiService = {
     if (payload.company_id) {
       formData.append('company_id', String(payload.company_id));
     }
+    if (payload.cash_id) {
+      formData.append('cash_id', String(payload.cash_id));
+    }
 
     appendRefundItemDetailIds(formData, payload.unit_transaction_item_detail_ids);
 
@@ -157,6 +160,7 @@ export const refundAdministrasiService = {
     if (payload.refund_amount !== undefined) formData.append('refund_amount', String(payload.refund_amount));
     if (payload.note !== undefined) formData.append('note', payload.note);
     if (payload.company_id) formData.append('company_id', String(payload.company_id));
+    if (payload.cash_id) formData.append('cash_id', String(payload.cash_id));
     appendRefundItemDetailIds(formData, payload.unit_transaction_item_detail_ids);
 
     const response = await apiClient.post<LaravelApiResponse<any>>(`${BASE_PATH}/${id}`, formData, {

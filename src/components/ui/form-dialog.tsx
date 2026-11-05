@@ -15,6 +15,8 @@ interface FormDialogProps {
   submitLabel?: string;
   cancelLabel?: string;
   isSubmitting?: boolean;
+  loading?: boolean;
+  disabled?: boolean;
   maxWidthClassName?: string;
 }
 
@@ -29,8 +31,13 @@ export function FormDialog({
   submitLabel = "Simpan",
   cancelLabel = "Batal",
   isSubmitting = false,
+  loading = false,
+  disabled = false,
   maxWidthClassName = "max-w-md",
 }: FormDialogProps) {
+  const activeSubmitting = isSubmitting || loading;
+  const isActionDisabled = disabled || activeSubmitting;
+
   const handleCancel = () => {
     if (onCancel) {
       onCancel();
@@ -62,20 +69,22 @@ export function FormDialog({
 
           <div className="flex items-center flex-col sm:flex-row w-full sm:w-auto justify-end gap-2 px-6 py-5">
             <Button
+              size="sm"
               type="button"
               variant="outline"
               onClick={handleCancel}
-              disabled={isSubmitting}
+              disabled={isActionDisabled}
             >
               {cancelLabel}
             </Button>
             <Button
+              size="sm"
               type="submit"
-              disabled={isSubmitting}
-              loading={isSubmitting}
+              disabled={isActionDisabled}
+              loading={activeSubmitting}
               variant="default"
             >
-              {isSubmitting ? "Menyimpan..." : submitLabel}
+              {activeSubmitting ? "Menyimpan..." : submitLabel}
             </Button>
           </div>
         </form>
