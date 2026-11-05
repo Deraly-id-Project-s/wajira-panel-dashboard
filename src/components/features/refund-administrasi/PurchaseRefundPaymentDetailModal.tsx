@@ -14,7 +14,6 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { toast } from 'sonner';
 import { formatCurrency } from '@/lib/utils/currency';
-import { refundInputClassName, refundLabelClassName, refundPrimaryButtonClassName, refundSecondaryButtonClassName } from './purchase-refund.styles';
 import { useCompany } from '@/contexts/CompanyContext';
 import { useKas } from '@/hooks/useKas';
 import { LoadingState } from '@/components/ui/loading-state';
@@ -137,7 +136,7 @@ export default function PurchaseRefundPaymentDetailModal({ open, onClose, refund
           </div>
 
           <div>
-            <Label className={refundLabelClassName}>Akun Kas / Bank</Label>
+            <Label className="mb-2 block text-sm font-medium text-slate-900">Akun Kas / Bank</Label>
             <Controller
               control={form.control}
               name="cash_id"
@@ -159,7 +158,7 @@ export default function PurchaseRefundPaymentDetailModal({ open, onClose, refund
           </div>
 
           <div>
-            <Label className={refundLabelClassName}>Tanggal Refund</Label>
+            <Label className="mb-2 block text-sm font-medium text-slate-900">Tanggal Refund</Label>
             <Controller
               control={form.control}
               name="payment_date"
@@ -168,7 +167,7 @@ export default function PurchaseRefundPaymentDetailModal({ open, onClose, refund
           </div>
 
           <div>
-            <Label className={refundLabelClassName}>Nominal Refund</Label>
+            <Label className="mb-2 block text-sm font-medium text-slate-900">Nominal Refund</Label>
             <Controller
               control={form.control}
               name="amount"
@@ -197,11 +196,11 @@ export default function PurchaseRefundPaymentDetailModal({ open, onClose, refund
           </div>
 
           <div className="space-y-3 pt-1">
-            <Button type="submit" className={`w-full ${refundPrimaryButtonClassName}`} disabled={isPending}>
+            <Button type="submit" size="sm" className="w-full bg-[#1F3B5B] hover:bg-[#1B3450] text-white" disabled={isPending}>
               {isPending ? <LoadingState variant="inline" text={null} /> : null}
               Simpan
             </Button>
-            <Button type="button" variant="outline" className={`w-full ${refundSecondaryButtonClassName}`} onClick={onClose} disabled={isPending}>
+            <Button type="button" variant="outline" size="sm" className="w-full" onClick={onClose} disabled={isPending}>
               Batal
             </Button>
           </div>

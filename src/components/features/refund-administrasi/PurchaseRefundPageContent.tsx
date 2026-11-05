@@ -16,7 +16,6 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { useDeleteRefund, useRefundList, useRefundTransactionDetail } from '@/hooks/useRefundAdministrasi';
 import { toast } from 'sonner';
 import PurchaseRefundFormModal from './PurchaseRefundFormModal';
-import { refundPrimaryButtonClassName } from './purchase-refund.styles';
 import { RefundPaymentProgressBadge } from '@/components/features/refund/RefundPaymentProgressBadge';
 import { getRefundPaymentProgressStatus } from '@/components/features/refund/refund.utils';
 import { useUnitBillings, useCurrentBilling, useBillingHistory } from '@/hooks/useUnitBilling';
@@ -414,13 +413,6 @@ export default function PurchaseRefundPageContent({ transactionId }: { transacti
             </div>
           </div>
         </div>
-
-        <Alert variant="warning">
-          <AlertTriangle />
-          <AlertDescription>
-            Pembayaran refund hanya bisa dibuat setelah refund berhasil disimpan. Jika refund sudah memiliki pembayaran, ubah atau hapus refund sebaiknya dilakukan setelah pembayaran refund disesuaikan terlebih dahulu.
-          </AlertDescription>
-        </Alert>
 
         {isRefunded ? (
           <Alert variant="warning">
