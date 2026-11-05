@@ -2,7 +2,7 @@ import { useEffect, useMemo, useCallback } from 'react';
 import { z } from 'zod';
 import { type FieldErrors, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { CalendarDays, PackageSearch } from 'lucide-react';
+import { PackageSearch } from 'lucide-react';
 import type { UnitTransactionRefund } from '@/@types/refund.type';
 import { useCreateRefund, useRefundDetail, useRefundSelectableItems, useUpdateRefund } from '@/hooks/useRefundAdministrasi';
 import { createRefundSchema, type CreateRefundFormValues } from '@/schemas/refund.schema';
@@ -18,10 +18,13 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { ApiValidationError } from '@/lib/api/response';
 import { toast } from 'sonner';
-import { refundInputClassName, refundLabelClassName, refundPrimaryButtonClassName, refundSecondaryButtonClassName } from './purchase-refund.styles';
 import { currenciesFormat } from '@/components/ui/currenciesFormat';
+import { isKasDisabledForTransaction } from '@/utils/payment-helpers';
 import { Badge } from '@/components/ui/badge';
 import { LoadingState } from '@/components/ui/loading-state';
+import { useCompany } from '@/contexts/CompanyContext';
+import { useKas } from '@/hooks/useKas';
+import { cn } from '@/lib/utils';
 import {
   Form,
   FormControl,
@@ -39,6 +42,11 @@ interface PurchaseRefundFormModalProps {
   entityLabel?: 'pembelian' | 'penjualan';
   mode?: 'create' | 'edit' | 'detail';
 }
+
+type FormValues = CreateRefundFormValues & {
+  status?: string;
+  cash_id?: string;
+};
 
 const displayDate = (value?: string) => {
   if (!value) return '';
@@ -62,24 +70,8 @@ const formatDate = (value?: string) => {
   return date.toLocaleDateString('id-ID');
 };
 
-const parseCurrencyInput = (value: string) => {
-  const numericValue = value.replace(/[^\d]/g, '');
-  return numericValue ? Number(numericValue) : 0;
-};
-
 const getRefundErrorMessage = (error: unknown, titleLabel: string) => {
   const rawMessage = error instanceof Error ? error.message : '';
-  const normalizedMessage = rawMessage.toLowerCase();
-
-  if (
-    normalizedMessage.includes('warehouse') ||
-    normalizedMessage.includes('stock') ||
-    normalizedMessage.includes('in stock') ||
-    normalizedMessage.includes('not received') ||
-    normalizedMessage.includes('not accepted')
-  ) {
-    return 'Data refund belum bisa dibuat karena unit transaksi ini belum diterima dan belum masuk ke stok warehouse. Terima unit terlebih dahulu agar bisa direfund.';
-  }
 
   if (rawMessage === 'Failed to update unit transaction refund') {
     return 'Gagal memperbarui data refund. Backend mengembalikan error saat memproses status item unit.';
@@ -92,12 +84,13 @@ const getRefundErrorMessage = (error: unknown, titleLabel: string) => {
   return rawMessage || `Gagal menyimpan data refund ${titleLabel}`;
 };
 
-const getFirstFormErrorMessage = (errors: FieldErrors<CreateRefundFormValues & { status?: string }>) => {
+const getFirstFormErrorMessage = (errors: FieldErrors<FormValues>) => {
   const messages = [
     errors.refund_amount?.message,
     errors.refund_date?.message,
     errors.unit_transaction_item_detail_ids?.message,
     errors.note?.message,
+    errors.cash_id?.message,
   ];
 
   return messages.find((message): message is string => typeof message === 'string' && message.length > 0) ?? 'Lengkapi data refund terlebih dahulu.';
@@ -116,12 +109,26 @@ export default function PurchaseRefundFormModal({
   const isEdit = resolvedMode === 'edit';
   const isCreate = resolvedMode === 'create';
   const titleLabel = entityLabel === 'penjualan' ? 'penjualan' : 'pembelian';
+
+  const { companyId } = useCompany();
+  const kasQuery = useKas(companyId ?? undefined);
+  const kasOptions = useMemo(() => {
+    const list = kasQuery.data?.data ?? [];
+    return Array.isArray(list) ? list : [];
+  }, [kasQuery.data?.data]);
+
   const createMutation = useCreateRefund();
   const updateMutation = useUpdateRefund();
   const refundDetailQuery = useRefundDetail(!isCreate && refund?.id ? refund.id : undefined);
   const effectiveRefund = refundDetailQuery.data ?? refund ?? null;
   const selectableItemsQuery = useRefundSelectableItems(transactionId);
   const selectableItems = selectableItemsQuery.items;
+
+  // Task 3: Pengecekan unitTransaction.is_usd_transaction === true
+  const unitTransaction = selectableItemsQuery.transactionQuery.data;
+  const isUsdTransaction = Boolean(unitTransaction?.is_usd_transaction);
+  const currencyCode = isUsdTransaction ? 'usd' : 'idr';
+
   const displayedItems = useMemo(() => (isDetail ? effectiveRefund?.items ?? [] : selectableItems), [effectiveRefund?.items, isDetail, selectableItems]);
   const hasWarehouseReadyItems = useMemo(() => displayedItems.some((item) => item.in_stock), [displayedItems]);
   const lessPayment = effectiveRefund
@@ -136,19 +143,36 @@ export default function PurchaseRefundFormModal({
     [effectiveRefund?.items],
   );
 
-  const form = useForm<CreateRefundFormValues & { status?: string }>({
-    resolver: zodResolver(createRefundSchema.extend({ status: z.string().optional() })),
+  const initialCashId = useMemo(() => {
+    if (effectiveRefund?.payments?.[0]?.cash_id) {
+      return String(effectiveRefund.payments[0].cash_id);
+    }
+    if ((effectiveRefund as any)?.cash_id) {
+      return String((effectiveRefund as any).cash_id);
+    }
+    return '';
+  }, [effectiveRefund]);
+
+  const form = useForm<FormValues>({
+    resolver: zodResolver(
+      createRefundSchema.extend({
+        status: z.string().optional(),
+        cash_id: z.string().optional(),
+      }),
+    ),
     defaultValues: {
       unit_transaction_id: transactionId,
       refund_date: displayDate(effectiveRefund?.refund_date) || new Date().toISOString().split('T')[0],
       refund_amount: effectiveRefund?.refund_amount !== undefined && effectiveRefund?.refund_amount !== null ? Number(effectiveRefund.refund_amount) : undefined,
       note: effectiveRefund?.note || '',
       unit_transaction_item_detail_ids: selectedIdsFromRefund,
+      cash_id: initialCashId,
       status: getDisplayStatus(effectiveRefund),
     },
   });
 
-  const selectedIds = form.watch('unit_transaction_item_detail_ids');
+  const rawSelectedIds = form.watch('unit_transaction_item_detail_ids');
+  const selectedIds = useMemo(() => rawSelectedIds ?? [], [rawSelectedIds]);
   const selectedItems = useMemo(
     () => displayedItems.filter((item) => selectedIds.includes(Number(item.id))),
     [displayedItems, selectedIds],
@@ -164,7 +188,6 @@ export default function PurchaseRefundFormModal({
       const status = item.status?.toLowerCase();
       const isRefundedOrReturned = status === 'returned' || status === 'refunded';
       if (isRefundedOrReturned) {
-        // If we are editing, allow deselecting items that were already part of this refund
         if (isEdit && selectedIdsFromRefund.includes(Number(item.id))) {
           return false;
         }
@@ -183,7 +206,9 @@ export default function PurchaseRefundFormModal({
   const allSelected = selectableItemsForRefund.length > 0 && selectableItemsForRefund.every((item) => selectedIds.includes(Number(item.id)));
 
   useEffect(() => {
-    if (!open) return;
+    if (!open) {
+      return;
+    }
 
     form.reset({
       unit_transaction_id: transactionId,
@@ -191,9 +216,10 @@ export default function PurchaseRefundFormModal({
       refund_amount: effectiveRefund?.refund_amount !== undefined && effectiveRefund?.refund_amount !== null ? Number(effectiveRefund.refund_amount) : undefined,
       note: effectiveRefund?.note || '',
       unit_transaction_item_detail_ids: selectedIdsFromRefund,
+      cash_id: initialCashId,
       status: getDisplayStatus(effectiveRefund),
     });
-  }, [effectiveRefund, form, open, selectedIdsFromRefund, transactionId]);
+  }, [effectiveRefund, form, initialCashId, open, selectedIdsFromRefund, transactionId]);
 
   const isPending = createMutation.isPending || updateMutation.isPending;
   const isLoadingItems =
@@ -226,12 +252,7 @@ export default function PurchaseRefundFormModal({
 
   const onSubmit = form.handleSubmit(
     async (values) => {
-      if (!isDetail && (!displayedItems.length || !hasWarehouseReadyItems)) {
-        toast.error('Data refund belum bisa dibuat karena unit transaksi ini belum diterima dan belum masuk ke stok warehouse. Terima unit terlebih dahulu agar bisa direfund.');
-        return;
-      }
-
-      const selectedWarehouseItems = displayedItems.filter((item) => values.unit_transaction_item_detail_ids.includes(Number(item.id)));
+      const selectedWarehouseItems = displayedItems.filter((item) => (values.unit_transaction_item_detail_ids ?? []).includes(Number(item.id)));
       if (!isDetail && selectedWarehouseItems.some((item) => !item.in_stock)) {
         toast.error('Unit yang dipilih belum masuk ke stok warehouse. Pilih unit yang sudah diterima terlebih dahulu.');
         return;
@@ -246,12 +267,16 @@ export default function PurchaseRefundFormModal({
               refund_date: values.refund_date,
               refund_amount: values.refund_amount,
               note: values.note,
-              unit_transaction_item_detail_ids: values.unit_transaction_item_detail_ids,
+              unit_transaction_item_detail_ids: values.unit_transaction_item_detail_ids ?? [],
+              cash_id: values.cash_id || undefined,
             },
           });
           toast.success(`Data refund ${titleLabel} berhasil diperbarui`);
         } else {
-          await createMutation.mutateAsync(values);
+          await createMutation.mutateAsync({
+            ...values,
+            cash_id: values.cash_id || undefined,
+          });
           toast.success(`Data refund ${titleLabel} berhasil ditambahkan`);
         }
         onClose();
@@ -284,42 +309,112 @@ export default function PurchaseRefundFormModal({
           <DialogTitle className="text-[18px] font-semibold text-[#111827]">
             {isDetail ? `Detail Refund ${titleLabel}` : isEdit ? `Ubah Data Refund ${titleLabel}` : `Tambah Data Refund ${titleLabel}`}
           </DialogTitle>
+          {isUsdTransaction ? (
+            <p className="mt-0.5 text-xs font-medium text-emerald-700">Transaksi Menggunakan Mata Uang USD ($)</p>
+          ) : null}
         </DialogHeader>
 
         <Form {...form}>
           <form onSubmit={onSubmit} className="flex min-h-0 flex-1 flex-col overflow-hidden">
-            <div className="min-w-0 flex-1 space-y-5 overflow-y-auto overflow-x-hidden px-6 pb-5 pt-6">
-              <FormField
-                control={form.control}
-                name="refund_date"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="text-sm font-medium">Tanggal Refund</FormLabel>
-                    <FormControl>
-                      <InputDate
-                        readOnly={isDetail}
-                        {...field}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+            <div className="min-w-0 flex-1 space-y-4 overflow-y-auto overflow-x-hidden px-6 py-5">
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <FormField
+                  control={form.control}
+                  name="refund_date"
+                  render={({ field }) => (
+                    <FormItem className="space-y-1.5">
+                      <FormLabel className="text-sm font-medium text-slate-800">Tanggal Refund</FormLabel>
+                      <FormControl>
+                        <InputDate
+                          readOnly={isDetail}
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
 
+                {/* Task 3: Kas field dengan disable jika is_usd_transaction === true dan currency_type != usd */}
+                <FormField
+                  control={form.control}
+                  name="cash_id"
+                  render={({ field }) => (
+                    <FormItem className="space-y-1.5">
+                      <FormLabel className="text-sm font-medium text-slate-800">
+                        Akun Kas / Bank {isUsdTransaction ? '(Khusus USD)' : ''}
+                      </FormLabel>
+                      <Select
+                        value={field.value || ''}
+                        onValueChange={field.onChange}
+                        disabled={isDetail}
+                      >
+                        <FormControl>
+                          <SelectTrigger className="h-9 w-full rounded-md border-slate-300 bg-white text-sm">
+                            <SelectValue placeholder={kasQuery.isLoading ? 'Memuat kas...' : 'Pilih akun kas/bank'} />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {kasOptions.map((k) => {
+                            const isUsdKas = String(k.currency_type || '').toLowerCase() === 'usd';
+                            const isDisabled = isKasDisabledForTransaction(k.currency_type, isUsdTransaction, isDetail);
+                            return (
+                              <SelectItem
+                                key={k.id}
+                                value={String(k.id)}
+                                disabled={isDisabled}
+                              >
+                                <div className="flex items-center justify-between gap-3">
+                                  <span>{k.cash_name || `${k.code} - ${k.description}`}</span>
+                                  <Badge
+                                    variant="outline"
+                                    className={cn(
+                                      'text-[10px] font-semibold uppercase',
+                                      isUsdKas
+                                        ? 'border-emerald-300 bg-emerald-50 text-emerald-700'
+                                        : 'border-slate-200 bg-slate-50 text-slate-600',
+                                    )}
+                                  >
+                                    {k.currency_type || 'IDR'}
+                                  </Badge>
+                                </div>
+                              </SelectItem>
+                            );
+                          })}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+
+              {/* Task 3: Nominal refund dengan simbol USD jika is_usd_transaction === true */}
               <FormField
                 control={form.control}
                 name="refund_amount"
                 render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className={refundLabelClassName}>Nominal Refund</FormLabel>
+                  <FormItem className="space-y-1.5">
+                    <FormLabel className="text-sm font-medium text-slate-800">
+                      Nominal Refund ({isUsdTransaction ? 'USD' : 'IDR'})
+                    </FormLabel>
                     <FormControl>
-                      <MoneyInput name={field.name} value={Number(field.value) || 0} onChangeValue={(val) => field.onChange(val)} onBlur={field.onBlur} disabled={isDetail} placeholder='Rp. ' />
+                      <MoneyInput
+                        name={field.name}
+                        value={Number(field.value) || 0}
+                        onChangeValue={(val) => field.onChange(val)}
+                        onBlur={field.onBlur}
+                        disabled={isDetail}
+                        currency={isUsdTransaction ? 'USD' : 'IDR'}
+                        placeholder={isUsdTransaction ? '$ ' : 'Rp. '}
+                        className="h-9 rounded-md border-slate-300 bg-white text-sm"
+                      />
                     </FormControl>
-                    {!form.formState.errors.refund_amount && (
-                      <p className="mt-2 text-xs text-[#6B7280]">
+                    {!form.formState.errors.refund_amount ? (
+                      <p className="text-xs text-slate-500">
                         Nominal refund diisi manual. Nilai unit terpilih hanya sebagai referensi.
                       </p>
-                    )}
+                    ) : null}
                     <FormMessage />
                   </FormItem>
                 )}
@@ -329,12 +424,13 @@ export default function PurchaseRefundFormModal({
                 control={form.control}
                 name="note"
                 render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className={refundLabelClassName}>Catatan Refund</FormLabel>
+                  <FormItem className="space-y-1.5">
+                    <FormLabel className="text-sm font-medium text-slate-800">Catatan Refund</FormLabel>
                     <FormControl>
                       <Input
                         placeholder="Contoh: refund karena terdapat kecacatan"
                         readOnly={isDetail}
+                        className="h-9 rounded-md border-slate-300 bg-white text-sm"
                         {...field}
                       />
                     </FormControl>
@@ -347,39 +443,49 @@ export default function PurchaseRefundFormModal({
                 control={form.control}
                 name="unit_transaction_item_detail_ids"
                 render={() => (
-                  <FormItem className="min-w-0 space-y-3 flex flex-col">
+                  <FormItem className="min-w-0 space-y-2 flex flex-col">
                     <div className="flex items-center justify-between gap-4">
                       <div className="min-w-0">
-                        <h3 className="text-[14px] font-semibold text-[#111827]">{isDetail ? 'Detail Unit yang Direfund' : 'Pilih Unit yang Direfund'}</h3>
-                        <p className="mt-1 text-xs text-[#6B7280]">{isDetail ? 'Daftar item detail unit yang termasuk ke refund ini.' : 'Checklist manual item detail yang ingin direfund.'}</p>
+                        <h3 className="text-sm font-semibold text-slate-900">
+                          {isDetail ? 'Detail Unit yang Direfund' : 'Pilih Unit yang Direfund'}
+                        </h3>
+                        <p className="text-xs text-slate-500">
+                          {isDetail ? 'Daftar item detail unit yang termasuk ke refund ini.' : 'Checklist manual item detail yang ingin direfund.'}
+                        </p>
                       </div>
-                      <div className="shrink-0 text-sm font-medium text-emerald-700">{currenciesFormat('idr', selectedTotal)}</div>
+                      <div className="shrink-0 text-sm font-semibold text-emerald-700">
+                        Total Unit: {currenciesFormat(currencyCode, selectedTotal)}
+                      </div>
                     </div>
 
                     <FormControl>
-                      <div className="max-w-full overflow-hidden rounded-[12px] border border-[#D9DEE8] bg-white">
+                      <div className="max-w-full overflow-hidden rounded-lg border border-slate-200 bg-white">
                         <div className="max-h-[260px] overflow-y-auto">
                           <div className="max-w-full overflow-x-auto">
                             <Table className="w-max min-w-full">
                               <TableHeader>
-                                <TableRow className="bg-[#E9EEF5] hover:bg-[#E9EEF5]">
+                                <TableRow className="bg-slate-100/70 hover:bg-slate-100/70">
                                   <TableHead className="w-14 px-4 text-center">
-                                    <Checkbox checked={allSelected} disabled={isDetail || selectableItemsForRefund.length === 0} onCheckedChange={(checked) => toggleAllItems(Boolean(checked))} />
+                                    <Checkbox
+                                      checked={allSelected}
+                                      disabled={isDetail || selectableItemsForRefund.length === 0}
+                                      onCheckedChange={(checked) => toggleAllItems(Boolean(checked))}
+                                    />
                                   </TableHead>
-                                  <TableHead className="whitespace-nowrap px-4 text-[#111827]">Warna</TableHead>
-                                  <TableHead className="whitespace-nowrap px-4 text-[#111827]">No. Mesin</TableHead>
-                                  <TableHead className="whitespace-nowrap px-4 text-[#111827]">No. Rangka</TableHead>
-                                  <TableHead className="whitespace-nowrap px-4 text-[#111827]">Status Stok</TableHead>
-                                  <TableHead className="whitespace-nowrap px-4 text-[#111827]">Status Forecast</TableHead>
-                                  <TableHead className="whitespace-nowrap px-4 text-[#111827]">Status Unit</TableHead>
-                                  <TableHead className="whitespace-nowrap px-4 text-[#111827]">Tanggal Dibuat</TableHead>
-                                  <TableHead className="whitespace-nowrap px-4 text-right text-[#111827]">Nilai</TableHead>
+                                  <TableHead className="whitespace-nowrap px-4 text-slate-900">Warna</TableHead>
+                                  <TableHead className="whitespace-nowrap px-4 text-slate-900">No. Mesin</TableHead>
+                                  <TableHead className="whitespace-nowrap px-4 text-slate-900">No. Rangka</TableHead>
+                                  <TableHead className="whitespace-nowrap px-4 text-slate-900">Status Stok</TableHead>
+                                  <TableHead className="whitespace-nowrap px-4 text-slate-900">Status Forecast</TableHead>
+                                  <TableHead className="whitespace-nowrap px-4 text-slate-900">Status Unit</TableHead>
+                                  <TableHead className="whitespace-nowrap px-4 text-slate-900">Tanggal Dibuat</TableHead>
+                                  <TableHead className="whitespace-nowrap px-4 text-right text-slate-900">Nilai</TableHead>
                                 </TableRow>
                               </TableHeader>
                               <TableBody>
                                 {isLoadingItems ? (
                                   <TableRow>
-                                    <TableCell colSpan={9} className="h-28 text-center text-[#6B7280]">
+                                    <TableCell colSpan={9} className="h-28 text-center text-slate-500">
                                       <div className="flex items-center justify-center gap-2">
                                         <LoadingState variant="inline" text={null} />
                                         Memuat unit transaksi...
@@ -388,35 +494,47 @@ export default function PurchaseRefundFormModal({
                                   </TableRow>
                                 ) : displayedItems.length > 0 ? (
                                   displayedItems.map((item) => (
-                                    <TableRow key={item.id} className="border-[#E5E7EB] hover:bg-white">
-                                      <TableCell className="px-4 py-3 text-center">
+                                    <TableRow key={item.id} className="border-slate-200 hover:bg-slate-50/50">
+                                      <TableCell className="px-4 py-2.5 text-center">
                                         <Checkbox
                                           checked={selectedIds.includes(Number(item.id))}
                                           disabled={isItemDisabled(item)}
                                           onCheckedChange={(checked) => toggleItem(Number(item.id), Boolean(checked))}
                                         />
                                       </TableCell>
-                                      <TableCell className="whitespace-nowrap px-4 py-3 text-sm text-[#111827]">{item.color || '-'}</TableCell>
-                                      <TableCell className="whitespace-nowrap px-4 py-3 text-sm text-[#111827]">
+                                      <TableCell className="whitespace-nowrap px-4 py-2.5 text-sm text-slate-800">{item.color || '-'}</TableCell>
+                                      <TableCell className="whitespace-nowrap px-4 py-2.5 text-sm text-slate-800">
                                         <CopyBox text={item.machine_number || '-'} />
                                       </TableCell>
-                                      <TableCell className="whitespace-nowrap px-4 py-3 text-sm text-[#111827]">
+                                      <TableCell className="whitespace-nowrap px-4 py-2.5 text-sm text-slate-800">
                                         <CopyBox text={item.chassis_number || '-'} />
                                       </TableCell>
-                                      <TableCell className="whitespace-nowrap px-4 py-3 text-sm text-[#111827]">{item.in_stock ? 'Tersedia' : 'Tidak tersedia'}</TableCell>
-                                      <TableCell className="whitespace-nowrap px-4 py-3 text-sm text-[#111827]">{item.is_forecast ? 'Forecast' : 'Normal'}</TableCell>
-                                      <TableCell className="whitespace-nowrap px-4 py-3 text-sm text-[#111827]">
-                                        <Badge variant="outline" className={`${item.status === 'refunded' || item.status === 'returned' ? 'border-orange-200 bg-orange-50 text-orange-700' : item.status === 'receive' ? 'border-emerald-200 bg-emerald-50 text-emerald-700' : 'border-gray-200 bg-gray-50 text-gray-700'} font-semibold`}>
+                                      <TableCell className="whitespace-nowrap px-4 py-2.5 text-sm text-slate-800">{item.in_stock ? 'Tersedia' : 'Tidak tersedia'}</TableCell>
+                                      <TableCell className="whitespace-nowrap px-4 py-2.5 text-sm text-slate-800">{item.is_forecast ? 'Forecast' : 'Normal'}</TableCell>
+                                      <TableCell className="whitespace-nowrap px-4 py-2.5 text-sm text-slate-800">
+                                        <Badge
+                                          variant="outline"
+                                          className={cn(
+                                            'font-semibold',
+                                            item.status === 'refunded' || item.status === 'returned'
+                                              ? 'border-orange-200 bg-orange-50 text-orange-700'
+                                              : item.status === 'receive'
+                                                ? 'border-emerald-200 bg-emerald-50 text-emerald-700'
+                                                : 'border-slate-200 bg-slate-50 text-slate-700',
+                                          )}
+                                        >
                                           {item.status}
                                         </Badge>
                                       </TableCell>
-                                      <TableCell className="whitespace-nowrap px-4 py-3 text-sm text-[#111827]">{formatDate(item.created_at)}</TableCell>
-                                      <TableCell className="whitespace-nowrap px-4 py-3 text-right text-sm font-medium text-[#111827]">{currenciesFormat('idr', Number(item.price ?? 0))}</TableCell>
+                                      <TableCell className="whitespace-nowrap px-4 py-2.5 text-sm text-slate-800">{formatDate(item.created_at)}</TableCell>
+                                      <TableCell className="whitespace-nowrap px-4 py-2.5 text-right text-sm font-medium text-slate-900">
+                                        {currenciesFormat(currencyCode, Number(item.price ?? 0))}
+                                      </TableCell>
                                     </TableRow>
                                   ))
                                 ) : (
                                   <TableRow>
-                                    <TableCell colSpan={9} className="h-28 text-center text-[#6B7280]">
+                                    <TableCell colSpan={9} className="h-28 text-center text-slate-500">
                                       <div className="flex flex-col items-center justify-center gap-2">
                                         <PackageSearch className="h-5 w-5" />
                                         {hasWarehouseReadyItems
@@ -438,31 +556,31 @@ export default function PurchaseRefundFormModal({
               />
 
               {isEdit ? (
-                <>
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
                   <div>
-                    <Label className={refundLabelClassName}>Kurang Bayar</Label>
-                    <Input readOnly className={refundInputClassName} value={currenciesFormat('idr', lessPayment)} />
+                    <Label className="mb-1.5 block text-sm font-medium text-slate-800">Kurang Bayar</Label>
+                    <Input readOnly className="h-9 rounded-md border-slate-300 bg-slate-50 text-sm" value={currenciesFormat(currencyCode, lessPayment)} />
                   </div>
 
                   <div>
-                    <Label className={refundLabelClassName}>QTY</Label>
-                    <Input readOnly className={refundInputClassName} value={String(qty)} />
+                    <Label className="mb-1.5 block text-sm font-medium text-slate-800">QTY</Label>
+                    <Input readOnly className="h-9 rounded-md border-slate-300 bg-slate-50 text-sm" value={String(qty)} />
                   </div>
 
                   <FormField
                     control={form.control}
                     name="status"
                     render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className={refundLabelClassName}>Status</FormLabel>
+                      <FormItem className="space-y-1.5">
+                        <FormLabel className="text-sm font-medium text-slate-800">Status</FormLabel>
                         <Select
                           value={field.value || 'belum-dibayar'}
                           onValueChange={field.onChange}
                           disabled={isDetail}
                         >
                           <FormControl>
-                            <SelectTrigger className={refundInputClassName}>
-                              <SelectValue placeholder="Select an item" />
+                            <SelectTrigger className="h-9 rounded-md border-slate-300 bg-white text-sm">
+                              <SelectValue placeholder="Pilih status" />
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
@@ -475,23 +593,24 @@ export default function PurchaseRefundFormModal({
                       </FormItem>
                     )}
                   />
-                </>
+                </div>
               ) : null}
             </div>
 
-            <div className="shrink-0 space-y-3 border-t border-slate-200 bg-white px-6 pb-7 pt-4">
+            {/* Note: Buat button HANYA ukuran sm, jangan ngide pake ukuran lainnya */}
+            <div className="shrink-0 border-t border-slate-200 bg-slate-50/80 px-6 py-3 flex flex-row items-center justify-end gap-2">
               {isDetail ? (
-                <Button type="button" variant="outline" className={`w-full ${refundSecondaryButtonClassName}`} onClick={onClose}>
+                <Button type="button" variant="outline" size="sm" onClick={onClose}>
                   Tutup
                 </Button>
               ) : (
                 <>
-                  <Button type="submit" className={`w-full ${refundPrimaryButtonClassName}`} disabled={isPending}>
+                  <Button type="button" variant="outline" size="sm" onClick={onClose} disabled={isPending}>
+                    Batal
+                  </Button>
+                  <Button type="submit" size="sm" className="bg-[#1F3B5B] hover:bg-[#1B3450] text-white" disabled={isPending}>
                     {isPending ? <LoadingState variant="inline" text={null} /> : null}
                     Simpan
-                  </Button>
-                  <Button type="button" variant="outline" className={`w-full ${refundSecondaryButtonClassName}`} onClick={onClose} disabled={isPending}>
-                    Batal
                   </Button>
                 </>
               )}

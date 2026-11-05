@@ -154,3 +154,76 @@ export function getUsdCostsFromItem(item: any): UsdCostsBreakdown {
     totalUsdCost: totalCost > 0 ? totalCost : sumOfParts,
   };
 }
+
+export function isUnitUsdTransaction(item: any): boolean {
+  return Boolean(
+    item?.is_usd_transaction === true ||
+    item?.is_usd_transaction === 1 ||
+    String(item?.is_usd_transaction) === 'true'
+  );
+}
+
+export function getUnitTransactionBrutoUsd(item: any): number {
+  const explicit = Number(
+    item?.unit_transaction_price_usd_total && Number(item.unit_transaction_price_usd_total) > 0
+      ? item.unit_transaction_price_usd_total
+      : (item?.transaction_price_usd_total && Number(item.transaction_price_usd_total) > 0
+        ? item.transaction_price_usd_total
+        : (item?.unit_transaction_price_usd_total_actual && Number(item.unit_transaction_price_usd_total_actual) > 0
+          ? item.unit_transaction_price_usd_total_actual
+          : (item?.price_usd && Number(item.price_usd) > 0
+            ? item.price_usd
+            : 0)))
+  );
+
+  const items: any[] = item?.unit_transaction_items ?? [];
+  const baseItemsUsd = items.reduce((sum, it) => {
+    const p = Number(
+      it.price_usd && Number(it.price_usd) > 0
+        ? it.price_usd
+        : (Number(it.price_per_unit_usd ?? 0) * Number(it.qty_total ?? it.qty ?? 1))
+    );
+    return sum + p;
+  }, 0);
+
+  const additionalCost = getUsdCostsFromItem(item).totalUsdCost;
+  const calculated = baseItemsUsd + additionalCost;
+
+  return Math.max(explicit, calculated);
+}
+
+export function getUnitTransactionOtherFeeUsd(item: any): number {
+  return getUsdCostsFromItem(item).totalUsdCost;
+}
+
+export function getUnitTransactionRemainingPaymentUsd(item: any): number {
+  if (item?.isPaid || item?.unit_transaction_billing?.is_paid || item?.billing_summary?.is_paid) {
+    return 0;
+  }
+  if (item?.billing_summary?.remaining_payment_usd !== undefined && item?.billing_summary?.remaining_payment_usd !== null) {
+    return Number(item.billing_summary.remaining_payment_usd);
+  }
+  const brutoUsd = getUnitTransactionBrutoUsd(item);
+  const paidUsd = Number(item?.billing_summary?.total_paid_usd ?? item?.billing_summary?.total_usd_payment ?? 0);
+  return Math.max(0, brutoUsd - paidUsd);
+}
+
+export function getUnitTransactionRemainingPayment(item: any): number {
+  if (isUnitUsdTransaction(item)) {
+    return getUnitTransactionRemainingPaymentUsd(item);
+  }
+  if (item?.isPaid) return Number(item.remainingPayment || 0);
+  if (!item?.remainingPayment) return Number(item.transaction_bruto_total || 0);
+  return Number(item.remainingPayment || 0);
+}
+
+export function isKasDisabledForTransaction(
+  kasCurrencyType?: string | null,
+  isUsdTransaction?: boolean,
+  isDetail = false,
+): boolean {
+  if (isDetail) return true;
+  const isUsdKas = String(kasCurrencyType || '').toLowerCase() === 'usd';
+  return Boolean(isUsdTransaction ? !isUsdKas : isUsdKas);
+}
+

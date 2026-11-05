@@ -13,7 +13,9 @@ import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
 import { MoneyInput } from '@/components/ui/money-input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useCompany } from '@/contexts/CompanyContext';
+import { useKas } from '@/hooks/useKas';
 import { usePurchases, usePurchaseById, useUnitTransactionItemDetailsData } from '@/hooks/usePurchase';
 import { useCreateRefund, useUpdateRefund, useRefundDetail } from '@/hooks/useRefundAdministrasi';
 import BaseTable, { ColumnDef } from '@/components/ui/base-table';
@@ -23,13 +25,16 @@ import { toast } from 'sonner';
 import { useDebouncedValue } from '@/hooks/useDebouncedValue';
 import { ReferenceLink } from '@/components/ui/reference-link';
 import { LoadingState } from '@/components/ui/loading-state';
+import { isKasDisabledForTransaction } from '@/utils/payment-helpers';
+import { cn } from '@/lib/utils';
 
 const refundFormSchema = z.object({
   unit_transaction_id: z.string().min(1, 'Transaksi harus dipilih'),
   refund_date: z.string().min(1, 'Tanggal refund harus diisi'),
   refund_amount: z.number().min(1, 'Nominal refund harus lebih dari 0'),
   note: z.string().min(1, 'Catatan / Alasan refund harus diisi'),
-  unit_transaction_item_detail_ids: z.array(z.number()).optional().default([]),
+  unit_transaction_item_detail_ids: z.array(z.number()),
+  cash_id: z.string().optional(),
 });
 
 type RefundFormValues = z.infer<typeof refundFormSchema>;
@@ -43,6 +48,11 @@ export default function PurchaseRefundFormPageContent({ mode, refundId }: Purcha
   const router = useRouter();
   const slug = typeof router.query.slug === 'string' ? router.query.slug : '';
   const { companyId } = useCompany();
+  const kasQuery = useKas(companyId ?? undefined);
+  const kasOptions = useMemo(() => {
+    const list = kasQuery.data?.data ?? [];
+    return Array.isArray(list) ? list : [];
+  }, [kasQuery.data?.data]);
 
   // Search filter states for items checkbox table
   const [filterColor, setFilterColor] = useState('');
@@ -68,14 +78,18 @@ export default function PurchaseRefundFormPageContent({ mode, refundId }: Purcha
       refund_amount: 0,
       note: '',
       unit_transaction_item_detail_ids: [],
+      cash_id: '',
     },
   });
 
   const selectedTransactionId = form.watch('unit_transaction_id');
-  const selectedIds = form.watch('unit_transaction_item_detail_ids');
+  const rawSelectedIds = form.watch('unit_transaction_item_detail_ids');
+  const selectedIds = useMemo(() => rawSelectedIds ?? [], [rawSelectedIds]);
 
   // Load Parent Transaction Details to Map Prices
   const { data: parentPurchase, isLoading: isLoadingParent } = usePurchaseById(selectedTransactionId);
+  const isUsdTransaction = Boolean(parentPurchase?.is_usd_transaction);
+  const currencyCode = isUsdTransaction ? 'usd' : 'idr';
 
   // Fetch Items from requested endpoint: /wapi/transaction/unit-transaction/unit-transaction/:id/get-item-details
   const { data: itemDetails = [], isLoading: isLoadingItems } = useUnitTransactionItemDetailsData(
@@ -104,6 +118,7 @@ export default function PurchaseRefundFormPageContent({ mode, refundId }: Purcha
         refund_amount: Number(existingRefund.refund_amount || 0),
         note: existingRefund.note || '',
         unit_transaction_item_detail_ids: (existingRefund.items ?? []).map((item) => Number(item.pivot?.unit_transaction_item_detail_id || item.id)),
+        cash_id: String(existingRefund.cash_id ?? existingRefund.payments?.[0]?.cash_id ?? ''),
       });
     }
   }, [existingRefund, mode, form]);
@@ -118,12 +133,16 @@ export default function PurchaseRefundFormPageContent({ mode, refundId }: Purcha
         (item: any) => Number(item.id) === Number(detail.unit_transaction_item_id)
       );
 
+      const resolvedPrice = isUsdTransaction
+        ? Number(detail.price_usd ?? parentItem?.price_per_unit_usd ?? parentItem?.price_usd ?? detail.price ?? 0)
+        : Number(detail.price !== undefined ? detail.price : (parentItem?.price ?? 0));
+
       return {
         ...detail,
-        price: detail.price !== undefined ? Number(detail.price) : Number(parentItem?.price ?? 0),
+        price: resolvedPrice,
       };
     });
-  }, [itemDetails, parentPurchase]);
+  }, [itemDetails, parentPurchase, isUsdTransaction]);
 
   // Calculations for Summary
   const selectedItemsPriceSum = useMemo(() => {
@@ -160,6 +179,7 @@ export default function PurchaseRefundFormPageContent({ mode, refundId }: Purcha
           refund_amount: values.refund_amount,
           note: values.note,
           unit_transaction_item_detail_ids: values.unit_transaction_item_detail_ids,
+          cash_id: values.cash_id || undefined,
         });
         toast.success('Data refund berhasil dibuat');
         newRefundId = response.id;
@@ -173,6 +193,7 @@ export default function PurchaseRefundFormPageContent({ mode, refundId }: Purcha
             refund_amount: values.refund_amount,
             note: values.note,
             unit_transaction_item_detail_ids: values.unit_transaction_item_detail_ids,
+            cash_id: values.cash_id || undefined,
           },
         });
         toast.success('Data refund berhasil diperbarui');
@@ -239,10 +260,10 @@ export default function PurchaseRefundFormPageContent({ mode, refundId }: Purcha
         header: 'HARGA',
         accessorKey: 'price',
         sortable: true,
-        cell: (item) => currenciesFormat('idr', Number(item.price || 0)),
+        cell: (item) => currenciesFormat(currencyCode, Number(item.price || 0)),
       },
     ],
-    [slug, selectedIds, allSelected, toggleAllItems, toggleItem]
+    [slug, selectedIds, allSelected, toggleAllItems, toggleItem, currencyCode]
   );
 
   return (
@@ -264,8 +285,8 @@ export default function PurchaseRefundFormPageContent({ mode, refundId }: Purcha
         {/* HEADLINE & ACTIONS */}
         <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
           <div className="flex items-center gap-4">
-            <Button onClick={() => router.push(`/dashboard/${slug}/transaksi/refund-beli?unit_transaction_id=${parentPurchase?.id}`)} variant="ghost" size="icon" className="h-10 w-10 rounded-md border border-slate-200 hover:bg-slate-50 cursor-pointer">
-              <ArrowLeft className="h-5 w-5 text-slate-700" />
+            <Button onClick={() => router.push(`/dashboard/${slug}/transaksi/refund-beli?unit_transaction_id=${parentPurchase?.id}`)} variant="ghost" size="sm" className="h-9 w-9 rounded-md border border-slate-200 hover:bg-slate-50 cursor-pointer p-0">
+              <ArrowLeft className="h-4 w-4 text-slate-700" />
             </Button>
             <div className="space-y-1">
               <h1 className="text-2xl font-semibold text-slate-900">Tambah Data Refund Pembelian</h1>
@@ -305,23 +326,69 @@ export default function PurchaseRefundFormPageContent({ mode, refundId }: Purcha
                 )}
               </div>
 
+              {/* Cash Account Select */}
+              <div className="space-y-2">
+                <Label>Akun Kas / Bank (Pengembalian Dana)</Label>
+                <Select
+                  value={form.watch('cash_id') || ''}
+                  onValueChange={(val) => form.setValue('cash_id', val)}
+                >
+                  <SelectTrigger className="h-9 w-full rounded-md border-slate-300 bg-white text-sm">
+                    <SelectValue placeholder={kasQuery.isLoading ? 'Memuat kas...' : 'Pilih akun kas/bank'} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {kasOptions.map((k) => {
+                      const isUsdKas = String(k.currency_type || '').toLowerCase() === 'usd';
+                      const isDisabled = isKasDisabledForTransaction(k.currency_type, isUsdTransaction, false);
+                      return (
+                        <SelectItem
+                          key={k.id}
+                          value={String(k.id)}
+                          disabled={isDisabled}
+                        >
+                          <div className="flex items-center justify-between gap-3">
+                            <span>{k.cash_name || `${k.code} - ${k.description}`}</span>
+                            <Badge
+                              variant="outline"
+                              className={cn(
+                                'text-[10px] font-semibold uppercase',
+                                isUsdKas
+                                  ? 'border-emerald-300 bg-emerald-50 text-emerald-700'
+                                  : 'border-slate-200 bg-slate-50 text-slate-600',
+                              )}
+                            >
+                              {k.currency_type || 'IDR'}
+                            </Badge>
+                          </div>
+                        </SelectItem>
+                      );
+                    })}
+                  </SelectContent>
+                </Select>
+                {form.formState.errors.cash_id && (
+                  <p className="text-xs text-red-500">{form.formState.errors.cash_id.message}</p>
+                )}
+              </div>
+
               {/* Refund Amount Input */}
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
-                  <Label>Nominal Refund</Label>
+                  <Label>Nominal Refund ({isUsdTransaction ? 'USD' : 'IDR'})</Label>
                   {selectedItemsPriceSum > 0 && (
                     <button
                       type="button"
                       onClick={() => form.setValue('refund_amount', selectedItemsPriceSum)}
                       className="text-xs text-blue-600 font-medium hover:underline"
                     >
-                      Gunakan Total Unit ({currenciesFormat('idr', selectedItemsPriceSum)})
+                      Gunakan Total Unit ({currenciesFormat(currencyCode, selectedItemsPriceSum)})
                     </button>
                   )}
                 </div>
                 <MoneyInput
                   value={form.watch('refund_amount')}
                   onChangeValue={(val) => form.setValue('refund_amount', val)}
+                  currency={isUsdTransaction ? 'USD' : 'IDR'}
+                  placeholder={isUsdTransaction ? '$ ' : 'Rp. '}
                 />
                 {form.formState.errors.refund_amount && (
                   <p className="text-xs text-red-500">{form.formState.errors.refund_amount.message}</p>
@@ -350,15 +417,16 @@ export default function PurchaseRefundFormPageContent({ mode, refundId }: Purcha
                 </div>
                 <div className="flex justify-between">
                   <span>Total Harga Unit:</span>
-                  <span className="font-semibold text-slate-900">{currenciesFormat('idr', selectedItemsPriceSum)}</span>
+                  <span className="font-semibold text-slate-900">{currenciesFormat(currencyCode, selectedItemsPriceSum)}</span>
                 </div>
               </div>
 
               {/* Actions Save */}
               <Button
+                size="sm"
                 onClick={form.handleSubmit(onSubmit)}
                 disabled={createMutation.isPending || updateMutation.isPending}
-                className="gap-2 py-6 rounded-md btn-primary!"
+                className="gap-2 py-5 rounded-md btn-primary!"
               >
                 {createMutation.isPending || updateMutation.isPending ? (
                   <LoadingState variant="inline" text={null} />
