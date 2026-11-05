@@ -355,7 +355,7 @@ export default function PurchaseDetailPage() {
       <DashboardLayout>
         <div className="flex h-[50vh] flex-col items-center justify-center gap-4">
           <p className="text-muted-foreground">Pembelian tidak ditemukan</p>
-          <Button onClick={() => router.push(`/dashboard/${slug}/transaksi/pembelian-unit`)}>Kembali ke List</Button>
+          <Button size="sm" onClick={() => router.push(`/dashboard/${slug}/transaksi/pembelian-unit`)}>Kembali ke List</Button>
         </div>
       </DashboardLayout>
     );
@@ -389,22 +389,25 @@ export default function PurchaseDetailPage() {
           actions={
             <>
               <Button
-                disabled={isRefunded || !canEdit}
+                size="sm"
+                disabled={isPaid ? false : !canEdit}
                 variant="default"
                 onClick={() => router.push(`/dashboard/${slug}/transaksi/pembelian-unit/${purchase.id}/payment`)}>
                 <CreditCard className="mr-2 h-4 w-4" />
                 {isPaid ? 'Sudah Dibayar' : 'Bayar'}
               </Button>
               <Button
+                size="sm"
                 type="button"
                 variant="success"
-                disabled={!canEdit || isPaid || isRefunded || updateBillingIsPaid.isPending || purchase?.unit_transaction_billing == null}
+                disabled={!canEdit || isPaid || updateBillingIsPaid.isPending || purchase?.unit_transaction_billing == null}
                 onClick={() => setIsMarkAsPaidDialogOpen(true)}
               >
                 <CheckCircle2 className="mr-2 h-4 w-4" />
                 {isPaid ? 'Sudah Lunas' : 'Tandai Lunas'}
               </Button>
               <Button
+                size="sm"
                 variant="default"
                 disabled={!canReceive || !canEdit}
                 onClick={() => setIsReceiveDialogOpen(true)}
@@ -413,6 +416,7 @@ export default function PurchaseDetailPage() {
                 {receiveButtonText}
               </Button>
               <Button
+                size="sm"
                 type="button"
                 variant="outline"
                 onClick={handleOpenPrint}
@@ -421,6 +425,7 @@ export default function PurchaseDetailPage() {
                 Print
               </Button>
               <Button
+                size="sm"
                 variant="outline"
                 disabled={!canEdit || isPaid}
                 onClick={() => router.push(`/dashboard/${slug}/transaksi/pembelian-unit/edit/${purchase?.id}`)}>
@@ -436,6 +441,7 @@ export default function PurchaseDetailPage() {
                         <TooltipTrigger asChild>
                           <span className="inline-block">
                             <Button
+                              size="sm"
                               variant="outline"
                               disabled
                               className="pointer-events-none opacity-50 border-rose-200 text-rose-700 bg-rose-50"
@@ -454,6 +460,7 @@ export default function PurchaseDetailPage() {
                 }
                 return (
                   <Button
+                    size="sm"
                     variant="outline"
                     className="border-amber-300 text-amber-700 hover:bg-amber-50"
                     onClick={() => router.push(`/dashboard/${slug}/transaksi/pembelian-unit/${purchase.id}/refund`)}
@@ -470,9 +477,9 @@ export default function PurchaseDetailPage() {
         {isRefunded ? (
           <Alert variant="warning">
             <AlertTriangle />
-            <AlertTitle>Transaksi Sudah Direfund</AlertTitle>
+            <AlertTitle>Transaksi Memiliki Riwayat Refund</AlertTitle>
             <AlertDescription>
-              Status stok saat ini adalah <span className="font-mono font-medium bg-amber-100 px-1.5 py-0.5 rounded text-amber-900">inbound_return</span>. Proses Proses Barang dinonaktifkan.
+              Status stok saat ini mencakup <span className="font-mono font-medium bg-amber-100 px-1.5 py-0.5 rounded text-amber-900">inbound_return</span>.
             </AlertDescription>
           </Alert>
         ) : null}
@@ -520,6 +527,7 @@ export default function PurchaseDetailPage() {
           </DialogHeader>
           <DialogFooter className="mt-4 flex justify-end gap-2">
             <Button
+              size="sm"
               type="button"
               variant="outline"
               onClick={() => setIsMarkAsPaidDialogOpen(false)}
@@ -528,6 +536,7 @@ export default function PurchaseDetailPage() {
               Batal
             </Button>
             <Button
+              size="sm"
               type="button"
               className="bg-emerald-600 hover:bg-emerald-700 text-white"
               onClick={handleMarkAsPaid}
@@ -560,6 +569,7 @@ export default function PurchaseDetailPage() {
           </DialogHeader>
           <DialogFooter className="mt-4 flex justify-end gap-2">
             <Button
+              size="sm"
               type="button"
               variant="outline"
               onClick={() => setIsReceiveDialogOpen(false)}
@@ -568,6 +578,7 @@ export default function PurchaseDetailPage() {
               Batal
             </Button>
             <Button
+              size="sm"
               type="button"
               className="bg-blue-600 hover:bg-blue-700 text-white"
               onClick={handleReceipt}

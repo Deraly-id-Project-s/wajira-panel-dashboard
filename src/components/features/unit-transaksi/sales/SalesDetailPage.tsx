@@ -367,7 +367,7 @@ export default function SalesDetailPage() {
       <DashboardLayout>
         <div className="flex h-[50vh] flex-col items-center justify-center gap-4">
           <p className="text-muted-foreground">Penjualan tidak ditemukan</p>
-          <Button onClick={() => router.push(`/dashboard/${slug}/transaksi/penjualan-unit`)}>Kembali ke List</Button>
+          <Button size="sm" onClick={() => router.push(`/dashboard/${slug}/transaksi/penjualan-unit`)}>Kembali ke List</Button>
         </div>
       </DashboardLayout>
     );
@@ -400,20 +400,27 @@ export default function SalesDetailPage() {
           }
           actions={
             <>
-              <Button disabled={isRefunded || !canCreate} variant="default" onClick={handlePayment}>
+              <Button
+                size="sm"
+                disabled={isPaid ? false : (!canCreate && !canEdit)}
+                variant="default"
+                onClick={handlePayment}
+              >
                 <CreditCard className="mr-2 h-4 w-4" />
                 {isPaid ? 'Sudah Dibayar' : 'Bayar'}
               </Button>
               <Button
+                size="sm"
                 type="button"
                 variant="success"
-                disabled={isPaid || isRefunded || updateBillingIsPaid.isPending || sales?.unit_transaction_billing == null || (!canCreate && !canEdit)}
+                disabled={isPaid || updateBillingIsPaid.isPending || sales?.unit_transaction_billing == null || (!canCreate && !canEdit)}
                 onClick={() => setIsMarkAsPaidDialogOpen(true)}
               >
                 <CheckCircle2 className="mr-2 h-4 w-4" />
                 {isPaid ? 'Sudah Lunas' : 'Tandai Lunas'}
               </Button>
               <Button
+                size="sm"
                 variant="default"
                 disabled={!canDeliver || !canCreate}
                 onClick={() => setIsDeliveryDialogOpen(true)}
@@ -421,6 +428,7 @@ export default function SalesDetailPage() {
                 {deliveryButtonText}
               </Button>
               <Button
+                size="sm"
                 type="button"
                 variant="outline"
                 onClick={handleOpenPrint}
@@ -429,6 +437,7 @@ export default function SalesDetailPage() {
                 Print
               </Button>
               <Button
+                size="sm"
                 variant="outline"
                 disabled={!canEdit || isPaid}
                 onClick={() => router.push(`/dashboard/${slug}/transaksi/penjualan-unit/edit/${sales?.id}`)}>
@@ -444,6 +453,7 @@ export default function SalesDetailPage() {
                         <TooltipTrigger asChild>
                           <span className="inline-block">
                             <Button
+                              size="sm"
                               variant="outline"
                               disabled
                               className="pointer-events-none opacity-50 border-rose-200 text-rose-700 bg-rose-50"
@@ -462,6 +472,7 @@ export default function SalesDetailPage() {
                 }
                 return (
                   <Button
+                    size="sm"
                     variant="outline"
                     className="border-amber-300 text-amber-700 hover:bg-amber-50"
                     onClick={() => router.push(`/dashboard/${slug}/transaksi/penjualan-unit/${sales.id}/refund`)}
@@ -478,9 +489,9 @@ export default function SalesDetailPage() {
         {isRefunded ? (
           <Alert variant="warning">
             <AlertTriangle />
-            <AlertTitle>Transaksi Sudah Direfund</AlertTitle>
+            <AlertTitle>Transaksi Memiliki Riwayat Refund</AlertTitle>
             <AlertDescription>
-              Status stok saat ini adalah <span className="font-mono font-medium bg-amber-100 px-1.5 py-0.5 rounded text-amber-900">outbound_return</span>. Proses Proses Barang dinonaktifkan.
+              Status stok saat ini mencakup <span className="font-mono font-medium bg-amber-100 px-1.5 py-0.5 rounded text-amber-900">outbound_return</span>.
             </AlertDescription>
           </Alert>
         ) : null}
@@ -536,6 +547,7 @@ export default function SalesDetailPage() {
           </DialogHeader>
           <DialogFooter className="mt-4 flex justify-end gap-2">
             <Button
+              size="sm"
               type="button"
               variant="outline"
               onClick={() => setIsMarkAsPaidDialogOpen(false)}
@@ -544,6 +556,7 @@ export default function SalesDetailPage() {
               Batal
             </Button>
             <Button
+              size="sm"
               type="button"
               className="bg-emerald-600 hover:bg-emerald-700 text-white"
               onClick={handleMarkAsPaid}
@@ -576,6 +589,7 @@ export default function SalesDetailPage() {
           </DialogHeader>
           <DialogFooter className="mt-4 flex justify-end gap-2">
             <Button
+              size="sm"
               type="button"
               variant="outline"
               onClick={() => setIsDeliveryDialogOpen(false)}
@@ -584,6 +598,7 @@ export default function SalesDetailPage() {
               Batal
             </Button>
             <Button
+              size="sm"
               type="button"
               className="bg-blue-600 hover:bg-blue-700 text-white"
               onClick={handleDelivery}
