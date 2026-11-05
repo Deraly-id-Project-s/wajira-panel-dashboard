@@ -440,7 +440,7 @@ export default function UnitPurchaseDetailPage() {
       <DashboardLayout>
         <div className="flex h-[50vh] flex-col items-center justify-center gap-4">
           <p className="text-muted-foreground">Data detail unit tidak ditemukan</p>
-          <Button onClick={() => router.push(`/dashboard/${slug}/transaksi/pembelian-unit/${purchaseId}`)}>Kembali ke Detail Pembelian</Button>
+          <Button size="sm" onClick={() => router.push(`/dashboard/${slug}/transaksi/pembelian-unit/${purchaseId}`)}>Kembali ke Detail Pembelian</Button>
         </div>
       </DashboardLayout>
     );
@@ -523,6 +523,7 @@ export default function UnitPurchaseDetailPage() {
                     <div className="flex flex-col sm:flex-row items-center gap-2 w-full sm:w-auto">
                       {selectedIds.size > 0 && !isPaid && (
                         <Button
+                          size="sm"
                           onClick={() => setOpenMoveModal(true)}
                           variant="outline"
                           className="w-full sm:w-auto border-blue-600 text-blue-600 hover:bg-blue-50"
@@ -533,6 +534,7 @@ export default function UnitPurchaseDetailPage() {
                       )}
                       {selectedIds.size > 0 && canDelete && !isPaid && (
                         <Button
+                          size="sm"
                           onClick={() => setOpenBulkDeleteModal(true)}
                           disabled={isBulkDeleting}
                           variant="destructive"
@@ -544,11 +546,11 @@ export default function UnitPurchaseDetailPage() {
                       )}
                       {canCreate && (
                         <>
-                          <Button onClick={() => setOpenImport(true)} disabled={qty === details.length} variant="outline">
+                          <Button size="sm" onClick={() => setOpenImport(true)} disabled={qty === details.length} variant="outline">
                             <Upload className="h-4 w-4 mr-2" />
                             Import
                           </Button>
-                          <Button onClick={openCreateForm} disabled={qty === details.length || !qty} variant="default">
+                          <Button size="sm" onClick={openCreateForm} disabled={qty === details.length || !qty} variant="default">
                             <Plus className="h-4 w-4 mr-2" />
                             Tambah Detail Unit
                           </Button>

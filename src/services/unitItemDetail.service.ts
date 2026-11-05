@@ -33,6 +33,8 @@ type UnitTransactionItemApiModel = {
   price_per_unit_usd?: number | string;
   price_discount?: number | string;
   price_usd_discount?: number | string;
+  price_total_usd?: number | string;
+  price_usd_total?: number | string;
   total_usd_cost?: number | string;
   usd_cost_freight_total?: number | string;
   usd_cost_box_packing_total?: number | string;
@@ -170,6 +172,8 @@ const mapUnitTransactionItem = (item: UnitTransactionItemApiModel): UnitTransact
   price_per_unit_usd: item.price_per_unit_usd !== undefined ? toNumber(item.price_per_unit_usd) : undefined,
   price_discount: item.price_discount !== undefined ? toNumber(item.price_discount) : 0,
   price_usd_discount: item.price_usd_discount !== undefined ? toNumber(item.price_usd_discount) : 0,
+  price_total_usd: item.price_total_usd !== undefined ? toNumber(item.price_total_usd) : (item.price_usd_total !== undefined ? toNumber(item.price_usd_total) : undefined),
+  price_usd_total: item.price_usd_total !== undefined ? toNumber(item.price_usd_total) : (item.price_total_usd !== undefined ? toNumber(item.price_total_usd) : undefined),
   total_usd_cost: item.total_usd_cost !== undefined ? toNumber(item.total_usd_cost) : undefined,
   usd_cost_freight_total: item.usd_cost_freight_total !== undefined ? toNumber(item.usd_cost_freight_total) : undefined,
   usd_cost_box_packing_total: item.usd_cost_box_packing_total !== undefined ? toNumber(item.usd_cost_box_packing_total) : undefined,

@@ -207,7 +207,7 @@ export default function SalesUnitDetailPage() {
       <DashboardLayout>
         <div className="flex h-[50vh] flex-col items-center justify-center gap-4">
           <p className="text-muted-foreground">URL detail penjualan tidak valid</p>
-          <Button onClick={() => router.push(salesPath)}>Kembali ke List Penjualan</Button>
+          <Button size="sm" onClick={() => router.push(salesPath)}>Kembali ke List Penjualan</Button>
         </div>
       </DashboardLayout>
     );
@@ -226,7 +226,7 @@ export default function SalesUnitDetailPage() {
       <DashboardLayout>
         <div className="flex h-[50vh] flex-col items-center justify-center gap-4">
           <p className="text-muted-foreground">Data penjualan atau item unit tidak ditemukan</p>
-          <Button onClick={() => router.push(salesPath)}>Kembali ke List Penjualan</Button>
+          <Button size="sm" onClick={() => router.push(salesPath)}>Kembali ke List Penjualan</Button>
         </div>
       </DashboardLayout>
     );

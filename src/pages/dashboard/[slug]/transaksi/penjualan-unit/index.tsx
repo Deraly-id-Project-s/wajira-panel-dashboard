@@ -119,6 +119,7 @@ export default function SalesPage() {
               actions={(
                 <>
                   <Button
+                    size="sm"
                     type="button"
                     variant="outline"
                     tooltip="gunakan fitur ini untuk mencari data detail tipe unit berdasarkan No. Rangka, No. Mesin, Warna"
@@ -127,7 +128,7 @@ export default function SalesPage() {
                     Cari Data Kendaraan
                   </Button>
                   {canCreate && (
-                    <Button onClick={() => router.push(`/dashboard/${slug}/transaksi/penjualan-unit/create`)} className="btn-primary!">
+                    <Button size="sm" onClick={() => router.push(`/dashboard/${slug}/transaksi/penjualan-unit/create`)} className="btn-primary!">
                       <Plus className="mr-2 h-4 w-4" />
                       Tambah Data
                     </Button>

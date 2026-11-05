@@ -12,6 +12,12 @@ import { ReferenceLink } from '@/components/ui/reference-link';
 import { PaginationMeta } from '@/@types/pagination.types';
 import { UnitTransaction } from '@/@types/unit-transaction.types';
 import { cn } from '@/lib/utils';
+import {
+  isUnitUsdTransaction,
+  getUnitTransactionBrutoUsd,
+  getUnitTransactionOtherFeeUsd,
+  getUnitTransactionRemainingPaymentUsd,
+} from '@/utils/payment-helpers';
 
 import {
   DropdownMenu,
@@ -131,19 +137,28 @@ export function SalesTable({
         case 'warehouse':
           return compareText(a.warehouse, b.warehouse);
         case 'transaction_bruto_total':
-          return compareNumber(a.transaction_bruto_total, b.transaction_bruto_total);
+          return compareNumber(
+            isUnitUsdTransaction(a) ? getUnitTransactionBrutoUsd(a) : a.transaction_bruto_total,
+            isUnitUsdTransaction(b) ? getUnitTransactionBrutoUsd(b) : b.transaction_bruto_total
+          );
         case 'transaction_bbn_total':
           return compareNumber(a.transaction_bbn_total, b.transaction_bbn_total);
         case 'expedition_fee_total':
           return compareNumber(a.expedition_fee_total, b.expedition_fee_total);
         case 'transaction_other_fee':
-          return compareNumber(a.transaction_other_fee, b.transaction_other_fee);
+          return compareNumber(
+            isUnitUsdTransaction(a) ? getUnitTransactionOtherFeeUsd(a) : a.transaction_other_fee,
+            isUnitUsdTransaction(b) ? getUnitTransactionOtherFeeUsd(b) : b.transaction_other_fee
+          );
         case 'transaction_dpp_total':
           return compareNumber(a.transaction_dpp_total, b.transaction_dpp_total);
         case 'transaction_ppn_total':
           return compareNumber(a.transaction_ppn_total, b.transaction_ppn_total);
         case 'remainingPayment':
-          return compareNumber(getRemainingPayment(a), getRemainingPayment(b));
+          return compareNumber(
+            isUnitUsdTransaction(a) ? getUnitTransactionRemainingPaymentUsd(a) : getRemainingPayment(a),
+            isUnitUsdTransaction(b) ? getUnitTransactionRemainingPaymentUsd(b) : getRemainingPayment(b)
+          );
         case 'stock_state':
           return compareText(a.stock_state, b.stock_state);
         case 'billing':
@@ -262,53 +277,69 @@ export function SalesTable({
         accessorKey: 'transaction_bruto_total',
         sortable: true,
         alignment: 'center',
-        cell: (item) => currenciesFormat('idr', item.transaction_bruto_total),
+        cell: (item) => {
+          if (isUnitUsdTransaction(item)) {
+            return currenciesFormat('usd', getUnitTransactionBrutoUsd(item));
+          }
+          return currenciesFormat('idr', item.transaction_bruto_total);
+        },
       },
       {
         header: 'BBN Total',
         accessorKey: 'transaction_bbn_total',
         sortable: true,
         alignment: 'center',
-        cell: (item) => currenciesFormat('idr', item.transaction_bbn_total),
+        cell: (item) => (isUnitUsdTransaction(item) ? '-' : currenciesFormat('idr', item.transaction_bbn_total)),
       },
       {
         header: 'Ekspedisi Total',
         accessorKey: 'expedition_fee_total',
         sortable: true,
         alignment: 'center',
-        cell: (item) => currenciesFormat('idr', item.expedition_fee_total),
+        cell: (item) => (isUnitUsdTransaction(item) ? '-' : currenciesFormat('idr', item.expedition_fee_total)),
       },
       {
         header: 'Biaya Lainnya',
         accessorKey: 'transaction_other_fee',
         sortable: true,
         alignment: 'center',
-        cell: (item) => currenciesFormat('idr', item.transaction_other_fee),
+        cell: (item) => {
+          if (isUnitUsdTransaction(item)) {
+            return currenciesFormat('usd', getUnitTransactionOtherFeeUsd(item));
+          }
+          return currenciesFormat('idr', item.transaction_other_fee);
+        },
       },
       {
         header: 'DPP Total',
         accessorKey: 'transaction_dpp_total',
         sortable: true,
         alignment: 'center',
-        cell: (item) => currenciesFormat('idr', item.transaction_dpp_total),
+        cell: (item) => (isUnitUsdTransaction(item) ? '-' : currenciesFormat('idr', item.transaction_dpp_total)),
       },
       {
         header: 'PPN Total',
         accessorKey: 'transaction_ppn_total',
         sortable: true,
         alignment: 'center',
-        cell: (item) => currenciesFormat('idr', item.transaction_ppn_total),
+        cell: (item) => (isUnitUsdTransaction(item) ? '-' : currenciesFormat('idr', item.transaction_ppn_total)),
       },
       {
         header: 'Sisa Pembayaran',
         accessorKey: 'remainingPayment',
         sortable: true,
         alignment: 'center',
-        cell: (item) => (
-          <span className={cn(getRemainingPayment(item) !== 0 && 'text-red-600 font-semibold')}>
-            {currenciesFormat('idr', getRemainingPayment(item))}
-          </span>
-        ),
+        cell: (item) => {
+          const isUsd = isUnitUsdTransaction(item);
+          const remaining = isUsd
+            ? getUnitTransactionRemainingPaymentUsd(item)
+            : getRemainingPayment(item);
+          return (
+            <span className={cn(remaining !== 0 && 'text-red-600 font-semibold')}>
+              {isUsd ? currenciesFormat('usd', remaining) : currenciesFormat('idr', remaining)}
+            </span>
+          );
+        },
       },
       {
         header: 'Status Billing',
@@ -338,7 +369,7 @@ export function SalesTable({
         cell: (item) => (
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" className="h-8 w-8 p-0">
+              <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
                 <MoreVertical className="h-4 w-4" />
               </Button>
             </DropdownMenuTrigger>
