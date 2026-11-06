@@ -54,6 +54,8 @@ export interface UnitTransactionBilling {
 
 export interface UnitTransactionBillingSummary {
   grand_total?: number;
+  bruto_total?: number;
+  total_discount?: number;
   total_usd_payment?: number;
   total_cash_payment?: number;
   total_bca_payment?: number;
@@ -141,6 +143,13 @@ export interface UnitTransactionItemDetail {
   chassis_number?: string;
   machine_number?: string;
   unit_transaction_bruto_total: number;
+  bruto_total?: number;
+  transaction_bruto_total?: number;
+  total_discount?: number;
+  transaction_discount_total?: number;
+  price_discount_total?: number;
+  remaining_payment?: number;
+  remaining_payment_usd?: number;
   unit_transaction_item_total_hpp: number;
   unit_transaction_item_total_dpp: number;
   unit_transaction_item_total_ppn: number;
@@ -182,6 +191,13 @@ export interface UnitTransactionDetail {
   chassis_number?: string;
   machine_number?: string;
   unit_transaction_bruto_total: number;
+  bruto_total?: number;
+  transaction_bruto_total?: number;
+  total_discount?: number;
+  transaction_discount_total?: number;
+  price_discount_total?: number;
+  remaining_payment?: number;
+  remaining_payment_usd?: number;
   unit_transaction_item_total_hpp: number;
   unit_transaction_item_total_dpp: number;
   unit_transaction_item_total_ppn: number;

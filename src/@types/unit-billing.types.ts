@@ -4,6 +4,7 @@ export interface UnitBilling {
   company_id: string;
   unit_transaction_id: string;
   grand_total?: number;
+  bruto_total?: number;
   total_paid?: number;
   remaining_payment?: number;
   remaining_payment_usd?: number;

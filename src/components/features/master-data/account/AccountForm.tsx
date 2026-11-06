@@ -67,7 +67,7 @@ export const AccountForm = ({
             control={form.control}
             name="code"
             render={({ field }) => (
-              <FormItem className="space-y-1.5">
+              <FormItem >
                 <FormLabel className="text-xs font-semibold text-slate-700">Kode Akun<RequiredMark /></FormLabel>
                 <FormControl>
                   <Input readOnly={lockRestricted} placeholder="Masukkan kode akun" className={cn("h-10 rounded-md border-slate-200 px-3 text-sm shadow-none focus-visible:ring-slate-300 bg-white", lockRestricted && "bg-slate-50 text-slate-500 cursor-not-allowed")} {...field} />
@@ -81,7 +81,7 @@ export const AccountForm = ({
             control={form.control}
             name="accountGroupId"
             render={({ field }) => (
-              <FormItem className="space-y-1.5">
+              <FormItem>
                 <FormLabel className="text-xs font-semibold text-slate-700">Grup Akun <RequiredMark /></FormLabel>
                 <FormControl>
                   <div className="flex flex-col sm:flex-row items-center gap-2 w-full sm:w-auto">
@@ -117,7 +117,7 @@ export const AccountForm = ({
             control={form.control}
             name="name"
             render={({ field }) => (
-              <FormItem className="space-y-1.5">
+              <FormItem >
                 <FormLabel className="text-xs font-semibold text-slate-700">Nama Akun<RequiredMark /></FormLabel>
                 <FormControl>
                   <Input readOnly={lockRestricted} placeholder="Masukkan nama akun" className={cn("h-10 rounded-md border-slate-200 px-3 text-sm shadow-none focus-visible:ring-slate-300 bg-white", lockRestricted && "bg-slate-50 text-slate-500 cursor-not-allowed")} {...field} />
@@ -131,7 +131,7 @@ export const AccountForm = ({
             control={form.control}
             name="type"
             render={({ field }) => (
-              <FormItem className="space-y-1.5">
+              <FormItem >
                 <FormLabel className="text-xs font-semibold text-slate-700">Tipe Akun<RequiredMark /></FormLabel>
                 <FormControl>
                   <Select
@@ -162,7 +162,7 @@ export const AccountForm = ({
             control={form.control}
             name="pos_code"
             render={({ field }) => (
-              <FormItem className="space-y-1.5">
+              <FormItem >
                 <FormLabel className="text-xs font-semibold text-slate-700">Kategori Pos</FormLabel>
                 <FormControl>
                   <Select
@@ -181,12 +181,12 @@ export const AccountForm = ({
                     </SelectTrigger>
                     <SelectContent>
                       {ACCOUNT_POS_CODE_OPTIONS.map((option) => (
-                        <SelectItem key={option.value} value={option.value} className="text-sm">
+                        <SelectItem key={option.value} value={option.value} className="text-sm" maxLength={30}>
                           {option.label}
                         </SelectItem>
                       ))}
                       {field.value && !ACCOUNT_POS_CODE_OPTIONS.some((opt) => opt.value === field.value) && (
-                        <SelectItem value={field.value} className="text-sm">
+                        <SelectItem value={field.value} className="text-sm" maxLength={30}>
                           {field.value}
                         </SelectItem>
                       )}
@@ -202,8 +202,8 @@ export const AccountForm = ({
             control={form.control}
             name="class"
             render={({ field }) => (
-              <FormItem className="space-y-1.5">
-                <FormLabel className="text-xs font-semibold text-slate-700">Klasifikasi Akun</FormLabel>
+              <FormItem >
+                <FormLabel className="text-xs font-semibold text-slate-700">Kelompok Akun</FormLabel>
                 <FormControl>
                   <Select
                     value={field.value || 'none'}
@@ -220,11 +220,11 @@ export const AccountForm = ({
                       <SelectValue placeholder="Pilih Klasifikasi Akun (Opsional)" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="none" className="text-sm">
-                        Tanpa Klasifikasi
+                      <SelectItem value="none" className="text-sm" maxLength={30}>
+                        Tanpa Kelompok Akun
                       </SelectItem>
                       {ACCOUNT_CLASS_OPTIONS.map((option) => (
-                        <SelectItem key={option.value} value={option.value} className="text-sm">
+                        <SelectItem key={option.value} value={option.value} className="text-sm" maxLength={30}>
                           {option.label}
                         </SelectItem>
                       ))}
@@ -245,7 +245,7 @@ export const AccountForm = ({
               const currentValue = field.value ? (normalizeAccountCategory(field.value) ?? field.value) : '';
 
               return (
-                <FormItem className="space-y-1.5">
+                <FormItem >
                   <FormLabel className="text-xs font-semibold text-slate-700">Kategori Laporan</FormLabel>
                   <FormControl>
                     <SearchableSelect
@@ -273,7 +273,7 @@ export const AccountForm = ({
           control={form.control}
           name="description"
           render={({ field }) => (
-            <FormItem className="space-y-1.5">
+            <FormItem >
               <FormLabel className="text-xs font-semibold text-slate-700">Deskripsi</FormLabel>
               <FormControl>
                 <Textarea
@@ -328,6 +328,6 @@ export const AccountForm = ({
           });
         }}
       />
-    </Form>
+    </Form >
   );
 };

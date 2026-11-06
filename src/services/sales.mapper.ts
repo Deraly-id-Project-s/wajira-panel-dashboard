@@ -321,6 +321,7 @@ export const mapSalesToTableItem = (item: SalesApiModel): UnitTransaction => {
     billing_summary: item.billing_summary
       ? {
         grand_total: toNumber(item.billing_summary.grand_total),
+        bruto_total: toNumber((item.billing_summary as any).bruto_total),
         total_usd_payment: toNumber(item.billing_summary.total_usd_payment),
         total_cash_payment: toNumber(item.billing_summary.total_cash_payment),
         total_bca_payment: toNumber(item.billing_summary.total_bca_payment),
@@ -417,8 +418,15 @@ export const mapSalesDetailToUI = (item: SalesApiModel): SalesItem => {
     totalPpn,
     totalBiaya: toNumber(item.transaction_bbn_total) + toNumber(item.expedition_fee_total) + toNumber(item.transaction_other_fee),
     totalJual,
+    bruto_total: toNumber((item as any).bruto_total ?? item.unit_transaction_bruto_total ?? item.transaction_bruto_total ?? totalJual),
+    transaction_bruto_total: toNumber(item.transaction_bruto_total ?? (item as any).bruto_total ?? totalJual),
+    unit_transaction_bruto_total: toNumber(item.unit_transaction_bruto_total ?? (item as any).bruto_total ?? totalJual),
+    total_discount: toNumber((item as any).total_discount ?? (item as any).transaction_discount_total ?? (item as any).price_discount_total),
+    transaction_discount_total: toNumber((item as any).transaction_discount_total ?? (item as any).total_discount),
     totalBayar,
     kurangBayar,
+    remaining_payment: toNumber((item as any).remaining_payment ?? item.billing_summary?.remaining_payment ?? kurangBayar),
+    remaining_payment_usd: toNumber((item as any).remaining_payment_usd ?? item.billing_summary?.remaining_payment_usd),
     lineItems: (item.unit_transaction_items ?? []).map(mapSalesLineItem),
     units: [],
     price_usd: item.unit_transaction_items?.[0]?.price_usd ? toNumber(item.unit_transaction_items[0].price_usd) : undefined,
@@ -439,6 +447,7 @@ export const mapSalesDetailToUI = (item: SalesApiModel): SalesItem => {
     billing_summary: item.billing_summary
       ? {
         grand_total: toNumber(item.billing_summary.grand_total),
+        bruto_total: toNumber((item.billing_summary as any).bruto_total),
         total_usd_payment: toNumber(item.billing_summary.total_usd_payment),
         total_cash_payment: toNumber(item.billing_summary.total_cash_payment),
         total_bca_payment: toNumber(item.billing_summary.total_bca_payment),

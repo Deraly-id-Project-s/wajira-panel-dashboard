@@ -164,32 +164,29 @@ export function isUnitUsdTransaction(item: any): boolean {
 }
 
 export function getUnitTransactionBrutoUsd(item: any): number {
-  const explicit = Number(
-    item?.unit_transaction_price_usd_total && Number(item.unit_transaction_price_usd_total) > 0
-      ? item.unit_transaction_price_usd_total
-      : (item?.transaction_price_usd_total && Number(item.transaction_price_usd_total) > 0
-        ? item.transaction_price_usd_total
-        : (item?.unit_transaction_price_usd_total_actual && Number(item.unit_transaction_price_usd_total_actual) > 0
-          ? item.unit_transaction_price_usd_total_actual
-          : (item?.price_usd && Number(item.price_usd) > 0
-            ? item.price_usd
-            : 0)))
-  );
+  if (item?.billing_summary?.bruto_total !== undefined && item?.billing_summary?.bruto_total !== null) {
+    return Number(item.billing_summary.bruto_total);
+  }
+  if (item?.bruto_total && Number(item.bruto_total) > 0) {
+    return Number(item.bruto_total);
+  }
+  if (item?.transaction_bruto_total && Number(item.transaction_bruto_total) > 0) {
+    return Number(item.transaction_bruto_total);
+  }
+  if (item?.unit_transaction_bruto_total && Number(item.unit_transaction_bruto_total) > 0) {
+    return Number(item.unit_transaction_bruto_total);
+  }
 
-  const items: any[] = item?.unit_transaction_items ?? [];
+  const items: any[] = item?.unit_transaction_items ?? item?.lineItems ?? [];
   const baseItemsUsd = items.reduce((sum, it) => {
-    const p = Number(
-      it.price_usd && Number(it.price_usd) > 0
-        ? it.price_usd
-        : (Number(it.price_per_unit_usd ?? 0) * Number(it.qty_total ?? it.qty ?? 1))
-    );
-    return sum + p;
+    const qty = Number(it.qty_total ?? it.qty ?? it.max_capacity ?? 1);
+    const unitPrice = Number(it.price_per_unit_usd ?? 0);
+    if (unitPrice > 0) return sum + (unitPrice * qty);
+    return sum + Number(it.price_usd ?? 0);
   }, 0);
 
   const additionalCost = getUsdCostsFromItem(item).totalUsdCost;
-  const calculated = baseItemsUsd + additionalCost;
-
-  return Math.max(explicit, calculated);
+  return baseItemsUsd + additionalCost;
 }
 
 export function getUnitTransactionOtherFeeUsd(item: any): number {
@@ -203,9 +200,322 @@ export function getUnitTransactionRemainingPaymentUsd(item: any): number {
   if (item?.billing_summary?.remaining_payment_usd !== undefined && item?.billing_summary?.remaining_payment_usd !== null) {
     return Number(item.billing_summary.remaining_payment_usd);
   }
-  const brutoUsd = getUnitTransactionBrutoUsd(item);
+  if (item?.remaining_payment_usd !== undefined && item?.remaining_payment_usd !== null) {
+    return Number(item.remaining_payment_usd);
+  }
+  const grandTotalUsd = Number(
+    item?.billing_summary?.grand_total ??
+    item?.unit_transaction_price_usd_total ??
+    item?.transaction_price_usd_total ??
+    getUnitTransactionBrutoUsd(item)
+  );
   const paidUsd = Number(item?.billing_summary?.total_paid_usd ?? item?.billing_summary?.total_usd_payment ?? 0);
-  return Math.max(0, brutoUsd - paidUsd);
+  return Math.max(0, grandTotalUsd - paidUsd);
+}
+
+export interface UsdTransactionSummary {
+  isUsd: boolean;
+  baseUsd: number;
+  costs: UsdCostsBreakdown;
+  totalUsdCost: number;
+  brutoTotalUsd: number;
+  totalDiscountUsd: number;
+  discountUsdPercent: number | null;
+  grandTotalUsd: number;
+  totalPaidUsd: number;
+  remainingPaymentUsd: number;
+  isPaid: boolean;
+}
+
+export function getUsdTransactionSummary(
+  data: any,
+  items: any[] = [],
+  billingHistories: any[] = [],
+): UsdTransactionSummary {
+  const resolvedItems: any[] = items && items.length > 0
+    ? items
+    : (data?.unit_transaction_items ?? data?.lineItems ?? []);
+
+  const isUsd = isUnitUsdTransaction(data) || resolvedItems.some(i => isUnitUsdTransaction(i) || Number(i.price_usd_total ?? i.price_total_usd ?? i.price_per_unit_usd ?? 0) > 0);
+
+  // 1. Subtotal Base USD: qty_total * price_per_unit_usd
+  const baseUsd = resolvedItems.reduce((sum, item) => {
+    const qty = Number(item.qty_total ?? item.qty ?? item.max_capacity ?? 1);
+    const unitPrice = Number(item.price_per_unit_usd ?? 0);
+    if (unitPrice > 0) return sum + (unitPrice * qty);
+    return sum + Number(item.price_usd ?? 0);
+  }, 0);
+
+  // 2. Costs breakdown
+  const allUsdCostList: any[] = [
+    ...(data?.unit_transaction_usd_costs ?? []),
+    ...resolvedItems.flatMap((i) => i?.unit_transaction_usd_costs ?? i?.usd_costs ?? []),
+  ];
+  const getCostAmountByType = (costType: string): number => {
+    return allUsdCostList
+      .filter((c) => String(c?.cost_type ?? '').toLowerCase() === costType.toLowerCase())
+      .reduce((sum, c) => sum + Number(c?.amount ?? 0), 0);
+  };
+
+  const freight = Number(data?.usd_cost_freight_total ?? (resolvedItems.reduce((s, i) => s + Number(i.usd_cost_freight_total ?? 0), 0) || getCostAmountByType('freight')));
+  const boxPacking = Number(data?.usd_cost_box_packing_total ?? (resolvedItems.reduce((s, i) => s + Number(i.usd_cost_box_packing_total ?? 0), 0) || getCostAmountByType('box_packing')));
+  const admin = Number(data?.usd_cost_admin_cost_total ?? (resolvedItems.reduce((s, i) => s + Number(i.usd_cost_admin_cost_total ?? 0), 0) || getCostAmountByType('admin_cost')));
+  const ckd = Number(data?.usd_cost_ckd_processing_cost_total ?? (resolvedItems.reduce((s, i) => s + Number(i.usd_cost_ckd_processing_cost_total ?? 0), 0) || getCostAmountByType('ckd_processing_cost')));
+  const blSwitch = Number(data?.usd_cost_bill_of_lading_switch_cost_total ?? (resolvedItems.reduce((s, i) => s + Number(i.usd_cost_bill_of_lading_switch_cost_total ?? 0), 0) || getCostAmountByType('bill_of_lading_switch_cost')));
+  const customs = Number(data?.usd_cost_customs_clearance_cost_total ?? (resolvedItems.reduce((s, i) => s + Number(i.usd_cost_customs_clearance_cost_total ?? 0), 0) || getCostAmountByType('customs_clearance_cost')));
+  const other = Number(data?.usd_cost_other_total ?? (resolvedItems.reduce((s, i) => s + Number(i.usd_cost_other_total ?? 0), 0) || getCostAmountByType('other')));
+  const sumCosts = freight + boxPacking + admin + ckd + blSwitch + customs + other;
+
+  const totalUsdCost = Number(
+    data?.total_usd_cost ??
+    data?.transaction_usd_cost_total ??
+    (resolvedItems.some((i) => Number(i.total_usd_cost ?? 0) > 0)
+      ? resolvedItems.reduce((s, i) => s + Number(i.total_usd_cost ?? 0), 0)
+      : sumCosts)
+  );
+
+  const costs: UsdCostsBreakdown = {
+    freight,
+    boxPacking,
+    admin,
+    ckd,
+    blSwitch,
+    customs,
+    other,
+    totalUsdCost,
+  };
+
+  // 3. Bruto Total (Gross) USD: Base USD + Total USD Cost
+  const calculatedBrutoUsd = baseUsd + totalUsdCost;
+  const brutoTotalUsd = Number(
+    data?.billing_summary?.bruto_total ??
+    data?.bruto_total ??
+    data?.transaction_bruto_total ??
+    data?.unit_transaction_bruto_total ??
+    calculatedBrutoUsd
+  );
+
+  // 4. Discount USD: Gross Item USD * (price_usd_discount / 100)
+  const discountPercentages = Array.from(
+    new Set(
+      resolvedItems
+        .map((i) => Number(i.price_usd_discount ?? i.price_discount_usd ?? 0))
+        .filter((p) => p > 0)
+    )
+  );
+  const fallbackSingleDiscount = Number(data?.price_usd_discount ?? data?.price_discount_usd ?? 0);
+  const discountUsdPercent = discountPercentages.length === 1
+    ? discountPercentages[0]
+    : (discountPercentages.length === 0 ? (fallbackSingleDiscount > 0 ? fallbackSingleDiscount : null) : null);
+
+  const calculatedDiscountUsd = resolvedItems.reduce((sum, item) => {
+    const qty = Number(item.qty_total ?? item.qty ?? item.max_capacity ?? 1);
+    const unitPrice = Number(item.price_per_unit_usd ?? 0);
+    const itemBase = unitPrice > 0 ? (unitPrice * qty) : Number(item.price_usd ?? 0);
+    const itemCost = Number(item.total_usd_cost ?? getUsdCostsFromItem(item).totalUsdCost);
+    const grossItem = itemBase + itemCost;
+    const discPercent = Number(item.price_usd_discount ?? item.price_discount_usd ?? fallbackSingleDiscount);
+    return sum + (grossItem * (discPercent / 100));
+  }, 0);
+
+  const headerDiscount = Number(
+    data?.total_discount ??
+    data?.transaction_discount_total ??
+    data?.price_discount_total ??
+    0
+  );
+  const totalDiscountUsd = headerDiscount > 0 ? headerDiscount : calculatedDiscountUsd;
+
+  // 5. Grand Total (Netto) USD: Bruto - Discount (or from API billing_summary.grand_total / transaction_price_usd_total)
+  const headerGrandTotal = Number(
+    data?.billing_summary?.grand_total ??
+    data?.unit_transaction_price_usd_total_actual ??
+    data?.unit_transaction_price_usd_total ??
+    data?.transaction_price_usd_total ??
+    0
+  );
+  const grandTotalUsd = headerGrandTotal > 0 ? headerGrandTotal : Math.max(0, brutoTotalUsd - totalDiscountUsd);
+
+  // 6. Paid & Remaining
+  const historyPaidUsd = billingHistories.reduce((sum, h) => sum + getHistoryUsdAmount(h), 0);
+  const summaryPaidUsd = Number(
+    data?.billing_summary?.total_paid_usd ??
+    data?.billing_summary?.total_usd_payment ??
+    data?.billing_summary?.total_paid ??
+    0
+  );
+  const totalPaidUsd = Math.max(summaryPaidUsd, historyPaidUsd);
+
+  const isPaid = Boolean(
+    data?.billing_summary?.is_paid ??
+    data?.isPaid ??
+    data?.unit_transaction_billing?.is_paid ??
+    (grandTotalUsd > 0 && totalPaidUsd >= grandTotalUsd)
+  );
+
+  const summaryRemainingUsd = data?.billing_summary?.remaining_payment_usd !== undefined
+    ? Number(data.billing_summary.remaining_payment_usd)
+    : (data?.billing_summary?.remaining_payment !== undefined && isUsd
+      ? Number(data.billing_summary.remaining_payment)
+      : (data?.remaining_payment_usd !== undefined ? Number(data.remaining_payment_usd) : undefined));
+
+  const remainingPaymentUsd = isPaid
+    ? 0
+    : (summaryRemainingUsd !== undefined ? summaryRemainingUsd : Math.max(0, grandTotalUsd - totalPaidUsd));
+
+  return {
+    isUsd,
+    baseUsd,
+    costs,
+    totalUsdCost,
+    brutoTotalUsd,
+    totalDiscountUsd,
+    discountUsdPercent,
+    grandTotalUsd,
+    totalPaidUsd,
+    remainingPaymentUsd,
+    isPaid,
+  };
+}
+
+export interface IdrTransactionSummary {
+  totalDpp: number;
+  totalPpn: number;
+  totalHpp: number;
+  biayaBbn: number;
+  biayaEkspedisi: number;
+  biayaLainnya: number;
+  totalBiaya: number;
+  brutoTotalIdr: number;
+  totalDiscountIdr: number;
+  discountIdrPercent: number | null;
+  grandTotalIdr: number;
+  debetBankIdr: number;
+  debetCashIdr: number;
+  totalPaidIdr: number;
+  remainingPaymentIdr: number;
+  isPaid: boolean;
+}
+
+export function getIdrTransactionSummary(
+  data: any,
+  items: any[] = [],
+  billingHistories: any[] = [],
+): IdrTransactionSummary {
+  const resolvedItems: any[] = items && items.length > 0
+    ? items
+    : (data?.unit_transaction_items ?? data?.lineItems ?? []);
+
+  const totalDppFromItems = resolvedItems.reduce((sum, it) => sum + Number(it.dpp ?? it.dpp_total_price ?? 0), 0);
+  const totalPpnFromItems = resolvedItems.reduce((sum, it) => sum + Number(it.ppn ?? it.ppn_total_price ?? 0), 0);
+
+  const totalDpp = totalDppFromItems > 0
+    ? totalDppFromItems
+    : Number(data?.unit_transaction_item_total_dpp ?? data?.transaction_dpp_total ?? data?.total_dpp ?? data?.totalDpp ?? 0);
+
+  const totalPpn = totalPpnFromItems > 0
+    ? totalPpnFromItems
+    : Number(data?.unit_transaction_item_total_ppn ?? data?.transaction_ppn_total ?? data?.total_ppn ?? data?.totalPpn ?? 0);
+
+  const totalHpp = Number(data?.total_hpp ?? data?.totalHpp ?? 0) || (totalDpp + totalPpn);
+
+  const biayaBbn = Number(data?.transaction_bbn_total ?? data?.total_bbn ?? data?.biayaBbn ?? 0);
+  const biayaEkspedisi = Number(data?.expedition_fee_total ?? data?.total_expedition_fee ?? data?.biayaEkspedisi ?? 0);
+  const biayaLainnya = Number(data?.transaction_other_fee ?? data?.total_other_fee ?? data?.biayaLain ?? 0);
+  const totalBiaya = Number(data?.total_operational_fee ?? data?.totalBiaya ?? (biayaBbn + biayaEkspedisi + biayaLainnya));
+
+  const totalPembelianKotor = totalHpp + totalBiaya;
+
+  const headerBruto = Number(
+    data?.billing_summary?.bruto_total ??
+    data?.bruto_total ??
+    data?.transaction_bruto_total ??
+    data?.unit_transaction_bruto_total ??
+    data?.totalJual ??
+    0
+  );
+  const brutoTotalIdr = headerBruto > 0 ? headerBruto : totalPembelianKotor;
+
+  const discountPercentages = Array.from(
+    new Set(
+      resolvedItems
+        .map((i) => Number(i.price_discount ?? 0))
+        .filter((p) => p > 0)
+    )
+  );
+  const fallbackSingleDiscount = Number(data?.price_discount ?? 0);
+  const discountIdrPercent = discountPercentages.length === 1
+    ? discountPercentages[0]
+    : (discountPercentages.length === 0 ? (fallbackSingleDiscount > 0 ? fallbackSingleDiscount : null) : null);
+
+  const calculatedDiscountIdr = resolvedItems.reduce((sum, item) => {
+    const itemPrice = Number(item.price ?? item.hargaJual ?? 0);
+    const itemQty = Number(item.qty_total ?? item.qty ?? item.max_capacity ?? 1);
+    const discPercent = Number(item.price_discount ?? fallbackSingleDiscount);
+    return sum + (itemPrice * (discPercent / 100) * itemQty);
+  }, 0);
+
+  const headerDiscount = Number(
+    data?.total_discount ??
+    data?.transaction_discount_total ??
+    data?.price_discount_total ??
+    0
+  );
+  const totalDiscountIdr = headerDiscount > 0 ? headerDiscount : calculatedDiscountIdr;
+
+  const grandTotalIdr = Number(
+    data?.billing_summary?.grand_total ??
+    Math.max(0, brutoTotalIdr - totalDiscountIdr)
+  );
+
+  const historyPaidIdr = billingHistories.reduce((sum, h) => sum + getHistoryTotalIdrEquivalent(h), 0);
+  const debetBankIdr = Number(
+    data?.billing_summary?.total_bca_payment ??
+    billingHistories.reduce((sum, h) => sum + getHistoryBcaIdrAmount(h), 0)
+  );
+  const debetCashIdr = Number(
+    data?.billing_summary?.total_cash_payment ??
+    billingHistories.reduce((sum, h) => sum + getHistoryCashIdrAmount(h), 0)
+  );
+  const summaryPaidIdr = Number(
+    data?.billing_summary?.total_paid ??
+    (debetBankIdr + debetCashIdr)
+  );
+  const totalPaidIdr = Math.max(summaryPaidIdr, historyPaidIdr);
+
+  const isPaid = Boolean(
+    data?.billing_summary?.is_paid ??
+    data?.isPaid ??
+    data?.unit_transaction_billing?.is_paid ??
+    (grandTotalIdr > 0 && totalPaidIdr >= grandTotalIdr)
+  );
+
+  const summaryRemainingIdr = data?.billing_summary?.remaining_payment !== undefined
+    ? Number(data.billing_summary.remaining_payment)
+    : (data?.remaining_payment !== undefined ? Number(data.remaining_payment) : undefined);
+
+  const remainingPaymentIdr = isPaid
+    ? 0
+    : (summaryRemainingIdr !== undefined ? summaryRemainingIdr : Math.max(0, grandTotalIdr - totalPaidIdr));
+
+  return {
+    totalDpp,
+    totalPpn,
+    totalHpp,
+    biayaBbn,
+    biayaEkspedisi,
+    biayaLainnya,
+    totalBiaya,
+    brutoTotalIdr,
+    totalDiscountIdr,
+    discountIdrPercent,
+    grandTotalIdr,
+    debetBankIdr,
+    debetCashIdr,
+    totalPaidIdr,
+    remainingPaymentIdr,
+    isPaid,
+  };
 }
 
 export function getUnitTransactionRemainingPayment(item: any): number {

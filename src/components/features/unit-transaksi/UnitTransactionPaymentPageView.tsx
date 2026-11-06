@@ -23,6 +23,12 @@ export interface UnitTransactionPaymentPageViewProps {
   totalDpp?: number;
   totalTagihanUsd?: number;
   totalTagihanUsdActual?: number;
+  brutoTotalUsd?: number;
+  totalDiscountUsd?: number;
+  discountUsdPercent?: number | null;
+  brutoTotalIdr?: number;
+  totalDiscountIdr?: number;
+  discountIdrPercent?: number | null;
   isUsdTransaction?: boolean;
   billing?: UnitBilling | null;
   histories?: UnitBillingHistory[];
@@ -40,6 +46,12 @@ export function UnitTransactionPaymentPageView({
   totalPpn: externalTotalPpn,
   totalDpp: externalTotalDpp,
   totalTagihanUsd: externalTotalTagihanUsd,
+  brutoTotalUsd: externalBrutoTotalUsd,
+  totalDiscountUsd: externalTotalDiscountUsd,
+  discountUsdPercent: externalDiscountUsdPercent,
+  brutoTotalIdr: externalBrutoTotalIdr,
+  totalDiscountIdr: externalTotalDiscountIdr,
+  discountIdrPercent: externalDiscountIdrPercent,
   isUsdTransaction: externalIsUsd,
   billing: externalBilling,
   histories: externalHistories,
@@ -136,6 +148,12 @@ export function UnitTransactionPaymentPageView({
             remainingPaymentIdr={remainingPaymentIdr}
             totalDpp={totalDpp}
             totalPpn={totalPpn}
+            brutoTotalUsd={externalBrutoTotalUsd !== undefined ? externalBrutoTotalUsd : hookState.brutoTotalUsd}
+            totalDiscountUsd={externalTotalDiscountUsd !== undefined ? externalTotalDiscountUsd : hookState.totalDiscountUsd}
+            discountUsdPercent={externalDiscountUsdPercent !== undefined ? externalDiscountUsdPercent : hookState.discountUsdPercent}
+            brutoTotalIdr={externalBrutoTotalIdr !== undefined ? externalBrutoTotalIdr : hookState.brutoTotalIdr}
+            totalDiscountIdr={externalTotalDiscountIdr !== undefined ? externalTotalDiscountIdr : hookState.totalDiscountIdr}
+            discountIdrPercent={externalDiscountIdrPercent !== undefined ? externalDiscountIdrPercent : hookState.discountIdrPercent}
           />
 
           {/* 2. Form Pembayaran (Aktif bila belum lunas) */}

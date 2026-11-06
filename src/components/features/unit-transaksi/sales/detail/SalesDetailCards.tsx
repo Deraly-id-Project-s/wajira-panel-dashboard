@@ -1,15 +1,12 @@
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { FileText, DollarSign, CreditCard, Calendar, User, Motorbike } from 'lucide-react';
+import { FileText, DollarSign, CreditCard, Calendar, User } from 'lucide-react';
 import { SalesItem } from '../sales.data';
 import { useRouter } from 'next/router';
 import { currenciesFormat } from '@/components/ui/currenciesFormat';
 import {
-  getHistoryTotalIdrEquivalent,
-  getHistoryUsdAmount,
-  getHistoryBcaIdrAmount,
-  getHistoryCashIdrAmount,
-  calculateTotalAfterDiscount,
+  getUsdTransactionSummary,
+  getIdrTransactionSummary,
 } from '@/utils/payment-helpers';
 import { CopyBox } from '@/components/ui/copy-box';
 import { ReferenceLink } from '@/components/ui/reference-link';
@@ -25,176 +22,19 @@ interface Props {
 
 export function SalesDetailCards({ data, billingHistories = [], unitType, stockQty }: Props) {
   const router = useRouter();
-  const totalDppFromItems = (data.lineItems ?? []).reduce((sum, item) => sum + Number(item.dpp ?? 0), 0);
-  const totalPpnFromItems = (data.lineItems ?? []).reduce((sum, item) => sum + Number(item.ppn ?? 0), 0);
-  const totalDpp = totalDppFromItems > 0 ? totalDppFromItems : Number(data.totalDpp ?? 0);
-  const totalPpn = totalPpnFromItems > 0 ? totalPpnFromItems : Number(data.totalPpn ?? 0);
-  const totalHpp = Number(data.totalHpp ?? 0) || (totalDpp + totalPpn);
-  const totalBiaya = Number(data.totalBiaya ?? 0);
-  const totalJual = Number(data.totalJual ?? 0);
-
   const slugQuery = router.query.slug;
   const slug = Array.isArray(slugQuery) ? slugQuery[0] : slugQuery || '';
 
   const items = data.lineItems ?? [];
-  const totalDiscountIdr = items.reduce((sum, item) => {
-    const itemPrice = Number(item.hargaJual ?? 0);
-    const itemQty = Number(item.qty ?? 1);
-    const discountPercent = Number(item.price_discount ?? data.price_discount ?? 0);
-    return sum + (itemPrice * (discountPercent / 100) * itemQty);
-  }, 0);
+  const usdSummary = getUsdTransactionSummary(data, items, billingHistories);
+  const idrSummary = getIdrTransactionSummary(data, items, billingHistories);
 
-  const discountIdrPercentages = Array.from(new Set(items.map((i) => Number(i.price_discount ?? 0)).filter((p) => p > 0)));
-  const fallbackSingleIdrDiscount = Number(data.price_discount ?? 0);
-  const resolvedDiscountIdrPercent = discountIdrPercentages.length === 1
-    ? discountIdrPercentages[0]
-    : (discountIdrPercentages.length === 0 ? (fallbackSingleIdrDiscount > 0 ? fallbackSingleIdrDiscount : 0) : null);
-
-  const totalDiscountUsd = items.reduce((sum, item) => {
-    const itemPriceUsd = Number(item.price_usd && Number(item.price_usd) > 0
-      ? item.price_usd
-      : (Number(item.price_per_unit_usd ?? 0) * Number(item.qty ?? 1)));
-    const discountUsdPercent = Number(item.price_discount_usd ?? item.price_usd_discount ?? (data as any).price_discount_usd ?? data.price_usd_discount ?? 0);
-    return sum + (itemPriceUsd * (discountUsdPercent / 100));
-  }, 0);
-
-  const discountUsdPercentages = Array.from(new Set(items.map((i) => Number(i.price_discount_usd ?? i.price_usd_discount ?? 0)).filter((p) => p > 0)));
-  const fallbackSingleUsdDiscount = Number((data as any).price_discount_usd ?? data.price_usd_discount ?? 0);
-  const resolvedDiscountUsdPercent = discountUsdPercentages.length === 1
-    ? discountUsdPercentages[0]
-    : (discountUsdPercentages.length === 0 ? (fallbackSingleUsdDiscount > 0 ? fallbackSingleUsdDiscount : 0) : null);
-
-  const allUsdCostList = [
-    ...(data?.unit_transaction_usd_costs ?? []),
-    ...items.flatMap((i: any) => i?.unit_transaction_usd_costs ?? i?.usd_costs ?? []),
-  ];
-
-  const getCostAmountByType = (costType: string): number => {
-    return allUsdCostList
-      .filter((c) => String(c?.cost_type ?? '').toLowerCase() === costType.toLowerCase())
-      .reduce((sum, c) => sum + Number(c?.amount ?? 0), 0);
-  };
-
-  const freightCost = Number(
-    data?.usd_cost_freight_total ??
-    (items.reduce((sum: number, item: any) => sum + Number(item.usd_cost_freight_total ?? 0), 0) || getCostAmountByType('freight'))
-  );
-  const boxPackingCost = Number(
-    data?.usd_cost_box_packing_total ??
-    (items.reduce((sum: number, item: any) => sum + Number(item.usd_cost_box_packing_total ?? 0), 0) || getCostAmountByType('box_packing'))
-  );
-  const adminCost = Number(
-    data?.usd_cost_admin_cost_total ??
-    (items.reduce((sum: number, item: any) => sum + Number(item.usd_cost_admin_cost_total ?? 0), 0) || getCostAmountByType('admin_cost'))
-  );
-  const ckdCost = Number(
-    data?.usd_cost_ckd_processing_cost_total ??
-    (items.reduce((sum: number, item: any) => sum + Number(item.usd_cost_ckd_processing_cost_total ?? 0), 0) || getCostAmountByType('ckd_processing_cost'))
-  );
-  const blSwitchCost = Number(
-    data?.usd_cost_bill_of_lading_switch_cost_total ??
-    (items.reduce((sum: number, item: any) => sum + Number(item.usd_cost_bill_of_lading_switch_cost_total ?? 0), 0) || getCostAmountByType('bill_of_lading_switch_cost'))
-  );
-  const customsCost = Number(
-    data?.usd_cost_customs_clearance_cost_total ??
-    (items.reduce((sum: number, item: any) => sum + Number(item.usd_cost_customs_clearance_cost_total ?? 0), 0) || getCostAmountByType('customs_clearance_cost'))
-  );
-  const otherCost = Number(
-    data?.usd_cost_other_total ??
-    (items.reduce((sum: number, item: any) => sum + Number(item.usd_cost_other_total ?? 0), 0) || getCostAmountByType('other'))
-  );
-
-  const sumOfIndividualUsdCosts = freightCost + boxPackingCost + adminCost + ckdCost + blSwitchCost + customsCost + otherCost;
-
-  const totalUsdCost = Number(
-    data?.total_usd_cost ??
-    data?.transaction_usd_cost_total ??
-    (items.some((i: any) => Number(i.total_usd_cost ?? 0) > 0)
-      ? items.reduce((sum: number, item: any) => sum + Number(item.total_usd_cost ?? 0), 0)
-      : sumOfIndividualUsdCosts)
-  );
-
-  const totalBaseItemsUsd = items.reduce((sum, item) => {
-    const itemPriceUsd = Number(
-      item.price_usd && Number(item.price_usd) > 0
-        ? item.price_usd
-        : (Number(item.price_per_unit_usd ?? 0) * Number(item.qty ?? 1))
-    );
-    return sum + itemPriceUsd;
-  }, 0);
-
-  const totalItemsWithCostsUsd = items.reduce((sum: number, item: any) => {
-    const itemTotalUsd = Number(item.price_total_usd ?? item.price_usd_total ?? 0);
-    return sum + itemTotalUsd;
-  }, 0);
-
-  const explicitTotalUsd = Number(
-    data.unit_transaction_price_usd_total_actual && Number(data.unit_transaction_price_usd_total_actual) > 0
-      ? data.unit_transaction_price_usd_total_actual
-      : (data.unit_transaction_price_usd_total && Number(data.unit_transaction_price_usd_total) > 0
-        ? data.unit_transaction_price_usd_total
-        : ((data as any).transaction_price_usd_total && Number((data as any).transaction_price_usd_total) > 0
-          ? (data as any).transaction_price_usd_total
-          : 0))
-  );
-
-  const calculatedTotalUsd = totalBaseItemsUsd + totalUsdCost;
-  const resolvedTotalUsd = Math.max(
-    explicitTotalUsd,
-    totalItemsWithCostsUsd,
-    calculatedTotalUsd
-  );
-  const totalPenjualanSetelahDiskon = calculateTotalAfterDiscount(totalJual, totalDiscountIdr);
-  const totalPenjualanSetelahDiskonUsd = calculateTotalAfterDiscount(resolvedTotalUsd, totalDiscountUsd);
-
-  const billingSummary = data.billing_summary;
-
-  const historyPaid = billingHistories.reduce((sum, item) => sum + getHistoryTotalIdrEquivalent(item), 0);
-  const debetBankUsd = billingSummary?.total_paid_usd !== undefined
-    ? Number(billingSummary.total_paid_usd)
-    : (billingSummary?.total_usd_payment !== undefined
-      ? Number(billingSummary.total_usd_payment)
-      : billingHistories.reduce((sum, item) => sum + getHistoryUsdAmount(item), 0));
-
-  const debetBankIdr = billingSummary?.total_bca_payment !== undefined
-    ? Number(billingSummary.total_bca_payment)
-    : billingHistories.reduce((sum, item) => sum + getHistoryBcaIdrAmount(item), 0);
-
-  const debetCashIdr = billingSummary?.total_cash_payment !== undefined
-    ? Number(billingSummary.total_cash_payment)
-    : billingHistories.reduce((sum, item) => sum + getHistoryCashIdrAmount(item), 0);
-
-  const kurangBayarIdr = billingSummary?.remaining_payment !== undefined
-    ? Number(billingSummary.remaining_payment)
-    : Math.max(0, totalPenjualanSetelahDiskon - historyPaid);
-
-  const kurangBayarUsd = billingSummary?.remaining_payment_usd !== undefined
-    ? Number(billingSummary.remaining_payment_usd)
-    : Math.max(0, totalPenjualanSetelahDiskonUsd - debetBankUsd);
+  const isUsdTransaction = usdSummary.isUsd;
+  const hasAnyUsdData = isUsdTransaction || usdSummary.totalUsdCost > 0 || usdSummary.totalDiscountUsd > 0 || usdSummary.brutoTotalUsd > 0;
 
   const activeUnitTypeCode = unitType?.code ?? (data as any)?.unit_type?.code ?? (items.length === 1 ? (items[0] as any)?.unit_type?.code : undefined);
   const activeUnitTypeName = unitType?.name ?? (data as any)?.unit_type?.name ?? (items.length === 1 ? (items[0] as any)?.unit_type?.name : undefined);
   const activeStockQty = stockQty ?? (data as any)?.stockQty ?? (data as any)?.qty_total ?? (items.length === 1 ? items[0]?.qty : undefined);
-
-  const hasAnyUsdData = freightCost > 0
-    || boxPackingCost > 0
-    || adminCost > 0
-    || ckdCost > 0
-    || blSwitchCost > 0
-    || customsCost > 0
-    || otherCost > 0
-    || totalUsdCost > 0
-    || totalDiscountUsd > 0
-    || resolvedTotalUsd > 0
-    || Boolean(data.price_per_unit_usd && Number(data.price_per_unit_usd) > 0);
-
-  const isUsdTransaction = Boolean(
-    data.is_usd_transaction === true ||
-    (data as any).is_usd_transaction === 1 ||
-    String((data as any).is_usd_transaction) === 'true'
-  );
-
-  const hasUsdDetails = isUsdTransaction || hasAnyUsdData;
 
   const visibleCardsCount = 1 + (!isUsdTransaction ? 1 : 0) + (hasAnyUsdData ? 1 : 0) + 1;
   const gridColsClass = visibleCardsCount >= 4
@@ -284,40 +124,42 @@ export function SalesDetailCards({ data, billingHistories = [], unitType, stockQ
             <div className="space-y-3 text-xs text-slate-500">
               <div className="flex items-center justify-between">
                 <span>Total DPP</span>
-                <span className="text-sm font-semibold text-slate-900">{currenciesFormat('idr', totalDpp)}</span>
+                <span className="text-sm font-semibold text-slate-900">{currenciesFormat('idr', idrSummary.totalDpp)}</span>
               </div>
               <div className="flex items-center justify-between">
                 <span>Total PPN</span>
-                <span className="text-sm font-semibold text-slate-900">{currenciesFormat('idr', totalPpn)}</span>
+                <span className="text-sm font-semibold text-slate-900">{currenciesFormat('idr', idrSummary.totalPpn)}</span>
               </div>
               <div className="border-t border-slate-100 my-1"></div>
               <div className="flex items-center justify-between text-slate-900">
                 <span className="font-bold text-sm">Total HPP</span>
-                <span className="text-sm font-bold">{currenciesFormat('idr', totalHpp)}</span>
+                <span className="text-sm font-bold">{currenciesFormat('idr', idrSummary.totalHpp)}</span>
               </div>
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-1.5">
-                  <span>Diskon (IDR)</span>
-                  {resolvedDiscountIdrPercent !== null && resolvedDiscountIdrPercent > 0 && (
-                    <Badge variant="outline" className="border-amber-300 bg-amber-100 text-amber-800 font-semibold text-[10px] px-1.5 py-0">
-                      {resolvedDiscountIdrPercent}%
-                    </Badge>
-                  )}
+              {idrSummary.totalDiscountIdr > 0 && (
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-1.5">
+                    <span>Diskon (IDR)</span>
+                    {idrSummary.discountIdrPercent !== null && idrSummary.discountIdrPercent > 0 && (
+                      <Badge variant="outline" className="border-amber-300 bg-amber-100 text-amber-800 font-semibold text-[10px] px-1.5 py-0">
+                        {idrSummary.discountIdrPercent}%
+                      </Badge>
+                    )}
+                  </div>
+                  <span className="text-sm font-semibold text-slate-900">{currenciesFormat('idr', idrSummary.totalDiscountIdr)}</span>
                 </div>
-                <span className="text-sm font-semibold text-slate-900">{currenciesFormat('idr', totalDiscountIdr)}</span>
-              </div>
+              )}
               <div className="flex items-center justify-between">
                 <span>Total Biaya</span>
-                <span className="text-sm font-semibold text-slate-900">{currenciesFormat('idr', totalBiaya)}</span>
+                <span className="text-sm font-semibold text-slate-900">{currenciesFormat('idr', idrSummary.totalBiaya)}</span>
               </div>
               <div className="border-t border-slate-100 my-1"></div>
               <div className="flex items-center justify-between text-slate-900">
                 <span className="font-bold uppercase text-sm">TOTAL PENJUALAN</span>
-                <span className="text-sm font-bold">{currenciesFormat('idr', totalJual)}</span>
+                <span className="text-sm font-bold">{currenciesFormat('idr', idrSummary.brutoTotalIdr)}</span>
               </div>
               <div className="flex items-center justify-between text-slate-900">
                 <span className="font-bold uppercase text-sm">TOTAL PENJUALAN SETELAH DISKON</span>
-                <span className="text-sm font-bold text-emerald-700">{currenciesFormat('idr', totalPenjualanSetelahDiskon)}</span>
+                <span className="text-sm font-bold text-emerald-700">{currenciesFormat('idr', idrSummary.grandTotalIdr)}</span>
               </div>
             </div>
           </CardContent>
@@ -336,86 +178,91 @@ export function SalesDetailCards({ data, billingHistories = [], unitType, stockQ
             </div>
 
             <div className="space-y-2.5 text-xs text-slate-500">
-              {totalBaseItemsUsd > 0 && totalUsdCost > 0 && (
+              {usdSummary.baseUsd > 0 && (
                 <div className="flex items-center justify-between">
-                  <span>Total Harga Item (USD)</span>
-                  <span className="text-sm font-semibold text-slate-900">{currenciesFormat('usd', totalBaseItemsUsd)}</span>
+                  <span>Subtotal Harga Unit (USD)</span>
+                  <span className="text-sm font-semibold text-slate-900">{currenciesFormat('usd', usdSummary.baseUsd)}</span>
                 </div>
               )}
-              {freightCost > 0 && (
+              {usdSummary.costs.freight > 0 && (
                 <div className="flex items-center justify-between">
                   <span>Biaya Freight (Pengiriman)</span>
-                  <span className="text-sm font-semibold text-slate-900">{currenciesFormat('usd', freightCost)}</span>
+                  <span className="text-sm font-semibold text-slate-900">{currenciesFormat('usd', usdSummary.costs.freight)}</span>
                 </div>
               )}
-              {boxPackingCost > 0 && (
+              {usdSummary.costs.boxPacking > 0 && (
                 <div className="flex items-center justify-between">
                   <span>Biaya Box Packing (Peti)</span>
-                  <span className="text-sm font-semibold text-slate-900">{currenciesFormat('usd', boxPackingCost)}</span>
+                  <span className="text-sm font-semibold text-slate-900">{currenciesFormat('usd', usdSummary.costs.boxPacking)}</span>
                 </div>
               )}
-              {adminCost > 0 && (
+              {usdSummary.costs.admin > 0 && (
                 <div className="flex items-center justify-between">
                   <span>Biaya Administrasi</span>
-                  <span className="text-sm font-semibold text-slate-900">{currenciesFormat('usd', adminCost)}</span>
+                  <span className="text-sm font-semibold text-slate-900">{currenciesFormat('usd', usdSummary.costs.admin)}</span>
                 </div>
               )}
-              {ckdCost > 0 && (
+              {usdSummary.costs.ckd > 0 && (
                 <div className="flex items-center justify-between">
                   <span>Biaya Pemrosesan CKD</span>
-                  <span className="text-sm font-semibold text-slate-900">{currenciesFormat('usd', ckdCost)}</span>
+                  <span className="text-sm font-semibold text-slate-900">{currenciesFormat('usd', usdSummary.costs.ckd)}</span>
                 </div>
               )}
-              {blSwitchCost > 0 && (
+              {usdSummary.costs.blSwitch > 0 && (
                 <div className="flex items-center justify-between">
                   <span>Biaya Switch B/L</span>
-                  <span className="text-sm font-semibold text-slate-900">{currenciesFormat('usd', blSwitchCost)}</span>
+                  <span className="text-sm font-semibold text-slate-900">{currenciesFormat('usd', usdSummary.costs.blSwitch)}</span>
                 </div>
               )}
-              {customsCost > 0 && (
+              {usdSummary.costs.customs > 0 && (
                 <div className="flex items-center justify-between">
                   <span>Biaya Bea Cukai</span>
-                  <span className="text-sm font-semibold text-slate-900">{currenciesFormat('usd', customsCost)}</span>
+                  <span className="text-sm font-semibold text-slate-900">{currenciesFormat('usd', usdSummary.costs.customs)}</span>
                 </div>
               )}
-              {otherCost > 0 && (
+              {usdSummary.costs.other > 0 && (
                 <div className="flex items-center justify-between">
                   <span>Biaya USD Lainnya</span>
-                  <span className="text-sm font-semibold text-slate-900">{currenciesFormat('usd', otherCost)}</span>
+                  <span className="text-sm font-semibold text-slate-900">{currenciesFormat('usd', usdSummary.costs.other)}</span>
                 </div>
               )}
-              {totalUsdCost > 0 && (
+              {usdSummary.totalUsdCost > 0 && (
                 <>
                   <div className="border-t border-slate-100 my-1"></div>
                   <div className="flex items-center justify-between text-slate-900">
-                    <span className="font-bold text-sm">Total Biaya USD</span>
-                    <span className="text-sm font-bold text-amber-700">{currenciesFormat('usd', totalUsdCost)}</span>
+                    <span className="font-bold text-sm">Total Biaya Tambahan USD</span>
+                    <span className="text-sm font-bold text-amber-700">{currenciesFormat('usd', usdSummary.totalUsdCost)}</span>
                   </div>
                 </>
               )}
-              {totalDiscountUsd > 0 && (
+              {usdSummary.brutoTotalUsd > 0 && (
+                <>
+                  <div className="border-t border-slate-100 my-1"></div>
+                  <div className="flex items-center justify-between text-slate-900">
+                    <span className="font-bold text-sm">Total Bruto (Kotor)</span>
+                    <span className="text-sm font-bold text-slate-900">{currenciesFormat('usd', usdSummary.brutoTotalUsd)}</span>
+                  </div>
+                </>
+              )}
+              {usdSummary.totalDiscountUsd > 0 && (
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-1.5">
                     <span>Diskon (USD)</span>
-                    {resolvedDiscountUsdPercent !== null && resolvedDiscountUsdPercent > 0 && (
+                    {usdSummary.discountUsdPercent !== null && usdSummary.discountUsdPercent > 0 && (
                       <Badge variant="outline" className="border-amber-300 bg-amber-100 text-amber-800 font-semibold text-[10px] px-1.5 py-0">
-                        {resolvedDiscountUsdPercent}%
+                        {usdSummary.discountUsdPercent}%
                       </Badge>
                     )}
                   </div>
-                  <span className="text-sm font-semibold text-slate-900">{currenciesFormat('usd', totalDiscountUsd)}</span>
+                  <span className="text-sm font-semibold text-slate-900">{currenciesFormat('usd', usdSummary.totalDiscountUsd)}</span>
                 </div>
               )}
-              {resolvedTotalUsd > 0 && (
+              {usdSummary.grandTotalUsd > 0 && (
                 <>
                   <div className="border-t border-slate-100 my-1"></div>
-                  <div className="flex items-center justify-between text-slate-900 pt-1">
-                    <span className="font-bold uppercase text-sm">TOTAL PENJUALAN (USD)</span>
-                    <span className="text-sm font-bold text-amber-600">{currenciesFormat('usd', resolvedTotalUsd)}</span>
-                  </div>
                   <div className="flex items-center justify-between text-slate-900 pt-0.5">
-                    <span className="font-bold uppercase text-sm">TOTAL PENJUALAN SETELAH DISKON (USD)</span>
-                    <span className="text-sm font-bold text-emerald-700">{currenciesFormat('usd', totalPenjualanSetelahDiskonUsd)}</span>
+                    <span className="font-bold uppercase text-sm">GRAND TOTAL (USD)</span>
+                    <span className="text-sm font-bold text-emerald-700">{currenciesFormat('usd', usdSummary.grandTotalUsd)}</span>
                   </div>
                 </>
               )}
@@ -445,26 +292,26 @@ export function SalesDetailCards({ data, billingHistories = [], unitType, stockQ
               <>
                 <div className="flex items-center justify-between">
                   <span>Debet Bank USD</span>
-                  <span className="text-sm font-semibold text-slate-900">{currenciesFormat('usd', debetBankUsd)}</span>
+                  <span className="text-sm font-semibold text-slate-900">{currenciesFormat('usd', usdSummary.totalPaidUsd)}</span>
                 </div>
                 <div className="flex items-center justify-between text-amber-800 bg-amber-50/50 px-2 py-1 rounded border border-amber-200/60 font-medium">
                   <span>Kurang Bayar USD</span>
-                  <span className="font-semibold">{currenciesFormat('usd', kurangBayarUsd)}</span>
+                  <span className="font-semibold">{currenciesFormat('usd', usdSummary.remainingPaymentUsd)}</span>
                 </div>
               </>
             ) : (
               <>
                 <div className="flex items-center justify-between">
                   <span>Debet Bank IDR</span>
-                  <span className="text-sm font-semibold text-slate-900">{currenciesFormat('idr', debetBankIdr)}</span>
+                  <span className="text-sm font-semibold text-slate-900">{currenciesFormat('idr', idrSummary.debetBankIdr)}</span>
                 </div>
                 <div className="flex items-center justify-between">
                   <span>Debet Cash IDR</span>
-                  <span className="text-sm font-semibold text-slate-900">{currenciesFormat('idr', debetCashIdr)}</span>
+                  <span className="text-sm font-semibold text-slate-900">{currenciesFormat('idr', idrSummary.debetCashIdr)}</span>
                 </div>
                 <div className="flex items-center justify-between text-rose-800 bg-rose-50/50 px-2 py-1 rounded border border-rose-200/60 font-medium">
                   <span>Kurang Bayar IDR</span>
-                  <span className="font-semibold">{currenciesFormat('idr', kurangBayarIdr)}</span>
+                  <span className="font-semibold">{currenciesFormat('idr', idrSummary.remainingPaymentIdr)}</span>
                 </div>
               </>
             )}

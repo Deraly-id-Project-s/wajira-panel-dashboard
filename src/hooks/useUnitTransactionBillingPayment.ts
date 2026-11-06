@@ -11,7 +11,12 @@ import {
   useDeleteBillingHistory,
 } from '@/hooks/useUnitBilling';
 import { toast } from 'sonner';
-import { getHistoryUsdAmount, getHistoryTotalIdrEquivalent } from '@/utils/payment-helpers';
+import {
+  getHistoryUsdAmount,
+  getHistoryTotalIdrEquivalent,
+  getUsdTransactionSummary,
+  getIdrTransactionSummary,
+} from '@/utils/payment-helpers';
 import type { UnitBilling, UnitBillingHistory } from '@/@types/unit-billing.types';
 
 export interface PaymentFormData {
@@ -149,20 +154,30 @@ export function useUnitTransactionBillingPayment({
     return salesDetail?.ui?.kodeJual ?? salesDetail?.raw?.code ?? '-';
   }, [isPurchase, purchase?.code, salesDetail]);
 
+  const transactionData = useMemo(() => {
+    return isPurchase ? purchase : (salesDetail?.raw ?? salesDetail?.ui);
+  }, [isPurchase, purchase, salesDetail]);
+
+  const transactionItems = useMemo(() => {
+    if (isPurchase) return purchase?.unit_transaction_items ?? [];
+    return salesDetail?.raw?.unit_transaction_items ?? salesDetail?.ui?.lineItems ?? [];
+  }, [isPurchase, purchase, salesDetail]);
+
+  const usdSummary = useMemo(() => {
+    return getUsdTransactionSummary(transactionData, transactionItems, billingHistories);
+  }, [transactionData, transactionItems, billingHistories]);
+
+  const idrSummary = useMemo(() => {
+    return getIdrTransactionSummary(transactionData, transactionItems, billingHistories);
+  }, [transactionData, transactionItems, billingHistories]);
+
   // Is USD Transaction
   const isUsd = useMemo(() => {
     if (currentBilling?.is_usd_transaction !== undefined) {
       return Boolean(currentBilling.is_usd_transaction);
     }
-    if (isPurchase) {
-      return Boolean(purchase?.is_usd_transaction ?? (Number(purchase?.unit_transaction_price_usd_total ?? 0) > 0));
-    }
-    return Boolean(
-      salesDetail?.ui?.is_usd_transaction ??
-      (salesDetail?.raw as any)?.is_usd_transaction ??
-      (Number(salesDetail?.raw?.unit_transaction_price_usd_total ?? 0) > 0)
-    );
-  }, [currentBilling?.is_usd_transaction, isPurchase, purchase, salesDetail]);
+    return usdSummary.isUsd;
+  }, [currentBilling?.is_usd_transaction, usdSummary.isUsd]);
 
   // Computed amounts for USD
   const totalTagihanUsd = useMemo(() => {
@@ -170,29 +185,22 @@ export function useUnitTransactionBillingPayment({
     if (currentBilling?.grand_total && Number(currentBilling.grand_total) > 0) {
       return Number(currentBilling.grand_total);
     }
-    if (isPurchase) {
-      return Number(purchase?.unit_transaction_price_usd_total_actual || purchase?.unit_transaction_price_usd_total || 0);
-    }
-    return Number(salesDetail?.raw?.unit_transaction_price_usd_total_actual || salesDetail?.raw?.unit_transaction_price_usd_total || 0);
-  }, [isUsd, currentBilling?.grand_total, isPurchase, purchase, salesDetail]);
-
-  const historyPaidUsd = useMemo(() => {
-    return (billingHistories ?? []).reduce((acc, h) => acc + getHistoryUsdAmount(h), 0);
-  }, [billingHistories]);
+    return usdSummary.grandTotalUsd;
+  }, [isUsd, currentBilling?.grand_total, usdSummary.grandTotalUsd]);
 
   const totalPaidUsd = useMemo(() => {
     if (!isUsd) return 0;
     const fromBilling = Number(currentBilling?.total_usd_payment ?? currentBilling?.total_paid ?? 0);
-    return Math.max(fromBilling, historyPaidUsd);
-  }, [isUsd, currentBilling, historyPaidUsd]);
+    return Math.max(fromBilling, usdSummary.totalPaidUsd);
+  }, [isUsd, currentBilling, usdSummary.totalPaidUsd]);
 
   const remainingPaymentUsd = useMemo(() => {
     if (!isUsd) return 0;
-    if (currentBilling?.is_paid) return 0;
+    if (currentBilling?.is_paid || usdSummary.isPaid) return 0;
     const fromBilling = Number(currentBilling?.remaining_payment_usd ?? currentBilling?.remaining_payment ?? 0);
     if (fromBilling > 0) return fromBilling;
-    return Math.max(0, totalTagihanUsd - totalPaidUsd);
-  }, [isUsd, currentBilling, totalTagihanUsd, totalPaidUsd]);
+    return usdSummary.remainingPaymentUsd;
+  }, [isUsd, currentBilling, usdSummary.isPaid, usdSummary.remainingPaymentUsd]);
 
   // Computed amounts for IDR
   const totalTagihanIdr = useMemo(() => {
@@ -200,15 +208,8 @@ export function useUnitTransactionBillingPayment({
     if (currentBilling?.grand_total && Number(currentBilling.grand_total) > 0) {
       return Number(currentBilling.grand_total);
     }
-    if (isPurchase) {
-      return Number(purchase?.unit_transaction_bruto_total ?? purchase?.unit_transaction_item_bruto_total ?? 0);
-    }
-    return Number(salesDetail?.ui?.totalJual ?? 0);
-  }, [isUsd, currentBilling?.grand_total, isPurchase, purchase, salesDetail]);
-
-  const historyPaidIdr = useMemo(() => {
-    return (billingHistories ?? []).reduce((acc, h) => acc + getHistoryTotalIdrEquivalent(h), 0);
-  }, [billingHistories]);
+    return idrSummary.grandTotalIdr;
+  }, [isUsd, currentBilling?.grand_total, idrSummary.grandTotalIdr]);
 
   const totalPaidIdr = useMemo(() => {
     if (isUsd) return 0;
@@ -216,41 +217,34 @@ export function useUnitTransactionBillingPayment({
       currentBilling?.total_paid ??
       (Number(currentBilling?.total_cash_payment ?? 0) + Number(currentBilling?.total_bca_payment ?? 0))
     );
-    return Math.max(fromBilling, historyPaidIdr);
-  }, [isUsd, currentBilling, historyPaidIdr]);
+    return Math.max(fromBilling, idrSummary.totalPaidIdr);
+  }, [isUsd, currentBilling, idrSummary.totalPaidIdr]);
 
   const remainingPaymentIdr = useMemo(() => {
     if (isUsd) return 0;
-    if (currentBilling?.is_paid) return 0;
+    if (currentBilling?.is_paid || idrSummary.isPaid) return 0;
     const fromBilling = Number(currentBilling?.remaining_payment ?? 0);
     if (fromBilling > 0) return fromBilling;
-    return Math.max(0, totalTagihanIdr - totalPaidIdr);
-  }, [isUsd, currentBilling, totalTagihanIdr, totalPaidIdr]);
+    return idrSummary.remainingPaymentIdr;
+  }, [isUsd, currentBilling, idrSummary.isPaid, idrSummary.remainingPaymentIdr]);
 
   const totalPpn = useMemo(() => {
     if (isUsd) return 0;
-    if (isPurchase) {
-      return Number((purchase as any)?.unit_transaction_item_total_ppn ?? (purchase as any)?.transaction_ppn_total ?? 0);
-    }
-    return Number(salesDetail?.ui?.totalPpn ?? 0);
-  }, [isUsd, isPurchase, purchase, salesDetail]);
+    return idrSummary.totalPpn;
+  }, [isUsd, idrSummary.totalPpn]);
 
   const totalDpp = useMemo(() => {
     if (isUsd) return 0;
-    if (isPurchase) {
-      const dpp = Number((purchase as any)?.unit_transaction_item_total_dpp ?? 0);
-      return dpp > 0 ? dpp : Math.max(0, totalTagihanIdr - totalPpn);
-    }
-    return Number(salesDetail?.ui?.totalDpp ?? Math.max(0, totalTagihanIdr - totalPpn));
-  }, [isUsd, isPurchase, purchase, salesDetail, totalTagihanIdr, totalPpn]);
+    return idrSummary.totalDpp;
+  }, [isUsd, idrSummary.totalDpp]);
 
   const isPaid = useMemo(() => {
     if (currentBilling?.is_paid) return true;
     if (isUsd) {
-      return totalTagihanUsd > 0 && remainingPaymentUsd === 0;
+      return usdSummary.isPaid || (totalTagihanUsd > 0 && remainingPaymentUsd === 0);
     }
-    return totalTagihanIdr > 0 && remainingPaymentIdr === 0;
-  }, [currentBilling?.is_paid, isUsd, totalTagihanUsd, remainingPaymentUsd, totalTagihanIdr, remainingPaymentIdr]);
+    return idrSummary.isPaid || (totalTagihanIdr > 0 && remainingPaymentIdr === 0);
+  }, [currentBilling?.is_paid, isUsd, usdSummary.isPaid, totalTagihanUsd, remainingPaymentUsd, idrSummary.isPaid, totalTagihanIdr, remainingPaymentIdr]);
 
   // Submit payment handler
   const submitPayment = async (data: PaymentFormData) => {
@@ -399,6 +393,12 @@ export function useUnitTransactionBillingPayment({
     remainingPaymentIdr,
     totalDpp,
     totalPpn,
+    brutoTotalUsd: usdSummary.brutoTotalUsd,
+    totalDiscountUsd: usdSummary.totalDiscountUsd,
+    discountUsdPercent: usdSummary.discountUsdPercent,
+    brutoTotalIdr: idrSummary.brutoTotalIdr,
+    totalDiscountIdr: idrSummary.totalDiscountIdr,
+    discountIdrPercent: idrSummary.discountIdrPercent,
     isLoading,
     isSubmitting: isSubmitting || createBillingHistoryMutation.isPending || deleteBillingHistoryMutation.isPending,
     validationMessage,
