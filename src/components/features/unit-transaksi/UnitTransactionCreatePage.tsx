@@ -6,6 +6,7 @@ import { toast } from 'sonner';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { PageHeader } from '@/components/ui/page-header';
 import { Card, CardContent } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
 import { LoadingState } from '@/components/ui/loading-state';
 import { CollapsibleBox } from '@/components/ui/collapsible-box';
 import { FileText } from 'lucide-react';
@@ -16,7 +17,7 @@ import {
   type UnitTransactionPerson,
 } from '@/components/features/unit-transaksi/UnitTransactionPartyFields';
 import { useCreatePurchase } from '@/hooks/usePurchase';
-import { useCreateSales } from '@/hooks/useSales';
+import { useCreateSales, useSalesById } from '@/hooks/useSales';
 import { useCompany } from '@/contexts/CompanyContext';
 import { usePageLoading } from '@/contexts/PageLoadingContext';
 import type { CreatePurchaseRequest } from '@/@types/purchase.types';
@@ -24,6 +25,7 @@ import type { UnitTransactionFormValues, UnitTransactionKind } from '@/types/uni
 import { apiClient } from '@/lib/api/client';
 import { purchaseService } from '@/services/purchase.service';
 import { generateSalesCode } from '@/lib/utils/sales';
+import { isUnitUsdTransaction } from '@/utils/payment-helpers';
 import {
   usePurchaseById,
   useUpdateUnitTransactionDocumentTemplate,
@@ -139,7 +141,11 @@ export function UnitTransactionCreatePage({ type, mode }: UnitTransactionCreateP
   const [transactionDate, setTransactionDate] = useState(new Date().toISOString().split('T')[0]);
 
   // Queries & Mutations for mode === 'unit'
-  const { data: transactionDetail, isLoading: isLoadingDetail } = usePurchaseById(isUnitMode ? transactionId : undefined);
+  const { data: purchaseDetail, isLoading: isLoadingPurchaseDetail } = usePurchaseById(isUnitMode && isPurchase ? transactionId : undefined);
+  const { data: salesDetail, isLoading: isLoadingSalesDetail } = useSalesById(isUnitMode && !isPurchase ? transactionId : undefined);
+  const transactionDetail = isPurchase ? purchaseDetail : salesDetail;
+  const isLoadingDetail = isPurchase ? isLoadingPurchaseDetail : isLoadingSalesDetail;
+  const isUsdTransaction = isUnitUsdTransaction(transactionDetail);
   const { data: purchaseItems } = usePurchaseUnitItems(isUnitMode && isPurchase ? transactionId : undefined);
   const { data: salesItems } = useSalesUnitItems(isUnitMode && !isPurchase ? transactionId : undefined);
   const addUnitMutation = useCreateUnitItem();
@@ -448,7 +454,12 @@ export function UnitTransactionCreatePage({ type, mode }: UnitTransactionCreateP
             subtitle={
               <div className="flex flex-wrap items-center gap-2">
                 <span>{isPurchase ? 'Kode Pembelian:' : 'Kode Penjualan:'}</span>
-                <span className={isPurchase ? 'font-semibold text-orange-600' : 'font-semibold text-orange-600'}>{invoiceCode}</span>
+                <span className="font-semibold text-orange-600">{invoiceCode}</span>
+                {isUsdTransaction && (
+                  <Badge variant="outline" className="border-amber-300 bg-amber-100 text-amber-800 font-semibold">
+                    Transaksi USD
+                  </Badge>
+                )}
               </div>
             }
           />
@@ -458,6 +469,7 @@ export function UnitTransactionCreatePage({ type, mode }: UnitTransactionCreateP
               <UnitTransactionForm
                 type={type}
                 allowCreateTypeUnit
+                hideUsdCheckbox={true}
                 defaultValues={{
                   unitTypeId: '',
                   qty: 1,
@@ -471,7 +483,7 @@ export function UnitTransactionCreatePage({ type, mode }: UnitTransactionCreateP
                   hppPerUnit: 0,
                   dppPerUnit: 0,
                   ppnPerUnit: 0,
-                  is_usd_transaction: Boolean(transactionDetail?.is_usd_transaction),
+                  is_usd_transaction: isUsdTransaction,
                   documentTemplateId: transactionDetail?.documentTemplateId ?? null,
                 }}
                 excludedTypeUnitIds={existingTypeUnitIds}

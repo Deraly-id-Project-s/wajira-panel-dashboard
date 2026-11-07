@@ -5,6 +5,7 @@ import { Calendar, User, FileText, DollarSign, CreditCard } from 'lucide-react';
 import {
   getUsdTransactionSummary,
   getIdrTransactionSummary,
+  isUnitUsdTransaction,
 } from '@/utils/payment-helpers';
 import { currenciesFormat } from '@/components/ui/currenciesFormat';
 import { CopyBox } from '@/components/ui/copy-box';
@@ -32,18 +33,15 @@ export function PurchaseDetailCards({ data, billingHistories = [], unitItems, un
   const usdSummary = getUsdTransactionSummary(data, items, billingHistories);
   const idrSummary = getIdrTransactionSummary(data, items, billingHistories);
 
-  const isUsdTransaction = usdSummary.isUsd;
-  const hasAnyUsdData = isUsdTransaction || usdSummary.totalUsdCost > 0 || usdSummary.totalDiscountUsd > 0 || usdSummary.brutoTotalUsd > 0;
+  const isUsdTransaction = isUnitUsdTransaction(data);
 
   const activeUnitType = unitType ?? unitItem?.unit_type ?? (items.length === 1 ? items[0]?.unit_type : undefined);
   const activeUnitTypeCode = activeUnitType?.code ?? unitItem?.unit_type_code ?? (items.length === 1 ? items[0]?.unit_type_code : undefined);
   const activeUnitTypeName = activeUnitType?.name ?? unitItem?.unit_type_name ?? (items.length === 1 ? items[0]?.unit_type_name : undefined);
   const activeStockQty = stockQty ?? unitItem?.qty_total ?? (items.length === 1 ? items[0]?.qty_total : undefined);
 
-  const visibleCardsCount = 1 + (!isUsdTransaction ? 1 : 0) + (hasAnyUsdData ? 1 : 0) + 1;
-  const gridColsClass = visibleCardsCount >= 4
-    ? "lg:grid-cols-4"
-    : (visibleCardsCount === 3 ? "lg:grid-cols-3" : "lg:grid-cols-2");
+  const visibleCardsCount = 3;
+  const gridColsClass = "lg:grid-cols-3";
 
   return (
     <div className={cn(
@@ -170,7 +168,7 @@ export function PurchaseDetailCards({ data, billingHistories = [], unitItems, un
       )}
 
       {/* Card 3: Detail Pembelian (USD) */}
-      {hasAnyUsdData && (
+      {isUsdTransaction && (
         <Card className="rounded-md border border-slate-200 shadow-sm h-full">
           <CardContent className="p-5 flex flex-col h-full gap-4">
             <div className="flex items-center gap-3">

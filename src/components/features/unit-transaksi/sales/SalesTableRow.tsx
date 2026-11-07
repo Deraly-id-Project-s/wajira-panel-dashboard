@@ -57,7 +57,7 @@ export function SalesTableRow({ item, isSelected, onToggle, onDelete, canEdit, c
     }
 
     const handleRefund = () => {
-        router.push(slug ? `/dashboard/${slug}/transaksi/penjualan-unit/${item.id}/refund` : `/transaksi/penjualan-unit/${item.id}/refund`)
+        router.push(slug ? `/dashboard/${slug}/transaksi/refund-jual?unit_transaction_id=${item.id}` : `/transaksi/refund-jual?unit_transaction_id=${item.id}`)
     }
 
     const handleDelete = async () => {

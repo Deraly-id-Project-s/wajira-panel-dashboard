@@ -15,6 +15,7 @@ import { useUnitTransactionItemById } from '@/hooks/useUnitItemDetail';
 import { toast } from 'sonner';
 import type { UnitTransactionFormValues } from '@/types/unit-transaction.types';
 import { LoadingState } from '@/components/ui/loading-state';
+import { isUnitUsdTransaction } from '@/utils/payment-helpers';
 
 const parseApiError = (err: any): string => {
   const details = err?.details ?? err?.response?.data?.errors;
@@ -49,13 +50,7 @@ export default function EditPurchaseUnitPage() {
   const unit = singleUnitItem ?? unitItems?.data?.find((item) => item.id === String(unitId));
   const parentTransactionId = String(unit?.unit_transaction_id ?? id ?? '');
 
-  const isUsd = Boolean(
-    unit?.is_usd_transaction ??
-    (unit as any)?.unit_transaction?.is_usd_transaction ??
-    purchase?.is_usd_transaction ??
-    ((Number((unit as any)?.price_usd ?? 0) > 0) ||
-    (Number((unit as any)?.price_per_unit_usd ?? 0) > 0))
-  );
+  const isUsd = isUnitUsdTransaction(purchase ?? (unit as any)?.unit_transaction ?? unit);
 
   const excludedTypeUnitIds = (unitItems?.data ?? [])
     .filter((item) => item.id !== String(unitId) && item.unit_type_id)
@@ -240,6 +235,7 @@ export default function EditPurchaseUnitPage() {
             <UnitTransactionForm
               type="purchase"
               allowCreateTypeUnit
+              hideUsdCheckbox={true}
               defaultValues={{
                 unitTypeId: unit.unit_type_id ?? '',
                 qty: unit.qty_total,

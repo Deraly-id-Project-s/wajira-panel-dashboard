@@ -40,6 +40,7 @@ import { useReportTemplatePrint } from '@/hooks/useReportTemplatePrint';
 import { ReportTemplatePrintDialog } from '@/components/ui/report-template-print-dialog';
 import { resolveCompanyId, getLetterheadByCompanyId, getCompanyName } from '@/lib/print-letterhead';
 import PurchasePrintDocument from '@/components/features/unit-transaksi/purchase/PurchasePrintDocument';
+import { isUnitUsdTransaction } from '@/utils/payment-helpers';
 
 const readApiError = (error: any): string => {
   const details = error?.details ?? error?.response?.data?.errors;
@@ -188,6 +189,8 @@ export default function PurchaseDetailPage() {
     }
   }, [router.query.print, isLoading, purchase, templatePrint.selectedTemplateId]);
 
+  const isUsdTransaction = isUnitUsdTransaction(purchase);
+
   const historyColumns = useMemo<ColumnDef<any>[]>(
     () => [
       {
@@ -205,32 +208,37 @@ export default function PurchaseDetailPage() {
           <TextTruncate text={history?.note ?? '-'} maxLength={20} className="break-all" />
         ),
       },
-      {
-        header: 'Nominal Pembayaran BCA USD',
-        alignment: 'right',
-        cell: (history) => {
-          const usdPayment = Number(history.bca_payment_usd_amount ?? 0);
-          return usdPayment > 0 ? `$ ${usdPayment.toLocaleString('id-ID')}` : '-';
-        },
-      },
-      {
-        header: 'Nominal Pembayaran BCA IDR',
-        alignment: 'right',
-        cell: (history) => {
-          const bcaPayment = Number(history.bca_payment_amount ?? 0);
-          return bcaPayment > 0 ? `Rp ${bcaPayment.toLocaleString('id-ID')}` : '-';
-        },
-      },
-      {
-        header: 'Nominal Pembayaran CASH IDR',
-        alignment: 'right',
-        cell: (history) => {
-          const cashPayment = Number(history.cash_payment_amount ?? 0);
-          return cashPayment > 0 ? `Rp ${cashPayment.toLocaleString('id-ID')}` : '-';
-        },
-      },
+      ...(isUsdTransaction
+        ? [
+            {
+              header: 'Nominal Pembayaran BCA USD',
+              alignment: 'right' as const,
+              cell: (history: any) => {
+                const usdPayment = Number(history.bca_payment_usd_amount ?? 0);
+                return usdPayment > 0 ? `$ ${usdPayment.toLocaleString('id-ID')}` : '-';
+              },
+            },
+          ]
+        : [
+            {
+              header: 'Nominal Pembayaran BCA IDR',
+              alignment: 'right' as const,
+              cell: (history: any) => {
+                const bcaPayment = Number(history.bca_payment_amount ?? 0);
+                return bcaPayment > 0 ? `Rp ${bcaPayment.toLocaleString('id-ID')}` : '-';
+              },
+            },
+            {
+              header: 'Nominal Pembayaran CASH IDR',
+              alignment: 'right' as const,
+              cell: (history: any) => {
+                const cashPayment = Number(history.cash_payment_amount ?? 0);
+                return cashPayment > 0 ? `Rp ${cashPayment.toLocaleString('id-ID')}` : '-';
+              },
+            },
+          ]),
     ],
-    []
+    [isUsdTransaction]
   );
 
   const handleMarkAsPaid = async () => {
@@ -463,7 +471,7 @@ export default function PurchaseDetailPage() {
                     size="sm"
                     variant="outline"
                     className="border-amber-300 text-amber-700 hover:bg-amber-50"
-                    onClick={() => router.push(`/dashboard/${slug}/transaksi/pembelian-unit/${purchase.id}/refund`)}
+                    onClick={() => router.push(`/dashboard/${slug}/transaksi/refund-beli?unit_transaction_id=${purchase.id}`)}
                   >
                     <RotateCcw className="mr-2 h-4 w-4" />
                     Refund
@@ -486,7 +494,7 @@ export default function PurchaseDetailPage() {
 
         <PurchaseDetailCards data={purchase} billingHistories={resolvedBillingHistories} unitItems={unitItems} />
 
-        <PurchaseUnitTable purchaseId={purchase.id} slug={slug as string} isPaid={isPaid} canEdit={canEdit} canDelete={canDelete} isUsdTransaction={purchase.is_usd_transaction} />
+        <PurchaseUnitTable purchaseId={purchase.id} slug={slug as string} isPaid={isPaid} canEdit={canEdit} canDelete={canDelete} isUsdTransaction={isUsdTransaction} />
 
         <UnitTypeDetailTable
           transactionId={purchase.id}

@@ -8,6 +8,7 @@ import { UnitTransactionForm } from "@/components/features/unit-transaksi/UnitTr
 import { useAddPurchaseUnit } from "@/hooks/usePurchase"
 import { usePurchaseById, useUpdateUnitTransactionDocumentTemplate } from "@/hooks/useUnitTransaction"
 import type { UnitTransactionFormValues } from "@/types/unit-transaction.types"
+import { isUnitUsdTransaction } from "@/utils/payment-helpers"
 
 export default function AddPurchaseUnitPage() {
     const router = useRouter()
@@ -47,6 +48,8 @@ export default function AddPurchaseUnitPage() {
         }
     }
 
+    const isUsd = isUnitUsdTransaction(purchase);
+
     return (
         <DashboardLayout>
             <div className="p-6 space-y-6">
@@ -59,7 +62,17 @@ export default function AddPurchaseUnitPage() {
                     </p>
                 </div>
 
-                <UnitTransactionForm type="purchase" allowCreateTypeUnit defaultValues={{ documentTemplateId: purchase?.documentTemplateId ?? null }} onSubmit={handleSubmit} onCancel={() => router.back()} />
+                <UnitTransactionForm
+                    type="purchase"
+                    allowCreateTypeUnit
+                    hideUsdCheckbox={true}
+                    defaultValues={{
+                        is_usd_transaction: isUsd,
+                        documentTemplateId: purchase?.documentTemplateId ?? null,
+                    }}
+                    onSubmit={handleSubmit}
+                    onCancel={() => router.back()}
+                />
             </div>
         </DashboardLayout>
     )

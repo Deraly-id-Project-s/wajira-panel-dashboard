@@ -40,6 +40,7 @@ import { ReportTemplatePrintDialog } from '@/components/ui/report-template-print
 import { resolveCompanyId, getLetterheadByCompanyId, getCompanyName } from '@/lib/print-letterhead';
 import { useUnitTransactionTypeDetails } from '@/hooks/useUnitTransaction';
 import SalesPrintDocument from '@/components/features/unit-transaksi/sales/SalesPrintDocument';
+import { isUnitUsdTransaction } from '@/utils/payment-helpers';
 
 export default function SalesDetailPage() {
   const router = useRouter();
@@ -178,6 +179,8 @@ export default function SalesDetailPage() {
     }
   }, [router.query.print, isLoading, sales, templatePrint.selectedTemplateId]);
 
+  const isUsdTransaction = isUnitUsdTransaction(salesData?.is_usd_transaction !== undefined ? salesData : sales);
+
   const historyColumns = useMemo<ColumnDef<any>[]>(
     () => [
       {
@@ -212,32 +215,37 @@ export default function SalesDetailPage() {
             <span className="text-slate-400">-</span>
           ),
       },
-      {
-        header: 'Nominal Pembayaran BCA USD',
-        alignment: 'right',
-        cell: (history) => {
-          const usdPayment = Number(history.bca_payment_usd_amount ?? 0);
-          return usdPayment > 0 ? `$ ${usdPayment.toLocaleString('id-ID')}` : '-';
-        },
-      },
-      {
-        header: 'Nominal Pembayaran BCA IDR',
-        alignment: 'right',
-        cell: (history) => {
-          const bcaPayment = Number(history.bca_payment_amount ?? 0);
-          return bcaPayment > 0 ? `Rp ${bcaPayment.toLocaleString('id-ID')}` : '-';
-        },
-      },
-      {
-        header: 'Nominal Pembayaran CASH IDR',
-        alignment: 'right',
-        cell: (history) => {
-          const cashPayment = Number(history.cash_payment_amount ?? 0);
-          return cashPayment > 0 ? `Rp ${cashPayment.toLocaleString('id-ID')}` : '-';
-        },
-      },
+      ...(isUsdTransaction
+        ? [
+            {
+              header: 'Nominal Pembayaran BCA USD',
+              alignment: 'right' as const,
+              cell: (history: any) => {
+                const usdPayment = Number(history.bca_payment_usd_amount ?? 0);
+                return usdPayment > 0 ? `$ ${usdPayment.toLocaleString('id-ID')}` : '-';
+              },
+            },
+          ]
+        : [
+            {
+              header: 'Nominal Pembayaran BCA IDR',
+              alignment: 'right' as const,
+              cell: (history: any) => {
+                const bcaPayment = Number(history.bca_payment_amount ?? 0);
+                return bcaPayment > 0 ? `Rp ${bcaPayment.toLocaleString('id-ID')}` : '-';
+              },
+            },
+            {
+              header: 'Nominal Pembayaran CASH IDR',
+              alignment: 'right' as const,
+              cell: (history: any) => {
+                const cashPayment = Number(history.cash_payment_amount ?? 0);
+                return cashPayment > 0 ? `Rp ${cashPayment.toLocaleString('id-ID')}` : '-';
+              },
+            },
+          ]),
     ],
-    []
+    [isUsdTransaction]
   );
 
   const handleCreateUnit = () => {
@@ -475,7 +483,7 @@ export default function SalesDetailPage() {
                     size="sm"
                     variant="outline"
                     className="border-amber-300 text-amber-700 hover:bg-amber-50"
-                    onClick={() => router.push(`/dashboard/${slug}/transaksi/penjualan-unit/${sales.id}/refund`)}
+                    onClick={() => router.push(`/dashboard/${slug}/transaksi/refund-jual?unit_transaction_id=${sales.id}`)}
                   >
                     <RotateCcw className="mr-2 h-4 w-4" />
                     Refund
@@ -506,7 +514,7 @@ export default function SalesDetailPage() {
           canDelete={canDelete}
           canCreate={canCreate}
           isPaid={isPaid}
-          isUsdTransaction={salesData?.is_usd_transaction ?? (sales as any)?.is_usd_transaction}
+          isUsdTransaction={isUsdTransaction}
         />
 
         <UnitTypeDetailTable

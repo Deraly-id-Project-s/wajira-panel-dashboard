@@ -609,7 +609,26 @@ function SidebarNavItem({ item, isCollapsed }: { item: MenuItem; isCollapsed?: b
     if (exact) {
       return currentPath === href;
     }
-    return currentPath === href || currentPath.startsWith(`${href}/`);
+    if (currentPath === href || currentPath.startsWith(`${href}/`)) {
+      return true;
+    }
+    if (href.endsWith('/transaksi/pembelian-unit')) {
+      if (
+        currentPath.includes('/transaksi/refund-beli') ||
+        currentPath.includes('/transaksi/pembelian-unit')
+      ) {
+        return true;
+      }
+    }
+    if (href.endsWith('/transaksi/penjualan-unit')) {
+      if (
+        currentPath.includes('/transaksi/refund-jual') ||
+        currentPath.includes('/transaksi/penjualan-unit')
+      ) {
+        return true;
+      }
+    }
+    return false;
   };
 
   const hasActiveChild = (menuItem: MenuItem): boolean => {

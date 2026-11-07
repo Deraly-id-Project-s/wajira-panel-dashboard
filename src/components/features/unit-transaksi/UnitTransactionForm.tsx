@@ -21,6 +21,7 @@ import RequiredMark from '@/components/ui/required-mark';
 import { TypeUnitFormModal } from '@/components/features/type-unit/TypeUnitFormModal';
 import { unitTransactionSchema } from '@/scheme/unit-transaction.schema';
 import type { UnitTransactionFormValues } from '@/types/unit-transaction.types';
+import { cn } from '@/lib/utils';
 
 export interface UnitTransactionFormProps {
   type: 'purchase' | 'sales';
@@ -46,6 +47,7 @@ export interface UnitTransactionFormProps {
   excludedTypeUnitIds?: string[];
   prependFields?: ReactNode | ((form: UseFormReturn<UnitTransactionFormValues>) => ReactNode);
   hideItemFields?: boolean;
+  hideUsdCheckbox?: boolean;
   submitDisabled?: boolean;
   cancelDisabled?: boolean;
   allowCreateTypeUnit?: boolean;
@@ -141,6 +143,7 @@ export function UnitTransactionForm({
   excludedTypeUnitIds = [],
   prependFields,
   hideItemFields = false,
+  hideUsdCheckbox = false,
   submitDisabled = false,
   cancelDisabled = false,
   allowCreateTypeUnit = false,
@@ -468,58 +471,60 @@ export function UnitTransactionForm({
           {!hideItemFields && (
             <>
               {/* USD Transaction Toggle */}
-              <div className="flex items-center space-x-2 py-1">
-                <Checkbox
-                  id={`${type}_is_usd`}
-                  checked={isUsd}
-                  onCheckedChange={(checked) => {
-                    const nextValue = checked === true;
-                    setIsUsd(nextValue);
+              {!hideUsdCheckbox && (
+                <div className="flex items-center space-x-2 py-1">
+                  <Checkbox
+                    id={`${type}_is_usd`}
+                    checked={isUsd}
+                    onCheckedChange={(checked) => {
+                      const nextValue = checked === true;
+                      setIsUsd(nextValue);
 
-                    const currentUnitTypeId = form.getValues('unitTypeId');
-                    const selectedTypeUnit = currentUnitTypeId
-                      ? typeUnitOptions.find((opt) => String(opt.id) === String(currentUnitTypeId))
-                      : null;
-                    const currentQty = Number(form.getValues('qty') || 1);
+                      const currentUnitTypeId = form.getValues('unitTypeId');
+                      const selectedTypeUnit = currentUnitTypeId
+                        ? typeUnitOptions.find((opt) => String(opt.id) === String(currentUnitTypeId))
+                        : null;
+                      const currentQty = Number(form.getValues('qty') || 1);
 
-                    if (nextValue) {
-                      form.setValue('price', 0, { shouldDirty: true, shouldValidate: true });
-                      form.setValue('bbnPrice', 0, { shouldDirty: true });
-                      form.setValue('expeditionFee', 0, { shouldDirty: true });
-                      form.setValue('otherFee', 0, { shouldDirty: true });
-                      form.setValue('price_discount', 0, { shouldDirty: true });
-
-                      if (selectedTypeUnit) {
-                        const usdPrice = getUnitPrice(selectedTypeUnit, true);
-                        form.setValue('pricePerUnitUsd', usdPrice, { shouldDirty: true, shouldValidate: true });
-                        form.setValue('priceUsd', usdPrice * currentQty, { shouldDirty: true, shouldValidate: true });
-                      } else {
-                        form.setValue('pricePerUnitUsd', 0, { shouldDirty: true });
-                        form.setValue('priceUsd', 0, { shouldDirty: true });
-                      }
-                    } else {
-                      form.setValue('priceUsd', 0, { shouldDirty: true });
-                      form.setValue('pricePerUnitUsd', 0, { shouldDirty: true });
-                      setOtherCosts([]);
-
-                      if (selectedTypeUnit) {
-                        const idrPrice = getUnitPrice(selectedTypeUnit, false);
-                        form.setValue('price', idrPrice, { shouldDirty: true, shouldValidate: true });
-                      } else {
+                      if (nextValue) {
                         form.setValue('price', 0, { shouldDirty: true, shouldValidate: true });
+                        form.setValue('bbnPrice', 0, { shouldDirty: true });
+                        form.setValue('expeditionFee', 0, { shouldDirty: true });
+                        form.setValue('otherFee', 0, { shouldDirty: true });
+                        form.setValue('price_discount', 0, { shouldDirty: true });
+
+                        if (selectedTypeUnit) {
+                          const usdPrice = getUnitPrice(selectedTypeUnit, true);
+                          form.setValue('pricePerUnitUsd', usdPrice, { shouldDirty: true, shouldValidate: true });
+                          form.setValue('priceUsd', usdPrice * currentQty, { shouldDirty: true, shouldValidate: true });
+                        } else {
+                          form.setValue('pricePerUnitUsd', 0, { shouldDirty: true });
+                          form.setValue('priceUsd', 0, { shouldDirty: true });
+                        }
+                      } else {
+                        form.setValue('priceUsd', 0, { shouldDirty: true });
+                        form.setValue('pricePerUnitUsd', 0, { shouldDirty: true });
+                        setOtherCosts([]);
+
+                        if (selectedTypeUnit) {
+                          const idrPrice = getUnitPrice(selectedTypeUnit, false);
+                          form.setValue('price', idrPrice, { shouldDirty: true, shouldValidate: true });
+                        } else {
+                          form.setValue('price', 0, { shouldDirty: true, shouldValidate: true });
+                        }
                       }
-                    }
-                  }}
-                  disabled={readOnly}
-                  className="cursor-pointer"
-                />
-                <Label htmlFor={`${type}_is_usd`} className="text-sm font-medium cursor-pointer">
-                  Transaksi USD (Gunakan mata uang asing USD)
-                </Label>
-              </div>
+                    }}
+                    disabled={readOnly}
+                    className="cursor-pointer"
+                  />
+                  <Label htmlFor={`${type}_is_usd`} className="text-sm font-medium cursor-pointer">
+                    Transaksi USD (Gunakan mata uang asing USD)
+                  </Label>
+                </div>
+              )}
 
               {/* Row Type Unit / Qty / Harga */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div className={cn("grid grid-cols-1 gap-6", showIdrFields ? "md:grid-cols-3" : "md:grid-cols-2")}>
                 <FormField
                   control={form.control}
                   name="unitTypeId"

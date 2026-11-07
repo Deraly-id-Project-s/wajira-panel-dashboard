@@ -415,7 +415,7 @@ export function SalesTable({
                     return (
                       <DropdownMenuItem
                         className="rounded-md px-3 py-2 text-sm text-slate-900 focus:bg-slate-50 cursor-pointer"
-                        onClick={() => router.push(slug ? `/dashboard/${slug}/transaksi/penjualan-unit/${item.id}/refund` : `/transaksi/penjualan-unit/${item.id}/refund`)}
+                        onClick={() => router.push(slug ? `/dashboard/${slug}/transaksi/refund-jual?unit_transaction_id=${item.id}` : `/transaksi/refund-jual?unit_transaction_id=${item.id}`)}
                         disabled={isRefunded(item) || !canEdit}
                       >
                         Refund Jual

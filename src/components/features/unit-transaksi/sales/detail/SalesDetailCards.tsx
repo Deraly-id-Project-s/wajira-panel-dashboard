@@ -7,6 +7,7 @@ import { currenciesFormat } from '@/components/ui/currenciesFormat';
 import {
   getUsdTransactionSummary,
   getIdrTransactionSummary,
+  isUnitUsdTransaction,
 } from '@/utils/payment-helpers';
 import { CopyBox } from '@/components/ui/copy-box';
 import { ReferenceLink } from '@/components/ui/reference-link';
@@ -29,17 +30,14 @@ export function SalesDetailCards({ data, billingHistories = [], unitType, stockQ
   const usdSummary = getUsdTransactionSummary(data, items, billingHistories);
   const idrSummary = getIdrTransactionSummary(data, items, billingHistories);
 
-  const isUsdTransaction = usdSummary.isUsd;
-  const hasAnyUsdData = isUsdTransaction || usdSummary.totalUsdCost > 0 || usdSummary.totalDiscountUsd > 0 || usdSummary.brutoTotalUsd > 0;
+  const isUsdTransaction = isUnitUsdTransaction(data);
 
   const activeUnitTypeCode = unitType?.code ?? (data as any)?.unit_type?.code ?? (items.length === 1 ? (items[0] as any)?.unit_type?.code : undefined);
   const activeUnitTypeName = unitType?.name ?? (data as any)?.unit_type?.name ?? (items.length === 1 ? (items[0] as any)?.unit_type?.name : undefined);
   const activeStockQty = stockQty ?? (data as any)?.stockQty ?? (data as any)?.qty_total ?? (items.length === 1 ? items[0]?.qty : undefined);
 
-  const visibleCardsCount = 1 + (!isUsdTransaction ? 1 : 0) + (hasAnyUsdData ? 1 : 0) + 1;
-  const gridColsClass = visibleCardsCount >= 4
-    ? "lg:grid-cols-4"
-    : (visibleCardsCount === 3 ? "lg:grid-cols-3" : "lg:grid-cols-2");
+  const visibleCardsCount = 3;
+  const gridColsClass = "lg:grid-cols-3";
 
   return (
     <div className={cn(
@@ -167,7 +165,7 @@ export function SalesDetailCards({ data, billingHistories = [], unitType, stockQ
       )}
 
       {/* Card 3: Detail Penjualan (USD) */}
-      {hasAnyUsdData && (
+      {isUsdTransaction && (
         <Card className="rounded-md border border-slate-200 shadow-sm h-full">
           <CardContent className="p-5 flex flex-col h-full gap-4">
             <div className="flex items-center gap-3">

@@ -4,8 +4,9 @@
 import { useMemo } from 'react';
 import { useRouter } from 'next/router';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
+import { PageHeader } from '@/components/ui/page-header';
+import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
-import { ArrowLeft } from 'lucide-react';
 import { UnitTransactionForm } from '@/components/features/unit-transaksi/UnitTransactionForm';
 import type { UnitTransactionFormValues } from '@/types/unit-transaction.types';
 import { toast } from 'sonner';
@@ -16,6 +17,7 @@ import { useTypeUnits } from '@/hooks/useTypeUnit';
 import { useCompany } from '@/contexts/CompanyContext';
 import { LoadingState } from '@/components/ui/loading-state';
 import { useUpdateUnitTransactionDocumentTemplate } from '@/hooks/useUnitTransaction';
+import { isUnitUsdTransaction } from '@/utils/payment-helpers';
 
 export default function EditSalesUnitPage() {
     const router = useRouter();
@@ -39,6 +41,7 @@ export default function EditSalesUnitPage() {
 
     const item = singleUnitItem ?? (itemResponse?.data ?? []).find((row) => String(row.id) === String(selectedUnitId ?? ''));
     const invoiceCode = salesDetail?.raw?.code ?? '-';
+    const isUsd = isUnitUsdTransaction(salesDetail?.raw ?? salesDetail?.ui ?? (item as any)?.unit_transaction ?? item);
 
     const formData: UnitTransactionFormValues | null = useMemo(() => {
         if (!item) return null;
@@ -63,14 +66,7 @@ export default function EditSalesUnitPage() {
             price_usd_discount: Number((item as any).price_discount_usd ?? item.price_usd_discount ?? 0) || 0,
             unit_transaction_usd_costs: (item as any).unit_transaction_usd_costs || (item as any).usd_costs || [],
             usd_costs: (item as any).unit_transaction_usd_costs || (item as any).usd_costs || [],
-            is_usd_transaction: Boolean(
-                item?.is_usd_transaction ??
-                (item as any)?.unit_transaction?.is_usd_transaction ??
-                salesDetail?.ui?.is_usd_transaction ??
-                (salesDetail?.raw as any)?.is_usd_transaction ??
-                ((Number((item as any)?.price_usd ?? 0) > 0) ||
-                (Number((item as any)?.price_per_unit_usd ?? 0) > 0))
-            ),
+            is_usd_transaction: isUsd,
             usd_cost_freight_total: (item as any).usd_cost_freight_total,
             usd_cost_box_packing_total: (item as any).usd_cost_box_packing_total,
             usd_cost_admin_cost_total: (item as any).usd_cost_admin_cost_total,
@@ -82,7 +78,7 @@ export default function EditSalesUnitPage() {
             ppnTaxVersionId: item.ppn_tax_id ?? undefined,
             documentTemplateId: salesDetail?.ui?.documentTemplateId ?? null,
         };
-    }, [item, salesDetail?.ui?.documentTemplateId, salesDetail?.ui?.is_usd_transaction, salesDetail?.raw]);
+    }, [item, salesDetail?.ui?.documentTemplateId, isUsd]);
 
     const handleSubmit = async (values: UnitTransactionFormValues) => {
         try {
@@ -152,29 +148,38 @@ export default function EditSalesUnitPage() {
         );
     }
 
+    const basePath = slugValue ? `/dashboard/${slugValue}/transaksi/penjualan-unit` : '/transaksi/penjualan-unit';
+
     return (
         <DashboardLayout>
             <div className="space-y-6">
-                <div>
-                    <button onClick={() => router.back()} className="mb-2 flex items-center gap-2 text-sm text-muted-foreground transition-colors hover:text-foreground">
-                        <ArrowLeft className="h-4 w-4" />
-                        Kembali
-                    </button>
-
-                    <div className="flex flex-col gap-1">
-                        <h1 className="text-2xl font-bold tracking-tight">Edit Unit</h1>
-                        <div className="flex items-center gap-2 text-sm">
-                            <span className="text-muted-foreground">Kode Jual</span>
-                            <span className="text-blue-600 font-medium">{invoiceCode}</span>
+                <PageHeader
+                    breadcrumbs={[
+                        { label: 'Penjualan Unit', onClick: () => router.push(basePath) },
+                        { label: 'Detail Penjualan', onClick: () => router.push(`${basePath}/${salesId}`) },
+                        { label: 'Edit Unit Tipe Penjualan' }
+                    ]}
+                    title="Data Penjualan Unit Tipe"
+                    subtitle={
+                        <div className="flex flex-wrap items-center gap-2">
+                            <span>Kode Jual:</span>
+                            <span className="inline-flex items-center gap-1.5 font-semibold text-blue-600 hover:text-blue-700">{invoiceCode}</span>
+                            {isUsd && (
+                                <Badge variant="outline" className="border-amber-300 bg-amber-100 text-amber-800 font-semibold">
+                                    Transaksi USD
+                                </Badge>
+                            )}
                         </div>
-                    </div>
-                </div>
+                    }
+                    onBack={() => router.back()}
+                />
 
                 <Card className="rounded-md">
                     <CardContent className="p-6">
                         <UnitTransactionForm
                             type="sales"
                             allowCreateTypeUnit
+                            hideUsdCheckbox={true}
                             defaultValues={formData}
                             typeUnitOptions={unitTypes?.data ?? []}
                             onSubmit={handleSubmit}

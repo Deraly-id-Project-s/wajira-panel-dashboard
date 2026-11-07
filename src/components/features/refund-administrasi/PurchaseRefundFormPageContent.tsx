@@ -117,7 +117,9 @@ export default function PurchaseRefundFormPageContent({ mode, refundId }: Purcha
         refund_date: existingRefund.refund_date?.slice(0, 10) || new Date().toISOString().slice(0, 10),
         refund_amount: Number(existingRefund.refund_amount || 0),
         note: existingRefund.note || '',
-        unit_transaction_item_detail_ids: (existingRefund.items ?? []).map((item) => Number(item.pivot?.unit_transaction_item_detail_id || item.id)),
+        unit_transaction_item_detail_ids: (existingRefund.items ?? []).map((item: any) =>
+          Number(item.unit_transaction_item_detail_id ?? item.pivot?.unit_transaction_item_detail_id ?? item.id)
+        ),
         cash_id: String(existingRefund.cash_id ?? existingRefund.payments?.[0]?.cash_id ?? ''),
       });
     }
@@ -271,25 +273,25 @@ export default function PurchaseRefundFormPageContent({ mode, refundId }: Purcha
       <div className="space-y-6">
         {/* BREADCRUMB HEADER */}
         <div className="flex items-center gap-2 text-sm text-slate-500">
-          <span className="hover:text-slate-800 cursor-pointer" onClick={() => router.push(`/dashboard/${slug}/transaksi//${parentPurchase?.id}`)}>
-            Penjualan Unit
+          <span className="hover:text-slate-800 cursor-pointer" onClick={() => router.push(`/dashboard/${slug}/transaksi/pembelian-unit/${parentPurchase?.id || selectedTransactionId}`)}>
+            Pembelian Unit
           </span>
           <ChevronRight className="h-4 w-4 shrink-0 text-slate-400" />
-          <span className="hover:text-slate-800 cursor-pointer" onClick={() => router.push(`/dashboard/${slug}/transaksi/refund-beli?unit_transaction_id=${parentPurchase?.id}`)}>
+          <span className="hover:text-slate-800 cursor-pointer" onClick={() => router.push(`/dashboard/${slug}/transaksi/refund-beli?unit_transaction_id=${parentPurchase?.id || selectedTransactionId}`)}>
             Data Refund Pembelian
           </span>
           <ChevronRight className="h-4 w-4 shrink-0 text-slate-400" />
-          <span className="font-medium text-slate-800">DetailData Refund Pembelian</span>
+          <span className="font-medium text-slate-800">{mode === 'edit' ? 'Edit Data Refund Pembelian' : 'Tambah Data Refund Pembelian'}</span>
         </div>
 
         {/* HEADLINE & ACTIONS */}
         <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
           <div className="flex items-center gap-4">
-            <Button onClick={() => router.push(`/dashboard/${slug}/transaksi/refund-beli?unit_transaction_id=${parentPurchase?.id}`)} variant="ghost" size="sm" className="h-9 w-9 rounded-md border border-slate-200 hover:bg-slate-50 cursor-pointer p-0">
+            <Button onClick={() => router.push(`/dashboard/${slug}/transaksi/refund-beli?unit_transaction_id=${parentPurchase?.id || selectedTransactionId}`)} variant="ghost" size="sm" className="h-9 w-9 rounded-md border border-slate-200 hover:bg-slate-50 cursor-pointer p-0">
               <ArrowLeft className="h-4 w-4 text-slate-700" />
             </Button>
             <div className="space-y-1">
-              <h1 className="text-2xl font-semibold text-slate-900">Tambah Data Refund Pembelian</h1>
+              <h1 className="text-2xl font-semibold text-slate-900">{mode === 'edit' ? 'Edit Data Refund Pembelian' : 'Tambah Data Refund Pembelian'}</h1>
               <div className="text-sm text-muted-foreground flex items-center gap-2">
                 <span>Kode Beli:</span>
                 <span className="inline-flex items-center gap-1.5 font-semibold text-orange-600 hover:text-orange-700">{parentPurchase?.code}</span>
@@ -433,7 +435,7 @@ export default function PurchaseRefundFormPageContent({ mode, refundId }: Purcha
                 ) : (
                   <Save className="h-4 w-4" />
                 )}
-                Simpan Refund Beli
+                {mode === 'edit' ? 'Simpan Perubahan' : 'Simpan Refund Beli'}
               </Button>
             </div>
           </div>

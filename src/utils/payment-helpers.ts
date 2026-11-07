@@ -236,7 +236,10 @@ export function getUsdTransactionSummary(
     ? items
     : (data?.unit_transaction_items ?? data?.lineItems ?? []);
 
-  const isUsd = isUnitUsdTransaction(data) || resolvedItems.some(i => isUnitUsdTransaction(i) || Number(i.price_usd_total ?? i.price_total_usd ?? i.price_per_unit_usd ?? 0) > 0);
+  const hasExplicitFlag = data?.is_usd_transaction !== undefined && data?.is_usd_transaction !== null;
+  const isUsd = hasExplicitFlag
+    ? isUnitUsdTransaction(data)
+    : (isUnitUsdTransaction(data) || resolvedItems.some(i => isUnitUsdTransaction(i) || Number(i.price_usd_total ?? i.price_total_usd ?? i.price_per_unit_usd ?? 0) > 0));
 
   // 1. Subtotal Base USD: qty_total * price_per_unit_usd
   const baseUsd = resolvedItems.reduce((sum, item) => {

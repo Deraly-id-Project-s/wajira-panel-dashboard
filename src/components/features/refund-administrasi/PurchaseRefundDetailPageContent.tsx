@@ -18,6 +18,8 @@ import { Badge } from '@/components/ui/badge';
 import { CopyBox } from '@/components/ui/copy-box';
 import { ReferenceLink } from '@/components/ui/reference-link';
 import { LoadingState } from '@/components/ui/loading-state';
+import { usePurchaseById } from '@/hooks/usePurchase';
+import { isUnitUsdTransaction } from '@/utils/payment-helpers';
 
 const formatDate = (value?: string) => {
   if (!value) return '-';
@@ -38,6 +40,11 @@ export default function PurchaseRefundDetailPageContent({ transactionId, refundI
 
   const refundQuery = useRefundDetail(refundId);
   const refund = refundQuery.data;
+
+  const targetPurchaseId = transactionId || refund?.unit_transaction_id || '';
+  const { data: purchase } = usePurchaseById(targetPurchaseId);
+  const isUsdTransaction = isUnitUsdTransaction(refund?.transaction ?? (refund as any)?.unit_transaction ?? refund ?? purchase);
+  const currencyCode = isUsdTransaction ? 'usd' : 'idr';
 
   const totalPaid = (refund?.payments ?? []).reduce((total, item) => total + Number(item.amount), 0);
   const lessPayment = Math.max(0, Number(refund?.refund_amount || 0) - totalPaid);
@@ -127,7 +134,7 @@ export default function PurchaseRefundDetailPageContent({ transactionId, refundI
         accessorKey: 'amount',
         sortable: true,
         alignment: 'left',
-        cell: (payment) => currenciesFormat('idr', payment.amount),
+        cell: (payment) => currenciesFormat(currencyCode, payment.amount),
       },
       {
         header: 'KETERANGAN',
@@ -163,7 +170,7 @@ export default function PurchaseRefundDetailPageContent({ transactionId, refundI
         ),
       },
     ],
-    [],
+    [currencyCode],
   );
 
   const handleDeletePayment = async () => {
@@ -199,11 +206,11 @@ export default function PurchaseRefundDetailPageContent({ transactionId, refundI
       <div className="space-y-6">
         {/* BREADCRUMB HEADER */}
         <div className="flex items-center gap-2 text-sm text-slate-500">
-          <span className="hover:text-slate-800 cursor-pointer" onClick={() => router.push(`/dashboard/${slug}/transaksi//${transactionId}`)}>
-            Penjualan Unit
+          <span className="hover:text-slate-800 cursor-pointer" onClick={() => router.push(`/dashboard/${slug}/transaksi/pembelian-unit/${transactionId || refund.unit_transaction_id}`)}>
+            Pembelian Unit
           </span>
           <ChevronRight className="h-4 w-4 shrink-0 text-slate-400" />
-          <span className="hover:text-slate-800 cursor-pointer" onClick={() => router.push(`/dashboard/${slug}/transaksi/refund-beli?unit_transaction_id=${transactionId}`)}>
+          <span className="hover:text-slate-800 cursor-pointer" onClick={() => router.push(`/dashboard/${slug}/transaksi/refund-beli?unit_transaction_id=${transactionId || refund.unit_transaction_id}`)}>
             Data Refund Pembelian
           </span>
           <ChevronRight className="h-4 w-4 shrink-0 text-slate-400" />
@@ -213,7 +220,7 @@ export default function PurchaseRefundDetailPageContent({ transactionId, refundI
         {/* HEADLINE & ACTIONS */}
         <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
           <div className="flex items-center gap-4">
-            <Button onClick={() => router.push(`/dashboard/${slug}/transaksi/refund-beli?unit_transaction_id=${transactionId}`)} variant="ghost" size="icon" className="h-10 w-10 rounded-md border border-slate-200 hover:bg-slate-50 cursor-pointer">
+            <Button onClick={() => router.push(`/dashboard/${slug}/transaksi/refund-beli?unit_transaction_id=${transactionId || refund.unit_transaction_id}`)} variant="ghost" size="icon" className="h-10 w-10 rounded-md border border-slate-200 hover:bg-slate-50 cursor-pointer">
               <ArrowLeft className="h-5 w-5 text-slate-700" />
             </Button>
             <div className="space-y-1">
@@ -278,15 +285,15 @@ export default function PurchaseRefundDetailPageContent({ transactionId, refundI
                 </div>
                 <div className="flex items-center justify-between pt-1.5 border-t border-slate-100">
                   <span className="text-xs text-slate-400">Nominal Refund</span>
-                  <span className="font-semibold text-slate-900">{currenciesFormat('idr', refund.refund_amount)}</span>
+                  <span className="font-semibold text-slate-900">{currenciesFormat(currencyCode, refund.refund_amount)}</span>
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-xs text-slate-400">Total Terbayar</span>
-                  <span className="font-semibold text-slate-900">{currenciesFormat('idr', totalPaid)}</span>
+                  <span className="font-semibold text-slate-900">{currenciesFormat(currencyCode, totalPaid)}</span>
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-xs font-medium text-slate-500">Kurang Bayar</span>
-                  <span className="font-bold text-emerald-600">{currenciesFormat('idr', lessPayment)}</span>
+                  <span className="font-bold text-emerald-600">{currenciesFormat(currencyCode, lessPayment)}</span>
                 </div>
               </div>
             </CardContent>
@@ -352,8 +359,8 @@ export default function PurchaseRefundDetailPageContent({ transactionId, refundI
           />
         </div>
 
-        <PurchaseRefundPaymentDetailModal open={isAddDetailOpen} onClose={() => setIsAddDetailOpen(false)} refund={refund} />
-        <PurchaseRefundPaymentDetailModal open={Boolean(editingPayment)} onClose={() => setEditingPayment(null)} refund={refund} payment={editingPayment} />
+        <PurchaseRefundPaymentDetailModal open={isAddDetailOpen} onClose={() => setIsAddDetailOpen(false)} refund={refund} isUsdTransaction={isUsdTransaction} />
+        <PurchaseRefundPaymentDetailModal open={Boolean(editingPayment)} onClose={() => setEditingPayment(null)} refund={refund} payment={editingPayment} isUsdTransaction={isUsdTransaction} />
 
         <AlertDialog open={Boolean(deletingPayment)} onOpenChange={(open) => !open && setDeletingPayment(null)}>
           <AlertDialogContent>
