@@ -12,6 +12,7 @@ import { ReferenceLink } from '@/components/ui/reference-link';
 import { useRouter } from 'next/router';
 import { CollapsibleBox } from '@/components/ui/collapsible-box';
 import { Download } from 'lucide-react';
+import { createCustomerColumn, createSupplierColumn } from './unitTransactionPersonColumns';
 
 const stockStateConfig: Record<string, { label: string; className: string }> = {
   draft: { label: 'Draft', className: 'border-slate-200 bg-slate-50 text-slate-600' },
@@ -102,17 +103,8 @@ export function UnitTypeDetailTable({
         sortable: true,
         cell: (item) => item?.chassis_number ? <CopyBox text={item.chassis_number} /> : '-',
       },
-      {
-        header: 'Supplier',
-        accessorKey: 'person.name',
-        sortable: true,
-        cell: (item) =>
-          item.person?.name ? (
-            <ReferenceLink target='_blank' href={`/dashboard/${slug}/master/supplier/${item.person.id}`}>{item.person.name}</ReferenceLink>
-          ) : (
-            '-'
-          ),
-      },
+      createSupplierColumn<UnitTransactionTypeDetail>(slug),
+      createCustomerColumn<UnitTransactionTypeDetail>(slug),
       {
         header: 'Sub Blok Warehouse',
         accessorKey: 'warehouse_sub_block.name',

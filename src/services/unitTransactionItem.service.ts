@@ -48,6 +48,21 @@ type UnitTransactionItemApiModel = {
   usd_cost_other_total?: number | string;
   unit_transaction_usd_costs?: any[];
   is_usd_transaction?: boolean | string | number;
+  supplier?: {
+    id?: number | string;
+    name?: string;
+    type?: string;
+  } | null;
+  customer?: {
+    id?: number | string;
+    name?: string;
+    type?: string;
+  } | null;
+  person?: {
+    id?: number | string;
+    name?: string;
+    type?: string;
+  } | null;
 };
 
 export type UnitFormulaInput = {
@@ -154,6 +169,32 @@ const mapItem = (item: UnitTransactionItemApiModel): UnitTransactionItem => {
     usd_cost_other_total: item.usd_cost_other_total !== undefined ? toNumber(item.usd_cost_other_total) : undefined,
     unit_transaction_usd_costs: item.unit_transaction_usd_costs ?? [],
     is_usd_transaction: Boolean(item.is_usd_transaction),
+    supplier: item.supplier
+      ? {
+          id: item.supplier.id !== undefined && item.supplier.id !== null ? String(item.supplier.id) : undefined,
+          name: item.supplier.name ?? '',
+          type: item.supplier.type,
+        }
+      : (item.person && (item.person.type === 'supplier' || !item.person.type)
+        ? {
+            id: item.person.id !== undefined && item.person.id !== null ? String(item.person.id) : undefined,
+            name: item.person.name ?? '',
+            type: item.person.type ?? 'supplier',
+          }
+        : null),
+    customer: item.customer
+      ? {
+          id: item.customer.id !== undefined && item.customer.id !== null ? String(item.customer.id) : undefined,
+          name: item.customer.name ?? '',
+          type: item.customer.type,
+        }
+      : (item.person && item.person.type === 'customer'
+        ? {
+            id: item.person.id !== undefined && item.person.id !== null ? String(item.person.id) : undefined,
+            name: item.person.name ?? '',
+            type: 'customer',
+          }
+        : null),
   };
 };
 

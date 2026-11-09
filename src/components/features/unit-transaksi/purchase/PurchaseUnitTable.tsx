@@ -18,6 +18,7 @@ import BaseTable, { ColumnDef } from '@/components/ui/base-table';
 import { CollapsibleBox } from '@/components/ui/collapsible-box';
 import { getUsdCostsFromItem } from '@/utils/payment-helpers';
 import UnitTransactionSummaryFooter from '../UnitTransactionSummaryFooter';
+import { createCustomerColumn, createSupplierColumn } from '../unitTransactionPersonColumns';
 
 interface Props {
   purchaseId: string;
@@ -115,6 +116,8 @@ export default function PurchaseUnitTable({ purchaseId, slug, isPaid, canEdit, c
             </ReferenceLink>
           ),
         },
+        createSupplierColumn<UnitTransactionItem>(slug),
+        createCustomerColumn<UnitTransactionItem>(slug),
         {
           header: 'QTY',
           alignment: 'center',
@@ -242,6 +245,8 @@ export default function PurchaseUnitTable({ purchaseId, slug, isPaid, canEdit, c
           </ReferenceLink>
         ),
       },
+      createSupplierColumn<UnitTransactionItem>(slug),
+      createCustomerColumn<UnitTransactionItem>(slug),
       {
         header: 'QTY',
         alignment: 'center',
@@ -406,6 +411,7 @@ export default function PurchaseUnitTable({ purchaseId, slug, isPaid, canEdit, c
                   showCheckbox
                   hasActions
                   isUsd={isUsd}
+                  hasPersonColumns
                 />
               }
               headerActions={

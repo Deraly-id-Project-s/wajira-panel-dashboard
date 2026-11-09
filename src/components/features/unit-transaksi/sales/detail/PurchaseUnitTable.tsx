@@ -1,4 +1,5 @@
 import { useState, useMemo } from 'react';
+import { useRouter } from 'next/router';
 
 import BaseTable, { ColumnDef } from '@/components/ui/base-table';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
@@ -7,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { MoreVertical, Trash2 } from 'lucide-react';
 import type { UnitItem } from '@/types/sales';
 import { toast } from 'sonner';
+import { createCustomerColumn, createSupplierColumn } from '@/components/features/unit-transaksi/unitTransactionPersonColumns';
 
 interface Props {
   units: UnitItem[];
@@ -14,6 +16,10 @@ interface Props {
 }
 
 export function PurchaseUnitTable({ units }: Props) {
+  const router = useRouter();
+  const slugQuery = router.query.slug;
+  const slug = Array.isArray(slugQuery) ? slugQuery[0] : slugQuery || '';
+
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [page, setPage] = useState(1);
   const [perPage, setPerPage] = useState(10);
@@ -48,6 +54,8 @@ export function PurchaseUnitTable({ units }: Props) {
         className: 'text-slate-700',
         cell: (item) => item.chassisNumber || '-',
       },
+      createSupplierColumn<UnitItem>(slug),
+      createCustomerColumn<UnitItem>(slug),
       {
         header: 'Aksi',
         alignment: 'center',
@@ -71,7 +79,7 @@ export function PurchaseUnitTable({ units }: Props) {
         ),
       },
     ],
-    [],
+    [slug],
   );
 
   const totalPages = Math.ceil(units.length / perPage) || 1;

@@ -176,6 +176,16 @@ type UnitTransactionTypeDetailApiModel = {
   is_sold_unit?: boolean | number | string;
   created_at?: string;
   updated_at?: string;
+  supplier?: {
+    id?: number | string;
+    name?: string;
+    type?: string;
+  } | null;
+  customer?: {
+    id?: number | string;
+    name?: string;
+    type?: string;
+  } | null;
   person?: {
     id?: number | string;
     uuid?: string;
@@ -251,6 +261,32 @@ const mapUnitTransactionTypeDetail = (
   is_sold_unit: toBoolean(item.is_sold_unit),
   created_at: item.created_at,
   updated_at: item.updated_at,
+  supplier: item.supplier
+    ? {
+        id: item.supplier.id !== undefined && item.supplier.id !== null ? String(item.supplier.id) : '',
+        name: item.supplier.name ?? '-',
+        type: item.supplier.type ?? 'supplier',
+      }
+    : (item.person && (item.person.type === 'supplier' || !item.person.type)
+      ? {
+          id: String(item.person.id ?? ''),
+          name: item.person.name ?? '-',
+          type: item.person.type ?? 'supplier',
+        }
+      : null),
+  customer: item.customer
+    ? {
+        id: item.customer.id !== undefined && item.customer.id !== null ? String(item.customer.id) : '',
+        name: item.customer.name ?? '-',
+        type: item.customer.type ?? 'customer',
+      }
+    : (item.person && item.person.type === 'customer'
+      ? {
+          id: String(item.person.id ?? ''),
+          name: item.person.name ?? '-',
+          type: 'customer',
+        }
+      : null),
   person: item.person
     ? {
         id: item.person.id ?? '',

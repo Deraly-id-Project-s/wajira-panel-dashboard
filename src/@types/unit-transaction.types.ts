@@ -250,6 +250,16 @@ export interface UnitTransactionItem {
   unit_transaction_id: string;
   unit_type_id?: string;
   sparepart_id?: string;
+  supplier?: {
+    id?: number | string;
+    name?: string;
+    type?: string;
+  } | null;
+  customer?: {
+    id?: number | string;
+    name?: string;
+    type?: string;
+  } | null;
   is_usd_transaction?: boolean;
   qty_total: number;
   price: number;
@@ -462,6 +472,16 @@ export interface UnitTransactionTypeDetail {
   is_sold_unit: boolean;
   created_at?: string;
   updated_at?: string;
+  supplier?: {
+    id: number | string;
+    name: string;
+    type?: string;
+  } | null;
+  customer?: {
+    id: number | string;
+    name: string;
+    type?: string;
+  } | null;
   person?: {
     id: number | string;
     uuid?: string;

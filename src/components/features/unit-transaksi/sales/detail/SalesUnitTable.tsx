@@ -16,6 +16,7 @@ import { ReferenceLink } from '@/components/ui/reference-link';
 import BaseTable, { ColumnDef } from '@/components/ui/base-table';
 import { CollapsibleBox } from '@/components/ui/collapsible-box';
 import { UnitTransactionSummaryFooter } from '@/components/features/unit-transaksi/UnitTransactionSummaryFooter';
+import { createCustomerColumn, createSupplierColumn } from '@/components/features/unit-transaksi/unitTransactionPersonColumns';
 
 interface Props {
   lineItems: SalesLineItem[];
@@ -123,6 +124,8 @@ export function SalesUnitTable({ lineItems, salesId, onAddUnit, canCreate, canEd
             </ReferenceLink>
           ),
         },
+        createSupplierColumn(slug),
+        createCustomerColumn(slug),
         {
           header: 'QTY',
           alignment: 'center',
@@ -254,6 +257,8 @@ export function SalesUnitTable({ lineItems, salesId, onAddUnit, canCreate, canEd
           </ReferenceLink>
         ),
       },
+      createSupplierColumn(slug),
+      createCustomerColumn(slug),
       {
         header: 'QTY',
         alignment: 'center',
@@ -384,6 +389,7 @@ export function SalesUnitTable({ lineItems, salesId, onAddUnit, canCreate, canEd
                 showCheckbox={!isPaid}
                 hasActions
                 isUsd={isUsd}
+                hasPersonColumns
               />
             }
             headerActions={

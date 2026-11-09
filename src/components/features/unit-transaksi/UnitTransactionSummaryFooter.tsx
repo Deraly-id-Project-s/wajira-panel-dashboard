@@ -37,6 +37,7 @@ interface UnitTransactionSummaryFooterProps {
   hasActions?: boolean;
   label?: string;
   isUsd?: boolean;
+  hasPersonColumns?: boolean;
 }
 
 export function UnitTransactionSummaryFooter({
@@ -45,6 +46,7 @@ export function UnitTransactionSummaryFooter({
   hasActions = true,
   label = 'Total',
   isUsd,
+  hasPersonColumns = false,
 }: UnitTransactionSummaryFooterProps) {
   if (!items || items.length === 0) return null;
 
@@ -144,6 +146,12 @@ export function UnitTransactionSummaryFooter({
           <TableCell className="px-2.5 py-3 text-left font-bold text-slate-900 sm:px-4 sm:py-3.5">
             {label}
           </TableCell>
+          {hasPersonColumns && (
+            <>
+              <TableCell className="px-2.5 py-3 text-center sm:px-4 sm:py-3.5" />
+              <TableCell className="px-2.5 py-3 text-center sm:px-4 sm:py-3.5" />
+            </>
+          )}
           <TableCell className="w-[100px] px-2.5 py-3 text-center font-bold text-slate-900 sm:px-4 sm:py-3.5">
             {totalQty} Unit
           </TableCell>
@@ -258,6 +266,12 @@ export function UnitTransactionSummaryFooter({
         <TableCell className="px-2.5 py-3 text-left font-bold text-slate-900 sm:px-4 sm:py-3.5">
           {label}
         </TableCell>
+        {hasPersonColumns && (
+          <>
+            <TableCell className="px-2.5 py-3 text-center sm:px-4 sm:py-3.5" />
+            <TableCell className="px-2.5 py-3 text-center sm:px-4 sm:py-3.5" />
+          </>
+        )}
         <TableCell className="w-[100px] px-2.5 py-3 text-center font-bold text-slate-900 sm:px-4 sm:py-3.5">
           {totalQty} Unit
         </TableCell>
