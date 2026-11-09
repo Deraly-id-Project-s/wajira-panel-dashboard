@@ -32,11 +32,12 @@ export function UnitTypeDetailTable({
   transactionId,
   transactionCode,
 }: UnitTypeDetailTableProps) {
-  const [page, setPage] = useState(1);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [perPage, setPerPage] = useState(25);
   const [search, setSearch] = useState('');
-  const perPage = 10;
+
   const { data, isLoading, isFetching } = useUnitTransactionTypeDetails(transactionId, {
-    page,
+    page: currentPage,
     perPage,
     search: search || undefined,
   });
@@ -45,13 +46,31 @@ export function UnitTypeDetailTable({
   const router = useRouter();
   const slug = typeof router.query.slug === 'string' ? router.query.slug : '';
 
+  const rawData = useMemo(() => data?.data ?? [], [data?.data]);
+
+  const isServerPaginated = useMemo(() => {
+    if (!data?.meta) return false;
+    return (data.meta.lastPage > 1 || data.meta.total > rawData.length) && rawData.length <= perPage;
+  }, [data?.meta, rawData.length, perPage]);
+
+  const totalEntries = data?.meta?.total ?? rawData.length;
+  const totalPages = isServerPaginated
+    ? (data?.meta?.lastPage ?? 1)
+    : Math.max(1, Math.ceil(rawData.length / perPage));
+
+  const pagedData = useMemo(() => {
+    if (isServerPaginated) return rawData;
+    const start = (currentPage - 1) * perPage;
+    return rawData.slice(start, start + perPage);
+  }, [isServerPaginated, rawData, currentPage, perPage]);
+
   const columns = useMemo<ColumnDef<UnitTransactionTypeDetail>[]>(
     () => [
       {
         header: 'No',
         alignment: 'center',
         cell: (_item, index) =>
-          ((data?.meta.currentPage ?? page) - 1) * (data?.meta.perPage ?? perPage) + index + 1,
+          ((currentPage - 1) * perPage) + index + 1,
       },
       {
         header: 'Kode Unit',
@@ -147,13 +166,13 @@ export function UnitTypeDetailTable({
         },
       },
     ],
-    [data?.meta.currentPage, data?.meta.perPage, page, perPage, slug],
+    [currentPage, perPage, slug],
   );
 
-  const totalUnits = data?.meta?.total ?? data?.data?.length ?? 0;
+  const totalUnits = totalEntries;
 
   const tableFooter = useMemo(() => {
-    if (isLoading || !data?.data || data.data.length === 0) return null;
+    if (isLoading || !rawData || rawData.length === 0) return null;
 
     return (
       <TableFooter className="bg-[#f8f9fa] border-t border-slate-200">
@@ -172,7 +191,7 @@ export function UnitTypeDetailTable({
         </TableRow>
       </TableFooter>
     );
-  }, [columns.length, data?.data, isLoading, totalUnits]);
+  }, [columns.length, rawData, isLoading, totalUnits]);
 
   return (
     <CollapsibleBox
@@ -194,17 +213,28 @@ export function UnitTypeDetailTable({
     >
       <div className="p-6">
         <BaseTable
-          data={data?.data ?? []}
+          data={pagedData}
           columns={columns}
           loading={isLoading || isFetching}
           search={search}
           onSearchChange={(val) => {
             setSearch(val);
-            setPage(1);
+            setCurrentPage(1);
           }}
-          searchPlaceholder="Cari nomor mesin, nomor rangka, warna, supplier..."
-          meta={data?.meta}
-          onPageChange={setPage}
+          searchPlaceholder="Cari nomor mesin, nomor rangka, warna, supplier, customer..."
+          showLimitChange
+          perPage={perPage}
+          onPerPageChange={(val) => {
+            setPerPage(val);
+            setCurrentPage(1);
+          }}
+          meta={{
+            currentPage,
+            perPage,
+            lastPage: totalPages,
+            total: totalEntries,
+          }}
+          onPageChange={setCurrentPage}
           footer={tableFooter}
         />
       </div>
