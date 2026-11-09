@@ -28,9 +28,20 @@ import {
 import { formatDate } from '@/lib/utils/format';
 import { LoadingState } from '@/components/ui/loading-state';
 import { useCompany } from '@/contexts/CompanyContext';
-import { CreditCard, AlertTriangle, CheckCircle2, Info, Edit, Printer, RotateCcw } from 'lucide-react';
+import { CreditCard, AlertTriangle, CheckCircle2, Info, Edit, Printer, RotateCcw, MoreVertical } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { TextTruncate } from '@/components/ui/text-truncate';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { CopyBox } from '@/components/ui/copy-box';
+import { currenciesFormat } from '@/components/ui/currenciesFormat';
+import { cn } from '@/lib/utils';
+import { useRefundList } from '@/hooks/useRefundAdministrasi';
+import type { UnitTransactionRefund } from '@/@types/refund.type';
 import { UnitTypeDetailTable } from '@/components/features/unit-transaksi/UnitTypeDetailTable';
 import { useDocumentTemplate } from '@/hooks/useDocumentTemplate';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
@@ -57,6 +68,16 @@ export default function SalesDetailPage() {
   const billingId = String(currentBilling?.id ?? '');
   const { data: billingHistories = [], isLoading: historyLoading } = useBillingHistory(billingId || undefined, String(sales?.id ?? ''));
   const updateBillingIsPaid = useUpdateBillingIsPaid();
+  const { data: refundResponse, isLoading: refundLoading } = useRefundList({
+    unit_transaction_id: String(sales?.id ?? id ?? ''),
+    perPage: 50,
+  });
+  const refundList = useMemo(() => {
+    if (sales?.unit_transaction_refunds && Array.isArray(sales.unit_transaction_refunds) && sales.unit_transaction_refunds.length > 0) {
+      return sales.unit_transaction_refunds;
+    }
+    return refundResponse?.data ?? [];
+  }, [sales?.unit_transaction_refunds, refundResponse?.data]);
 
   const [isMarkAsPaidDialogOpen, setIsMarkAsPaidDialogOpen] = useState(false);
   const [isDeliveryDialogOpen, setIsDeliveryDialogOpen] = useState(false);
@@ -246,6 +267,126 @@ export default function SalesDetailPage() {
           ]),
     ],
     [isUsdTransaction]
+  );
+
+  const currencyCode = isUsdTransaction ? 'usd' : 'idr';
+
+  const refundColumns = useMemo<ColumnDef<UnitTransactionRefund>[]>(
+    () => [
+      {
+        header: 'Tanggal Refund',
+        alignment: 'left',
+        accessorKey: 'refund_date',
+        sortable: true,
+        cell: (refund) => formatDate(refund?.refund_date),
+      },
+      {
+        header: 'Kode Refund',
+        alignment: 'left',
+        accessorKey: 'code',
+        sortable: true,
+        cell: (refund) => <CopyBox text={refund?.code || '-'} />,
+      },
+      {
+        header: 'Nominal Refund',
+        alignment: 'right',
+        accessorKey: 'refund_amount',
+        sortable: true,
+        cell: (refund) => {
+          const itemCurrency = refund?.is_usd_transaction ? 'usd' : currencyCode;
+          return currenciesFormat(itemCurrency, Number(refund?.refund_amount || 0));
+        },
+      },
+      {
+        header: 'Total Dibayar',
+        alignment: 'right',
+        cell: (refund) => {
+          const itemCurrency = refund?.is_usd_transaction ? 'usd' : currencyCode;
+          const totalPaid = Number(
+            refund?.total_paid ??
+            (refund?.payments ? refund.payments.reduce((acc: number, p: any) => acc + Number(p.amount || 0), 0) : Math.max(0, Number(refund?.refund_amount || 0) - Number(refund?.remaining_payment ?? 0)))
+          );
+          return currenciesFormat(itemCurrency, totalPaid);
+        },
+      },
+      {
+        header: 'Sisa Bayar',
+        alignment: 'right',
+        cell: (refund) => {
+          const itemCurrency = refund?.is_usd_transaction ? 'usd' : currencyCode;
+          const totalPaid = Number(
+            refund?.total_paid ??
+            (refund?.payments ? refund.payments.reduce((acc: number, p: any) => acc + Number(p.amount || 0), 0) : Math.max(0, Number(refund?.refund_amount || 0) - Number(refund?.remaining_payment ?? 0)))
+          );
+          const remaining = Number(refund?.remaining_payment ?? Math.max(0, Number(refund?.refund_amount || 0) - totalPaid));
+          return (
+            <span className={cn(remaining > 0 && 'text-amber-600 font-semibold')}>
+              {currenciesFormat(itemCurrency, remaining)}
+            </span>
+          );
+        },
+      },
+      {
+        header: 'Qty',
+        alignment: 'center',
+        cell: (refund) => {
+          const qty = refund?.total_qty ?? refund?.items?.length;
+          if (qty !== undefined && qty !== null) return `${qty} Unit`;
+          if (refund?.is_with_stock !== undefined && refund?.is_with_stock !== null) {
+            return refund.is_with_stock ? 'Dengan Stok' : 'Tanpa Stok';
+          }
+          return '-';
+        },
+      },
+      {
+        header: 'Status',
+        alignment: 'center',
+        cell: (refund) => (
+          <Badge
+            variant="outline"
+            className={cn(
+              'font-semibold',
+              refund?.is_paid
+                ? 'border-emerald-200 bg-emerald-50 text-emerald-700'
+                : 'border-rose-200 bg-rose-50 text-rose-700'
+            )}
+          >
+            {refund?.is_paid ? 'Lunas' : 'Belum Lunas'}
+          </Badge>
+        ),
+      },
+      {
+        header: 'Catatan',
+        alignment: 'left',
+        cell: (refund) => <TextTruncate text={refund?.note || '-'} maxLength={30} />,
+      },
+      {
+        header: 'Aksi',
+        alignment: 'center',
+        sticky: 'right',
+        cell: (refund) => (
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                variant="ghost"
+                className="h-8 w-8 p-0 rounded-full text-slate-600 hover:bg-slate-100 hover:text-slate-900"
+              >
+                <MoreVertical className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="min-w-[150px] rounded-md border-slate-200 p-1.5 shadow-lg">
+              <DropdownMenuItem
+                onClick={() => router.push(`/dashboard/${slug}/transaksi/penjualan-unit/${sales?.id}/refund/${refund.id}`)}
+                className="rounded-md px-3 py-2 text-sm text-slate-900 focus:bg-slate-50 cursor-pointer"
+              >
+                Detail
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        ),
+      },
+    ],
+    [currencyCode, sales?.id, router, slug]
   );
 
   const handleCreateUnit = () => {
@@ -526,9 +667,21 @@ export default function SalesDetailPage() {
         <div className="space-y-3">
           <CollapsibleBox title="History Pembayaran" description="Rincian lengkap unit yang terjual">
             <BaseTable
+              tableId="sales-payment-history-table"
               data={resolvedBillingHistories}
               columns={historyColumns}
               loading={historyLoading}
+            />
+          </CollapsibleBox>
+        </div>
+
+        <div className="space-y-3">
+          <CollapsibleBox title="Riwayat Refund" description="Rincian riwayat refund penjualan">
+            <BaseTable
+              tableId="sales-refund-history-table"
+              data={refundList}
+              columns={refundColumns}
+              loading={isLoading || (!sales?.unit_transaction_refunds && refundLoading)}
             />
           </CollapsibleBox>
         </div>

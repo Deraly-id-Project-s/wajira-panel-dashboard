@@ -13,6 +13,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
 import { MoneyInput } from '@/components/ui/money-input';
 import { useCreateRefund, useUpdateRefund, useRefundDetail, useRefundSelectableItems } from '@/hooks/useRefundAdministrasi';
+import { useSalesById } from '@/hooks/useSales';
 import BaseTable, { ColumnDef } from '@/components/ui/base-table';
 import { CopyBox } from '@/components/ui/copy-box';
 import { currenciesFormat } from '@/components/ui/currenciesFormat';
@@ -53,6 +54,38 @@ export default function SalesRefundFormPageContent({ transactionId, mode, refund
 
   // Retrieve unit items and parent transaction data
   const selectableItemsQuery = useRefundSelectableItems(transactionId);
+  const { data: salesDetail } = useSalesById(transactionId);
+  const parentTransaction = selectableItemsQuery.transactionQuery?.data?.data ?? selectableItemsQuery.transactionQuery?.data ?? salesDetail;
+
+  const isUsdTransaction = Boolean(
+    parentTransaction?.is_usd_transaction ||
+    (parentTransaction as any)?.is_usd_trasnaction ||
+    salesDetail?.is_usd_transaction
+  );
+  const currencyCode = isUsdTransaction ? 'usd' : 'idr';
+
+  const parentTotalNominal = useMemo(() => {
+    const raw = parentTransaction || salesDetail;
+    if (!raw) return 0;
+    const isUsd = Boolean(
+      raw.is_usd_transaction ||
+      (raw as any)?.is_usd_trasnaction
+    );
+    if (isUsd) {
+      return Number(
+        raw.transaction_price_usd_total ??
+        (raw as any).unit_transaction_price_usd_total ??
+        0
+      );
+    }
+    return Number(
+      raw.transaction_bruto_total ??
+      raw.unit_transaction_bruto_total ??
+      (raw as any).bruto_total ??
+      0
+    );
+  }, [parentTransaction, salesDetail]);
+
   const displayedItems = useMemo(() => {
     if (mode === 'edit' && existingRefund) {
       return existingRefund.items ?? [];
@@ -290,21 +323,35 @@ export default function SalesRefundFormPageContent({ transactionId, mode, refund
 
               {/* Refund Amount Input */}
               <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <Label>Nominal Refund</Label>
+                <div className="flex items-center justify-between flex-wrap gap-2">
+                  <div className="flex items-center gap-2">
+                    <Label>Nominal Refund ({isUsdTransaction ? 'USD' : 'IDR'})</Label>
+                    {parentTotalNominal > 0 && (
+                      <button
+                        type="button"
+                        onClick={() => form.setValue('refund_amount', parentTotalNominal, { shouldValidate: true })}
+                        title="Klik untuk mengisi nominal dengan total transaksi"
+                        className="inline-flex items-center gap-1 rounded bg-blue-50 px-2 py-0.5 text-xs font-semibold text-blue-700 hover:bg-blue-100 transition-colors cursor-pointer border border-blue-200"
+                      >
+                        <span>Total: {currenciesFormat(currencyCode, parentTotalNominal)}</span>
+                      </button>
+                    )}
+                  </div>
                   {selectedItemsPriceSum > 0 && (
                     <button
                       type="button"
-                      onClick={() => form.setValue('refund_amount', selectedItemsPriceSum)}
-                      className="text-xs text-blue-600 font-medium hover:underline"
+                      onClick={() => form.setValue('refund_amount', selectedItemsPriceSum, { shouldValidate: true })}
+                      className="text-xs text-blue-600 font-medium hover:underline cursor-pointer"
                     >
-                      Gunakan Total Unit ({currenciesFormat('idr', selectedItemsPriceSum)})
+                      Gunakan Total Unit ({currenciesFormat(currencyCode, selectedItemsPriceSum)})
                     </button>
                   )}
                 </div>
                 <MoneyInput
                   value={form.watch('refund_amount')}
                   onChangeValue={(val) => form.setValue('refund_amount', val)}
+                  currency={isUsdTransaction ? 'USD' : 'IDR'}
+                  placeholder={isUsdTransaction ? '$ ' : 'Rp. '}
                 />
                 {form.formState.errors.refund_amount && (
                   <p className="text-xs text-red-500">{form.formState.errors.refund_amount.message}</p>
@@ -333,7 +380,7 @@ export default function SalesRefundFormPageContent({ transactionId, mode, refund
                 </div>
                 <div className="flex justify-between">
                   <span>Total Harga Unit:</span>
-                  <span className="font-semibold text-slate-900">{currenciesFormat('idr', selectedItemsPriceSum)}</span>
+                  <span className="font-semibold text-slate-900">{currenciesFormat(currencyCode, selectedItemsPriceSum)}</span>
                 </div>
               </div>
 

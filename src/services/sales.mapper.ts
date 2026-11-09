@@ -122,6 +122,7 @@ export type SalesApiModel = {
     description?: string;
     created_at?: string;
   }>;
+  is_refunded?: boolean | number | string | null;
   is_unit_type_detail_valid?: boolean | string | number;
   is_usd_transaction?: boolean | string | number;
   unit_transaction_price_usd_total?: string | number;
@@ -292,6 +293,7 @@ export const mapSalesToTableItem = (item: SalesApiModel): UnitTransaction => {
     remainingPayment: kurangBayar,
     created_at: formatDate(mapped.date),
     isRefunded: mapped.isRefunded,
+    is_refunded: item.is_refunded !== undefined ? toBool(item.is_refunded) : (mapped.isRefunded || item.stock_state === 'outbound_return'),
     isUnitTypeDetailValid: item.is_unit_type_detail_valid === true || item.is_unit_type_detail_valid === 1 || String(item.is_unit_type_detail_valid) === 'true',
     is_usd_transaction: toBool((item as any).is_usd_transaction),
     unit_transaction_price_usd_total: item.unit_transaction_price_usd_total !== undefined

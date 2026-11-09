@@ -88,8 +88,33 @@ export default function PurchaseRefundFormPageContent({ mode, refundId }: Purcha
 
   // Load Parent Transaction Details to Map Prices
   const { data: parentPurchase, isLoading: isLoadingParent } = usePurchaseById(selectedTransactionId);
-  const isUsdTransaction = Boolean(parentPurchase?.is_usd_transaction);
+  const isUsdTransaction = Boolean(
+    parentPurchase?.is_usd_transaction ||
+    (parentPurchase as any)?.is_usd_trasnaction
+  );
   const currencyCode = isUsdTransaction ? 'usd' : 'idr';
+
+  const parentTotalNominal = useMemo(() => {
+    if (!parentPurchase) return 0;
+    const isUsd = Boolean(
+      parentPurchase.is_usd_transaction ||
+      (parentPurchase as any)?.is_usd_trasnaction
+    );
+    if (isUsd) {
+      return Number(
+        parentPurchase.transaction_price_usd_total ??
+        parentPurchase.unit_transaction_price_usd_total ??
+        0
+      );
+    }
+    return Number(
+      parentPurchase.transaction_bruto_total ??
+      parentPurchase.unit_transaction_bruto_total ??
+      parentPurchase.bruto_total ??
+      parentPurchase.totalPurchase ??
+      0
+    );
+  }, [parentPurchase]);
 
   // Fetch Items from requested endpoint: /wapi/transaction/unit-transaction/unit-transaction/:id/get-item-details
   const { data: itemDetails = [], isLoading: isLoadingItems } = useUnitTransactionItemDetailsData(
@@ -374,13 +399,25 @@ export default function PurchaseRefundFormPageContent({ mode, refundId }: Purcha
 
               {/* Refund Amount Input */}
               <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <Label>Nominal Refund ({isUsdTransaction ? 'USD' : 'IDR'})</Label>
+                <div className="flex items-center justify-between flex-wrap gap-2">
+                  <div className="flex items-center gap-2">
+                    <Label>Nominal Refund ({isUsdTransaction ? 'USD' : 'IDR'})</Label>
+                    {parentTotalNominal > 0 && (
+                      <button
+                        type="button"
+                        onClick={() => form.setValue('refund_amount', parentTotalNominal, { shouldValidate: true })}
+                        title="Klik untuk mengisi nominal dengan total transaksi"
+                        className="inline-flex items-center gap-1 rounded bg-blue-50 px-2 py-0.5 text-xs font-semibold text-blue-700 hover:bg-blue-100 transition-colors cursor-pointer border border-blue-200"
+                      >
+                        <span>Total: {currenciesFormat(currencyCode, parentTotalNominal)}</span>
+                      </button>
+                    )}
+                  </div>
                   {selectedItemsPriceSum > 0 && (
                     <button
                       type="button"
-                      onClick={() => form.setValue('refund_amount', selectedItemsPriceSum)}
-                      className="text-xs text-blue-600 font-medium hover:underline"
+                      onClick={() => form.setValue('refund_amount', selectedItemsPriceSum, { shouldValidate: true })}
+                      className="text-xs text-blue-600 font-medium hover:underline cursor-pointer"
                     >
                       Gunakan Total Unit ({currenciesFormat(currencyCode, selectedItemsPriceSum)})
                     </button>

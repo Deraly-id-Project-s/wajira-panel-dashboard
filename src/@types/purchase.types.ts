@@ -60,6 +60,12 @@ export interface Purchase {
   totalBiaya: number;
   totalPurchase: number;
 
+  transaction_bruto_total?: number;
+  unit_transaction_bruto_total?: number;
+  transaction_price_usd_total?: number;
+  unit_transaction_price_usd_total?: number;
+  bruto_total?: number;
+
   unit_transaction_items: any[];
 
   totalPaid: number;

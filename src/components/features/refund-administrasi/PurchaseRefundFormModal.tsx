@@ -126,8 +126,18 @@ export default function PurchaseRefundFormModal({
 
   // Task 3: Pengecekan unitTransaction.is_usd_transaction === true
   const unitTransaction = selectableItemsQuery.transactionQuery.data;
-  const isUsdTransaction = Boolean(unitTransaction?.is_usd_transaction);
+  const isUsdTransaction = Boolean(unitTransaction?.is_usd_transaction || (unitTransaction as any)?.is_usd_trasnaction);
   const currencyCode = isUsdTransaction ? 'usd' : 'idr';
+
+  const parentTotalNominal = useMemo(() => {
+    const raw = (unitTransaction as any)?.data ?? unitTransaction;
+    if (!raw) return 0;
+    const isUsd = Boolean(raw.is_usd_transaction || (raw as any).is_usd_trasnaction);
+    if (isUsd) {
+      return Number(raw.transaction_price_usd_total ?? (raw as any).unit_transaction_price_usd_total ?? 0);
+    }
+    return Number(raw.transaction_bruto_total ?? raw.unit_transaction_bruto_total ?? (raw as any).bruto_total ?? 0);
+  }, [unitTransaction]);
 
   const displayedItems = useMemo(() => (isDetail ? effectiveRefund?.items ?? [] : selectableItems), [effectiveRefund?.items, isDetail, selectableItems]);
   const hasWarehouseReadyItems = useMemo(() => displayedItems.some((item) => item.in_stock), [displayedItems]);
@@ -395,9 +405,23 @@ export default function PurchaseRefundFormModal({
                 name="refund_amount"
                 render={({ field }) => (
                   <FormItem className="space-y-1.5">
-                    <FormLabel className="text-sm font-medium text-slate-800">
-                      Nominal Refund ({isUsdTransaction ? 'USD' : 'IDR'})
-                    </FormLabel>
+                    <div className="flex items-center justify-between flex-wrap gap-2">
+                      <div className="flex items-center gap-2">
+                        <FormLabel className="text-sm font-medium text-slate-800">
+                          Nominal Refund ({isUsdTransaction ? 'USD' : 'IDR'})
+                        </FormLabel>
+                        {parentTotalNominal > 0 && !isDetail && (
+                          <button
+                            type="button"
+                            onClick={() => form.setValue('refund_amount', parentTotalNominal, { shouldValidate: true })}
+                            title="Klik untuk mengisi nominal dengan total transaksi"
+                            className="inline-flex items-center gap-1 rounded bg-blue-50 px-2 py-0.5 text-xs font-semibold text-blue-700 hover:bg-blue-100 transition-colors cursor-pointer border border-blue-200"
+                          >
+                            <span>Total: {currenciesFormat(currencyCode, parentTotalNominal)}</span>
+                          </button>
+                        )}
+                      </div>
+                    </div>
                     <FormControl>
                       <MoneyInput
                         name={field.name}

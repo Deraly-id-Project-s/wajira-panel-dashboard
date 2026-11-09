@@ -89,12 +89,7 @@ export function UnitTypeDetailTable({
         sortable: true,
         cell: (item) =>
           item.person?.name ? (
-            <div className="flex flex-col">
-              <span className="font-medium text-slate-900">{item.person.name}</span>
-              {item.person.code && (
-                <span className="text-xs text-slate-500 font-mono">{item.person.code}</span>
-              )}
-            </div>
+            <ReferenceLink target='_blank' href={`/dashboard/${slug}/master/supplier/${item.person.id}`}>{item.person.name}</ReferenceLink>
           ) : (
             '-'
           ),

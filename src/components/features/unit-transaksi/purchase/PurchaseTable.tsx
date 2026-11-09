@@ -83,10 +83,13 @@ export default function PurchaseTable({
     return () => clearTimeout(timer);
   }, [localSearch, onSearchChange, search]);
 
-  const isRefunded = useCallback(
-    (item: UnitTransaction) => String(item.stock_state ?? '').toLowerCase() === 'inbound_return',
-    []
-  );
+  const isRefunded = useCallback((item: UnitTransaction) => {
+    const val = (item as any).is_refunded ?? item.isRefunded;
+    if (typeof val === 'boolean') return val;
+    if (typeof val === 'number') return val === 1;
+    if (typeof val === 'string') return val === '1' || val.toLowerCase() === 'true';
+    return String(item.stock_state ?? '').toLowerCase() === 'inbound_return';
+  }, []);
   const getBillingLabel = useCallback(
     (item: UnitTransaction) => {
       if (isRefunded(item)) return 'Refund';
@@ -156,6 +159,8 @@ export default function PurchaseTable({
           return compareText(a.stock_state, b.stock_state);
         case 'billing':
           return compareText(getBillingLabel(a), getBillingLabel(b));
+        case 'is_refunded':
+          return compareText(isRefunded(a) ? 'Refund Beli' : '-', isRefunded(b) ? 'Refund Beli' : '-');
         default:
           return 0;
       }
@@ -337,6 +342,20 @@ export default function PurchaseTable({
         },
       },
       {
+        header: 'Keterangan',
+        alignment: 'center',
+        accessorKey: 'is_refunded',
+        sortable: true,
+        cell: (item) => {
+          if (!isRefunded(item)) return '-';
+          return (
+            <Badge variant="outline" className="border-amber-300 bg-amber-50 text-amber-700 font-medium">
+              Refund Beli
+            </Badge>
+          );
+        },
+      },
+      {
         header: 'Aksi',
         alignment: 'center',
         sticky: 'right',
@@ -483,6 +502,7 @@ export default function PurchaseTable({
   return (
     <div className="space-y-4">
       <BaseTable
+        tableId="purchase-table"
         data={pagedData}
         columns={columns}
         loading={loading}

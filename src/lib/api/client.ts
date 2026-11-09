@@ -6,7 +6,7 @@
 import axios, { AxiosError, InternalAxiosRequestConfig } from 'axios';
 import { ApiError } from '@/@types/api';
 import { getAccessToken, removeAccessToken } from '@/lib/auth/token';
-import { clearStoredCompanyId, clearStoredPermissions } from '@/lib/session/storage';
+import { clearStoredCompanyId, clearStoredPermissions, clearAllTableVisibilityPreferences } from '@/lib/session/storage';
 import { clearCachedUserCompanies } from '@/services/company.service';
 import { clearCachedPreferences } from '@/services/preference.service';
 import { AuthService } from '@/features/auth/services/auth.service';
@@ -64,6 +64,7 @@ apiClient.interceptors.response.use(
           clearStoredPermissions();
           clearCachedUserCompanies();
           clearCachedPreferences();
+          clearAllTableVisibilityPreferences();
           AuthService.clearCachedProfile();
           window.location.href = '/login';
         }

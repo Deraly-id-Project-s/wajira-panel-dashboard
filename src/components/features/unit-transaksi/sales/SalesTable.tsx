@@ -90,10 +90,13 @@ export function SalesTable({
     return () => clearTimeout(timer);
   }, [localSearch, onSearchChange, search]);
 
-  const isRefunded = useCallback(
-    (item: UnitTransaction) => String(item.stock_state ?? '').toLowerCase() === 'outbound_return',
-    []
-  );
+  const isRefunded = useCallback((item: UnitTransaction) => {
+    const val = (item as any).is_refunded ?? item.isRefunded;
+    if (typeof val === 'boolean') return val;
+    if (typeof val === 'number') return val === 1;
+    if (typeof val === 'string') return val === '1' || val.toLowerCase() === 'true';
+    return String(item.stock_state ?? '').toLowerCase() === 'outbound_return';
+  }, []);
   const getBillingLabel = useCallback(
     (item: UnitTransaction) => {
       if (isRefunded(item)) return 'Refund';
@@ -163,6 +166,8 @@ export function SalesTable({
           return compareText(a.stock_state, b.stock_state);
         case 'billing':
           return compareText(getBillingLabel(a), getBillingLabel(b));
+        case 'is_refunded':
+          return compareText(isRefunded(a) ? 'Refund Jual' : '-', isRefunded(b) ? 'Refund Jual' : '-');
         default:
           return 0;
       }
@@ -253,16 +258,9 @@ export function SalesTable({
         sortable: true,
         alignment: 'left',
         cell: (item) => (
-          <div className="flex flex-col sm:flex-row items-center gap-2 w-full sm:w-auto">
-            <ReferenceLink href={`/dashboard/${slug}/customer?search=${encodeURIComponent(item.supplier || '')}`}>
-              {item.supplier || '-'}
-            </ReferenceLink>
-            {isRefunded(item) && (
-              <Badge variant="outline" className="border-amber-300 bg-amber-50 text-amber-700">
-                Sudah Refund
-              </Badge>
-            )}
-          </div>
+          <ReferenceLink href={`/dashboard/${slug}/customer?search=${encodeURIComponent(item.supplier || '')}`}>
+            {item.supplier || '-'}
+          </ReferenceLink>
         ),
       },
       {
@@ -358,6 +356,20 @@ export function SalesTable({
               )}
             >
               {label}
+            </Badge>
+          );
+        },
+      },
+      {
+        header: 'Keterangan',
+        alignment: 'center',
+        accessorKey: 'is_refunded',
+        sortable: true,
+        cell: (item) => {
+          if (!isRefunded(item)) return '-';
+          return (
+            <Badge variant="outline" className="border-amber-300 bg-amber-50 text-amber-700 font-medium">
+              Refund Jual
             </Badge>
           );
         },
@@ -512,6 +524,7 @@ export function SalesTable({
   return (
     <div className="space-y-4">
       <BaseTable
+        tableId="sales-table"
         data={pagedData}
         columns={columns}
         loading={loading}

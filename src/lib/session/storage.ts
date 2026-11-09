@@ -48,3 +48,21 @@ export const clearStoredPermissions = (): void => {
   if (!isBrowser()) return;
   localStorage.removeItem(USER_PERMISSIONS_KEY);
 };
+
+export const TABLE_VISIBILITY_PREFIX = 'table_hidden_cols_';
+
+export const clearAllTableVisibilityPreferences = (): void => {
+  if (!isBrowser()) return;
+  try {
+    const keysToRemove: string[] = [];
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (key && (key.startsWith(TABLE_VISIBILITY_PREFIX) || key.startsWith('table_visibility_'))) {
+        keysToRemove.push(key);
+      }
+    }
+    keysToRemove.forEach((key) => localStorage.removeItem(key));
+  } catch (err) {
+    console.warn('Failed to clear table visibility preferences', err);
+  }
+};

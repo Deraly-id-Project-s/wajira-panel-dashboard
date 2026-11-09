@@ -87,6 +87,7 @@ type UnitTransactionApiModel = {
     is_paid?: boolean;
   } | null;
   has_refund_transaction?: boolean;
+  is_refunded?: boolean | number | string | null;
   warehouse_activity?: {
     id?: number | string;
     uuid?: string;
@@ -118,6 +119,7 @@ type UnitTransactionApiModel = {
   usd_cost_customs_clearance_cost_total?: string | number;
   usd_cost_other_total?: string | number;
   unit_transaction_usd_costs?: any[];
+  unit_transaction_refunds?: any[];
 };
 
 type UnitTransactionItemListApiModel = {
@@ -359,6 +361,7 @@ const mapUnitTransaction = (item: UnitTransactionApiModel): UnitTransaction => (
   isPaid: Boolean(item.unit_transaction_billing?.is_paid || item.billing_summary?.is_paid),
   paymentAt: item.unit_transaction_billing?.payment_at ?? null,
   isRefunded: item?.has_returned_data ?? null,
+  is_refunded: item.is_refunded !== undefined ? toBoolean(item.is_refunded) : (toBoolean(item?.has_returned_data) || item.stock_state === 'inbound_return'),
   remainingPayment: toNumber(item.billing_summary?.remaining_payment),
   isUnitTypeDetailValid: item.is_unit_type_detail_valid === true || item.is_unit_type_detail_valid === 1 || String(item.is_unit_type_detail_valid) === 'true',
   is_usd_transaction: item.is_usd_transaction === true || item.is_usd_transaction === 1 || String(item.is_usd_transaction) === 'true',
@@ -400,6 +403,7 @@ const mapUnitTransaction = (item: UnitTransactionApiModel): UnitTransaction => (
       is_paid: Boolean(item.billing_summary?.is_paid),
     }
     : null,
+  unit_transaction_refunds: item.unit_transaction_refunds ?? [],
   documentTemplateId: item.document_template_id != null ? String(item.document_template_id) : item.document_template?.id != null ? String(item.document_template.id) : item.document_template?.uuid ?? null,
 });
 
@@ -635,6 +639,7 @@ const mapUnitTransactionDetail = (item: UnitTransactionApiModel): UnitTransactio
     type: item?.type ?? '-',
     pivot: { unit_transaction_item_detail_id: 0 },
     unit_transaction_bruto_total: mainBruto,
+    transaction_bruto_total: toNumber(item.transaction_bruto_total ?? item.unit_transaction_bruto_total ?? mainBruto),
     unit_transaction_item_total_hpp: itemHpp,
     unit_transaction_item_total_dpp: itemDpp || toNumber(item.unit_transaction_item_total_dpp ?? item.transaction_dpp_total),
     unit_transaction_item_total_ppn: itemPpn || toNumber(item.unit_transaction_item_total_ppn ?? item.transaction_ppn_total),
@@ -670,6 +675,7 @@ const mapUnitTransactionDetail = (item: UnitTransactionApiModel): UnitTransactio
       }
       : null,
     has_refund_transaction: Boolean(item.has_refund_transaction),
+    is_refunded: item.is_refunded !== undefined ? toBoolean(item.is_refunded) : (toBoolean(item?.has_returned_data) || item.stock_state === 'inbound_return'),
     warehouse_activity: item.warehouse_activity
       ? {
         id: toNumber(item.warehouse_activity.id),
@@ -715,6 +721,7 @@ const mapUnitTransactionDetail = (item: UnitTransactionApiModel): UnitTransactio
     usd_cost_customs_clearance_cost_total: item.usd_cost_customs_clearance_cost_total !== undefined ? toNumber(item.usd_cost_customs_clearance_cost_total) : undefined,
     usd_cost_other_total: item.usd_cost_other_total !== undefined ? toNumber(item.usd_cost_other_total) : undefined,
     unit_transaction_usd_costs: item.unit_transaction_usd_costs ?? [],
+    unit_transaction_refunds: item.unit_transaction_refunds ?? [],
   };
 };
 

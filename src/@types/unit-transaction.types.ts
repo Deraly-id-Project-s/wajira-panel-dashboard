@@ -84,6 +84,7 @@ export interface UnitTransaction {
   unit_transaction_billing?: UnitTransactionBilling | null;
   isPaid: boolean;
   isRefunded: boolean | string | null;
+  is_refunded?: boolean | number | string | null;
   paymentAt: string | null;
   remainingPayment: number;
   isUnitTypeDetailValid?: boolean;
@@ -103,6 +104,7 @@ export interface UnitTransaction {
   unit_transaction_usd_costs?: any[];
   unit_transaction_items?: any[];
   billing_summary?: UnitTransactionBillingSummary | null;
+  unit_transaction_refunds?: any[];
   documentTemplateId?: string | null;
 }
 
@@ -207,11 +209,13 @@ export interface UnitTransactionDetail {
   expedition_fee_total: number;
   total_operational_fee?: number;
   has_refund_transaction?: boolean;
+  is_refunded?: boolean | number | string | null;
   warehouse_activity?: WarehouseActivity | null;
   billing_summary?: UnitTransactionBillingSummary | null;
   unit_transaction_billing?: UnitTransactionBilling | null;
   unit_transaction_adjustments?: any[];
   unit_transaction_items?: any[];
+  unit_transaction_refunds?: any[];
   isUnitTypeDetailValid?: boolean;
   is_usd_transaction?: boolean;
   documentTemplateId?: string | null;

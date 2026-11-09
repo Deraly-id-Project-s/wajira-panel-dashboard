@@ -28,6 +28,7 @@ import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from '@/comp
 import { DatePickerWithRange } from '@/components/ui/date-range-picker';
 import { DateRange } from 'react-day-picker';
 import { format } from 'date-fns';
+import { TABLE_VISIBILITY_PREFIX } from '@/lib/session/storage';
 
 export interface ColumnDef<T> {
   header: React.ReactNode;
@@ -67,6 +68,9 @@ export interface BaseTableProps<T> {
   hiddenColumns?: Set<string | number> | (string | number)[];
   onHiddenColumnsChange?: (hiddenColumns: Set<string | number>) => void;
   defaultHiddenColumns?: (string | number)[];
+  tableId?: string;
+  storageKey?: string;
+  disableStoragePersistence?: boolean;
 
   // Sorting props
   sortBy?: string;
@@ -121,6 +125,9 @@ export default function BaseTable<T>({
   hiddenColumns,
   onHiddenColumnsChange,
   defaultHiddenColumns,
+  tableId,
+  storageKey,
+  disableStoragePersistence = false,
   sortBy,
   sortDirection,
   onSortChange,
@@ -166,6 +173,37 @@ export default function BaseTable<T>({
     return `Kolom ${idx + 1}`;
   }, []);
 
+  // Resolve unique storage key for persistent column visibility
+  const resolvedStorageKey = useMemo(() => {
+    if (disableStoragePersistence) return null;
+    if (storageKey) {
+      return storageKey.startsWith(TABLE_VISIBILITY_PREFIX)
+        ? storageKey
+        : `${TABLE_VISIBILITY_PREFIX}${storageKey}`;
+    }
+    if (tableId) {
+      return `${TABLE_VISIBILITY_PREFIX}${tableId}`;
+    }
+
+    if (typeof window === 'undefined') return null;
+
+    // Normalize path by replacing dynamic slug/ids (uuid or numeric)
+    const rawPath = window.location.pathname || '';
+    const normalizedPath = rawPath
+      .replace(/^\/dashboard\/[^/]+/, '/dashboard/:slug')
+      .replace(/\/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/gi, '/:id')
+      .replace(/\/\d+/g, '/:id');
+
+    // Create column signature to distinguish different tables on the same page
+    const colSignature = columns
+      .map((col, idx) => col.id || col.accessorKey || (typeof col.header === 'string' ? col.header : ''))
+      .filter(Boolean)
+      .slice(0, 8)
+      .join('_');
+
+    return `${TABLE_VISIBILITY_PREFIX}${normalizedPath}__${colSignature}`;
+  }, [disableStoragePersistence, storageKey, tableId, columns]);
+
   // Initial hidden columns setup
   const initialHiddenColumns = useMemo(() => {
     const hidden = new Set<string | number>();
@@ -182,6 +220,37 @@ export default function BaseTable<T>({
   }, [columns, defaultHiddenColumns, getColKey]);
 
   const [internalHiddenColumns, setInternalHiddenColumns] = useState<Set<string | number>>(initialHiddenColumns);
+
+  // Load saved preferences from localStorage on mount or key change
+  useEffect(() => {
+    if (!resolvedStorageKey || typeof window === 'undefined') return;
+    try {
+      const stored = localStorage.getItem(resolvedStorageKey);
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        if (Array.isArray(parsed)) {
+          const loadedSet = new Set<string | number>(parsed);
+          setInternalHiddenColumns(loadedSet);
+          onHiddenColumnsChange?.(loadedSet);
+        }
+      }
+    } catch (e) {
+      console.warn('Failed to load table hidden columns from localStorage', e);
+    }
+  }, [resolvedStorageKey]);
+
+  // Save preferences to localStorage helper
+  const saveHiddenColumnsToStorage = useCallback(
+    (nextSet: Set<string | number>) => {
+      if (!resolvedStorageKey || typeof window === 'undefined') return;
+      try {
+        localStorage.setItem(resolvedStorageKey, JSON.stringify(Array.from(nextSet)));
+      } catch (e) {
+        console.warn('Failed to save table hidden columns to localStorage', e);
+      }
+    },
+    [resolvedStorageKey]
+  );
 
   // Controlled / uncontrolled hidden columns
   const effectiveHiddenColumns = useMemo(() => {
@@ -212,29 +281,36 @@ export default function BaseTable<T>({
       }
       next.add(colKey);
     }
+    saveHiddenColumnsToStorage(next);
     if (onHiddenColumnsChange) {
       onHiddenColumnsChange(next);
     } else {
       setInternalHiddenColumns(next);
     }
-  }, [effectiveHiddenColumns, onHiddenColumnsChange, visibleColumns.length]);
+  }, [effectiveHiddenColumns, onHiddenColumnsChange, saveHiddenColumnsToStorage, visibleColumns.length]);
 
   const showAllColumns = useCallback(() => {
     const next = new Set<string | number>();
+    saveHiddenColumnsToStorage(next);
     if (onHiddenColumnsChange) {
       onHiddenColumnsChange(next);
     } else {
       setInternalHiddenColumns(next);
     }
-  }, [onHiddenColumnsChange]);
+  }, [onHiddenColumnsChange, saveHiddenColumnsToStorage]);
 
   const resetHiddenColumns = useCallback(() => {
+    if (resolvedStorageKey && typeof window !== 'undefined') {
+      try {
+        localStorage.removeItem(resolvedStorageKey);
+      } catch {}
+    }
     if (onHiddenColumnsChange) {
       onHiddenColumnsChange(initialHiddenColumns);
     } else {
       setInternalHiddenColumns(initialHiddenColumns);
     }
-  }, [initialHiddenColumns, onHiddenColumnsChange]);
+  }, [initialHiddenColumns, onHiddenColumnsChange, resolvedStorageKey]);
 
   const hiddenCount = effectiveHiddenColumns.size;
 
