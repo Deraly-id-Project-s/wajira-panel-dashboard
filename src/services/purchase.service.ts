@@ -464,8 +464,12 @@ export const purchaseService = {
     if (payload.bbn_price !== undefined) form.append('bbn_price', String(payload.bbn_price));
     if (payload.expedition_fee !== undefined) form.append('expedition_fee', String(payload.expedition_fee));
     if (payload.other_fee !== undefined) form.append('other_fee', String(payload.other_fee));
-    form.append('price_discount', String(payload.price_discount ?? 0));
-    form.append('price_usd_discount', String(payload.price_usd_discount ?? 0));
+    const idrDiscount = String(payload.price_discount ?? payload.discount ?? 0);
+    const usdDiscount = String(payload.price_usd_discount ?? payload.usd_discount ?? 0);
+    form.append('price_discount', idrDiscount);
+    form.append('discount', idrDiscount);
+    form.append('price_usd_discount', usdDiscount);
+    form.append('usd_discount', usdDiscount);
     if (payload.price_usd !== undefined) form.append('price_usd', String(payload.price_usd));
     if (payload.price_per_unit_usd !== undefined) form.append('price_per_unit_usd', String(payload.price_per_unit_usd));
   if (payload.is_usd_transaction !== undefined) form.append('is_usd_transaction', payload.is_usd_transaction ? '1' : '0');
@@ -541,8 +545,12 @@ export const purchaseService = {
     form.append('bbn_price', String(payload.biayaBBN ?? 0));
     form.append('expedition_fee', String(payload.biayaEkspedisi ?? 0));
     form.append('other_fee', String(payload.biayaLain ?? 0));
-    form.append('price_discount', String(payload.price_discount ?? 0));
-    form.append('price_usd_discount', String(payload.price_usd_discount ?? 0));
+    const idrDiscount = String(payload.price_discount ?? payload.discount ?? 0);
+    const usdDiscount = String(payload.price_usd_discount ?? payload.usd_discount ?? 0);
+    form.append('price_discount', idrDiscount);
+    form.append('discount', idrDiscount);
+    form.append('price_usd_discount', usdDiscount);
+    form.append('usd_discount', usdDiscount);
     if (payload.priceUsd !== undefined) form.append('price_usd', String(payload.priceUsd));
     if (payload.pricePerUnitUsd !== undefined) form.append('price_per_unit_usd', String(payload.pricePerUnitUsd));
     if (payload.usd_costs && payload.usd_costs.length > 0) {

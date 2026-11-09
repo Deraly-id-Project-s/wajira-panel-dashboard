@@ -264,7 +264,9 @@ export interface UnitTransactionItem {
   qty_total: number;
   price: number;
   price_discount?: number;
+  discount?: number;
   price_usd_discount?: number;
+  usd_discount?: number;
   bbn_price: number;
   expedition_fee: number;
   other_fee: number;
@@ -327,6 +329,10 @@ export interface UnitTransactionItemFormulaResponse {
   price_usd_total: number;            // Main USD price + additional USD costs
   price_total?: number;
   price_total_usd?: number;
+  price_discount?: number;
+  discount?: number;
+  price_usd_discount?: number;
+  usd_discount?: number;
 }
 
 export interface UnitTransactionItemListResponse {
@@ -341,7 +347,9 @@ export interface CreateUnitTransactionItemPayload {
   qty_total: number;
   price: number;
   price_discount?: number;
+  discount?: number;
   price_usd_discount?: number;
+  usd_discount?: number;
   bbn_price: number;
   expedition_fee: number;
   other_fee: number;
@@ -366,7 +374,9 @@ export interface UpdateUnitTransactionItemPayload {
   qty_total?: number;
   price?: number;
   price_discount?: number;
+  discount?: number;
   price_usd_discount?: number;
+  usd_discount?: number;
   bbn_price?: number;
   expedition_fee?: number;
   other_fee?: number;
@@ -401,7 +411,9 @@ export interface UnitTransactionItemSummary {
   qty_total: number;
   price: number;
   price_discount?: number;
+  discount?: number;
   price_usd_discount?: number;
+  usd_discount?: number;
   bbn_price: number;
   expedition_fee: number;
   price_usd?: number;

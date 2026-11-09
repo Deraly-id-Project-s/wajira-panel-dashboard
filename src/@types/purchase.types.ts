@@ -13,6 +13,8 @@ export interface PurchaseUnit {
   price: number;
   price_discount?: number;
   price_usd_discount?: number;
+  discount?: number;
+  usd_discount?: number;
 
   biayaBBN: number;
   biayaEkspedisi: number;
@@ -99,6 +101,8 @@ export interface CreatePurchaseRequest {
   other_fee?: number;
   price_discount?: number;
   price_usd_discount?: number;
+  discount?: number;
+  usd_discount?: number;
   transaction_date?: string;
   price_usd?: number;
   price_per_unit_usd?: number;
@@ -139,6 +143,8 @@ export interface CreatePurchaseUnitRequest {
   price: number;
   price_discount?: number;
   price_usd_discount?: number;
+  discount?: number;
+  usd_discount?: number;
   biayaBBN: number;
   biayaEkspedisi: number;
   dppTaxVersionId: string;
@@ -179,6 +185,8 @@ export interface PurchaseUnitItemRow {
   price: number;
   price_discount?: number;
   price_usd_discount?: number;
+  discount?: number;
+  usd_discount?: number;
   bbnPrice: number;
   expeditionFee: number;
   otherFee: number;

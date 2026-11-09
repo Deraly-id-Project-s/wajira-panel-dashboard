@@ -26,6 +26,8 @@ export type SalesPayload = {
   other_fee?: number;
   price_discount?: number;
   price_usd_discount?: number;
+  discount?: number;
+  usd_discount?: number;
   transaction_date?: string;
   price_usd?: number;
   price_per_unit_usd?: number;
@@ -56,8 +58,12 @@ const appendPayload = (form: FormData, payload: SalesPayload) => {
   appendIfDefined(form, 'sparepart_id', payload.sparepart_id);
   appendIfDefined(form, 'qty_total', payload.qty_total);
   appendIfDefined(form, 'price', payload.price);
-  form.append('price_discount', String(payload.price_discount ?? 0));
-  form.append('price_usd_discount', String(payload.price_usd_discount ?? 0));
+  const idrDiscount = String(payload.price_discount ?? payload.discount ?? 0);
+  const usdDiscount = String(payload.price_usd_discount ?? payload.usd_discount ?? 0);
+  form.append('price_discount', idrDiscount);
+  form.append('discount', idrDiscount);
+  form.append('price_usd_discount', usdDiscount);
+  form.append('usd_discount', usdDiscount);
   appendIfDefined(form, 'bbn_price', payload.bbn_price);
   appendIfDefined(form, 'expedition_fee', payload.expedition_fee);
   appendIfDefined(form, 'other_fee', payload.other_fee);

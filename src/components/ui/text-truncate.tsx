@@ -8,7 +8,8 @@ import {
 
 interface TextTruncateProps {
   text: string;
-  maxLength: number;
+  maxLength?: number;
+  maxWords?: number;
   className?: string;
   showTooltip?: boolean;
 }
@@ -16,14 +17,33 @@ interface TextTruncateProps {
 export function TextTruncate({
   text,
   maxLength,
+  maxWords,
   className,
   showTooltip = true,
 }: TextTruncateProps) {
-  if (!text || text.length <= maxLength) {
+  if (!text) {
     return <span className={className}>{text}</span>;
   }
 
-  const truncated = `${text.slice(0, maxLength)}...`;
+  let isTruncated = false;
+  let truncated = text;
+
+  if (typeof maxWords === 'number' && maxWords > 0) {
+    const words = text.trim().split(/\s+/);
+    if (words.length > maxWords) {
+      isTruncated = true;
+      truncated = `${words.slice(0, maxWords).join(' ')}...`;
+    }
+  } else if (typeof maxLength === 'number' && maxLength > 0) {
+    if (text.length > maxLength) {
+      isTruncated = true;
+      truncated = `${text.slice(0, maxLength)}...`;
+    }
+  }
+
+  if (!isTruncated) {
+    return <span className={className}>{text}</span>;
+  }
 
   if (!showTooltip) {
     return (

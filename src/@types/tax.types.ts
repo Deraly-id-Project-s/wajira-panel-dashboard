@@ -5,6 +5,7 @@ export interface TaxVersion {
   tax_id: number;
   name: string;
   is_default: number | boolean;
+  tax_rate?: number | string;
 }
 
 export interface Tax {

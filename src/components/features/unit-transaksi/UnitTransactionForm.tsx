@@ -8,7 +8,7 @@ import { MoneyInput } from '@/components/ui/money-input';
 import { formatCurrency } from '@/lib/utils/currency';
 import { currenciesFormat } from '@/components/ui/currenciesFormat';
 import { Button } from '@/components/ui/button';
-import { Plus, Trash2, Percent, Info } from 'lucide-react';
+import { Plus, Trash2, Info } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { useTypeUnits } from '@/hooks/useTypeUnit';
 import type { TypeUnit } from '@/@types/type-unit.types';
@@ -212,16 +212,36 @@ export function UnitTransactionForm({
       otherFee: defaultValues?.otherFee || 0,
       price_discount: defaultValues?.price_discount !== undefined
         ? Number(defaultValues.price_discount)
-        : (defaultValues as any)?.priceDiscount !== undefined
-          ? Number((defaultValues as any).priceDiscount)
-          : 0,
+        : (defaultValues as any)?.discount !== undefined
+          ? Number((defaultValues as any).discount)
+          : (defaultValues as any)?.priceDiscount !== undefined
+            ? Number((defaultValues as any).priceDiscount)
+            : 0,
+      discount: defaultValues?.discount !== undefined
+        ? Number(defaultValues.discount)
+        : defaultValues?.price_discount !== undefined
+          ? Number(defaultValues.price_discount)
+          : (defaultValues as any)?.priceDiscount !== undefined
+            ? Number((defaultValues as any).priceDiscount)
+            : 0,
       price_usd_discount: defaultValues?.price_usd_discount !== undefined
         ? Number(defaultValues.price_usd_discount)
-        : (defaultValues as any)?.price_discount_usd !== undefined
-          ? Number((defaultValues as any).price_discount_usd)
-          : (defaultValues as any)?.priceUsdDiscount !== undefined
-            ? Number((defaultValues as any).priceUsdDiscount)
-            : 0,
+        : (defaultValues as any)?.usd_discount !== undefined
+          ? Number((defaultValues as any).usd_discount)
+          : (defaultValues as any)?.price_discount_usd !== undefined
+            ? Number((defaultValues as any).price_discount_usd)
+            : (defaultValues as any)?.priceUsdDiscount !== undefined
+              ? Number((defaultValues as any).priceUsdDiscount)
+              : 0,
+      usd_discount: defaultValues?.usd_discount !== undefined
+        ? Number(defaultValues.usd_discount)
+        : defaultValues?.price_usd_discount !== undefined
+          ? Number(defaultValues.price_usd_discount)
+          : (defaultValues as any)?.price_discount_usd !== undefined
+            ? Number((defaultValues as any).price_discount_usd)
+            : (defaultValues as any)?.priceUsdDiscount !== undefined
+              ? Number((defaultValues as any).priceUsdDiscount)
+              : 0,
       priceUsd: defaultValues?.priceUsd || (defaultValues as any)?.price_usd || 0,
       pricePerUnitUsd: defaultValues?.pricePerUnitUsd || (defaultValues as any)?.price_per_unit_usd || 0,
       usdCostsFreight: initialCosts.usdCostsFreight,
@@ -279,16 +299,36 @@ export function UnitTransactionForm({
         otherFee: defaultValues.otherFee !== undefined ? Number(defaultValues.otherFee) : 0,
         price_discount: defaultValues.price_discount !== undefined
           ? Number(defaultValues.price_discount)
-          : (defaultValues as any)?.priceDiscount !== undefined
-            ? Number((defaultValues as any).priceDiscount)
-            : 0,
+          : (defaultValues as any)?.discount !== undefined
+            ? Number((defaultValues as any).discount)
+            : (defaultValues as any)?.priceDiscount !== undefined
+              ? Number((defaultValues as any).priceDiscount)
+              : 0,
+        discount: defaultValues.discount !== undefined
+          ? Number(defaultValues.discount)
+          : defaultValues.price_discount !== undefined
+            ? Number(defaultValues.price_discount)
+            : (defaultValues as any)?.priceDiscount !== undefined
+              ? Number((defaultValues as any).priceDiscount)
+              : 0,
         price_usd_discount: defaultValues.price_usd_discount !== undefined
           ? Number(defaultValues.price_usd_discount)
-          : (defaultValues as any)?.price_discount_usd !== undefined
-            ? Number((defaultValues as any).price_discount_usd)
-            : (defaultValues as any)?.priceUsdDiscount !== undefined
-              ? Number((defaultValues as any).priceUsdDiscount)
-              : 0,
+          : (defaultValues as any)?.usd_discount !== undefined
+            ? Number((defaultValues as any).usd_discount)
+            : (defaultValues as any)?.price_discount_usd !== undefined
+              ? Number((defaultValues as any).price_discount_usd)
+              : (defaultValues as any)?.priceUsdDiscount !== undefined
+                ? Number((defaultValues as any).priceUsdDiscount)
+                : 0,
+        usd_discount: defaultValues.usd_discount !== undefined
+          ? Number(defaultValues.usd_discount)
+          : defaultValues.price_usd_discount !== undefined
+            ? Number(defaultValues.price_usd_discount)
+            : (defaultValues as any)?.price_discount_usd !== undefined
+              ? Number((defaultValues as any).price_discount_usd)
+              : (defaultValues as any)?.priceUsdDiscount !== undefined
+                ? Number((defaultValues as any).priceUsdDiscount)
+                : 0,
         priceUsd: defaultValues.priceUsd !== undefined ? Number(defaultValues.priceUsd) : (Number((defaultValues as any)?.price_usd) || 0),
         pricePerUnitUsd: defaultValues.pricePerUnitUsd !== undefined ? Number(defaultValues.pricePerUnitUsd) : (Number((defaultValues as any)?.price_per_unit_usd) || 0),
         usdCostsFreight: nextCosts.usdCostsFreight,
@@ -380,20 +420,58 @@ export function UnitTransactionForm({
   const additionalUsdTotal = formula?.price_usd_additional_total ?? formula?.total_usd_cost ?? compiledUsdCosts.reduce((s, c) => s + c.amount, 0);
 
   const fallbackGrandTotalUsd = useMemo(() => {
-    const discountUsdPercent = Math.min(100, Math.max(0, priceUsdDiscount));
     const basePriceUsd = Number(priceUsd ?? 0);
-    const discountedPriceUsd = discountUsdPercent > 0 ? basePriceUsd * (1 - discountUsdPercent / 100) : basePriceUsd;
+    const nominalUsdDiscount = Number(priceUsdDiscount ?? 0);
+    const usdDiscountTotal = Number(pricePerUnitUsd ?? 0) > 0
+      ? nominalUsdDiscount * Math.max(1, qty)
+      : nominalUsdDiscount;
+    const discountedPriceUsd = Math.max(0, basePriceUsd - usdDiscountTotal);
     return discountedPriceUsd + additionalUsdTotal;
-  }, [priceUsdDiscount, priceUsd, additionalUsdTotal]);
+  }, [priceUsdDiscount, priceUsd, pricePerUnitUsd, qty, additionalUsdTotal]);
 
   const grandTotalUsd = formula?.price_usd_total ?? formula?.price_total_usd ?? fallbackGrandTotalUsd;
 
-  const hppPerUnit = Number(formula?.hpp_per_unit_price ?? 0);
-  const dppPerUnit = Number(formula?.dpp_per_unit_price ?? 0);
-  const ppnPerUnit = Number(formula?.ppn_per_unit_price ?? 0);
-  const hppTotal = Number(formula?.hpp_total_price ?? 0);
-  const dppTotal = Number(formula?.dpp_total_price ?? 0);
-  const ppnTotal = Number(formula?.ppn_total_price ?? 0);
+  const fallbackIdrFormula = useMemo(() => {
+    if (isUsd) {
+      return {
+        hppPerUnit: 0,
+        dppPerUnit: 0,
+        ppnPerUnit: 0,
+        hppTotal: 0,
+        dppTotal: 0,
+        ppnTotal: 0,
+      };
+    }
+    const safeQty = Math.max(1, qty);
+    const discountPerUnit = Math.min(price, Math.max(0, priceDiscount));
+    const priceAfterDiscount = Math.max(0, price - discountPerUnit);
+    const additionalFeePerUnit = bbnPrice + expeditionFee + otherFee;
+    const hppPerUnitCalc = priceAfterDiscount + additionalFeePerUnit;
+    const dppRate = Number(defaultDppTax?.rate ?? defaultDppTax?.tax_rate ?? 100) || 100;
+    const ppnRate = Number(defaultPpnTax?.rate ?? defaultPpnTax?.tax_rate ?? 11) || 11;
+    const dppPerUnitCalc = hppPerUnitCalc / (dppRate / 100);
+    const ppnPerUnitCalc = dppPerUnitCalc * (ppnRate / 100);
+
+    const hppTotalCalc = hppPerUnitCalc * safeQty;
+    const dppTotalCalc = dppPerUnitCalc * safeQty;
+    const ppnTotalCalc = ppnPerUnitCalc * safeQty;
+
+    return {
+      hppPerUnit: hppPerUnitCalc,
+      dppPerUnit: dppPerUnitCalc,
+      ppnPerUnit: ppnPerUnitCalc,
+      hppTotal: hppTotalCalc,
+      dppTotal: dppTotalCalc,
+      ppnTotal: ppnTotalCalc,
+    };
+  }, [isUsd, price, priceDiscount, bbnPrice, expeditionFee, otherFee, qty, defaultDppTax, defaultPpnTax]);
+
+  const hppPerUnit = formula?.hpp_per_unit_price !== undefined ? Number(formula.hpp_per_unit_price) : fallbackIdrFormula.hppPerUnit;
+  const dppPerUnit = formula?.dpp_per_unit_price !== undefined ? Number(formula.dpp_per_unit_price) : fallbackIdrFormula.dppPerUnit;
+  const ppnPerUnit = formula?.ppn_per_unit_price !== undefined ? Number(formula.ppn_per_unit_price) : fallbackIdrFormula.ppnPerUnit;
+  const hppTotal = formula?.hpp_total_price !== undefined ? Number(formula.hpp_total_price) : fallbackIdrFormula.hppTotal;
+  const dppTotal = formula?.dpp_total_price !== undefined ? Number(formula.dpp_total_price) : fallbackIdrFormula.dppTotal;
+  const ppnTotal = formula?.ppn_total_price !== undefined ? Number(formula.ppn_total_price) : fallbackIdrFormula.ppnTotal;
 
   const typeUnitOptions = useMemo<TypeUnit[]>(() => {
     const list = suppliedTypeUnitOptions ?? typeUnitData?.data ?? [];
@@ -442,7 +520,9 @@ export function UnitTransactionForm({
       expeditionFee: isUsd ? 0 : (Number(values.expeditionFee ?? 0) || 0),
       otherFee: isUsd ? 0 : (Number(values.otherFee ?? 0) || 0),
       price_discount: isUsd ? 0 : (Number(values.price_discount ?? 0) || 0),
+      discount: isUsd ? 0 : (Number(values.price_discount ?? 0) || 0),
       price_usd_discount: isUsd ? (Number(values.price_usd_discount ?? 0) || 0) : 0,
+      usd_discount: isUsd ? (Number(values.price_usd_discount ?? 0) || 0) : 0,
       priceUsd: isUsd ? Number(values.priceUsd) || 0 : 0,
       pricePerUnitUsd: isUsd ? Number(values.pricePerUnitUsd) || 0 : 0,
       price_usd: isUsd ? Number(values.priceUsd) || 0 : 0,
@@ -759,25 +839,16 @@ export function UnitTransactionForm({
                                 </Tooltip>
                               </FormLabel>
                               <FormControl>
-                                <div className="relative">
-                                  <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-2.5 text-amber-700/70">
-                                    <Percent className="h-3.5 w-3.5" />
-                                  </div>
-                                  <Input
-                                    type="number"
-                                    step="any"
-                                    min="0"
-                                    max="100"
-                                    placeholder="0"
-                                    value={field.value ?? ''}
-                                    onChange={(e) => {
-                                      const val = e.target.value;
-                                      field.onChange(val === '' ? 0 : Number(val));
-                                    }}
-                                    disabled={readOnly}
-                                    className="h-9 border-amber-200 focus:border-amber-300 bg-white text-xs pl-8"
-                                  />
-                                </div>
+                                <MoneyInput
+                                  currency="USD"
+                                  placeholder="$ 0.00"
+                                  name={field.name}
+                                  value={Number(field.value) || 0}
+                                  onChangeValue={(val) => field.onChange(val)}
+                                  onBlur={field.onBlur}
+                                  disabled={readOnly}
+                                  className="h-9 border-amber-200 focus:border-amber-300 bg-white text-xs"
+                                />
                               </FormControl>
                               <FormMessage />
                             </FormItem>
@@ -962,25 +1033,14 @@ export function UnitTransactionForm({
                     <FormItem>
                       <FormLabel className="text-sm font-medium">Diskon Harga</FormLabel>
                       <FormControl>
-                        <div className="relative">
-                          <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-muted-foreground">
-                            <Percent className="h-4 w-4" />
-                          </div>
-                          <Input
-                            type="number"
-                            step="any"
-                            min="0"
-                            max="100"
-                            placeholder="0"
-                            value={field.value ?? ''}
-                            onChange={(e) => {
-                              const val = e.target.value;
-                              field.onChange(val === '' ? 0 : Number(val));
-                            }}
-                            disabled={readOnly}
-                            className="pl-9"
-                          />
-                        </div>
+                        <MoneyInput
+                          placeholder="Rp 0"
+                          name={field.name}
+                          value={Number(field.value) || 0}
+                          onChangeValue={(val) => field.onChange(val)}
+                          onBlur={field.onBlur}
+                          disabled={readOnly}
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>

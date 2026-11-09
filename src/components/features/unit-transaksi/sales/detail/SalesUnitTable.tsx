@@ -139,14 +139,14 @@ export function SalesUnitTable({ lineItems, salesId, onAddUnit, canCreate, canEd
             const usdPrice = Number(item.price_per_unit_usd ?? 0) > 0
               ? Number(item.price_per_unit_usd)
               : (Number(item.price_usd ?? 0) > 0 ? Number(item.price_usd) / Math.max(1, Number(item.qty_total ?? 1)) : 0);
-            const discountUsdPercent = Number(item.price_usd_discount ?? item.price_discount_usd ?? 0);
+            const discountUsdNominal = Number(item.price_usd_discount ?? item.price_discount_usd ?? item.usd_discount ?? 0);
 
             return (
               <div className="text-center">
                 <span>{currenciesFormat('usd', usdPrice)}</span>
-                {discountUsdPercent > 0 && (
+                {discountUsdNominal > 0 && (
                   <span className="block text-[11px] text-amber-600 font-medium">
-                    Diskon: {discountUsdPercent}%
+                    Diskon: {currenciesFormat('usd', discountUsdNominal)}
                   </span>
                 )}
               </div>
@@ -204,9 +204,10 @@ export function SalesUnitTable({ lineItems, salesId, onAddUnit, canCreate, canEd
               ? Number(item.price_per_unit_usd)
               : (Number(item.price_usd ?? 0) > 0 ? Number(item.price_usd) / Math.max(1, Number(item.qty_total ?? 1)) : 0);
             const qty = Number(item.qty_total ?? 1);
-            const discountUsdPercent = Number(item.price_usd_discount ?? item.price_discount_usd ?? 0);
+            const discountUsdNominal = Number(item.price_usd_discount ?? item.price_discount_usd ?? item.usd_discount ?? 0);
             const baseTotal = usdPrice * qty;
-            const discountedBase = discountUsdPercent > 0 ? baseTotal * (1 - discountUsdPercent / 100) : baseTotal;
+            const usdDiscountTotal = usdPrice > 0 ? discountUsdNominal * qty : discountUsdNominal;
+            const discountedBase = Math.max(0, baseTotal - usdDiscountTotal);
             const subtotalUsd = Number(item.price_usd_total ?? item.price_total_usd ?? (discountedBase + costs.totalUsdCost));
 
             return currenciesFormat('usd', subtotalUsd);
@@ -270,12 +271,13 @@ export function SalesUnitTable({ lineItems, salesId, onAddUnit, canCreate, canEd
         alignment: 'center',
         cell: (item) => {
           const idrPrice = Number(item.price ?? 0);
+          const idrDiscount = Number(item.price_discount ?? item.discount ?? 0);
           return (
             <div>
               <span>{currenciesFormat('idr', idrPrice)}</span>
-              {Number(item.price_discount ?? 0) > 0 && (
+              {idrDiscount > 0 && (
                 <span className="block text-[11px] text-emerald-600 font-medium">
-                  Diskon: {item.price_discount}%
+                  Diskon: {currenciesFormat('idr', idrDiscount)}
                 </span>
               )}
             </div>

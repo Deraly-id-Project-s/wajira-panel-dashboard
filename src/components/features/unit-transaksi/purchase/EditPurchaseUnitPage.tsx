@@ -137,16 +137,18 @@ export default function EditPurchaseUnitPage() {
         payload.price_per_unit_usd = pricePerUnitUsd;
       }
 
-      const currentPriceDiscount = Number(unit?.price_discount ?? 0);
-      const currentPriceUsdDiscount = Number((unit as any)?.price_discount_usd ?? unit?.price_usd_discount ?? 0);
-      const priceDiscount = Number(data.price_discount ?? 0) || 0;
-      const priceUsdDiscount = Number((data as any)?.price_discount_usd ?? data.price_usd_discount ?? 0) || 0;
+      const currentPriceDiscount = Number(unit?.price_discount ?? (unit as any)?.discount ?? 0);
+      const currentPriceUsdDiscount = Number((unit as any)?.price_discount_usd ?? unit?.price_usd_discount ?? (unit as any)?.usd_discount ?? 0);
+      const priceDiscount = Number(data.price_discount ?? (data as any)?.discount ?? 0) || 0;
+      const priceUsdDiscount = Number((data as any)?.price_discount_usd ?? data.price_usd_discount ?? (data as any)?.usd_discount ?? 0) || 0;
 
       if (!isSame(priceDiscount, currentPriceDiscount)) {
         payload.price_discount = priceDiscount;
+        payload.discount = priceDiscount;
       }
       if (!isSame(priceUsdDiscount, currentPriceUsdDiscount)) {
         payload.price_usd_discount = priceUsdDiscount;
+        payload.usd_discount = priceUsdDiscount;
       }
 
       const currentDppTaxId = unit?.dpp_tax_id ? Number(unit.dpp_tax_id) : 0;

@@ -121,14 +121,12 @@ export function UnitTransactionSummaryFooter({
             ? Number(item.price_usd) / Math.max(1, Number(item.qty_total ?? item.qty ?? 1))
             : 0);
       const qty = Number(item.qty_total ?? item.qty ?? 1);
-      const discountUsdPercent = Number(
-        item.price_usd_discount ?? item.price_discount_usd ?? 0,
+      const discountUsdNominal = Number(
+        item.price_usd_discount ?? item.price_discount_usd ?? item.usd_discount ?? 0,
       );
       const baseTotal = usdPrice * qty;
-      const discountedBase =
-        discountUsdPercent > 0
-          ? baseTotal * (1 - discountUsdPercent / 100)
-          : baseTotal;
+      const usdDiscountTotal = usdPrice > 0 ? discountUsdNominal * qty : discountUsdNominal;
+      const discountedBase = Math.max(0, baseTotal - usdDiscountTotal);
       const subtotalUsd = Number(
         item.price_usd_total ??
           item.price_total_usd ??

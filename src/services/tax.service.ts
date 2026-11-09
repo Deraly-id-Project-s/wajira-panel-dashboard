@@ -5,6 +5,7 @@ export interface TaxVersion {
   tax_id: number;
   name: string;
   rate: number;
+  tax_rate?: number;
   effective_from: string | null;
   effective_until: string | null;
   is_default: number | boolean;

@@ -228,6 +228,10 @@ const mapFormula = (payload: any): UnitTransactionItemFormulaResponse => {
     price_usd_total: priceUsdTotal,
     price_total: payload?.price_total !== undefined ? toNumber(payload.price_total) : undefined,
     price_total_usd: priceUsdTotal,
+    price_discount: payload?.price_discount !== undefined ? toNumber(payload.price_discount) : (payload?.discount !== undefined ? toNumber(payload.discount) : undefined),
+    discount: payload?.discount !== undefined ? toNumber(payload.discount) : (payload?.price_discount !== undefined ? toNumber(payload.price_discount) : undefined),
+    price_usd_discount: payload?.price_usd_discount !== undefined ? toNumber(payload.price_usd_discount) : (payload?.usd_discount !== undefined ? toNumber(payload.usd_discount) : undefined),
+    usd_discount: payload?.usd_discount !== undefined ? toNumber(payload.usd_discount) : (payload?.price_usd_discount !== undefined ? toNumber(payload.price_usd_discount) : undefined),
   };
 };
 
@@ -246,10 +250,14 @@ export const unitTransactionItemService = {
     };
 
     if (payload.price_discount !== undefined && payload.price_discount !== null) {
-      requestParams.price_discount = toDecimalString(payload.price_discount);
+      const discountVal = toDecimalString(payload.price_discount);
+      requestParams.price_discount = discountVal;
+      requestParams.discount = discountVal;
     }
     if (payload.price_usd_discount !== undefined && payload.price_usd_discount !== null) {
-      requestParams.price_usd_discount = toDecimalString(payload.price_usd_discount);
+      const usdDiscountVal = toDecimalString(payload.price_usd_discount);
+      requestParams.price_usd_discount = usdDiscountVal;
+      requestParams.usd_discount = usdDiscountVal;
     }
     if (payload.price_per_unit_usd !== undefined && payload.price_per_unit_usd !== null) {
       requestParams.price_per_unit_usd = toDecimalString(payload.price_per_unit_usd);
@@ -416,8 +424,12 @@ export const unitTransactionItemService = {
       payload.other_fee,
       toDecimalString
     );
-    form.append('price_discount', toDecimalString(payload.price_discount ?? 0));
-    form.append('price_usd_discount', toDecimalString(payload.price_usd_discount ?? 0));
+    const idrDiscountVal = toDecimalString(payload.price_discount ?? (payload as any).discount ?? 0);
+    const usdDiscountVal = toDecimalString(payload.price_usd_discount ?? (payload as any).usd_discount ?? 0);
+    form.append('price_discount', idrDiscountVal);
+    form.append('discount', idrDiscountVal);
+    form.append('price_usd_discount', usdDiscountVal);
+    form.append('usd_discount', usdDiscountVal);
     appendIfDefined(
       form,
       'price_usd',
@@ -500,10 +512,12 @@ export const unitTransactionItemService = {
 
     if (payload.price_discount !== undefined) {
       params.append('price_discount', Number(payload.price_discount).toFixed(2));
+      params.append('discount', Number(payload.price_discount).toFixed(2));
     }
 
     if (payload.price_usd_discount !== undefined) {
       params.append('price_usd_discount', Number(payload.price_usd_discount).toFixed(2));
+      params.append('usd_discount', Number(payload.price_usd_discount).toFixed(2));
     }
 
     if (payload.bbn_price !== undefined) {

@@ -1,10 +1,11 @@
 import { useState, useMemo } from 'react';
 import { useRouter } from 'next/router';
-import { ChevronRight, MoreVertical, Plus, ArrowLeft, FileText, Package, CheckCircle2 } from 'lucide-react';
+import { ChevronRight, MoreVertical, Plus, ArrowLeft, FileText, Package, DollarSign, CheckCircle2 } from 'lucide-react';
 import type { UnitTransactionRefundPayment } from '@/@types/refund.type';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
+import { CollapsibleBox } from '@/components/ui/collapsible-box';
+import { TextTruncate } from '@/components/ui/text-truncate';
 import BaseTable, { ColumnDef } from '@/components/ui/base-table';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
@@ -141,10 +142,12 @@ export default function SalesRefundDetailPageContent({ transactionId, refundId }
         sortable: true,
         alignment: 'left',
         cell: (payment) => (
-          <Badge variant="outline" className="border-gray-200 bg-gray-50 text-gray-700 font-semibold">
-            {payment.note || 'Terbayar'}
-          </Badge>
-        )
+          <TextTruncate
+            text={payment.note || 'Terbayar'}
+            maxWords={35}
+            className="text-sm text-slate-700"
+          />
+        ),
       },
       {
         header: 'aksi',
@@ -261,105 +264,98 @@ export default function SalesRefundDetailPageContent({ transactionId, refundId }
         </div>
 
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-          {/* Card 1: Informasi Refund */}
-          <Card className="border-slate-200 shadow-sm">
-            <CardContent className="p-5 space-y-2">
-              <div className="flex items-center gap-3">
-                <div className="p-2 rounded-md bg-blue-50">
-                  <FileText className="h-5 w-5 text-blue-500" />
-                </div>
-                <h3 className="text-sm font-semibold text-slate-700">Informasi Refund</h3>
-              </div>
-              <div className="text-sm text-slate-600 mt-3 space-y-2">
-                <div className="grid grid-cols-2 gap-2">
-                  <div>
-                    <p className="text-xs text-slate-400">Kode Refund</p>
-                    <p className="font-semibold text-slate-900">
-                      <CopyBox text={refund.code || '-'} />
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-xs text-slate-400">Tanggal Refund</p>
-                    <p className="font-semibold text-slate-900">{formatDate(refund.refund_date)}</p>
-                  </div>
-                </div>
-                <div className="flex items-center justify-between pt-1.5 border-t border-slate-100">
-                  <span className="text-xs text-slate-400">Nominal Refund</span>
-                  <span className="font-semibold text-slate-900">{currenciesFormat(currencyCode, refund.refund_amount)}</span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-xs text-slate-400">Total Terbayar</span>
-                  <span className="font-semibold text-slate-900">{currenciesFormat(currencyCode, totalPaid)}</span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-xs font-medium text-slate-500">Kurang Bayar</span>
-                  <span className="font-bold text-emerald-600">{currenciesFormat(currencyCode, lessPayment)}</span>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Card 2: Informasi Unit */}
-          <Card className="border-slate-200 shadow-sm">
-            <CardContent className="p-5 space-y-2">
-              <div className="flex items-center gap-3">
-                <div className="p-2 rounded-md bg-yellow-50">
-                  <Package className="h-5 w-5 text-yellow-500" />
-                </div>
-                <h3 className="text-sm font-semibold text-slate-700">Informasi Unit</h3>
-              </div>
-              <div className="text-sm text-slate-600 mt-3 space-y-2">
-                <div className="flex items-center justify-between">
-                  <span className="text-xs text-slate-400">Quantity</span>
-                  <span className="font-semibold text-slate-900">{qty}</span>
-                </div>
-                <div className="flex flex-col gap-2">
-                  <span className="text-xs text-slate-400">Alasan Refund</span>
-                  <p className="text-slate-900 p-2 rounded-md bg-slate-50 w-full">
-                    {refund?.note || '-'}
+          {/* Section 1: Informasi Refund */}
+          <CollapsibleBox
+            title="Informasi Refund"
+            description="Rincian informasi transaksi refund"
+            icon={FileText}
+          >
+            <div className="text-sm text-slate-600 space-y-2">
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <p className="text-xs text-slate-400">Kode Refund</p>
+                  <p className="font-semibold text-slate-900">
+                    <CopyBox text={refund.code || '-'} />
                   </p>
                 </div>
+                <div>
+                  <p className="text-xs text-slate-400">Tanggal Refund</p>
+                  <p className="font-semibold text-slate-900">{formatDate(refund.refund_date)}</p>
+                </div>
               </div>
-            </CardContent>
-          </Card>
+              <div className="flex items-center justify-between pt-1.5 border-t border-slate-100">
+                <span className="text-xs text-slate-400">Nominal Refund</span>
+                <span className="font-semibold text-slate-900">{currenciesFormat(currencyCode, refund.refund_amount)}</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-xs text-slate-400">Total Terbayar</span>
+                <span className="font-semibold text-slate-900">{currenciesFormat(currencyCode, totalPaid)}</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-medium text-slate-500">Kurang Bayar</span>
+                <span className="font-bold text-emerald-600">{currenciesFormat(currencyCode, lessPayment)}</span>
+              </div>
+            </div>
+          </CollapsibleBox>
+
+          {/* Section 2: Informasi Unit */}
+          <CollapsibleBox
+            title="Informasi Unit"
+            description="Rincian jumlah unit dan alasan refund"
+            icon={Package}
+          >
+            <div className="text-sm text-slate-600 space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="text-xs text-slate-400">Quantity</span>
+                <span className="font-semibold text-slate-900">{qty}</span>
+              </div>
+              <div className="flex flex-col gap-2">
+                <span className="text-xs text-slate-400">Alasan Refund</span>
+                <p className="text-slate-900 p-2 rounded-md bg-slate-50 w-full">
+                  {refund?.note || '-'}
+                </p>
+              </div>
+            </div>
+          </CollapsibleBox>
         </div>
 
-        {/* Tabel Detail Unit yang Direfund */}
-        <div className="space-y-4">
-          <div>
-            <h2 className="text-base font-semibold text-slate-800">Detail Unit yang Direfund</h2>
-            <p className="text-xs text-slate-500">Rincian item detail unit yang termasuk dalam refund ini</p>
-          </div>
+        {/* Section 3: Detail Unit yang Direfund */}
+        <CollapsibleBox
+          title="Detail Unit yang Direfund"
+          description="Rincian item detail unit yang termasuk dalam refund ini"
+          icon={Package}
+        >
           <BaseTable
             data={refund.items ?? []}
             columns={unitColumns}
             headerRowClassName="bg-[#f8f9fa] border-b border-gray-200"
           />
-        </div>
+        </CollapsibleBox>
 
-        {/* Tabel Pembayaran Refund */}
-        <div className="space-y-4">
+        {/* Section 4: Riwayat Pembayaran Refund */}
+        <CollapsibleBox
+          title="Riwayat Pembayaran Refund"
+          description="Daftar transaksi pembayaran refund yang telah dicatat"
+          icon={DollarSign}
+          actions={
+            <Button
+              size="sm"
+              onClick={() => setIsAddDetailOpen(true)}
+              disabled={lessPayment === 0}
+              className="btn-primary!"
+            >
+              <Plus className="h-4 w-4 mr-2" />
+              Tambah Data Pembayaran Refund
+            </Button>
+          }
+        >
           <BaseTable
             data={refund.payments ?? []}
             columns={columns}
             headerRowClassName="bg-[#f8f9fa] border-b border-gray-200"
             defaultSort={{ key: 'payment_date', direction: 'desc' }}
-            headerActions={
-              <div className="flex flex-col gap-2 md:flex-row md:items-center justify-between">
-                <div>
-                  <h2 className="text-base font-semibold text-slate-800">Riwayat Pembayaran Refund</h2>
-                  <p className="text-xs text-slate-500">Daftar transaksi pembayaran refund yang telah dicatat</p>
-                </div>
-                <div className="flex flex-col sm:flex-row items-center gap-2 w-full sm:w-auto">
-                  <Button size="sm" onClick={() => setIsAddDetailOpen(true)} disabled={lessPayment === 0} className="btn-primary!">
-                    <Plus className="h-4 w-4 mr-2" />
-                    Tambah Data Pembayaran Refund
-                  </Button>
-                </div>
-              </div>
-            }
           />
-        </div>
+        </CollapsibleBox>
 
         <PurchaseRefundPaymentDetailModal open={isAddDetailOpen} onClose={() => setIsAddDetailOpen(false)} refund={refund} entityLabel="Penjualan" isUsdTransaction={isUsdTransaction} />
         <PurchaseRefundPaymentDetailModal open={Boolean(editingPayment)} onClose={() => setEditingPayment(null)} refund={refund} payment={editingPayment} entityLabel="Penjualan" isUsdTransaction={isUsdTransaction} />

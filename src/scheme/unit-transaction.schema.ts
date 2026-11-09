@@ -11,6 +11,8 @@ export const unitTransactionSchema = z.object({
   otherFee: z.number().min(0).optional(),
   price_discount: z.number().min(0).optional(),
   price_usd_discount: z.number().min(0).optional(),
+  discount: z.number().min(0).optional(),
+  usd_discount: z.number().min(0).optional(),
   priceDiscount: z.number().min(0).optional(),
   priceUsdDiscount: z.number().min(0).optional(),
   priceUsd: z.number().min(0).optional(),
