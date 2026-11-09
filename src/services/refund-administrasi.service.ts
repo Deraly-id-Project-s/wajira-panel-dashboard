@@ -62,6 +62,7 @@ const mapRefund = (item: any): UnitTransactionRefund => ({
   status: item.status || 'waiting',
   is_paid: item.is_paid === true || item.is_paid === 1 || item.is_paid === '1',
   is_with_stock: item.is_with_stock === true || item.is_with_stock === 1 || item.is_with_stock === '1',
+  is_usd_transaction: item.is_usd_transaction === true || item.is_usd_transaction === 1 || String(item.is_usd_transaction) === 'true' || Boolean(item.unit_transaction?.is_usd_transaction || item.transaction?.is_usd_transaction),
   created_at: item.created_at || '',
   total_paid: toNumber(item.total_paid ?? item.total_terbayar),
   total_qty: toNumber(item.total_qty),

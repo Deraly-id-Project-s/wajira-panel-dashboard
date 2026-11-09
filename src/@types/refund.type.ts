@@ -18,6 +18,7 @@ export interface UnitTransactionRefund {
   status: 'waiting' | 'approve' | 'reject' | string;
   is_paid?: boolean;
   is_with_stock?: boolean;
+  is_usd_transaction?: boolean;
   created_at: string;
   total_paid?: number;
   total_qty?: number;
@@ -30,6 +31,17 @@ export interface UnitTransactionRefund {
     id?: string;
     code?: string;
     type?: string;
+    is_usd_transaction?: boolean;
+    person?: {
+      id?: string;
+      name?: string;
+    } | null;
+  } | null;
+  unit_transaction?: {
+    id?: string;
+    code?: string;
+    type?: string;
+    is_usd_transaction?: boolean;
     person?: {
       id?: string;
       name?: string;

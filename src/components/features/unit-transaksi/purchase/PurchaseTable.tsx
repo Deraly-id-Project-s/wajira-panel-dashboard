@@ -167,7 +167,7 @@ export default function PurchaseTable({
     });
 
     return sorted;
-  }, [data, billingFilter, sortConfig, getBillingLabel]);
+  }, [data, billingFilter, sortConfig, getBillingLabel, isRefunded]);
 
   const currentPage = meta?.currentPage ?? 1;
   const itemsPerPage = meta?.perPage ?? 25;

@@ -228,7 +228,7 @@ const withBaseFallback = async <T>(
 
 const toNumber = (value: string | number | undefined): number => Number(value ?? 0);
 
-const toBoolean = (value: boolean | number | string | undefined): boolean =>
+const toBoolean = (value: boolean | number | string | undefined | null): boolean =>
   value === true || value === 1 || value === '1' || value === 'true';
 
 const mapUnitTransactionTypeDetail = (

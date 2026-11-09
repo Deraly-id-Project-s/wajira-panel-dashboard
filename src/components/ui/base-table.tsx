@@ -221,6 +221,11 @@ export default function BaseTable<T>({
 
   const [internalHiddenColumns, setInternalHiddenColumns] = useState<Set<string | number>>(initialHiddenColumns);
 
+  const onHiddenColumnsChangeRef = useRef(onHiddenColumnsChange);
+  useEffect(() => {
+    onHiddenColumnsChangeRef.current = onHiddenColumnsChange;
+  }, [onHiddenColumnsChange]);
+
   // Load saved preferences from localStorage on mount or key change
   useEffect(() => {
     if (!resolvedStorageKey || typeof window === 'undefined') return;
@@ -231,7 +236,7 @@ export default function BaseTable<T>({
         if (Array.isArray(parsed)) {
           const loadedSet = new Set<string | number>(parsed);
           setInternalHiddenColumns(loadedSet);
-          onHiddenColumnsChange?.(loadedSet);
+          onHiddenColumnsChangeRef.current?.(loadedSet);
         }
       }
     } catch (e) {
