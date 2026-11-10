@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import Head from 'next/head';
 import { useRouter } from 'next/router';
-import { Download, Plus } from 'lucide-react';
+import { Plus, Upload } from 'lucide-react';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
 import type { DateRange } from 'react-day-picker';
@@ -249,7 +249,7 @@ export default function KasHarianPage() {
                 disabled={isLoading || isFetching || isExporting}
                 className="w-full sm:w-auto"
               >
-                <Download className="mr-2 h-4 w-4" />
+                <Upload className="mr-2 h-4 w-4" />
                 {isExporting ? 'Exporting...' : 'Export'}
               </Button>
             </div>

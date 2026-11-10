@@ -5,6 +5,7 @@ import * as SelectPrimitive from '@radix-ui/react-select';
 import { CheckIcon, ChevronDownIcon, ChevronUpIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { TextTruncate } from '@/components/ui/text-truncate';
+import { SearchInput } from '@/components/ui/search-input';
 
 /* ================= Root ================= */
 
@@ -140,12 +141,13 @@ const SelectContent = React.forwardRef<
 
         {showSearch && (
           <div className="sticky top-0 z-10 border-b border-slate-100 bg-popover p-2">
-            <input
+            <SearchInput
               ref={searchInputRef}
               placeholder={searchPlaceholder || 'Cari...'}
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="h-10 w-full min-w-0 rounded-md border border-slate-200 bg-white px-3 py-1.5 text-base placeholder:text-slate-400 focus:outline-none focus:ring-1 focus:ring-slate-400 disabled:cursor-not-allowed disabled:opacity-50 sm:h-9 sm:text-sm"
+              searchValue={searchTerm}
+              onSearchChange={setSearchTerm}
+              enableShortcut={false}
+              className="h-10 text-base sm:h-9 sm:text-sm bg-white"
               onKeyDown={(e) => {
                 e.stopPropagation();
               }}
