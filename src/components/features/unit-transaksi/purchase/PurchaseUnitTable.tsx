@@ -18,7 +18,6 @@ import BaseTable, { ColumnDef } from '@/components/ui/base-table';
 import { CollapsibleBox } from '@/components/ui/collapsible-box';
 import { getUsdCostsFromItem } from '@/utils/payment-helpers';
 import UnitTransactionSummaryFooter from '../UnitTransactionSummaryFooter';
-import { createCustomerColumn, createSupplierColumn } from '../unitTransactionPersonColumns';
 
 interface Props {
   purchaseId: string;
@@ -116,8 +115,6 @@ export default function PurchaseUnitTable({ purchaseId, slug, isPaid, canEdit, c
             </ReferenceLink>
           ),
         },
-        createSupplierColumn<UnitTransactionItem>(slug),
-        createCustomerColumn<UnitTransactionItem>(slug),
         {
           header: 'QTY',
           alignment: 'center',
@@ -128,14 +125,15 @@ export default function PurchaseUnitTable({ purchaseId, slug, isPaid, canEdit, c
           header: 'Harga Beli (USD)',
           alignment: 'center',
           cell: (item) => {
-            const usdPrice = Number(item.price_per_unit_usd ?? 0) > 0
+            const qty = Number(item.qty_total ?? 1);
+            const unitUsdPrice = Number(item.price_per_unit_usd ?? 0) > 0
               ? Number(item.price_per_unit_usd)
-              : (Number(item.price_usd ?? 0) > 0 ? Number(item.price_usd) / Math.max(1, Number(item.qty_total ?? 1)) : 0);
+              : (Number(item.price_usd ?? 0) > 0 ? Number(item.price_usd) / Math.max(1, qty) : 0);
             const discountUsdNominal = Number(item.price_usd_discount ?? (item as any).price_discount_usd ?? (item as any).usd_discount ?? 0);
 
             return (
               <div className="text-center">
-                <span>{currenciesFormat('usd', usdPrice)}</span>
+                <span>{currenciesFormat('usd', unitUsdPrice)}</span>
                 {discountUsdNominal > 0 && (
                   <span className="block text-[11px] text-amber-600 font-medium">
                     Diskon: {currenciesFormat('usd', discountUsdNominal)}
@@ -246,8 +244,6 @@ export default function PurchaseUnitTable({ purchaseId, slug, isPaid, canEdit, c
           </ReferenceLink>
         ),
       },
-      createSupplierColumn<UnitTransactionItem>(slug),
-      createCustomerColumn<UnitTransactionItem>(slug),
       {
         header: 'QTY',
         alignment: 'center',
@@ -258,17 +254,19 @@ export default function PurchaseUnitTable({ purchaseId, slug, isPaid, canEdit, c
         header: 'Harga Beli',
         alignment: 'center',
         cell: (item) => {
-          const idrPrice = Number(item.price ?? 0);
-          const usdPrice = Number(item.price_per_unit_usd ?? 0) > 0
+          const qty = Number(item.qty_total ?? 1);
+          const unitIdrPrice = Number(item.price ?? 0);
+
+          const unitUsdPrice = Number(item.price_per_unit_usd ?? 0) > 0
             ? Number(item.price_per_unit_usd)
-            : Number(item.price_usd ?? 0);
+            : (Number(item.price_usd ?? 0) > 0 ? Number(item.price_usd) / Math.max(1, qty) : 0);
 
           const idrDiscount = Number(item.price_discount ?? (item as any).discount ?? 0);
-          const usdDiscount = Number(item.price_usd_discount ?? (item as any).usd_discount ?? 0);
+          const usdDiscount = Number(item.price_usd_discount ?? (item as any).price_discount_usd ?? (item as any).usd_discount ?? 0);
 
           return (
-            <div>
-              <FilteredCurrency idr={idrPrice} usd={usdPrice} />
+            <div className="text-center">
+              <FilteredCurrency idr={unitIdrPrice} usd={unitUsdPrice} />
               {idrDiscount > 0 && (
                 <span className="block text-[11px] text-emerald-600 font-medium">
                   Diskon: {currenciesFormat('idr', idrDiscount)}
@@ -415,7 +413,6 @@ export default function PurchaseUnitTable({ purchaseId, slug, isPaid, canEdit, c
                   showCheckbox
                   hasActions
                   isUsd={isUsd}
-                  hasPersonColumns
                 />
               }
               headerActions={

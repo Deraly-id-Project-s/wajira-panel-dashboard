@@ -42,8 +42,21 @@ export default function PenerimaanUnitDetailTable({ data, activityState, isRefun
   const [stockState, setStockState] = useState<string>('receipt');
   const [warehouseSubBlockId, setWarehouseSubBlockId] = useState<string>('');
 
-  const { data: subBlocksResponse, isLoading: subBlocksLoading } = useWarehouseSubBlocks({ is_active: true });
+  const {
+    data: subBlocksResponse,
+    isLoading: subBlocksLoading,
+    isError: subBlocksError,
+    refetch: refetchSubBlocks,
+  } = useWarehouseSubBlocks({ is_active: true, per_page: 500 });
   const bulkUpdateMutation = useBulkUpdateUnitItemDetails();
+
+  const subBlockOptions = useMemo(() => {
+    const raw = subBlocksResponse?.data;
+    if (Array.isArray(raw?.data)) return raw.data;
+    if (Array.isArray(raw)) return raw;
+    if (Array.isArray(subBlocksResponse)) return subBlocksResponse;
+    return [];
+  }, [subBlocksResponse]);
 
   const rows = useMemo(() => {
     const source = data ?? [];
@@ -129,6 +142,7 @@ export default function PenerimaanUnitDetailTable({ data, activityState, isRefun
       toast.success('Berhasil memproses status dan sub-blok unit');
       setSelected([]);
       setIsOpenProcessModal(false);
+      setWarehouseSubBlockId('');
     } catch (err: any) {
       toast.error(err?.message || 'Gagal memproses data unit');
     }
@@ -422,7 +436,15 @@ export default function PenerimaanUnitDetailTable({ data, activityState, isRefun
         }
       />
 
-      <Dialog open={isOpenProcessModal} onOpenChange={setIsOpenProcessModal}>
+      <Dialog
+        open={isOpenProcessModal}
+        onOpenChange={(open) => {
+          setIsOpenProcessModal(open);
+          if (!open) {
+            setWarehouseSubBlockId('');
+          }
+        }}
+      >
         <DialogContent className="sm:max-w-4xl md:max-w-5xl w-[90vw] p-6 rounded-md">
           <DialogHeader>
             <DialogTitle className="text-xl font-bold text-slate-800">Proses Data Unit ({selected.length} Unit Terpilih)</DialogTitle>
@@ -441,35 +463,43 @@ export default function PenerimaanUnitDetailTable({ data, activityState, isRefun
               <div className="space-y-2">
                 <label className="text-sm font-semibold text-slate-700">Posisi Stok</label>
                 <Select value={stockState} onValueChange={setStockState}>
-                  <SelectTrigger className="w-full bg-white border-slate-200 h-10 rounded-md">
-                    <SelectValue placeholder="Pilih posisi stok" />
+                  <SelectTrigger className="h-10 w-full min-w-0 overflow-hidden bg-white border-slate-200 rounded-md">
+                    <SelectValue maxLength={40} placeholder="Pilih posisi stok" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="purchase_order">Purchase Order (PO)</SelectItem>
-                    <SelectItem value="in_transit">In Transit (Dalam Perjalanan)</SelectItem>
-                    <SelectItem value="receipt">Receipt (Diterima / Tersedia)</SelectItem>
+                    <SelectItem value="purchase_order" maxLength={40}>Purchase Order (PO)</SelectItem>
+                    <SelectItem value="in_transit" maxLength={40}>In Transit (Dalam Perjalanan)</SelectItem>
+                    <SelectItem value="receipt" maxLength={40}>Receipt (Diterima / Tersedia)</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
 
               <div className="space-y-2">
                 <label className="text-sm font-semibold text-slate-700">Sub Blok Gudang</label>
-                <Select value={warehouseSubBlockId} onValueChange={setWarehouseSubBlockId}>
-                  <SelectTrigger className="w-full bg-white border-slate-200 h-10 rounded-md">
-                    <SelectValue placeholder={subBlocksLoading ? "Memuat sub blok..." : "Pilih sub blok gudang"} />
+                <Select
+                  value={warehouseSubBlockId ? String(warehouseSubBlockId) : undefined}
+                  onValueChange={setWarehouseSubBlockId}
+                >
+                  <SelectTrigger className="h-10 w-full min-w-0 overflow-hidden bg-white border-slate-200 rounded-md">
+                    <SelectValue maxLength={50} placeholder="Pilih sub blok gudang" />
                   </SelectTrigger>
-                  <SelectContent>
-                    {subBlocksResponse?.data?.data && subBlocksResponse.data.data.length > 0 ? (
-                      subBlocksResponse.data.data.map((sb: any) => (
-                        <SelectItem key={sb.id} value={String(sb.id)}>
-                          {sb.name}
-                        </SelectItem>
-                      ))
-                    ) : (
-                      <SelectItem value="none" disabled>
-                        Sub blok gudang tidak ditemukan.
-                      </SelectItem>
+                  <SelectContent showSearch searchPlaceholder="Cari sub blok gudang...">
+                    {subBlocksLoading && <div className="px-3 py-2 text-xs text-muted-foreground">Memuat sub blok...</div>}
+                    {subBlocksError && (
+                      <div className="px-3 py-2 text-xs text-destructive">
+                        Gagal memuat sub blok.{' '}
+                        <button type="button" className="underline" onClick={() => refetchSubBlocks()}>
+                          Coba lagi
+                        </button>
+                      </div>
                     )}
+                    {subBlockOptions.map((sb: any) => (
+                      <SelectItem key={sb.id} value={String(sb.id)} maxLength={50}>
+                        <span className="flex w-full min-w-0 items-center gap-2">
+                          <span className="truncate">{sb.name}</span>
+                        </span>
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>
@@ -477,7 +507,14 @@ export default function PenerimaanUnitDetailTable({ data, activityState, isRefun
           </div>
 
           <DialogFooter className="gap-2 sm:gap-0 pt-4 flex flex-row justify-end">
-            <Button variant="outline" onClick={() => setIsOpenProcessModal(false)} className="mr-2">
+            <Button
+              variant="outline"
+              onClick={() => {
+                setIsOpenProcessModal(false);
+                setWarehouseSubBlockId('');
+              }}
+              className="mr-2"
+            >
               Batal
             </Button>
             <Button

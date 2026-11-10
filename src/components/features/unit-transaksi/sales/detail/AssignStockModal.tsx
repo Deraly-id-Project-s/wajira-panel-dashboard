@@ -83,7 +83,7 @@ export function AssignStockModal({
   const [search, setSearch] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
-  const [perPage, setPerPage] = useState(10);
+  const [perPage, setPerPage] = useState(25);
   const [selectedDetailIds, setSelectedDetailIds] = useState<Set<number>>(new Set());
 
   // Debounce search

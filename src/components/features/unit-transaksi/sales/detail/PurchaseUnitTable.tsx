@@ -22,7 +22,7 @@ export function PurchaseUnitTable({ units }: Props) {
 
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [page, setPage] = useState(1);
-  const [perPage, setPerPage] = useState(10);
+  const [perPage, setPerPage] = useState(25);
 
   const confirmDelete = () => {
     if (deleteId) {

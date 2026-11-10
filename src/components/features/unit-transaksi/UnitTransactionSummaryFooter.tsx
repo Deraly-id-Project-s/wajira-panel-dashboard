@@ -74,9 +74,7 @@ export function UnitTransactionSummaryFooter({
           : (Number(item.price_usd ?? 0) > 0
             ? Number(item.price_usd) / Math.max(1, Number(item.qty_total ?? item.qty ?? 1))
             : 0);
-      const qty = Number(item.qty_total ?? item.qty ?? 1);
-      const baseTotal = Number(item.price_usd ?? 0) > 0 ? Number(item.price_usd) : usdPrice * qty;
-      return sum + baseTotal;
+      return sum + usdPrice;
     }, 0);
 
     const totalFreightUsd = items.reduce(
@@ -192,20 +190,18 @@ export function UnitTransactionSummaryFooter({
   }
 
   const totalPriceIdr = items.reduce(
-    (sum, item) =>
-      sum +
-      Number(item.price ?? item.hargaJual ?? 0) *
-        Number(item.qty_total ?? item.qty ?? 1),
+    (sum, item) => sum + Number(item.price ?? item.hargaJual ?? 0),
     0,
   );
 
   const totalPriceUsd = items.reduce((sum, item) => {
-    const usd =
-      Number(item.price_usd ?? 0) > 0
-        ? Number(item.price_usd)
-        : Number(item.price_per_unit_usd ?? 0) *
-          Number(item.qty_total ?? item.qty ?? 1);
-    return sum + usd;
+    const usdPrice =
+      Number(item.price_per_unit_usd ?? 0) > 0
+        ? Number(item.price_per_unit_usd)
+        : (Number(item.price_usd ?? 0) > 0
+          ? Number(item.price_usd) / Math.max(1, Number(item.qty_total ?? item.qty ?? 1))
+          : 0);
+    return sum + usdPrice;
   }, 0);
 
   const totalBbn = items.reduce(

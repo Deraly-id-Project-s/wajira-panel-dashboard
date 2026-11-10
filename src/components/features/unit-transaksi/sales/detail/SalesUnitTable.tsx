@@ -16,7 +16,6 @@ import { ReferenceLink } from '@/components/ui/reference-link';
 import BaseTable, { ColumnDef } from '@/components/ui/base-table';
 import { CollapsibleBox } from '@/components/ui/collapsible-box';
 import { UnitTransactionSummaryFooter } from '@/components/features/unit-transaksi/UnitTransactionSummaryFooter';
-import { createCustomerColumn, createSupplierColumn } from '@/components/features/unit-transaksi/unitTransactionPersonColumns';
 
 interface Props {
   lineItems: SalesLineItem[];
@@ -124,8 +123,6 @@ export function SalesUnitTable({ lineItems, salesId, onAddUnit, canCreate, canEd
             </ReferenceLink>
           ),
         },
-        createSupplierColumn(slug),
-        createCustomerColumn(slug),
         {
           header: 'QTY',
           alignment: 'center',
@@ -136,14 +133,15 @@ export function SalesUnitTable({ lineItems, salesId, onAddUnit, canCreate, canEd
           header: 'Harga Jual (USD)',
           alignment: 'center',
           cell: (item) => {
-            const usdPrice = Number(item.price_per_unit_usd ?? 0) > 0
+            const qty = Number(item.qty_total ?? 1);
+            const unitUsdPrice = Number(item.price_per_unit_usd ?? 0) > 0
               ? Number(item.price_per_unit_usd)
-              : (Number(item.price_usd ?? 0) > 0 ? Number(item.price_usd) / Math.max(1, Number(item.qty_total ?? 1)) : 0);
+              : (Number(item.price_usd ?? 0) > 0 ? Number(item.price_usd) / Math.max(1, qty) : 0);
             const discountUsdNominal = Number(item.price_usd_discount ?? item.price_discount_usd ?? item.usd_discount ?? 0);
 
             return (
               <div className="text-center">
-                <span>{currenciesFormat('usd', usdPrice)}</span>
+                <span>{currenciesFormat('usd', unitUsdPrice)}</span>
                 {discountUsdNominal > 0 && (
                   <span className="block text-[11px] text-amber-600 font-medium">
                     Diskon: {currenciesFormat('usd', discountUsdNominal)}
@@ -258,8 +256,6 @@ export function SalesUnitTable({ lineItems, salesId, onAddUnit, canCreate, canEd
           </ReferenceLink>
         ),
       },
-      createSupplierColumn(slug),
-      createCustomerColumn(slug),
       {
         header: 'QTY',
         alignment: 'center',
@@ -270,11 +266,12 @@ export function SalesUnitTable({ lineItems, salesId, onAddUnit, canCreate, canEd
         header: 'Harga Jual',
         alignment: 'center',
         cell: (item) => {
-          const idrPrice = Number(item.price ?? 0);
+          const unitIdrPrice = Number(item.price ?? 0);
           const idrDiscount = Number(item.price_discount ?? item.discount ?? 0);
+
           return (
-            <div>
-              <span>{currenciesFormat('idr', idrPrice)}</span>
+            <div className="text-center">
+              <span>{currenciesFormat('idr', unitIdrPrice)}</span>
               {idrDiscount > 0 && (
                 <span className="block text-[11px] text-emerald-600 font-medium">
                   Diskon: {currenciesFormat('idr', idrDiscount)}
@@ -316,11 +313,11 @@ export function SalesUnitTable({ lineItems, salesId, onAddUnit, canCreate, canEd
         cell: (item) => {
           const idrSubtotal = Number(
             item.price_total ??
-              ((item.dpp_total_price ?? 0) +
-                (item.ppn_total_price ?? 0) +
-                (item.bbn_price ?? 0) +
-                (item.expedition_fee ?? 0) +
-                (item.other_fee ?? 0))
+            ((item.dpp_total_price ?? 0) +
+              (item.ppn_total_price ?? 0) +
+              (item.bbn_price ?? 0) +
+              (item.expedition_fee ?? 0) +
+              (item.other_fee ?? 0))
           );
           return currenciesFormat('idr', idrSubtotal);
         },
@@ -391,7 +388,6 @@ export function SalesUnitTable({ lineItems, salesId, onAddUnit, canCreate, canEd
                 showCheckbox={!isPaid}
                 hasActions
                 isUsd={isUsd}
-                hasPersonColumns
               />
             }
             headerActions={
