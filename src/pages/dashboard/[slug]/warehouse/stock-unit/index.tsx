@@ -11,9 +11,11 @@ import type { StockStatus } from '@/@types/stock-unit.types';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { SlidersHorizontal } from 'lucide-react';
+import { SlidersHorizontal, Upload } from 'lucide-react';
 import { SearchPagination } from '@/components/ui/search-pagination';
 import { useQueryParamsTable } from '@/hooks/useQueryParamsTable';
+import { exportStockUnits } from '@/services/stock-unit.service';
+import { toast } from 'sonner';
 
 export default function StockUnitPage() {
   const { companyId } = useCompany();
@@ -129,6 +131,34 @@ export default function StockUnitPage() {
   const { data, isLoading, isError, isFetching } = useStockUnits(companyId, params);
 
   const isDataLoading = isLoading || isFetching;
+  const [isExporting, setIsExporting] = useState<boolean>(false);
+
+  const handleExport = async () => {
+    if (!companyId) {
+      toast.error('Pilih perusahaan terlebih dahulu');
+      return;
+    }
+
+    setIsExporting(true);
+    try {
+      await exportStockUnits(companyId, {
+        search: (searchInput.trim() || search) || undefined,
+        in_stock: inStock === undefined ? 'all' : inStock ? 'true' : 'false',
+        stock_state: stockState,
+        activity_type: activityType,
+        unit_transaction_item_id: unitTransactionItemId,
+        machine_number: machineNumber,
+        chassis_number: chassisNumber,
+        color: color,
+        specified: specified,
+      });
+      toast.success('Data stok unit berhasil diexport');
+    } catch (err: any) {
+      toast.error(err?.message || 'Gagal export data stok unit');
+    } finally {
+      setIsExporting(false);
+    }
+  };
 
   const filters = (
     <div className="flex flex-col sm:flex-row items-center gap-2 w-full">
@@ -167,7 +197,24 @@ export default function StockUnitPage() {
   return (
     <DashboardLayout>
       <div className="space-y-6">
-        <PageHeader title="Data Unit Stok" subtitle="Kelola dan lacak semua unit stok" />
+        <PageHeader
+          title="Data Unit Stok"
+          subtitle="Kelola dan lacak semua unit stok"
+          actions={
+            <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={handleExport}
+                disabled={isDataLoading || isExporting}
+                className="w-full sm:w-auto"
+              >
+                <Upload className="mr-2 h-4 w-4" />
+                {isExporting ? 'Exporting...' : 'Export'}
+              </Button>
+            </div>
+          }
+        />
         {isError ? (
           <Card className="rounded-md p-6">
             <div className="text-center text-destructive">Gagal memuat data</div>

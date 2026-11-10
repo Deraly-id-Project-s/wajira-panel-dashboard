@@ -2,7 +2,8 @@ import { StockUnit, StockStatus, Status } from '@/@types/stock-unit.types';
 import type { PaginationParams } from '@/@types/pagination.types';
 import { apiClient } from '@/lib/api/client';
 import { buildLaravelPaginationQuery } from '@/lib/api/pagination';
-import { LaravelApiResponse, ensureSuccess, toPaginatedResult } from '@/lib/api/response';
+import { ApiResponseError, LaravelApiResponse, ensureSuccess, toPaginatedResult } from '@/lib/api/response';
+import { downloadFileFromResponse, extractBlobErrorMessage } from '@/utils/download';
 
 interface StockUnitApiModel {
   id: number;
@@ -119,4 +120,74 @@ export const getStockUnits = async (
     },
     mapStockUnit,
   );
+};
+
+export interface ExportStockUnitParams {
+  search?: string;
+  in_stock?: boolean | string;
+  is_sold_unit?: boolean | string;
+  stock_state?: string;
+  status?: string;
+  color?: string;
+  machine_number?: string;
+  chassis_number?: string;
+  unit_transaction_item_id?: number | string;
+  unit_transaction_id?: number | string;
+  specified?: string;
+  activity_type?: string;
+  sort_by?: string;
+  sort_dir?: 'asc' | 'desc';
+}
+
+/**
+ * Download file Excel data stok unit gudang berdasarkan filter aktif
+ */
+export const exportStockUnits = async (
+  companyId: number | string,
+  params: ExportStockUnitParams = {},
+): Promise<void> => {
+  const queryParams: Record<string, unknown> = {
+    search: params.search?.trim() ? params.search.trim() : undefined,
+    in_stock: params.in_stock,
+    is_sold_unit: params.is_sold_unit,
+    stock_state: params.stock_state,
+    status: params.status,
+    color: params.color,
+    machine_number: params.machine_number,
+    chassis_number: params.chassis_number,
+    unit_transaction_item_id: params.unit_transaction_item_id,
+    unit_transaction_id: params.unit_transaction_id,
+    specified: params.specified,
+    activity_type: params.activity_type,
+    sort_by: params.sort_by,
+    sort_dir: params.sort_dir,
+  };
+
+  // Bersihkan key bernilai undefined
+  Object.keys(queryParams).forEach((key) => {
+    if (queryParams[key] === undefined) {
+      delete queryParams[key];
+    }
+  });
+
+  try {
+    const response = await apiClient.get(
+      `/wapi/warehouse/warehouse-get-unit-transaction-item-details/${companyId}/export`,
+      {
+        params: queryParams,
+        responseType: 'blob',
+        headers: {
+          Accept: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/json',
+        },
+      },
+    );
+
+    await downloadFileFromResponse(response, `data_stok_unit_${Date.now()}.xlsx`);
+  } catch (error: any) {
+    if (error instanceof ApiResponseError) {
+      throw error;
+    }
+    const message = await extractBlobErrorMessage(error, 'Gagal mengekspor data stok unit');
+    throw new ApiResponseError(message);
+  }
 };
