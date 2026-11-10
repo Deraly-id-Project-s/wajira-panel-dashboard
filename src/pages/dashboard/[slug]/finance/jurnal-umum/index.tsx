@@ -153,18 +153,6 @@ export default function GeneralJournalPage() {
         <PageHeader
           title="Transaksi Jurnal Umum"
           subtitle="Pencatatan Transaksi jurnal umum."
-          actions={
-            canCreate ? (
-              <Button
-                type="button"
-                onClick={() => void router.push(`/dashboard/${slug}/finance/jurnal-umum/create`)}
-                className="w-full sm:w-auto btn-primary"
-              >
-                <Plus className="mr-2 h-4 w-4" />
-                Tambah Jurnal Umum
-              </Button>
-            ) : null
-          }
         />
 
         <SearchPagination
@@ -172,7 +160,7 @@ export default function GeneralJournalPage() {
           onSearchChange={setSearchInput}
           searchPlaceholder="Cari kode jurnal atau keterangan..."
           filters={
-            <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full sm:w-auto">
               <div className="w-full sm:w-40">
                 <Select
                   value={statusFilter}
@@ -231,6 +219,18 @@ export default function GeneralJournalPage() {
             setPerPage(value);
             setPage(1);
           }}
+          actions={
+            canCreate ? (
+              <Button
+                type="button"
+                onClick={() => void router.push(`/dashboard/${slug}/finance/jurnal-umum/create`)}
+                className="w-full sm:w-auto btn-primary"
+              >
+                <Plus className="mr-2 h-4 w-4" />
+                Tambah Jurnal Umum
+              </Button>
+            ) : null
+          }
         >
           <GeneralJournalTable
             data={listItems}

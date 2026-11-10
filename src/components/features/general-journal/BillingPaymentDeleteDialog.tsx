@@ -1,5 +1,11 @@
 import { toast } from 'sonner';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { useDeleteGeneralJournalBillingPayment } from '@/hooks/useGeneralJournal';
 import type { GeneralJournalBillingPayment } from '@/@types/general-journal.types';
@@ -11,6 +17,7 @@ interface Props {
   onOpenChange: (open: boolean) => void;
   payment: GeneralJournalBillingPayment | null;
   journalId: number;
+  isUsd?: boolean;
 }
 
 export default function BillingPaymentDeleteDialog({
@@ -18,6 +25,7 @@ export default function BillingPaymentDeleteDialog({
   onOpenChange,
   payment,
   journalId,
+  isUsd = false,
 }: Props) {
   const { mutateAsync: deletePayment, isPending } = useDeleteGeneralJournalBillingPayment(journalId);
 
@@ -26,7 +34,7 @@ export default function BillingPaymentDeleteDialog({
 
     try {
       await deletePayment(payment.id);
-      toast.success('Pembayaran billing berhasil dihapus');
+      toast.success('Alokasi pembayaran kredit berhasil dihapus');
       onOpenChange(false);
     } catch (error) {
       toast.error(getApiErrorMessage(error) || 'Gagal menghapus pembayaran billing');
@@ -39,12 +47,12 @@ export default function BillingPaymentDeleteDialog({
       <DialogContent className="max-w-sm rounded-md">
         <DialogHeader>
           <DialogTitle className="text-lg font-semibold text-slate-950">
-            Hapus Pembayaran Billing?
+            Hapus Pembayaran Kredit?
           </DialogTitle>
           <DialogDescription className="text-sm text-slate-500 mt-2">
             Apakah Anda yakin ingin menghapus alokasi pembayaran akun{' '}
             <strong>{payment?.account?.name || payment?.account?.code || '-'}</strong> sebesar{' '}
-            <strong>{currenciesFormat('idr', payment?.amount)}</strong>? Tindakan ini tidak dapat dibatalkan.
+            <strong>{currenciesFormat(isUsd ? 'usd' : 'idr', payment?.amount)}</strong>? Tindakan ini tidak dapat dibatalkan.
           </DialogDescription>
         </DialogHeader>
 

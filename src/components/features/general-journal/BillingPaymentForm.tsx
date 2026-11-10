@@ -15,6 +15,7 @@ import { getApiErrorMessage } from '@/utils/apiErrorHandler';
 interface Props {
   billingId: number;
   journalId: number;
+  totalAmount?: number;
   remainingAmount?: number;
   accounts: Account[];
   isAccountsLoading?: boolean;
@@ -25,6 +26,7 @@ interface Props {
 export default function BillingPaymentForm({
   billingId,
   journalId,
+  totalAmount,
   remainingAmount = 0,
   accounts,
   isAccountsLoading = false,
@@ -38,9 +40,22 @@ export default function BillingPaymentForm({
   const createPaymentMutation = useCreateGeneralJournalBillingPayment(journalId);
   const isBusy = createPaymentMutation.isPending;
 
+  const maxAllowedAmount = totalAmount !== undefined && totalAmount > 0 ? totalAmount : undefined;
+
   const handleFillRemaining = () => {
     if (remainingAmount > 0) {
-      setAmount(remainingAmount);
+      const fillVal = maxAllowedAmount !== undefined
+        ? Math.min(remainingAmount, maxAllowedAmount)
+        : remainingAmount;
+      setAmount(fillVal);
+    }
+  };
+
+  const handleAmountChange = (val: number) => {
+    if (maxAllowedAmount !== undefined && val > maxAllowedAmount) {
+      setAmount(maxAllowedAmount);
+    } else {
+      setAmount(val);
     }
   };
 
@@ -54,6 +69,13 @@ export default function BillingPaymentForm({
 
     if (!amount || amount <= 0) {
       toast.error('Nominal pembayaran harus lebih dari 0');
+      return;
+    }
+
+    if (maxAllowedAmount !== undefined && amount > maxAllowedAmount) {
+      toast.error(
+        `Nominal pembayaran tidak boleh melebihi total amount (${currenciesFormat(isUsd ? 'usd' : 'idr', maxAllowedAmount)})`
+      );
       return;
     }
 
@@ -124,13 +146,21 @@ export default function BillingPaymentForm({
 
           {/* Nominal Pembayaran */}
           <div className="sm:col-span-4 space-y-1.5">
-            <label className="text-xs font-semibold text-slate-700">
-              Nominal ({isUsd ? 'USD' : 'IDR'}) <RequiredMark />
-            </label>
+            <div className="flex items-center justify-between">
+              <label className="text-xs font-semibold text-slate-700">
+                Nominal ({isUsd ? 'USD' : 'IDR'}) <RequiredMark />
+              </label>
+              {maxAllowedAmount !== undefined && (
+                <span className="text-[11px] text-slate-500 font-medium">
+                  Maks: {currenciesFormat(isUsd ? 'usd' : 'idr', maxAllowedAmount)}
+                </span>
+              )}
+            </div>
             <MoneyInput
               currency={isUsd ? 'USD' : 'IDR'}
               value={amount}
-              onChangeValue={setAmount}
+              max={maxAllowedAmount}
+              onChangeValue={handleAmountChange}
               placeholder="0"
               disabled={disabled || isBusy}
               className="bg-white h-9"
@@ -157,7 +187,13 @@ export default function BillingPaymentForm({
           <Button
             type="submit"
             size="sm"
-            disabled={disabled || isBusy || !selectedAccountId || amount <= 0}
+            disabled={
+              disabled ||
+              isBusy ||
+              !selectedAccountId ||
+              amount <= 0 ||
+              (maxAllowedAmount !== undefined && amount > maxAllowedAmount)
+            }
             className="btn-primary h-9 gap-1.5 text-xs px-4"
           >
             {isBusy ? (

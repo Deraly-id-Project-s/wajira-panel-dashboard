@@ -9,6 +9,7 @@ import { MoneyInput } from '@/components/ui/money-input';
 import { LedgerAccountSelect } from '@/components/features/laporan-buku-besar/LedgerAccountSelect';
 import { LoadingState } from '@/components/ui/loading-state';
 import RequiredMark from '@/components/ui/required-mark';
+import { currenciesFormat } from '@/components/ui/currenciesFormat';
 import { useUpdateGeneralJournalBillingPayment } from '@/hooks/useGeneralJournal';
 import { getApiErrorMessage } from '@/utils/apiErrorHandler';
 
@@ -17,6 +18,7 @@ interface Props {
   onOpenChange: (open: boolean) => void;
   payment: GeneralJournalBillingPayment | null;
   journalId: number;
+  totalAmount?: number;
   accounts: Account[];
   isUsd?: boolean;
 }
@@ -26,6 +28,7 @@ export default function BillingPaymentEditDialog({
   onOpenChange,
   payment,
   journalId,
+  totalAmount,
   accounts,
   isUsd = false,
 }: Props) {
@@ -35,6 +38,16 @@ export default function BillingPaymentEditDialog({
 
   const updateMutation = useUpdateGeneralJournalBillingPayment(journalId);
   const isBusy = updateMutation.isPending;
+
+  const maxAllowedAmount = totalAmount !== undefined && totalAmount > 0 ? totalAmount : undefined;
+
+  const handleAmountChange = (val: number) => {
+    if (maxAllowedAmount !== undefined && val > maxAllowedAmount) {
+      setAmount(maxAllowedAmount);
+    } else {
+      setAmount(val);
+    }
+  };
 
   useEffect(() => {
     if (payment) {
@@ -55,6 +68,13 @@ export default function BillingPaymentEditDialog({
 
     if (!amount || amount <= 0) {
       toast.error('Nominal pembayaran harus lebih dari 0');
+      return;
+    }
+
+    if (maxAllowedAmount !== undefined && amount > maxAllowedAmount) {
+      toast.error(
+        `Nominal pembayaran tidak boleh melebihi total amount (${currenciesFormat(isUsd ? 'usd' : 'idr', maxAllowedAmount)})`
+      );
       return;
     }
 
@@ -105,13 +125,21 @@ export default function BillingPaymentEditDialog({
           </div>
 
           <div className="space-y-1.5">
-            <label className="text-xs font-semibold text-slate-700">
-              Nominal ({isUsd ? 'USD' : 'IDR'}) <RequiredMark />
-            </label>
+            <div className="flex items-center justify-between">
+              <label className="text-xs font-semibold text-slate-700">
+                Nominal ({isUsd ? 'USD' : 'IDR'}) <RequiredMark />
+              </label>
+              {maxAllowedAmount !== undefined && (
+                <span className="text-[11px] text-slate-500 font-medium">
+                  Maks: {currenciesFormat(isUsd ? 'usd' : 'idr', maxAllowedAmount)}
+                </span>
+              )}
+            </div>
             <MoneyInput
               currency={isUsd ? 'USD' : 'IDR'}
               value={amount}
-              onChangeValue={setAmount}
+              max={maxAllowedAmount}
+              onChangeValue={handleAmountChange}
               placeholder="0"
               disabled={isBusy}
               className="bg-white h-9"
@@ -144,7 +172,12 @@ export default function BillingPaymentEditDialog({
             <Button
               type="submit"
               className="btn-primary"
-              disabled={isBusy || !selectedAccountId || amount <= 0}
+              disabled={
+                isBusy ||
+                !selectedAccountId ||
+                amount <= 0 ||
+                (maxAllowedAmount !== undefined && amount > maxAllowedAmount)
+              }
             >
               {isBusy ? (
                 <LoadingState variant="inline" text="Menyimpan..." iconClassName="text-white" />

@@ -69,77 +69,36 @@ export default function GeneralJournalTable({
         cell: (item) => (
           <div className="flex items-center gap-1.5">
             <CopyBox text={item.code || '-'} />
-            {item.is_usd_transaction ? (
-              <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-blue-100 text-blue-700 border border-blue-200">
-                USD
-              </span>
-            ) : null}
           </div>
-        ),
-      },
-      {
-        header: 'MATA UANG',
-        accessorKey: 'is_usd_transaction',
-        sortable: true,
-        alignment: 'center',
-        cell: (item) => (
-          <span
-            className={cn(
-              'px-2 py-0.5 rounded text-xs font-semibold uppercase',
-              item.is_usd_transaction
-                ? 'bg-blue-50 text-blue-700 border border-blue-200'
-                : 'bg-slate-100 text-slate-700 border border-slate-200',
-            )}
-          >
-            {item.is_usd_transaction ? 'USD ($)' : 'IDR (Rp)'}
-          </span>
-        ),
-      },
-      {
-        header: 'NOMINAL TRANSAKSI',
-        accessorKey: 'amount',
-        sortable: true,
-        alignment: 'right',
-        cell: (item) => (
-          <div className="text-right">
-            <span className={cn('font-bold', item.is_usd_transaction ? 'text-blue-700' : 'text-slate-800')}>
-              {item.is_usd_transaction
-                ? currenciesFormat('usd', item.amount)
-                : currenciesFormat('idr', item.amount || item.total_debit)}
-            </span>
-            {item.is_usd_transaction && item.amount_original ? (
-              <span className="text-[11px] text-slate-400 block">
-                ~ {currenciesFormat('idr', item.amount_original)}
-              </span>
-            ) : null}
-          </div>
-        ),
-      },
-      {
-        header: 'STATUS POSTING',
-        accessorKey: 'is_paid',
-        sortable: true,
-        alignment: 'center',
-        cell: (item) => (
-          <span
-            className={cn(
-              'px-2.5 py-0.5 rounded-full text-xs font-semibold uppercase tracking-wider inline-flex items-center gap-1',
-              item.is_paid
-                ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
-                : 'bg-amber-50 text-amber-700 border border-amber-200',
-            )}
-          >
-            {item.is_paid ? <CheckCircle2 className="h-3 w-3" /> : null}
-            {item.is_paid ? 'Posted' : 'Draft'}
-          </span>
         ),
       },
       {
         header: 'TANGGAL',
         accessorKey: 'date',
         sortable: true,
-        alignment: 'center',
+        alignment: 'left',
         cell: (item) => formatDate(item.date),
+      },
+      {
+        header: 'DEBET',
+        accessorKey: 'total_debit',
+        sortable: true,
+        alignment: 'left',
+        cell: (item) => currenciesFormat(item.is_usd_transaction ? 'usd' : 'idr', item.total_debit),
+      },
+      {
+        header: 'KREDIT',
+        accessorKey: 'total_credit',
+        sortable: true,
+        alignment: 'left',
+        cell: (item) => currenciesFormat(item.is_usd_transaction ? 'usd' : 'idr', item.total_credit),
+      },
+      {
+        header: 'STATUS',
+        accessorKey: 'is_paid',
+        sortable: true,
+        alignment: 'left',
+        cell: (item) => <span className={'badge' + cn(item.is_paid ? 'text-green-600' : 'text-red-600')}>{item.is_paid ? 'LUNAS' : 'BELUM LUNAS'}</span>,
       },
       {
         header: 'KETERANGAN',
@@ -147,57 +106,6 @@ export default function GeneralJournalTable({
         sortable: true,
         alignment: 'left',
         cell: (item) => <TextTruncate text={item.note || '-'} maxLength={30} />,
-      },
-      {
-        header: 'TOTAL DEBET',
-        accessorKey: 'total_debit',
-        sortable: true,
-        alignment: 'right',
-        cell: (item) => (
-          <span className="font-semibold text-emerald-600">
-            {currenciesFormat('idr', item.total_debit)}
-          </span>
-        ),
-      },
-      {
-        header: 'TOTAL KREDIT',
-        accessorKey: 'total_credit',
-        sortable: true,
-        alignment: 'right',
-        cell: (item) => (
-          <span className="font-semibold text-rose-600">
-            {currenciesFormat('idr', item.total_credit)}
-          </span>
-        ),
-      },
-      {
-        header: 'KESEIMBANGAN',
-        accessorKey: 'is_balanced',
-        sortable: true,
-        alignment: 'center',
-        cell: (item) => (
-          <span
-            className={cn(
-              'px-2 py-0.5 rounded text-[11px] font-medium inline-flex items-center gap-1',
-              item.is_balanced
-                ? 'bg-blue-50 text-blue-700 border border-blue-200'
-                : 'bg-rose-50 text-rose-700 border border-rose-200',
-            )}
-          >
-            {item.is_balanced ? 'Balanced' : (
-              <>
-                <AlertCircle className="h-3 w-3" /> Tidak Seimbang
-              </>
-            )}
-          </span>
-        ),
-      },
-      {
-        header: 'BARIS ITEM',
-        accessorKey: 'billingsCount',
-        sortable: true,
-        alignment: 'center',
-        cell: (item) => `${item.billingsCount} baris`,
       },
       {
         header: 'Aksi',
