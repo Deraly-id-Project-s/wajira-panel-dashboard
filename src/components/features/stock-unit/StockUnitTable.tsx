@@ -128,7 +128,7 @@ export default function StockUnitTable({
     {
       header: 'Sub Blok',
       accessorKey: 'warehouseSubBlock',
-      alignment: 'center',
+      alignment: 'left',
       sortable: true,
       tooltip: 'Lokasi sub-blok penyimpanan unit di dalam gudang',
       cell: (item) => item.warehouseSubBlock?.name ? <CopyBox text={item.warehouseSubBlock.name} /> : <Badge variant='outline' className={`font-semibold bg-white`}>Belum Ditambahkan</Badge>,
@@ -137,7 +137,7 @@ export default function StockUnitTable({
       header: 'Status Stok',
       accessorKey: 'status',
       sortable: true,
-      alignment: 'center',
+      alignment: 'left',
       tooltip: 'Status ketersediaan unit fisik di gudang',
       cell: (item) => item?.inStock ? <Badge variant="outline" className={cn('capitalize', 'border-emerald-200 bg-emerald-50 text-emerald-700 font-semibold')}>Tersedia</Badge> : <Badge variant="outline" className={cn('capitalize', 'border-rose-200 bg-rose-50 text-rose-700 font-semibold')}>Tidak Tersedia {item?.isSoldUnit && '/ Terjual'}</Badge>
     },
@@ -145,7 +145,7 @@ export default function StockUnitTable({
       header: 'Kondisi Stok',
       accessorKey: 'status',
       sortable: true,
-      alignment: 'center',
+      alignment: 'left',
       tooltip: 'Kondisi fisik unit saat ini',
       cell: (item) => renderStatus(item.status),
     },
@@ -153,7 +153,7 @@ export default function StockUnitTable({
       header: 'Posisi Stok',
       accessorKey: 'stockStatus',
       sortable: true,
-      alignment: 'center',
+      alignment: 'left',
       tooltip: 'Posisi logistik atau status alur stok unit',
       cell: (item) => {
         const config: Record<string, { label: string; name: string; className: string }> = {
