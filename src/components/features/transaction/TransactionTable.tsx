@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { formatDate } from '@/lib/utils/format';
 import { currenciesFormat } from '@/components/ui/currenciesFormat';
 import { CopyBox } from '@/components/ui/copy-box';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import BaseTable, { ColumnDef } from '@/components/ui/base-table';
 import { TableRow, TableHead } from '@/components/ui/table';
 
@@ -40,12 +41,21 @@ export function TransactionTable({ data, onEdit, onDelete, canEdit, canDelete }:
             <div className="flex items-center gap-1.5">
               <CopyBox text={trx.name || '-'} />
               {isLocked && (
-                <span
-                  className="inline-flex items-center text-amber-600 shrink-0"
-                  title="Data terkunci (tidak dapat diubah atau dihapus)"
-                >
-                  <Lock className="h-3.5 w-3.5" />
-                </span>
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <span
+                        className="inline-flex items-center text-amber-600 shrink-0 cursor-help"
+                        title="Data terkunci: memiliki relasi atau terhubung dengan data pembayaran yang ada pada administrasi pembelian/penjualan unit/sparepart/perlengkapan dll."
+                      >
+                        <Lock className="h-3.5 w-3.5" />
+                      </span>
+                    </TooltipTrigger>
+                    <TooltipContent side="top" className="max-w-xs text-xs">
+                      Data terkunci: memiliki relasi atau terhubung dengan data pembayaran yang ada pada administrasi pembelian/penjualan unit/sparepart/perlengkapan dll.
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
               )}
             </div>
           );
@@ -179,7 +189,7 @@ export function TransactionTable({ data, onEdit, onDelete, canEdit, canDelete }:
                     variant="ghost"
                     className="h-8 w-8 p-0 rounded-full text-slate-600 hover:bg-slate-100 hover:text-slate-900 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
                     disabled={isActionDisabled}
-                    title={isLocked ? 'Data transaksi terkunci' : undefined}
+                    title={isLocked ? 'Data transaksi terkunci karena memiliki relasi atau terhubung dengan data pembayaran yang ada pada administrasi pembelian/penjualan unit/sparepart/perlengkapan dll.' : undefined}
                   >
                     <MoreVertical className="h-4 w-4" />
                   </Button>
