@@ -135,14 +135,7 @@ export function SalesDetailCards({ data, billingHistories = [], unitType, stockQ
               </div>
               {idrSummary.totalDiscountIdr > 0 && (
                 <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-1.5">
-                    <span>Diskon (IDR)</span>
-                    {idrSummary.discountIdrPercent !== null && idrSummary.discountIdrPercent > 0 && (
-                      <Badge variant="outline" className="border-amber-300 bg-amber-100 text-amber-800 font-semibold text-[10px] px-1.5 py-0">
-                        {idrSummary.discountIdrPercent}%
-                      </Badge>
-                    )}
-                  </div>
+                  <span>Diskon (IDR)</span>
                   <span className="text-sm font-semibold text-slate-900">{currenciesFormat('idr', idrSummary.totalDiscountIdr)}</span>
                 </div>
               )}
@@ -244,14 +237,7 @@ export function SalesDetailCards({ data, billingHistories = [], unitType, stockQ
               )}
               {usdSummary.totalDiscountUsd > 0 && (
                 <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-1.5">
-                    <span>Diskon (USD)</span>
-                    {usdSummary.discountUsdPercent !== null && usdSummary.discountUsdPercent > 0 && (
-                      <Badge variant="outline" className="border-amber-300 bg-amber-100 text-amber-800 font-semibold text-[10px] px-1.5 py-0">
-                        {usdSummary.discountUsdPercent}%
-                      </Badge>
-                    )}
-                  </div>
+                  <span>Diskon (USD)</span>
                   <span className="text-sm font-semibold text-slate-900">{currenciesFormat('usd', usdSummary.totalDiscountUsd)}</span>
                 </div>
               )}

@@ -298,36 +298,20 @@ export function getUsdTransactionSummary(
     calculatedBrutoUsd
   );
 
-  // 4. Discount USD: Gross Item USD * (price_usd_discount / 100)
-  const discountPercentages = Array.from(
-    new Set(
-      resolvedItems
-        .map((i) => Number(i.price_usd_discount ?? i.price_discount_usd ?? 0))
-        .filter((p) => p > 0)
-    )
-  );
+  // 4. Discount USD: nominal amount from price_usd_discount
   const fallbackSingleDiscount = Number(data?.price_usd_discount ?? data?.price_discount_usd ?? 0);
-  const discountUsdPercent = discountPercentages.length === 1
-    ? discountPercentages[0]
-    : (discountPercentages.length === 0 ? (fallbackSingleDiscount > 0 ? fallbackSingleDiscount : null) : null);
-
   const calculatedDiscountUsd = resolvedItems.reduce((sum, item) => {
-    const qty = Number(item.qty_total ?? item.qty ?? item.max_capacity ?? 1);
-    const unitPrice = Number(item.price_per_unit_usd ?? 0);
-    const itemBase = unitPrice > 0 ? (unitPrice * qty) : Number(item.price_usd ?? 0);
-    const itemCost = Number(item.total_usd_cost ?? getUsdCostsFromItem(item).totalUsdCost);
-    const grossItem = itemBase + itemCost;
-    const discPercent = Number(item.price_usd_discount ?? item.price_discount_usd ?? fallbackSingleDiscount);
-    return sum + (grossItem * (discPercent / 100));
+    return sum + Number(item.price_usd_discount ?? item.price_discount_usd ?? 0);
   }, 0);
 
   const headerDiscount = Number(
     data?.total_discount ??
     data?.transaction_discount_total ??
     data?.price_discount_total ??
-    0
+    fallbackSingleDiscount
   );
   const totalDiscountUsd = headerDiscount > 0 ? headerDiscount : calculatedDiscountUsd;
+  const discountUsdPercent = null;
 
   // 5. Grand Total (Netto) USD: Bruto - Discount (or from API billing_summary.grand_total / transaction_price_usd_total)
   const headerGrandTotal = Number(
@@ -439,32 +423,20 @@ export function getIdrTransactionSummary(
   );
   const brutoTotalIdr = headerBruto > 0 ? headerBruto : totalPembelianKotor;
 
-  const discountPercentages = Array.from(
-    new Set(
-      resolvedItems
-        .map((i) => Number(i.price_discount ?? 0))
-        .filter((p) => p > 0)
-    )
-  );
+  // Discount IDR: nominal amount from price_discount
   const fallbackSingleDiscount = Number(data?.price_discount ?? 0);
-  const discountIdrPercent = discountPercentages.length === 1
-    ? discountPercentages[0]
-    : (discountPercentages.length === 0 ? (fallbackSingleDiscount > 0 ? fallbackSingleDiscount : null) : null);
-
   const calculatedDiscountIdr = resolvedItems.reduce((sum, item) => {
-    const itemPrice = Number(item.price ?? item.hargaJual ?? 0);
-    const itemQty = Number(item.qty_total ?? item.qty ?? item.max_capacity ?? 1);
-    const discPercent = Number(item.price_discount ?? fallbackSingleDiscount);
-    return sum + (itemPrice * (discPercent / 100) * itemQty);
+    return sum + Number(item.price_discount ?? 0);
   }, 0);
 
   const headerDiscount = Number(
     data?.total_discount ??
     data?.transaction_discount_total ??
     data?.price_discount_total ??
-    0
+    fallbackSingleDiscount
   );
   const totalDiscountIdr = headerDiscount > 0 ? headerDiscount : calculatedDiscountIdr;
+  const discountIdrPercent = null;
 
   const grandTotalIdr = Number(
     data?.billing_summary?.grand_total ??
