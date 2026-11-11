@@ -2,6 +2,7 @@
 
 import { useMemo, useState, useCallback } from 'react';
 import { useRouter } from 'next/router';
+import { format } from 'date-fns';
 import { Plus, Info, MoreVertical } from 'lucide-react';
 import { toast } from 'sonner';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
@@ -20,6 +21,7 @@ import { useKas } from '@/hooks/useKas';
 import { useAccounts } from '@/hooks/useAccount';
 import { getApiErrorMessage } from '@/utils/apiErrorHandler';
 import { currenciesFormat } from '@/components/ui/currenciesFormat';
+import { getTodayWIB } from '@/lib/utils/date';
 import type { FinanceBilling, FinanceBillingPayload } from '@/@types/finance-billing.types';
 import type { KasHarian } from '@/@types/kas-harian.types';
 import { LoadingState } from '@/components/ui/loading-state';
@@ -306,7 +308,7 @@ export default function FinanceBillingTable({ financeBillings, cashFlowDetail, c
       account_id: defaultAccountId,
       amount: initialLimit > 0 ? initialLimit : 0,
       amount_original: 0,
-      payment_at: cashFlowDetail.date?.slice(0, 10) || new Date().toISOString().slice(0, 10),
+      payment_at: format(getTodayWIB(), 'yyyy-MM-dd'),
       note: '',
     });
     setIsFormOpen(true);
@@ -791,6 +793,8 @@ export default function FinanceBillingTable({ financeBillings, cashFlowDetail, c
               <InputDate
                 value={form.payment_at}
                 onChange={(e) => setForm((prev) => ({ ...prev, payment_at: e.target.value }))}
+                isEdit={Boolean(editingId)}
+                defaultToday={true}
                 className="h-11"
                 disabled={isLoading}
               />
