@@ -50,6 +50,8 @@ export interface BaseTableProps<T> {
   data: T[];
   columns: ColumnDef<T>[];
   loading?: boolean;
+  emptyText?: string;
+  emptyMessage?: string;
 
   // Header / Control bar props
   searchPlaceholder?: string;
@@ -114,6 +116,8 @@ export default function BaseTable<T>({
   data,
   columns,
   loading,
+  emptyText,
+  emptyMessage,
   searchPlaceholder = 'Search...',
   search,
   onSearchChange,
@@ -899,7 +903,9 @@ export default function BaseTable<T>({
                           <Search className="h-8 w-8 text-slate-400" />
                         </div>
                         <p className="text-sm font-semibold text-slate-900 sm:text-base">Tidak ada data ditemukan</p>
-                        <p className="text-xs text-slate-500 sm:text-sm">Belum ada data atau coba gunakan kata kunci pencarian lain.</p>
+                        <p className="text-xs text-slate-500 sm:text-sm">
+                          {emptyText || emptyMessage || 'Belum ada data atau coba gunakan kata kunci pencarian lain.'}
+                        </p>
                       </>
                     )}
                   </div>

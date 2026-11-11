@@ -49,10 +49,10 @@ export function LaporanJurnalUmumTable({
     () => [
       {
         header: 'Tanggal',
-        accessorKey: 'created_at',
+        accessorKey: 'payment_at',
         sortable: true,
         alignment: 'center',
-        cell: (item) => formatDate(item.created_at),
+        cell: (item) => formatDate(item.payment_at || item.created_at || item.general_journal?.date),
       },
       {
         header: 'Kode Jurnal',

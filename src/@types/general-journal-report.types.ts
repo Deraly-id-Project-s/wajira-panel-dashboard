@@ -9,6 +9,8 @@ export interface GeneralJournalReportItem {
   debit: number;
   credit: number;
   payment_at: string;
+  created_at?: string;
+  updated_at?: string;
   note?: string | null;
   payment_proof?: string | null;
   is_paid?: boolean;
