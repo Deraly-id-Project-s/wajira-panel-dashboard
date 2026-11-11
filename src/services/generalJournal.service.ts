@@ -178,10 +178,13 @@ export const deleteGeneralJournal = async (id: number | string): Promise<void> =
 export const createGeneralJournalBillingPayment = async (
   payload: GeneralJournalBillingPaymentPayload,
 ): Promise<GeneralJournalBillingPayment> => {
+  const type = payload.type || 'debit';
+
   if (payload.transaction_proof instanceof File) {
     const formData = new FormData();
     formData.append('general_journal_billing_id', String(payload.general_journal_billing_id));
     formData.append('account_id', String(payload.account_id));
+    formData.append('type', type);
     formData.append('amount', String(payload.amount));
     if (payload.amount_original !== undefined) {
       formData.append('amount_original', String(payload.amount_original));
@@ -189,27 +192,51 @@ export const createGeneralJournalBillingPayment = async (
     if (payload.note) formData.append('note', payload.note);
     formData.append('transaction_proof', payload.transaction_proof);
 
-    const response = await apiClient.post<LaravelApiResponse<GeneralJournalBillingPayment>>(
-      BILLING_PAYMENT_BASE_PATH,
-      formData,
-      { headers: { 'Content-Type': 'multipart/form-data' } },
-    );
-    return ensureSuccess(response.data);
+    try {
+      const response = await apiClient.post<LaravelApiResponse<GeneralJournalBillingPayment>>(
+        BILLING_PAYMENT_BASE_PATH,
+        formData,
+        { headers: { 'Content-Type': 'multipart/form-data' } },
+      );
+      return ensureSuccess(response.data);
+    } catch (error: any) {
+      if (error?.statusCode === 404 || error?.response?.status === 404) {
+        const response = await apiClient.post<LaravelApiResponse<GeneralJournalBillingPayment>>(
+          '/wapi/general-journal-billing-payment',
+          formData,
+          { headers: { 'Content-Type': 'multipart/form-data' } },
+        );
+        return ensureSuccess(response.data);
+      }
+      throw error;
+    }
   }
 
   const jsonBody = {
     general_journal_billing_id: payload.general_journal_billing_id,
     account_id: payload.account_id,
+    type,
     amount: payload.amount,
     amount_original: payload.amount_original ?? 0,
     note: payload.note ?? null,
   };
 
-  const response = await apiClient.post<LaravelApiResponse<GeneralJournalBillingPayment>>(
-    BILLING_PAYMENT_BASE_PATH,
-    jsonBody,
-  );
-  return ensureSuccess(response.data);
+  try {
+    const response = await apiClient.post<LaravelApiResponse<GeneralJournalBillingPayment>>(
+      BILLING_PAYMENT_BASE_PATH,
+      jsonBody,
+    );
+    return ensureSuccess(response.data);
+  } catch (error: any) {
+    if (error?.statusCode === 404 || error?.response?.status === 404) {
+      const response = await apiClient.post<LaravelApiResponse<GeneralJournalBillingPayment>>(
+        '/wapi/general-journal-billing-payment',
+        jsonBody,
+      );
+      return ensureSuccess(response.data);
+    }
+    throw error;
+  }
 };
 
 export const updateGeneralJournalBillingPayment = async (
@@ -220,6 +247,7 @@ export const updateGeneralJournalBillingPayment = async (
     const formData = new FormData();
     formData.append('_method', 'PUT');
     if (payload.account_id !== undefined) formData.append('account_id', String(payload.account_id));
+    if (payload.type !== undefined) formData.append('type', payload.type);
     if (payload.amount !== undefined) formData.append('amount', String(payload.amount));
     if (payload.amount_original !== undefined) {
       formData.append('amount_original', String(payload.amount_original));
@@ -227,28 +255,61 @@ export const updateGeneralJournalBillingPayment = async (
     if (payload.note !== undefined && payload.note !== null) formData.append('note', payload.note);
     formData.append('transaction_proof', payload.transaction_proof);
 
-    const response = await apiClient.post<LaravelApiResponse<GeneralJournalBillingPayment>>(
-      `${BILLING_PAYMENT_BASE_PATH}/${id}`,
-      formData,
-      { headers: { 'Content-Type': 'multipart/form-data' } },
-    );
-    return ensureSuccess(response.data);
+    try {
+      const response = await apiClient.post<LaravelApiResponse<GeneralJournalBillingPayment>>(
+        `${BILLING_PAYMENT_BASE_PATH}/${id}`,
+        formData,
+        { headers: { 'Content-Type': 'multipart/form-data' } },
+      );
+      return ensureSuccess(response.data);
+    } catch (error: any) {
+      if (error?.statusCode === 404 || error?.response?.status === 404) {
+        const response = await apiClient.post<LaravelApiResponse<GeneralJournalBillingPayment>>(
+          `/wapi/general-journal-billing-payment/${id}`,
+          formData,
+          { headers: { 'Content-Type': 'multipart/form-data' } },
+        );
+        return ensureSuccess(response.data);
+      }
+      throw error;
+    }
   }
 
   const jsonBody: Record<string, unknown> = {};
   if (payload.account_id !== undefined) jsonBody.account_id = payload.account_id;
+  if (payload.type !== undefined) jsonBody.type = payload.type;
   if (payload.amount !== undefined) jsonBody.amount = payload.amount;
   if (payload.amount_original !== undefined) jsonBody.amount_original = payload.amount_original;
   if (payload.note !== undefined) jsonBody.note = payload.note;
 
-  const response = await apiClient.put<LaravelApiResponse<GeneralJournalBillingPayment>>(
-    `${BILLING_PAYMENT_BASE_PATH}/${id}`,
-    jsonBody,
-  );
-  return ensureSuccess(response.data);
+  try {
+    const response = await apiClient.put<LaravelApiResponse<GeneralJournalBillingPayment>>(
+      `${BILLING_PAYMENT_BASE_PATH}/${id}`,
+      jsonBody,
+    );
+    return ensureSuccess(response.data);
+  } catch (error: any) {
+    if (error?.statusCode === 404 || error?.response?.status === 404) {
+      const response = await apiClient.put<LaravelApiResponse<GeneralJournalBillingPayment>>(
+        `/wapi/general-journal-billing-payment/${id}`,
+        jsonBody,
+      );
+      return ensureSuccess(response.data);
+    }
+    throw error;
+  }
 };
 
 export const deleteGeneralJournalBillingPayment = async (id: number | string): Promise<void> => {
-  const response = await apiClient.delete<LaravelApiResponse<null>>(`${BILLING_PAYMENT_BASE_PATH}/${id}`);
-  ensureSuccess(response.data);
+  try {
+    const response = await apiClient.delete<LaravelApiResponse<null>>(`${BILLING_PAYMENT_BASE_PATH}/${id}`);
+    ensureSuccess(response.data);
+  } catch (error: any) {
+    if (error?.statusCode === 404 || error?.response?.status === 404) {
+      const response = await apiClient.delete<LaravelApiResponse<null>>(`/wapi/general-journal-billing-payment/${id}`);
+      ensureSuccess(response.data);
+      return;
+    }
+    throw error;
+  }
 };

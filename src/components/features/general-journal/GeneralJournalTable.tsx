@@ -3,6 +3,7 @@ import { format } from 'date-fns';
 import { MoreVertical, CheckCircle2, AlertCircle } from 'lucide-react';
 import type { GeneralJournalListItem } from '@/@types/general-journal.types';
 import type { PaginationMeta } from '@/@types/pagination.types';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { currenciesFormat } from '@/components/ui/currenciesFormat';
@@ -98,7 +99,25 @@ export default function GeneralJournalTable({
         accessorKey: 'is_paid',
         sortable: true,
         alignment: 'left',
-        cell: (item) => <span className={'badge' + cn(item.is_paid ? 'text-green-600' : 'text-red-600')}>{item.is_paid ? 'LUNAS' : 'BELUM LUNAS'}</span>,
+        cell: (item) => (
+          <Badge
+            variant="outline"
+            className={cn(
+              'rounded-full px-2.5 py-0.5 font-semibold text-xs whitespace-nowrap',
+              item.is_paid
+                ? item.is_balanced
+                  ? 'border-emerald-200 bg-emerald-50 text-emerald-700'
+                  : 'border-amber-200 bg-amber-50 text-amber-700'
+                : 'border-rose-200 bg-rose-50 text-rose-700',
+            )}
+          >
+            {item.is_paid
+              ? item.is_balanced
+                ? 'LUNAS & SEIMBANG'
+                : 'LUNAS (BELUM SEIMBANG)'
+              : 'BELUM LUNAS'}
+          </Badge>
+        ),
       },
       {
         header: 'KETERANGAN',

@@ -49,10 +49,10 @@ export function LaporanJurnalUmumTable({
     () => [
       {
         header: 'Tanggal',
-        accessorKey: 'payment_at',
+        accessorKey: 'created_at',
         sortable: true,
         alignment: 'center',
-        cell: (item) => formatDate(item.payment_at),
+        cell: (item) => formatDate(item.created_at),
       },
       {
         header: 'Kode Jurnal',
@@ -62,29 +62,48 @@ export function LaporanJurnalUmumTable({
         cell: (item) => <CopyBox text={item.general_journal?.code || '-'} />,
       },
       {
-        header: 'Kode Akun',
-        accessorKey: 'account.code',
+        header: 'Status',
+        accessorKey: 'general_journal.is_paid',
         sortable: true,
-        alignment: 'left',
-        cell: (item) => <CopyBox text={item.account?.code || '-'} />,
-      },
-      {
-        header: 'Nama Akun',
-        accessorKey: 'account.name',
-        sortable: true,
-        alignment: 'left',
+        alignment: 'center',
         cell: (item) => {
-          const type = item.account?.type ? String(item.account.type).toUpperCase() : null;
-          const name = item.account?.name;
-          if (type && name) {
-            return (
-              <span className="font-medium text-slate-900">
-                <span className="text-slate-400 font-normal mr-1">[{type}]</span>
-                {name}
-              </span>
-            );
-          }
-          return <span className="font-medium text-slate-900">{name || '-'}</span>;
+          const isPaid =
+            item.general_journal?.is_paid !== undefined
+              ? Boolean(item.general_journal.is_paid)
+              : item.is_paid !== undefined
+                ? Boolean(item.is_paid)
+                : true;
+
+          const isBalanced =
+            item.general_journal?.is_balanced !== undefined
+              ? Boolean(item.general_journal.is_balanced)
+              : item.general_journal?.is_valid !== undefined
+                ? Boolean(item.general_journal.is_valid)
+                : item.is_balanced !== undefined
+                  ? Boolean(item.is_balanced)
+                  : item.is_valid !== undefined
+                    ? Boolean(item.is_valid)
+                    : true;
+
+          return (
+            <Badge
+              variant="outline"
+              className={cn(
+                'rounded-full px-2.5 py-0.5 font-semibold text-xs whitespace-nowrap',
+                isPaid
+                  ? isBalanced
+                    ? 'border-emerald-200 bg-emerald-50 text-emerald-700'
+                    : 'border-amber-200 bg-amber-50 text-amber-700'
+                  : 'border-rose-200 bg-rose-50 text-rose-700',
+              )}
+            >
+              {isPaid
+                ? isBalanced
+                  ? 'LUNAS & SEIMBANG'
+                  : 'LUNAS (BELUM SEIMBANG)'
+                : 'BELUM LUNAS'}
+            </Badge>
+          );
         },
       },
       {
@@ -149,7 +168,7 @@ export function LaporanJurnalUmumTable({
 
   const footer = (
     <TableRow className="group border-t border-slate-200 bg-slate-50/70 hover:bg-slate-50/70">
-      <TableCell colSpan={6} className="px-4 py-4 text-right text-sm font-semibold text-slate-900">
+      <TableCell colSpan={5} className="px-4 py-4 text-right text-sm font-semibold text-slate-900">
         Grand Total
       </TableCell>
       <TableCell className="px-4 py-4 text-right text-sm font-bold text-slate-900 tabular-nums">

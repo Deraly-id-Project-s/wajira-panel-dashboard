@@ -57,6 +57,7 @@ export default function GeneralJournalDetailView({ journalId }: Props) {
   const [isToggleOpen, setIsToggleOpen] = useState(false);
   const [targetStatus, setTargetStatus] = useState(false);
   const [isAddPaymentOpen, setIsAddPaymentOpen] = useState(false);
+  const [paymentDialogType, setPaymentDialogType] = useState<'debit' | 'credit'>('debit');
   const [selectedPayment, setSelectedPayment] = useState<GeneralJournalBillingPayment | null>(null);
   const [isPaymentEditOpen, setIsPaymentEditOpen] = useState(false);
   const [isPaymentDeleteOpen, setIsPaymentDeleteOpen] = useState(false);
@@ -70,7 +71,6 @@ export default function GeneralJournalDetailView({ journalId }: Props) {
 
   const journal = detailQuery.data;
   const isPaid = Boolean(journal?.is_paid);
-  const isBalanced = Boolean(journal?.is_balanced);
   const isUsd = Boolean(journal?.is_usd_transaction);
   const proofUrl = buildProofUrl(journal?.payment_proof);
 
@@ -104,12 +104,68 @@ export default function GeneralJournalDetailView({ journalId }: Props) {
     return list;
   }, [billings]);
 
-  // Debet, Credit, Remaining calculations
+  // Debet Kas Jurnal
   const totalDebit = Number(journal?.total_debit ?? journal?.total_amount ?? journal?.amount ?? 0);
-  const totalCredit = Number(journal?.total_credit ?? journal?.total_paid ?? 0);
-  const remainingAmount = Number(journal?.remaining_amount ?? (totalDebit - totalCredit));
   const hasBillings = billings.length > 0;
-  const canMarkPaid = canEdit && !isPaid && isBalanced && totalDebit > 0 && hasBillings;
+
+  // Akumulasi Pembayaran Dual: Debet & Kredit
+  const paidDebit = useMemo(() => {
+    if (primaryBilling?.paid_debit !== undefined) return Number(primaryBilling.paid_debit);
+    if (journal?.paid_debit !== undefined) return Number(journal.paid_debit);
+    return allPayments
+      .filter((p) => p.type === 'debit')
+      .reduce((sum, p) => sum + Number(p.amount || 0), 0);
+  }, [primaryBilling?.paid_debit, journal?.paid_debit, allPayments]);
+
+  const paidCredit = useMemo(() => {
+    if (primaryBilling?.paid_credit !== undefined) return Number(primaryBilling.paid_credit);
+    if (journal?.paid_credit !== undefined) return Number(journal.paid_credit);
+    return allPayments
+      .filter((p) => p.type === 'credit')
+      .reduce((sum, p) => sum + Number(p.amount || 0), 0);
+  }, [primaryBilling?.paid_credit, journal?.paid_credit, allPayments]);
+
+  const totalCredit = paidCredit;
+
+  // Sisa kewajiban dual payment:
+  // Sisa debit (Langkah 2: wajib lunas)
+  const remainingDebit = useMemo(() => {
+    if (primaryBilling?.remaining_payment !== undefined) return Number(primaryBilling.remaining_payment);
+    if (primaryBilling?.remaining_debit !== undefined) return Number(primaryBilling.remaining_debit);
+    if (journal?.remaining_payment !== undefined) return Number(journal.remaining_payment);
+    return Math.max(0, totalDebit - paidDebit);
+  }, [primaryBilling?.remaining_payment, primaryBilling?.remaining_debit, journal?.remaining_payment, totalDebit, paidDebit]);
+
+  // Sisa kredit (Langkah 3: opsional seimbang)
+  const remainingCredit = useMemo(() => {
+    if (primaryBilling?.dual_remaining_payment !== undefined) return Number(primaryBilling.dual_remaining_payment);
+    if (primaryBilling?.remaining_credit !== undefined) return Number(primaryBilling.remaining_credit);
+    if (journal?.dual_remaining_payment !== undefined) return Number(journal.dual_remaining_payment);
+    return Math.max(0, totalDebit - paidCredit);
+  }, [primaryBilling?.dual_remaining_payment, primaryBilling?.remaining_credit, journal?.dual_remaining_payment, totalDebit, paidCredit]);
+
+  // Status settled
+  const isDebitSettled = useMemo(() => {
+    if (primaryBilling?.is_original_settled !== undefined) return Boolean(primaryBilling.is_original_settled);
+    return remainingDebit <= 0 && totalDebit > 0;
+  }, [primaryBilling?.is_original_settled, remainingDebit, totalDebit]);
+
+  const isCreditSettled = useMemo(() => {
+    if (primaryBilling?.is_dual_settled !== undefined) return Boolean(primaryBilling.is_dual_settled);
+    return remainingCredit <= 0 && totalDebit > 0;
+  }, [primaryBilling?.is_dual_settled, remainingCredit, totalDebit]);
+
+  // Keseimbangan Jurnal: True jika kedua sisi (debit & kredit) telah lunas
+  const isBalanced = useMemo(() => {
+    if (journal?.is_balanced !== undefined) return Boolean(journal.is_balanced);
+    if (primaryBilling?.is_balanced !== undefined) return Boolean(primaryBilling.is_balanced);
+    return isDebitSettled && isCreditSettled;
+  }, [journal?.is_balanced, primaryBilling?.is_balanced, isDebitSettled, isCreditSettled]);
+
+  // Syarat Tandai Lunas:
+  // Berdasarkan alur 3 langkah dan dokumentasi API:
+  // Cukup pembayaran debet lunas (isDebitSettled). Sisi kredit bersifat opsional dan tidak memblokir posting status lunas.
+  const canMarkPaid = canEdit && !isPaid && isDebitSettled && hasBillings;
 
   const totalAmount = useMemo(() => {
     const rawBillingTotal = Number(primaryBilling?.total_amount ?? 0);
@@ -128,13 +184,18 @@ export default function GeneralJournalDetailView({ journalId }: Props) {
     if (!canEdit) return 'Anda tidak memiliki hak akses untuk mengubah status jurnal.';
     if (isPaid) return 'Jurnal ini sudah ditandai lunas.';
     if (!hasBillings) return 'Jurnal tidak dapat ditandai lunas tanpa item billing.';
-    if (!isBalanced || totalDebit <= 0) {
-      return `Jurnal belum seimbang (Debet: ${currenciesFormat(isUsd ? 'usd' : 'idr', totalDebit)}, Kredit: ${currenciesFormat(isUsd ? 'usd' : 'idr', totalCredit)}).`;
+    if (!isDebitSettled) {
+      return `Pembayaran debet sebesar ${currenciesFormat(isUsd ? 'usd' : 'idr', totalDebit)} wajib dilunasi terlebih dahulu (Sisa debet: ${currenciesFormat(isUsd ? 'usd' : 'idr', remainingDebit)}).`;
     }
     return '';
-  }, [canEdit, hasBillings, isBalanced, isPaid, isUsd, totalCredit, totalDebit]);
+  }, [canEdit, hasBillings, isDebitSettled, isPaid, isUsd, remainingDebit, totalDebit]);
 
   const backToList = () => void router.push(basePath);
+
+  const handleOpenAddPayment = (defaultType: 'debit' | 'credit' = 'debit') => {
+    setPaymentDialogType(defaultType);
+    setIsAddPaymentOpen(true);
+  };
 
   if (detailQuery.isLoading) {
     return (
@@ -186,18 +247,32 @@ export default function GeneralJournalDetailView({ journalId }: Props) {
           subtitle={
             <div className="flex flex-wrap items-center gap-2">
               <span className="font-semibold text-slate-800">{journal.code}</span>
+
+              {/* Status Lunas / Posting Badge */}
               <Badge
                 variant="outline"
                 className={cn(
                   'rounded-full px-2.5 py-0.5 font-semibold text-xs',
                   isPaid
-                    ? 'border-emerald-200 bg-emerald-50 text-emerald-700'
-                    : 'border-amber-200 bg-amber-50 text-amber-700',
+                    ? isBalanced
+                      ? 'border-emerald-200 bg-emerald-50 text-emerald-700'
+                      : 'border-amber-200 bg-amber-50 text-amber-700'
+                    : isDebitSettled
+                      ? 'border-blue-200 bg-blue-50 text-blue-700'
+                      : 'border-slate-200 bg-slate-100 text-slate-700',
                 )}
               >
                 {isPaid ? <CheckCircle2 className="mr-1 h-3.5 w-3.5" /> : null}
-                {isPaid ? 'Posted (Lunas)' : 'Draft (Belum Diposting)'}
+                {isPaid
+                  ? isBalanced
+                    ? 'Lunas & Seimbang'
+                    : 'Lunas (Belum Seimbang)'
+                  : isDebitSettled
+                    ? 'Debet Lunas (Siap Posting)'
+                    : 'Draft (Belum Lunas)'}
               </Badge>
+
+              {/* Status Keseimbangan (Balanced) Badge */}
               <Badge
                 variant="outline"
                 className={cn(
@@ -219,6 +294,8 @@ export default function GeneralJournalDetailView({ journalId }: Props) {
                   </>
                 )}
               </Badge>
+
+              {/* Mata Uang Badge */}
               <Badge
                 variant="outline"
                 className={cn(
@@ -235,7 +312,7 @@ export default function GeneralJournalDetailView({ journalId }: Props) {
           onBack={backToList}
           actions={
             <>
-              {/* Tombol Edit Jurnal */}
+              {/* Tombol Edit Jurnal (hanya sebelum diposting) */}
               {!isPaid && canEdit ? (
                 <Button
                   type="button"
@@ -248,16 +325,28 @@ export default function GeneralJournalDetailView({ journalId }: Props) {
                 </Button>
               ) : null}
 
-              {/* Tombol Tambah Akun Lawan (jika belum seimbang) */}
-              {!isPaid && canEdit && primaryBilling?.id && remainingAmount > 0 ? (
+              {/* Tombol Cepat: Bayar Debet (Wajib Lunas) */}
+              {canEdit && !isPaid && !isDebitSettled && primaryBilling?.id ? (
+                <Button
+                  type="button"
+                  onClick={() => handleOpenAddPayment('debit')}
+                  className="h-9 gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white"
+                >
+                  <Plus className="h-4 w-4" />
+                  Bayar Debet (Wajib)
+                </Button>
+              ) : null}
+
+              {/* Tombol Cepat: Bayar Kredit (Opsional Seimbang) */}
+              {canEdit && !(isPaid && isBalanced) && primaryBilling?.id && !isCreditSettled ? (
                 <Button
                   type="button"
                   variant="outline"
-                  onClick={() => setIsAddPaymentOpen(true)}
-                  className="h-9 gap-1.5 border-emerald-300 text-emerald-700 hover:bg-emerald-50 bg-white"
+                  onClick={() => handleOpenAddPayment('credit')}
+                  className="h-9 gap-1.5 border-rose-300 text-rose-700 hover:bg-rose-50 bg-white"
                 >
                   <Plus className="h-4 w-4" />
-                  Tambah Akun Lawan
+                  Bayar Kredit (Seimbang)
                 </Button>
               ) : null}
 
@@ -278,6 +367,7 @@ export default function GeneralJournalDetailView({ journalId }: Props) {
                 ) : (
                   <Tooltip>
                     <TooltipTrigger asChild>
+                      {/* PENTING: Bungkus span jika Button berpotensi disabled per file-instruction.md */}
                       <span className="inline-block">
                         <Button
                           type="button"
@@ -296,7 +386,9 @@ export default function GeneralJournalDetailView({ journalId }: Props) {
                     </TooltipTrigger>
                     <TooltipContent side="bottom" className="max-w-xs text-center text-xs">
                       {canMarkPaid
-                        ? 'Menandai jurnal sebagai lunas akan membukukan transaksi ke laporan keuangan dan mengunci rincian jurnal.'
+                        ? isBalanced
+                          ? 'Menandai jurnal sebagai lunas dan seimbang akan membukukan transaksi secara resmi ke Laporan Keuangan.'
+                          : 'Menandai jurnal sebagai lunas. Sisi kredit belum seimbang, namun Anda masih dapat melunasi kredit setelah ini.'
                         : markPaidDisabledReason}
                     </TooltipContent>
                   </Tooltip>
@@ -306,33 +398,41 @@ export default function GeneralJournalDetailView({ journalId }: Props) {
           }
         />
 
-        {/* Section 1: Detail Overview Cards (Informasi & Finansial) */}
+        {/* Section 1: Detail Overview Cards (Informasi & Informasi Nominal Jurnal) */}
         <GeneralJournalDetailCards
           journal={journal}
+          cashes={primaryBilling?.cashes ?? allCashes}
           isPaid={isPaid}
           isBalanced={isBalanced}
           isUsd={isUsd}
           totalDebit={totalDebit}
           totalCredit={totalCredit}
-          remainingAmount={remainingAmount}
+          paidDebit={paidDebit}
+          paidCredit={paidCredit}
+          remainingDebit={remainingDebit}
+          remainingCredit={remainingCredit}
+          isDebitSettled={isDebitSettled}
+          isCreditSettled={isCreditSettled}
           cashesCount={allCashes.length}
           paymentsCount={allPayments.length}
           proofUrl={proofUrl}
           onPreviewProof={(url) => setPreviewUrl(url)}
         />
 
-        {/* Section 2: Ayat Jurnal Umum Memorial Table */}
+        {/* Section 2: Tabel Pembayaran Jurnal Umum */}
         <GeneralJournalEntriesTable
           journal={journal}
-          cashes={allCashes}
           payments={allPayments}
           isPaid={isPaid}
           canEdit={canEdit}
           isUsd={isUsd}
           totalDebit={totalDebit}
           totalCredit={totalCredit}
-          remainingAmount={remainingAmount}
-          onAddPayment={() => setIsAddPaymentOpen(true)}
+          paidDebit={paidDebit}
+          paidCredit={paidCredit}
+          isDebitSettled={isDebitSettled}
+          isCreditSettled={isCreditSettled}
+          onAddPayment={(type) => handleOpenAddPayment(type || (isDebitSettled ? 'credit' : 'debit'))}
           onEditPayment={(payment) => {
             setSelectedPayment(payment);
             setIsPaymentEditOpen(true);
@@ -343,7 +443,7 @@ export default function GeneralJournalDetailView({ journalId }: Props) {
           }}
         />
 
-        {/* Dialog Tambah Pembayaran Kredit */}
+        {/* Dialog Tambah Pembayaran Dual (Debet / Kredit) */}
         {primaryBilling?.id ? (
           <BillingPaymentCreateDialog
             open={isAddPaymentOpen}
@@ -351,30 +451,39 @@ export default function GeneralJournalDetailView({ journalId }: Props) {
             billingId={primaryBilling.id}
             journalId={journal.id}
             totalAmount={totalAmount}
-            remainingAmount={remainingAmount > 0 ? remainingAmount : 0}
+            remainingDebit={remainingDebit}
+            remainingCredit={remainingCredit}
+            paidDebit={paidDebit}
+            paidCredit={paidCredit}
+            isPaid={isPaid}
+            defaultType={paymentDialogType}
             accounts={accountOptions}
             isAccountsLoading={accountQuery.isLoading}
             isUsd={isUsd}
           />
         ) : null}
 
-        {/* Dialog Edit Pembayaran Kredit */}
+        {/* Dialog Edit Pembayaran Dual */}
         <BillingPaymentEditDialog
           open={isPaymentEditOpen}
           onOpenChange={setIsPaymentEditOpen}
           payment={selectedPayment}
           journalId={journal.id}
           totalAmount={totalAmount}
+          remainingDebit={remainingDebit}
+          remainingCredit={remainingCredit}
+          isPaid={isPaid}
           accounts={accountOptions}
           isUsd={isUsd}
         />
 
-        {/* Dialog Hapus Pembayaran Kredit */}
+        {/* Dialog Hapus Pembayaran Dual */}
         <BillingPaymentDeleteDialog
           open={isPaymentDeleteOpen}
           onOpenChange={setIsPaymentDeleteOpen}
           payment={selectedPayment}
           journalId={journal.id}
+          isPaid={isPaid}
           isUsd={isUsd}
         />
 

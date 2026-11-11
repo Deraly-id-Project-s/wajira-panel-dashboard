@@ -1,5 +1,11 @@
 import { toast } from 'sonner';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { useToggleGeneralJournalPaidStatus } from '@/hooks/useGeneralJournal';
 import type { GeneralJournal, GeneralJournalListItem } from '@/@types/general-journal.types';
@@ -19,6 +25,7 @@ export default function ToggleGeneralJournalPostingDialog({
   targetStatus,
 }: Props) {
   const { mutateAsync: toggleStatus, isPending } = useToggleGeneralJournalPaidStatus();
+  const isBalanced = Boolean(data?.is_balanced);
 
   const handleToggle = async () => {
     if (!data) return;
@@ -27,7 +34,9 @@ export default function ToggleGeneralJournalPostingDialog({
       await toggleStatus({ id: data.id, isPaid: targetStatus });
       toast.success(
         targetStatus
-          ? `Jurnal umum ${data.code} berhasil ditandai lunas dan diposting ke Laporan Jurnal Umum.`
+          ? isBalanced
+            ? `Jurnal umum ${data.code} berhasil ditandai lunas dan seimbang.`
+            : `Jurnal umum ${data.code} berhasil ditandai lunas (sisi kredit masih dapat dibayar).`
           : `Status lunas jurnal umum ${data.code} berhasil dibatalkan (unposted).`,
       );
       onOpenChange(false);
@@ -39,26 +48,32 @@ export default function ToggleGeneralJournalPostingDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-sm rounded-md">
+      <DialogContent className="max-w-sm rounded-md p-6">
         <DialogHeader>
           <DialogTitle className="text-xl font-semibold text-slate-950">
             {targetStatus ? 'Tandai Lunas Jurnal Umum?' : 'Batal Tandai Lunas Jurnal?'}
           </DialogTitle>
           <DialogDescription className="text-sm text-slate-500 mt-2">
             {targetStatus ? (
-              <>
-                Jurnal <strong>{data?.code}</strong> akan ditandai lunas dan resmi dibukukan ke{' '}
-                <strong>Laporan Jurnal Umum</strong>. Form dan alokasi pembayaran akan terkunci (read-only).
-              </>
+              isBalanced ? (
+                <>
+                  Jurnal <strong>{data?.code}</strong> telah seimbang dan akan ditandai lunas serta resmi dibukukan ke{' '}
+                  <strong>Laporan Jurnal Umum</strong>. Form dan alokasi pembayaran akan terkunci penuh.
+                </>
+              ) : (
+                <>
+                  Jurnal <strong>{data?.code}</strong> akan ditandai lunas karena pembayaran debet telah terpenuhi. Sisi kredit belum seimbang, namun Anda tetap dapat menambahkan atau melunasi pembayaran kredit setelah status lunas ini aktif.
+                </>
+              )
             ) : (
               <>
-                Status lunas jurnal <strong>{data?.code}</strong> akan dibatalkan sehingga data dan alokasi pembayaran dapat diedit kembali.
+                Status lunas jurnal <strong>{data?.code}</strong> akan dibatalkan sehingga data jurnal dan alokasi pembayaran debet dapat diedit kembali.
               </>
             )}
           </DialogDescription>
         </DialogHeader>
 
-        <div className="flex justify-end gap-2 pt-4">
+        <div className="flex justify-end gap-2 pt-4 border-t border-slate-100">
           <Button
             type="button"
             variant="outline"

@@ -11,6 +11,9 @@ export interface GeneralJournalReportItem {
   payment_at: string;
   note?: string | null;
   payment_proof?: string | null;
+  is_paid?: boolean;
+  is_valid?: boolean;
+  is_balanced?: boolean;
   account?: {
     id: number;
     uuid?: string;
@@ -26,6 +29,7 @@ export interface GeneralJournalReportItem {
     date: string;
     is_paid: boolean;
     is_valid: boolean;
+    is_balanced?: boolean;
     amount?: number | string | null;
     amount_original?: number | string | null;
     is_usd_transaction?: boolean;

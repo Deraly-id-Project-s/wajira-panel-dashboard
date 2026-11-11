@@ -107,6 +107,7 @@ export const generalJournalSchema = z
 export const generalJournalBillingPaymentSchema = z.object({
   general_journal_billing_id: z.number({ required_error: 'Billing ID wajib ada' }).min(1),
   account_id: z.number({ required_error: 'Akun (COA) wajib dipilih' }).min(1, 'Akun (COA) wajib dipilih'),
+  type: z.enum(['debit', 'credit'], { required_error: 'Tipe pembayaran wajib dipilih' }).default('debit'),
   amount: z.number({ required_error: 'Nominal pembayaran wajib diisi' }).min(0.01, 'Nominal harus lebih dari 0'),
   amount_original: z.number().min(0).optional().nullable(),
   note: z.string().trim().optional().nullable(),

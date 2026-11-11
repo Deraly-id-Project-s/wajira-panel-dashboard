@@ -12,6 +12,7 @@ import {
 import type { Company } from '@/services/company.service';
 import type { Kas } from '@/@types/kas.types';
 import type { GeneralJournalFormValues } from '@/scheme/general-journal.schema';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { DatePicker } from '@/components/ui/date-picker';
 import { FileInput } from '@/components/ui/file-input';
@@ -92,6 +93,38 @@ export default function GeneralJournalForm({
     );
   }, [billings, kasOptions]);
 
+  // Active locked currency across the entire form based on selected cashes
+  const activeLockedCurrency = useMemo<'idr' | 'usd' | null>(() => {
+    for (const b of billings || []) {
+      for (const c of b?.cashes || []) {
+        const cid = Number(c?.cash_id);
+        if (cid && cid > 0) {
+          const k = kasOptions.find((opt) => Number(opt.id) === cid);
+          const curr = String(k?.currency_type || 'idr').toLowerCase();
+          return curr === 'usd' ? 'usd' : 'idr';
+        }
+      }
+    }
+    return null;
+  }, [billings, kasOptions]);
+
+  // Helper to determine the locked currency for a specific row based on all OTHER rows
+  const getOtherRowsLockedCurrency = (currentBIndex: number, currentCIndex: number): 'idr' | 'usd' | null => {
+    for (let b = 0; b < (billings?.length || 0); b++) {
+      const cashes = billings?.[b]?.cashes || [];
+      for (let c = 0; c < cashes.length; c++) {
+        if (b === currentBIndex && c === currentCIndex) continue;
+        const cid = Number(cashes[c]?.cash_id);
+        if (cid && cid > 0) {
+          const k = kasOptions.find((opt) => Number(opt.id) === cid);
+          const curr = String(k?.currency_type || 'idr').toLowerCase();
+          return curr === 'usd' ? 'usd' : 'idr';
+        }
+      }
+    }
+    return null;
+  };
+
   // Keep is_usd_transaction synchronized with whether any selected cash is USD
   useEffect(() => {
     form.setValue('is_usd_transaction', hasUsdCash, { shouldValidate: true, shouldDirty: true });
@@ -120,6 +153,14 @@ export default function GeneralJournalForm({
       isValid,
     };
   }, [billings]);
+
+  // Filter kasOptions to only matching currency when currency is locked
+  const availableMatchingKas = useMemo(() => {
+    if (!activeLockedCurrency) return kasOptions;
+    return kasOptions.filter(
+      (k) => String(k.currency_type || 'idr').toLowerCase() === activeLockedCurrency,
+    );
+  }, [kasOptions, activeLockedCurrency]);
 
   const formContent = (
     <div className="space-y-6">
@@ -213,7 +254,7 @@ export default function GeneralJournalForm({
           {billingFields.map((billingField, bIndex) => {
             const currentBillingCashes = billings?.[bIndex]?.cashes || [];
             const isMaxKasReached =
-              kasOptions.length > 0 && currentBillingCashes.length >= kasOptions.length;
+              availableMatchingKas.length > 0 && currentBillingCashes.length >= availableMatchingKas.length;
 
             return (
               <div
@@ -222,14 +263,31 @@ export default function GeneralJournalForm({
               >
                 {/* Multiple Cash Rows */}
                 <div className="space-y-3">
-                  <div className="flex items-center justify-between">
+                  <div className="flex flex-wrap items-center justify-between gap-2">
                     <div>
-                      <p className=" font-semibold text-slate-800 flex items-center gap-1.5">
-                        <Coins className="h-3.5 w-3.5 text-emerald-600" />
-                        Daftar Alokasi Kas / Bank
-                      </p>
-                      <p className="text-slate-400">
-                        Pilih kas/bank dan masukkan nominal transaksi (Posisi: {isCredit ? 'Kredit' : 'Debet'})
+                      <div className="flex items-center gap-2">
+                        <p className="font-semibold text-slate-800 flex items-center gap-1.5">
+                          <Coins className="h-3.5 w-3.5 text-emerald-600" />
+                          Daftar Alokasi Kas / Bank
+                        </p>
+                        {activeLockedCurrency && (
+                          <Badge
+                            variant="outline"
+                            className={cn(
+                              'text-[10px] font-semibold px-2 py-0.5 rounded-full',
+                              activeLockedCurrency === 'usd'
+                                ? 'border-blue-200 bg-blue-50 text-blue-700'
+                                : 'border-emerald-200 bg-emerald-50 text-emerald-700',
+                            )}
+                          >
+                            Mata Uang: {activeLockedCurrency.toUpperCase()}
+                          </Badge>
+                        )}
+                      </div>
+                      <p className="text-slate-400 text-xs mt-0.5">
+                        {activeLockedCurrency
+                          ? `Hanya kas bermata uang ${activeLockedCurrency.toUpperCase()} yang dapat dialokasikan (Posisi: ${isCredit ? 'Kredit' : 'Debet'})`
+                          : `Pilih kas/bank dan masukkan nominal transaksi (Posisi: ${isCredit ? 'Kredit' : 'Debet'})`}
                       </p>
                     </div>
 
@@ -239,7 +297,7 @@ export default function GeneralJournalForm({
                       size="sm"
                       onClick={() => {
                         const existingCashes = form.getValues(`billings.${bIndex}.cashes`) || [];
-                        if (kasOptions.length > 0 && existingCashes.length >= kasOptions.length) {
+                        if (availableMatchingKas.length > 0 && existingCashes.length >= availableMatchingKas.length) {
                           return;
                         }
                         const rawType = form.getValues('type');
@@ -262,10 +320,12 @@ export default function GeneralJournalForm({
                       }
                       title={
                         isMaxKasReached
-                          ? `Maksimal ${kasOptions.length} kas telah dipilih`
+                          ? activeLockedCurrency
+                            ? `Maksimal ${availableMatchingKas.length} kas ${activeLockedCurrency.toUpperCase()} telah dipilih`
+                            : `Maksimal ${kasOptions.length} kas telah dipilih`
                           : 'Tambah alokasi kas'
                       }
-                      className="h-7  gap-1 border-dashed border-emerald-400 text-emerald-700 hover:bg-emerald-50 disabled:cursor-not-allowed disabled:opacity-50"
+                      className="h-7 text-xs gap-1 border-dashed border-emerald-400 text-emerald-700 hover:bg-emerald-50 disabled:cursor-not-allowed disabled:opacity-50"
                     >
                       <Plus className="h-3.5 w-3.5" />
                       Tambah Kas
@@ -282,12 +342,15 @@ export default function GeneralJournalForm({
                       const rowCurrency: 'IDR' | 'USD' =
                         String(selectedCash?.currency_type || 'idr').toLowerCase() === 'usd' ? 'USD' : 'IDR';
 
+                      // Check locked currency from other rows
+                      const otherRowsCurrency = getOtherRowsLockedCurrency(bIndex, cIndex);
+
                       return (
                         <div
                           key={cIndex}
                           className="grid gap-3 sm:grid-cols-12 items-center rounded-md border border-slate-100 bg-slate-50/60 p-3 transition-colors hover:border-slate-200"
                         >
-                          {/* 1. Kas Selector (Unique across journal) */}
+                          {/* 1. Kas Selector (Unique across journal & matching currency_type) */}
                           <div className="sm:col-span-6 space-y-1">
                             <label className="text-xs font-semibold text-slate-700 flex items-center justify-between">
                               <span>
@@ -319,15 +382,20 @@ export default function GeneralJournalForm({
                                       Number(kas.id) !== Number(selectedCashId) &&
                                       selectedCashIds.has(Number(kas.id));
 
-                                    const kasCurrencyLabel = (kas.currency_type || 'idr').toUpperCase();
+                                    const kasCurrency = String(kas.currency_type || 'idr').toLowerCase();
+                                    const isCurrencyMismatched =
+                                      otherRowsCurrency !== null && kasCurrency !== otherRowsCurrency;
+                                    const isDisabled = isSelectedElsewhere || isCurrencyMismatched;
+
+                                    const kasCurrencyLabel = kasCurrency.toUpperCase();
 
                                     return (
                                       <SelectItem
                                         key={kas.id}
                                         value={String(kas.id)}
-                                        disabled={isSelectedElsewhere}
+                                        disabled={isDisabled}
                                         className={cn(
-                                          isSelectedElsewhere && 'opacity-50 cursor-not-allowed bg-slate-50',
+                                          isDisabled && 'opacity-50 cursor-not-allowed bg-slate-50',
                                         )}
                                       >
                                         <div className="flex items-center justify-between w-full gap-2">
@@ -335,7 +403,7 @@ export default function GeneralJournalForm({
                                             <span
                                               className={cn(
                                                 'font-medium',
-                                                isSelectedElsewhere ? 'text-slate-400' : 'text-slate-900',
+                                                isDisabled ? 'text-slate-400' : 'text-slate-900',
                                               )}
                                             >
                                               {kas.cash_name || kas.code}
@@ -347,6 +415,10 @@ export default function GeneralJournalForm({
                                           {isSelectedElsewhere ? (
                                             <span className="text-[10px] text-amber-700 font-medium whitespace-nowrap bg-amber-50 px-1.5 py-0.5 rounded border border-amber-200">
                                               Sudah dipilih
+                                            </span>
+                                          ) : isCurrencyMismatched ? (
+                                            <span className="text-[10px] text-rose-700 font-medium whitespace-nowrap bg-rose-50 px-1.5 py-0.5 rounded border border-rose-200">
+                                              Hanya {otherRowsCurrency.toUpperCase()}
                                             </span>
                                           ) : null}
                                         </div>

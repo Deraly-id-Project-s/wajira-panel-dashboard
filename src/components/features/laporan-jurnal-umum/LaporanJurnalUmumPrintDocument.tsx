@@ -135,19 +135,17 @@ export function LaporanJurnalUmumPrintDocument({
                 <table className="w-full table-fixed border-collapse text-[6pt] leading-tight text-slate-900">
                   <colgroup>
                     <col className="w-[8%]" />
+                    <col className="w-[18%]" />
+                    <col className="w-[16%]" />
+                    <col className="w-[30%]" />
                     <col className="w-[14%]" />
-                    <col className="w-[12%]" />
-                    <col className="w-[20%]" />
-                    <col className="w-[22%]" />
-                    <col className="w-[12%]" />
-                    <col className="w-[12%]" />
+                    <col className="w-[14%]" />
                   </colgroup>
                   <thead>
                     <tr className="text-white" style={{ backgroundColor: tableColor }}>
                       <th className="border border-white/30 px-1 py-1.5 text-center font-semibold uppercase">No</th>
                       <th className="border border-white/30 px-1.5 py-1.5 text-left font-semibold uppercase">No. Jurnal</th>
-                      <th className="border border-white/30 px-1.5 py-1.5 text-left font-semibold uppercase">Kode Akun</th>
-                      <th className="border border-white/30 px-1.5 py-1.5 text-left font-semibold uppercase">Nama Akun</th>
+                      <th className="border border-white/30 px-1.5 py-1.5 text-center font-semibold uppercase">Status</th>
                       <th className="border border-white/30 px-1.5 py-1.5 text-left font-semibold uppercase">Keterangan</th>
                       <th className="border border-white/30 px-1.5 py-1.5 text-right font-semibold uppercase">Debet (IDR)</th>
                       <th className="border border-white/30 px-1.5 py-1.5 text-right font-semibold uppercase">Kredit (IDR)</th>
@@ -165,11 +163,8 @@ export function LaporanJurnalUmumPrintDocument({
                         <td className="border border-slate-300 px-1.5 py-1 font-mono font-medium">
                           {item.general_journal?.code || '-'}
                         </td>
-                        <td className="border border-slate-300 px-1.5 py-1 font-mono">
-                          {item.account?.code || '-'}
-                        </td>
-                        <td className="border border-slate-300 px-1.5 py-1 truncate">
-                          {item.account?.name || '-'}
+                        <td className="border border-slate-300 px-1.5 py-1 text-center font-semibold text-[5.5pt]">
+                          {item.general_journal?.is_paid !== false ? 'LUNAS & SEIMBANG' : 'BELUM LUNAS'}
                         </td>
                         <td className="border border-slate-300 px-1.5 py-1 truncate">
                           {item.note || item.general_journal?.note || '-'}
@@ -184,7 +179,7 @@ export function LaporanJurnalUmumPrintDocument({
                     ))}
                     {isLastPage && data.length > 0 && (
                       <tr className="font-bold" style={{ backgroundColor: `${tableColor}14` }}>
-                        <td colSpan={5} className="border border-slate-400 px-1.5 py-1.5 text-right uppercase">
+                        <td colSpan={4} className="border border-slate-400 px-1.5 py-1.5 text-right uppercase">
                           Grand Total
                         </td>
                         <td className="border border-slate-400 px-1.5 py-1.5 text-right tabular-nums">

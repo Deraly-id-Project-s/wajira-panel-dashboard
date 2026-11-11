@@ -3,16 +3,15 @@ import {
   CalendarDays,
   Building2,
   FileText,
-  Wallet,
-  CreditCard,
-  Scale,
   Coins,
-  CheckCircle2,
-  AlertCircle,
   ExternalLink,
   Paperclip,
+  Calculator,
 } from 'lucide-react';
-import type { GeneralJournal } from '@/@types/general-journal.types';
+import type {
+  GeneralJournal,
+  GeneralJournalBillingCash,
+} from '@/@types/general-journal.types';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -22,14 +21,20 @@ import { cn } from '@/lib/utils';
 
 interface Props {
   journal: GeneralJournal;
+  cashes?: GeneralJournalBillingCash[];
   isPaid: boolean;
   isBalanced: boolean;
   isUsd: boolean;
   totalDebit: number;
   totalCredit: number;
-  remainingAmount: number;
-  cashesCount: number;
-  paymentsCount: number;
+  paidDebit?: number;
+  paidCredit?: number;
+  remainingDebit?: number;
+  remainingCredit?: number;
+  isDebitSettled?: boolean;
+  isCreditSettled?: boolean;
+  cashesCount?: number;
+  paymentsCount?: number;
   proofUrl?: string | null;
   onPreviewProof?: (url: string) => void;
 }
@@ -53,14 +58,14 @@ const isImageFile = (path?: string | null) => {
 
 export default function GeneralJournalDetailCards({
   journal,
+  cashes,
   isPaid,
   isBalanced,
   isUsd,
   totalDebit,
   totalCredit,
-  remainingAmount,
-  cashesCount,
-  paymentsCount,
+  remainingDebit = 0,
+  remainingCredit = 0,
   proofUrl,
   onPreviewProof,
 }: Props) {
@@ -68,10 +73,22 @@ export default function GeneralJournalDetailCards({
   const hasProof = Boolean(proofUrl || journal.payment_proof);
   const isProofAnImage = isImageFile(journal.payment_proof) || isImageFile(proofUrl);
 
+  const primaryBilling = journal?.billings?.[0];
+  const billingCashes: GeneralJournalBillingCash[] =
+    primaryBilling?.cashes && primaryBilling.cashes.length > 0
+      ? primaryBilling.cashes
+      : cashes && cashes.length > 0
+      ? cashes
+      : [];
+
+  // Nominal kredit setara dengan nominal debit transaksi (keseimbangan neraca)
+  const nominalDebit = totalDebit;
+  const nominalKredit = Number(journal?.total_credit ?? journal?.total_amount ?? journal?.amount ?? totalDebit);
+
   return (
     <div className="grid grid-cols-1 gap-6 lg:grid-cols-12 items-stretch">
-      {/* Kolom 1: Informasi Jurnal Umum (7 Kolom) */}
-      <div className="lg:col-span-7 flex flex-col">
+      {/* Kolom 1: Informasi Jurnal Umum (6 Kolom) */}
+      <div className="lg:col-span-6 flex flex-col">
         <Card className="rounded-md border-slate-200 shadow-xs flex-1 flex flex-col">
           <CardHeader className="border-b border-slate-100 py-3.5 px-5">
             <div className="flex items-center gap-2">
@@ -189,110 +206,140 @@ export default function GeneralJournalDetailCards({
         </Card>
       </div>
 
-      {/* Kolom 2: Status Finansial & Neraca Jurnal (5 Kolom) */}
-      <div className="lg:col-span-5 flex flex-col">
+      {/* Kolom 2: Informasi Nominal Jurnal (6 Kolom) */}
+      <div className="lg:col-span-6 flex flex-col">
         <Card className="rounded-md border-slate-200 shadow-xs flex-1 flex flex-col">
           <CardHeader className="border-b border-slate-100 py-3.5 px-5">
             <div className="flex items-center gap-2">
-              <Scale className="h-4 w-4 text-emerald-600" />
+              <Calculator className="h-4 w-4 text-slate-600" />
               <CardTitle className="text-sm font-semibold text-slate-900">
-                Neraca & Ringkasan Finansial
+                Informasi Nominal Jurnal
               </CardTitle>
             </div>
             <CardDescription className="text-xs text-slate-500">
-              Keseimbangan debet kas dan kredit pembayaran
+              Rincian nominal debit, nominal kredit, sisa pembayaran, dan status transaksi
             </CardDescription>
           </CardHeader>
 
           <CardContent className="p-5 flex-1 flex flex-col justify-between space-y-4">
-            {/* Box Debet & Kredit Side by Side */}
-            <div className="grid grid-cols-2 gap-3">
-              {/* Box Debet */}
-              <div className="rounded-md border border-emerald-100 bg-emerald-50/40 p-3.5">
-                <div className="flex items-center justify-between text-emerald-700">
-                  <span className="text-[11px] font-semibold uppercase tracking-wider">
-                    Debet (Kas)
-                  </span>
-                  <Wallet className="h-4 w-4 text-emerald-600" />
-                </div>
-                <p className="mt-1.5 text-base font-bold text-emerald-800 tabular-nums">
-                  {currenciesFormat(currency, totalDebit)}
-                </p>
-                <p className="mt-0.5 text-[11px] text-emerald-600">
-                  {cashesCount} akun kas teralokasi
-                </p>
-              </div>
+            {/* Grid Dinamis Kas: debit {cashes.name}, kredit {cashes.name}, serta sisa debit & sisa kredit */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+              {billingCashes.length > 0 ? (
+                billingCashes.map((c, idx) => {
+                  const cashName =
+                    c.cash?.cash_name ||
+                    c.cash?.name ||
+                    (c as any)?.name ||
+                    c.cash?.code ||
+                    `Kas #${idx + 1}`;
+                  const cashAmount = Number(c.amount || 0);
 
-              {/* Box Kredit */}
-              <div className="rounded-md border border-rose-100 bg-rose-50/40 p-3.5">
-                <div className="flex items-center justify-between text-rose-700">
-                  <span className="text-[11px] font-semibold uppercase tracking-wider">
-                    Kredit (Akun Lawan)
-                  </span>
-                  <CreditCard className="h-4 w-4 text-rose-600" />
-                </div>
-                <p className="mt-1.5 text-base font-bold text-rose-800 tabular-nums">
-                  {currenciesFormat(currency, totalCredit)}
-                </p>
-                <p className="mt-0.5 text-[11px] text-rose-600">
-                  {paymentsCount} alokasi pembayaran
-                </p>
-              </div>
-            </div>
+                  return (
+                    <React.Fragment key={c.id ?? idx}>
+                      {/* Debit {cashes.name} */}
+                      <div className="rounded-md border border-slate-200 bg-slate-50/70 p-3.5">
+                        <p
+                          className="text-xs font-medium uppercase tracking-wide text-slate-500 truncate"
+                          title={`Debit ${cashName}`}
+                        >
+                          Debit {cashName}
+                        </p>
+                        <p className="mt-1.5 text-base font-bold text-slate-900 tabular-nums">
+                          {currenciesFormat(currency, cashAmount)}
+                        </p>
+                      </div>
 
-            {/* Status Keseimbangan (Balanced vs Belum Seimbang) */}
-            <div
-              className={cn(
-                'rounded-md border p-3.5 transition-colors',
-                isBalanced && totalDebit > 0
-                  ? 'border-emerald-200 bg-emerald-50/60 text-emerald-800'
-                  : 'border-amber-200 bg-amber-50/60 text-amber-900',
-              )}
-            >
-              <div className="flex items-start gap-2.5">
-                {isBalanced && totalDebit > 0 ? (
-                  <CheckCircle2 className="h-5 w-5 text-emerald-600 shrink-0 mt-0.5" />
-                ) : (
-                  <AlertCircle className="h-5 w-5 text-amber-600 shrink-0 mt-0.5" />
-                )}
-                <div className="min-w-0 flex-1">
-                  <div className="flex items-center justify-between">
-                    <h4 className="text-xs font-bold uppercase tracking-wider">
-                      {isBalanced && totalDebit > 0
-                        ? 'Jurnal Seimbang (Balanced)'
-                        : 'Belum Seimbang (Selisih)'}
-                    </h4>
-                    <span className="text-xs font-semibold tabular-nums">
-                      {isBalanced && totalDebit > 0
-                        ? 'Selisih: 0'
-                        : `Sisa: ${currenciesFormat(currency, Math.max(0, remainingAmount))}`}
-                    </span>
+                      {/* Kredit {cashes.name} */}
+                      <div className="rounded-md border border-slate-200 bg-slate-50/70 p-3.5">
+                        <p
+                          className="text-xs font-medium uppercase tracking-wide text-slate-500 truncate"
+                          title={`Kredit ${cashName}`}
+                        >
+                          Kredit {cashName}
+                        </p>
+                        <p className="mt-1.5 text-base font-bold text-slate-900 tabular-nums">
+                          {currenciesFormat(currency, cashAmount)}
+                        </p>
+                      </div>
+                    </React.Fragment>
+                  );
+                })
+              ) : (
+                <>
+                  {/* Fallback jika data kas rincian kosong */}
+                  <div className="rounded-md border border-slate-200 bg-slate-50/70 p-3.5">
+                    <p className="text-xs font-medium uppercase tracking-wide text-slate-500">
+                      Nominal Debit
+                    </p>
+                    <p className="mt-1.5 text-base font-bold text-slate-900 tabular-nums">
+                      {currenciesFormat(currency, nominalDebit)}
+                    </p>
                   </div>
-                  <p className="mt-1 text-xs leading-relaxed opacity-90">
-                    {isBalanced && totalDebit > 0
-                      ? isPaid
-                        ? 'Jurnal telah diposting resmi ke Laporan Keuangan.'
-                        : 'Total debet dan kredit telah seimbang. Jurnal siap ditandai lunas (diposting).'
-                      : 'Total kas (debet) dan pembayaran akun lawan (kredit) belum seimbang. Tambahkan akun lawan hingga selisih bernilai 0.'}
-                  </p>
-                </div>
+
+                  <div className="rounded-md border border-slate-200 bg-slate-50/70 p-3.5">
+                    <p className="text-xs font-medium uppercase tracking-wide text-slate-500">
+                      Nominal Kredit
+                    </p>
+                    <p className="mt-1.5 text-base font-bold text-slate-900 tabular-nums">
+                      {currenciesFormat(currency, nominalKredit)}
+                    </p>
+                  </div>
+                </>
+              )}
+
+              {/* Sisa Nominal Debit */}
+              <div className="rounded-md border border-slate-200 bg-slate-50/70 p-3.5">
+                <p className="text-xs font-medium uppercase tracking-wide text-slate-500">
+                  Sisa Nominal Debit
+                </p>
+                <p
+                  className={cn(
+                    'mt-1.5 text-base font-bold tabular-nums',
+                    remainingDebit <= 0 ? 'text-emerald-700' : 'text-amber-700',
+                  )}
+                >
+                  {currenciesFormat(currency, remainingDebit)}
+                </p>
+              </div>
+
+              {/* Sisa Nominal Kredit */}
+              <div className="rounded-md border border-slate-200 bg-slate-50/70 p-3.5">
+                <p className="text-xs font-medium uppercase tracking-wide text-slate-500">
+                  Sisa Nominal Kredit
+                </p>
+                <p
+                  className={cn(
+                    'mt-1.5 text-base font-bold tabular-nums',
+                    remainingCredit <= 0 ? 'text-emerald-700' : 'text-rose-700',
+                  )}
+                >
+                  {currenciesFormat(currency, remainingCredit)}
+                </p>
               </div>
             </div>
 
-            {/* Status Posting Footer Info */}
-            <div className="flex items-center justify-between border-t border-slate-100 pt-3 text-xs text-slate-500">
-              <span>Status Transaksi:</span>
-              <Badge
-                variant="outline"
-                className={cn(
-                  'rounded-full px-2.5 py-0.5 font-semibold text-[11px]',
-                  isPaid
-                    ? 'border-emerald-200 bg-emerald-50 text-emerald-700'
-                    : 'border-amber-200 bg-amber-50 text-amber-700',
-                )}
-              >
-                {isPaid ? 'POSTED (LUNAS)' : 'DRAFT (BELUM DIPOSTING)'}
-              </Badge>
+            {/* 5. Informasi Status Transaksi (Lunas / Belum Lunas) */}
+            <div className="flex items-center justify-between border-t border-slate-100 pt-3 text-xs">
+              <span className="font-medium text-slate-500">Status Transaksi:</span>
+              <div className="flex items-center gap-2">
+                <Badge
+                  variant="outline"
+                  className={cn(
+                    'rounded-full px-3 py-1 font-semibold text-xs',
+                    isPaid
+                      ? isBalanced
+                        ? 'border-emerald-200 bg-emerald-50 text-emerald-700'
+                        : 'border-amber-200 bg-amber-50 text-amber-700'
+                      : 'border-rose-200 bg-rose-50 text-rose-700',
+                  )}
+                >
+                  {isPaid
+                    ? isBalanced
+                      ? 'Lunas (Seimbang)'
+                      : 'Lunas (Belum Seimbang)'
+                    : 'Belum Lunas'}
+                </Badge>
+              </div>
             </div>
           </CardContent>
         </Card>

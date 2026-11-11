@@ -31,10 +31,18 @@ export interface GeneralJournalBillingPayment {
   id?: number;
   general_journal_billing_id: number;
   account_id: number;
+  type?: 'debit' | 'credit';
   amount: number | string;
   amount_original?: number | string;
   note?: string | null;
   transaction_proof?: string | null;
+  paid_debit?: number;
+  paid_credit?: number;
+  remaining_payment?: number;
+  dual_remaining_payment?: number;
+  is_balanced?: boolean;
+  is_paid?: boolean;
+  is_valid?: boolean;
   created_at?: string;
   updated_at?: string;
   account?: MasterAccount;
@@ -49,9 +57,20 @@ export interface GeneralJournalBilling {
   note?: string | null;
   is_paid?: boolean;
   is_valid?: boolean;
+  original_direction?: 'debit' | 'credit';
+  dual_direction?: 'credit' | 'debit';
   total_amount?: number;
+  paid_debit?: number;
+  paid_credit?: number;
   total_paid?: number;
+  remaining_debit?: number;
+  remaining_credit?: number;
+  remaining_payment?: number;
+  dual_remaining_payment?: number;
   remaining_amount?: number;
+  is_original_settled?: boolean;
+  is_dual_settled?: boolean;
+  is_balanced?: boolean;
   cashes?: GeneralJournalBillingCash[];
   payments?: GeneralJournalBillingPayment[];
   created_at?: string;
@@ -73,6 +92,10 @@ export interface GeneralJournal {
   is_valid: boolean;
   total_amount?: number;
   total_paid?: number;
+  paid_debit?: number;
+  paid_credit?: number;
+  remaining_payment?: number;
+  dual_remaining_payment?: number;
   remaining_amount?: number;
   total_debit: number;
   total_credit: number;
@@ -156,6 +179,7 @@ export interface GeneralJournalPayload {
 export interface GeneralJournalBillingPaymentPayload {
   general_journal_billing_id: number;
   account_id: number;
+  type?: 'debit' | 'credit';
   amount: number;
   amount_original?: number;
   note?: string | null;
@@ -164,6 +188,7 @@ export interface GeneralJournalBillingPaymentPayload {
 
 export interface GeneralJournalBillingPaymentUpdatePayload {
   account_id?: number;
+  type?: 'debit' | 'credit';
   amount?: number;
   amount_original?: number;
   note?: string | null;

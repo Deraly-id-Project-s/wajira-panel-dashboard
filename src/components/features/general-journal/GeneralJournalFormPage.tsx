@@ -145,6 +145,23 @@ export default function GeneralJournalFormPage({ mode }: Props) {
   }, [journalDetail, kasOptions, form, mode]);
 
   const handleSubmit = async (values: GeneralJournalFormValues) => {
+    // Prohibit mixed currency types across allocated cashes
+    const selectedCurrencies = new Set<string>();
+    values.billings.forEach((b) => {
+      (b.cashes || []).forEach((c) => {
+        const cid = Number(c.cash_id);
+        if (cid && cid > 0) {
+          const k = kasOptions.find((opt) => Number(opt.id) === cid);
+          selectedCurrencies.add(String(k?.currency_type || 'idr').toLowerCase());
+        }
+      });
+    });
+
+    if (selectedCurrencies.size > 1) {
+      toast.error('Semua alokasi kas harus memiliki mata uang yang sama (hanya IDR atau hanya USD)');
+      return;
+    }
+
     const hasUsdCash = values.billings.some((b) =>
       (b.cashes || []).some((c) => {
         const k = kasOptions.find((opt) => Number(opt.id) === Number(c.cash_id));
