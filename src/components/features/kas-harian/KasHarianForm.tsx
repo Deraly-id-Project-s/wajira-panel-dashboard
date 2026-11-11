@@ -158,7 +158,6 @@ export default function KasHarianForm({
                 append({
                   cash_id: 0,
                   amount: 0,
-                  conversion_amount: undefined,
                   type: firstRowType,
                 });
               }}
@@ -183,7 +182,7 @@ export default function KasHarianForm({
                 >
                   <div className="grid grid-cols-1 md:grid-cols-12 gap-4 items-start">
                     {/* Data Kas */}
-                    <div className={isUsdCash ? 'md:col-span-4' : 'md:col-span-5'}>
+                    <div className="md:col-span-5">
                       <FormField
                         control={form.control}
                         name={`cash_flow_cashes.${index}.cash_id`}
@@ -311,7 +310,7 @@ export default function KasHarianForm({
                     </div>
 
                     {/* Nominal */}
-                    <div className={isUsdCash ? 'md:col-span-2' : 'md:col-span-3'}>
+                    <div className="md:col-span-3">
                       <FormField
                         control={form.control}
                         name={`cash_flow_cashes.${index}.amount`}
@@ -335,34 +334,6 @@ export default function KasHarianForm({
                         )}
                       />
                     </div>
-
-                    {/* Nominal Konversi (Hanya jika currency == USD) */}
-                    {isUsdCash ? (
-                      <div className="md:col-span-2">
-                        <FormField
-                          control={form.control}
-                          name={`cash_flow_cashes.${index}.conversion_amount`}
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel className="text-xs font-medium text-slate-700">
-                                Konversi (IDR)
-                              </FormLabel>
-                              <FormControl>
-                                <MoneyInput
-                                  currency="IDR"
-                                  value={field.value ?? 0}
-                                  onChangeValue={(val) => field.onChange(val)}
-                                  disabled={isBusy}
-                                  placeholder="0"
-                                  className="h-10 bg-white"
-                                />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                      </div>
-                    ) : null}
 
                     {/* Tombol Hapus Baris */}
                     <div className="flex md:h-10 items-end justify-end md:col-span-1">

@@ -32,7 +32,6 @@ const emptyValues = (companyId: number): KasHarianFormInput => ({
     {
       cash_id: 0,
       amount: 0,
-      conversion_amount: undefined,
       type: 'debet',
     },
   ],
