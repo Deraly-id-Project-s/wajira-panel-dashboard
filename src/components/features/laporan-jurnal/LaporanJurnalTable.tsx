@@ -1,8 +1,10 @@
 import { useMemo } from 'react';
+import { useRouter } from 'next/router';
 import BaseTable, { ColumnDef } from '@/components/ui/base-table';
 import { TableCell, TableRow } from '@/components/ui/table';
 import { CopyBox } from '@/components/ui/copy-box';
 import { TextTruncate } from '@/components/ui/text-truncate';
+import { ReferenceLink } from '@/components/ui/reference-link';
 import { currenciesFormat } from '@/components/ui/currenciesFormat';
 import { formatDate } from '@/lib/utils/format';
 import { JournalReportItem } from '@/@types/journal-report.types';
@@ -31,6 +33,9 @@ export function LaporanJurnalTable({
   meta,
   onPageChange,
 }: LaporanJurnalTableProps) {
+  const router = useRouter();
+  const slug = typeof router.query.slug === 'string' ? router.query.slug : '';
+
   const totals = useMemo(
     () =>
       data.reduce(
@@ -72,12 +77,21 @@ export function LaporanJurnalTable({
         sortable: true,
         alignment: 'left',
         cell: (item) => {
-          const type = item.account?.type == 'credit' ? 'KREDIT' : 'DEBIT';
           const name = item.account?.name;
-          if (type && name) {
-            return `[${type}] ${name}`;
-          }
-          return name || '-';
+          if (!name) return '-';
+
+          const type = item.account?.type == 'credit' ? 'KREDIT' : 'DEBIT';
+          const label = type ? `[${type}] ${name}` : name;
+          const searchParam = item.account?.code || name;
+          const href = slug
+            ? `/dashboard/${slug}/master/account?search=${encodeURIComponent(searchParam)}`
+            : `/master/account?search=${encodeURIComponent(searchParam)}`;
+
+          return (
+            <ReferenceLink target="_blank" href={href}>
+              {label}
+            </ReferenceLink>
+          );
         },
       },
       {
@@ -88,7 +102,7 @@ export function LaporanJurnalTable({
         cell: (item) => <TextTruncate text={item.note || '-'} maxLength={32} />,
       },
       {
-        header: 'Jenis Transaksi',
+        header: 'Keterangan Jurnal',
         accessorKey: 'cash_flow.note',
         sortable: true,
         alignment: 'left',
@@ -117,7 +131,7 @@ export function LaporanJurnalTable({
         ),
       },
     ],
-    [],
+    [slug],
   );
 
   const footer = (

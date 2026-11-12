@@ -141,7 +141,7 @@ export function LaporanJurnalPrintDocument({
                   </colgroup>
                   <thead>
                     <tr className="text-white" style={{ backgroundColor: tableColor }}>
-                      {['Tanggal', 'Kode Transaksi', 'Kode Akun', 'Nama Akun', 'Keterangan', 'Jenis Transaksi', 'Debit', 'Kredit'].map((label) => (
+                      {['Tanggal', 'Kode Transaksi', 'Kode Akun', 'Nama Akun', 'Keterangan', 'Keterangan Jurnal', 'Debit', 'Kredit'].map((label) => (
                         <th key={label} className="border border-white/30 px-1.5 py-1.5 text-left font-semibold uppercase tracking-wide last:text-right">
                           {label}
                         </th>
