@@ -17,7 +17,7 @@ import SearchVehicleModal from '@/components/features/vehicle/SearchVehicleModal
 import BaseTable, { ColumnDef } from '@/components/ui/base-table';
 import { CopyBox } from '@/components/ui/copy-box';
 import { ReferenceLink } from '@/components/ui/reference-link';
-import { formatDate } from '@/lib/utils/format';
+import { formatDate } from '@/components/ui/format-date';
 import {
   isUnitUsdTransaction,
   getUnitTransactionBrutoUsd,

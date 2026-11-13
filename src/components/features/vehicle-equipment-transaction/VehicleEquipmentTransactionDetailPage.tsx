@@ -32,7 +32,7 @@ import {
 import { useCreateWarehouseActivity } from '@/hooks/useWarehouseActivity';
 import { usePermissionGuard } from '@/hooks/usePermissionGuard';
 import { currenciesFormat } from '@/components/ui/currenciesFormat';
-import { formatDate } from '@/lib/utils/format';
+import { formatDate } from '@/components/ui/format-date';
 import { cn } from '@/lib/utils';
 
 interface VehicleEquipmentTransactionDetailPageProps {

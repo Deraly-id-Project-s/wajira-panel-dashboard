@@ -39,6 +39,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { currenciesFormat } from '@/components/ui/currenciesFormat';
 import { ReferenceLink } from '@/components/ui/reference-link';
+import { formatDate } from '@/components/ui/format-date';
 import { useCompany } from '@/contexts/CompanyContext';
 import { useKas } from '@/hooks/useKas';
 import { useAccounts } from '@/hooks/useAccount';
@@ -53,13 +54,6 @@ interface FinanceRefundDetailPageViewProps {
   id: string | number;
   transactionType: RefundTransactionType;
 }
-
-const formatDate = (value?: string) => {
-  if (!value) return '-';
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return value;
-  return date.toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' });
-};
 
 interface BillingFormState {
   cash_id: number;

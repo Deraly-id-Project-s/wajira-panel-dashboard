@@ -9,7 +9,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { useRouter } from 'next/router';
 import { ReferenceLink } from '@/components/ui/reference-link';
 import { currenciesFormat } from '@/components/ui/currenciesFormat';
-import { formatDate } from '@/lib/utils/format';
+import { formatDate } from '@/components/ui/format-date';
 
 interface DoInvoiceTableProps {
   data: DoInvoice[];

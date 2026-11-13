@@ -8,6 +8,7 @@ import type { LiabilityListItem, LiabilityListMeta } from '@/types/pembayaran-hu
 import BaseTable, { ColumnDef } from '@/components/ui/base-table';
 import { CopyBox } from '@/components/ui/copy-box';
 import { ReferenceLink } from '@/components/ui/reference-link';
+import { formatDate } from '@/components/ui/format-date';
 
 interface Props {
   data: LiabilityListItem[];
@@ -22,13 +23,6 @@ interface Props {
   onPageChange?: (value: number) => void;
   onRetry?: () => void;
 }
-
-const formatDate = (value: string) => {
-  if (!value) return '-';
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return value;
-  return date.toLocaleDateString('id-ID');
-};
 
 export default function DataPiutangTable({ data, meta, loading, error, search, perPage, currentPage, onSearchChange, onPerPageChange, onPageChange, onRetry }: Props) {
   const router = useRouter();

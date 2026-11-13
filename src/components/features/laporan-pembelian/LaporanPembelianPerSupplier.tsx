@@ -1,10 +1,9 @@
 import { useMemo } from 'react';
 import { PurchaseTransactionItem } from '@/services/laporan-pembelian.service';
-import { format } from 'date-fns';
-import { id } from 'date-fns/locale';
 import BaseTable, { ColumnDef } from '@/components/ui/base-table';
 import { CopyBox } from '@/components/ui/copy-box';
 import { ReferenceLink } from '@/components/ui/reference-link';
+import { formatDate } from '@/components/ui/format-date';
 import { useRouter } from 'next/router';
 
 interface Props {
@@ -15,10 +14,6 @@ interface Props {
 }
 
 const formatCurrency = (val: number) => `Rp ${Number(val).toLocaleString('id-ID')}`;
-const formatDate = (date: string) => {
-  const parsed = new Date(date);
-  return Number.isNaN(parsed.getTime()) ? '-' : format(parsed, 'dd MMMM yyyy', { locale: id });
-};
 
 export default function LaporanPembelianPerSupplier({ data, pagination, isLoading, onPageChange }: Props) {
   const router = useRouter();

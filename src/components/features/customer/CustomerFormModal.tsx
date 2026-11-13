@@ -106,7 +106,7 @@ export function CustomerFormModal({
           render={({ field }) => (
             <FormItem>
               <FormLabel className="text-sm font-medium text-gray-700">
-                NPWP<RequiredMark />
+                NPWP
               </FormLabel>
               <FormControl>
                 <Input

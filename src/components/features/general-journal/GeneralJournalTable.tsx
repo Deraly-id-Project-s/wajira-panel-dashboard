@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
-import { format } from 'date-fns';
 import { MoreVertical, CheckCircle2, AlertCircle } from 'lucide-react';
+import { formatDate } from '@/components/ui/format-date';
 import type { GeneralJournalListItem } from '@/@types/general-journal.types';
 import type { PaginationMeta } from '@/@types/pagination.types';
 import { Badge } from '@/components/ui/badge';
@@ -23,11 +23,6 @@ interface Props {
   canEdit?: boolean;
   canDelete?: boolean;
 }
-
-const formatDate = (value: string) => {
-  const parsed = new Date(value);
-  return Number.isNaN(parsed.getTime()) ? value : format(parsed, 'dd MMM yyyy');
-};
 
 export default function GeneralJournalTable({
   data,

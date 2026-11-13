@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import BaseTable, { ColumnDef } from '@/components/ui/base-table';
+import { formatDate } from '@/components/ui/format-date';
 import type { MaterialTransaction } from '@/@types/material-transaction.types';
 
 interface PurchaseMaterialTableProps {
@@ -18,13 +19,6 @@ interface PurchaseMaterialTableProps {
   counterpartyHeader?: string;
   routeBasePath?: string;
 }
-
-const formatDate = (value?: string) => {
-  if (!value) return '-';
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return value;
-  return date.toLocaleDateString('id-ID');
-};
 
 const formatCurrency = (value: number) => {
   if (!value) return '-';

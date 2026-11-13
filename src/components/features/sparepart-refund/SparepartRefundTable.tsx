@@ -7,7 +7,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import BaseTable, { ColumnDef } from '@/components/ui/base-table';
 import { CopyBox } from '@/components/ui/copy-box';
 import { currenciesFormat } from '@/components/ui/currenciesFormat';
-import { formatDate } from '@/lib/utils/format';
+import { formatDate } from '@/components/ui/format-date';
 import type { SparepartTransactionRefund } from '@/@types/sparepart-refund.types';
 
 interface Props {

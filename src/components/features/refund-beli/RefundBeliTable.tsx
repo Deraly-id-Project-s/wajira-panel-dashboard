@@ -9,6 +9,7 @@ import FinanceRefundApprovalModal from './FinanceRefundApprovalModal';
 import BaseTable, { ColumnDef } from '@/components/ui/base-table';
 import { CopyBox } from '@/components/ui/copy-box';
 import { ReferenceLink } from '@/components/ui/reference-link';
+import { formatDate } from '@/components/ui/format-date';
 import { useRouter } from 'next/router';
 
 interface Props {
@@ -23,12 +24,6 @@ interface Props {
   onSort: (key: keyof RefundBeli) => void;
   onPageChange: (page: number) => void;
 }
-
-const formatDate = (value: string) => {
-  if (!value) return '-';
-  const parsed = new Date(value);
-  return Number.isNaN(parsed.getTime()) ? value : parsed.toLocaleDateString('id-ID');
-};
 
 export default function RefundBeliTable({
   data,

@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { MoreVertical, Settings } from 'lucide-react';
 import { currenciesFormat } from '@/components/ui/currenciesFormat';
-import { formatDateUI } from '@/lib/utils/date';
+import { formatDate } from '@/components/ui/format-date';
 import BaseTable, { ColumnDef } from '@/components/ui/base-table';
 import { CopyBox } from '@/components/ui/copy-box';
 import { ReferenceLink } from '@/components/ui/reference-link';
@@ -34,13 +34,6 @@ interface Props {
   onSortChange: (sortBy: string) => void;
   onPageChange: (page: number) => void;
 }
-
-const formatDate = (value: string | null) => {
-  if (!value) return '-';
-
-  const parsed = new Date(value);
-  return Number.isNaN(parsed.getTime()) ? value : formatDateUI(parsed);
-};
 
 const renderStatusBadge = (hasValue: boolean, readyLabel: string, emptyLabel: string) => (
   <Badge className={hasValue ? 'bg-emerald-100 text-emerald-700 hover:bg-emerald-100 shadow-none' : 'bg-amber-100 text-amber-700 hover:bg-amber-100 shadow-none'}>

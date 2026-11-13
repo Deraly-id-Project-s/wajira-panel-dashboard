@@ -1,12 +1,11 @@
 import React, { useMemo } from 'react';
-import { format } from 'date-fns';
-import { id } from 'date-fns/locale';
 import type { CashFlowReportItem } from '@/@types/cash-flow-report.types';
 import BaseTable, { ColumnDef } from '@/components/ui/base-table';
 import { TableRow, TableCell } from '@/components/ui/table';
 import { TextTruncate } from '@/components/ui/text-truncate';
 import { CopyBox } from '@/components/ui/copy-box';
 import { currenciesFormat } from '@/components/ui/currenciesFormat';
+import { formatDate } from '@/components/ui/format-date';
 
 export interface LaporanKasTableProps {
   data: CashFlowReportItem[];
@@ -21,13 +20,6 @@ export interface LaporanKasTableProps {
   sortOrder?: 'asc' | 'desc';
   isLoading?: boolean;
 }
-
-const formatDate = (dateString?: string | null) => {
-  if (!dateString) return '-';
-  const date = new Date(dateString);
-  if (Number.isNaN(date.getTime())) return dateString;
-  return format(date, 'dd MMM yyyy', { locale: id });
-};
 
 export function LaporanKasTable({
   data,

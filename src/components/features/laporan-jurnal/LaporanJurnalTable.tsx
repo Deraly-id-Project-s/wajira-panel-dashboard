@@ -6,7 +6,7 @@ import { CopyBox } from '@/components/ui/copy-box';
 import { TextTruncate } from '@/components/ui/text-truncate';
 import { ReferenceLink } from '@/components/ui/reference-link';
 import { currenciesFormat } from '@/components/ui/currenciesFormat';
-import { formatDate } from '@/lib/utils/format';
+import { formatDate } from '@/components/ui/format-date';
 import { JournalReportItem } from '@/@types/journal-report.types';
 
 interface LaporanJurnalTableProps {

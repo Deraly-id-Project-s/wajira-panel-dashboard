@@ -14,7 +14,7 @@ import { cn } from '@/lib/utils';
 import BaseTable, { ColumnDef } from '@/components/ui/base-table';
 import { CopyBox } from '@/components/ui/copy-box';
 import { ReferenceLink } from '@/components/ui/reference-link';
-import { formatDate } from '@/lib/utils/format';
+import { formatDate } from '@/components/ui/format-date';
 import { useSuppliers } from '@/hooks/useSupplier';
 import { useSpareparts } from '@/hooks/useSparepart';
 import { useUpdateSparepartTransactionBillingPaymentStatus } from '@/hooks/useSparepartTransaction';

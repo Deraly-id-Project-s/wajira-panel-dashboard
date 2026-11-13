@@ -5,8 +5,7 @@ import { Button } from '@/components/ui/button';
 import BaseTable, { ColumnDef } from '@/components/ui/base-table';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import type { GoodsIssueEquipment } from '@/@types/goods-issue-equipment.types';
-import { format } from 'date-fns';
-import { id } from 'date-fns/locale';
+import { formatDate } from '@/components/ui/format-date';
 
 interface GoodsIssueEquipmentTableProps {
   data: GoodsIssueEquipment[];
@@ -15,13 +14,6 @@ interface GoodsIssueEquipmentTableProps {
   onUploadInvoice: (item: GoodsIssueEquipment) => void;
   onDelete: (item: GoodsIssueEquipment) => void;
 }
-
-const formatDate = (value?: string) => {
-  if (!value) return '-';
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return value;
-  return format(date, 'dd MMMM yyyy', { locale: id });
-};
 
 const getCategoryLabel = (category: string) => {
   if (category === 'equipped') return 'Perlengkapan Armada';

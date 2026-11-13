@@ -14,14 +14,8 @@ import { useQueryParamsTable } from '@/hooks/useQueryParamsTable';
 import { LoadingState } from '@/components/ui/loading-state';
 import { currenciesFormat } from '@/components/ui/currenciesFormat';
 import { CopyBox } from '@/components/ui/copy-box';
+import { formatDate } from '@/components/ui/format-date';
 import { usePermissionGuard } from '@/hooks/usePermissionGuard';
-
-const formatDate = (value?: string) => {
-  if (!value) return '-';
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return value;
-  return date.toLocaleDateString('id-ID');
-};
 
 export default function SalesRefundPageContent({ transactionId }: { transactionId: string }) {
   const router = useRouter();

@@ -11,8 +11,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { format } from 'date-fns';
-import { id } from 'date-fns/locale';
+import { formatDate } from '@/components/ui/format-date';
 import { ReferenceLink } from '@/components/ui/reference-link';
 import { CopyBox } from '@/components/ui/copy-box';
 import { Badge } from '@/components/ui/badge';
@@ -43,13 +42,6 @@ interface Props {
   canEdit: boolean;
   canDelete: boolean;
 }
-
-const formatDate = (value: string): string => {
-  if (!value) return '-';
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return value;
-  return format(date, 'dd MMMM yyyy', { locale: id });
-};
 
 export default function PengeluaranUnitTable({
   data,

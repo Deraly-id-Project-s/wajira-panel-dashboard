@@ -89,7 +89,7 @@ export function SupplierFormDialog({ open, onOpenChange, form, onSubmit, title, 
                 name="npwp"
                 render={({ field }) => (
                   <FormItem className="space-y-2">
-                    <FormLabel className="text-[14px] font-medium text-[#171717]">Nomer NPWP</FormLabel>
+                    <FormLabel className="text-[14px] font-medium text-[#171717]">NPWP</FormLabel>
                     <FormControl>
                       <Input
                         placeholder="Tambahkan NPWP"

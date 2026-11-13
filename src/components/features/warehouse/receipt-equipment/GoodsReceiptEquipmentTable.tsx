@@ -5,7 +5,8 @@ import { Button } from '@/components/ui/button';
 import BaseTable, { ColumnDef } from '@/components/ui/base-table';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import type { GoodsReceiptEquipment } from '@/@types/goods-receipt-equipment.types';
-import { formatDate, formatCurrency, getReceiptBilling } from './goodsReceiptEquipment.utils';
+import { formatCurrency, getReceiptBilling } from './goodsReceiptEquipment.utils';
+import { formatDate } from '@/components/ui/format-date';
 
 interface GoodsReceiptEquipmentTableProps {
   data: GoodsReceiptEquipment[];

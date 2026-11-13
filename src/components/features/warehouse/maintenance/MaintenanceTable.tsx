@@ -2,8 +2,7 @@ import { useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import BaseTable, { ColumnDef } from '@/components/ui/base-table';
 import type { MaintenanceItem } from '@/@types/maintenance.types';
-import { format } from 'date-fns';
-import { id } from 'date-fns/locale';
+import { formatDate } from '@/components/ui/format-date';
 
 interface MaintenanceTableProps {
   data: MaintenanceItem[];
@@ -11,13 +10,6 @@ interface MaintenanceTableProps {
   onViewDetail: (item: MaintenanceItem) => void;
   startIndex: number;
 }
-
-const formatDate = (value?: string) => {
-  if (!value) return '-';
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return value;
-  return format(date, 'dd MMMM yyyy', { locale: id });
-};
 
 export function MaintenanceTable({
   data,

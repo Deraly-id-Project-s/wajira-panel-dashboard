@@ -2,8 +2,8 @@ import { useMemo } from 'react';
 import type { WithholdingTaxItem, WithholdingTaxListResponse } from '@/@types/withholding-tax.types';
 import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { format } from 'date-fns';
 import { Eye, Edit, Trash2, MoreVertical } from 'lucide-react';
+import { formatDate } from '@/components/ui/format-date';
 import { CopyBox } from '@/components/ui/copy-box';
 import BaseTable, { ColumnDef } from '@/components/ui/base-table';
 import { currenciesFormat } from '@/components/ui/currenciesFormat';
@@ -23,12 +23,6 @@ interface Props {
   currentSortBy?: string;
   currentSortDirection?: 'asc' | 'desc';
 }
-
-const formatDate = (value: string | null | undefined) => {
-  if (!value) return '-';
-  const parsed = new Date(value);
-  return Number.isNaN(parsed.getTime()) ? value : format(parsed, 'dd/MM/yyyy');
-};
 
 export default function WithholdingTaxTable({
   data,

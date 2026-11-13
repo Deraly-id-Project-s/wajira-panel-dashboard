@@ -7,7 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { CheckCircle2, Lock, MoreVertical, Pencil, Trash } from 'lucide-react';
 import { currenciesFormat } from '@/components/ui/currenciesFormat';
 import type { TarifPriceVersion } from '@/@types/tarif-price-version.types';
-import { formatDate } from '@/lib/utils/format';
+import { formatDate } from '@/components/ui/format-date';
 
 interface Props {
   data: TarifPriceVersion[];

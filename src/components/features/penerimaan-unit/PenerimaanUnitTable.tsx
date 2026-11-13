@@ -12,8 +12,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { MoreVertical, Pencil } from 'lucide-react';
-import { format } from 'date-fns';
-import { id } from 'date-fns/locale';
+import { formatDate } from '@/components/ui/format-date';
 import { CopyBox } from '@/components/ui/copy-box';
 import { ReferenceLink } from '@/components/ui/reference-link';
 import { Badge } from '@/components/ui/badge';
@@ -91,13 +90,6 @@ export default function PenerimaanUnitTable({
     const s = state?.toLowerCase();
     const cleanState = s === 'draft' || s === 'process' || s === 'done' ? (s as 'draft' | 'process' | 'done') : 'draft';
     setEditingActivity({ id: activityId, state: cleanState, state_note: stateNote });
-  };
-
-  const formatDate = (val?: string) => {
-    if (!val) return '-';
-    const date = new Date(val);
-    if (Number.isNaN(date.getTime())) return val;
-    return format(date, 'dd MMMM yyyy', { locale: id });
   };
 
   const columns: ColumnDef<PenerimaanUnit>[] = [

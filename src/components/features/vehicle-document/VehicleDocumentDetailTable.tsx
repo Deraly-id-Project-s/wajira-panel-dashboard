@@ -1,8 +1,8 @@
 import { useMemo } from 'react';
-import { format } from 'date-fns';
 import { Pencil } from 'lucide-react';
 import BaseTable, { ColumnDef } from '@/components/ui/base-table';
 import { Button } from '@/components/ui/button';
+import { formatDate } from '@/components/ui/format-date';
 import type { VehicleDocumentItem } from '@/@types/vehicle-document.types';
 
 interface Props {
@@ -10,13 +10,6 @@ interface Props {
   isLoading?: boolean;
   onEdit: (item: VehicleDocumentItem) => void;
 }
-
-const formatDate = (value?: string) => {
-  if (!value) return '-';
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return value;
-  return format(date, 'dd/MM/yy');
-};
 
 export function VehicleDocumentDetailTable({
   items,

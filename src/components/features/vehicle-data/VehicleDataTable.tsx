@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import { CheckCircle2, MoreVertical } from 'lucide-react';
-import { format } from 'date-fns';
+import { formatDate } from '@/components/ui/format-date';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
@@ -27,13 +27,6 @@ interface VehicleDataTableProps {
   onSubmitAssign: () => void;
   isAssigning?: boolean;
 }
-
-const formatDate = (value?: string | null) => {
-  if (!value) return '-';
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return '-';
-  return format(date, 'dd/MM/yyyy');
-};
 
 export function VehicleDataTable({
   items,

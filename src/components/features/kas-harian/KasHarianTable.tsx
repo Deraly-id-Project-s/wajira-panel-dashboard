@@ -5,8 +5,8 @@ import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { currenciesFormat } from '@/components/ui/currenciesFormat';
-import { format } from 'date-fns';
 import { MoreVertical, Info, CheckCircle } from 'lucide-react';
+import { formatDate } from '@/components/ui/format-date';
 import { CopyBox } from '@/components/ui/copy-box';
 import { TextTruncate } from '@/components/ui/text-truncate';
 import { cn } from '@/lib/utils';
@@ -74,12 +74,6 @@ interface Props {
   onMonthChange?: (month: string) => void;
   showMonthFilter?: boolean;
 }
-
-const formatDate = (value?: string | null) => {
-  if (!value) return '-';
-  const parsed = new Date(value);
-  return Number.isNaN(parsed.getTime()) ? value : format(parsed, 'dd MMM yyyy');
-};
 
 const hasUnitTransactionBilling = (item: KasHarianListItem) =>
   item.unitTransactionBillingId !== undefined && item.unitTransactionBillingId !== null;

@@ -12,6 +12,7 @@ import type { Driver } from '@/@types/driver.types';
 import type { PaginationMeta } from '@/@types/pagination.types';
 import { ReferenceLink } from '@/components/ui/reference-link';
 import { CopyBox } from '@/components/ui/copy-box';
+import { formatDate } from '@/components/ui/format-date';
 
 interface DriverTableProps {
     data: Driver[];
@@ -27,19 +28,6 @@ interface DriverTableProps {
     onEdit: (driver: Driver) => void;
     onDelete: (driver: Driver) => void;
 }
-
-const formatDate = (dateStr?: string | null): string => {
-    if (!dateStr) return '-';
-    try {
-        return new Date(dateStr).toLocaleDateString('id-ID', {
-            day: '2-digit',
-            month: 'short',
-            year: 'numeric',
-        });
-    } catch {
-        return dateStr;
-    }
-};
 
 export function DriverTable({
     data,

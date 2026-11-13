@@ -144,10 +144,10 @@ export function TransactionTable({ data, onEdit, onDelete, canEdit, canDelete }:
         accessorKey: 'description',
         sortable: true,
         alignment: 'left',
+        headerClassName: 'min-w-[280px]',
+        className: 'min-w-[280px]',
         cell: (trx) => (
-          <span className="text-slate-500 max-w-[150px] truncate block" title={trx.description}>
-            {trx.description || '-'}
-          </span>
+          <CopyBox text={trx.description || '-'} />
         ),
       },
       {

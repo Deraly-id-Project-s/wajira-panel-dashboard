@@ -4,7 +4,7 @@ import { TableCell, TableRow } from '@/components/ui/table';
 import { CopyBox } from '@/components/ui/copy-box';
 import { TextTruncate } from '@/components/ui/text-truncate';
 import { currenciesFormat } from '@/components/ui/currenciesFormat';
-import { formatDate } from '@/lib/utils/format';
+import { formatDate } from '@/components/ui/format-date';
 import type { LedgerReportItem } from '@/@types/ledger-report.types';
 
 interface LaporanBukuBesarTableProps {

@@ -3,7 +3,7 @@ import type { UJDriverItem, UJDriverPaginationResponse } from '@/@types/uj-drive
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { formatCurrency } from '@/lib/utils/currency';
-import { format } from 'date-fns';
+import { formatDate } from '@/components/ui/format-date';
 import BaseTable, { ColumnDef } from '@/components/ui/base-table';
 
 interface Props {
@@ -20,12 +20,6 @@ interface Props {
   currentSortBy?: string;
   currentSortDirection?: 'asc' | 'desc';
 }
-
-const formatDate = (value: string | null | undefined) => {
-  if (!value) return '-';
-  const parsed = new Date(value);
-  return Number.isNaN(parsed.getTime()) ? value : format(parsed, 'dd/MM/yyyy');
-};
 
 export default function UJDriverTable({
   data,

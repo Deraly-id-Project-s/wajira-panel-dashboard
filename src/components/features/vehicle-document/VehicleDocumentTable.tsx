@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import { MoreVertical } from 'lucide-react';
-import { format } from 'date-fns';
+import { formatDate } from '@/components/ui/format-date';
 import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import BaseTable, { ColumnDef } from '@/components/ui/base-table';
@@ -12,13 +12,6 @@ interface Props {
   onEdit: (item: VehicleDocumentSummary) => void;
   onDelete: (item: VehicleDocumentSummary) => void;
 }
-
-const formatDate = (value?: string) => {
-  if (!value) return '-';
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return value;
-  return format(date, 'dd/MM/yyyy');
-};
 
 export function VehicleDocumentTable({
   items,

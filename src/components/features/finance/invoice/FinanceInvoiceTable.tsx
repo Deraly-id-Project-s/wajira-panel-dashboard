@@ -2,7 +2,7 @@ import type { DoInvoice, DoInvoiceListResponse } from '@/@types/do-invoice.types
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { formatCurrency } from '@/lib/utils/currency';
-import { format } from 'date-fns';
+import { formatDate } from '@/components/ui/format-date';
 import { useOrderListDetail } from '@/hooks/useOrderList';
 import BaseTable, { ColumnDef } from '@/components/ui/base-table';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -20,12 +20,6 @@ interface Props {
   currentSortBy?: string;
   currentSortDirection?: 'asc' | 'desc';
 }
-
-const formatDate = (value: string | null | undefined) => {
-  if (!value) return '-';
-  const parsed = new Date(value);
-  return Number.isNaN(parsed.getTime()) ? value : format(parsed, 'dd MMM yyyy');
-};
 
 const getKasMasukAmount = (item: DoInvoice) => {
   const payment = item.financeBillingPayment;

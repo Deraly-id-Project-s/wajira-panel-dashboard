@@ -19,15 +19,9 @@ import { currenciesFormat } from '@/components/ui/currenciesFormat';
 import { Badge } from '@/components/ui/badge';
 import { CopyBox } from '@/components/ui/copy-box';
 import { ReferenceLink } from '@/components/ui/reference-link';
+import { formatDate } from '@/components/ui/format-date';
 import { useSalesById } from '@/hooks/useSales';
 import { isUnitUsdTransaction } from '@/utils/payment-helpers';
-
-const formatDate = (value?: string) => {
-  if (!value) return '-';
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return value;
-  return date.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
-};
 
 export default function SalesRefundDetailPageContent({ transactionId, refundId }: { transactionId: string; refundId: string }) {
   const router = useRouter();
