@@ -5,7 +5,7 @@ export const customerSchema = z.object({
   // address: z.string().min(1, 'Alamat wajib diisi'),
   address: z.string().min(1, 'Alamat wajib diisi'),
   // npwp: z.string().min(1, 'NPWP wajib diisi'),
-  npwp: z.string().min(1, 'NPWP wajib diisi'),
+  npwp: z.string().optional().nullable(),
   pic: z.string().optional(),
   // phone: z.string().min(1, 'Nomer telepon wajib diisi'),
   phone: z.string().min(1, 'Nomer telepon wajib diisi'),

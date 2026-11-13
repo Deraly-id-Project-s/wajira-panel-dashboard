@@ -68,7 +68,7 @@ export function CustomerFormDialog({ open, onOpenChange, form, onSubmit, title, 
                   <FormItem>
                     <FormLabel>NPWP</FormLabel>
                     <FormControl>
-                      <Input placeholder="Tambahkan NPWP" {...field} />
+                      <Input placeholder="Tambahkan NPWP" {...field} value={field.value ?? ''} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
