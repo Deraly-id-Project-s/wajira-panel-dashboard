@@ -3,7 +3,7 @@ import { useRouter } from 'next/router';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { PageHeader } from '@/components/ui/page-header';
 import { LaporanKasTable } from '@/components/features/laporan-kas/LaporanKasTable';
-import { Download, Printer } from 'lucide-react';
+import { Archive, Download, Printer } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { DatePickerWithRange } from '@/components/ui/date-range-picker';
 import { DateRange } from 'react-day-picker';
@@ -19,6 +19,7 @@ import { DocumentTemplatePrintFooter } from '@/components/common/DocumentTemplat
 import { getObjectStorageUrl } from '@/components/ui/storage-image';
 import { useReportTemplatePrint } from '@/hooks/useReportTemplatePrint';
 import { ReportTemplatePrintDialog } from '@/components/ui/report-template-print-dialog';
+import { CustomableReportDocumentDialog } from '@/components/features/document-template/CustomableReportDocumentDialog';
 
 export default function LaporanTransaksiKasPage() {
   const {
@@ -65,6 +66,11 @@ export default function LaporanTransaksiKasPage() {
 
   const [dateRange, setDateRangeState] = useState<DateRange | undefined>(undefined);
   const [searchInput, setSearchInput] = useState('');
+  const [isArchiveDialogOpen, setIsArchiveDialogOpen] = useState(false);
+
+  const periodLabel = dateRange?.from
+    ? `${format(dateRange.from, 'dd MMM yyyy')}${dateRange.to ? ` - ${format(dateRange.to, 'dd MMM yyyy')}` : ''}`
+    : 'Semua Periode';
 
   // Debounce search
   useEffect(() => {
@@ -79,7 +85,7 @@ export default function LaporanTransaksiKasPage() {
     const startDate = dateRange?.from ? format(dateRange.from, 'yyyy-MM-dd') : null;
     const endDate = dateRange?.to ? format(dateRange.to, 'yyyy-MM-dd') : startDate;
     setDateRange(startDate, endDate);
-  }, [dateRange, setDateRange]);
+  }, [dateRange?.from, dateRange?.to, setDateRange]);
   const isLoadingDisplay = isLoading;
 
   return (
@@ -109,6 +115,15 @@ export default function LaporanTransaksiKasPage() {
                 >
                   <Printer className="h-4 w-4 mr-2" />
                   Print
+                </Button>
+                <Button
+                  onClick={() => setIsArchiveDialogOpen(true)}
+                  variant="outline"
+                  className="w-full sm:w-auto text-blue-700 border-blue-200 hover:bg-blue-50"
+                  disabled={isLoading}
+                >
+                  <Archive className="h-4 w-4 mr-2" />
+                  Kustom & Arsipkan
                 </Button>
               </div>
             }
@@ -195,6 +210,17 @@ export default function LaporanTransaksiKasPage() {
           onPrint={templatePrint.printWithSelectedTemplate}
           isPreparingPrint={templatePrint.isPreparingPrint}
           reportName="laporan transaksi kas"
+        />
+
+        <CustomableReportDocumentDialog
+          open={isArchiveDialogOpen}
+          onOpenChange={setIsArchiveDialogOpen}
+          reportTitle="Laporan Transaksi Kas"
+          companyName={getCompanyName(resolvedCompanyId)}
+          periodLabel={periodLabel}
+          data={data}
+          totals={totals}
+          fallbackLetterhead={selectedPrintBackground}
         />
       </div>
     </DashboardLayout>

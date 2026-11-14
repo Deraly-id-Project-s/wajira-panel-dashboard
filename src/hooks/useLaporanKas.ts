@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { useRouter } from 'next/router';
 import { toast } from 'sonner';
 import { useCompany } from '@/contexts/CompanyContext';
@@ -99,31 +99,31 @@ export const useLaporanKas = (defaultPerPage = 25): UseLaporanKasReturn => {
     }
   };
 
-  const handleSetPage = (p: number) => {
+  const handleSetPage = useCallback((p: number) => {
     setPage(p);
-  };
+  }, []);
 
-  const handleSetPerPage = (p: number) => {
+  const handleSetPerPage = useCallback((p: number) => {
     setPerPage(p);
     setPage(1);
-  };
+  }, []);
 
-  const handleSetDateRange = (start: string | null, end: string | null) => {
+  const handleSetDateRange = useCallback((start: string | null, end: string | null) => {
     setStartDate(start);
     setEndDate(end);
     setPage(1);
-  };
+  }, []);
 
-  const handleSetSearch = (s: string) => {
+  const handleSetSearch = useCallback((s: string) => {
     setSearch(s);
     setPage(1);
-  };
+  }, []);
 
-  const handleSetSort = (key: string, direction: 'asc' | 'desc') => {
+  const handleSetSort = useCallback((key: string, direction: 'asc' | 'desc') => {
     setSortKey(key);
     setSortOrder(direction);
     setPage(1);
-  };
+  }, []);
 
   return {
     data,

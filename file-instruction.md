@@ -42,7 +42,7 @@ Dokumen ini wajib dibaca terlebih dahulu oleh AI MVC sebelum menerapkan fitur ba
 | Label | `src/components/ui/label.tsx` | Gunakan sebagai label form. Jaga spacing label dan input konsisten, umumnya wrapper `space-y-2`. |
 | Form dengan react-hook-form | `src/components/ui/form.tsx` | Gunakan untuk form kompleks yang membutuhkan validation state dan `FormMessage`. |
 | Modal form | `src/components/ui/form-dialog.tsx` | Gunakan untuk dialog create/edit sederhana dengan submit/cancel standar. |
-| Dialog primitive | `src/components/ui/dialog.tsx` | Gunakan jika layout dialog butuh kontrol khusus. |
+| Dialog primitive | `src/components/ui/dialog.tsx` | Gunakan jika layout dialog butuh kontrol khusus. Mendukung kustomisasi lebar via prop `size` (`'sm'` s/d `'7xl'`, `'3x'` = 1536px, `'full'`), prop `width`/`maxWidth`, atau `className="max-w-*"`, drag & drop, 8-arah resize, dan tombol mode layar penuh (fullpage/modal toggle). |
 | Dialog print template | `src/components/ui/report-template-print-dialog.tsx` | Gunakan untuk modal dialog pemilihan template dokumen cetak pada laporan atau dokumen transaksi. |
 | Alert dialog | `src/components/ui/alert-dialog.tsx` | Gunakan untuk konfirmasi aksi penting seperti hapus atau destructive action. |
 | Button | `src/components/ui/button.tsx` | Gunakan untuk semua action button. Ikuti variant dan size yang tersedia. |
@@ -68,6 +68,7 @@ Dokumen ini wajib dibaca terlebih dahulu oleh AI MVC sebelum menerapkan fitur ba
 | Input koordinat Leaflet | `src/components/ui/leaflet-coordinate-input.tsx` | Gunakan untuk memilih koordinat opsional melalui teks, klik peta, atau geolokasi perangkat. Value dan payload memakai format `latitude,longitude`; nilai kosong dikirim sebagai `null`/string kosong pada `FormData`. |
 | Tampilan peta Leaflet | `src/components/ui/show-map-leaflet.tsx` | Gunakan untuk menampilkan lokasi dari koordinat. Prop `onCoordinateChange` bersifat opsional; jika diberikan, peta dapat dipakai memilih titik. Import Leaflet dilakukan client-only agar aman pada SSR Next.js. |
 | Text truncate | `src/components/ui/text-truncate.tsx` | Gunakan untuk memotong teks panjang secara konsisten. |
+| Format tanggal | `src/components/ui/format-date.tsx` | Gunakan untuk format tanggal standar 'dd MMM yyyy' id-ID dengan opsi includeTime. |
 | Image preview | `src/components/ui/image-preview.tsx` | Gunakan untuk preview gambar. |
 | Parsed image | `src/components/ui/parsed-image.tsx` | Gunakan untuk render image dari value yang perlu diparse. |
 | Storage image | `src/components/ui/storage-image.tsx` | Gunakan untuk gambar dari storage/backend. |
