@@ -108,6 +108,7 @@ export function SupplierFormModal({
               <FormControl>
                 <Input
                   {...field}
+                  value={field.value ?? ''}
                   placeholder="Tambahkan NPWP"
                   className="bg-transparent"
                   onChange={(e) => {

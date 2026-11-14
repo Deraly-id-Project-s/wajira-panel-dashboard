@@ -111,6 +111,7 @@ export function CustomerFormModal({
               <FormControl>
                 <Input
                   {...field}
+                  value={field.value ?? ''}
                   placeholder="Tambahkan NPWP"
                   className={`bg-white ${form.formState.errors.npwp ? 'border-red-500' : ''}`}
                   onChange={(e) => {

@@ -21,7 +21,7 @@ export interface Customer {
 export interface CustomerPayload {
   name: string;
   address?: string;
-  npwp?: string;
+  npwp?: string | null;
   pic?: string;
   phone?: string;
   map_link?: string;

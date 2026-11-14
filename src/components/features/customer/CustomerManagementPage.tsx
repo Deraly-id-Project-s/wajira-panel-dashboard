@@ -151,6 +151,7 @@ export function CustomerManagementPage() {
 
     const payload = {
       ...values,
+      npwp: values.npwp ?? undefined,
       companyId: Number(companyId) || companyId,
     };
 

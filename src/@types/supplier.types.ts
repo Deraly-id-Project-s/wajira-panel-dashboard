@@ -21,7 +21,7 @@ export interface SupplierPayload {
   code?: string;
   type?: string;
   address?: string;
-  npwp?: string;
+  npwp?: string | null;
   phone?: string;
   pic?: string;
   userId?: number | string;

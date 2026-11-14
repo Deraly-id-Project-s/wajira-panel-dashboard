@@ -95,6 +95,7 @@ export function SupplierFormDialog({ open, onOpenChange, form, onSubmit, title, 
                         placeholder="Tambahkan NPWP"
                         className="h-12 rounded-md border-[#E4E4E7] px-4 text-[15px] placeholder:text-[#A1A1AA]"
                         {...field}
+                        value={field.value ?? ''}
                         onChange={(e) => {
                           field.onChange(e.target.value.replace(/[^\d]/g, ''));
                         }}

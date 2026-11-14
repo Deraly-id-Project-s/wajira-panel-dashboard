@@ -4,7 +4,7 @@ export const createSupplierSchema = z.object({
     name: z.string().min(1, "Nama supplier wajib diisi"),
     // address: z.string().min(1, 'Alamat wajib diisi'),
     address: z.string().optional(),
-    npwp: z.string().optional(),
+    npwp: z.string().optional().nullable(),
     pic: z.string().optional(),
     // phone: z.string().min(1, 'Nomer telepon wajib diisi'),
     phone: z.string().optional().refine(
@@ -17,7 +17,7 @@ export const updateSupplierSchema = z.object({
     name: z.string().min(1, "Nama supplier wajib diisi"),
     // address: z.string().min(1, 'Alamat wajib diisi'),
     address: z.string().optional(),
-    npwp: z.string().optional(),
+    npwp: z.string().optional().nullable(),
     pic: z.string().optional(),
     // phone: z.string().min(1, 'Nomer telepon wajib diisi'),
     phone: z.string().optional().refine(
