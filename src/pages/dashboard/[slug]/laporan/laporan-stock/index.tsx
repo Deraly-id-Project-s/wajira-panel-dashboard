@@ -22,6 +22,7 @@ import { DocumentTemplatePrintFooter } from '@/components/common/DocumentTemplat
 import { getObjectStorageUrl } from '@/components/ui/storage-image';
 import { useReportTemplatePrint } from '@/hooks/useReportTemplatePrint';
 import { ReportTemplatePrintDialog } from '@/components/ui/report-template-print-dialog';
+import { ReportArchiveAction } from '@/components/features/report-archive/ReportArchiveAction';
 
 const reportMeta = {
     stock: { title: 'Stock Unit', subtitle: 'Pantau semua stock unit' },
@@ -32,7 +33,7 @@ const reportMeta = {
 
 export default function LaporanStockPage() {
     const [activeTab, setActiveTab] = useState('stock');
-    const [currentActions, setCurrentActions] = useState<{ print: () => void; download: () => void } | null>(null);
+    const [currentActions, setCurrentActions] = useState<{ print: () => void; download: () => void; archiveData?: object[] } | null>(null);
     const [stockPerPage, setStockPerPage] = useState(25);
 
     const [stockDetailPerPage, setStockDetailPerPage] = useState(25);
@@ -78,6 +79,12 @@ export default function LaporanStockPage() {
         : '#1f4163';
 
     const activeMeta = reportMeta[activeTab as keyof typeof reportMeta] ?? reportMeta.stock;
+
+    const archivePeriodLabel = activeTab === 'purchase-order' && appliedPoDateRange?.from
+        ? `${appliedPoDateRange.from.toLocaleDateString('id-ID')}${appliedPoDateRange.to ? ` - ${appliedPoDateRange.to.toLocaleDateString('id-ID')}` : ''}`
+        : activeTab === 'sales-order' && appliedSoDateRange?.from
+            ? `${appliedSoDateRange.from.toLocaleDateString('id-ID')}${appliedSoDateRange.to ? ` - ${appliedSoDateRange.to.toLocaleDateString('id-ID')}` : ''}`
+            : 'Semua Periode';
 
     const pageFilter = useMemo(() => {
         switch (activeTab) {
@@ -232,6 +239,13 @@ export default function LaporanStockPage() {
                             <Button onClick={() => currentActions?.download()} variant="outline" className="w-full sm:w-auto h-9">
                                 <Download className="h-4 w-4 mr-2" /> Download
                             </Button>
+                            <ReportArchiveAction
+                                reportTitle={activeMeta.title}
+                                archiveSourceLabel={activeMeta.title}
+                                periodLabel={archivePeriodLabel}
+                                data={currentActions?.archiveData ?? []}
+                                disabled={!currentActions?.archiveData}
+                            />
                         </div>
                     </div>
 

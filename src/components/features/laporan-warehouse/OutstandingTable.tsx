@@ -15,7 +15,7 @@ type OutstandingTableProps = {
   type: 'purchase' | 'sales';
   perPage: number;
   dateRange?: { from?: Date; to?: Date };
-  onActionsChange?: (actions: { print: () => void; download: () => void }) => void;
+  onActionsChange?: (actions: { print: () => void; download: () => void; archiveData?: object[] }) => void;
 };
 
 const toCsvLine = (cells: Array<string | number>): string =>
@@ -106,8 +106,8 @@ export default function OutstandingTable({ type, perPage, onActionsChange }: Out
   }, [hookPage, rows, type]);
 
   useEffect(() => {
-    onActionsChange?.({ print: handlePrint, download: handleDownload });
-  }, [handleDownload, handlePrint, onActionsChange]);
+    onActionsChange?.({ print: handlePrint, download: handleDownload, archiveData: rows });
+  }, [handleDownload, handlePrint, onActionsChange, rows]);
 
   return (
     <div className="space-y-4">

@@ -3,7 +3,7 @@ import { useRouter } from 'next/router';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { PageHeader } from '@/components/ui/page-header';
 import { LaporanKasTable } from '@/components/features/laporan-kas/LaporanKasTable';
-import { Archive, Download, Printer } from 'lucide-react';
+import { Download, Printer } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { DatePickerWithRange } from '@/components/ui/date-range-picker';
 import { DateRange } from 'react-day-picker';
@@ -19,7 +19,18 @@ import { DocumentTemplatePrintFooter } from '@/components/common/DocumentTemplat
 import { getObjectStorageUrl } from '@/components/ui/storage-image';
 import { useReportTemplatePrint } from '@/hooks/useReportTemplatePrint';
 import { ReportTemplatePrintDialog } from '@/components/ui/report-template-print-dialog';
-import { CustomableReportDocumentDialog } from '@/components/features/document-template/CustomableReportDocumentDialog';
+import { ReportArchiveAction } from '@/components/features/report-archive/ReportArchiveAction';
+import type { ReportArchiveColumn } from '@/lib/report-archive';
+
+const KAS_ARCHIVE_COLUMNS: ReportArchiveColumn[] = [
+  { key: 'tanggal', label: 'Tanggal', align: 'center', format: 'date', width: 12 },
+  { key: 'nota_ref', label: 'Nota/Ref', width: 14 },
+  { key: 'keterangan', label: 'Keterangan', width: 28 },
+  { key: 'debit_cash_idr', label: 'Kas In', align: 'right', format: 'currency', width: 12 },
+  { key: 'kredit_cash_idr', label: 'Kas Out', align: 'right', format: 'currency', width: 12 },
+  { key: 'debit_bank_idr', label: 'Bank In', align: 'right', format: 'currency', width: 12 },
+  { key: 'kredit_bank_idr', label: 'Bank Out', align: 'right', format: 'currency', width: 12 },
+];
 
 export default function LaporanTransaksiKasPage() {
   const {
@@ -66,7 +77,6 @@ export default function LaporanTransaksiKasPage() {
 
   const [dateRange, setDateRangeState] = useState<DateRange | undefined>(undefined);
   const [searchInput, setSearchInput] = useState('');
-  const [isArchiveDialogOpen, setIsArchiveDialogOpen] = useState(false);
 
   const periodLabel = dateRange?.from
     ? `${format(dateRange.from, 'dd MMM yyyy')}${dateRange.to ? ` - ${format(dateRange.to, 'dd MMM yyyy')}` : ''}`
@@ -116,15 +126,20 @@ export default function LaporanTransaksiKasPage() {
                   <Printer className="h-4 w-4 mr-2" />
                   Print
                 </Button>
-                <Button
-                  onClick={() => setIsArchiveDialogOpen(true)}
-                  variant="outline"
-                  className="w-full sm:w-auto text-blue-700 border-blue-200 hover:bg-blue-50"
+                <ReportArchiveAction
+                  reportTitle="Laporan Transaksi Kas"
+                  periodLabel={periodLabel}
+                  data={data}
+                  columns={KAS_ARCHIVE_COLUMNS}
+                  totals={[
+                    { key: 'debit_cash_idr', value: totals.debitCashIdr, format: 'currency' },
+                    { key: 'kredit_cash_idr', value: totals.kreditCashIdr, format: 'currency' },
+                    { key: 'debit_bank_idr', value: totals.debitBankIdr, format: 'currency' },
+                    { key: 'kredit_bank_idr', value: totals.kreditBankIdr, format: 'currency' },
+                  ]}
                   disabled={isLoading}
-                >
-                  <Archive className="h-4 w-4 mr-2" />
-                  Kustom & Arsipkan
-                </Button>
+                  className="text-blue-700 border-blue-200 hover:bg-blue-50"
+                />
               </div>
             }
           />
@@ -210,17 +225,6 @@ export default function LaporanTransaksiKasPage() {
           onPrint={templatePrint.printWithSelectedTemplate}
           isPreparingPrint={templatePrint.isPreparingPrint}
           reportName="laporan transaksi kas"
-        />
-
-        <CustomableReportDocumentDialog
-          open={isArchiveDialogOpen}
-          onOpenChange={setIsArchiveDialogOpen}
-          reportTitle="Laporan Transaksi Kas"
-          companyName={getCompanyName(resolvedCompanyId)}
-          periodLabel={periodLabel}
-          data={data}
-          totals={totals}
-          fallbackLetterhead={selectedPrintBackground}
         />
       </div>
     </DashboardLayout>

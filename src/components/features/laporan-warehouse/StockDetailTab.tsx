@@ -62,7 +62,7 @@ const renderStatus = (status: string) => {
 type StockDetailTabProps = {
   perPage: number;
   machineNumber: string;
-  onActionsChange?: (actions: { print: () => void; download: () => void }) => void;
+  onActionsChange?: (actions: { print: () => void; download: () => void; archiveData?: object[] }) => void;
 };
 
 const toCsvLine = (cells: Array<string | number>): string =>
@@ -170,8 +170,8 @@ export default function StockDetailTab({ perPage, machineNumber: initialMachineN
   }, [page, rows]);
 
   useEffect(() => {
-    onActionsChange?.({ print: handlePrint, download: handleDownload });
-  }, [handleDownload, handlePrint, onActionsChange]);
+    onActionsChange?.({ print: handlePrint, download: handleDownload, archiveData: rows });
+  }, [handleDownload, handlePrint, onActionsChange, rows]);
 
   const router = useRouter();
   const { slug } = router.query;

@@ -15,6 +15,7 @@ import { LedgerAccountSelect } from '@/components/features/laporan-buku-besar/Le
 import { LaporanJurnalUmumTable } from '@/components/features/laporan-jurnal-umum/LaporanJurnalUmumTable';
 import { LaporanJurnalUmumPrintDocument } from '@/components/features/laporan-jurnal-umum/LaporanJurnalUmumPrintDocument';
 import { ReportTemplatePrintDialog } from '@/components/ui/report-template-print-dialog';
+import { ReportArchiveAction } from '@/components/features/report-archive/ReportArchiveAction';
 import { useGeneralJournalReport } from '@/hooks/report/useGeneralJournalReport';
 import { useAccounts } from '@/hooks/useAccount';
 import { useReportTemplatePrint } from '@/hooks/useReportTemplatePrint';
@@ -154,6 +155,13 @@ export default function LaporanJurnalUmumPage() {
                   <Printer className="mr-2 h-4 w-4" />
                   Print
                 </Button>
+                <ReportArchiveAction
+                  reportTitle="Laporan Jurnal Umum"
+                  archiveSourceLabel={`Jurnal Umum · ${accountLabel}`}
+                  periodLabel={periodLabel}
+                  data={data}
+                  disabled={isLoading}
+                />
               </div>
             }
           />

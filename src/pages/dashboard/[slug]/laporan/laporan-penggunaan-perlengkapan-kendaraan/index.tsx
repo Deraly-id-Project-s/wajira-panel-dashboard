@@ -15,6 +15,7 @@ import { DatePickerWithRange } from '@/components/ui/date-range-picker';
 import { Badge } from '@/components/ui/badge';
 import BaseTable, { ColumnDef } from '@/components/ui/base-table';
 import { ReportTemplatePrintDialog } from '@/components/ui/report-template-print-dialog';
+import { ReportArchiveAction } from '@/components/features/report-archive/ReportArchiveAction';
 import { LoadingState } from '@/components/ui/loading-state';
 
 import { useCompany } from '@/contexts/CompanyContext';
@@ -192,10 +193,21 @@ export default function LaporanPenggunaanPerlengkapanKendaraanPage() {
             title="Laporan Pemakaian Perlengkapan Kendaraan"
             subtitle="Pantau semua pemakaian dan pengembalian perlengkapan kendaraan di warehouse"
             actions={
-              <Button variant="outline" onClick={() => templatePrint.openPrintDialog()}>
-                <Printer className="mr-2 h-4 w-4" />
-                Print
-              </Button>
+              <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row">
+                <Button variant="outline" onClick={() => templatePrint.openPrintDialog()}>
+                  <Printer className="mr-2 h-4 w-4" />
+                  Print
+                </Button>
+                <ReportArchiveAction
+                  reportTitle="Laporan Pemakaian Perlengkapan Kendaraan"
+                  archiveSourceLabel={activeTab === 'assign' ? 'Laporan Masukan' : 'Laporan Keluaran'}
+                  periodLabel={dateRange?.from
+                    ? `${format(dateRange.from, 'dd MMM yyyy')}${dateRange.to ? ` - ${format(dateRange.to, 'dd MMM yyyy')}` : ''}`
+                    : 'Semua Periode'}
+                  data={data?.data ?? []}
+                  disabled={isLoading}
+                />
+              </div>
             }
           />
         </div>

@@ -16,6 +16,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Badge } from '@/components/ui/badge';
 import BaseTable, { ColumnDef } from '@/components/ui/base-table';
 import { ReportTemplatePrintDialog } from '@/components/ui/report-template-print-dialog';
+import { ReportArchiveAction } from '@/components/features/report-archive/ReportArchiveAction';
+import { reportArchiveColumnsFromTable } from '@/lib/report-archive';
 import { LoadingState } from '@/components/ui/loading-state';
 
 import { useCompany } from '@/contexts/CompanyContext';
@@ -213,10 +215,22 @@ export default function LaporanTransaksiPerlengkapanKendaraanPage() {
             title="Laporan Transaksi Perlengkapan Kendaraan"
             subtitle="Pantau semua transaksi pembelian dan penjualan perlengkapan kendaraan"
             actions={
-              <Button variant="outline" onClick={() => templatePrint.openPrintDialog()}>
-                <Printer className="mr-2 h-4 w-4" />
-                Print
-              </Button>
+              <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row">
+                <Button variant="outline" onClick={() => templatePrint.openPrintDialog()}>
+                  <Printer className="mr-2 h-4 w-4" />
+                  Print
+                </Button>
+                <ReportArchiveAction
+                  reportTitle="Laporan Transaksi Perlengkapan Kendaraan"
+                  archiveSourceLabel={activeTab === 'purchase' ? 'Laporan Pembelian' : 'Laporan Penjualan'}
+                  periodLabel={dateRange?.from
+                    ? `${format(dateRange.from, 'dd MMM yyyy')}${dateRange.to ? ` - ${format(dateRange.to, 'dd MMM yyyy')}` : ''}`
+                    : 'Semua Periode'}
+                  data={data?.data ?? []}
+                  columns={reportArchiveColumnsFromTable(columns)}
+                  disabled={isLoading}
+                />
+              </div>
             }
           />
         </div>

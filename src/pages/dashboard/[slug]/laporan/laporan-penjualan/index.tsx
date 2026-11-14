@@ -16,6 +16,7 @@ import { useRouter } from 'next/router';
 import { useCompany } from '@/contexts/CompanyContext';
 import { resolveCompanyId, getLetterheadByCompanyId } from '@/lib/print-letterhead';
 import { PrintLetterPage } from '@/components/common/PrintLetterPage';
+import { ReportArchiveAction } from '@/components/features/report-archive/ReportArchiveAction';
 
 export default function LaporanPenjualanPage() {
     const [activeTab, setActiveTab] = useState('per-nota');
@@ -53,6 +54,10 @@ export default function LaporanPenjualanPage() {
     const handlePrint = () => {
         window.print();
     };
+
+    const periodLabel = startDate && endDate
+        ? `${format(new Date(startDate), 'dd MMM yyyy')} - ${format(new Date(endDate), 'dd MMM yyyy')}`
+        : 'Semua Periode';
 
     const exportToCSV = () => {
         let csvContent = "";
@@ -160,6 +165,14 @@ export default function LaporanPenjualanPage() {
                     <PageHeader
                         title="Laporan Penjualan"
                         subtitle="Pantau semua transaksi penjualan"
+                        actions={
+                            <ReportArchiveAction
+                                reportTitle={`Laporan Penjualan ${reportItem.toUpperCase()} ${activeTab.replace('-', ' ')}`}
+                                periodLabel={periodLabel}
+                                data={data}
+                                disabled={isLoading}
+                            />
+                        }
                     />
                 </div>
 

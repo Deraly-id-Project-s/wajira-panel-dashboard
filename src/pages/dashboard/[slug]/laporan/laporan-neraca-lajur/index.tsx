@@ -16,6 +16,7 @@ import {
 } from '@/components/ui/date-range-picker';
 import { PageHeader } from '@/components/ui/page-header';
 import { SearchPagination } from '@/components/ui/search-pagination';
+import { ReportArchiveAction } from '@/components/features/report-archive/ReportArchiveAction';
 import { useCompany } from '@/contexts/CompanyContext';
 import { useAccounts } from '@/hooks/useAccount';
 import { useBalanceColumnReport } from '@/hooks/report/useBalanceColumnReport';
@@ -105,6 +106,10 @@ export default function LaporanNeracaLajurPage() {
     setPage(1);
   };
 
+  const periodLabel = dateRange?.from
+    ? `${format(dateRange.from, 'dd MMM yyyy')}${dateRange.to ? ` - ${format(dateRange.to, 'dd MMM yyyy')}` : ''}`
+    : 'Semua Periode';
+
   const handleExport = async () => {
     setIsExporting(true);
     try {
@@ -128,10 +133,19 @@ export default function LaporanNeracaLajurPage() {
           title="Laporan Neraca Lajur"
           subtitle="Pantau saldo awal, mutasi debit dan kredit, serta saldo akhir setiap akun"
           actions={
-            <Button onClick={handleExport} variant="outline" disabled={isFetching || isExporting}>
-              <Download className="mr-2 h-4 w-4" />
-              {isExporting ? 'Exporting...' : 'Export'}
-            </Button>
+            <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row">
+              <Button onClick={handleExport} variant="outline" disabled={isFetching || isExporting}>
+                <Download className="mr-2 h-4 w-4" />
+                {isExporting ? 'Exporting...' : 'Export'}
+              </Button>
+              <ReportArchiveAction
+                reportTitle="Laporan Neraca Lajur"
+                archiveSourceLabel="Neraca Lajur"
+                periodLabel={periodLabel}
+                data={data}
+                disabled={isLoading}
+              />
+            </div>
           }
         />
 

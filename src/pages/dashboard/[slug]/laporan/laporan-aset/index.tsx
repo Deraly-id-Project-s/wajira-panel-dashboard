@@ -18,6 +18,7 @@ import { useAssetReport } from '@/hooks/report/useAssetReport';
 import { useCompany } from '@/contexts/CompanyContext';
 import { resolveCompanyId, getLetterheadByCompanyId } from '@/lib/print-letterhead';
 import { PrintLetterPage } from '@/components/common/PrintLetterPage';
+import { ReportArchiveAction } from '@/components/features/report-archive/ReportArchiveAction';
 import { formatDate } from '@/lib/utils/format';
 import BaseTable, { ColumnDef } from '@/components/ui/base-table';
 import { CopyBox } from '@/components/ui/copy-box';
@@ -234,6 +235,14 @@ export default function LaporanAssetPage() {
                 <Button onClick={handlePrint} variant="outline" className="flex-1 sm:flex-none">
                   <Printer className="h-4.5 w-4.5 text-slate-700 mr-2" /> Print
                 </Button>
+                <ReportArchiveAction
+                  reportTitle="Laporan Aset"
+                  periodLabel={dateRange?.from
+                    ? `${format(dateRange.from, 'dd MMM yyyy')}${dateRange.to ? ` - ${format(dateRange.to, 'dd MMM yyyy')}` : ''}`
+                    : 'Semua Periode'}
+                  data={filteredData}
+                  disabled={isLoading}
+                />
               </div>
             }
           />

@@ -10,6 +10,7 @@ import { Button } from '@/components/ui/button';
 import { DatePickerWithRange, type DateRangePickerMode } from '@/components/ui/date-range-picker';
 import { SearchPagination } from '@/components/ui/search-pagination';
 import { ReportTemplatePrintDialog } from '@/components/ui/report-template-print-dialog';
+import { ReportArchiveAction } from '@/components/features/report-archive/ReportArchiveAction';
 import { LedgerAccountSelect } from '@/components/features/laporan-buku-besar/LedgerAccountSelect';
 import { LaporanBukuBesarTable } from '@/components/features/laporan-buku-besar/LaporanBukuBesarTable';
 import { LaporanBukuBesarPrintDocument } from '@/components/features/laporan-buku-besar/LaporanBukuBesarPrintDocument';
@@ -128,10 +129,19 @@ export default function LaporanBukuBesarPage() {
             title="Laporan Buku Besar"
             subtitle="Pantau mutasi akun dan posisi saldo berdasarkan periode pembayaran"
             actions={
-              <Button onClick={templatePrint.openPrintDialog} variant="outline" disabled={isLoading}>
-                <Printer className="mr-2 h-4 w-4" />
-                Print
-              </Button>
+              <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row">
+                <Button onClick={templatePrint.openPrintDialog} variant="outline" disabled={isLoading}>
+                  <Printer className="mr-2 h-4 w-4" />
+                  Print
+                </Button>
+                <ReportArchiveAction
+                  reportTitle="Laporan Buku Besar"
+                  archiveSourceLabel={`Buku Besar · ${accountLabel}`}
+                  periodLabel={periodLabel}
+                  data={data}
+                  disabled={isLoading}
+                />
+              </div>
             }
           />
         </div>

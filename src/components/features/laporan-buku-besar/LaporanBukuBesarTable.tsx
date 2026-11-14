@@ -1,8 +1,10 @@
 import { useMemo } from 'react';
+import { useRouter } from 'next/router';
 import BaseTable, { ColumnDef } from '@/components/ui/base-table';
 import { TableCell, TableRow } from '@/components/ui/table';
 import { CopyBox } from '@/components/ui/copy-box';
 import { TextTruncate } from '@/components/ui/text-truncate';
+import { ReferenceLink } from '@/components/ui/reference-link';
 import { currenciesFormat } from '@/components/ui/currenciesFormat';
 import { formatDate } from '@/components/ui/format-date';
 import type { LedgerReportItem } from '@/@types/ledger-report.types';
@@ -36,6 +38,9 @@ export function LaporanBukuBesarTable({
   meta,
   onPageChange,
 }: LaporanBukuBesarTableProps) {
+  const router = useRouter();
+  const slug = typeof router.query.slug === 'string' ? router.query.slug : '';
+
   const totals = useMemo(
     () =>
       data.reduce(
@@ -71,7 +76,23 @@ export function LaporanBukuBesarTable({
         accessorKey: 'account.name',
         sortable: true,
         alignment: 'left',
-        cell: (item) => item.account?.name || '-',
+        cell: (item) => {
+          const name = item.account?.name;
+          if (!name) return '-';
+
+          const type = item.account?.type == 'credit' ? 'KREDIT' : 'DEBIT';
+          const label = type ? `[${type}] ${name}` : name;
+          const searchParam = item.account?.code || name;
+          const href = slug
+            ? `/dashboard/${slug}/master/account?search=${encodeURIComponent(searchParam)}`
+            : `/master/account?search=${encodeURIComponent(searchParam)}`;
+
+          return (
+            <ReferenceLink target="_blank" href={href}>
+              {label}
+            </ReferenceLink>
+          );
+        },
       },
       {
         header: 'Kode Transaksi',
@@ -153,7 +174,7 @@ export function LaporanBukuBesarTable({
         cell: (item) => formatLedgerMoney(item.cash_position_after),
       },
     ],
-    [],
+    [slug],
   );
 
   const footer = (

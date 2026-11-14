@@ -17,8 +17,8 @@ import { PrintLetterPage } from '@/components/common/PrintLetterPage';
 import { DocumentTemplatePrintFooter } from '@/components/common/DocumentTemplatePrintFooter';
 import { getObjectStorageUrl } from '@/components/ui/storage-image';
 import { useReportTemplatePrint } from '@/hooks/useReportTemplatePrint';
-import { Button } from '@/components/ui/button';
 import { ReportTemplatePrintDialog } from '@/components/ui/report-template-print-dialog';
+import { ReportArchiveAction } from '@/components/features/report-archive/ReportArchiveAction';
 
 type TabType = 'per-nota' | 'per-tipe' | 'per-customer';
 
@@ -71,6 +71,10 @@ export default function LaporanPengirimanPage() {
     templatePrint.openPrintDialog();
   };
 
+  const periodLabel = startDate && endDate
+    ? `${format(new Date(startDate), 'dd MMM yyyy')} - ${format(new Date(endDate), 'dd MMM yyyy')}`
+    : 'Semua Periode';
+
   const exportToCSV = () => {
     if (data.length === 0) {
       alert('Tidak ada data untuk diunduh');
@@ -120,6 +124,14 @@ export default function LaporanPengirimanPage() {
           <PageHeader
             title="Laporan Pengiriman"
             subtitle="Pantau semua transaksi pengiriman unit"
+            actions={
+              <ReportArchiveAction
+                reportTitle={`Laporan Pengiriman ${activeTab.replace('-', ' ')}`}
+                periodLabel={periodLabel}
+                data={data}
+                disabled={isLoading}
+              />
+            }
           />
         </div>
 

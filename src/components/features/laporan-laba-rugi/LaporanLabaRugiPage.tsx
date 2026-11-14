@@ -51,6 +51,8 @@ import { exportProfitLossReport } from '@/services/report/profitLossReport.servi
 import { getLetterheadByCompanyId, resolveCompanyId } from '@/lib/print-letterhead';
 import { cn } from '@/lib/utils';
 import { ReportTemplatePrintDialog } from '@/components/ui/report-template-print-dialog';
+import { ReportArchiveAction } from '@/components/features/report-archive/ReportArchiveAction';
+import type { ReportArchiveColumn } from '@/lib/report-archive';
 import {
   LaporanLabaRugiPrintDocument,
   type ProfitLossPrintSection,
@@ -549,6 +551,74 @@ export default function LaporanLabaRugiPage() {
     return 'Periode Berjalan';
   }, [activeMonthLabel, activeYear]);
 
+  const archiveColumns: ReportArchiveColumn[] = [
+    { key: 'kategori', label: 'Kategori', width: 18 },
+    { key: 'akun', label: 'Akun', width: 34 },
+    { key: 'idr', label: 'IDR', align: 'right', width: 24 },
+    { key: 'usd', label: 'USD', align: 'right', width: 18 },
+  ];
+
+  const archiveRows = useMemo(() => {
+    const rows = REPORT_SECTIONS.flatMap((section) => {
+      const sectionData = normalizedSections[section.key];
+      return [
+        ...sectionData.rows.map((line) => ({
+          kategori: section.title,
+          akun: getLineLabel(line, accountMap),
+          idr: currenciesFormat('idr', getLineIdrAmount(line)),
+          usd: currenciesFormat('usd', getLineUsdAmount(line)),
+        })),
+        {
+          kategori: section.title,
+          akun: `Total ${section.title}`,
+          idr: currenciesFormat('idr', sectionData.total),
+          usd: currenciesFormat('usd', sectionData.totalUsd),
+        },
+      ];
+    });
+
+    rows.push(
+      {
+        kategori: 'Ringkasan',
+        akun: 'Laba Kotor',
+        idr: currenciesFormat('idr', labaKotor),
+        usd: currenciesFormat('usd', labaKotorUsd),
+      },
+      {
+        kategori: 'Ringkasan',
+        akun: 'Laba Periode Berjalan (Sebelum Pajak)',
+        idr: currenciesFormat('idr', labaPeriodeBerjalan),
+        usd: currenciesFormat('usd', labaPeriodeBerjalanUsd),
+      },
+      {
+        kategori: 'Ringkasan',
+        akun: `Beban Pajak (${taxPercentage}%)`,
+        idr: currenciesFormat('idr', taxAmount),
+        usd: currenciesFormat('usd', taxAmountUsd),
+      },
+      {
+        kategori: 'Ringkasan',
+        akun: 'Laba / (Rugi) Bersih Setelah Pajak',
+        idr: currenciesFormat('idr', profitAfterTax),
+        usd: currenciesFormat('usd', profitAfterTaxUsd),
+      },
+    );
+
+    return rows;
+  }, [
+    accountMap,
+    labaKotor,
+    labaKotorUsd,
+    labaPeriodeBerjalan,
+    labaPeriodeBerjalanUsd,
+    normalizedSections,
+    profitAfterTax,
+    profitAfterTaxUsd,
+    taxAmount,
+    taxAmountUsd,
+    taxPercentage,
+  ]);
+
   const handleExport = async () => {
     if (!resolvedCompanyId) {
       toast.error('Company belum dipilih.');
@@ -601,6 +671,14 @@ export default function LaporanLabaRugiPage() {
                 <Printer className="h-4 w-4" />
                 Print
               </Button>
+              <ReportArchiveAction
+                reportTitle="Laporan Laba Rugi"
+                archiveSourceLabel="Laba Rugi"
+                periodLabel={periodLabel}
+                data={archiveRows}
+                columns={archiveColumns}
+                disabled={reportQuery.isLoading}
+              />
               <Button
                 type="button"
                 variant="default"

@@ -40,6 +40,8 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { currenciesFormat } from '@/components/ui/currenciesFormat';
 import { ReportTemplatePrintDialog } from '@/components/ui/report-template-print-dialog';
+import { ReportArchiveAction } from '@/components/features/report-archive/ReportArchiveAction';
+import type { ReportArchiveColumn } from '@/lib/report-archive';
 import {
   LaporanNeracaPrintDocument,
   type BalancePrintCategory,
@@ -473,6 +475,37 @@ export default function LaporanNeracaPage() {
     totalUsd: jumlahModalUsd,
   }), [equityCat.accounts, jumlahModal, jumlahModalUsd]);
 
+  const archiveColumns: ReportArchiveColumn[] = [
+    { key: 'kategori', label: 'Kategori', width: 18 },
+    { key: 'akun', label: 'Akun', width: 34 },
+    { key: 'idr', label: 'IDR', align: 'right', width: 24 },
+    { key: 'usd', label: 'USD', align: 'right', width: 18 },
+  ];
+
+  const archiveRows = useMemo(() => {
+    const categories: Array<{ label: string; subtotalLabel: string; category: NormalizedCategory }> = [
+      { label: 'Aset Lancar', subtotalLabel: 'Jumlah Aset Lancar', category: currentAssetCat },
+      { label: 'Aset Tetap', subtotalLabel: 'Jumlah Aset Tetap', category: fixedAssetCat },
+      { label: 'Kewajiban', subtotalLabel: 'Jumlah Kewajiban', category: liabilityCat },
+      { label: 'Modal', subtotalLabel: 'Jumlah Modal', category: equityCat },
+    ];
+
+    return categories.flatMap(({ label, subtotalLabel, category }) => [
+      ...category.accounts.map((line) => ({
+        kategori: label,
+        akun: getLineLabel(line, accountMap),
+        idr: currenciesFormat('idr', getLineIdrAmount(line)),
+        usd: currenciesFormat('usd', getLineUsdAmount(line)),
+      })),
+      {
+        kategori: label,
+        akun: subtotalLabel,
+        idr: currenciesFormat('idr', category.totalIdr),
+        usd: currenciesFormat('usd', category.totalUsd),
+      },
+    ]);
+  }, [accountMap, currentAssetCat, equityCat, fixedAssetCat, liabilityCat]);
+
   const isLoading = reportQuery.isLoading || accountQuery.isLoading;
 
   return (
@@ -510,6 +543,14 @@ export default function LaporanNeracaPage() {
                 <Printer className="h-4 w-4" />
                 Print
               </Button>
+              <ReportArchiveAction
+                reportTitle="Laporan Neraca"
+                archiveSourceLabel="Neraca"
+                periodLabel={periodLabel}
+                data={archiveRows}
+                columns={archiveColumns}
+                disabled={isLoading}
+              />
               <Button
                 type="button"
                 variant="default"

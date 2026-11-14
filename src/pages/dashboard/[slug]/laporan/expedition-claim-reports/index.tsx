@@ -20,6 +20,8 @@ import { DocumentTemplatePrintFooter } from '@/components/common/DocumentTemplat
 import { getObjectStorageUrl } from '@/components/ui/storage-image';
 import { useReportTemplatePrint } from '@/hooks/useReportTemplatePrint';
 import { ReportTemplatePrintDialog } from '@/components/ui/report-template-print-dialog';
+import { ReportArchiveAction } from '@/components/features/report-archive/ReportArchiveAction';
+import { reportArchiveColumnsFromTable } from '@/lib/report-archive';
 import { ReportFilterBar } from '@/components/common/ReportFilterBar';
 import { ReportDateFilters, ReportExpeditionClaimItem } from '@/@types/report-feature.types';
 import { currenciesFormat } from '@/components/ui/currenciesFormat';
@@ -86,6 +88,10 @@ export default function ExpeditionClaimReportsPage() {
   const handlePrint = () => {
     templatePrint.openPrintDialog();
   };
+
+  const periodLabel = dateRange?.from
+    ? `${format(dateRange.from, 'dd MMM yyyy')}${dateRange.to ? ` - ${format(dateRange.to, 'dd MMM yyyy')}` : ''}`
+    : 'Semua Periode';
 
   const columns: ColumnDef<ReportExpeditionClaimItem>[] = useMemo(() => [
     {
@@ -227,10 +233,19 @@ export default function ExpeditionClaimReportsPage() {
             title="Laporan Klaim Ekspedisi"
             subtitle="Laporan rekap klaim dan potongan DO ekspedisi driver"
             actions={
-              <Button onClick={handlePrint} variant="outline" className="w-full sm:w-auto" disabled={isLoading}>
-                <Printer className="h-4 w-4 mr-2" />
-                Print
-              </Button>
+              <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row">
+                <Button onClick={handlePrint} variant="outline" className="w-full sm:w-auto" disabled={isLoading}>
+                  <Printer className="h-4 w-4 mr-2" />
+                  Print
+                </Button>
+                <ReportArchiveAction
+                  reportTitle="Laporan Klaim Ekspedisi"
+                  periodLabel={periodLabel}
+                  data={data}
+                  columns={reportArchiveColumnsFromTable(columns)}
+                  disabled={isLoading}
+                />
+              </div>
             }
           />
         </div>

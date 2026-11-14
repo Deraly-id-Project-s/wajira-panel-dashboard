@@ -13,6 +13,7 @@ import { SearchPagination } from '@/components/ui/search-pagination';
 import { useCompany } from '@/contexts/CompanyContext';
 import { resolveCompanyId, getLetterheadByCompanyId } from '@/lib/print-letterhead';
 import { PrintLetterPage } from '@/components/common/PrintLetterPage';
+import { ReportArchiveAction } from '@/components/features/report-archive/ReportArchiveAction';
 import { formatDate } from '@/lib/utils/format';
 import Head from 'next/head';
 import { LoadingState } from '@/components/ui/loading-state';
@@ -211,6 +212,14 @@ export default function LaporanBuktiPotongPage() {
                 <Printer className="h-4 w-4 mr-2" />
                 Print
               </Button>
+              <ReportArchiveAction
+                reportTitle="Laporan Bukti Potong"
+                periodLabel={dateRange?.from
+                  ? `${format(dateRange.from, 'dd MMM yyyy')}${dateRange.to ? ` - ${format(dateRange.to, 'dd MMM yyyy')}` : ''}`
+                  : 'Semua Periode'}
+                data={filteredData}
+                disabled={isLoading}
+              />
             </div>
           }
         >

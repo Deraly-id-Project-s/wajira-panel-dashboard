@@ -25,7 +25,7 @@ const toCsvLine = (cells: Array<string | number>): string =>
 
 type StockTabProps = {
   perPage: number;
-  onActionsChange?: (actions: { print: () => void; download: () => void }) => void;
+  onActionsChange?: (actions: { print: () => void; download: () => void; archiveData?: object[] }) => void;
 };
 
 export default function StockTab({ perPage, onActionsChange }: StockTabProps) {
@@ -110,8 +110,8 @@ export default function StockTab({ perPage, onActionsChange }: StockTabProps) {
   }, [rows, response?.from, totals.available, totals.forecast, page]);
 
   useEffect(() => {
-    onActionsChange?.({ print: handlePrint, download: handleDownload });
-  }, [handleDownload, handlePrint, onActionsChange]);
+    onActionsChange?.({ print: handlePrint, download: handleDownload, archiveData: rows });
+  }, [handleDownload, handlePrint, onActionsChange, rows]);
 
   const router = useRouter();
   const { slug } = router.query;

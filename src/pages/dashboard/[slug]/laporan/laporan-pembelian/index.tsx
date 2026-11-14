@@ -21,6 +21,7 @@ import { getObjectStorageUrl } from '@/components/ui/storage-image';
 import { useReportTemplatePrint } from '@/hooks/useReportTemplatePrint';
 import { Button } from '@/components/ui/button';
 import { ReportTemplatePrintDialog } from '@/components/ui/report-template-print-dialog';
+import { ReportArchiveAction } from '@/components/features/report-archive/ReportArchiveAction';
 
 export default function LaporanPembelianPage() {
   const [activeTab, setActiveTab] = useState('per-nota');
@@ -65,6 +66,10 @@ export default function LaporanPembelianPage() {
   const handlePrint = () => {
     templatePrint.openPrintDialog();
   };
+
+  const periodLabel = startDate && endDate
+    ? `${format(new Date(startDate), 'dd MMM yyyy')} - ${format(new Date(endDate), 'dd MMM yyyy')}`
+    : 'Semua Periode';
 
   const exportToCSV = () => {
     let csvContent = "";
@@ -172,6 +177,14 @@ export default function LaporanPembelianPage() {
           <PageHeader
             title="Laporan Pembelian"
             subtitle="Pantau semua transaksi pembelian"
+            actions={
+              <ReportArchiveAction
+                reportTitle={`Laporan Pembelian ${reportItem.toUpperCase()} ${activeTab.replace('-', ' ')}`}
+                periodLabel={periodLabel}
+                data={data}
+                disabled={isLoading}
+              />
+            }
           />
         </div>
 

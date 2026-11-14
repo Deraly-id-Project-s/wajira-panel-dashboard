@@ -18,6 +18,8 @@ import { useJumlahTerimaReport } from '@/hooks/report/useJumlahTerimaReport';
 import { useCompany } from '@/contexts/CompanyContext';
 import { resolveCompanyId, getLetterheadByCompanyId } from '@/lib/print-letterhead';
 import { PrintLetterPage } from '@/components/common/PrintLetterPage';
+import { ReportArchiveAction } from '@/components/features/report-archive/ReportArchiveAction';
+import { reportArchiveColumnsFromTable } from '@/lib/report-archive';
 import { formatDate } from '@/lib/utils/format';
 
 
@@ -228,9 +230,18 @@ export default function LPJumlahTerimaPage() {
             setPage(1);
           }}
           actions={
-            <Button onClick={handlePrint} variant="outline" className="w-full sm:w-auto">
-              <Printer className="mr-2 h-4 w-4" /> Print
-            </Button>
+            <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row">
+              <Button onClick={handlePrint} variant="outline" className="w-full sm:w-auto">
+                <Printer className="mr-2 h-4 w-4" /> Print
+              </Button>
+              <ReportArchiveAction
+                reportTitle={`Laporan Jumlah Terima ${activeTab.toUpperCase()}`}
+                periodLabel="Semua Periode"
+                data={data}
+                columns={reportArchiveColumnsFromTable(columns)}
+                disabled={isLoading}
+              />
+            </div>
           }
         >
           <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
