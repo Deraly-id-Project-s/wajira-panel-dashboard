@@ -19,6 +19,8 @@ type UnitTransactionApiModel = {
   max_capacity?: number | string;
   document_template_id?: number | string | null;
   document_template?: { id?: number | string; uuid?: string } | null;
+  document_archive_id?: number | string | null;
+  document_archive?: any;
   unit_transaction_bruto_total?: string | number;
   transaction_bruto_total?: string | number;
   transaction_dpp_total?: string | number;
@@ -441,6 +443,8 @@ const mapUnitTransaction = (item: UnitTransactionApiModel): UnitTransaction => (
     : null,
   unit_transaction_refunds: item.unit_transaction_refunds ?? [],
   documentTemplateId: item.document_template_id != null ? String(item.document_template_id) : item.document_template?.id != null ? String(item.document_template.id) : item.document_template?.uuid ?? null,
+  document_archive_id: item.document_archive_id != null ? Number(item.document_archive_id) : (item.document_archive?.id != null ? Number(item.document_archive.id) : null),
+  document_archive: item.document_archive ?? null,
 });
 
 const buildUnitTransactionFromRows = (rows: UnitTransactionItemListApiModel[]): UnitTransaction[] => {
@@ -758,10 +762,22 @@ const mapUnitTransactionDetail = (item: UnitTransactionApiModel): UnitTransactio
     usd_cost_other_total: item.usd_cost_other_total !== undefined ? toNumber(item.usd_cost_other_total) : undefined,
     unit_transaction_usd_costs: item.unit_transaction_usd_costs ?? [],
     unit_transaction_refunds: item.unit_transaction_refunds ?? [],
+    document_archive_id: item.document_archive_id != null ? Number(item.document_archive_id) : (item.document_archive?.id != null ? Number(item.document_archive.id) : null),
+    document_archive: item.document_archive ?? null,
   };
 };
 
 export const unitTransactionService = {
+  async updateDocumentArchive(id: string | number, documentArchiveId: number): Promise<any> {
+    const response = await apiClient.put<LaravelApiResponse<any>>(
+      `${strictBasePath}/${id}/update-document-archive`,
+      {
+        document_archive_id: documentArchiveId,
+      }
+    );
+    return ensureSuccess(response.data);
+  },
+
   async updateDocumentTemplate(id: string, documentTemplateId: string | number | null): Promise<UnitTransactionDetail> {
     const body = new FormData();
     body.append('_method', 'PUT');

@@ -10,7 +10,7 @@ import { Badge } from '@/components/ui/badge';
 import { PurchaseDetailCards } from '@/components/features/unit-transaksi/purchase/PurchaseDetailCards';
 import PurchaseUnitTable from '@/components/features/unit-transaksi/purchase/PurchaseUnitTable';
 import BaseTable, { ColumnDef } from '@/components/ui/base-table';
-import { usePurchaseById, useUnitTransactionTypeDetails } from '@/hooks/useUnitTransaction';
+import { usePurchaseById, useUnitTransactionTypeDetails, useUpdateUnitTransactionDocumentArchive } from '@/hooks/useUnitTransaction';
 import { useUnitBillings, useCurrentBilling, useBillingHistory, useUpdateBillingIsPaid } from '@/hooks/useUnitBilling';
 import { usePurchaseUnitItems } from '@/hooks/useUnitTransactionItem';
 import { useTypeUnits } from '@/hooks/useTypeUnit';
@@ -33,6 +33,7 @@ import { currenciesFormat } from '@/components/ui/currenciesFormat';
 import { cn } from '@/lib/utils';
 import { useRefundList } from '@/hooks/useRefundAdministrasi';
 import type { UnitTransactionRefund } from '@/@types/refund.type';
+import type { DocumentArchive } from '@/@types/document-archive.types';
 import {
   Dialog,
   DialogContent,
@@ -49,6 +50,8 @@ import { CollapsibleBox } from '@/components/ui/collapsible-box';
 import { useCompany } from '@/contexts/CompanyContext';
 import { useReportTemplatePrint } from '@/hooks/useReportTemplatePrint';
 import { ReportTemplatePrintDialog } from '@/components/ui/report-template-print-dialog';
+import { ReportArchiveAction } from '@/components/features/report-archive/ReportArchiveAction';
+import type { ReportArchiveColumn } from '@/lib/report-archive';
 import { resolveCompanyId, getLetterheadByCompanyId, getCompanyName } from '@/lib/print-letterhead';
 import PurchasePrintDocument from '@/components/features/unit-transaksi/purchase/PurchasePrintDocument';
 import { isUnitUsdTransaction } from '@/utils/payment-helpers';
@@ -211,6 +214,64 @@ export default function PurchaseDetailPage() {
   }, [router.query.print, isLoading, purchase, templatePrint.selectedTemplateId]);
 
   const isUsdTransaction = isUnitUsdTransaction(purchase);
+  const updateDocArchive = useUpdateUnitTransactionDocumentArchive();
+
+  const archiveColumns = useMemo<ReportArchiveColumn[]>(
+    () => [
+      { key: 'unit_type_name', label: 'Tipe Unit', width: 22 },
+      { key: 'color', label: 'Warna', width: 14 },
+      { key: 'chassis_number', label: 'No Rangka', width: 22 },
+      { key: 'machine_number', label: 'No Mesin', width: 22 },
+      {
+        key: 'price',
+        label: isUsdTransaction ? 'Harga (USD)' : 'Harga',
+        align: 'right',
+        format: isUsdTransaction ? 'number' : 'currency',
+        width: 20,
+      },
+    ],
+    [isUsdTransaction]
+  );
+
+  const archiveRows = useMemo(() => {
+    if (detailsList.length > 0) {
+      return detailsList;
+    }
+    return unitItems.map((item: any, idx: number) => ({
+      id: item.id || idx,
+      unit_type_name: item.unit_type?.name ?? '-',
+      color: '-',
+      chassis_number: '-',
+      machine_number: '-',
+      price: Number(item.price || 0),
+    }));
+  }, [detailsList, unitItems]);
+
+  const archiveTotals = useMemo(
+    () => [
+      {
+        key: 'price',
+        value: totalTagihan,
+        format: (isUsdTransaction ? 'number' : 'currency') as 'currency' | 'number',
+        label: 'Total',
+      },
+    ],
+    [totalTagihan, isUsdTransaction]
+  );
+
+  const handleArchiveSuccess = async (archive: DocumentArchive) => {
+    if (!purchase?.id) return;
+    try {
+      await updateDocArchive.mutateAsync({
+        id: String(purchase.id),
+        documentArchiveId: Number(archive.id),
+      });
+      toast.success(`Arsip dokumen berhasil disimpan dan ditautkan ke transaksi (ID Arsip: ${archive.id})`);
+      await refetchPurchase();
+    } catch (err: any) {
+      toast.error(err?.message || 'Gagal memperbarui document_archive_id pada transaksi');
+    }
+  };
 
   const historyColumns = useMemo<ColumnDef<any>[]>(
     () => [
@@ -231,33 +292,33 @@ export default function PurchaseDetailPage() {
       },
       ...(isUsdTransaction
         ? [
-            {
-              header: 'Nominal Pembayaran BCA USD',
-              alignment: 'right' as const,
-              cell: (history: any) => {
-                const usdPayment = Number(history.bca_payment_usd_amount ?? 0);
-                return usdPayment > 0 ? `$ ${usdPayment.toLocaleString('id-ID')}` : '-';
-              },
+          {
+            header: 'Nominal Pembayaran BCA USD',
+            alignment: 'right' as const,
+            cell: (history: any) => {
+              const usdPayment = Number(history.bca_payment_usd_amount ?? 0);
+              return usdPayment > 0 ? `$ ${usdPayment.toLocaleString('id-ID')}` : '-';
             },
-          ]
+          },
+        ]
         : [
-            {
-              header: 'Nominal Pembayaran BCA IDR',
-              alignment: 'right' as const,
-              cell: (history: any) => {
-                const bcaPayment = Number(history.bca_payment_amount ?? 0);
-                return bcaPayment > 0 ? `Rp ${bcaPayment.toLocaleString('id-ID')}` : '-';
-              },
+          {
+            header: 'Nominal Pembayaran BCA IDR',
+            alignment: 'right' as const,
+            cell: (history: any) => {
+              const bcaPayment = Number(history.bca_payment_amount ?? 0);
+              return bcaPayment > 0 ? `Rp ${bcaPayment.toLocaleString('id-ID')}` : '-';
             },
-            {
-              header: 'Nominal Pembayaran CASH IDR',
-              alignment: 'right' as const,
-              cell: (history: any) => {
-                const cashPayment = Number(history.cash_payment_amount ?? 0);
-                return cashPayment > 0 ? `Rp ${cashPayment.toLocaleString('id-ID')}` : '-';
-              },
+          },
+          {
+            header: 'Nominal Pembayaran CASH IDR',
+            alignment: 'right' as const,
+            cell: (history: any) => {
+              const cashPayment = Number(history.cash_payment_amount ?? 0);
+              return cashPayment > 0 ? `Rp ${cashPayment.toLocaleString('id-ID')}` : '-';
             },
-          ]),
+          },
+        ]),
     ],
     [isUsdTransaction]
   );
@@ -525,14 +586,24 @@ export default function PurchaseDetailPage() {
               <span>Kode Beli:</span>
               <span className="inline-flex items-center gap-1.5 font-semibold text-orange-600 hover:text-orange-700">{purchase.code}</span>
               {isPaid ? (
-                <Badge variant="outline">
+                <Badge variant="outline" className="border-emerald-200 bg-emerald-50 text-emerald-700 font-semibold">
                   Lunas
                 </Badge>
               ) : (
-                <Badge variant="outline">
+                <Badge variant="outline" className="border-rose-200 bg-rose-50 text-rose-700 font-semibold">
                   Belum Lunas
                 </Badge>
               )}
+              {purchase?.document_archive_id ? (
+                <Badge
+                  variant="outline"
+                  className="border-blue-200 bg-blue-50 text-blue-700 font-semibold cursor-pointer"
+                  onClick={() => router.push(`/dashboard/${slug}/master/document-archive?search=${purchase.code}`)}
+                  title="Lihat di Arsip Dokumen"
+                >
+                  Arsip: #{purchase.document_archive_id}
+                </Badge>
+              ) : null}
             </>
           }
           actions={
@@ -573,6 +644,22 @@ export default function PurchaseDetailPage() {
                 <Printer className="mr-2 h-4 w-4" />
                 Print
               </Button>
+              <ReportArchiveAction
+                reportTitle={`Administrasi Pembelian - ${purchase.code}`}
+                archiveSourceLabel={`Pembelian ${purchase.code}`}
+                defaultDocumentCode={purchase.code}
+                defaultArchiveName={`Administrasi Pembelian - ${purchase.code}`}
+                defaultNotes={`Diarsipkan dari Administrasi Pembelian Unit ${purchase.code} (${companyName})`}
+                periodLabel={purchase.created_at ? formatDate(purchase.created_at) : '-'}
+                data={archiveRows}
+                columns={archiveColumns}
+                totals={archiveTotals}
+                companyName={companyName}
+                fallbackLetterhead={selectedPrintBackground}
+                onArchiveSuccess={handleArchiveSuccess}
+                disabled={isLoading}
+                className="text-blue-700 border-blue-200 hover:bg-blue-50"
+              />
               <Button
                 size="sm"
                 variant="outline"
@@ -675,7 +762,7 @@ export default function PurchaseDetailPage() {
             <DialogDescription className="pt-2">
               Apakah Anda yakin ingin menandai transaksi ini sebagai <strong>Lunas</strong>?
             </DialogDescription>
-            <div className="border border-slate-200 bg-slate-50 text-slate-700 text-sm rounded-md p-2 text-justify">
+            <div className="border border-slate-200 bg-slate-50 text-slate-700 text-sm rounded-md p-2 text-justify w-full">
               <div className="flex gap-2">
                 <span>
                   <Info />

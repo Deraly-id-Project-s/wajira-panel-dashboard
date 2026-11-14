@@ -26,6 +26,9 @@ export interface ReportArchiveActionProps<T extends object = Record<string, unkn
   archiveSourceLabel?: string;
   companyName?: string;
   fallbackLetterhead?: string;
+  defaultDocumentCode?: string;
+  defaultArchiveName?: string;
+  defaultNotes?: string;
   disabled?: boolean;
   className?: string;
   onArchiveSuccess?: (archive: DocumentArchive) => void;
@@ -41,6 +44,9 @@ export function ReportArchiveAction<T extends object = Record<string, unknown>>(
   archiveSourceLabel,
   companyName,
   fallbackLetterhead,
+  defaultDocumentCode,
+  defaultArchiveName,
+  defaultNotes,
   disabled,
   className,
   onArchiveSuccess,
@@ -83,6 +89,9 @@ export function ReportArchiveAction<T extends object = Record<string, unknown>>(
         totalLabel={totalLabel}
         archiveSourceLabel={archiveSourceLabel}
         fallbackLetterhead={resolvedLetterhead}
+        defaultDocumentCode={defaultDocumentCode}
+        defaultArchiveName={defaultArchiveName}
+        defaultNotes={defaultNotes}
         onArchiveSuccess={onArchiveSuccess}
       />
     </>

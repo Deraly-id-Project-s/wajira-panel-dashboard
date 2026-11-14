@@ -106,6 +106,8 @@ export interface UnitTransaction {
   billing_summary?: UnitTransactionBillingSummary | null;
   unit_transaction_refunds?: any[];
   documentTemplateId?: string | null;
+  document_archive_id?: number | null;
+  document_archive?: any;
 }
 
 export interface UnitTransactionResponse {
@@ -219,6 +221,8 @@ export interface UnitTransactionDetail {
   isUnitTypeDetailValid?: boolean;
   is_usd_transaction?: boolean;
   documentTemplateId?: string | null;
+  document_archive_id?: number | null;
+  document_archive?: any;
   unit_transaction_price_usd_total?: number;
   transaction_price_usd_total?: number;
   unit_transaction_price_usd_total_actual?: number;

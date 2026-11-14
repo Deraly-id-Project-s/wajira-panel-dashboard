@@ -54,14 +54,20 @@ import {
 } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { currenciesFormat } from '@/components/ui/currenciesFormat';
 import { getObjectStorageUrl } from '@/components/ui/storage-image';
 import { useDocumentTemplates } from '@/hooks/useDocumentTemplate';
 import { useCreateDocumentArchive } from '@/hooks/useDocumentArchive';
 import { getLatestDocumentNumber } from '@/services/document-archive.service';
-import type { CashFlowReportItem } from '@/@types/cash-flow-report.types';
 import type { DocumentArchive } from '@/@types/document-archive.types';
+import {
+  formatReportArchiveValue,
+  getReportArchiveValue,
+  inferReportArchiveColumns,
+  type ReportArchiveColumn,
+  type ReportArchiveTotal,
+} from '@/lib/report-archive';
 import { cn } from '@/lib/utils';
+import { DEFAULT_CANVAS_POSITIONS } from '@/lib/custom-document-helpers';
 
 export interface ComponentPosition {
   x: number;
@@ -103,39 +109,25 @@ export interface CustomImageBlock {
   opacity: number;
 }
 
-export interface CustomableReportDocumentDialogProps {
+export interface CustomableReportDocumentDialogProps<T extends object = Record<string, unknown>> {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   reportTitle?: string;
   companyName: string;
   periodLabel?: string;
-  data: CashFlowReportItem[];
-  totals: {
-    debitCashIdr: number;
-    kreditCashIdr: number;
-    debitBankIdr: number;
-    kreditBankIdr: number;
-    debitBankUsd: number;
-    kreditBankUsd: number;
-  };
+  data: T[];
+  columns?: ReportArchiveColumn[];
+  totals?: ReportArchiveTotal[];
+  totalLabel?: string;
+  archiveSourceLabel?: string;
   fallbackLetterhead?: string;
+  defaultDocumentCode?: string;
+  defaultArchiveName?: string;
+  defaultNotes?: string;
   onArchiveSuccess?: (archive: DocumentArchive) => void;
 }
 
-// Default standard A4 positions (794px width, 1123px height)
-const DEFAULT_POSITIONS: {
-  headerInfo: ComponentPosition;
-  introText: ComponentPosition;
-  table: ComponentPosition;
-  closingText: ComponentPosition;
-  printDate: ComponentPosition;
-} = {
-  headerInfo: { x: 55, y: 125, width: 684 },
-  introText: { x: 55, y: 220, width: 684 },
-  table: { x: 55, y: 295, width: 684 },
-  closingText: { x: 55, y: 790, width: 684 },
-  printDate: { x: 55, y: 1060, width: 320 },
-};
+const DEFAULT_POSITIONS = DEFAULT_CANVAS_POSITIONS;
 
 function EditorToolbar({ editor }: { editor: Editor | null }) {
   if (!editor) return null;
@@ -207,17 +199,27 @@ function EditorToolbar({ editor }: { editor: Editor | null }) {
   );
 }
 
-export function CustomableReportDocumentDialog({
+export function CustomableReportDocumentDialog<T extends object = Record<string, unknown>>({
   open,
   onOpenChange,
-  reportTitle = 'Laporan Transaksi Kas',
+  reportTitle = 'Laporan',
   companyName,
   periodLabel = '-',
   data,
+  columns,
   totals,
+  totalLabel = 'Total',
+  archiveSourceLabel,
   fallbackLetterhead,
+  defaultDocumentCode,
+  defaultArchiveName,
+  defaultNotes,
   onArchiveSuccess,
-}: CustomableReportDocumentDialogProps) {
+}: CustomableReportDocumentDialogProps<T>) {
+  const rows = useMemo(
+    () => data as unknown as Array<Record<string, unknown>>,
+    [data],
+  );
   // Query master templates
   const { data: templatesData } = useDocumentTemplates({ page: 1, perPage: 100 });
   const templates = useMemo(() => templatesData?.data ?? [], [templatesData?.data]);
@@ -231,9 +233,22 @@ export function CustomableReportDocumentDialog({
   const [backgroundUrl, setBackgroundUrl] = useState<string | null>(fallbackLetterhead || null);
 
   // Archive metadata state
-  const [archiveName, setArchiveName] = useState('');
-  const [documentCode, setDocumentCode] = useState('');
-  const [archiveNotes, setArchiveNotes] = useState('');
+  const [archiveName, setArchiveName] = useState(defaultArchiveName || '');
+  const [documentCode, setDocumentCode] = useState(defaultDocumentCode || '');
+  const [archiveNotes, setArchiveNotes] = useState(defaultNotes || '');
+
+  useEffect(() => {
+    if (open) {
+      if (defaultDocumentCode) setDocumentCode(defaultDocumentCode);
+      if (defaultArchiveName) {
+        setArchiveName(defaultArchiveName);
+      } else if (!archiveName) {
+        setArchiveName(`${reportTitle}${defaultDocumentCode ? ` - ${defaultDocumentCode}` : ''}`);
+      }
+      if (defaultNotes) setArchiveNotes(defaultNotes);
+      if (reportTitle && (!subject || subject === 'Laporan')) setSubject(reportTitle);
+    }
+  }, [open, defaultDocumentCode, defaultArchiveName, defaultNotes, reportTitle]);
 
   // Active left tab
   const [activeTab, setActiveTab] = useState<'info' | 'text' | 'media'>('info');
@@ -291,7 +306,7 @@ export function CustomableReportDocumentDialog({
   }, [open, reportTitle, periodLabel, fallbackLetterhead]);
 
   // Tiptap Header Content Editor
-  const defaultHeader = '<p>Berikut adalah rincian mutasi kas dan bank yang dicatat pada periode ini:</p>';
+  const defaultHeader = `<p>Berikut adalah rincian ${reportTitle.toLowerCase()} yang dicatat pada periode ini:</p>`;
   const [headerHtml, setHeaderHtml] = useState(defaultHeader);
   const headerEditor = useEditor({
     extensions: [StarterKit],
@@ -303,7 +318,7 @@ export function CustomableReportDocumentDialog({
   });
 
   // Tiptap Footer Content Editor
-  const defaultFooter = '<p>Dokumen ini dibuat otomatis sebagai laporan mutasi kas dan bank operasional perusahaan.</p>';
+  const defaultFooter = `<p>Dokumen ini dibuat otomatis sebagai ${reportTitle.toLowerCase()} perusahaan.</p>`;
   const [footerHtml, setFooterHtml] = useState(defaultFooter);
   const footerEditor = useEditor({
     extensions: [StarterKit],
@@ -780,7 +795,8 @@ export function CustomableReportDocumentDialog({
       pdf.addImage(imgData, 'JPEG', 0, 0, pdfWidth, pdfHeight);
 
       const blob = pdf.output('blob');
-      const safeFilename = `${(archiveName.trim() || 'Laporan_Kas').replace(/[^a-zA-Z0-9_-]/g, '_')}.pdf`;
+      const fallbackFilename = reportTitle.replace(/[^a-zA-Z0-9]+/g, '_');
+      const safeFilename = `${(archiveName.trim() || fallbackFilename || 'Laporan').replace(/[^a-zA-Z0-9_-]/g, '_')}.pdf`;
       return new File([blob], safeFilename, { type: 'application/pdf' });
     } catch (err: any) {
       toast.error(err?.message ?? 'Gagal membuat berkas PDF dokumen');
@@ -805,8 +821,35 @@ export function CustomableReportDocumentDialog({
     toast.success('Berkas PDF berhasil diunduh');
   };
 
-  // Trigger browser print
-  const handlePrint = () => {
+  // Track if current document in dialog has already been archived
+  const [hasArchived, setHasArchived] = useState(false);
+
+  // Trigger browser print & automatically archive
+  const handlePrint = async () => {
+    if (!hasArchived && archiveName.trim()) {
+      const pdfFile = await generatePdfFile();
+      if (pdfFile) {
+        try {
+          const result = await createArchiveMutation.mutateAsync({
+            name: archiveName.trim(),
+            type: 'report',
+            file: pdfFile,
+            document_code: documentCode.trim() || undefined,
+            notes: archiveNotes.trim() || `Diarsipkan dari ${archiveSourceLabel || reportTitle} (${periodLabel})`,
+            is_active: true,
+          });
+          setHasArchived(true);
+          toast.success(
+            `Dokumen berhasil dicetak & diarsipkan dengan kode: ${result.documentCode || documentCode || 'Auto'}`
+          );
+          if (onArchiveSuccess) {
+            onArchiveSuccess(result);
+          }
+        } catch (err: any) {
+          console.warn('Gagal otomatis mengarsipkan saat print:', err);
+        }
+      }
+    }
     window.print();
   };
 
@@ -826,10 +869,11 @@ export function CustomableReportDocumentDialog({
         type: 'report',
         file: pdfFile,
         document_code: documentCode.trim() || undefined,
-        notes: archiveNotes.trim() || `Diarsipkan dari Laporan Transaksi Kas (${periodLabel})`,
+        notes: archiveNotes.trim() || `Diarsipkan dari ${archiveSourceLabel || reportTitle} (${periodLabel})`,
         is_active: true,
       });
 
+      setHasArchived(true);
       toast.success(
         `Laporan berhasil diarsipkan dengan kode: ${result.documentCode || documentCode || 'Auto'}`
       );
@@ -843,7 +887,22 @@ export function CustomableReportDocumentDialog({
   };
 
   // Limit preview rows to 20 for preview readability
-  const previewRows = data.slice(0, 20);
+  const previewRows = rows.slice(0, 20);
+
+  const resolvedColumns = useMemo(
+    () => (columns && columns.length > 0 ? columns : inferReportArchiveColumns(rows)),
+    [columns, rows],
+  );
+
+  const previewColumnWidths = useMemo(() => {
+    const totalWidth = resolvedColumns.reduce((sum, column) => sum + (column.width ?? 16), 0) || 1;
+    return resolvedColumns.map((column) => ((column.width ?? 16) / totalWidth) * 94);
+  }, [resolvedColumns]);
+
+  const totalsByKey = useMemo(
+    () => new Map((totals ?? []).map((total) => [total.key, total])),
+    [totals],
+  );
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -982,7 +1041,7 @@ export function CustomableReportDocumentDialog({
                       id="archive-name"
                       value={archiveName}
                       onChange={(e) => setArchiveName(e.target.value)}
-                      placeholder="Contoh: Laporan Transaksi Kas November 2026"
+                      placeholder="Contoh: Laporan November 2026"
                       className="text-xs"
                     />
                   </div>
@@ -1681,7 +1740,7 @@ export function CustomableReportDocumentDialog({
                     <div className="flex items-start justify-between gap-4">
                       <div>
                         <p className="text-[8pt] font-semibold uppercase tracking-[0.16em] text-slate-500">
-                          Laporan Akuntansi / Kas
+                          {archiveSourceLabel || 'Laporan Perusahaan'}
                         </p>
                         <h1 className="text-[13pt] font-bold uppercase tracking-wide mt-0.5">
                           {subject || reportTitle}
@@ -1772,7 +1831,7 @@ export function CustomableReportDocumentDialog({
                     >
                       <div className="flex items-center gap-1">
                         <GripVertical className="h-3 w-3" />
-                        <span>Tabel Data Transaksi (Klik & Geser)</span>
+                        <span>Tabel Data Laporan (Klik & Geser)</span>
                       </div>
                       <span className="font-mono text-[8px] opacity-80">
                         X:{tablePos.x} Y:{tablePos.y}
@@ -1792,78 +1851,82 @@ export function CustomableReportDocumentDialog({
                           title="Klik & geser untuk memindahkan tabel"
                         >
                           <th className="w-[6%] border border-white px-1 py-1 text-center font-semibold">No</th>
-                          <th className="w-[12%] border border-white px-1 py-1 text-center font-semibold">Tanggal</th>
-                          <th className="w-[14%] border border-white px-1 py-1 text-left font-semibold">Nota/Ref</th>
-                          <th className="w-[28%] border border-white px-1 py-1 text-left font-semibold">Keterangan</th>
-                          <th className="w-[10%] border border-white px-1 py-1 text-right font-semibold">Kas In</th>
-                          <th className="w-[10%] border border-white px-1 py-1 text-right font-semibold">Kas Out</th>
-                          <th className="w-[10%] border border-white px-1 py-1 text-right font-semibold">Bank In</th>
-                          <th className="w-[10%] border border-white px-1 py-1 text-right font-semibold">Bank Out</th>
+                          {resolvedColumns.map((column, index) => (
+                            <th
+                              key={column.key}
+                              style={{ width: `${previewColumnWidths[index]}%` }}
+                              className={cn(
+                                'border border-white px-1 py-1 font-semibold',
+                                column.align === 'center' && 'text-center',
+                                column.align === 'right' && 'text-right',
+                                (!column.align || column.align === 'left') && 'text-left',
+                              )}
+                            >
+                              {column.label}
+                            </th>
+                          ))}
                         </tr>
                       </thead>
                       <tbody>
-                        {previewRows.map((row, idx) => {
-                          const debitCash = Number(row.debit_cash_idr ?? row['DEBIT (CASH IDR)'] ?? 0);
-                          const kreditCash = Number(row.kredit_cash_idr ?? row['KREDIT (CASH IDR)'] ?? 0);
-                          const debitBank = Number(row.debit_bank_idr ?? row['DEBIT (BANK IDR)'] ?? 0);
-                          const kreditBank = Number(row.kredit_bank_idr ?? row['KREDIT (BANK IDR)'] ?? 0);
+                        {previewRows.map((row, idx) => (
+                          <tr
+                            key={String(row.id ?? row.uuid ?? idx)}
+                            className={idx % 2 === 1 ? 'bg-slate-50' : 'bg-white'}
+                          >
+                            <td className="border border-slate-200 px-1 py-1 text-center">{idx + 1}</td>
+                            {resolvedColumns.map((column) => {
+                              const value = getReportArchiveValue(row, column.key);
+                              return (
+                                <td
+                                  key={column.key}
+                                  className={cn(
+                                    'border border-slate-200 px-1 py-1 align-top',
+                                    column.align === 'center' && 'text-center',
+                                    column.align === 'right' && 'text-right tabular-nums',
+                                    (!column.align || column.align === 'left') && 'text-left',
+                                    (!column.format || column.format === 'text') && 'truncate',
+                                  )}
+                                  title={formatReportArchiveValue(value, column.format)}
+                                >
+                                  {formatReportArchiveValue(value, column.format)}
+                                </td>
+                              );
+                            })}
+                          </tr>
+                        ))}
 
-                          return (
-                            <tr
-                              key={row.id ?? idx}
-                              className={idx % 2 === 1 ? 'bg-slate-50' : 'bg-white'}
-                            >
-                              <td className="border border-slate-200 px-1 py-1 text-center">{idx + 1}</td>
-                              <td className="border border-slate-200 px-1 py-1 text-center">
-                                {row.tanggal ? String(row.tanggal).slice(0, 10) : '-'}
-                              </td>
-                              <td className="border border-slate-200 px-1 py-1 font-mono truncate">
-                                {row.nota_ref || '-'}
-                              </td>
-                              <td className="border border-slate-200 px-1 py-1 truncate">
-                                {row.keterangan || '-'}
-                              </td>
-                              <td className="border border-slate-200 px-1 py-1 text-right tabular-nums">
-                                {debitCash > 0 ? currenciesFormat('idr', debitCash) : '-'}
-                              </td>
-                              <td className="border border-slate-200 px-1 py-1 text-right tabular-nums">
-                                {kreditCash > 0 ? currenciesFormat('idr', kreditCash) : '-'}
-                              </td>
-                              <td className="border border-slate-200 px-1 py-1 text-right tabular-nums">
-                                {debitBank > 0 ? currenciesFormat('idr', debitBank) : '-'}
-                              </td>
-                              <td className="border border-slate-200 px-1 py-1 text-right tabular-nums">
-                                {kreditBank > 0 ? currenciesFormat('idr', kreditBank) : '-'}
-                              </td>
-                            </tr>
-                          );
-                        })}
-
-                        {/* Summary Row */}
-                        <tr className="font-bold bg-slate-100" style={{ backgroundColor: `${tableColor}14` }}>
-                          <td colSpan={4} className="border border-slate-300 px-1.5 py-1 text-right uppercase">
-                            Total
-                          </td>
-                          <td className="border border-slate-300 px-1 py-1 text-right tabular-nums text-emerald-800">
-                            {currenciesFormat('idr', totals.debitCashIdr)}
-                          </td>
-                          <td className="border border-slate-300 px-1 py-1 text-right tabular-nums text-rose-800">
-                            {currenciesFormat('idr', totals.kreditCashIdr)}
-                          </td>
-                          <td className="border border-slate-300 px-1 py-1 text-right tabular-nums text-emerald-800">
-                            {currenciesFormat('idr', totals.debitBankIdr)}
-                          </td>
-                          <td className="border border-slate-300 px-1 py-1 text-right tabular-nums text-rose-800">
-                            {currenciesFormat('idr', totals.kreditBankIdr)}
-                          </td>
-                        </tr>
+                        {totals && totals.length > 0 && (
+                          <tr className="font-bold bg-slate-100" style={{ backgroundColor: `${tableColor}14` }}>
+                            {resolvedColumns.map((column, index) => {
+                              const total = totalsByKey.get(column.key);
+                              return (
+                                <td
+                                  key={column.key}
+                                  className={cn(
+                                    'border border-slate-300 px-1 py-1',
+                                    column.align === 'center' && 'text-center',
+                                    column.align === 'right' && 'text-right tabular-nums',
+                                    (!column.align || column.align === 'left') && 'text-left',
+                                  )}
+                                >
+                                  {index === 0 && <span className="uppercase">{totalLabel}</span>}
+                                  {total && (
+                                    <span className={cn(index === 0 && 'ml-1', 'text-emerald-800')}>
+                                      {formatReportArchiveValue(total.value, total.format ?? 'currency')}
+                                    </span>
+                                  )}
+                                </td>
+                              );
+                            })}
+                          </tr>
+                        )}
                       </tbody>
                     </table>
                   </div>
 
                   {data.length > 20 && (
                     <p className="mt-1 text-[6pt] text-slate-400 italic">
-                      * Menampilkan 20 transaksi pertama dari total {data.length} transaksi pada preview ringkas.
+                      * Menampilkan 20 baris pertama dari total {data.length} baris pada preview ringkas.
                     </p>
                   )}
                 </div>

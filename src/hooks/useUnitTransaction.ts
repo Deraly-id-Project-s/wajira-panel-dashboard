@@ -193,6 +193,27 @@ export const useUpdateUnitTransactionState = () => {
   });
 };
 
+export const useUpdateUnitTransactionDocumentArchive = () => {
+  const queryClient = useQueryClient();
+  const { companyId } = useCompany();
+
+  return useMutation({
+    mutationFn: ({ id, documentArchiveId }: { id: string | number; documentArchiveId: number }) =>
+      unitTransactionService.updateDocumentArchive(id, documentArchiveId),
+    onSuccess: (_data, variables) => {
+      if (companyId) {
+        queryClient.invalidateQueries({ queryKey: companyQueryKeys.companyScope(companyId) });
+        queryClient.invalidateQueries({ queryKey: unitTransactionKeys.detail(companyId, String(variables.id)) });
+        queryClient.invalidateQueries({ queryKey: unitTransactionKeys.purchaseDetail(companyId, String(variables.id)) });
+      }
+      queryClient.invalidateQueries({ queryKey: ['unit-transaction', String(variables.id)] });
+      queryClient.invalidateQueries({ queryKey: ['purchase-by-id', String(variables.id)] });
+      queryClient.invalidateQueries({ queryKey: ['sales-by-id', String(variables.id)] });
+      queryClient.invalidateQueries({ queryKey: ['sales-detail', String(variables.id)] });
+    },
+  });
+};
+
 export const useUpdateUnitTransactionDocumentTemplate = () => {
   const queryClient = useQueryClient();
   const { companyId } = useCompany();

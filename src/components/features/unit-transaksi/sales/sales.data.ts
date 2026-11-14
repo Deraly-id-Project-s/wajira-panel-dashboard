@@ -95,6 +95,8 @@ export interface SalesItem {
   usd_cost_other_total?: number;
   unit_transaction_usd_costs?: any[];
   documentTemplateId?: string | null;
+  document_archive_id?: number | null;
+  document_archive?: any;
   billing_summary?: UnitTransactionBillingSummary | null;
 }
 

@@ -48,8 +48,11 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { CollapsibleBox } from '@/components/ui/collapsible-box';
 import { useReportTemplatePrint } from '@/hooks/useReportTemplatePrint';
 import { ReportTemplatePrintDialog } from '@/components/ui/report-template-print-dialog';
+import { ReportArchiveAction } from '@/components/features/report-archive/ReportArchiveAction';
+import type { ReportArchiveColumn } from '@/lib/report-archive';
+import type { DocumentArchive } from '@/@types/document-archive.types';
 import { resolveCompanyId, getLetterheadByCompanyId, getCompanyName } from '@/lib/print-letterhead';
-import { useUnitTransactionTypeDetails } from '@/hooks/useUnitTransaction';
+import { useUnitTransactionTypeDetails, useUpdateUnitTransactionDocumentArchive } from '@/hooks/useUnitTransaction';
 import SalesPrintDocument from '@/components/features/unit-transaksi/sales/SalesPrintDocument';
 import { isUnitUsdTransaction } from '@/utils/payment-helpers';
 
@@ -201,6 +204,64 @@ export default function SalesDetailPage() {
   }, [router.query.print, isLoading, sales, templatePrint.selectedTemplateId]);
 
   const isUsdTransaction = isUnitUsdTransaction(salesData?.is_usd_transaction !== undefined ? salesData : sales);
+  const updateDocArchive = useUpdateUnitTransactionDocumentArchive();
+
+  const archiveColumns = useMemo<ReportArchiveColumn[]>(
+    () => [
+      { key: 'unit_type_name', label: 'Tipe Unit', width: 22 },
+      { key: 'color', label: 'Warna', width: 14 },
+      { key: 'chassis_number', label: 'No Rangka', width: 22 },
+      { key: 'machine_number', label: 'No Mesin', width: 22 },
+      {
+        key: 'price',
+        label: isUsdTransaction ? 'Harga (USD)' : 'Harga',
+        align: 'right',
+        format: isUsdTransaction ? 'number' : 'currency',
+        width: 20,
+      },
+    ],
+    [isUsdTransaction]
+  );
+
+  const archiveRows = useMemo(() => {
+    if (detailsList.length > 0) {
+      return detailsList;
+    }
+    return (salesData?.lineItems ?? []).map((item, idx) => ({
+      id: item.id || idx,
+      unit_type_name: item.tipeUnit ?? '-',
+      color: '-',
+      chassis_number: '-',
+      machine_number: '-',
+      price: Number(item.hargaJual || 0),
+    }));
+  }, [detailsList, salesData?.lineItems]);
+
+  const archiveTotals = useMemo(
+    () => [
+      {
+        key: 'price',
+        value: totalTagihan,
+        format: (isUsdTransaction ? 'number' : 'currency') as 'currency' | 'number',
+        label: 'Total',
+      },
+    ],
+    [totalTagihan, isUsdTransaction]
+  );
+
+  const handleArchiveSuccess = async (archive: DocumentArchive) => {
+    if (!sales?.id) return;
+    try {
+      await updateDocArchive.mutateAsync({
+        id: String(sales.id),
+        documentArchiveId: Number(archive.id),
+      });
+      toast.success(`Arsip dokumen berhasil disimpan dan ditautkan ke transaksi (ID Arsip: ${archive.id})`);
+      await refetchSales();
+    } catch (err: any) {
+      toast.error(err?.message || 'Gagal memperbarui document_archive_id pada transaksi');
+    }
+  };
 
   const historyColumns = useMemo<ColumnDef<any>[]>(
     () => [
@@ -545,6 +606,16 @@ export default function SalesDetailPage() {
                   Belum Lunas
                 </Badge>
               )}
+              {(sales?.document_archive_id || salesData?.document_archive_id) ? (
+                <Badge
+                  variant="outline"
+                  className="border-blue-200 bg-blue-50 text-blue-700 font-semibold cursor-pointer"
+                  onClick={() => router.push(`/dashboard/${slug}/master/document-archive?search=${sales.code}`)}
+                  title="Lihat di Arsip Dokumen"
+                >
+                  Arsip: #{sales?.document_archive_id ?? salesData?.document_archive_id}
+                </Badge>
+              ) : null}
             </>
           }
           actions={
@@ -585,6 +656,22 @@ export default function SalesDetailPage() {
                 <Printer className="mr-2 h-4 w-4" />
                 Print
               </Button>
+              <ReportArchiveAction
+                reportTitle={`Administrasi Penjualan - ${sales.code}`}
+                archiveSourceLabel={`Penjualan ${sales.code}`}
+                defaultDocumentCode={sales.code}
+                defaultArchiveName={`Administrasi Penjualan - ${sales.code}`}
+                defaultNotes={`Diarsipkan dari Administrasi Penjualan Unit ${sales.code} (${companyName})`}
+                periodLabel={salesData?.tanggal || '-'}
+                data={archiveRows}
+                columns={archiveColumns}
+                totals={archiveTotals}
+                companyName={companyName}
+                fallbackLetterhead={selectedPrintBackground}
+                onArchiveSuccess={handleArchiveSuccess}
+                disabled={isLoading}
+                className="text-blue-700 border-blue-200 hover:bg-blue-50"
+              />
               <Button
                 size="sm"
                 variant="outline"

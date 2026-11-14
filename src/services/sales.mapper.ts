@@ -14,6 +14,8 @@ export type SalesApiModel = {
   created_at?: string;
   document_template_id?: number | string | null;
   document_template?: { id?: number | string; uuid?: string } | null;
+  document_archive_id?: number | string | null;
+  document_archive?: any;
   unit_transaction_bruto_total?: string | number;
   transaction_bruto_total?: string | number;
   unit_transaction_dpp_total?: string | number;
@@ -336,6 +338,8 @@ export const mapSalesToTableItem = (item: SalesApiModel): UnitTransaction => {
       }
       : null,
     documentTemplateId: item.document_template_id != null ? String(item.document_template_id) : item.document_template?.id != null ? String(item.document_template.id) : item.document_template?.uuid ?? null,
+    document_archive_id: item.document_archive_id != null ? Number(item.document_archive_id) : (item.document_archive?.id != null ? Number(item.document_archive.id) : null),
+    document_archive: item.document_archive ?? null,
   };
 };
 
@@ -446,6 +450,8 @@ export const mapSalesDetailToUI = (item: SalesApiModel): SalesItem => {
     usd_cost_other_total: (item as any).usd_cost_other_total !== undefined ? toNumber((item as any).usd_cost_other_total) : undefined,
     unit_transaction_usd_costs: (item as any).unit_transaction_usd_costs ?? [],
     documentTemplateId: item.document_template_id != null ? String(item.document_template_id) : item.document_template?.id != null ? String(item.document_template.id) : item.document_template?.uuid ?? null,
+    document_archive_id: item.document_archive_id != null ? Number(item.document_archive_id) : (item.document_archive?.id != null ? Number(item.document_archive.id) : null),
+    document_archive: item.document_archive ?? null,
     billing_summary: item.billing_summary
       ? {
         grand_total: toNumber(item.billing_summary.grand_total),

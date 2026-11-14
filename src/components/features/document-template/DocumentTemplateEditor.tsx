@@ -2,21 +2,58 @@ import { useEffect, useState, useRef } from 'react';
 import { EditorContent, useEditor } from '@tiptap/react';
 import type { Editor } from '@tiptap/core';
 import StarterKit from '@tiptap/starter-kit';
-import { Bold, Italic, List, ListOrdered, Redo2, Undo2 } from 'lucide-react';
+import {
+  Bold,
+  Eye,
+  EyeOff,
+  GripVertical,
+  ImageIcon,
+  Italic,
+  List,
+  ListOrdered,
+  Move,
+  Plus,
+  Printer,
+  Redo2,
+  RotateCcw,
+  Trash2,
+  Type,
+  Undo2,
+  Upload,
+  ZoomIn,
+  ZoomOut,
+  Download,
+} from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { toast } from 'sonner';
+
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { FileInput } from '@/components/ui/file-input';
-import { getObjectStorageUrl, StorageImage } from '@/components/ui/storage-image';
+import { getObjectStorageUrl } from '@/components/ui/storage-image';
 import type { DocumentTemplate } from '@/@types/document-template.types';
 import { documentTemplateSchema, type DocumentTemplateFormValues } from '@/scheme/document-template.schema';
+import type {
+  ComponentPosition,
+  CustomImageBlock,
+  CustomTextBlock,
+  SignatureBlock,
+} from '@/components/features/document-template/CustomableReportDocumentDialog';
+import {
+  DEFAULT_CANVAS_POSITIONS,
+  generatePdfFromHtmlElement,
+} from '@/lib/custom-document-helpers';
+import { cn } from '@/lib/utils';
 
 const dummyRows = [
-  ['1', 'Honda Vario 160', 'Hitam', 'MH1PC...', 'JFX1...', 'Rp 28.500.000'],
-  ['2', 'Honda PCX 160', 'Putih', 'MH1KF...', 'K1Z1...', 'Rp 32.000.000'],
+  ['1', 'Honda Vario 160', 'Hitam', 'MH1PC6112PK123456', 'JFX1E-1234567', 'Rp 28.500.000'],
+  ['2', 'Honda PCX 160', 'Putih', 'MH1KF5113PK234567', 'K1Z1E-2345678', 'Rp 32.000.000'],
+  ['3', 'Honda Beat CBS', 'Merah', 'MH1JM8114PK345678', 'JM81E-3456789', 'Rp 18.050.000'],
 ];
 
 const translations = {
@@ -25,18 +62,19 @@ const translations = {
     languageLabel: 'Bahasa',
     subjectFieldLabel: 'Subject',
     headerInformationLabel: 'Konten Header',
-    headerInformationHint: 'Pesan yang ditampilkan di bawah subject.',
+    headerInformationHint: 'Pesan pengantar yang ditampilkan di bawah subject.',
     tableColorLabel: 'Warna Header Tabel',
     signatureLabel: 'Tanda Tangan',
-    signatureHint: 'Upload gambar tanda tangan yang akan ditampilkan di atas nama penandatangan.',
+    signatureHint: 'Upload berkas gambar tanda tangan penandatangan.',
     signerLabel: 'Penandatangan',
-    documentLabel: 'Desain Dokumen',
+    documentLabel: 'Desain Dokumen (Kop Surat)',
+    documentHint: 'Upload gambar kop surat/desain dokumen latar belakang.',
     invoiceNumber: 'Nomor Invoice',
     subjectLabel: 'Perihal',
     toLabel: 'Kepada',
     dateLabel: 'Yogyakarta, 23 Agustus 2026',
     salutation: 'Dengan hormat,',
-    intro: 'Berikut adalah rincian transaksi yang dihasilkan oleh sistem:',
+    intro: 'Berikut adalah rincian transaksi unit yang dihasilkan oleh sistem:',
     tableHeaders: ['NO', 'TIPE UNIT', 'WARNA', 'NO RANGKA', 'NO MESIN', 'HARGA'],
     total: 'TOTAL',
     paymentInfo: 'Informasi Pembayaran',
@@ -44,28 +82,31 @@ const translations = {
     defaultSubject: 'Invoice Pembayaran Motor',
     defaultFooterInfo: 'Mohon pembayaran dapat dilakukan ke :\nNama : PT. WAJIRA JAGRATARA MORINDO\nNo Rekening BCA : 456-581-1313\nNPWP : 65.546.691.0-542.000',
     cancel: 'Batal',
-    save: 'Simpan',
-    saving: 'Menyimpan...',
+    save: 'Simpan Template',
+    saving: 'Menyimpan Template...',
     fallbackSubject: 'DOKUMEN TEMPLATE',
-    paymentPlaceholder: 'Informasi pembayaran',
+    tabInfo: 'Informasi & Desain',
+    tabText: 'Konten Teks',
+    tabMedia: 'Media & TTD',
   },
   en: {
     nameLabel: 'Template Name',
     languageLabel: 'Language',
     subjectFieldLabel: 'Subject',
     headerInformationLabel: 'Header Content',
-    headerInformationHint: 'Message displayed below the subject.',
+    headerInformationHint: 'Introductory message displayed below subject.',
     tableColorLabel: 'Table Header Color',
     signatureLabel: 'Signature',
-    signatureHint: 'Upload a signature image to display above the signer name.',
+    signatureHint: 'Upload signature image for signer.',
     signerLabel: 'Signer',
-    documentLabel: 'Document Design',
+    documentLabel: 'Document Design (Letterhead)',
+    documentHint: 'Upload letterhead/background image design.',
     invoiceNumber: 'Invoice Number',
     subjectLabel: 'Subject',
     toLabel: 'To',
     dateLabel: 'Yogyakarta, August 23, 2026',
     salutation: 'Dear Sir/Madam,',
-    intro: 'Here are the transaction details generated by the system:',
+    intro: 'Here are the unit transaction details generated by the system:',
     tableHeaders: ['NO', 'UNIT TYPE', 'COLOR', 'FRAME NO', 'ENGINE NO', 'PRICE'],
     total: 'TOTAL',
     paymentInfo: 'Payment Information',
@@ -73,11 +114,13 @@ const translations = {
     defaultSubject: 'Motorcycle Payment Invoice',
     defaultFooterInfo: 'Please make payment to :\nName : PT. WAJIRA JAGRATARA MORINDO\nBCA Account Number : 456-581-1313\nNPWP : 65.546.691.0-542.000',
     cancel: 'Cancel',
-    save: 'Save',
-    saving: 'Saving...',
+    save: 'Save Template',
+    saving: 'Saving Template...',
     fallbackSubject: 'DOCUMENT TEMPLATE',
-    paymentPlaceholder: 'Payment information',
-  }
+    tabInfo: 'Info & Design',
+    tabText: 'Text Content',
+    tabMedia: 'Media & Signatures',
+  },
 };
 
 interface Props {
@@ -88,14 +131,77 @@ interface Props {
 }
 
 function EditorToolbar({ editor }: { editor: Editor | null }) {
+  if (!editor) return null;
+
   return (
-    <div className="flex gap-1 rounded-md border bg-white p-2">
-      <button type="button" aria-label="Tebal" onClick={() => editor?.chain().focus().toggleBold().run()}><Bold className="h-4 w-4" /></button>
-      <button type="button" aria-label="Miring" onClick={() => editor?.chain().focus().toggleItalic().run()}><Italic className="h-4 w-4" /></button>
-      <button type="button" aria-label="Bullet list" onClick={() => editor?.chain().focus().toggleBulletList().run()}><List className="h-4 w-4" /></button>
-      <button type="button" aria-label="Numbered list" onClick={() => editor?.chain().focus().toggleOrderedList().run()}><ListOrdered className="h-4 w-4" /></button>
-      <button type="button" aria-label="Undo" onClick={() => editor?.chain().focus().undo().run()}><Undo2 className="h-4 w-4" /></button>
-      <button type="button" aria-label="Redo" onClick={() => editor?.chain().focus().redo().run()}><Redo2 className="h-4 w-4" /></button>
+    <div className="flex flex-wrap items-center gap-1 rounded-md border border-slate-200 bg-white p-1.5 shadow-xs">
+      <button
+        type="button"
+        title="Tebal"
+        aria-label="Tebal"
+        onClick={() => editor.chain().focus().toggleBold().run()}
+        className={cn(
+          'rounded p-1 text-slate-600 hover:bg-slate-100',
+          editor.isActive('bold') && 'bg-slate-200 text-blue-700'
+        )}
+      >
+        <Bold className="h-3.5 w-3.5" />
+      </button>
+      <button
+        type="button"
+        title="Miring"
+        aria-label="Miring"
+        onClick={() => editor.chain().focus().toggleItalic().run()}
+        className={cn(
+          'rounded p-1 text-slate-600 hover:bg-slate-100',
+          editor.isActive('italic') && 'bg-slate-200 text-blue-700'
+        )}
+      >
+        <Italic className="h-3.5 w-3.5" />
+      </button>
+      <button
+        type="button"
+        title="Daftar Bullet"
+        aria-label="Bullet list"
+        onClick={() => editor.chain().focus().toggleBulletList().run()}
+        className={cn(
+          'rounded p-1 text-slate-600 hover:bg-slate-100',
+          editor.isActive('bulletList') && 'bg-slate-200 text-blue-700'
+        )}
+      >
+        <List className="h-3.5 w-3.5" />
+      </button>
+      <button
+        type="button"
+        title="Daftar Angka"
+        aria-label="Numbered list"
+        onClick={() => editor.chain().focus().toggleOrderedList().run()}
+        className={cn(
+          'rounded p-1 text-slate-600 hover:bg-slate-100',
+          editor.isActive('orderedList') && 'bg-slate-200 text-blue-700'
+        )}
+      >
+        <ListOrdered className="h-3.5 w-3.5" />
+      </button>
+      <div className="mx-1 h-3.5 w-[1px] bg-slate-200" />
+      <button
+        type="button"
+        title="Undo"
+        aria-label="Undo"
+        onClick={() => editor.chain().focus().undo().run()}
+        className="rounded p-1 text-slate-600 hover:bg-slate-100"
+      >
+        <Undo2 className="h-3.5 w-3.5" />
+      </button>
+      <button
+        type="button"
+        title="Redo"
+        aria-label="Redo"
+        onClick={() => editor.chain().focus().redo().run()}
+        className="rounded p-1 text-slate-600 hover:bg-slate-100"
+      >
+        <Redo2 className="h-3.5 w-3.5" />
+      </button>
     </div>
   );
 }
@@ -110,7 +216,14 @@ export function DocumentTemplateEditor({ initialData, isSubmitting, onSubmit, on
   const defaultFooter = initialData?.footerInformation ?? translations[langInit].defaultFooterInfo;
   const defaultTableColor = initialData?.tableColor || '#1f4163';
 
-  const { register, handleSubmit, setValue, watch, formState: { errors } } = useForm<DocumentTemplateFormValues>({
+  // React Hook Form
+  const {
+    register,
+    handleSubmit,
+    setValue,
+    watch,
+    formState: { errors },
+  } = useForm<DocumentTemplateFormValues>({
     resolver: zodResolver(documentTemplateSchema),
     defaultValues: {
       name: initialData?.name ?? '',
@@ -121,7 +234,7 @@ export function DocumentTemplateEditor({ initialData, isSubmitting, onSubmit, on
       tableColor: defaultTableColor,
       personSignature: null,
       personSigner: initialData?.personSigner ?? 'Zaifudin Yukhri',
-      documentTemplate: null
+      documentTemplate: null,
     },
   });
 
@@ -133,11 +246,69 @@ export function DocumentTemplateEditor({ initialData, isSubmitting, onSubmit, on
   const currentLang = (language === 'en' ? 'en' : 'id') as 'id' | 'en';
   const t = translations[currentLang];
 
+  // Active Tab for sidebar controls
+  const [activeTab, setActiveTab] = useState<'info' | 'text' | 'media'>('info');
+
+  // Preview & Canvas Canvas State
+  const previewRef = useRef<HTMLDivElement>(null);
+  const [zoom, setZoom] = useState(1);
+  const [showDragHandles, setShowDragHandles] = useState(true);
+  const [activeDragId, setActiveDragId] = useState<string | null>(null);
+  const [isExportingPdf, setIsExportingPdf] = useState(false);
+
+  // Hidden file inputs for canvas/blocks
+  const imageBlockInputRef = useRef<HTMLInputElement>(null);
+  const signatureInputRef = useRef<HTMLInputElement>(null);
+  const [activeSigIdForUpload, setActiveSigIdForUpload] = useState<string | null>(null);
+
+  // Relocatable Component Positions (Exact from pengarsipan / CustomableReportDocumentDialog)
+  const [headerInfoPos, setHeaderInfoPos] = useState<ComponentPosition>(DEFAULT_CANVAS_POSITIONS.headerInfo);
+  const [introTextPos, setIntroTextPos] = useState<ComponentPosition>(DEFAULT_CANVAS_POSITIONS.introText);
+  const [tablePos, setTablePos] = useState<ComponentPosition>(DEFAULT_CANVAS_POSITIONS.table);
+  const [closingTextPos, setClosingTextPos] = useState<ComponentPosition>(DEFAULT_CANVAS_POSITIONS.closingText);
+  const [printDatePos, setPrintDatePos] = useState<ComponentPosition>(DEFAULT_CANVAS_POSITIONS.printDate);
+
+  // Signatures Array (Default with 1 primary signer synchronized with form)
+  const [signatures, setSignatures] = useState<SignatureBlock[]>([
+    {
+      id: 'sig-primary',
+      label: translations[langInit].closing,
+      signerName: initialData?.personSigner ?? 'Zaifudin Yukhri',
+      signatureUrl: initialData?.personSignature ? getObjectStorageUrl(initialData.personSignature) : null,
+      x: 520,
+      y: 920,
+      width: 190,
+    },
+  ]);
+
+  // Custom Text Blocks
+  const [textBlocks, setTextBlocks] = useState<CustomTextBlock[]>([]);
+
+  // Custom Image Blocks (Stamps, Watermarks, Logos)
+  const [imageBlocks, setImageBlocks] = useState<CustomImageBlock[]>([]);
+
+  // Keep primary signature block synced with form personSigner and signature preview
+  useEffect(() => {
+    setSignatures((prev) =>
+      prev.map((sig, idx) =>
+        idx === 0
+          ? {
+              ...sig,
+              signerName: personSigner || '-',
+              signatureUrl: signaturePreview ? getObjectStorageUrl(signaturePreview) : sig.signatureUrl,
+            }
+          : sig
+      )
+    );
+  }, [personSigner, signaturePreview]);
+
+  // Tiptap Rich Text Editors
   const headerEditor = useEditor({
     extensions: [StarterKit],
     content: defaultHeader,
     immediatelyRender: false,
-    onUpdate: ({ editor: next }: { editor: Editor }) => setValue('headerInformation', next.getHTML(), { shouldDirty: true, shouldValidate: true })
+    onUpdate: ({ editor: next }: { editor: Editor }) =>
+      setValue('headerInformation', next.getHTML(), { shouldDirty: true, shouldValidate: true }),
   });
 
   useEffect(() => {
@@ -150,7 +321,8 @@ export function DocumentTemplateEditor({ initialData, isSubmitting, onSubmit, on
     extensions: [StarterKit],
     content: defaultFooter,
     immediatelyRender: false,
-    onUpdate: ({ editor: next }: { editor: Editor }) => setValue('footerInformation', next.getHTML(), { shouldDirty: true, shouldValidate: true })
+    onUpdate: ({ editor: next }: { editor: Editor }) =>
+      setValue('footerInformation', next.getHTML(), { shouldDirty: true, shouldValidate: true }),
   });
 
   useEffect(() => {
@@ -159,8 +331,8 @@ export function DocumentTemplateEditor({ initialData, isSubmitting, onSubmit, on
     }
   }, [footerEditor, initialData?.footerInformation]);
 
+  // Language auto-defaults update
   const prevLanguageRef = useRef(language);
-
   useEffect(() => {
     const prevLang = prevLanguageRef.current;
     if (prevLang && prevLang !== language) {
@@ -184,7 +356,10 @@ export function DocumentTemplateEditor({ initialData, isSubmitting, onSubmit, on
       }
 
       const normalizedCurrent = currentFooter ? currentFooter.replace(/<[^>]*>/g, '').trim() : '';
-      const normalizedOldDefault = oldDefaults.defaultFooterInfo.replace(/<[^>]*>/g, '').trim().replace(/\n/g, ' ');
+      const normalizedOldDefault = oldDefaults.defaultFooterInfo
+        .replace(/<[^>]*>/g, '')
+        .trim()
+        .replace(/\n/g, ' ');
 
       if (
         normalizedCurrent === normalizedOldDefault ||
@@ -194,142 +369,1378 @@ export function DocumentTemplateEditor({ initialData, isSubmitting, onSubmit, on
         setValue('footerInformation', newDefaults.defaultFooterInfo, { shouldValidate: true });
         footerEditor?.commands.setContent(newDefaults.defaultFooterInfo);
       }
+
+      // Update primary signature label
+      setSignatures((prev) =>
+        prev.map((sig, idx) => (idx === 0 ? { ...sig, label: newDefaults.closing } : sig))
+      );
     }
     prevLanguageRef.current = language;
   }, [language, setValue, headerEditor, footerEditor, watch]);
 
+  // File Preview Helper
   const fileUrl = (file: File | null, setPreview: (url: string | null) => void) => {
     if (!file) {
       setPreview(null);
       return;
     }
-
     const reader = new FileReader();
-
     reader.onload = () => {
       setPreview(typeof reader.result === 'string' ? reader.result : null);
     };
-
     reader.onerror = () => {
       setPreview(null);
     };
-
     reader.readAsDataURL(file);
   };
 
-  const submit = (values: DocumentTemplateFormValues) => onSubmit(values);
+  // Drag and Drop Handler
+  type ItemType =
+    | 'headerInfo'
+    | 'introText'
+    | 'table'
+    | 'closingText'
+    | 'printDate'
+    | 'signature'
+    | 'text'
+    | 'image';
+
+  const handleDragStart = (
+    e: React.PointerEvent,
+    itemId: string,
+    itemType: ItemType,
+    currentX: number,
+    currentY: number
+  ) => {
+    const target = e.target as HTMLElement;
+    if (target.closest('button, input, textarea, select')) return;
+
+    e.preventDefault();
+    e.stopPropagation();
+
+    setActiveDragId(itemId);
+    const startPointerX = e.clientX;
+    const startPointerY = e.clientY;
+    const currentZoom = zoom || 1;
+
+    const handlePointerMove = (moveEvent: PointerEvent) => {
+      const deltaX = (moveEvent.clientX - startPointerX) / currentZoom;
+      const deltaY = (moveEvent.clientY - startPointerY) / currentZoom;
+
+      const nextX = Math.max(0, Math.min(740, Math.round(currentX + deltaX)));
+      const nextY = Math.max(0, Math.min(1080, Math.round(currentY + deltaY)));
+
+      switch (itemType) {
+        case 'headerInfo':
+          setHeaderInfoPos((prev) => ({ ...prev, x: nextX, y: nextY }));
+          break;
+        case 'introText':
+          setIntroTextPos((prev) => ({ ...prev, x: nextX, y: nextY }));
+          break;
+        case 'table':
+          setTablePos((prev) => ({ ...prev, x: nextX, y: nextY }));
+          break;
+        case 'closingText':
+          setClosingTextPos((prev) => ({ ...prev, x: nextX, y: nextY }));
+          break;
+        case 'printDate':
+          setPrintDatePos((prev) => ({ ...prev, x: nextX, y: nextY }));
+          break;
+        case 'signature':
+          setSignatures((prev) =>
+            prev.map((s) => (s.id === itemId ? { ...s, x: nextX, y: nextY } : s))
+          );
+          break;
+        case 'text':
+          setTextBlocks((prev) =>
+            prev.map((t) => (t.id === itemId ? { ...t, x: nextX, y: nextY } : t))
+          );
+          break;
+        case 'image':
+          setImageBlocks((prev) =>
+            prev.map((img) => (img.id === itemId ? { ...img, x: nextX, y: nextY } : img))
+          );
+          break;
+      }
+    };
+
+    const handlePointerUp = () => {
+      setActiveDragId(null);
+      window.removeEventListener('pointermove', handlePointerMove);
+      window.removeEventListener('pointerup', handlePointerUp);
+    };
+
+    window.addEventListener('pointermove', handlePointerMove);
+    window.addEventListener('pointerup', handlePointerUp);
+  };
+
+  // Reset positions to standard A4 layout
+  const handleResetAllPositions = () => {
+    setHeaderInfoPos(DEFAULT_CANVAS_POSITIONS.headerInfo);
+    setIntroTextPos(DEFAULT_CANVAS_POSITIONS.introText);
+    setTablePos(DEFAULT_CANVAS_POSITIONS.table);
+    setClosingTextPos(DEFAULT_CANVAS_POSITIONS.closingText);
+    setPrintDatePos(DEFAULT_CANVAS_POSITIONS.printDate);
+    setSignatures((prev) =>
+      prev.map((s, idx) => ({
+        ...s,
+        x: idx === 0 ? 520 : 80 + idx * 210,
+        y: 920,
+      }))
+    );
+    toast.success('Tata letak template dirapikan ke posisi standar');
+  };
+
+  // Signature Block Management
+  const handleAddSignature = () => {
+    const newSig: SignatureBlock = {
+      id: `sig-${Date.now()}`,
+      label: 'Mengetahui,',
+      signerName: 'Nama Penandatangan Tambahan',
+      signatureUrl: null,
+      x: 80,
+      y: 920,
+      width: 190,
+    };
+    setSignatures((prev) => [...prev, newSig]);
+    setActiveTab('media');
+    toast.success('Blok tanda tangan baru ditambahkan. Geser di pratinjau untuk mengatur posisinya.');
+  };
+
+  const handleDeleteSignature = (id: string) => {
+    if (signatures.length <= 1) {
+      toast.error('Minimal harus ada 1 penandatangan');
+      return;
+    }
+    setSignatures((prev) => prev.filter((s) => s.id !== id));
+    toast.info('Blok tanda tangan dihapus');
+  };
+
+  const handleTriggerUploadSignature = (sigId: string) => {
+    setActiveSigIdForUpload(sigId);
+    if (signatureInputRef.current) {
+      signatureInputRef.current.value = '';
+      signatureInputRef.current.click();
+    }
+  };
+
+  const handleSigFileSelected = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !activeSigIdForUpload) return;
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      const result = reader.result as string;
+      setSignatures((prev) =>
+        prev.map((s) => (s.id === activeSigIdForUpload ? { ...s, signatureUrl: result } : s))
+      );
+      if (activeSigIdForUpload === 'sig-primary') {
+        setValue('personSignature', file, { shouldValidate: true });
+        setSignaturePreview(result);
+      }
+      toast.success('Berkas tanda tangan berhasil dimuat');
+    };
+    reader.readAsDataURL(file);
+  };
+
+  // Custom Text Block Management
+  const handleAddTextBlock = () => {
+    const newBlock: CustomTextBlock = {
+      id: `text-${Date.now()}`,
+      text: 'Catatan tambahan template baru di sini...',
+      x: 60,
+      y: 380,
+      width: 300,
+      fontSize: 9,
+      fontWeight: 'normal',
+      fontStyle: 'normal',
+      color: '#334155',
+      textAlign: 'left',
+      border: false,
+    };
+    setTextBlocks((prev) => [...prev, newBlock]);
+    setActiveTab('text');
+    toast.success('Blok teks baru ditambahkan. Anda dapat menggesernya di canvas.');
+  };
+
+  const handleDeleteTextBlock = (id: string) => {
+    setTextBlocks((prev) => prev.filter((t) => t.id !== id));
+    toast.info('Blok teks dihapus');
+  };
+
+  const handleUpdateTextBlock = (id: string, patch: Partial<CustomTextBlock>) => {
+    setTextBlocks((prev) => prev.map((t) => (t.id === id ? { ...t, ...patch } : t)));
+  };
+
+  // Custom Image Block Management (Stamps, Watermarks, Logos)
+  const handleTriggerUploadImage = () => {
+    if (imageBlockInputRef.current) {
+      imageBlockInputRef.current.value = '';
+      imageBlockInputRef.current.click();
+    }
+  };
+
+  const handleImageFileSelected = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      const result = reader.result as string;
+      const newImg: CustomImageBlock = {
+        id: `img-${Date.now()}`,
+        name: file.name.slice(0, 18),
+        url: result,
+        x: 430,
+        y: 890,
+        width: 130,
+        opacity: 0.95,
+      };
+      setImageBlocks((prev) => [...prev, newImg]);
+      setActiveTab('media');
+      toast.success('Komponen stempel/gambar berhasil ditambahkan');
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleDeleteImageBlock = (id: string) => {
+    setImageBlocks((prev) => prev.filter((img) => img.id !== id));
+    toast.info('Komponen gambar dihapus');
+  };
+
+  const handleUpdateImageBlock = (id: string, patch: Partial<CustomImageBlock>) => {
+    setImageBlocks((prev) => prev.map((img) => (img.id === id ? { ...img, ...patch } : img)));
+  };
+
+  // Direct PDF Download
+  const handleDownloadPdf = async () => {
+    if (!previewRef.current) return;
+    setIsExportingPdf(true);
+    const prevZoom = zoom;
+    setZoom(1);
+    await new Promise((resolve) => setTimeout(resolve, 80));
+
+    try {
+      const pdfFile = await generatePdfFromHtmlElement(
+        previewRef.current,
+        `${(watch('name') || 'template_dokumen').replace(/[^a-zA-Z0-9_-]/g, '_')}.pdf`
+      );
+      if (pdfFile) {
+        const url = URL.createObjectURL(pdfFile);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = pdfFile.name;
+        a.click();
+        URL.revokeObjectURL(url);
+        toast.success('Berkas PDF template berhasil diunduh');
+      }
+    } finally {
+      setZoom(prevZoom);
+      setIsExportingPdf(false);
+    }
+  };
+
+  // Trigger browser print of the template preview
+  const handlePrint = () => {
+    window.print();
+  };
+
+  // Form submission
+  const submit = (values: DocumentTemplateFormValues) => {
+    onSubmit(values);
+  };
+
+  // Header and Footer HTML for live rendering
+  const headerHtml = headerEditor?.getHTML() || defaultHeader;
+  const footerHtml = footerEditor?.getHTML() || defaultFooter;
 
   return (
     <form onSubmit={handleSubmit(submit)} className="space-y-6">
-      <div className="grid gap-6 xl:grid-cols-[360px_minmax(0,1fr)]">
-        <div className="space-y-4 rounded-md border bg-white p-5 shadow-sm">
-          <div>
-            <Label htmlFor="name">{t.nameLabel}</Label>
-            <Input id="name" {...register('name')} placeholder={t.nameLabel} className="mt-1" />
-            {errors.name && <p className="mt-1 text-xs text-red-600">{errors.name.message}</p>}
-          </div>
-          <div>
-            <Label>{t.languageLabel}</Label>
-            <Select value={language} onValueChange={(value: 'id' | 'en') => setValue('language', value, { shouldValidate: true })}>
-              <SelectTrigger className="mt-1">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="id">Bahasa Indonesia</SelectItem>
-                <SelectItem value="en">English</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-          <div>
-            <Label htmlFor="subject">{t.subjectFieldLabel}</Label>
-            <Input id="subject" {...register('subject')} className="mt-1" />
-            {errors.subject && <p className="mt-1 text-xs text-red-600">{errors.subject.message}</p>}
-          </div>
-          <div>
-            <Label>{t.headerInformationLabel}</Label>
-            <p className="mt-1 text-xs text-slate-500">{t.headerInformationHint}</p>
-            {errors.headerInformation && <p className="mt-1 text-xs text-red-600">{errors.headerInformation.message}</p>}
-          </div>
-          <div>
-            <Label htmlFor="table-color">{t.tableColorLabel}</Label>
-            <div className="mt-1 flex items-center gap-2">
-              <input id="table-color" type="color" {...register('tableColor')} className="h-10 w-14 cursor-pointer rounded border border-slate-200 bg-white p-1" />
-              <Input value={tableColor} onChange={(event) => setValue('tableColor', event.target.value, { shouldDirty: true, shouldValidate: true })} className="font-mono uppercase" />
-            </div>
-            {errors.tableColor && <p className="mt-1 text-xs text-red-600">{errors.tableColor.message}</p>}
-          </div>
-          <div>
-            <Label htmlFor="person-signature">{t.signatureLabel}</Label>
-            <FileInput id="person-signature" accept="image/png,image/jpeg" value={watch('personSignature')} onFileChange={(file) => { setValue('personSignature', file, { shouldValidate: true }); fileUrl(file, setSignaturePreview); }} className="mt-1" />
-            <p className="mt-1 text-xs text-slate-500">{t.signatureHint}</p>
-          </div>
-          <div>
-            <Label htmlFor="personSigner">{t.signerLabel}</Label>
-            <Input id="personSigner" {...register('personSigner')} className="mt-1" />
-            {errors.personSigner && <p className="mt-1 text-xs text-red-600">{errors.personSigner.message}</p>}
-          </div>
-          <div>
-            <Label>{t.documentLabel}</Label>
-            <FileInput id="document-template" accept="image/png,image/jpeg" value={watch('documentTemplate')} onFileChange={(file) => { setValue('documentTemplate', file, { shouldValidate: true }); fileUrl(file, setDocumentPreview); }} className="mt-1" />
-            <p className="mt-1 text-xs text-slate-500">Upload satu gambar desain dokumen penuh. Konten sistem akan dirender di atas template ini.</p>
-          </div>
-          <div className="flex gap-2 pt-2">
-            <Button type="button" variant="outline" onClick={onCancel} className="flex-1">{t.cancel}</Button>
-            <Button type="submit" disabled={isSubmitting} className="flex-1 bg-[#1e3a5f]">
-              {isSubmitting ? t.saving : t.save}
-            </Button>
-          </div>
-        </div>
+      {/* Hidden file inputs for canvas components */}
+      <input
+        ref={imageBlockInputRef}
+        type="file"
+        accept="image/*"
+        className="hidden"
+        onChange={handleImageFileSelected}
+      />
+      <input
+        ref={signatureInputRef}
+        type="file"
+        accept="image/*"
+        className="hidden"
+        onChange={handleSigFileSelected}
+      />
 
-        <div className="space-y-3 overflow-auto rounded-md bg-slate-100 p-4">
-          <EditorToolbar editor={headerEditor} />
-          <div className="mx-auto min-h-[1123px] w-[794px] overflow-hidden bg-white shadow-md" style={{ backgroundImage: documentPreview ? `url(${getObjectStorageUrl(documentPreview)})` : undefined, backgroundSize: '100% 100%', backgroundPosition: 'center', backgroundRepeat: 'no-repeat' }}>
-            <div className="flex min-h-[1123px] flex-col px-[76px] pb-[76px] pt-[160px]">
-              <div className="flex-1">
-                <div className="flex justify-between text-sm">
-                  <div>
-                    <p>{t.invoiceNumber}: <strong>INV/2026/0001</strong></p>
-                    <p>{t.subjectLabel}: {subject || '-'}</p>
-                    <p>{t.toLabel}: Customer Dummy</p>
-                    <p>{language === 'en' ? 'Sheet' : 'Lembar'}: <strong>1</strong></p>
-                  </div>
-                  <p>{t.dateLabel}</p>
+      {/* Main Two-Column Layout */}
+      <div className="grid gap-6 xl:grid-cols-[460px_minmax(0,1fr)]">
+        {/* Left Column: Tabbed Customization Panel */}
+        <div className="flex flex-col space-y-4 rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+          <Tabs
+            value={activeTab}
+            onValueChange={(val) => setActiveTab(val as 'info' | 'text' | 'media')}
+            className="w-full flex-1 flex flex-col"
+          >
+            <TabsList className="grid w-full grid-cols-3 mb-4">
+              <TabsTrigger value="info" className="text-xs">
+                {t.tabInfo}
+              </TabsTrigger>
+              <TabsTrigger value="text" className="text-xs">
+                {t.tabText}
+              </TabsTrigger>
+              <TabsTrigger value="media" className="text-xs">
+                {t.tabMedia}
+              </TabsTrigger>
+            </TabsList>
+
+            {/* TAB 1: INFORMASI & DESAIN */}
+            <TabsContent value="info" className="space-y-4 focus-visible:outline-none">
+              <div>
+                <Label htmlFor="name">{t.nameLabel}</Label>
+                <Input
+                  id="name"
+                  {...register('name')}
+                  placeholder={t.nameLabel}
+                  className="mt-1"
+                />
+                {errors.name && <p className="mt-1 text-xs text-red-600">{errors.name.message}</p>}
+              </div>
+
+              <div>
+                <Label>{t.languageLabel}</Label>
+                <Select
+                  value={language}
+                  onValueChange={(value: 'id' | 'en') =>
+                    setValue('language', value, { shouldValidate: true })
+                  }
+                >
+                  <SelectTrigger className="mt-1">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="id">Bahasa Indonesia</SelectItem>
+                    <SelectItem value="en">English</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div>
+                <Label htmlFor="subject">{t.subjectFieldLabel}</Label>
+                <Input id="subject" {...register('subject')} className="mt-1" />
+                {errors.subject && <p className="mt-1 text-xs text-red-600">{errors.subject.message}</p>}
+              </div>
+
+              <div>
+                <Label htmlFor="table-color">{t.tableColorLabel}</Label>
+                <div className="mt-1 flex items-center gap-2">
+                  <input
+                    id="table-color"
+                    type="color"
+                    {...register('tableColor')}
+                    className="h-10 w-14 cursor-pointer rounded border border-slate-200 bg-white p-1"
+                  />
+                  <Input
+                    value={tableColor}
+                    onChange={(event) =>
+                      setValue('tableColor', event.target.value, {
+                        shouldDirty: true,
+                        shouldValidate: true,
+                      })
+                    }
+                    className="font-mono uppercase"
+                  />
                 </div>
-                <h1 className="mt-8 text-center text-xl font-bold tracking-widest underline">{subject || t.fallbackSubject}</h1>
-                <p className="mt-6 text-sm">{t.salutation}</p>
-                <EditorContent editor={headerEditor} className="mt-1 text-sm prose prose-sm max-w-none" dangerouslySetInnerHTML={undefined} />
+                {errors.tableColor && (
+                  <p className="mt-1 text-xs text-red-600">{errors.tableColor.message}</p>
+                )}
+              </div>
 
-                <table className="mt-5 w-full border-collapse text-xs">
-                  <thead>
-                    <tr style={{ backgroundColor: tableColor }} className="text-white">
-                      {t.tableHeaders.map((head) => <th key={head} className="border border-white/20 px-2 py-2">{head}</th>)}
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {dummyRows.map((row) => (
-                      <tr key={row[0]}>
-                        {row.map((cell) => <td key={cell} className="border border-slate-200 px-2 py-2">{cell}</td>)}
-                      </tr>
+              <div>
+                <Label htmlFor="personSigner">{t.signerLabel}</Label>
+                <Input
+                  id="personSigner"
+                  {...register('personSigner')}
+                  className="mt-1"
+                  placeholder="Nama penandatangan"
+                />
+                {errors.personSigner && (
+                  <p className="mt-1 text-xs text-red-600">{errors.personSigner.message}</p>
+                )}
+              </div>
+
+              <div>
+                <Label htmlFor="person-signature">{t.signatureLabel}</Label>
+                <FileInput
+                  id="person-signature"
+                  accept="image/png,image/jpeg"
+                  value={watch('personSignature')}
+                  onFileChange={(file) => {
+                    setValue('personSignature', file, { shouldValidate: true });
+                    fileUrl(file, setSignaturePreview);
+                  }}
+                  className="mt-1"
+                />
+                <p className="mt-1 text-xs text-slate-500">{t.signatureHint}</p>
+              </div>
+
+              <div>
+                <Label>{t.documentLabel}</Label>
+                <FileInput
+                  id="document-template"
+                  accept="image/png,image/jpeg"
+                  value={watch('documentTemplate')}
+                  onFileChange={(file) => {
+                    setValue('documentTemplate', file, { shouldValidate: true });
+                    fileUrl(file, setDocumentPreview);
+                  }}
+                  className="mt-1"
+                />
+                <p className="mt-1 text-xs text-slate-500">{t.documentHint}</p>
+              </div>
+
+              <div className="pt-2 border-t border-slate-100 flex items-center justify-between">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={handleResetAllPositions}
+                  className="gap-1.5 text-xs text-slate-600 w-full"
+                >
+                  <RotateCcw className="h-3.5 w-3.5" />
+                  Reset Posisi Tata Letak ke Standar
+                </Button>
+              </div>
+            </TabsContent>
+
+            {/* TAB 2: KONTEN TEKS */}
+            <TabsContent value="text" className="space-y-4 focus-visible:outline-none">
+              <div>
+                <div className="flex items-center justify-between mb-1">
+                  <Label>{t.headerInformationLabel}</Label>
+                  <span className="text-[10px] text-slate-400">Teks Pengantar</span>
+                </div>
+                <p className="text-xs text-slate-500 mb-2">{t.headerInformationHint}</p>
+                <EditorToolbar editor={headerEditor} />
+                <div className="mt-2 min-h-[90px] rounded-md border border-slate-200 bg-white p-2.5 text-xs">
+                  <EditorContent editor={headerEditor} className="prose prose-xs max-w-none" />
+                </div>
+                {errors.headerInformation && (
+                  <p className="mt-1 text-xs text-red-600">{errors.headerInformation.message}</p>
+                )}
+              </div>
+
+              <div>
+                <div className="flex items-center justify-between mb-1">
+                  <Label>{t.paymentInfo}</Label>
+                  <span className="text-[10px] text-slate-400">Teks Penutup</span>
+                </div>
+                <p className="text-xs text-slate-500 mb-2">
+                  Informasi nomor rekening atau instruksi pembayaran dokumen.
+                </p>
+                <EditorToolbar editor={footerEditor} />
+                <div className="mt-2 min-h-[90px] rounded-md border border-slate-200 bg-white p-2.5 text-xs">
+                  <EditorContent editor={footerEditor} className="prose prose-xs max-w-none" />
+                </div>
+                {errors.footerInformation && (
+                  <p className="mt-1 text-xs text-red-600">{errors.footerInformation.message}</p>
+                )}
+              </div>
+
+              {/* Custom Text Blocks Manager */}
+              <div className="rounded-lg border border-slate-200 bg-slate-50/70 p-3 space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-semibold text-slate-800 flex items-center gap-1.5">
+                    <Type className="h-4 w-4 text-blue-600" />
+                    Blok Teks Bebas ({textBlocks.length})
+                  </span>
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="outline"
+                    onClick={handleAddTextBlock}
+                    className="h-7 text-xs gap-1 border-blue-200 text-blue-700 hover:bg-blue-50"
+                  >
+                    <Plus className="h-3 w-3" />
+                    Tambah Blok Teks
+                  </Button>
+                </div>
+
+                {textBlocks.length === 0 ? (
+                  <p className="text-[11px] text-slate-400 italic">
+                    Belum ada blok teks tambahan. Tambahkan untuk menaruh catatan/paragraf bebas di canvas.
+                  </p>
+                ) : (
+                  <div className="space-y-2.5 max-h-[260px] overflow-y-auto pr-1">
+                    {textBlocks.map((tb, idx) => (
+                      <div
+                        key={tb.id}
+                        className="rounded-md border border-slate-200 bg-white p-2.5 space-y-2 text-xs shadow-xs"
+                      >
+                        <div className="flex items-center justify-between">
+                          <span className="font-semibold text-slate-700 flex items-center gap-1">
+                            <Move className="h-3 w-3 text-slate-400" />
+                            Teks #{idx + 1}
+                          </span>
+                          <div className="flex items-center gap-1">
+                            <span className="text-[10px] text-slate-400 font-mono">
+                              X:{tb.x} Y:{tb.y}
+                            </span>
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleDeleteTextBlock(tb.id)}
+                              className="h-6 w-6 p-0 text-rose-500 hover:text-rose-700"
+                            >
+                              <Trash2 className="h-3.5 w-3.5" />
+                            </Button>
+                          </div>
+                        </div>
+
+                        <Textarea
+                          value={tb.text}
+                          onChange={(e) => handleUpdateTextBlock(tb.id, { text: e.target.value })}
+                          placeholder="Isi teks..."
+                          rows={2}
+                          className="text-xs"
+                        />
+
+                        <div className="grid grid-cols-3 gap-1.5">
+                          <div>
+                            <Label className="text-[10px] text-slate-500">Ukuran</Label>
+                            <Select
+                              value={String(tb.fontSize)}
+                              onValueChange={(val) =>
+                                handleUpdateTextBlock(tb.id, { fontSize: Number(val) })
+                              }
+                            >
+                              <SelectTrigger className="h-7 text-xs">
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {[7, 8, 9, 10, 11, 12, 14, 16].map((s) => (
+                                  <SelectItem key={s} value={String(s)} className="text-xs">
+                                    {s} pt
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </div>
+
+                          <div>
+                            <Label className="text-[10px] text-slate-500">Gaya</Label>
+                            <Select
+                              value={tb.fontWeight}
+                              onValueChange={(val) =>
+                                handleUpdateTextBlock(tb.id, {
+                                  fontWeight: val as 'normal' | 'semibold' | 'bold',
+                                })
+                              }
+                            >
+                              <SelectTrigger className="h-7 text-xs">
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="normal" className="text-xs">Normal</SelectItem>
+                                <SelectItem value="semibold" className="text-xs">Semibold</SelectItem>
+                                <SelectItem value="bold" className="text-xs">Bold</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </div>
+
+                          <div>
+                            <Label className="text-[10px] text-slate-500">Rata</Label>
+                            <Select
+                              value={tb.textAlign}
+                              onValueChange={(val) =>
+                                handleUpdateTextBlock(tb.id, {
+                                  textAlign: val as 'left' | 'center' | 'right',
+                                })
+                              }
+                            >
+                              <SelectTrigger className="h-7 text-xs">
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="left" className="text-xs">Kiri</SelectItem>
+                                <SelectItem value="center" className="text-xs">Tengah</SelectItem>
+                                <SelectItem value="right" className="text-xs">Kanan</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </div>
+                        </div>
+
+                        <div className="flex items-center justify-between pt-1">
+                          <label className="flex items-center gap-1.5 cursor-pointer text-[11px] text-slate-600">
+                            <input
+                              type="checkbox"
+                              checked={tb.border}
+                              onChange={(e) =>
+                                handleUpdateTextBlock(tb.id, { border: e.target.checked })
+                              }
+                              className="rounded text-blue-600 h-3.5 w-3.5"
+                            />
+                            Beri Bingkai / Kotak
+                          </label>
+                          <div className="flex items-center gap-1">
+                            <span className="text-[10px] text-slate-400">Warna:</span>
+                            <input
+                              type="color"
+                              value={tb.color}
+                              onChange={(e) =>
+                                handleUpdateTextBlock(tb.id, { color: e.target.value })
+                              }
+                              className="h-5 w-7 cursor-pointer rounded border p-0"
+                            />
+                          </div>
+                        </div>
+                      </div>
                     ))}
-                    <tr className="font-semibold">
-                      <td colSpan={5} className="border border-slate-200 px-2 py-2 text-right">{t.total}</td>
-                      <td className="border border-slate-200 px-2 py-2">Rp 60.500.000</td>
-                    </tr>
-                  </tbody>
-                </table>
+                  </div>
+                )}
+              </div>
+            </TabsContent>
 
-                <div className="mt-8 rounded border border-slate-200 p-3 text-sm">
-                  <div className="mb-2 font-semibold">{t.paymentInfo}</div>
-                  <EditorContent editor={footerEditor} className="prose prose-sm max-w-none" dangerouslySetInnerHTML={undefined} />
+            {/* TAB 3: MEDIA & TANDA TANGAN */}
+            <TabsContent value="media" className="space-y-4 focus-visible:outline-none">
+              {/* Tanda Tangan Section */}
+              <div className="rounded-lg border border-slate-200 bg-slate-50/70 p-3 space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-semibold text-slate-800">
+                    Tata Letak Tanda Tangan ({signatures.length})
+                  </span>
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="outline"
+                    onClick={handleAddSignature}
+                    className="h-7 text-xs gap-1 border-blue-200 text-blue-700 hover:bg-blue-50"
+                  >
+                    <Plus className="h-3 w-3" />
+                    Tambah TTD
+                  </Button>
+                </div>
+
+                <div className="space-y-2.5 max-h-[260px] overflow-y-auto pr-1">
+                  {signatures.map((sig, idx) => (
+                    <div
+                      key={sig.id}
+                      className="rounded-md border border-slate-200 bg-white p-2.5 space-y-2 text-xs shadow-xs"
+                    >
+                      <div className="flex items-center justify-between">
+                        <span className="font-semibold text-slate-700 flex items-center gap-1">
+                          <Move className="h-3.5 w-3.5 text-blue-600" />
+                          Penandatangan #{idx + 1}
+                        </span>
+                        <div className="flex items-center gap-1">
+                          <span className="text-[10px] text-slate-400 font-mono">
+                            X:{sig.x} Y:{sig.y}
+                          </span>
+                          {signatures.length > 1 && (
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleDeleteSignature(sig.id)}
+                              className="h-6 w-6 p-0 text-rose-500 hover:text-rose-700"
+                            >
+                              <Trash2 className="h-3.5 w-3.5" />
+                            </Button>
+                          )}
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-2">
+                        <div className="space-y-0.5">
+                          <Label className="text-[10px] text-slate-500">Jabatan / Keterangan</Label>
+                          <Input
+                            value={sig.label}
+                            onChange={(e) =>
+                              setSignatures((prev) =>
+                                prev.map((s) => (s.id === sig.id ? { ...s, label: e.target.value } : s))
+                              )
+                            }
+                            placeholder="Hormat kami,"
+                            className="text-xs h-7"
+                          />
+                        </div>
+                        <div className="space-y-0.5">
+                          <Label className="text-[10px] text-slate-500">Nama Penandatangan</Label>
+                          <Input
+                            value={sig.signerName}
+                            onChange={(e) => {
+                              const newName = e.target.value;
+                              setSignatures((prev) =>
+                                prev.map((s) => (s.id === sig.id ? { ...s, signerName: newName } : s))
+                              );
+                              if (idx === 0) {
+                                setValue('personSigner', newName, { shouldValidate: true });
+                              }
+                            }}
+                            placeholder="Nama lengkap"
+                            className="text-xs h-7"
+                          />
+                        </div>
+                      </div>
+
+                      <div className="flex items-center justify-between pt-1">
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleTriggerUploadSignature(sig.id)}
+                          className="h-6 text-[10px] gap-1"
+                        >
+                          <Upload className="h-3 w-3" />
+                          {sig.signatureUrl ? 'Ganti TTD' : 'Upload TTD'}
+                        </Button>
+                        {sig.signatureUrl && (
+                          <span className="text-[10px] text-emerald-600 font-medium">
+                            ✓ TTD Terpasang
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  ))}
                 </div>
               </div>
 
-              <div className="mb-38 text-end text-sm">
-                <p className='mr-12'>{t.closing}</p>
-                <div className="flex mr-[12.3px] items-center justify-end">
-                  <StorageImage src={signaturePreview} alt="Tanda tangan" width={160} height={85} className="max-h-24 max-w-40 object-contain" />
+              {/* Komponen Gambar / Stempel */}
+              <div className="rounded-lg border border-slate-200 bg-slate-50/70 p-3 space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-semibold text-slate-800 flex items-center gap-1.5">
+                    <ImageIcon className="h-4 w-4 text-emerald-600" />
+                    Stempel & Gambar ({imageBlocks.length})
+                  </span>
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="outline"
+                    onClick={handleTriggerUploadImage}
+                    className="h-7 text-xs gap-1 border-emerald-200 text-emerald-700 hover:bg-emerald-50"
+                  >
+                    <Plus className="h-3 w-3" />
+                    Tambah Gambar
+                  </Button>
                 </div>
-                <p className="mr-12 font-semibold underline">{personSigner || '-'}</p>
+
+                {imageBlocks.length === 0 ? (
+                  <p className="text-[11px] text-slate-400 italic">
+                    Belum ada stempel atau logo tambahan. Upload untuk menempatkannya di atas dokumen.
+                  </p>
+                ) : (
+                  <div className="space-y-2.5 max-h-[240px] overflow-y-auto pr-1">
+                    {imageBlocks.map((img) => (
+                      <div
+                        key={img.id}
+                        className="rounded-md border border-slate-200 bg-white p-2.5 space-y-2 text-xs shadow-xs"
+                      >
+                        <div className="flex items-center justify-between">
+                          <span className="font-semibold text-slate-700 truncate max-w-[150px]">
+                            {img.name}
+                          </span>
+                          <div className="flex items-center gap-1">
+                            <span className="text-[10px] text-slate-400 font-mono">
+                              X:{img.x} Y:{img.y}
+                            </span>
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleDeleteImageBlock(img.id)}
+                              className="h-6 w-6 p-0 text-rose-500 hover:text-rose-700"
+                            >
+                              <Trash2 className="h-3.5 w-3.5" />
+                            </Button>
+                          </div>
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-2">
+                          <div>
+                            <Label className="text-[10px] text-slate-500">Lebar: {img.width}px</Label>
+                            <input
+                              type="range"
+                              min="50"
+                              max="300"
+                              step="5"
+                              value={img.width}
+                              onChange={(e) =>
+                                handleUpdateImageBlock(img.id, { width: Number(e.target.value) })
+                              }
+                              className="w-full h-1 bg-slate-200 rounded cursor-pointer"
+                            />
+                          </div>
+                          <div>
+                            <Label className="text-[10px] text-slate-500">
+                              Transparansi: {Math.round(img.opacity * 100)}%
+                            </Label>
+                            <input
+                              type="range"
+                              min="0.1"
+                              max="1"
+                              step="0.05"
+                              value={img.opacity}
+                              onChange={(e) =>
+                                handleUpdateImageBlock(img.id, { opacity: Number(e.target.value) })
+                              }
+                              className="w-full h-1 bg-slate-200 rounded cursor-pointer"
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </TabsContent>
+          </Tabs>
+
+          {/* Action Buttons in Left Panel Footer */}
+          <div className="pt-4 border-t border-slate-200 flex flex-col gap-2">
+            <div className="flex gap-2">
+              <Button type="button" variant="outline" onClick={onCancel} className="flex-1">
+                {t.cancel}
+              </Button>
+              <Button
+                type="submit"
+                disabled={isSubmitting}
+                className="flex-1 bg-[#1e3a5f] hover:bg-[#152e4d] text-white"
+              >
+                {isSubmitting ? t.saving : t.save}
+              </Button>
+            </div>
+          </div>
+        </div>
+
+        {/* Right Column: Scaled Drag-and-Drop WYSIWYG Canvas */}
+        <div className="flex flex-col rounded-xl border border-slate-200 bg-slate-100 p-4 shadow-sm overflow-hidden min-h-[850px]">
+          {/* Top Canvas Bar: Toolbar Controls */}
+          <div className="no-print flex flex-wrap items-center justify-between gap-3 mb-4 rounded-lg border border-slate-200 bg-white px-4 py-2 shadow-xs">
+            {/* Drag Handles Toggle */}
+            <div className="flex items-center gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => setShowDragHandles((v) => !v)}
+                className={cn(
+                  'h-7 text-[11px] gap-1 border-slate-300',
+                  showDragHandles ? 'bg-blue-50 text-blue-700 border-blue-300 font-medium' : 'text-slate-600'
+                )}
+                title="Tampilkan / sembunyikan bar pegangan geser"
+              >
+                {showDragHandles ? <Eye className="h-3 w-3" /> : <EyeOff className="h-3 w-3" />}
+                {showDragHandles ? 'Handle Geser (ON)' : 'Pratinjau Polos'}
+              </Button>
+            </div>
+
+            {/* Zoom Controls */}
+            <div className="flex items-center gap-1.5">
+              <span className="text-[11px] text-slate-500 font-medium">Zoom:</span>
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                className="h-6 w-6 p-0 text-slate-600"
+                onClick={() => setZoom((z) => Math.max(0.6, Number((z - 0.1).toFixed(1))))}
+                title="Perkecil"
+              >
+                <ZoomOut className="h-3.5 w-3.5" />
+              </Button>
+              <span className="tabular-nums font-mono text-xs w-9 text-center font-semibold text-slate-800">
+                {Math.round(zoom * 100)}%
+              </span>
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                className="h-6 w-6 p-0 text-slate-600"
+                onClick={() => setZoom((z) => Math.min(1.3, Number((z + 0.1).toFixed(1))))}
+                title="Perbesar"
+              >
+                <ZoomIn className="h-3.5 w-3.5" />
+              </Button>
+              {zoom !== 1 && (
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className="h-6 px-1.5 text-[10px] text-blue-600 hover:text-blue-800"
+                  onClick={() => setZoom(1)}
+                >
+                  100%
+                </Button>
+              )}
+            </div>
+
+            {/* Quick Export / Print Tools */}
+            <div className="flex items-center gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={handlePrint}
+                className="gap-1.5 text-xs h-7"
+              >
+                <Printer className="h-3.5 w-3.5" />
+                Cetak
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={handleDownloadPdf}
+                disabled={isExportingPdf}
+                className="gap-1.5 text-xs h-7"
+              >
+                <Download className="h-3.5 w-3.5" />
+                {isExportingPdf ? 'Memproses...' : 'Unduh PDF'}
+              </Button>
+            </div>
+          </div>
+
+          {/* Scaled Canvas Container */}
+          <div className="flex-1 overflow-auto flex justify-center py-2">
+            <div
+              style={{
+                transform: zoom !== 1 ? `scale(${zoom})` : undefined,
+                transformOrigin: 'top center',
+                transition: 'transform 0.1s ease-out',
+              }}
+            >
+              <div
+                ref={previewRef}
+                className="relative w-[794px] min-h-[1123px] bg-white shadow-2xl overflow-hidden text-slate-900 border border-slate-300"
+                style={{
+                  backgroundImage: documentPreview
+                    ? `url(${getObjectStorageUrl(documentPreview)})`
+                    : undefined,
+                  backgroundSize: '100% 100%',
+                  backgroundPosition: 'center',
+                  backgroundRepeat: 'no-repeat',
+                }}
+              >
+                {/* 1. RELOCATABLE KOP & HEADER INFO */}
+                <div
+                  style={{
+                    position: 'absolute',
+                    left: `${headerInfoPos.x}px`,
+                    top: `${headerInfoPos.y}px`,
+                    width: `${headerInfoPos.width}px`,
+                  }}
+                  onPointerDown={(e) =>
+                    handleDragStart(e, 'headerInfo', 'headerInfo', headerInfoPos.x, headerInfoPos.y)
+                  }
+                  className={cn(
+                    'group select-none rounded border transition-all cursor-move',
+                    activeDragId === 'headerInfo'
+                      ? 'border-blue-500 ring-2 ring-blue-400 shadow-lg z-40 bg-blue-50/70'
+                      : 'border-transparent hover:border-blue-400 hover:bg-blue-50/40'
+                  )}
+                >
+                  {showDragHandles && (
+                    <div
+                      data-html2canvas-ignore="true"
+                      className="flex items-center justify-between rounded-t bg-blue-700 px-2 py-0.5 text-[9px] font-medium text-white shadow-xs cursor-move touch-none select-none opacity-90 group-hover:opacity-100"
+                    >
+                      <div className="flex items-center gap-1">
+                        <GripVertical className="h-3 w-3" />
+                        <span>Kop & Judul Dokumen (Geser)</span>
+                      </div>
+                      <span className="font-mono text-[8px] opacity-80">
+                        X:{headerInfoPos.x} Y:{headerInfoPos.y}
+                      </span>
+                    </div>
+                  )}
+
+                  <header className="border-b-2 p-2" style={{ borderColor: tableColor }}>
+                    <div className="flex items-start justify-between gap-4 text-xs">
+                      <div>
+                        <p>{t.invoiceNumber}: <strong>INV/2026/0001</strong></p>
+                        <p>{t.subjectLabel}: <strong>{subject || '-'}</strong></p>
+                        <p>{t.toLabel}: Customer Dummy</p>
+                        <p>{language === 'en' ? 'Sheet' : 'Lembar'}: <strong>1</strong></p>
+                      </div>
+                      <p className="text-slate-600">{t.dateLabel}</p>
+                    </div>
+                    <h1
+                      className="mt-4 text-center text-lg font-bold tracking-widest uppercase"
+                      style={{ color: tableColor }}
+                    >
+                      {subject || t.fallbackSubject}
+                    </h1>
+                  </header>
+                </div>
+
+                {/* 2. RELOCATABLE KONTEN HEADER / INTRO TEXT */}
+                {headerHtml && (
+                  <div
+                    style={{
+                      position: 'absolute',
+                      left: `${introTextPos.x}px`,
+                      top: `${introTextPos.y}px`,
+                      width: `${introTextPos.width}px`,
+                    }}
+                    onPointerDown={(e) =>
+                      handleDragStart(e, 'introText', 'introText', introTextPos.x, introTextPos.y)
+                    }
+                    className={cn(
+                      'group select-none rounded border transition-all cursor-move',
+                      activeDragId === 'introText'
+                        ? 'border-amber-500 ring-2 ring-amber-400 shadow-lg z-40 bg-amber-50/70'
+                        : 'border-transparent hover:border-amber-400 hover:bg-amber-50/40'
+                    )}
+                  >
+                    {showDragHandles && (
+                      <div
+                        data-html2canvas-ignore="true"
+                        className="flex items-center justify-between rounded-t bg-amber-700 px-2 py-0.5 text-[9px] font-medium text-white shadow-xs cursor-move touch-none select-none opacity-90 group-hover:opacity-100"
+                      >
+                        <div className="flex items-center gap-1">
+                          <GripVertical className="h-3 w-3" />
+                          <span>Paragraf Pengantar (Geser)</span>
+                        </div>
+                        <span className="font-mono text-[8px] opacity-80">
+                          X:{introTextPos.x} Y:{introTextPos.y}
+                        </span>
+                      </div>
+                    )}
+
+                    <div className="p-2 text-xs">
+                      <p className="font-medium text-slate-800 mb-1">{t.salutation}</p>
+                      <div
+                        className="text-slate-700 leading-relaxed prose prose-xs max-w-none"
+                        dangerouslySetInnerHTML={{ __html: headerHtml }}
+                      />
+                    </div>
+                  </div>
+                )}
+
+                {/* 3. RELOCATABLE TABLE DATA */}
+                <div
+                  style={{
+                    position: 'absolute',
+                    left: `${tablePos.x}px`,
+                    top: `${tablePos.y}px`,
+                    width: `${tablePos.width}px`,
+                  }}
+                  className={cn(
+                    'group select-none rounded border transition-all',
+                    activeDragId === 'table'
+                      ? 'border-cyan-500 ring-2 ring-cyan-400 shadow-lg z-40'
+                      : 'border-transparent hover:border-cyan-400'
+                  )}
+                >
+                  {showDragHandles && (
+                    <div
+                      data-html2canvas-ignore="true"
+                      onPointerDown={(e) =>
+                        handleDragStart(e, 'table', 'table', tablePos.x, tablePos.y)
+                      }
+                      className="flex items-center justify-between rounded-t bg-cyan-700 px-2 py-0.5 text-[9px] font-medium text-white shadow-xs cursor-move touch-none select-none opacity-90 group-hover:opacity-100"
+                    >
+                      <div className="flex items-center gap-1">
+                        <GripVertical className="h-3 w-3" />
+                        <span>Tabel Data Transaksi (Geser)</span>
+                      </div>
+                      <span className="font-mono text-[8px] opacity-80">
+                        X:{tablePos.x} Y:{tablePos.y}
+                      </span>
+                    </div>
+                  )}
+
+                  <div className="overflow-hidden border border-slate-300 bg-white">
+                    <table className="w-full table-fixed border-collapse text-xs">
+                      <thead>
+                        <tr style={{ backgroundColor: tableColor }} className="text-white">
+                          {t.tableHeaders.map((head, idx) => (
+                            <th
+                              key={head}
+                              className={cn(
+                                'border border-white/20 px-2 py-1.5 text-left font-semibold uppercase',
+                                idx === 0 && 'w-[8%] text-center',
+                                idx === 5 && 'text-right w-[24%]'
+                              )}
+                            >
+                              {head}
+                            </th>
+                          ))}
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {dummyRows.map((row) => (
+                          <tr key={row[0]} className="hover:bg-slate-50/80">
+                            {row.map((cell, cIdx) => (
+                              <td
+                                key={cIdx}
+                                className={cn(
+                                  'border border-slate-200 px-2 py-1.5 text-slate-800',
+                                  cIdx === 0 && 'text-center font-mono',
+                                  cIdx === 3 && 'font-mono text-[10px]',
+                                  cIdx === 4 && 'font-mono text-[10px]',
+                                  cIdx === 5 && 'text-right font-semibold tabular-nums'
+                                )}
+                              >
+                                {cell}
+                              </td>
+                            ))}
+                          </tr>
+                        ))}
+                        <tr className="font-bold" style={{ backgroundColor: `${tableColor}14` }}>
+                          <td
+                            colSpan={5}
+                            className="border border-slate-300 px-2 py-1.5 text-right uppercase tracking-wider text-slate-900"
+                          >
+                            {t.total}
+                          </td>
+                          <td className="border border-slate-300 px-2 py-1.5 text-right tabular-nums text-slate-950 font-bold">
+                            Rp 78.550.000
+                          </td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+
+                {/* 4. RELOCATABLE INFORMASI PEMBAYARAN / FOOTER INFO */}
+                {footerHtml && (
+                  <div
+                    style={{
+                      position: 'absolute',
+                      left: `${closingTextPos.x}px`,
+                      top: `${closingTextPos.y}px`,
+                      width: `${closingTextPos.width}px`,
+                    }}
+                    onPointerDown={(e) =>
+                      handleDragStart(
+                        e,
+                        'closingText',
+                        'closingText',
+                        closingTextPos.x,
+                        closingTextPos.y
+                      )
+                    }
+                    className={cn(
+                      'group select-none rounded border transition-all cursor-move',
+                      activeDragId === 'closingText'
+                        ? 'border-indigo-500 ring-2 ring-indigo-400 shadow-lg z-40 bg-indigo-50/70'
+                        : 'border-transparent hover:border-indigo-400 hover:bg-indigo-50/40'
+                    )}
+                  >
+                    {showDragHandles && (
+                      <div
+                        data-html2canvas-ignore="true"
+                        className="flex items-center justify-between rounded-t bg-indigo-700 px-2 py-0.5 text-[9px] font-medium text-white shadow-xs cursor-move touch-none select-none opacity-90 group-hover:opacity-100"
+                      >
+                        <div className="flex items-center gap-1">
+                          <GripVertical className="h-3 w-3" />
+                          <span>Informasi Pembayaran / Footer (Geser)</span>
+                        </div>
+                        <span className="font-mono text-[8px] opacity-80">
+                          X:{closingTextPos.x} Y:{closingTextPos.y}
+                        </span>
+                      </div>
+                    )}
+
+                    <div className="rounded border border-slate-300 bg-white/90 p-2.5 text-xs">
+                      <div className="font-semibold text-slate-800 mb-1">{t.paymentInfo}</div>
+                      <div
+                        className="text-slate-700 leading-relaxed whitespace-pre-line prose prose-xs max-w-none"
+                        dangerouslySetInnerHTML={{ __html: footerHtml }}
+                      />
+                    </div>
+                  </div>
+                )}
+
+                {/* 5. RELOCATABLE SIGNATURE BLOCKS */}
+                {signatures.map((sig, idx) => (
+                  <div
+                    key={sig.id}
+                    style={{
+                      position: 'absolute',
+                      left: `${sig.x}px`,
+                      top: `${sig.y}px`,
+                      width: `${sig.width}px`,
+                    }}
+                    onPointerDown={(e) =>
+                      handleDragStart(e, sig.id, 'signature', sig.x, sig.y)
+                    }
+                    className={cn(
+                      'group select-none rounded border transition-all cursor-move',
+                      activeDragId === sig.id
+                        ? 'border-emerald-500 ring-2 ring-emerald-400 shadow-lg z-40 bg-emerald-50/70'
+                        : 'border-transparent hover:border-emerald-400 hover:bg-emerald-50/30'
+                    )}
+                  >
+                    {showDragHandles && (
+                      <div
+                        data-html2canvas-ignore="true"
+                        className="flex items-center justify-between rounded-t bg-emerald-700 px-2 py-0.5 text-[9px] font-medium text-white shadow-xs cursor-move touch-none select-none opacity-90 group-hover:opacity-100"
+                      >
+                        <div className="flex items-center gap-1">
+                          <GripVertical className="h-3 w-3" />
+                          <span>TTD #{idx + 1} (Geser)</span>
+                        </div>
+                        <span className="font-mono text-[8px] opacity-80">
+                          X:{sig.x} Y:{sig.y}
+                        </span>
+                      </div>
+                    )}
+
+                    <div className="p-2 text-center text-xs text-slate-800">
+                      <p className="text-slate-600 mb-1">{sig.label || t.closing}</p>
+                      <div className="flex h-[18mm] items-center justify-center">
+                        {sig.signatureUrl ? (
+                          /* eslint-disable-next-line @next/next/no-img-element */
+                          <img
+                            src={sig.signatureUrl}
+                            alt="Tanda Tangan"
+                            className="max-h-[18mm] max-w-[38mm] object-contain pointer-events-none"
+                          />
+                        ) : (
+                          <div className="h-[14mm] w-[32mm] border border-dashed border-slate-300 rounded flex items-center justify-center text-[10px] text-slate-400">
+                            (Area Tanda Tangan)
+                          </div>
+                        )}
+                      </div>
+                      <p className="border-t border-slate-700 pt-1 font-semibold underline text-slate-900">
+                        {sig.signerName || '-'}
+                      </p>
+                    </div>
+                  </div>
+                ))}
+
+                {/* 6. RELOCATABLE CUSTOM TEXT BLOCKS */}
+                {textBlocks.map((tb, idx) => (
+                  <div
+                    key={tb.id}
+                    style={{
+                      position: 'absolute',
+                      left: `${tb.x}px`,
+                      top: `${tb.y}px`,
+                      width: `${tb.width}px`,
+                    }}
+                    onPointerDown={(e) => handleDragStart(e, tb.id, 'text', tb.x, tb.y)}
+                    className={cn(
+                      'group select-none rounded transition-all cursor-move',
+                      activeDragId === tb.id
+                        ? 'border-violet-500 ring-2 ring-violet-400 shadow-lg z-40 bg-violet-50/70'
+                        : 'border-transparent hover:border-violet-400 hover:bg-violet-50/30'
+                    )}
+                  >
+                    {showDragHandles && (
+                      <div
+                        data-html2canvas-ignore="true"
+                        className="flex items-center justify-between rounded-t bg-violet-700 px-2 py-0.5 text-[9px] font-medium text-white shadow-xs cursor-move touch-none select-none opacity-90 group-hover:opacity-100"
+                      >
+                        <div className="flex items-center gap-1">
+                          <GripVertical className="h-3 w-3" />
+                          <span>Teks #{idx + 1} (Geser)</span>
+                        </div>
+                        <span className="font-mono text-[8px] opacity-80">
+                          X:{tb.x} Y:{tb.y}
+                        </span>
+                      </div>
+                    )}
+
+                    <div
+                      style={{
+                        fontSize: `${tb.fontSize}pt`,
+                        fontWeight: tb.fontWeight,
+                        fontStyle: tb.fontStyle,
+                        color: tb.color,
+                        textAlign: tb.textAlign,
+                        border: tb.border ? `1px solid ${tb.color}` : 'none',
+                        padding: tb.border ? '4px 6px' : '2px',
+                        whiteSpace: 'pre-line',
+                        lineHeight: '1.3',
+                      }}
+                    >
+                      {tb.text}
+                    </div>
+                  </div>
+                ))}
+
+                {/* 7. RELOCATABLE CUSTOM IMAGE BLOCKS (STEMPEL / WATERMARK) */}
+                {imageBlocks.map((img, idx) => (
+                  <div
+                    key={img.id}
+                    style={{
+                      position: 'absolute',
+                      left: `${img.x}px`,
+                      top: `${img.y}px`,
+                      width: `${img.width}px`,
+                    }}
+                    onPointerDown={(e) => handleDragStart(e, img.id, 'image', img.x, img.y)}
+                    className={cn(
+                      'group select-none rounded transition-all cursor-move',
+                      activeDragId === img.id
+                        ? 'border-rose-500 ring-2 ring-rose-400 shadow-lg z-40'
+                        : 'border-transparent hover:border-rose-400'
+                    )}
+                  >
+                    {showDragHandles && (
+                      <div
+                        data-html2canvas-ignore="true"
+                        className="flex items-center justify-between rounded-t bg-rose-700 px-2 py-0.5 text-[9px] font-medium text-white shadow-xs cursor-move touch-none select-none opacity-90 group-hover:opacity-100"
+                      >
+                        <div className="flex items-center gap-1">
+                          <GripVertical className="h-3 w-3" />
+                          <span>Gambar #{idx + 1}</span>
+                        </div>
+                        <span className="font-mono text-[8px] opacity-80">
+                          X:{img.x} Y:{img.y}
+                        </span>
+                      </div>
+                    )}
+
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={img.url}
+                      alt={img.name}
+                      style={{ width: `${img.width}px`, opacity: img.opacity }}
+                      className="pointer-events-none object-contain select-none"
+                    />
+                  </div>
+                ))}
+
+                {/* 8. RELOCATABLE PRINT DATE */}
+                <div
+                  style={{
+                    position: 'absolute',
+                    left: `${printDatePos.x}px`,
+                    top: `${printDatePos.y}px`,
+                    width: `${printDatePos.width}px`,
+                  }}
+                  onPointerDown={(e) =>
+                    handleDragStart(e, 'printDate', 'printDate', printDatePos.x, printDatePos.y)
+                  }
+                  className={cn(
+                    'group select-none rounded border transition-all cursor-move',
+                    activeDragId === 'printDate'
+                      ? 'border-slate-500 ring-2 ring-slate-400 shadow-lg z-40 bg-slate-50'
+                      : 'border-transparent hover:border-slate-400 hover:bg-slate-50/40'
+                  )}
+                >
+                  {showDragHandles && (
+                    <div
+                      data-html2canvas-ignore="true"
+                      className="flex items-center justify-between rounded-t bg-slate-700 px-2 py-0.5 text-[9px] font-medium text-white shadow-xs cursor-move touch-none select-none opacity-90 group-hover:opacity-100"
+                    >
+                      <div className="flex items-center gap-1">
+                        <GripVertical className="h-3 w-3" />
+                        <span>Tanggal Cetak (Geser)</span>
+                      </div>
+                      <span className="font-mono text-[8px] opacity-80">
+                        X:{printDatePos.x} Y:{printDatePos.y}
+                      </span>
+                    </div>
+                  )}
+
+                  <p className="p-1 text-[7pt] text-slate-500 font-mono">
+                    Dicetak otomatis oleh Sistem Wajira Panel · {new Date().toLocaleString('id-ID')}
+                  </p>
+                </div>
               </div>
             </div>
           </div>
