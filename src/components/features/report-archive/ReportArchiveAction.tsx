@@ -16,9 +16,9 @@ import {
 import type { ReportArchiveColumn, ReportArchiveTotal } from '@/lib/report-archive';
 import { cn } from '@/lib/utils';
 
-export interface ReportArchiveActionProps<T extends object = Record<string, unknown>> {
+export interface ReportArchiveActionProps {
   reportTitle: string;
-  data?: T[] | null;
+  data?: object[] | null;
   periodLabel?: string;
   columns?: ReportArchiveColumn[];
   totals?: ReportArchiveTotal[];
@@ -34,7 +34,7 @@ export interface ReportArchiveActionProps<T extends object = Record<string, unkn
   onArchiveSuccess?: (archive: DocumentArchive) => void;
 }
 
-export function ReportArchiveAction<T extends object = Record<string, unknown>>({
+export function ReportArchiveAction({
   reportTitle,
   data,
   periodLabel,
@@ -50,7 +50,7 @@ export function ReportArchiveAction<T extends object = Record<string, unknown>>(
   disabled,
   className,
   onArchiveSuccess,
-}: ReportArchiveActionProps<T>) {
+}: ReportArchiveActionProps) {
   const router = useRouter();
   const { companyId } = useCompany();
   const [open, setOpen] = useState(false);

@@ -113,6 +113,7 @@ export default function LaporanRitaseArmadaPage() {
     return Object.values(item).some(val => String(val).toLowerCase().includes(searchTerm.toLowerCase()));
   });
   const paginatedMaintenance = filteredMaintenance.slice(startIndex, startIndex + limit);
+  const archiveRows: object[] = activeTab === 'ritase' ? filteredRitase : filteredMaintenance;
 
   const handleOpenEdit = () => {
     setEditRitaseValue('');
@@ -323,7 +324,7 @@ export default function LaporanRitaseArmadaPage() {
               <ReportArchiveAction
                 reportTitle={activeTab === 'ritase' ? 'Laporan Ritase Armada' : 'Laporan Maintenance Armada'}
                 periodLabel="Semua Periode"
-                data={activeTab === 'ritase' ? filteredRitase : filteredMaintenance}
+                data={archiveRows}
               />
             </div>
           }
