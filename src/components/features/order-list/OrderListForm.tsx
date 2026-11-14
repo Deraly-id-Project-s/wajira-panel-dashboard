@@ -250,6 +250,7 @@ export function OrderListForm({
     try {
       const created = await createCustomerMutation.mutateAsync({
         ...values,
+        npwp: values.npwp ?? undefined,
         companyId: Number(companyId),
         userId: Number(userId),
       });

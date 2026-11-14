@@ -1,7 +1,7 @@
 'use client';
 
 import * as React from 'react';
-import { XIcon } from 'lucide-react';
+import { Maximize2, Minimize2, XIcon } from 'lucide-react';
 import { Dialog as DialogPrimitive } from 'radix-ui';
 
 import { cn } from '@/lib/utils';
@@ -26,9 +26,12 @@ export function closeAllDropdowns() {
 
 const DialogDragContext = React.createContext<{
   isDraggable: boolean;
+  isFullscreen: boolean;
   onDragStart?: (e: React.PointerEvent) => void;
+  toggleFullscreen?: () => void;
 }>({
   isDraggable: false,
+  isFullscreen: false,
 });
 
 function Dialog({ open, onOpenChange, ...props }: React.ComponentProps<typeof DialogPrimitive.Root>) {
@@ -66,13 +69,49 @@ const DialogOverlay = React.forwardRef<
 ));
 DialogOverlay.displayName = DialogPrimitive.Overlay.displayName;
 
+export type DialogSize =
+  | 'sm'
+  | 'md'
+  | 'lg'
+  | 'xl'
+  | '2xl'
+  | '3xl'
+  | '4xl'
+  | '5xl'
+  | '6xl'
+  | '7xl'
+  | '3x'
+  | 'full';
+
+const DIALOG_SIZE_MAP: Record<DialogSize, string> = {
+  sm: 'sm:max-w-sm',         // 384px
+  md: 'sm:max-w-md',         // 448px
+  lg: 'sm:max-w-lg',         // 512px (standard default modal)
+  xl: 'sm:max-w-xl',         // 576px
+  '2xl': 'sm:max-w-2xl',     // 672px
+  '3xl': 'sm:max-w-3xl',     // 768px
+  '4xl': 'sm:max-w-4xl',     // 896px
+  '5xl': 'sm:max-w-5xl',     // 1024px (2x standard)
+  '6xl': 'sm:max-w-6xl',     // 1152px
+  '7xl': 'sm:max-w-7xl',     // 1280px (2.5x standard)
+  '3x': 'sm:max-w-[1536px]', // 1536px (3x lebar modal standar 512px!)
+  full: 'sm:max-w-[calc(100vw-2rem)]',
+};
+
 export interface DialogContentProps extends React.ComponentPropsWithoutRef<typeof DialogPrimitive.Content> {
   showCloseButton?: boolean;
+  showMaximizeButton?: boolean;
   closeOnInteractOutside?: boolean;
   isDraggable?: boolean;
   isResizable?: boolean;
+  defaultFullscreen?: boolean;
+  isFullscreen?: boolean;
+  onFullscreenChange?: (isFullscreen: boolean) => void;
   minWidth?: number;
   minHeight?: number;
+  width?: string | number;
+  maxWidth?: string | number;
+  size?: DialogSize;
 }
 
 const DialogContent = React.forwardRef<
@@ -82,11 +121,18 @@ const DialogContent = React.forwardRef<
   className,
   children,
   showCloseButton = true,
+  showMaximizeButton = true,
   closeOnInteractOutside = false,
   isDraggable = true,
   isResizable = true,
+  defaultFullscreen = false,
+  isFullscreen: controlledFullscreen,
+  onFullscreenChange,
   minWidth = 320,
   minHeight = 180,
+  width,
+  maxWidth,
+  size,
   onInteractOutside,
   onPointerDownOutside,
   style,
@@ -99,13 +145,25 @@ const DialogContent = React.forwardRef<
     };
   }, []);
 
+  // Fullscreen state (uncontrolled or controlled)
+  const [internalFullscreen, setInternalFullscreen] = React.useState(defaultFullscreen);
+  const isFullscreen = controlledFullscreen !== undefined ? controlledFullscreen : internalFullscreen;
+
+  const toggleFullscreen = React.useCallback(() => {
+    const next = !isFullscreen;
+    if (controlledFullscreen === undefined) {
+      setInternalFullscreen(next);
+    }
+    onFullscreenChange?.(next);
+  }, [isFullscreen, controlledFullscreen, onFullscreenChange]);
+
   // Drag state
   const [position, setPosition] = React.useState<{ x: number; y: number }>({ x: 0, y: 0 });
   const [isDragging, setIsDragging] = React.useState(false);
   const dragRef = React.useRef({ startX: 0, startY: 0, origX: 0, origY: 0 });
 
   // Resize state
-  const [size, setSize] = React.useState<{ width?: number; height?: number }>({});
+  const [resizedDimensions, setResizedDimensions] = React.useState<{ width?: number; height?: number }>({});
   const [resizingDir, setResizingDir] = React.useState<string | null>(null);
   const resizeRef = React.useRef({
     startX: 0,
@@ -131,11 +189,11 @@ const DialogContent = React.forwardRef<
     [ref]
   );
 
-  // Drag Handler
+  // Drag Handler (only active when not in fullscreen mode)
   const handleDragStart = (e: React.PointerEvent) => {
-    if (!isDraggable) return;
+    if (!isDraggable || isFullscreen) return;
     const target = e.target as HTMLElement;
-    if (target.closest('button, a, input, textarea, select, [role="button"], [data-slot="dialog-close"]')) {
+    if (target.closest('button, a, input, textarea, select, [role="button"], [data-slot="dialog-close"], [data-slot="dialog-maximize"]')) {
       return;
     }
     e.preventDefault();
@@ -152,7 +210,7 @@ const DialogContent = React.forwardRef<
   };
 
   const handleDragMove = (e: React.PointerEvent) => {
-    if (!isDragging) return;
+    if (!isDragging || isFullscreen) return;
     const dx = e.clientX - dragRef.current.startX;
     const dy = e.clientY - dragRef.current.startY;
     const nextX = dragRef.current.origX + dx;
@@ -179,9 +237,9 @@ const DialogContent = React.forwardRef<
     }
   };
 
-  // Resize Handler
+  // Resize Handler (only active when not in fullscreen mode)
   const handleResizeStart = (dir: string, e: React.PointerEvent) => {
-    if (!isResizable) return;
+    if (!isResizable || isFullscreen) return;
     e.preventDefault();
     e.stopPropagation();
     const rect = contentRef.current?.getBoundingClientRect();
@@ -203,7 +261,7 @@ const DialogContent = React.forwardRef<
   };
 
   const handleResizeMove = (e: React.PointerEvent) => {
-    if (!resizingDir) return;
+    if (!resizingDir || isFullscreen) return;
     const { startX, startY, origW, origH, origX, origY, dir } = resizeRef.current;
     const dx = e.clientX - startX;
     const dy = e.clientY - startY;
@@ -235,7 +293,7 @@ const DialogContent = React.forwardRef<
       newY = origY - (newH - origH) / 2;
     }
 
-    setSize({ width: newW, height: newH });
+    setResizedDimensions({ width: newW, height: newH });
     setPosition({ x: newX, y: newY });
   };
 
@@ -262,10 +320,18 @@ const DialogContent = React.forwardRef<
   return (
     <DialogPortal data-slot="dialog-portal">
       <DialogOverlay />
-      <DialogDragContext.Provider value={{ isDraggable, onDragStart: handleDragStart }}>
+      <DialogDragContext.Provider
+        value={{
+          isDraggable: isDraggable && !isFullscreen,
+          isFullscreen,
+          onDragStart: handleDragStart,
+          toggleFullscreen,
+        }}
+      >
         <DialogPrimitive.Content
           ref={setMergedRef}
           data-slot="dialog-content"
+          data-fullscreen={isFullscreen}
           onInteractOutside={(event) => {
             onInteractOutside?.(event);
             if (!closeOnInteractOutside) event.preventDefault();
@@ -283,31 +349,71 @@ const DialogContent = React.forwardRef<
             if (resizingDir) handleResizeEnd(e);
           }}
           style={{
-            transform: `translate(calc(-50% + ${position.x}px), calc(-50% + ${position.y}px))`,
-            ...(size.width ? { width: `${size.width}px`, maxWidth: 'none' } : {}),
-            ...(size.height ? { height: `${size.height}px`, maxHeight: 'none' } : {}),
+            ...(isFullscreen
+              ? {
+                  transform: 'none',
+                  top: 0,
+                  left: 0,
+                  right: 0,
+                  bottom: 0,
+                  width: '100vw',
+                  height: '100vh',
+                  maxWidth: '100vw',
+                  maxHeight: '100vh',
+                }
+              : {
+                  transform: `translate(calc(-50% + ${position.x}px), calc(-50% + ${position.y}px))`,
+                  ...(resizedDimensions.width ? { width: `${resizedDimensions.width}px`, maxWidth: 'none' } : {}),
+                  ...(resizedDimensions.height ? { height: `${resizedDimensions.height}px`, maxHeight: 'none' } : {}),
+                  ...(width !== undefined ? { width: typeof width === 'number' ? `${width}px` : width } : {}),
+                  ...(maxWidth !== undefined ? { maxWidth: typeof maxWidth === 'number' ? `${maxWidth}px` : maxWidth } : {}),
+                }),
             ...style,
+            // Ensure fullpage mode takes absolute priority over any user passed style
+            ...(isFullscreen
+              ? {
+                  top: 0,
+                  left: 0,
+                  right: 0,
+                  bottom: 0,
+                  width: '100vw',
+                  height: '100vh',
+                  maxWidth: '100vw',
+                  maxHeight: '100vh',
+                  borderRadius: 0,
+                }
+              : {}),
           }}
           className={cn(
-            'bg-background data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[state=closed]:hidden fixed top-[50%] left-[50%] z-[10000] grid w-full max-w-[calc(100%-2rem)] gap-4 rounded-md border p-6 shadow-lg outline-none sm:max-w-lg',
+            'bg-background data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[state=closed]:hidden fixed z-[10000] grid gap-4 border shadow-lg outline-none',
+            isFullscreen
+              ? 'inset-0 top-0 left-0 w-screen h-screen max-w-none max-h-none rounded-none border-none p-6 sm:max-w-none transition-all duration-150'
+              : cn(
+                  'top-[50%] left-[50%] w-full max-w-[calc(100%-2rem)] rounded-md p-6 transition-all duration-150',
+                  size
+                    ? DIALOG_SIZE_MAP[size] || ''
+                    : (Boolean(maxWidth) || Boolean(width) || /(?:^|\s)(?:sm:|md:|lg:|xl:|2xl:)?max-w-/.test(className || '')
+                        ? ''
+                        : 'sm:max-w-lg')
+                ),
             isDragging && 'transition-none select-none',
             className,
           )}
           {...props}
         >
-          {/* Subtle top drag grip indicator */}
-          {isDraggable && (
+          {/* Subtle top drag grip indicator (only when in modal mode) */}
+          {isDraggable && !isFullscreen && (
             <div
               onPointerDown={handleDragStart}
-              className="absolute top-0 left-12 right-12 h-3.5 cursor-grab active:cursor-grabbing z-30 flex justify-center items-center group touch-none"
+              className="absolute top-0 left-12 right-20 h-3.5 cursor-grab active:cursor-grabbing z-30 flex justify-center items-center group touch-none"
               title="Klik & tahan untuk menggeser dialog"
             >
               <div className="w-8 h-1 rounded-full bg-slate-200/80 group-hover:bg-slate-400 transition-colors" />
             </div>
           )}
 
-          {/* Resizer handles */}
-          {isResizable && (
+          {/* Resizer handles (only when in modal mode) */}
+          {isResizable && !isFullscreen && (
             <>
               {/* 4 Edges */}
               <div
@@ -352,15 +458,35 @@ const DialogContent = React.forwardRef<
 
           {children}
 
-          {showCloseButton && (
-            <DialogPrimitive.Close
-              data-slot="dialog-close"
-              className="ring-offset-background focus:ring-ring data-[state=open]:bg-accent data-[state=open]:text-muted-foreground absolute top-4 right-4 rounded-xs opacity-70 transition-opacity hover:opacity-100 focus:ring-2 focus:ring-offset-2 focus:outline-hidden disabled:pointer-events-none [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 z-40 cursor-pointer"
-            >
-              <XIcon />
-              <span className="sr-only">Close</span>
-            </DialogPrimitive.Close>
-          )}
+          {/* Action Buttons: Fullscreen/Modal Mode Toggle & Close Button */}
+          <div className="absolute top-4 right-4 flex items-center gap-1.5 z-40">
+            {showMaximizeButton && (
+              <button
+                type="button"
+                onClick={toggleFullscreen}
+                data-slot="dialog-maximize"
+                className="ring-offset-background focus:ring-ring rounded-xs opacity-70 transition-opacity hover:opacity-100 hover:bg-slate-100 dark:hover:bg-slate-800 p-1 focus:ring-2 focus:ring-offset-2 focus:outline-hidden cursor-pointer flex items-center justify-center text-slate-500 hover:text-slate-900"
+                title={isFullscreen ? 'Kembali ke Mode Modal' : 'Mode Layar Penuh (Fullpage)'}
+                aria-label={isFullscreen ? 'Kembali ke Mode Modal' : 'Mode Layar Penuh'}
+              >
+                {isFullscreen ? (
+                  <Minimize2 className="h-4 w-4" />
+                ) : (
+                  <Maximize2 className="h-4 w-4" />
+                )}
+              </button>
+            )}
+
+            {showCloseButton && (
+              <DialogPrimitive.Close
+                data-slot="dialog-close"
+                className="ring-offset-background focus:ring-ring data-[state=open]:bg-accent data-[state=open]:text-muted-foreground rounded-xs opacity-70 transition-opacity hover:opacity-100 hover:bg-slate-100 dark:hover:bg-slate-800 p-1 focus:ring-2 focus:ring-offset-2 focus:outline-hidden disabled:pointer-events-none cursor-pointer flex items-center justify-center text-slate-500 hover:text-slate-900"
+              >
+                <XIcon className="h-4 w-4" />
+                <span className="sr-only">Close</span>
+              </DialogPrimitive.Close>
+            )}
+          </div>
         </DialogPrimitive.Content>
       </DialogDragContext.Provider>
     </DialogPortal>
@@ -371,14 +497,19 @@ DialogContent.displayName = DialogPrimitive.Content.displayName;
 const DialogHeader = React.forwardRef<
   HTMLDivElement,
   React.ComponentPropsWithoutRef<'div'>
->(({ className, onPointerDown, ...props }, ref) => {
-  const { isDraggable, onDragStart } = React.useContext(DialogDragContext);
+>(({ className, onPointerDown, onDoubleClick, ...props }, ref) => {
+  const { isDraggable, isFullscreen, onDragStart, toggleFullscreen } = React.useContext(DialogDragContext);
 
   const handlePointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
     onPointerDown?.(e);
-    if (isDraggable && onDragStart) {
+    if (isDraggable && !isFullscreen && onDragStart) {
       onDragStart(e);
     }
+  };
+
+  const handleDoubleClick = (e: React.MouseEvent<HTMLDivElement>) => {
+    onDoubleClick?.(e);
+    toggleFullscreen?.();
   };
 
   return (
@@ -386,9 +517,10 @@ const DialogHeader = React.forwardRef<
       ref={ref}
       data-slot="dialog-header"
       onPointerDown={handlePointerDown}
+      onDoubleClick={handleDoubleClick}
       className={cn(
-        'flex flex-col gap-2 text-center sm:text-left',
-        isDraggable && 'cursor-grab active:cursor-grabbing select-none',
+        'flex flex-col gap-2 text-center sm:text-left pr-16',
+        isDraggable && !isFullscreen && 'cursor-grab active:cursor-grabbing select-none',
         className
       )}
       {...props}
