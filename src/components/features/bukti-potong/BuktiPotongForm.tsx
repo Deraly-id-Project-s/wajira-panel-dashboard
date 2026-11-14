@@ -1,4 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
+import { format } from 'date-fns';
+import { getTodayWIB } from '@/lib/utils/date';
 import type { WithholdingTaxItem, WithholdingTaxPayload } from '@/@types/withholding-tax.types';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -20,10 +22,23 @@ import { Save } from 'lucide-react';
 interface Props {
   item: WithholdingTaxItem | null;
   companyId: string | number;
-  onSuccess: () => void;
+  onSuccess: (id: string | number) => void;
   onCancel: () => void;
   submitLabel?: string;
 }
+
+const getFormattedPaymentDate = (date?: string | null) => {
+  if (!date) return format(getTodayWIB(), 'yyyy-MM-dd');
+  if (/^\d{4}-\d{2}-\d{2}/.test(date)) {
+    return date.substring(0, 10);
+  }
+  try {
+    const d = new Date(date);
+    return isNaN(d.getTime()) ? format(getTodayWIB(), 'yyyy-MM-dd') : format(d, 'yyyy-MM-dd');
+  } catch {
+    return format(getTodayWIB(), 'yyyy-MM-dd');
+  }
+};
 
 export default function BuktiPotongForm({ item, companyId, onSuccess: onFinish, onCancel, submitLabel }: Props) {
   const { companyId: sessionCompanyId } = useCompany();
@@ -37,7 +52,7 @@ export default function BuktiPotongForm({ item, companyId, onSuccess: onFinish, 
   const [pphAmountStr, setPphAmountStr] = useState('');
   const [pphDescription, setPphDescription] = useState('');
   const [paymentAmountStr, setPaymentAmountStr] = useState('');
-  const [paymentDate, setPaymentDate] = useState('');
+  const [paymentDate, setPaymentDate] = useState<string>(() => getFormattedPaymentDate(item?.payment_date));
 
   const { data: kasData, isLoading: isLoadingKas } = useKas(effectiveCompanyId);
 
@@ -76,16 +91,7 @@ export default function BuktiPotongForm({ item, companyId, onSuccess: onFinish, 
       setPphAmountStr(item.pph_amount !== undefined && item.pph_amount !== null ? String(item.pph_amount) : '');
       setPphDescription(item.pph_description || '');
       setPaymentAmountStr(item.payment_amount !== undefined && item.payment_amount !== null ? String(item.payment_amount) : '');
-      if (item.payment_date) {
-        try {
-          const dateObj = new Date(item.payment_date);
-          setPaymentDate(dateObj.toISOString().split('T')[0]);
-        } catch {
-          setPaymentDate(item.payment_date);
-        }
-      } else {
-        setPaymentDate('');
-      }
+      setPaymentDate(getFormattedPaymentDate(item.payment_date));
     } else {
       setSource('internal');
       setCashId('');
@@ -96,7 +102,7 @@ export default function BuktiPotongForm({ item, companyId, onSuccess: onFinish, 
       setPphAmountStr('');
       setPphDescription('');
       setPaymentAmountStr('');
-      setPaymentDate('');
+      setPaymentDate(format(getTodayWIB(), 'yyyy-MM-dd'));
     }
   }, [item]);
 
@@ -126,7 +132,9 @@ export default function BuktiPotongForm({ item, companyId, onSuccess: onFinish, 
       return;
     }
 
-    if (!paymentDate) {
+    const resolvedPaymentDate = paymentDate?.trim() || format(getTodayWIB(), 'yyyy-MM-dd');
+
+    if (!resolvedPaymentDate) {
       toast.error('Tanggal pembayaran wajib diisi.');
       return;
     }
@@ -138,7 +146,7 @@ export default function BuktiPotongForm({ item, companyId, onSuccess: onFinish, 
       withholding_number: withholdingNumber,
       pph_description: pphDescription,
       payment_amount: rawPayment,
-      payment_date: paymentDate,
+      payment_date: resolvedPaymentDate,
     };
 
     if (withholdingAge) {
@@ -157,9 +165,12 @@ export default function BuktiPotongForm({ item, companyId, onSuccess: onFinish, 
       payload.unit_transaction_id = Number(unitTransactionId);
     }
 
-    const onSuccess = () => {
+    const onSuccess = (data?: WithholdingTaxItem) => {
       toast.success(`Data Bukti Potong berhasil ${item ? 'diperbarui' : 'disimpan'}.`);
-      onFinish();
+      const targetId = data?.id ?? item?.id;
+      if (targetId) {
+        onFinish(targetId);
+      }
     };
 
     const onError = (error: unknown) => {
@@ -329,9 +340,11 @@ export default function BuktiPotongForm({ item, companyId, onSuccess: onFinish, 
             <InputDate
               value={paymentDate}
               onChange={(e) => setPaymentDate(e.target.value)}
+              onValueChange={(val) => setPaymentDate(val)}
               disabled={isPending}
               className="bg-white"
               required
+              isEdit={Boolean(item)}
             />
           </div>
         </div>

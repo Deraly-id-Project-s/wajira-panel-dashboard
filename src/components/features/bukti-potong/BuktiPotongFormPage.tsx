@@ -1,4 +1,3 @@
-import { useEffect, useState } from 'react';
 import Head from 'next/head';
 import { useRouter } from 'next/router';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
@@ -26,6 +25,14 @@ export default function BuktiPotongFormPage({ mode }: Props) {
 
   const handleBack = () => {
     void router.push(basePath);
+  };
+
+  const handleRedirectToDetail = (id: string | number) => {
+    if (id) {
+      void router.push(`${basePath}/${id}`);
+    } else {
+      void router.push(basePath);
+    }
   };
 
   if (isEdit && (!router.isReady || isFetching)) {
@@ -82,7 +89,7 @@ export default function BuktiPotongFormPage({ mode }: Props) {
             <BuktiPotongForm
               item={isEdit ? itemData || null : null}
               companyId={safeCompanyId}
-              onSuccess={handleBack}
+              onSuccess={handleRedirectToDetail}
               onCancel={handleBack}
             />
           </CardContent>
