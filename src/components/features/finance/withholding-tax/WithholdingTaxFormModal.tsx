@@ -1,4 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
+import { format } from 'date-fns';
+import { getTodayWIB } from '@/lib/utils/date';
 import { Search } from 'lucide-react';
 import type { WithholdingTaxItem, WithholdingTaxPayload } from '@/@types/withholding-tax.types';
 import { Button } from '@/components/ui/button';
@@ -27,6 +29,19 @@ const parseCurrencyIDR = (value: string): number => {
   return numericString ? parseInt(numericString, 10) : 0;
 };
 
+const getFormattedPaymentDate = (date?: string | null) => {
+  if (!date) return format(getTodayWIB(), 'yyyy-MM-dd');
+  if (/^\d{4}-\d{2}-\d{2}/.test(date)) {
+    return date.substring(0, 10);
+  }
+  try {
+    const d = new Date(date);
+    return isNaN(d.getTime()) ? format(getTodayWIB(), 'yyyy-MM-dd') : format(d, 'yyyy-MM-dd');
+  } catch {
+    return format(getTodayWIB(), 'yyyy-MM-dd');
+  }
+};
+
 export default function WithholdingTaxFormModal({ isOpen, onClose, item, companyId }: Props) {
   const [source, setSource] = useState<'internal' | 'external'>('internal');
   const [cashId, setCashId] = useState<string>('');
@@ -36,7 +51,7 @@ export default function WithholdingTaxFormModal({ isOpen, onClose, item, company
   const [pphAmountStr, setPphAmountStr] = useState('');
   const [pphDescription, setPphDescription] = useState('');
   const [paymentAmountStr, setPaymentAmountStr] = useState('');
-  const [paymentDate, setPaymentDate] = useState('');
+  const [paymentDate, setPaymentDate] = useState<string>(() => getFormattedPaymentDate(item?.payment_date));
 
   // Fetch detail if editing to prefill properly
   const { data: detailData, isLoading: isLoadingDetail } = useWithholdingTaxDetail(isOpen && item?.id ? item.id : null);
@@ -83,16 +98,7 @@ export default function WithholdingTaxFormModal({ isOpen, onClose, item, company
         setPphDescription(dataToUse.pph_description || '');
         setPaymentAmountStr(dataToUse.payment_amount ? formatCurrency(dataToUse.payment_amount) : '');
         // format date for input type="date"
-        if (dataToUse.payment_date) {
-          try {
-            const dateObj = new Date(dataToUse.payment_date);
-            setPaymentDate(dateObj.toISOString().split('T')[0]);
-          } catch (e) {
-            setPaymentDate(dataToUse.payment_date);
-          }
-        } else {
-          setPaymentDate('');
-        }
+        setPaymentDate(getFormattedPaymentDate(dataToUse.payment_date));
       } else {
         setSource('internal');
         setCashId('');
@@ -102,7 +108,7 @@ export default function WithholdingTaxFormModal({ isOpen, onClose, item, company
         setPphAmountStr('');
         setPphDescription('');
         setPaymentAmountStr('');
-        setPaymentDate('');
+        setPaymentDate(format(getTodayWIB(), 'yyyy-MM-dd'));
       }
     }
   }, [isOpen, item, detailData]);
@@ -147,7 +153,9 @@ export default function WithholdingTaxFormModal({ isOpen, onClose, item, company
       return;
     }
 
-    if (!paymentDate) {
+    const resolvedPaymentDate = paymentDate?.trim() || format(getTodayWIB(), 'yyyy-MM-dd');
+
+    if (!resolvedPaymentDate) {
       toast.error('Tanggal pembayaran wajib diisi.');
       return;
     }
@@ -160,7 +168,7 @@ export default function WithholdingTaxFormModal({ isOpen, onClose, item, company
       pph_amount: rawPph,
       pph_description: pphDescription,
       payment_amount: rawPayment,
-      payment_date: paymentDate,
+      payment_date: resolvedPaymentDate,
       no_invoice: '',
     };
 
@@ -326,8 +334,10 @@ export default function WithholdingTaxFormModal({ isOpen, onClose, item, company
                 <InputDate
                   value={paymentDate}
                   onChange={(e) => setPaymentDate(e.target.value)}
+                  onValueChange={(val) => setPaymentDate(val)}
                   disabled={isPending}
                   required
+                  isEdit={Boolean(item)}
                 />
               </div>
             </div>

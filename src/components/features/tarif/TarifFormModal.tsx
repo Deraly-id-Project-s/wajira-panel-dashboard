@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from 'react';
-import { useForm, Controller, useFieldArray } from 'react-hook-form';
+import React, { useEffect, useState, useMemo } from 'react';
+import { useForm, Controller, useFieldArray, useWatch } from 'react-hook-form';
 import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from '@/components/ui/form';
 import { FormDialog } from '@/components/ui/form-dialog';
 import { Input } from '@/components/ui/input';
@@ -64,6 +64,31 @@ export function TarifFormModal({ isOpen, onClose, onSave, isSubmitting = false }
         control: form.control,
         name: 'routes',
     });
+
+    const watchedRoutes = useWatch({
+        control: form.control,
+        name: 'routes',
+    });
+
+    const selectedRouteIds = useMemo(() => {
+        return new Set(
+            (watchedRoutes || [])
+                .map((r) => r?.routeId)
+                .filter((id): id is string => Boolean(id))
+        );
+    }, [watchedRoutes]);
+
+    const handleRemoveRoute = (indexToRemove: number) => {
+        const currentRoutes = form.getValues('routes') || [];
+        const remaining = currentRoutes.filter((_, i) => i !== indexToRemove);
+        remove(indexToRemove);
+        if (remaining.length > 0 && !remaining.some((r) => r.stateAt === 'loading_out')) {
+            form.setValue(`routes.${remaining.length - 1}.stateAt`, 'loading_out', {
+                shouldDirty: true,
+                shouldValidate: true,
+            });
+        }
+    };
 
     useEffect(() => {
         if (!isOpen) {
@@ -175,110 +200,142 @@ export function TarifFormModal({ isOpen, onClose, onSave, isSubmitting = false }
                             </div>
 
                             <div className="space-y-2">
-                                {fields.map((field, index) => (
-                                    <div
-                                        key={field.id}
-                                        className="flex flex-col sm:flex-row items-center gap-2 p-2.5 bg-slate-50 border border-slate-200 rounded-md"
-                                    >
-                                        <div className="flex items-center gap-2 min-w-[90px]">
-                                            <span className="flex h-5 w-5 items-center justify-center rounded-full bg-slate-200 text-xs font-semibold text-slate-700">
-                                                {index + 1}
-                                            </span>
-                                            <span className="text-xs text-slate-500">
-                                                {index === 0 ? 'Asal' : index === fields.length - 1 ? 'Tujuan' : `Transit`}
-                                            </span>
-                                        </div>
+                                {fields.map((field, index) => {
+                                    const otherRoutes = (watchedRoutes || []).filter((_, i) => i !== index);
+                                    const isOtherAllLoadingIn =
+                                        otherRoutes.length > 0 && otherRoutes.every((r) => r?.stateAt === 'loading_in');
 
-                                        <div className="flex-1 w-full grid grid-cols-1 sm:grid-cols-2 gap-2">
-                                            <Controller
-                                                control={form.control}
-                                                name={`routes.${index}.routeId`}
-                                                render={({ field: routeField }) => (
-                                                    <SelectAdd
-                                                        onAdd={() => handleQuickAddRoute(index)}
-                                                        addLabel="Tambah Rute"
-                                                        addVariant="outline"
-                                                        containerClassName="w-full"
-                                                    >
+                                    return (
+                                        <div
+                                            key={field.id}
+                                            className="flex flex-col sm:flex-row items-center gap-2 p-2.5 bg-slate-50 border border-slate-200 rounded-md"
+                                        >
+                                            <div className="flex items-center gap-2 min-w-[90px]">
+                                                <span className="flex h-5 w-5 items-center justify-center rounded-full bg-slate-200 text-xs font-semibold text-slate-700">
+                                                    {index + 1}
+                                                </span>
+                                                <span className="text-xs text-slate-500">
+                                                    {index === 0 ? 'Asal' : index === fields.length - 1 ? 'Tujuan' : `Transit`}
+                                                </span>
+                                            </div>
+
+                                            <div className="flex-1 w-full grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                                <Controller
+                                                    control={form.control}
+                                                    name={`routes.${index}.routeId`}
+                                                    render={({ field: routeField }) => (
+                                                        <SelectAdd
+                                                            onAdd={() => handleQuickAddRoute(index)}
+                                                            addLabel="Tambah Rute"
+                                                            addVariant="outline"
+                                                            containerClassName="w-full"
+                                                        >
+                                                            <Select
+                                                                value={routeField.value}
+                                                                onValueChange={routeField.onChange}
+                                                                disabled={isLoadingRoutes}
+                                                            >
+                                                                <SelectTrigger className="bg-white w-full h-9 text-xs">
+                                                                    <SelectValue placeholder={isLoadingRoutes ? 'Memuat rute...' : 'Pilih Rute'} />
+                                                                </SelectTrigger>
+                                                                <SelectContent className="max-h-56">
+                                                                    {routeOptions.map((opt) => {
+                                                                        const optIdStr = String(opt.id);
+                                                                        const isSelectedElsewhere =
+                                                                            optIdStr !== routeField.value && selectedRouteIds.has(optIdStr);
+
+                                                                        return (
+                                                                            <SelectItem
+                                                                                key={opt.id}
+                                                                                value={optIdStr}
+                                                                                disabled={isSelectedElsewhere}
+                                                                            >
+                                                                                <span className="flex items-center justify-between w-full gap-2">
+                                                                                    <span>{opt.name}</span>
+                                                                                    {isSelectedElsewhere && (
+                                                                                        <span className="text-[10px] text-slate-400 italic shrink-0">
+                                                                                            (Sudah dipilih)
+                                                                                        </span>
+                                                                                    )}
+                                                                                </span>
+                                                                            </SelectItem>
+                                                                        );
+                                                                    })}
+                                                                </SelectContent>
+                                                            </Select>
+                                                        </SelectAdd>
+                                                    )}
+                                                />
+
+                                                <Controller
+                                                    control={form.control}
+                                                    name={`routes.${index}.stateAt`}
+                                                    render={({ field: stateField }) => (
                                                         <Select
-                                                            value={routeField.value}
-                                                            onValueChange={routeField.onChange}
-                                                            disabled={isLoadingRoutes}
+                                                            value={stateField.value}
+                                                            onValueChange={stateField.onChange}
                                                         >
                                                             <SelectTrigger className="bg-white w-full h-9 text-xs">
-                                                                <SelectValue placeholder={isLoadingRoutes ? 'Memuat rute...' : 'Pilih Rute'} />
+                                                                <SelectValue placeholder="Pilih Jenis" />
                                                             </SelectTrigger>
-                                                            <SelectContent className="max-h-56">
-                                                                {routeOptions.map((opt) => (
-                                                                    <SelectItem key={opt.id} value={String(opt.id)}>
-                                                                        {opt.name}
-                                                                    </SelectItem>
-                                                                ))}
+                                                            <SelectContent>
+                                                                <SelectItem value="loading_in" disabled={isOtherAllLoadingIn}>
+                                                                    <span className="flex items-center justify-between w-full gap-2">
+                                                                        <span>Loading In (Muat)</span>
+                                                                        {isOtherAllLoadingIn && (
+                                                                            <span className="text-[10px] text-slate-400 italic shrink-0">
+                                                                                (Minimal 1 Loading Out)
+                                                                            </span>
+                                                                        )}
+                                                                    </span>
+                                                                </SelectItem>
+                                                                <SelectItem value="loading_out">Loading Out (Bongkar)</SelectItem>
                                                             </SelectContent>
                                                         </Select>
-                                                    </SelectAdd>
-                                                )}
-                                            />
+                                                    )}
+                                                />
+                                            </div>
 
-                                            <Controller
-                                                control={form.control}
-                                                name={`routes.${index}.stateAt`}
-                                                render={({ field: stateField }) => (
-                                                    <Select
-                                                        value={stateField.value}
-                                                        onValueChange={stateField.onChange}
-                                                    >
-                                                        <SelectTrigger className="bg-white w-full h-9 text-xs">
-                                                            <SelectValue placeholder="Pilih Jenis" />
-                                                        </SelectTrigger>
-                                                        <SelectContent>
-                                                            <SelectItem value="loading_in">Loading In (Muat)</SelectItem>
-                                                            <SelectItem value="loading_out">Loading Out (Bongkar)</SelectItem>
-                                                        </SelectContent>
-                                                    </Select>
-                                                )}
-                                            />
-                                        </div>
-
-                                        <div className="flex items-center gap-1 shrink-0">
-                                            <Button
-                                                type="button"
-                                                variant="ghost"
-                                                size="icon"
-                                                onClick={() => move(index, index - 1)}
-                                                disabled={index === 0}
-                                                className="text-slate-500 hover:text-slate-800 h-7 w-7 disabled:opacity-30 disabled:cursor-not-allowed"
-                                                title="Pindah ke Atas"
-                                            >
-                                                <ArrowUp className="h-3.5 w-3.5" />
-                                            </Button>
-                                            <Button
-                                                type="button"
-                                                variant="ghost"
-                                                size="icon"
-                                                onClick={() => move(index, index + 1)}
-                                                disabled={index === fields.length - 1}
-                                                className="text-slate-500 hover:text-slate-800 h-7 w-7 disabled:opacity-30 disabled:cursor-not-allowed"
-                                                title="Pindah ke Bawah"
-                                            >
-                                                <ArrowDown className="h-3.5 w-3.5" />
-                                            </Button>
-
-                                            {fields.length > 2 && (
+                                            <div className="flex items-center gap-1 shrink-0">
                                                 <Button
                                                     type="button"
                                                     variant="ghost"
                                                     size="icon"
-                                                    onClick={() => remove(index)}
-                                                    className="text-red-500 hover:text-red-700 h-7 w-7 shrink-0"
-                                                    title="Hapus Titik"
+                                                    onClick={() => move(index, index - 1)}
+                                                    disabled={index === 0}
+                                                    className="text-slate-500 hover:text-slate-800 h-7 w-7 disabled:opacity-30 disabled:cursor-not-allowed"
+                                                    title="Pindah ke Atas"
                                                 >
-                                                    <Trash2 className="h-3.5 w-3.5" />
+                                                    <ArrowUp className="h-3.5 w-3.5" />
                                                 </Button>
-                                            )}
+                                                <Button
+                                                    type="button"
+                                                    variant="ghost"
+                                                    size="icon"
+                                                    onClick={() => move(index, index + 1)}
+                                                    disabled={index === fields.length - 1}
+                                                    className="text-slate-500 hover:text-slate-800 h-7 w-7 disabled:opacity-30 disabled:cursor-not-allowed"
+                                                    title="Pindah ke Bawah"
+                                                >
+                                                    <ArrowDown className="h-3.5 w-3.5" />
+                                                </Button>
+
+                                                {fields.length > 2 && (
+                                                    <Button
+                                                        type="button"
+                                                        variant="ghost"
+                                                        size="icon"
+                                                        onClick={() => handleRemoveRoute(index)}
+                                                        className="text-red-500 hover:text-red-700 h-7 w-7 shrink-0"
+                                                        title="Hapus Titik"
+                                                    >
+                                                        <Trash2 className="h-3.5 w-3.5" />
+                                                    </Button>
+                                                )}
+                                            </div>
                                         </div>
-                                    </div>
-                                ))}
+                                    );
+                                })}
                             </div>
                         </div>
 

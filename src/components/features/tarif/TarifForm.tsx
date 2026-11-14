@@ -1,6 +1,6 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { useRouter } from 'next/router';
-import { useForm, Controller, useFieldArray } from 'react-hook-form';
+import { useForm, Controller, useFieldArray, useWatch } from 'react-hook-form';
 import { ArrowLeft, Save, Plus, Trash2, ArrowUp, ArrowDown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -53,6 +53,7 @@ export function TarifForm({ initialData, onSubmit, isSubmitting, title }: TarifF
         reset,
         control,
         setValue,
+        getValues,
         formState: { errors },
     } = useForm<TarifFormData>({
         defaultValues: {
@@ -75,6 +76,31 @@ export function TarifForm({ initialData, onSubmit, isSubmitting, title }: TarifF
         control,
         name: 'routes',
     });
+
+    const watchedRoutes = useWatch({
+        control,
+        name: 'routes',
+    });
+
+    const selectedRouteIds = useMemo(() => {
+        return new Set(
+            (watchedRoutes || [])
+                .map((r) => r?.routeId)
+                .filter((id): id is string => Boolean(id))
+        );
+    }, [watchedRoutes]);
+
+    const handleRemoveRoute = (indexToRemove: number) => {
+        const currentRoutes = getValues('routes') || [];
+        const remaining = currentRoutes.filter((_, i) => i !== indexToRemove);
+        remove(indexToRemove);
+        if (remaining.length > 0 && !remaining.some((r) => r.stateAt === 'loading_out')) {
+            setValue(`routes.${remaining.length - 1}.stateAt`, 'loading_out', {
+                shouldDirty: true,
+                shouldValidate: true,
+            });
+        }
+    };
 
     useEffect(() => {
         if (initialData) {
@@ -207,6 +233,9 @@ export function TarifForm({ initialData, onSubmit, isSubmitting, title }: TarifF
                                 const isFirst = index === 0;
                                 const isLast = index === fields.length - 1;
                                 const stepLabel = isFirst ? 'Titik Awal (Origin)' : isLast ? 'Titik Akhir (Destination)' : `Transit ${index}`;
+                                const otherRoutes = (watchedRoutes || []).filter((_, i) => i !== index);
+                                const isOtherAllLoadingIn =
+                                    otherRoutes.length > 0 && otherRoutes.every((r) => r?.stateAt === 'loading_in');
 
                                 return (
                                     <div
@@ -243,14 +272,33 @@ export function TarifForm({ initialData, onSubmit, isSubmitting, title }: TarifF
                                                                     <SelectValue placeholder={isLoadingRoutes ? 'Memuat rute...' : 'Pilih Rute / Lokasi'} />
                                                                 </SelectTrigger>
                                                                 <SelectContent className="max-h-60">
-                                                                    {routeOptions.map((opt) => (
-                                                                        <SelectItem key={opt.id} value={String(opt.id)}>
-                                                                            <span className="font-medium text-slate-900">{opt.name}</span>
-                                                                            {opt.address && (
-                                                                                <span className="text-xs text-slate-500 ml-2">({opt.address})</span>
-                                                                            )}
-                                                                        </SelectItem>
-                                                                    ))}
+                                                                    {routeOptions.map((opt) => {
+                                                                        const optIdStr = String(opt.id);
+                                                                        const isSelectedElsewhere =
+                                                                            optIdStr !== routeField.value && selectedRouteIds.has(optIdStr);
+
+                                                                        return (
+                                                                            <SelectItem
+                                                                                key={opt.id}
+                                                                                value={optIdStr}
+                                                                                disabled={isSelectedElsewhere}
+                                                                            >
+                                                                                <div className="flex items-center justify-between w-full gap-2">
+                                                                                    <div>
+                                                                                        <span className="font-medium text-slate-900">{opt.name}</span>
+                                                                                        {opt.address && (
+                                                                                            <span className="text-xs text-slate-500 ml-2">({opt.address})</span>
+                                                                                        )}
+                                                                                    </div>
+                                                                                    {isSelectedElsewhere && (
+                                                                                        <span className="text-[10px] text-slate-400 italic shrink-0">
+                                                                                            (Sudah dipilih)
+                                                                                        </span>
+                                                                                    )}
+                                                                                </div>
+                                                                            </SelectItem>
+                                                                        );
+                                                                    })}
                                                                 </SelectContent>
                                                             </Select>
                                                         </SelectAdd>
@@ -272,9 +320,14 @@ export function TarifForm({ initialData, onSubmit, isSubmitting, title }: TarifF
                                                                 <SelectValue placeholder="Pilih Jenis Titik" />
                                                             </SelectTrigger>
                                                             <SelectContent>
-                                                                <SelectItem value="loading_in">
-                                                                    <span className="inline-flex items-center gap-1.5 font-medium text-blue-700">
-                                                                        Loading In (Muat)
+                                                                <SelectItem value="loading_in" disabled={isOtherAllLoadingIn}>
+                                                                    <span className="inline-flex items-center justify-between w-full gap-2 font-medium text-blue-700">
+                                                                        <span>Loading In (Muat)</span>
+                                                                        {isOtherAllLoadingIn && (
+                                                                            <span className="text-[10px] text-slate-400 italic font-normal shrink-0">
+                                                                                (Minimal 1 Loading Out)
+                                                                            </span>
+                                                                        )}
                                                                     </span>
                                                                 </SelectItem>
                                                                 <SelectItem value="loading_out">
@@ -318,7 +371,7 @@ export function TarifForm({ initialData, onSubmit, isSubmitting, title }: TarifF
                                                     type="button"
                                                     variant="ghost"
                                                     size="icon"
-                                                    onClick={() => remove(index)}
+                                                    onClick={() => handleRemoveRoute(index)}
                                                     className="h-8 w-8 text-red-500 hover:text-red-700 hover:bg-red-50"
                                                     title="Hapus Titik Rute"
                                                 >

@@ -206,7 +206,7 @@ const DialogContent = React.forwardRef<
     };
     try {
       e.currentTarget.setPointerCapture(e.pointerId);
-    } catch {}
+    } catch { }
   };
 
   const handleDragMove = (e: React.PointerEvent) => {
@@ -233,7 +233,7 @@ const DialogContent = React.forwardRef<
       setIsDragging(false);
       try {
         e.currentTarget.releasePointerCapture(e.pointerId);
-      } catch {}
+      } catch { }
     }
   };
 
@@ -257,7 +257,7 @@ const DialogContent = React.forwardRef<
     };
     try {
       (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
-    } catch {}
+    } catch { }
   };
 
   const handleResizeMove = (e: React.PointerEvent) => {
@@ -302,7 +302,7 @@ const DialogContent = React.forwardRef<
       setResizingDir(null);
       try {
         (e.currentTarget as HTMLElement).releasePointerCapture(e.pointerId);
-      } catch {}
+      } catch { }
     }
   };
 
@@ -351,37 +351,37 @@ const DialogContent = React.forwardRef<
           style={{
             ...(isFullscreen
               ? {
-                  transform: 'none',
-                  top: 0,
-                  left: 0,
-                  right: 0,
-                  bottom: 0,
-                  width: '100vw',
-                  height: '100vh',
-                  maxWidth: '100vw',
-                  maxHeight: '100vh',
-                }
+                transform: 'none',
+                top: 0,
+                left: 0,
+                right: 0,
+                bottom: 0,
+                width: '100vw',
+                height: '100vh',
+                maxWidth: '100vw',
+                maxHeight: '100vh',
+              }
               : {
-                  transform: `translate(calc(-50% + ${position.x}px), calc(-50% + ${position.y}px))`,
-                  ...(resizedDimensions.width ? { width: `${resizedDimensions.width}px`, maxWidth: 'none' } : {}),
-                  ...(resizedDimensions.height ? { height: `${resizedDimensions.height}px`, maxHeight: 'none' } : {}),
-                  ...(width !== undefined ? { width: typeof width === 'number' ? `${width}px` : width } : {}),
-                  ...(maxWidth !== undefined ? { maxWidth: typeof maxWidth === 'number' ? `${maxWidth}px` : maxWidth } : {}),
-                }),
+                transform: `translate(calc(-50% + ${position.x}px), calc(-50% + ${position.y}px))`,
+                ...(resizedDimensions.width ? { width: `${resizedDimensions.width}px`, maxWidth: 'none' } : {}),
+                ...(resizedDimensions.height ? { height: `${resizedDimensions.height}px`, maxHeight: 'none' } : {}),
+                ...(width !== undefined ? { width: typeof width === 'number' ? `${width}px` : width } : {}),
+                ...(maxWidth !== undefined ? { maxWidth: typeof maxWidth === 'number' ? `${maxWidth}px` : maxWidth } : {}),
+              }),
             ...style,
             // Ensure fullpage mode takes absolute priority over any user passed style
             ...(isFullscreen
               ? {
-                  top: 0,
-                  left: 0,
-                  right: 0,
-                  bottom: 0,
-                  width: '100vw',
-                  height: '100vh',
-                  maxWidth: '100vw',
-                  maxHeight: '100vh',
-                  borderRadius: 0,
-                }
+                top: 0,
+                left: 0,
+                right: 0,
+                bottom: 0,
+                width: '100vw',
+                height: '100vh',
+                maxWidth: '100vw',
+                maxHeight: '100vh',
+                borderRadius: 0,
+              }
               : {}),
           }}
           className={cn(
@@ -389,13 +389,13 @@ const DialogContent = React.forwardRef<
             isFullscreen
               ? 'inset-0 top-0 left-0 w-screen h-screen max-w-none max-h-none rounded-none border-none p-6 sm:max-w-none transition-all duration-150'
               : cn(
-                  'top-[50%] left-[50%] w-full max-w-[calc(100%-2rem)] rounded-md p-6 transition-all duration-150',
-                  size
-                    ? DIALOG_SIZE_MAP[size] || ''
-                    : (Boolean(maxWidth) || Boolean(width) || /(?:^|\s)(?:sm:|md:|lg:|xl:|2xl:)?max-w-/.test(className || '')
-                        ? ''
-                        : 'sm:max-w-lg')
-                ),
+                'top-[50%] left-[50%] w-full max-w-[calc(100%-2rem)] rounded-md p-6 transition-all duration-150',
+                size
+                  ? DIALOG_SIZE_MAP[size] || ''
+                  : (Boolean(maxWidth) || Boolean(width) || /(?:^|\s)(?:sm:|md:|lg:|xl:|2xl:)?max-w-/.test(className || '')
+                    ? ''
+                    : 'sm:max-w-lg')
+              ),
             isDragging && 'transition-none select-none',
             className,
           )}
@@ -519,7 +519,7 @@ const DialogHeader = React.forwardRef<
       onPointerDown={handlePointerDown}
       onDoubleClick={handleDoubleClick}
       className={cn(
-        'flex flex-col gap-2 text-center sm:text-left pr-16',
+        'flex flex-col gap-2 text-center sm:text-left',
         isDraggable && !isFullscreen && 'cursor-grab active:cursor-grabbing select-none',
         className
       )}
