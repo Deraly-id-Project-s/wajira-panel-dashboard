@@ -96,18 +96,19 @@ export function AccountTable({
         header: 'GRUP AKUN',
         accessorKey: 'accountGroupCode',
         sortable: true,
-        alignment: 'center',
+        alignment: 'left',
         cell: (account) => (
-          <ReferenceLink href={`/dashboard/${slugStr}/master/account-group?search=${encodeURIComponent(account.accountGroupCode ?? account.accountGroupId ?? '')}`}>
-            {account.accountGroupCode ?? '-'}
+          account.accountGroupCode ? <ReferenceLink href={`/dashboard/${slugStr}/master/account-group?search=${encodeURIComponent(account.accountGroupCode ?? account.accountGroupId ?? '')}`}>
+            [{account?.accountGroupCode}] {account?.accountGroupDescription ?? '-'}
           </ReferenceLink>
+            : '-'
         ),
       },
       {
-        header: 'TIPE AKUN',
+        header: 'SALDO NORMAL',
         accessorKey: 'type',
         sortable: true,
-        alignment: 'center',
+        alignment: 'left',
         cell: (account) => {
           if (!account.type) return <span className="text-gray-400">-</span>;
           const isDebet = account.type === 'debet' || account.type === 'debit';
@@ -129,15 +130,25 @@ export function AccountTable({
         header: 'KATEGORI POS',
         accessorKey: 'pos_code',
         sortable: true,
-        alignment: 'center',
-        cell: (account) => (
-          <span className="text-sm font-mono text-slate-600">
-            {account.pos_code ?? account.posCode ?? '-'}
-          </span>
-        ),
+        alignment: 'left',
+        cell: (account) => {
+          const isNrc = account.posCode === 'NRC';
+          return (
+            <Badge
+              variant="outline"
+              className={
+                isNrc
+                  ? 'border-blue-200 bg-blue-50 text-blue-700 hover:bg-blue-50'
+                  : 'border-emerald-200 bg-emerald-50 text-emerald-700 hover:bg-emerald-50'
+              }
+            >
+              {account.pos_code ?? account.posCode ?? '-'}
+            </Badge>
+          )
+        }
       },
       {
-        header: 'KLASIFIKASI',
+        header: 'KELOMPOK AKUN',
         accessorKey: 'class',
         sortable: true,
         cell: (account) => {
@@ -166,7 +177,7 @@ export function AccountTable({
       },
       {
         header: 'Aksi',
-        alignment: 'center',
+        alignment: 'left',
         sticky: 'right',
         cell: (account) => (
           <DropdownMenu>

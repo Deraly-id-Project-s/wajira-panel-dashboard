@@ -20,6 +20,7 @@ export interface Account {
   name: string;
   accountGroupId: number;
   accountGroupCode?: string;
+  accountGroupDescription?: string;
   description?: string | null;
   isActive: boolean;
   is_lock?: boolean;
@@ -60,7 +61,7 @@ export interface AccountPayload {
 
 export type AccountUpdatePayload = Partial<AccountPayload>;
 
-export interface AccountListResponse extends PaginatedResult<Account> {}
+export interface AccountListResponse extends PaginatedResult<Account> { }
 
 // Legacy request shapes (kept for compatibility with older screens)
 export interface CreateAccountRequest {

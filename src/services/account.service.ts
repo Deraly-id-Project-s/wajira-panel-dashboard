@@ -13,6 +13,7 @@ interface AccountApiModel {
     id: number;
     company_id?: string | number | null;
     group_code?: string;
+    description?: string;
     name: string;
   };
   code: string;
@@ -35,6 +36,7 @@ const mapAccount = (payload: AccountApiModel): Account => ({
   name: payload.name,
   accountGroupId: payload.account_group_id,
   accountGroupCode: payload.account_group?.group_code ?? payload.account_group_name ?? undefined,
+  accountGroupDescription: payload.account_group?.description ?? undefined,
   group: payload.account_group?.group_code ?? payload.account_group_name ?? payload.account_group?.name,
   category: payload.category ?? undefined,
   class: payload.class ?? null,
@@ -65,13 +67,24 @@ type AccountItemResponse = LaravelApiResponse<AccountApiModel>;
 
 type DeleteResponse = LaravelApiResponse<null>;
 
-export const getAccounts = async (params: PaginationParams & { search?: string; company_id?: string | number; type?: string; account_group_id?: string | number }): Promise<AccountListResponse> => {
+export const getAccounts = async (params: PaginationParams & {
+  search?: string;
+  company_id?: string | number;
+  type?: string;
+  account_group_id?: string | number;
+  pos_code?: string;
+  class?: string;
+  category?: string;
+}): Promise<AccountListResponse> => {
   const response = await apiClient.get<PaginatedAccountResponse>(basePath, {
     params: {
       ...buildLaravelPaginationQuery(params),
       company_id: params.company_id,
-      type: params.type,
+      type: params.type && params.type !== 'all' ? params.type : undefined,
       account_group_id: params.account_group_id && params.account_group_id !== 'all' ? params.account_group_id : undefined,
+      pos_code: params.pos_code && params.pos_code !== 'all' ? params.pos_code : undefined,
+      class: params.class && params.class !== 'all' ? params.class : undefined,
+      category: params.category && params.category !== 'all' ? params.category : undefined,
     },
   });
 
@@ -84,9 +97,35 @@ export const getAccounts = async (params: PaginationParams & { search?: string; 
     scopedData = scopedData.filter((item) => String(item.account_group_id) === String(params.account_group_id));
   }
 
-  const isFrontendFallback = params.company_id || (params.account_group_id && params.account_group_id !== 'all')
-    ? (scopedData.length !== (data.data ?? []).length)
-    : false;
+  if (params.type && params.type !== 'all') {
+    const targetType = params.type === 'debit' ? 'debet' : params.type;
+    scopedData = scopedData.filter((item) => {
+      const itemType = item.type === 'debit' ? 'debet' : item.type;
+      return itemType === targetType;
+    });
+  }
+
+  if (params.pos_code && params.pos_code !== 'all') {
+    scopedData = scopedData.filter((item) => String(item.pos_code || '').toUpperCase() === String(params.pos_code).toUpperCase());
+  }
+
+  if (params.class && params.class !== 'all') {
+    scopedData = scopedData.filter((item) => String(item.class || '').toLowerCase() === String(params.class).toLowerCase());
+  }
+
+  if (params.category && params.category !== 'all') {
+    scopedData = scopedData.filter((item) => String(item.category || '').toLowerCase() === String(params.category).toLowerCase());
+  }
+
+  const isFrontendFallback =
+    params.company_id ||
+    (params.account_group_id && params.account_group_id !== 'all') ||
+    (params.type && params.type !== 'all') ||
+    (params.pos_code && params.pos_code !== 'all') ||
+    (params.class && params.class !== 'all') ||
+    (params.category && params.category !== 'all')
+      ? (scopedData.length !== (data.data ?? []).length)
+      : false;
 
   return toPaginatedResult(
     {

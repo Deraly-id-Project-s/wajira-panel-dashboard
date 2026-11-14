@@ -11,17 +11,22 @@ import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { SearchPagination } from '@/components/ui/search-pagination';
 import { useAccounts, useDeleteAccount, useBulkUpdateAccounts } from '@/hooks/useAccount';
-import { useAccountGroups } from '@/hooks/useAccountGroup';
+import { useAccountGroups, useAccountGroup } from '@/hooks/useAccountGroup';
 import { useQueryParamsTable } from '@/hooks/useQueryParamsTable';
 import { useCompany } from '@/contexts/CompanyContext';
 import { usePermissionGuard } from '@/hooks/usePermissionGuard';
 import type { Account } from '@/@types/account.types';
 import type { AccountGroup } from '@/@types/account-group.types';
-import { ACCOUNT_CATEGORY_OPTIONS } from '@/lib/account';
+import {
+  ACCOUNT_CATEGORY_OPTIONS,
+  ACCOUNT_CLASS_OPTIONS,
+  ACCOUNT_POS_CODE_OPTIONS,
+  ACCOUNT_TYPE_OPTIONS,
+} from '@/lib/account';
 import { ApiResponseError } from '@/lib/api/response';
 import { toast } from 'sonner';
 import { CircleAlert, Download, PencilLine, Plus, Upload } from 'lucide-react';
-import { SearchableSelect } from '@/components/features/vehicle-data/SearchableSelect';
+import { SearchableSelect, type SearchableSelectOption } from '@/components/features/vehicle-data/SearchableSelect';
 
 type BulkFormValues = {
   accountGroupId: string;
@@ -42,6 +47,10 @@ export const AccountListPage = () => {
   const { page, perPage, search, getParam, setPage, setPerPage, setSearch, updateQuery } = useQueryParamsTable({ defaultPerPage: 25 });
   const [searchInput, setSearchInput] = useState(search);
   const accountGroupId = getParam('account_group_id', '');
+  const typeFilter = getParam('type', '');
+  const posCodeFilter = getParam('pos_code', '');
+  const classFilter = getParam('class', '');
+  const categoryFilter = getParam('category', '');
 
   useEffect(() => {
     const timeout = window.setTimeout(() => {
@@ -52,19 +61,144 @@ export const AccountListPage = () => {
     return () => window.clearTimeout(timeout);
   }, [searchInput, search, setSearch]);
 
+  // Filter Group Account search and scroll pagination state (default 25 per request)
+  const [filterGroupSearch, setFilterGroupSearch] = useState('');
+  const [filterGroupPage, setFilterGroupPage] = useState(1);
+  const [accumulatedFilterGroups, setAccumulatedFilterGroups] = useState<AccountGroup[]>([]);
+
   const { data: filterGroupsData, isLoading: isLoadingFilterGroups } = useAccountGroups({
-    page: 1,
-    perPage: 500,
+    page: filterGroupPage,
+    perPage: 25, // default data ditampilkan adalah 25
+    search: filterGroupSearch,
     company_id: companyId ?? undefined,
     enabled: !isLoadingCompany && !!companyId,
   });
-  const filterAccountGroups = useMemo(() => filterGroupsData?.data ?? [], [filterGroupsData?.data]);
+
+  const { data: selectedGroupDetail } = useAccountGroup(accountGroupId && accountGroupId !== 'all' ? accountGroupId : undefined);
+
+  useEffect(() => {
+    if (filterGroupsData?.data) {
+      setAccumulatedFilterGroups((prev) => {
+        if (filterGroupPage === 1) {
+          return filterGroupsData.data;
+        }
+        const existingIds = new Set(prev.map((g) => g.id));
+        const newItems = filterGroupsData.data.filter((g) => !existingIds.has(g.id));
+        return [...prev, ...newItems];
+      });
+    }
+  }, [filterGroupsData, filterGroupPage]);
+
+  const hasMoreFilterGroups = filterGroupsData ? filterGroupPage < filterGroupsData.meta.lastPage : false;
+
+  const handleFilterGroupSearch = useCallback((query: string) => {
+    setFilterGroupSearch(query);
+    setFilterGroupPage(1);
+    setAccumulatedFilterGroups([]);
+  }, []);
+
+  const handleLoadMoreFilterGroups = useCallback(() => {
+    if (hasMoreFilterGroups && !isLoadingFilterGroups) {
+      setFilterGroupPage((prev) => prev + 1);
+    }
+  }, [hasMoreFilterGroups, isLoadingFilterGroups]);
+
+  const filterGroupOptions: SearchableSelectOption[] = useMemo(() => {
+    const list: SearchableSelectOption[] = [
+      {
+        value: 'all',
+        label: 'Semua Grup Akun',
+      },
+    ];
+
+    if (
+      selectedGroupDetail &&
+      accountGroupId &&
+      accountGroupId !== 'all' &&
+      !accumulatedFilterGroups.some((g) => String(g.id) === String(accountGroupId))
+    ) {
+      list.push({
+        value: String(selectedGroupDetail.id),
+        label: selectedGroupDetail.code
+          ? `${selectedGroupDetail.code} - ${selectedGroupDetail.name}`
+          : selectedGroupDetail.name || String(selectedGroupDetail.id),
+        subtitle: selectedGroupDetail.description ?? undefined,
+      });
+    }
+
+    accumulatedFilterGroups.forEach((group) => {
+      list.push({
+        value: String(group.id),
+        label: group.code ? `${group.code} - ${group.name}` : group.name || String(group.id),
+        subtitle: group.description ?? undefined,
+      });
+    });
+
+    return list;
+  }, [accumulatedFilterGroups, selectedGroupDetail, accountGroupId]);
+
+  const typeFilterOptions: SearchableSelectOption[] = useMemo(
+    () => [
+      { value: 'all', label: 'Semua Saldo Normal' },
+      ...ACCOUNT_TYPE_OPTIONS.map((item) => ({
+        value: item.value,
+        label: item.label,
+      })),
+    ],
+    []
+  );
+
+  const posCodeFilterOptions: SearchableSelectOption[] = useMemo(
+    () => [
+      { value: 'all', label: 'Semua Kategori Pos' },
+      ...ACCOUNT_POS_CODE_OPTIONS.map((item) => ({
+        value: item.value,
+        label: item.label,
+      })),
+    ],
+    []
+  );
+
+  const classFilterOptions: SearchableSelectOption[] = useMemo(
+    () => [
+      { value: 'all', label: 'Semua Kelompok Akun' },
+      ...ACCOUNT_CLASS_OPTIONS.map((item) => ({
+        value: item.value,
+        label: item.label,
+      })),
+    ],
+    []
+  );
+
+  const categoryFilterOptions: SearchableSelectOption[] = useMemo(
+    () => [
+      { value: 'all', label: 'Semua Kategori Akun' },
+      ...ACCOUNT_CATEGORY_OPTIONS.map((item) => ({
+        value: item.value,
+        label: item.label,
+      })),
+    ],
+    []
+  );
+
+  const hasActiveFilters = Boolean(
+    search ||
+    (accountGroupId && accountGroupId !== 'all') ||
+    (typeFilter && typeFilter !== 'all') ||
+    (posCodeFilter && posCodeFilter !== 'all') ||
+    (classFilter && classFilter !== 'all') ||
+    (categoryFilter && categoryFilter !== 'all')
+  );
 
   const { data, isLoading, isError, isFetching } = useAccounts({
     page,
     perPage,
     search,
     account_group_id: accountGroupId || undefined,
+    type: typeFilter || undefined,
+    pos_code: posCodeFilter || undefined,
+    class: classFilter || undefined,
+    category: categoryFilter || undefined,
     company_id: companyId ?? undefined,
     enabled: !isLoadingCompany && !!companyId,
   });
@@ -335,28 +469,90 @@ export const AccountListPage = () => {
           searchPlaceholder="Search here"
           searchAriaLabel="Cari akun"
           filters={
-            <div className="w-full sm:w-[220px]">
-              <Select
-                value={accountGroupId || 'all'}
-                onValueChange={(val) => {
-                  updateQuery({
-                    account_group_id: val === 'all' ? undefined : val,
-                    page: 1,
-                  });
-                }}
-              >
-                <SelectTrigger className="h-9 w-full rounded-md border-slate-200 bg-white text-sm shadow-none cursor-pointer" aria-label="Filter Grup Akun">
-                  <SelectValue placeholder={isLoadingFilterGroups ? 'Memuat grup...' : 'Semua Grup Akun'} />
-                </SelectTrigger>
-                <SelectContent showSearch searchPlaceholder="Cari grup akun...">
-                  <SelectItem value="all">Semua Grup Akun</SelectItem>
-                  {filterAccountGroups.map((group) => (
-                    <SelectItem key={group.id} value={String(group.id)}>
-                      {group.code ? `${group.code} - ${group.name}` : group.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 flex-wrap">
+              <div className="w-full sm:w-[220px]">
+                <SearchableSelect
+                  value={accountGroupId || 'all'}
+                  onChange={(val) => {
+                    updateQuery({
+                      account_group_id: val === 'all' || !val ? undefined : val,
+                      page: 1,
+                    });
+                  }}
+                  options={filterGroupOptions}
+                  placeholder="Semua Grup Akun"
+                  searchPlaceholder="Cari grup akun..."
+                  loading={isLoadingFilterGroups}
+                  onSearchChange={handleFilterGroupSearch}
+                  onLoadMore={handleLoadMoreFilterGroups}
+                  hasMore={hasMoreFilterGroups}
+                  className="h-9 w-full bg-white border-slate-200 text-sm shadow-none cursor-pointer"
+                />
+              </div>
+
+              <div className="w-full sm:w-[170px]">
+                <SearchableSelect
+                  value={typeFilter || 'all'}
+                  onChange={(val) => {
+                    updateQuery({
+                      type: val === 'all' || !val ? undefined : val,
+                      page: 1,
+                    });
+                  }}
+                  options={typeFilterOptions}
+                  placeholder="Semua Saldo Normal"
+                  searchPlaceholder="Cari saldo normal..."
+                  className="h-9 w-full bg-white border-slate-200 text-sm shadow-none cursor-pointer"
+                />
+              </div>
+
+              <div className="w-full sm:w-[170px]">
+                <SearchableSelect
+                  value={posCodeFilter || 'all'}
+                  onChange={(val) => {
+                    updateQuery({
+                      pos_code: val === 'all' || !val ? undefined : val,
+                      page: 1,
+                    });
+                  }}
+                  options={posCodeFilterOptions}
+                  placeholder="Semua Kategori Pos"
+                  searchPlaceholder="Cari kategori pos..."
+                  className="h-9 w-full bg-white border-slate-200 text-sm shadow-none cursor-pointer"
+                />
+              </div>
+
+              <div className="w-full sm:w-[190px]">
+                <SearchableSelect
+                  value={classFilter || 'all'}
+                  onChange={(val) => {
+                    updateQuery({
+                      class: val === 'all' || !val ? undefined : val,
+                      page: 1,
+                    });
+                  }}
+                  options={classFilterOptions}
+                  placeholder="Semua Kelompok Akun"
+                  searchPlaceholder="Cari kelompok akun..."
+                  className="h-9 w-full bg-white border-slate-200 text-sm shadow-none cursor-pointer"
+                />
+              </div>
+
+              <div className="w-full sm:w-[210px]">
+                <SearchableSelect
+                  value={categoryFilter || 'all'}
+                  onChange={(val) => {
+                    updateQuery({
+                      category: val === 'all' || !val ? undefined : val,
+                      page: 1,
+                    });
+                  }}
+                  options={categoryFilterOptions}
+                  placeholder="Semua Kategori Akun"
+                  searchPlaceholder="Cari kategori akun..."
+                  className="h-9 w-full bg-white border-slate-200 text-sm shadow-none cursor-pointer"
+                />
+              </div>
             </div>
           }
           page={page}
@@ -367,13 +563,21 @@ export const AccountListPage = () => {
           onPerPageChange={setPerPage}
           actions={
             <>
-              {(search || accountGroupId) && (
+              {hasActiveFilters && (
                 <Button
                   variant="outline"
                   size="sm"
                   onClick={() => {
                     setSearchInput('');
-                    updateQuery({ search: undefined, account_group_id: undefined, page: 1 });
+                    updateQuery({
+                      search: undefined,
+                      account_group_id: undefined,
+                      type: undefined,
+                      pos_code: undefined,
+                      class: undefined,
+                      category: undefined,
+                      page: 1,
+                    });
                   }}
                 >
                   Reset
