@@ -10,6 +10,7 @@ import { useRouter } from 'next/router';
 import { MoreVertical, Lock } from 'lucide-react';
 import BaseTable, { ColumnDef } from '@/components/ui/base-table';
 import { Badge } from '@/components/ui/badge';
+import { currenciesFormat } from '@/components/ui/currenciesFormat';
 
 interface AccountTableProps {
   data: Account[];
@@ -91,6 +92,9 @@ export function AccountTable({
         header: 'NAMA AKUN',
         accessorKey: 'name',
         sortable: true,
+        cell: (account) => (
+          <CopyBox text={account?.name} />
+        )
       },
       {
         header: 'GRUP AKUN',
@@ -125,6 +129,17 @@ export function AccountTable({
             </Badge>
           );
         },
+      },
+      {
+        header: 'SALDO AKUN',
+        accessorKey: 'amount',
+        sortable: true,
+        alignment: 'left',
+        cell: (account) => (
+          <span className="font-medium text-slate-900">
+            {currenciesFormat('idr', account.amount ?? 0)}
+          </span>
+        ),
       },
       {
         header: 'KATEGORI POS',

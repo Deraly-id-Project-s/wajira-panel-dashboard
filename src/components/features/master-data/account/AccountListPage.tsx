@@ -24,6 +24,7 @@ import {
   ACCOUNT_TYPE_OPTIONS,
 } from '@/lib/account';
 import { ApiResponseError } from '@/lib/api/response';
+import { currenciesFormat } from '@/components/ui/currenciesFormat';
 import { toast } from 'sonner';
 import { CircleAlert, Download, PencilLine, Plus, Upload } from 'lucide-react';
 import { SearchableSelect, type SearchableSelectOption } from '@/components/features/vehicle-data/SearchableSelect';
@@ -431,12 +432,13 @@ export const AccountListPage = () => {
       return;
     }
 
-    const headers = ['Kode Akun', 'Nama Akun', 'Grup Akun', 'Tipe Akun', 'Kode Pos', 'Kategori Akun', 'Deskripsi'];
+    const headers = ['Kode Akun', 'Nama Akun', 'Grup Akun', 'Tipe Akun', 'Saldo Akun', 'Kode Pos', 'Kategori Akun', 'Deskripsi'];
     const rows = accountRows.map((account) => [
       account.code,
       account.name,
       account.accountGroupCode ?? '-',
       account.type === 'credit' ? 'Kredit' : 'Debet',
+      currenciesFormat('idr', account.amount ?? 0),
       account.pos_code ?? account.posCode ?? '-',
       ACCOUNT_CATEGORY_OPTIONS.find((item) => item.value === account.category)?.label ?? account.category ?? '-',
       account.description ?? '-',

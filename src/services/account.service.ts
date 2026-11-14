@@ -18,6 +18,7 @@ interface AccountApiModel {
   };
   code: string;
   name: string;
+  amount?: number | string | null;
   description?: string | null;
   type?: 'credit' | 'debet' | 'debit';
   pos_code?: string | null;
@@ -34,6 +35,7 @@ const mapAccount = (payload: AccountApiModel): Account => ({
   uuid: payload.uuid,
   code: payload.code,
   name: payload.name,
+  amount: payload.amount !== undefined && payload.amount !== null && !isNaN(Number(payload.amount)) ? Number(payload.amount) : null,
   accountGroupId: payload.account_group_id,
   accountGroupCode: payload.account_group?.group_code ?? payload.account_group_name ?? undefined,
   accountGroupDescription: payload.account_group?.description ?? undefined,
@@ -153,6 +155,7 @@ export const createAccount = async (payload: AccountPayload): Promise<Account> =
     body.append('account_group_id', String(payload.accountGroupId));
     body.append('code', payload.code);
     body.append('name', payload.name);
+    if (payload.amount !== undefined && payload.amount !== null && !isNaN(Number(payload.amount))) body.append('amount', String(payload.amount));
     if (payload.description !== undefined && payload.description !== null) body.append('description', payload.description);
     body.append('type', type);
     if (posCode !== undefined && posCode !== null && posCode !== '') body.append('pos_code', posCode);
@@ -181,6 +184,7 @@ export const updateAccount = async (id: number | string, payload: AccountUpdateP
     if (payload.accountGroupId !== undefined) body.append('account_group_id', String(payload.accountGroupId));
     if (payload.code !== undefined) body.append('code', payload.code);
     if (payload.name !== undefined) body.append('name', payload.name);
+    if (payload.amount !== undefined && payload.amount !== null && !isNaN(Number(payload.amount))) body.append('amount', String(payload.amount));
     if (payload.description !== undefined && payload.description !== null) body.append('description', payload.description);
     if (payload.type !== undefined) body.append('type', type);
     if (posCode !== undefined) body.append('pos_code', posCode ?? '');

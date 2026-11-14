@@ -2,6 +2,7 @@ import { useState, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
+import { MoneyInput } from '@/components/ui/money-input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
@@ -266,6 +267,30 @@ export const AccountForm = ({
                 </FormItem>
               );
             }}
+          />
+
+          <FormField
+            control={form.control}
+            name="amount"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel className="text-xs font-semibold text-slate-700">Saldo Akun</FormLabel>
+                <FormControl>
+                  <MoneyInput
+                    value={field.value ?? null}
+                    onChangeValue={(val) => field.onChange(val)}
+                    currency="idr"
+                    placeholder="Masukkan saldo akun"
+                    disabled={lockRestricted}
+                    className={cn(
+                      "h-10 rounded-md border-slate-200 px-3 text-sm shadow-none focus-visible:ring-slate-300 bg-white",
+                      lockRestricted && "bg-slate-50 text-slate-500 cursor-not-allowed"
+                    )}
+                  />
+                </FormControl>
+                <FormMessage className="text-xs" />
+              </FormItem>
+            )}
           />
         </div>
 

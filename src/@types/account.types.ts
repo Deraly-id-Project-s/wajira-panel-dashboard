@@ -18,6 +18,7 @@ export interface Account {
   uuid?: string;
   code: string;
   name: string;
+  amount?: number | null;
   accountGroupId: number;
   accountGroupCode?: string;
   accountGroupDescription?: string;
@@ -50,6 +51,7 @@ export interface AccountPayload {
   accountGroupId: number;
   code: string;
   name: string;
+  amount?: number | null;
   description?: string | null;
   type: AccountTypeValue;
   pos_code?: string | null;

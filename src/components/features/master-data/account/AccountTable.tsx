@@ -7,6 +7,7 @@ import { MoreVertical, Plus, Lock } from 'lucide-react';
 import type { Account } from '@/@types/account.types';
 import type { PaginationMeta } from '@/@types/pagination.types';
 import { Badge } from '@/components/ui/badge';
+import { currenciesFormat } from '@/components/ui/currenciesFormat';
 import { getAccountCategoryBadgeClass, getAccountCategoryLabel, getAccountClassBadgeClass, getAccountClassLabel } from '@/lib/account';
 
 interface AccountTableProps {
@@ -85,6 +86,17 @@ export const AccountTable = ({ data, meta, search, page, perPage, isLoading = fa
             </Badge>
           );
         },
+      },
+      {
+        header: 'SALDO AKUN',
+        accessorKey: 'amount',
+        sortable: true,
+        alignment: 'right',
+        cell: (item) => (
+          <span className="font-medium text-slate-900">
+            {currenciesFormat('idr', item.amount ?? 0)}
+          </span>
+        ),
       },
       {
         header: 'KATEGORI POS',

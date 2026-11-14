@@ -2,6 +2,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
+import { currenciesFormat } from '@/components/ui/currenciesFormat';
 import { useAccount } from '@/hooks/useAccount';
 import { getAccountCategoryBadgeClass, getAccountCategoryLabel, getAccountClassBadgeClass, getAccountClassLabel, getAccountTypeLabel } from '@/lib/account';
 
@@ -120,6 +121,13 @@ export const AccountDetailModal = ({
                     ) : (
                       <span className="text-slate-400">-</span>
                     )}
+                  </dd>
+                </div>
+
+                <div>
+                  <dt className="text-xs text-slate-500">Saldo Akun</dt>
+                  <dd className="mt-1 font-semibold text-slate-900">
+                    {currenciesFormat('idr', account.amount ?? 0)}
                   </dd>
                 </div>
 
