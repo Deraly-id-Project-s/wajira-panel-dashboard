@@ -42,7 +42,10 @@ const FEATURE_MAP: Record<string, { path: string; label?: string; group?: string
   'vendor': { path: '/master/vendor', label: 'Vendor' },
   'bbn': { path: '/master/bbn', label: 'BBN' },
   'vehicle-equipment': { path: '/master/vehicle-equipment', label: 'Perlengkapan' },
-  'document-template': { path: '/master/document-template', label: 'Dokumen Template' },
+  'document-template': { path: '/master/document-template', label: 'Template Dokumen' },
+  'document-archive': { path: '/master/document-archive', label: 'Arsip Dokumen' },
+  'document-code': { path: '/master/document-code', label: 'Kode Dokumen' },
+
 
   // Administrasi / Transaction
   'transaction-flow': { path: '/arus-transaksi', label: 'Arus Transaksi' },
@@ -446,6 +449,26 @@ export function buildDynamicMenus(sidebarData: SidebarModuleItem[], permissions:
     }
 
     if (children.length > 0) {
+      if (moduleSlug === 'master-data') {
+        const templateIndex = children.findIndex((item) => item.label === 'Template Dokumen');
+        if (templateIndex !== -1) {
+          const archiveItem = children.find((item) => item.label === 'Arsip Dokumen');
+          const codeItem = children.find((item) => item.label === 'Kode Dokumen');
+
+          const remaining = children.filter(
+            (item) => item.label !== 'Arsip Dokumen' && item.label !== 'Kode Dokumen',
+          );
+          const newTemplateIndex = remaining.findIndex((item) => item.label === 'Template Dokumen');
+          const toInsert: MenuItem[] = [];
+          if (archiveItem) toInsert.push(archiveItem);
+          if (codeItem) toInsert.push(codeItem);
+
+          remaining.splice(newTemplateIndex + 1, 0, ...toInsert);
+          children.length = 0;
+          children.push(...remaining);
+        }
+      }
+
       if (moduleSlug === 'transaction') {
         sortGroupedMenuItems(children, [
           'Arus Transaksi',
