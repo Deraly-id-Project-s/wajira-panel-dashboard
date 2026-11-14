@@ -17,6 +17,8 @@ import { MenuItem } from '@/types/menu.types';
 import { cn } from '@/lib/utils';
 import { ParsedImage } from '@/components/ui/parsed-image';
 import { useCompany } from '@/contexts/CompanyContext';
+import { NotificationSidepanel } from '@/components/layout/NotificationSidepanel';
+import { useAppNotifications } from '@/hooks/useAppNotification';
 
 const RECENT_STORAGE_KEY = 'global-search-recent';
 
@@ -45,7 +47,10 @@ export function Topbar() {
   const [query, setQuery] = useState('');
   const [recentItems, setRecentItems] = useState<string[]>([]);
   const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
+  const [isNotificationOpen, setIsNotificationOpen] = useState(false);
   const { data: profile, isLoading: isProfileLoading } = useAuthMe();
+  const { data: notificationData } = useAppNotifications({ per_page: 1 });
+  const unreadNotificationCount = notificationData?.total ?? 0;
   const queryClient = useQueryClient();
   const router = useRouter();
   const params = useParams();
@@ -282,8 +287,19 @@ export function Topbar() {
 
         {/* ── Right Side ── */}
         <div className="flex items-center gap-4 md:gap-6">
-          <button className="text-gray-600 hover:text-black transition">
+          <button
+            type="button"
+            onClick={() => setIsNotificationOpen(true)}
+            className="relative p-2 text-gray-600 hover:text-black hover:bg-slate-100 rounded-full transition cursor-pointer"
+            aria-label="Lihat Notifikasi"
+            title="Notifikasi Aplikasi"
+          >
             <Bell className="h-5 w-5" />
+            {unreadNotificationCount > 0 && (
+              <span className="absolute top-0.5 right-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-rose-600 px-1 text-[10px] font-bold text-white shadow-xs">
+                {unreadNotificationCount > 99 ? '99+' : unreadNotificationCount}
+              </span>
+            )}
           </button>
 
           <div className="h-8 w-px bg-gray-200" />
@@ -357,6 +373,11 @@ export function Topbar() {
           </div>
         </div>
       )}
+
+      <NotificationSidepanel
+        open={isNotificationOpen}
+        onClose={() => setIsNotificationOpen(false)}
+      />
     </>
   );
 }
