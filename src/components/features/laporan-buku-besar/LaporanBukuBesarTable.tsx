@@ -22,12 +22,9 @@ interface LaporanBukuBesarTableProps {
     total: number;
   };
   onPageChange?: (page: number) => void;
+  totalDebit?: number | null;
+  totalCredit?: number | null;
 }
-
-const formatLedgerMoney = (value?: number | null) => {
-  if (value === null || value === undefined) return '-';
-  return currenciesFormat('idr', value);
-};
 
 export function LaporanBukuBesarTable({
   data,
@@ -37,6 +34,8 @@ export function LaporanBukuBesarTable({
   onSortChange,
   meta,
   onPageChange,
+  totalDebit,
+  totalCredit,
 }: LaporanBukuBesarTableProps) {
   const router = useRouter();
   const slug = typeof router.query.slug === 'string' ? router.query.slug : '';
@@ -47,13 +46,14 @@ export function LaporanBukuBesarTable({
         (acc, item) => ({
           debit: acc.debit + (Number(item.debit) || 0),
           credit: acc.credit + (Number(item.credit) || 0),
-          debitUsd: acc.debitUsd + (Number(item.debit_usd) || 0),
-          creditUsd: acc.creditUsd + (Number(item.credit_usd) || 0),
         }),
-        { debit: 0, credit: 0, debitUsd: 0, creditUsd: 0 },
+        { debit: 0, credit: 0 },
       ),
     [data],
   );
+
+  const displayTotalDebit = totalDebit ?? totals.debit;
+  const displayTotalCredit = totalCredit ?? totals.credit;
 
   const columns = useMemo<ColumnDef<LedgerReportItem>[]>(
     () => [
@@ -80,7 +80,7 @@ export function LaporanBukuBesarTable({
           const name = item.account?.name;
           if (!name) return '-';
 
-          const type = item.account?.type == 'credit' ? 'KREDIT' : 'DEBIT';
+          const type = item.account?.type === 'credit' ? 'KREDIT' : 'DEBIT';
           const label = type ? `[${type}] ${name}` : name;
           const searchParam = item.account?.code || name;
           const href = slug
@@ -116,13 +116,6 @@ export function LaporanBukuBesarTable({
         cell: (item) => <TextTruncate text={item.cash_flow?.note || '-'} maxLength={32} />,
       },
       {
-        header: 'Saldo Awal (IDR)',
-        accessorKey: 'cash_position_before',
-        sortable: true,
-        alignment: 'right',
-        cell: (item) => formatLedgerMoney(item.cash_position_before),
-      },
-      {
         header: 'Debit (IDR)',
         accessorKey: 'debit',
         sortable: true,
@@ -144,57 +137,21 @@ export function LaporanBukuBesarTable({
           </span>
         ),
       },
-      {
-        header: 'Debit (USD)',
-        accessorKey: 'debit_usd',
-        sortable: true,
-        alignment: 'right',
-        cell: (item) => (
-          <span className="font-semibold text-emerald-700">
-            {Number(item.debit_usd) > 0 ? currenciesFormat('usd', item.debit_usd) : '-'}
-          </span>
-        ),
-      },
-      {
-        header: 'Kredit (USD)',
-        accessorKey: 'credit_usd',
-        sortable: true,
-        alignment: 'right',
-        cell: (item) => (
-          <span className="font-semibold text-rose-700">
-            {Number(item.credit_usd) > 0 ? currenciesFormat('usd', item.credit_usd) : '-'}
-          </span>
-        ),
-      },
-      {
-        header: 'Saldo Akhir (IDR)',
-        accessorKey: 'cash_position_after',
-        sortable: true,
-        alignment: 'right',
-        cell: (item) => formatLedgerMoney(item.cash_position_after),
-      },
     ],
     [slug],
   );
 
   const footer = (
     <TableRow className="group border-t border-slate-200 bg-slate-50/70 hover:bg-slate-50/70">
-      <TableCell colSpan={7} className="px-4 py-4 text-right text-sm font-semibold text-slate-900">
+      <TableCell colSpan={6} className="px-4 py-4 text-right text-sm font-semibold text-slate-900">
         Grand Total
       </TableCell>
       <TableCell className="px-4 py-4 text-right text-sm font-bold text-slate-900">
-        {currenciesFormat('idr', totals.debit)}
+        {currenciesFormat('idr', displayTotalDebit)}
       </TableCell>
       <TableCell className="px-4 py-4 text-right text-sm font-bold text-slate-900">
-        {currenciesFormat('idr', totals.credit)}
+        {currenciesFormat('idr', displayTotalCredit)}
       </TableCell>
-      <TableCell className="px-4 py-4 text-right text-sm font-bold text-slate-900">
-        {currenciesFormat('usd', totals.debitUsd)}
-      </TableCell>
-      <TableCell className="px-4 py-4 text-right text-sm font-bold text-slate-900">
-        {currenciesFormat('usd', totals.creditUsd)}
-      </TableCell>
-      <TableCell className="px-4 py-4" />
     </TableRow>
   );
 

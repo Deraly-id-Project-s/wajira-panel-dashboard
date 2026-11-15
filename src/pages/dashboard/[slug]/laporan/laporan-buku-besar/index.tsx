@@ -2,7 +2,8 @@ import { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/router';
 import { format } from 'date-fns';
 import { DateRange } from 'react-day-picker';
-import { Printer, RotateCcw } from 'lucide-react';
+import { Download, Printer, RotateCcw } from 'lucide-react';
+import { toast } from 'sonner';
 
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { PageHeader } from '@/components/ui/page-header';
@@ -17,10 +18,11 @@ import { LaporanBukuBesarPrintDocument } from '@/components/features/laporan-buk
 import { useLedgerReport } from '@/hooks/report/useLedgerReport';
 import { useAccounts } from '@/hooks/useAccount';
 import { useReportTemplatePrint } from '@/hooks/useReportTemplatePrint';
-import type { LedgerReportParams } from '@/@types/ledger-report.types';
+import type { LedgerReportParams, OpeningBalanceType } from '@/@types/ledger-report.types';
 import { useCompany } from '@/contexts/CompanyContext';
 import { getLetterheadByCompanyId, resolveCompanyId } from '@/lib/print-letterhead';
 import { currenciesFormat } from '@/components/ui/currenciesFormat';
+import { exportLedgerReport } from '@/services/report/ledgerReport.service';
 
 const getCompanyName = (companyId: number) => {
   if (companyId === 1) return 'PT WAJIRA JAGRATARA MORINDO';
@@ -42,9 +44,10 @@ export default function LaporanBukuBesarPage() {
   const [searchInput, setSearchInput] = useState('');
   const [search, setSearch] = useState('');
   const [dateRange, setDateRange] = useState<DateRange | undefined>();
-  const [dateMode, setDateMode] = useState<DateRangePickerMode>('date');
+  const [dateMode, setDateMode] = useState<DateRangePickerMode>('month');
   const [sortBy, setSortBy] = useState('payment_at');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
+  const [isExporting, setIsExporting] = useState(false);
 
   const accountQuery = useAccounts({
     page: 1,
@@ -72,6 +75,12 @@ export default function LaporanBukuBesarPage() {
   const startDate = dateRange?.from ? format(dateRange.from, 'yyyy-MM-dd') : null;
   const endDate = dateRange?.to ? format(dateRange.to, 'yyyy-MM-dd') : startDate;
 
+  const openingBalanceType: OpeningBalanceType = useMemo(() => {
+    if (dateMode === 'date') return 'daily';
+    if (dateMode === 'year') return 'yearly';
+    return 'monthly';
+  }, [dateMode]);
+
   const queryParams = useMemo<LedgerReportParams>(
     () => ({
       company_id: resolvedCompanyId,
@@ -79,6 +88,7 @@ export default function LaporanBukuBesarPage() {
       per_page: perPage,
       start_date: startDate,
       end_date: endDate,
+      opening_balance_type: openingBalanceType,
       account_id: selectedAccountId,
       account_code: selectedAccount?.code ?? null,
       account_name: selectedAccount?.name ?? null,
@@ -86,10 +96,23 @@ export default function LaporanBukuBesarPage() {
       sort_by: sortBy,
       sort_order: sortOrder,
     }),
-    [resolvedCompanyId, page, perPage, startDate, endDate, selectedAccountId, selectedAccount?.code, selectedAccount?.name, search, sortBy, sortOrder],
+    [
+      resolvedCompanyId,
+      page,
+      perPage,
+      startDate,
+      endDate,
+      openingBalanceType,
+      selectedAccountId,
+      selectedAccount?.code,
+      selectedAccount?.name,
+      search,
+      sortBy,
+      sortOrder,
+    ],
   );
 
-  const { data, summary, pagination, isLoading } = useLedgerReport({
+  const { data, cashPosition, summary, pagination, isLoading } = useLedgerReport({
     ...queryParams,
     enabled: Boolean(resolvedCompanyId),
   });
@@ -105,13 +128,29 @@ export default function LaporanBukuBesarPage() {
     setSearchInput('');
     setSearch('');
     setDateRange(undefined);
-    setDateMode('date');
+    setDateMode('month');
     setPage(1);
   };
 
   const handleDateRangeChange = (range: DateRange | undefined) => {
     setDateRange(range);
     setPage(1);
+  };
+
+  const handleExport = async () => {
+    setIsExporting(true);
+    try {
+      await exportLedgerReport({
+        ...queryParams,
+        page: undefined,
+        per_page: undefined,
+      });
+      toast.success('Laporan buku besar berhasil diexport');
+    } catch (error: any) {
+      toast.error(error?.message || 'Gagal export laporan buku besar');
+    } finally {
+      setIsExporting(false);
+    }
   };
 
   const periodLabel = startDate
@@ -130,6 +169,10 @@ export default function LaporanBukuBesarPage() {
             subtitle="Pantau mutasi akun dan posisi saldo berdasarkan periode pembayaran"
             actions={
               <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row">
+                <Button onClick={handleExport} variant="outline" disabled={isExporting || isLoading}>
+                  <Download className="mr-2 h-4 w-4" />
+                  {isExporting ? 'Exporting...' : 'Export Excel'}
+                </Button>
                 <Button onClick={templatePrint.openPrintDialog} variant="outline" disabled={isLoading}>
                   <Printer className="mr-2 h-4 w-4" />
                   Print
@@ -169,10 +212,15 @@ export default function LaporanBukuBesarPage() {
                   date={dateRange}
                   onChange={handleDateRangeChange}
                   enablePeriodFilter
+                  modes={['date', 'month', 'year']}
+                  modeLabels={{
+                    date: 'Harian',
+                    month: 'Bulanan',
+                    year: 'Tahunan',
+                  }}
                   mode={dateMode}
                   onModeChange={(mode) => {
                     setDateMode(mode);
-                    setDateRange(undefined);
                     setPage(1);
                   }}
                 />
@@ -194,21 +242,52 @@ export default function LaporanBukuBesarPage() {
             setPage(1);
           }}
         >
-          <div className="mb-4 grid overflow-hidden rounded-md border border-slate-200 bg-white md:grid-cols-[minmax(260px,1fr)_200px_200px]">
-            <div className="border-b border-slate-200 px-4 py-3 md:border-b-0 md:border-r">
+          <div className="mb-4 grid overflow-hidden rounded-md border border-slate-200 bg-white grid-cols-1 sm:grid-cols-2 lg:grid-cols-5">
+            <div className="border-b border-slate-200 p-4 lg:border-b-0 lg:border-r">
               <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">Akun Buku Besar</p>
-              <p className="mt-1 text-sm font-semibold text-slate-900">{accountLabel}</p>
+              <p className="mt-1 text-sm font-semibold text-slate-900 truncate" title={accountLabel}>{accountLabel}</p>
               <p className="mt-0.5 text-xs text-slate-500">Periode {periodLabel}</p>
             </div>
-            <div className="border-b border-slate-200 px-4 py-3 md:border-b-0 md:border-r md:text-right">
-              <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">Saldo Awal Periode</p>
-              <p className="mt-1 text-sm font-bold tabular-nums text-slate-900">{currenciesFormat('idr', summary.openingBalance)}</p>
-              <p className="mt-1 text-xs font-semibold tabular-nums text-sky-700">{currenciesFormat('usd', summary.openingBalanceUsd)}</p>
+            <div className="border-b border-slate-200 p-4 sm:border-r lg:border-b-0 sm:text-right">
+              <div className="flex items-center justify-between sm:justify-end gap-1.5">
+                <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">Saldo Awal</p>
+                {summary.openingBalanceType && (
+                  <span className="rounded bg-slate-100 px-1.5 py-0.5 text-[10px] font-medium uppercase text-slate-600">
+                    {summary.openingBalanceType}
+                  </span>
+                )}
+              </div>
+              <p className="mt-1 text-sm font-bold tabular-nums text-slate-900">
+                {currenciesFormat('idr', cashPosition.cashPositionBefore)}
+              </p>
+              <p className="mt-0.5 text-[11px] text-slate-500 truncate">
+                {summary.openingBalanceDateFrom && summary.openingBalanceDateTo
+                  ? `${summary.openingBalanceDateFrom} s/d ${summary.openingBalanceDateTo}`
+                  : 'Posisi kas sebelum transaksi'}
+              </p>
             </div>
-            <div className="bg-slate-50/70 px-4 py-3 md:text-right">
-              <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">Saldo Akhir Periode</p>
-              <p className="mt-1 text-sm font-bold tabular-nums text-slate-950">{currenciesFormat('idr', summary.endingBalance)}</p>
-              <p className="mt-1 text-xs font-semibold tabular-nums text-sky-700">{currenciesFormat('usd', summary.endingBalanceUsd)}</p>
+            <div className="border-b border-slate-200 p-4 lg:border-b-0 lg:border-r sm:text-right">
+              <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">Total Debet</p>
+              <p className="mt-1 text-sm font-bold tabular-nums text-emerald-700">
+                {currenciesFormat('idr', summary.totalDebit)}
+              </p>
+              <p className="mt-0.5 text-[11px] text-slate-500">Total mutasi debet</p>
+            </div>
+            <div className="border-b border-slate-200 p-4 sm:border-r lg:border-b-0 sm:text-right">
+              <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">Total Kredit</p>
+              <p className="mt-1 text-sm font-bold tabular-nums text-rose-700">
+                {currenciesFormat('idr', summary.totalCredit)}
+              </p>
+              <p className="mt-0.5 text-[11px] text-slate-500">Total mutasi kredit</p>
+            </div>
+            <div className="bg-slate-50/70 p-4 sm:text-right">
+              <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">Saldo Akhir</p>
+              <p className="mt-1 text-sm font-bold tabular-nums text-slate-950">
+                {currenciesFormat('idr', cashPosition.cashPositionAfter)}
+              </p>
+              <p className="mt-0.5 text-[11px] text-slate-500 truncate">
+                Posisi kas setelah transaksi
+              </p>
             </div>
           </div>
 
@@ -218,6 +297,8 @@ export default function LaporanBukuBesarPage() {
             sortBy={sortBy}
             sortOrder={sortOrder}
             onSortChange={handleSortChange}
+            totalDebit={summary.totalDebit}
+            totalCredit={summary.totalCredit}
           />
         </SearchPagination>
 
@@ -228,10 +309,8 @@ export default function LaporanBukuBesarPage() {
           companyName={getCompanyName(resolvedCompanyId)}
           accountLabel={accountLabel}
           periodLabel={periodLabel}
-          openingBalance={summary.openingBalance}
-          endingBalance={summary.endingBalance}
-          openingBalanceUsd={summary.openingBalanceUsd}
-          endingBalanceUsd={summary.endingBalanceUsd}
+          openingBalance={cashPosition.cashPositionBefore}
+          endingBalance={cashPosition.cashPositionAfter}
           reportPage={page}
           reportTotal={pagination.total}
           printedAt={templatePrint.printedAt}

@@ -39,6 +39,8 @@ interface DatePickerWithRangeProps {
     enableMonthRange?: boolean
     mode?: DateRangePickerMode
     onModeChange?: (mode: DateRangePickerMode) => void
+    modes?: DateRangePickerMode[]
+    modeLabels?: Partial<Record<DateRangePickerMode, string>>
 }
 
 const MODE_OPTIONS: Array<{ value: DateRangePickerMode; label: string }> = [
@@ -88,6 +90,8 @@ export function DatePickerWithRange({
     enableMonthRange = false,
     mode,
     onModeChange,
+    modes,
+    modeLabels,
 }: DatePickerWithRangeProps) {
     const [internalMode, setInternalMode] = React.useState<DateRangePickerMode>("date")
     const activeMode = mode ?? internalMode
@@ -97,6 +101,15 @@ export function DatePickerWithRange({
     const currentYear = format(currentDate, "yyyy")
     const currentMonth = format(currentDate, "MM")
     const [isMobile, setIsMobile] = React.useState(false)
+
+    const availableModes = React.useMemo(() => {
+        const base = modes ? MODE_OPTIONS.filter((option) => modes.includes(option.value)) : MODE_OPTIONS
+        if (!modeLabels) return base
+        return base.map((option) => ({
+            ...option,
+            label: modeLabels[option.value] ?? option.label,
+        }))
+    }, [modes, modeLabels])
 
     React.useEffect(() => {
         const mediaQuery = window.matchMedia("(max-width: 639px)")
@@ -259,8 +272,18 @@ export function DatePickerWithRange({
                 </PopoverTrigger>
                 <PopoverContent className="w-[calc(100vw-2rem)] max-w-max overflow-x-auto rounded-md p-0 shadow-lg sm:w-auto" align="start" sideOffset={8} collisionPadding={16}>
                     {showPeriodFilter && (
-                        <div className="grid grid-cols-2 gap-1 border-b border-slate-200 p-2 sm:grid-cols-4 sm:gap-0" aria-label="Jenis periode">
-                            {MODE_OPTIONS.map((option, index) => (
+                        <div
+                            className={cn(
+                                "grid gap-1 border-b border-slate-200 p-2 sm:gap-0",
+                                availableModes.length === 3
+                                    ? "grid-cols-3 sm:grid-cols-3"
+                                    : availableModes.length === 2
+                                    ? "grid-cols-2 sm:grid-cols-2"
+                                    : "grid-cols-2 sm:grid-cols-4",
+                            )}
+                            aria-label="Jenis periode"
+                        >
+                            {availableModes.map((option, index) => (
                                 <Button
                                     key={option.value}
                                     type="button"
@@ -269,7 +292,7 @@ export function DatePickerWithRange({
                                     className={cn(
                                         "h-8 rounded-md px-3 sm:rounded-none",
                                         index === 0 && "sm:rounded-l-md",
-                                        index === MODE_OPTIONS.length - 1 && "sm:rounded-r-md",
+                                        index === availableModes.length - 1 && "sm:rounded-r-md",
                                     )}
                                     onClick={() => handleModeChange(option.value)}
                                 >
