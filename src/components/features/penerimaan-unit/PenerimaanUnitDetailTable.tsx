@@ -15,7 +15,8 @@ import {
   DialogTitle,
   DialogFooter,
 } from '@/components/ui/dialog';
-import { useBulkUpdateUnitItemDetails, useWarehouseSubBlocks } from '@/hooks/useUnitItemDetail';
+import { useBulkUpdateUnitItemDetails } from '@/hooks/useUnitItemDetail';
+import { WarehouseSubBlockSelect } from '@/components/features/stock-unit/WarehouseSubBlockSelect';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 
@@ -42,21 +43,7 @@ export default function PenerimaanUnitDetailTable({ data, activityState, isRefun
   const [stockState, setStockState] = useState<string>('receipt');
   const [warehouseSubBlockId, setWarehouseSubBlockId] = useState<string>('');
 
-  const {
-    data: subBlocksResponse,
-    isLoading: subBlocksLoading,
-    isError: subBlocksError,
-    refetch: refetchSubBlocks,
-  } = useWarehouseSubBlocks({ is_active: true, per_page: 500 });
   const bulkUpdateMutation = useBulkUpdateUnitItemDetails();
-
-  const subBlockOptions = useMemo(() => {
-    const raw = subBlocksResponse?.data;
-    if (Array.isArray(raw?.data)) return raw.data;
-    if (Array.isArray(raw)) return raw;
-    if (Array.isArray(subBlocksResponse)) return subBlocksResponse;
-    return [];
-  }, [subBlocksResponse]);
 
   const rows = useMemo(() => {
     const source = data ?? [];
@@ -476,32 +463,11 @@ export default function PenerimaanUnitDetailTable({ data, activityState, isRefun
 
               <div className="space-y-2">
                 <label className="text-sm font-semibold text-slate-700">Sub Blok Gudang</label>
-                <Select
-                  value={warehouseSubBlockId ? String(warehouseSubBlockId) : undefined}
-                  onValueChange={setWarehouseSubBlockId}
-                >
-                  <SelectTrigger className="h-10 w-full min-w-0 overflow-hidden bg-white border-slate-200 rounded-md">
-                    <SelectValue maxLength={50} placeholder="Pilih sub blok gudang" />
-                  </SelectTrigger>
-                  <SelectContent showSearch searchPlaceholder="Cari sub blok gudang...">
-                    {subBlocksLoading && <div className="px-3 py-2 text-xs text-muted-foreground">Memuat sub blok...</div>}
-                    {subBlocksError && (
-                      <div className="px-3 py-2 text-xs text-destructive">
-                        Gagal memuat sub blok.{' '}
-                        <button type="button" className="underline" onClick={() => refetchSubBlocks()}>
-                          Coba lagi
-                        </button>
-                      </div>
-                    )}
-                    {subBlockOptions.map((sb: any) => (
-                      <SelectItem key={sb.id} value={String(sb.id)} maxLength={50}>
-                        <span className="flex w-full min-w-0 items-center gap-2">
-                          <span className="truncate">{sb.name}</span>
-                        </span>
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <WarehouseSubBlockSelect
+                  selectedId={warehouseSubBlockId}
+                  onSelect={(sb) => setWarehouseSubBlockId(sb ? String(sb.id) : '')}
+                  disabled={bulkUpdateMutation.isPending}
+                />
               </div>
             </div>
           </div>

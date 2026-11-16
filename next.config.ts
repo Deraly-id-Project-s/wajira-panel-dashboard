@@ -24,6 +24,7 @@ const nextConfig: NextConfig = {
   env: {
     OBJECT_BUCKET_URL: process.env.OBJECT_BUCKET_URL || '',
     OBJECT_BUKCET: process.env.OBJECT_BUKCET || '',
+    INIT_STOCK_IMPORT: process.env.INIT_STOCK_IMPORT || process.env.NEXT_PUBLIC_INIT_STOCK_IMPORT || '',
   },
   reactStrictMode: true,
   output: "standalone",

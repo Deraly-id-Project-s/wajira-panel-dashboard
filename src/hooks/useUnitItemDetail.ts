@@ -94,7 +94,13 @@ export const useBulkDeleteUnitItemDetails = () => {
   });
 };
 
-export const useWarehouseSubBlocks = (params: { is_active?: boolean; per_page?: number } = {}) => {
+export const useWarehouseSubBlocks = (params: {
+  is_active?: boolean;
+  per_page?: number;
+  page?: number;
+  search?: string;
+  company_id?: string | number;
+} = {}) => {
   return useQuery({
     queryKey: ['warehouse-sub-blocks', params],
     queryFn: () => import('@/services/warehouseSubBlock.service').then(m => m.getWarehouseSubBlocks(params)),

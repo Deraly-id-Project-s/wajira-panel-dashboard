@@ -11,14 +11,20 @@ import type { StockStatus } from '@/@types/stock-unit.types';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { SlidersHorizontal, Upload } from 'lucide-react';
+import { Download, SlidersHorizontal, Upload } from 'lucide-react';
 import { SearchPagination } from '@/components/ui/search-pagination';
 import { useQueryParamsTable } from '@/hooks/useQueryParamsTable';
 import { exportStockUnits } from '@/services/stock-unit.service';
 import { toast } from 'sonner';
+import { InitStockImportDialog } from '@/components/features/stock-unit/InitStockImportDialog';
 
 export default function StockUnitPage() {
   const { companyId } = useCompany();
+
+  const isInitStockImportEnabled =
+    process.env.NEXT_PUBLIC_INIT_STOCK_IMPORT === 'true' ||
+    process.env.INIT_STOCK_IMPORT === 'true';
+  const [isImportModalOpen, setIsImportModalOpen] = useState(false);
 
   const { page, perPage, search, setPage, setPerPage, setSearch } = useQueryParamsTable({ defaultPerPage: 25 });
   const [searchInput, setSearchInput] = useState(search);
@@ -128,7 +134,7 @@ export default function StockUnitPage() {
     specified: specified,
   }), [page, perPage, search, stockState, inStock, activityType, unitTransactionItemId, machineNumber, chassisNumber, color, specified]);
 
-  const { data, isLoading, isError, isFetching } = useStockUnits(companyId, params);
+  const { data, isLoading, isError, isFetching, refetch } = useStockUnits(companyId, params);
 
   const isDataLoading = isLoading || isFetching;
   const [isExporting, setIsExporting] = useState<boolean>(false);
@@ -202,6 +208,18 @@ export default function StockUnitPage() {
           subtitle="Kelola dan lacak semua unit stok"
           actions={
             <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row">
+              {isInitStockImportEnabled && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setIsImportModalOpen(true)}
+                  disabled={isDataLoading}
+                  className="w-full sm:w-auto"
+                >
+                  <Upload className="mr-2 h-4 w-4" />
+                  Import
+                </Button>
+              )}
               <Button
                 type="button"
                 variant="outline"
@@ -209,7 +227,7 @@ export default function StockUnitPage() {
                 disabled={isDataLoading || isExporting}
                 className="w-full sm:w-auto"
               >
-                <Upload className="mr-2 h-4 w-4" />
+                <Download className="mr-2 h-4 w-4" />
                 {isExporting ? 'Exporting...' : 'Export'}
               </Button>
             </div>
@@ -392,6 +410,18 @@ export default function StockUnitPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {isInitStockImportEnabled && (
+        <InitStockImportDialog
+          open={isImportModalOpen}
+          onOpenChange={setIsImportModalOpen}
+          onSuccess={() => {
+            setPage(1);
+            refetch();
+          }}
+          companyId={companyId}
+        />
+      )}
     </DashboardLayout>
   );
 }

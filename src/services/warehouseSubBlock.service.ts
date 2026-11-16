@@ -76,7 +76,15 @@ export const deleteWarehouseSubBlock = async (id: number) => {
   return response.data;
 };
 
-export const getWarehouseSubBlocks = async (params: { is_active?: boolean; per_page?: number } = {}) => {
+export interface WarehouseSubBlockParams {
+  is_active?: boolean;
+  per_page?: number;
+  page?: number;
+  search?: string;
+  company_id?: string | number;
+}
+
+export const getWarehouseSubBlocks = async (params: WarehouseSubBlockParams = {}) => {
   const response = await apiClient.get<ApiResponse<any>>(`/wapi/master-data/warehouse-sub-block`, {
     params,
   });
