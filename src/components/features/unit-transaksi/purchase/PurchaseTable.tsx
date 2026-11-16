@@ -245,12 +245,6 @@ export default function PurchaseTable({
         ),
       },
       {
-        header: 'Gudang',
-        accessorKey: 'warehouse',
-        sortable: true,
-        cell: (item) => item.warehouse || '-',
-      },
-      {
         header: 'Bruto Total',
         alignment: 'center',
         accessorKey: 'transaction_bruto_total',

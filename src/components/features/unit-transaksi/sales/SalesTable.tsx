@@ -264,13 +264,6 @@ export function SalesTable({
         ),
       },
       {
-        header: 'Gudang',
-        accessorKey: 'warehouse',
-        sortable: true,
-        alignment: 'left',
-        cell: (item) => item.warehouse || '-',
-      },
-      {
         header: 'Bruto Total',
         accessorKey: 'transaction_bruto_total',
         sortable: true,
