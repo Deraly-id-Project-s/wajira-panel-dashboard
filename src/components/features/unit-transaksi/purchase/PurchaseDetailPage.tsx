@@ -129,7 +129,7 @@ export default function PurchaseDetailPage() {
   const canReceive = isPaid
     && purchase?.isUnitTypeDetailValid === true
     && receiveButtonText === 'Proses Barang';
-  const unitItems = unitItemsResponse?.data ?? [];
+  const unitItems = useMemo(() => unitItemsResponse?.data ?? [], [unitItemsResponse?.data]);
   const resolvedBillingHistories =
     billingHistories.length > 0
       ? billingHistories

@@ -242,11 +242,13 @@ export function CustomableReportDocumentDialog<T extends object = Record<string,
       if (defaultDocumentCode) setDocumentCode(defaultDocumentCode);
       if (defaultArchiveName) {
         setArchiveName(defaultArchiveName);
-      } else if (!archiveName) {
-        setArchiveName(`${reportTitle}${defaultDocumentCode ? ` - ${defaultDocumentCode}` : ''}`);
+      } else {
+        setArchiveName((prev) => prev || `${reportTitle}${defaultDocumentCode ? ` - ${defaultDocumentCode}` : ''}`);
       }
       if (defaultNotes) setArchiveNotes(defaultNotes);
-      if (reportTitle && (!subject || subject === 'Laporan')) setSubject(reportTitle);
+      if (reportTitle) {
+        setSubject((prev) => (!prev || prev === 'Laporan' ? reportTitle : prev));
+      }
     }
   }, [open, defaultDocumentCode, defaultArchiveName, defaultNotes, reportTitle]);
 
@@ -1439,6 +1441,7 @@ export function CustomableReportDocumentDialog<T extends object = Record<string,
                           <div className="flex items-center gap-2">
                             {sig.signatureUrl ? (
                               <div className="h-6 w-12 border bg-white rounded flex items-center justify-center overflow-hidden">
+                                {/* eslint-disable-next-line @next/next/no-img-element */}
                                 <img
                                   src={sig.signatureUrl}
                                   alt="TTD"
@@ -1553,6 +1556,7 @@ export function CustomableReportDocumentDialog<T extends object = Record<string,
 
                           <div className="flex items-center gap-3">
                             <div className="h-10 w-12 border rounded bg-slate-50 flex items-center justify-center p-0.5 shrink-0">
+                              {/* eslint-disable-next-line @next/next/no-img-element */}
                               <img
                                 src={img.url}
                                 alt={img.name}
@@ -2114,6 +2118,7 @@ export function CustomableReportDocumentDialog<T extends object = Record<string,
                       </div>
                     )}
 
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
                       src={img.url}
                       alt={img.name}
@@ -2174,6 +2179,7 @@ export function CustomableReportDocumentDialog<T extends object = Record<string,
                       <p className="text-[7pt] font-medium">{sig.label}</p>
                       <div className="flex h-[15mm] items-center justify-center my-1">
                         {sig.signatureUrl ? (
+                          // eslint-disable-next-line @next/next/no-img-element
                           <img
                             src={sig.signatureUrl}
                             alt={sig.signerName}
