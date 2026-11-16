@@ -14,6 +14,34 @@ export type StockStatus =
 
 export type Status = 'normal' | 'minor_damage' | 'major_damage' | 'returned' | 'refunded' | 'lost' | 'in_repair';
 
+export type UnitItemDetailStatus = Status;
+
+export type UnitItemDetailStockState =
+  | 'receipt'
+  | 'draft'
+  | 'cancel'
+  | 'prepare'
+  | 'purchase_order'
+  | 'in_transit';
+
+export interface InitImportStockPayload {
+  unit_type_id: number;
+  qty_total: number;
+  price?: number;
+  file?: File | null;
+  warehouse_sub_block_id?: number | null;
+  in_stock?: boolean;
+  status?: UnitItemDetailStatus;
+  stock_state?: UnitItemDetailStockState;
+}
+
+export interface InitImportStockResponse {
+  status: boolean;
+  message: string;
+  errors?: Record<string, string[]> | string | null;
+  data?: any;
+}
+
 export interface StockUnit {
   id: string;
   namaUnit: string;
@@ -25,6 +53,13 @@ export interface StockUnit {
   stockStatus: StockStatus;
   isSoldUnit: boolean;
   isForecast: boolean;
+  unitType?: {
+    id?: number;
+    code?: string;
+    name?: string;
+    unit_type?: string;
+    unit_model?: string;
+  } | null;
   warehouseSubBlock?: {
     id: number;
     name: string;

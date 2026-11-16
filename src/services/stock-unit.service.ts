@@ -1,4 +1,4 @@
-import { StockUnit, StockStatus, Status } from '@/@types/stock-unit.types';
+import { StockUnit, StockStatus, Status, InitImportStockPayload, InitImportStockResponse } from '@/@types/stock-unit.types';
 import type { PaginationParams } from '@/@types/pagination.types';
 import { apiClient } from '@/lib/api/client';
 import { buildLaravelPaginationQuery } from '@/lib/api/pagination';
@@ -41,13 +41,14 @@ interface StockUnitApiModel {
 
 const mapStockUnit = (payload: StockUnitApiModel): StockUnit => ({
   id: payload.id.toString(),
-  namaUnit: payload.unit_type?.unit_model ?? payload.unit_type?.name ?? payload.unit_type?.unit_type ?? '-',
+  namaUnit: payload.unit_type?.name ?? payload.type_unit_name ?? payload.unit_type?.unit_model ?? payload.unit_type?.unit_type ?? '-',
   warna: payload.color,
   noMesin: payload.machine_number,
   noRangka: payload.chassis_number,
   status: (payload.status) as Status,
   inStock: (payload.stock_available),
   stockStatus: (payload.stock_state) as StockStatus,
+  unitType: payload.unit_type ?? null,
   warehouseSubBlock: payload.warehouse_sub_block,
   customer: payload.customer ?? null,
   supplier: payload.supplier ?? null,
@@ -189,5 +190,76 @@ export const exportStockUnits = async (
     }
     const message = await extractBlobErrorMessage(error, 'Gagal mengekspor data stok unit');
     throw new ApiResponseError(message);
+  }
+};
+
+/**
+ * Inisialisasi import stok awal unit kendaraan tanpa transaksi sebelumnya (Fitur init-import)
+ */
+export const initImportStockUnits = async (
+  payload: InitImportStockPayload,
+  companyId?: number | string | null,
+): Promise<InitImportStockResponse> => {
+  const formData = new FormData();
+
+  formData.append('unit_type_id', String(payload.unit_type_id));
+  formData.append('qty_total', String(payload.qty_total));
+
+  if (payload.price !== undefined && payload.price !== null) {
+    formData.append('price', String(payload.price));
+  }
+
+  if (payload.file) {
+    formData.append('file', payload.file);
+  }
+
+  if (
+    payload.warehouse_sub_block_id !== undefined &&
+    payload.warehouse_sub_block_id !== null &&
+    String(payload.warehouse_sub_block_id).trim() !== ''
+  ) {
+    formData.append('warehouse_sub_block_id', String(payload.warehouse_sub_block_id));
+  }
+
+  if (typeof payload.in_stock === 'boolean') {
+    formData.append('in_stock', payload.in_stock ? '1' : '0');
+  }
+
+  if (payload.status) {
+    formData.append('status', payload.status);
+  }
+
+  if (payload.stock_state) {
+    formData.append('stock_state', payload.stock_state);
+  }
+
+  try {
+    const response = await apiClient.post<InitImportStockResponse>(
+      '/wapi/unit-transaction/unit-transaction-item/init-import',
+      formData,
+      {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+          ...(companyId ? { 'company-id': String(companyId) } : {}),
+        },
+      },
+    );
+
+    return response.data;
+  } catch (error: any) {
+    if (error?.response?.data) {
+      const resData = error.response.data;
+      if (resData.message) {
+        let msg = resData.message;
+        if (resData.errors && typeof resData.errors === 'object') {
+          const errList = Object.values(resData.errors).flat().filter(Boolean);
+          if (errList.length > 0) {
+            msg = `${msg}: ${errList.join(', ')}`;
+          }
+        }
+        throw new ApiResponseError(msg, error?.response?.status, resData);
+      }
+    }
+    throw error;
   }
 };
