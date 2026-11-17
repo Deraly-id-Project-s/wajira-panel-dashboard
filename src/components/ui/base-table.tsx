@@ -44,6 +44,10 @@ export interface ColumnDef<T> {
   cell?: (item: T, index: number) => React.ReactNode;
   sticky?: 'left' | 'right'; // If provided, column will float/sticky
   tooltip?: React.ReactNode; // Optional tooltip for the column header
+  group?: string; // Parent header group (e.g., 'Pergerakan', 'Saldo Akhir')
+  groupClassName?: string; // Custom styling for the parent group header
+  rowSpan?: number; // Row span height for headers without group (e.g. 2 for 2-row table header)
+  colSpan?: number; // Col span width
 }
 
 export interface BaseTableProps<T> {
@@ -59,6 +63,14 @@ export interface BaseTableProps<T> {
   onSearchChange?: (value: string) => void;
   headerActions?: React.ReactNode;
   headerGroups?: React.ReactNode; // Optional extra grouped header rows
+  customHeader?: React.ReactNode; // Optional full custom table header
+
+  // Row & Table styling props
+  bordered?: boolean; // Enables clean borders between all cells (ideal for sheets/financial tables)
+  dense?: boolean; // Enables compact row padding
+  striped?: boolean; // Enables alternating row backgrounds
+  rowClassName?: string | ((item: T, index: number) => string); // Custom styling per row
+  cellClassName?: string | ((item: T, column: ColumnDef<T>, index: number) => string); // Custom styling per cell
 
   // Show / Limit page props
   showLimitChange?: boolean;
@@ -139,6 +151,12 @@ export default function BaseTable<T>({
   meta,
   onPageChange,
   headerGroups,
+  customHeader,
+  bordered = false,
+  dense = false,
+  striped = false,
+  rowClassName,
+  cellClassName,
   headerRowClassName = 'bg-[#f8f9fa]',
   containerClassName,
   showCheckbox = false,
@@ -276,6 +294,52 @@ export default function BaseTable<T>({
       return !effectiveHiddenColumns.has(colKey);
     });
   }, [columns, effectiveHiddenColumns, getColKey]);
+
+  const hasMultiRowHeader = useMemo(() => {
+    return visibleColumns.some((c) => Boolean(c.group || (c.rowSpan && c.rowSpan > 1)));
+  }, [visibleColumns]);
+
+  const headerGroupItems = useMemo(() => {
+    if (!hasMultiRowHeader) return [];
+
+    interface GroupItem {
+      type: 'single' | 'group';
+      groupName?: string;
+      groupClassName?: string;
+      columns: ColumnDef<T>[];
+      colSpan: number;
+    }
+
+    const items: GroupItem[] = [];
+    let currentGroup: GroupItem | null = null;
+
+    visibleColumns.forEach((col) => {
+      if (col.group) {
+        if (currentGroup && currentGroup.type === 'group' && currentGroup.groupName === col.group) {
+          currentGroup.columns.push(col);
+          currentGroup.colSpan += 1;
+        } else {
+          currentGroup = {
+            type: 'group',
+            groupName: col.group,
+            groupClassName: col.groupClassName,
+            columns: [col],
+            colSpan: 1,
+          };
+          items.push(currentGroup);
+        }
+      } else {
+        currentGroup = {
+          type: 'single',
+          columns: [col],
+          colSpan: 1,
+        };
+        items.push(currentGroup);
+      }
+    });
+
+    return items;
+  }, [hasMultiRowHeader, visibleColumns]);
 
   const toggleHideColumn = useCallback((colKey: string | number, e?: React.MouseEvent) => {
     if (e) e.stopPropagation();
@@ -585,6 +649,119 @@ export default function BaseTable<T>({
     ));
   };
 
+  const renderTableHeadCell = (
+    col: ColumnDef<T>,
+    idx: number,
+    options?: { rowSpan?: number; isSubHeader?: boolean }
+  ) => {
+    const alignment = col.alignment ?? 'left';
+    const textAlignment =
+      alignment === 'right' ? 'text-right' : alignment === 'center' ? 'text-center' : 'text-left';
+    const colKey = getColKey(col, idx);
+    const isStickyLeft = col.sticky === 'left' || lockedColumns.has(colKey);
+    const isStickyRight = col.sticky === 'right';
+    const isLastStickyLeft = colKey === lastStickyLeftKey;
+    const leftOffset = columnLeftOffsets[colKey] ?? 0;
+    const isCurrentSort = Boolean(
+      activeSort?.key && (activeSort.key === col.id || activeSort.key === col.accessorKey)
+    );
+    const sortIcon = isCurrentSort ? (
+      activeSort?.direction === 'asc' ? (
+        <ArrowUp className="h-3.5 w-3.5 text-slate-900" />
+      ) : (
+        <ArrowDown className="h-3.5 w-3.5 text-slate-900" />
+      )
+    ) : (
+      <ArrowUpDown className="h-3 w-3 opacity-0 group-hover:opacity-40" />
+    );
+
+    const isSortable = Boolean(col.sortable && (col.id || col.accessorKey));
+    const isLocked = lockedColumns.has(colKey);
+    const rowSpan = options?.rowSpan ?? 1;
+
+    return (
+      <TableHead
+        key={col.id || colKey}
+        rowSpan={rowSpan > 1 ? rowSpan : undefined}
+        className={cn(
+          dense ? 'px-3 py-2 text-[11px] sm:text-xs' : 'px-2.5 py-2.5 text-[11px] sm:px-4 sm:py-3.5 sm:text-sm',
+          'font-semibold text-slate-700 transition-colors print:px-2 print:py-2 print:text-[10px]',
+          (bordered || hasMultiRowHeader) && 'border-r border-slate-200',
+          options?.isSubHeader ? 'bg-[#f8f9fa] text-[11px] font-semibold text-slate-600' : headerRowClassName,
+          rowSpan > 1 && 'align-middle border-b border-slate-200',
+          isStickyLeft &&
+            cn(
+              'sticky z-10 border-r border-slate-200',
+              headerRowClassName,
+              isLastStickyLeft && 'shadow-[4px_0_6px_-4px_rgba(0,0,0,0.05)]'
+            ),
+          isStickyRight &&
+            cn(
+              'sticky right-0 z-10 border-l border-slate-200 shadow-[-4px_0_6px_-4px_rgba(0,0,0,0.05)]',
+              headerRowClassName,
+              !col.headerClassName?.includes('w-') && 'w-[80px] min-w-[80px] max-w-[80px]'
+            ),
+          textAlignment,
+          col.headerClassName
+        )}
+        style={isStickyLeft ? { left: leftOffset } : undefined}
+      >
+        <div
+          className={cn(
+            'group/th flex items-center gap-1.5',
+            alignment === 'right' ? 'justify-end' : alignment === 'center' ? 'justify-center' : 'justify-start'
+          )}
+        >
+          {isSortable ? (
+            <button
+              type="button"
+              className={cn(
+                'flex items-center gap-1 hover:text-slate-900 transition-colors cursor-pointer select-none',
+                isCurrentSort && 'text-slate-950 font-bold'
+              )}
+              onClick={() => handleSort((col.id || col.accessorKey)!)}
+            >
+              <span>{col.header}</span>
+              <span className="shrink-0">{sortIcon}</span>
+            </button>
+          ) : (
+            <span className="select-none">{col.header}</span>
+          )}
+
+          {col.tooltip && (
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <button type="button" className="text-slate-400 hover:text-slate-600 focus:outline-none">
+                    <Info className="h-3 w-3" />
+                  </button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p className="max-w-xs text-xs">{col.tooltip}</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          )}
+
+          {/* Optional lock/pin button */}
+          {col.sticky !== 'left' && col.sticky !== 'right' && (
+            <button
+              type="button"
+              onClick={(e) => toggleLockColumn(colKey, e)}
+              className={cn(
+                'opacity-0 group-hover/th:opacity-100 transition-opacity p-0.5 rounded hover:bg-slate-200/60 text-slate-400 hover:text-slate-700',
+                isLocked && 'opacity-100 text-slate-700 bg-slate-200/50'
+              )}
+              title={isLocked ? 'Lepas pin kolom' : 'Pin kolom ke kiri'}
+            >
+              {isLocked ? <Lock className="h-3 w-3" /> : <Unlock className="h-3 w-3" />}
+            </button>
+          )}
+        </div>
+      </TableHead>
+    );
+  };
+
   const hasControls = Boolean(
     onSearchChange ||
     headerActions ||
@@ -768,127 +945,77 @@ export default function BaseTable<T>({
         ref={tableContainerRef}
         className={cn('relative overflow-x-auto rounded-md border border-slate-200 bg-white text-[11px] shadow-none sm:text-sm', containerClassName)}
       >
-        <Table className="w-max min-w-full print:w-full print:table-fixed">
-          <TableHeader className={cn('border-b border-gray-200', headerRowClassName)}>
-            {headerGroups && headerGroups}
-            <TableRow className="hover:bg-transparent border-none">
-              {showCheckbox && (
-                <TableHead className={cn("sticky left-0 z-10 w-[44px] min-w-[44px] max-w-[44px] border-r border-slate-200 px-3 py-3 text-center shadow-[4px_0_6px_-4px_rgba(0,0,0,0.05)] sm:w-[50px] sm:min-w-[50px] sm:max-w-[50px] sm:px-4 sm:py-4", headerRowClassName)}>
-                  <Checkbox
-                    checked={sortedData.length > 0 && sortedData.every((item) => selectedIds?.has(getRowIdInternal(item)))}
-                    onCheckedChange={handleToggleAll}
-                    disabled={isMasterCheckboxDisabled}
-                    aria-label="Pilih semua"
-                  />
-                </TableHead>
-              )}
-              {visibleColumns.map((col, idx) => {
-                const alignment = col.alignment ?? 'left';
-                const textAlignment = alignment === 'right' ? 'text-right' : alignment === 'center' ? 'text-center' : 'text-left';
-                const justifyClass = alignment === 'right' ? 'justify-end' : alignment === 'center' ? 'justify-center' : 'justify-start';
-
-                const isSortable = col.sortable && col.accessorKey;
-                const sortKey = String(col.accessorKey || col.id || '');
-                const colKey = getColKey(col, idx);
-                const isSorted = activeSort?.key === sortKey;
-
-                const isStickyLeft = col.sticky === 'left' || lockedColumns.has(colKey);
-                const isStickyRight = col.sticky === 'right';
-                const isLastStickyLeft = colKey === lastStickyLeftKey;
-                const leftOffset = columnLeftOffsets[colKey] ?? 0;
-                const canLock = !col.sticky;
-                const canHide = col.hideable !== false;
-
-                return (
-                  <TableHead
-                    key={col.id || idx}
-                    onClick={() => isSortable && handleSort(sortKey)}
-                    className={cn(
-                      'px-3 py-3 text-[11px] font-semibold uppercase text-slate-500 whitespace-nowrap print:px-2 print:py-2 print:text-[10px] print:whitespace-normal sm:px-4 sm:py-4 sm:text-xs group',
-                      isSortable && 'cursor-pointer select-none',
-                      isStickyLeft && cn(
-                        'sticky z-10 border-r border-slate-200',
-                        isLastStickyLeft && 'shadow-[4px_0_6px_-4px_rgba(0,0,0,0.05)]',
+        <Table className={cn("w-max min-w-full print:w-full print:table-fixed", (bordered || hasMultiRowHeader) && "border-collapse border-spacing-0")}>
+          <TableHeader className={cn('border-b border-slate-200', headerRowClassName)}>
+            {customHeader ? (
+              customHeader
+            ) : hasMultiRowHeader ? (
+              <>
+                {/* Row 1: Height row 2 columns (rowSpan: 2) and Group parent headers (colSpan) */}
+                <TableRow className="hover:bg-transparent border-b border-slate-200">
+                  {showCheckbox && (
+                    <TableHead
+                      rowSpan={2}
+                      className={cn(
+                        "sticky left-0 z-20 w-[44px] min-w-[44px] max-w-[44px] border-r border-b border-slate-200 px-3 py-3 text-center align-middle shadow-[4px_0_6px_-4px_rgba(0,0,0,0.05)] sm:w-[50px] sm:min-w-[50px] sm:max-w-[50px] sm:px-4 sm:py-4",
                         headerRowClassName
-                      ),
-                      isStickyRight && cn(
-                        'sticky right-0 z-10 border-l border-slate-200 shadow-[-4px_0_6px_-4px_rgba(0,0,0,0.05)]',
-                        !col.headerClassName?.includes('w-') && 'w-[80px] min-w-[80px] max-w-[80px]',
-                        headerRowClassName
-                      ),
-                      textAlignment,
-                      col.headerClassName
-                    )}
-                    style={isStickyLeft ? { left: leftOffset } : undefined}
-                  >
-                    <div className={cn('flex items-center gap-1.5', justifyClass)}>
-                      <span>{col.header}</span>
-                      {col.tooltip && (
-                        <TooltipProvider>
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <span
-                                onClick={(e) => e.stopPropagation()}
-                                className="cursor-help inline-flex items-center"
-                              >
-                                <Info className="h-3.5 w-3.5 text-slate-400 shrink-0 hover:text-slate-600 transition-colors" />
-                              </span>
-                            </TooltipTrigger>
-                            <TooltipContent>
-                              {col.tooltip}
-                            </TooltipContent>
-                          </Tooltip>
-                        </TooltipProvider>
                       )}
-                      {isSortable && (
-                        isSorted ? (
-                          activeSort.direction === 'asc' ? (
-                            <ArrowUp className="h-3 w-3 text-[#ed333b] shrink-0" />
-                          ) : (
-                            <ArrowDown className="h-3 w-3 text-[#ed333b] shrink-0" />
-                          )
-                        ) : (
-                          <ArrowUpDown className="h-3 w-3 opacity-0 group-hover:opacity-70 transition-opacity duration-150 shrink-0" />
-                        )
-                      )}
-                      {canHide && (
-                        <button
-                          type="button"
-                          disabled={visibleColumns.length <= 1}
-                          onClick={(e) => toggleHideColumn(colKey, e)}
-                          className={cn(
-                            "p-1 rounded hover:bg-slate-100/80 text-slate-400 hover:text-[#ed333b] transition-all shrink-0 cursor-pointer opacity-0 group-hover:opacity-100",
-                            visibleColumns.length <= 1 && "opacity-20 cursor-not-allowed hover:text-slate-400 pointer-events-none"
-                          )}
-                          title={visibleColumns.length <= 1 ? "Minimal 1 kolom harus tetap tampil" : "Sembunyikan kolom ini"}
-                        >
-                          <EyeOff className="h-3 w-3" />
-                        </button>
-                      )}
-                      {canLock && (
-                        <button
-                          type="button"
-                          onClick={(e) => toggleLockColumn(colKey, e)}
-                          className={cn(
-                            "p-1 rounded hover:bg-slate-100/80 text-slate-400 hover:text-slate-700 transition-all shrink-0 cursor-pointer",
-                            lockedColumns.has(colKey)
-                              ? "text-[#ed333b] opacity-100"
-                              : "opacity-0 group-hover:opacity-100"
-                          )}
-                          title={lockedColumns.has(colKey) ? "Lepas pin kolom" : "Pin kolom"}
-                        >
-                          {lockedColumns.has(colKey) ? (
-                            <Lock className="h-3 w-3" />
-                          ) : (
-                            <Unlock className="h-3 w-3" />
-                          )}
-                        </button>
-                      )}
-                    </div>
-                  </TableHead>
-                );
-              })}
-            </TableRow>
+                    >
+                      <Checkbox
+                        checked={sortedData.length > 0 && sortedData.every((item) => selectedIds?.has(getRowIdInternal(item)))}
+                        onCheckedChange={handleToggleAll}
+                        disabled={isMasterCheckboxDisabled}
+                        aria-label="Pilih semua"
+                      />
+                    </TableHead>
+                  )}
+                  {headerGroupItems.map((item, gIdx) => {
+                    if (item.type === 'single') {
+                      const col = item.columns[0];
+                      const colIdx = visibleColumns.indexOf(col);
+                      return renderTableHeadCell(col, colIdx, { rowSpan: col.rowSpan || 2 });
+                    }
+                    return (
+                      <TableHead
+                        key={`grp-${gIdx}-${item.groupName}`}
+                        colSpan={item.colSpan}
+                        className={cn(
+                          'px-4 py-2.5 text-center text-xs font-semibold uppercase tracking-wider text-slate-700 bg-slate-100/90 border-r border-b border-slate-200 select-none',
+                          item.groupClassName
+                        )}
+                      >
+                        {item.groupName}
+                      </TableHead>
+                    );
+                  })}
+                </TableRow>
+
+                {/* Row 2: Sub-columns for groups only */}
+                <TableRow className="hover:bg-transparent border-b border-slate-200">
+                  {visibleColumns.map((col, idx) => {
+                    if (!col.group) return null;
+                    return renderTableHeadCell(col, idx, { rowSpan: 1, isSubHeader: true });
+                  })}
+                </TableRow>
+              </>
+            ) : (
+              <>
+                {headerGroups && headerGroups}
+                <TableRow className="hover:bg-transparent border-none">
+                  {showCheckbox && (
+                    <TableHead className={cn("sticky left-0 z-10 w-[44px] min-w-[44px] max-w-[44px] border-r border-slate-200 px-3 py-3 text-center shadow-[4px_0_6px_-4px_rgba(0,0,0,0.05)] sm:w-[50px] sm:min-w-[50px] sm:max-w-[50px] sm:px-4 sm:py-4", headerRowClassName)}>
+                      <Checkbox
+                        checked={sortedData.length > 0 && sortedData.every((item) => selectedIds?.has(getRowIdInternal(item)))}
+                        onCheckedChange={handleToggleAll}
+                        disabled={isMasterCheckboxDisabled}
+                        aria-label="Pilih semua"
+                      />
+                    </TableHead>
+                  )}
+                  {visibleColumns.map((col, idx) => renderTableHeadCell(col, idx, { rowSpan: 1 }))}
+                </TableRow>
+              </>
+            )}
           </TableHeader>
           <TableBody>
             {sortedData.length === 0 ? (
@@ -915,14 +1042,17 @@ export default function BaseTable<T>({
               sortedData.map((item, rowIdx) => {
                 const mark = getRowMark?.(item);
                 const markClasses = getMarkClasses(mark);
+                const customRowClass = typeof rowClassName === 'function' ? rowClassName(item, rowIdx) : rowClassName;
 
                 return (
                   <TableRow
                     key={rowIdx}
                     className={cn(
-                      "group border-b transition-colors",
+                      "group border-b border-slate-200 transition-colors",
+                      striped && (rowIdx % 2 === 1 ? "bg-slate-50/50" : "bg-white"),
                       markClasses.row,
-                      onRowClick && "cursor-pointer"
+                      onRowClick && "cursor-pointer hover:bg-slate-50/80",
+                      customRowClass
                     )}
                     onClick={() => onRowClick?.(item)}
                   >
@@ -956,7 +1086,9 @@ export default function BaseTable<T>({
                         <TableCell
                           key={col.id || colIdx}
                           className={cn(
-                            'px-2.5 py-2.5 text-[11px] text-slate-700 transition-colors print:px-2 print:py-2 print:text-[10px] sm:px-4 sm:py-4 sm:text-sm',
+                            dense ? 'px-3 py-2 text-[11px] sm:text-xs' : 'px-2.5 py-2.5 text-[11px] sm:px-4 sm:py-3.5 sm:text-sm',
+                            'text-slate-700 transition-colors print:px-2 print:py-2 print:text-[10px]',
+                            (bordered || hasMultiRowHeader) && 'border-r border-slate-200',
                             isStickyLeft && cn(
                               'sticky z-10 border-r border-slate-200',
                               isLastStickyLeft && 'shadow-[4px_0_6px_-4px_rgba(0,0,0,0.05)]'
@@ -967,6 +1099,7 @@ export default function BaseTable<T>({
                             ),
                             markClasses.cell,
                             textAlignment,
+                            typeof cellClassName === 'function' ? cellClassName(item, col, rowIdx) : cellClassName,
                             col.className
                           )}
                           style={isStickyLeft ? { left: leftOffset } : undefined}

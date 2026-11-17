@@ -16,7 +16,15 @@ import {
 } from '@/components/ui/date-range-picker';
 import { PageHeader } from '@/components/ui/page-header';
 import { SearchPagination } from '@/components/ui/search-pagination';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { ReportArchiveAction } from '@/components/features/report-archive/ReportArchiveAction';
+import type { ReportArchiveColumn } from '@/lib/report-archive';
 import { useCompany } from '@/contexts/CompanyContext';
 import { useAccounts } from '@/hooks/useAccount';
 import { useBalanceColumnReport } from '@/hooks/report/useBalanceColumnReport';
@@ -37,6 +45,7 @@ export default function LaporanNeracaLajurPage() {
   const [dateMode, setDateMode] = useState<DateRangePickerMode>('date');
   const [sortBy, setSortBy] = useState('account_code');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
+  const [transactionFilter, setTransactionFilter] = useState<'accounts' | 'account_with_transactions'>('accounts');
   const [isExporting, setIsExporting] = useState(false);
 
   const accountQuery = useAccounts({
@@ -74,6 +83,7 @@ export default function LaporanNeracaLajurPage() {
     account_code: selectedAccount?.code ?? null,
     account_name: selectedAccount?.name ?? null,
     search: search || null,
+    transaction_filter: transactionFilter,
     sort_by: sortBy,
     sort_order: sortOrder,
   }), [
@@ -88,6 +98,7 @@ export default function LaporanNeracaLajurPage() {
     sortBy,
     sortOrder,
     startDate,
+    transactionFilter,
   ]);
 
   const { data, pagination, isLoading, isFetching } = useBalanceColumnReport({
@@ -101,6 +112,7 @@ export default function LaporanNeracaLajurPage() {
     setSearch('');
     setDateRange(undefined);
     setDateMode('date');
+    setTransactionFilter('accounts');
     setSortBy('account_code');
     setSortOrder('asc');
     setPage(1);
@@ -109,6 +121,22 @@ export default function LaporanNeracaLajurPage() {
   const periodLabel = dateRange?.from
     ? `${format(dateRange.from, 'dd MMM yyyy')}${dateRange.to ? ` - ${format(dateRange.to, 'dd MMM yyyy')}` : ''}`
     : 'Semua Periode';
+
+  const archiveColumns = useMemo<ReportArchiveColumn[]>(() => [
+    { key: 'kode_akun', label: 'Kode Akun', align: 'left' },
+    { key: 'nama_akun', label: 'Nama Akun', align: 'left' },
+    { key: 'pos_akun', label: 'Pos Akun', align: 'center' },
+    { key: 'saldo_normal', label: 'Saldo Normal', align: 'center' },
+    { key: 'saldo_akun', label: 'Saldo Akun', align: 'right', format: 'currency' },
+    { key: 'pergerakan.debit', label: 'Pergerakan (Debit)', align: 'right', format: 'currency' },
+    { key: 'pergerakan.kredit', label: 'Pergerakan (Kredit)', align: 'right', format: 'currency' },
+    { key: 'saldo_akhir.debit', label: 'Saldo Akhir (Debit)', align: 'right', format: 'currency' },
+    { key: 'saldo_akhir.kredit', label: 'Saldo Akhir (Kredit)', align: 'right', format: 'currency' },
+    { key: 'laba_rugi.debit', label: 'Laba Rugi (Debit)', align: 'right', format: 'currency' },
+    { key: 'laba_rugi.kredit', label: 'Laba Rugi (Kredit)', align: 'right', format: 'currency' },
+    { key: 'neraca.debit', label: 'Neraca (Debit)', align: 'right', format: 'currency' },
+    { key: 'neraca.kredit', label: 'Neraca (Kredit)', align: 'right', format: 'currency' },
+  ], []);
 
   const handleExport = async () => {
     setIsExporting(true);
@@ -143,6 +171,7 @@ export default function LaporanNeracaLajurPage() {
                 archiveSourceLabel="Neraca Lajur"
                 periodLabel={periodLabel}
                 data={data}
+                columns={archiveColumns}
                 disabled={isLoading}
               />
             </div>
@@ -166,6 +195,25 @@ export default function LaporanNeracaLajurPage() {
                   options={accountOptions}
                   disabled={accountQuery.isLoading}
                 />
+              </div>
+              <div className="w-full sm:w-[230px]">
+                <Select
+                  value={transactionFilter}
+                  onValueChange={(value) => {
+                    setTransactionFilter(value as 'accounts' | 'account_with_transactions');
+                    setPage(1);
+                  }}
+                >
+                  <SelectTrigger className="h-9 w-full bg-white border-slate-200 text-xs">
+                    <SelectValue placeholder="Pilih Filter Transaksi" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="accounts">Filter Akun</SelectItem>
+                    <SelectItem value="account_with_transactions">
+                      Filter Akun dengan Transaksi
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
               <div className="w-full sm:w-[260px]">
                 <DatePickerWithRange
