@@ -74,16 +74,28 @@ export function SparepartForm({
   const isSales = type === 'sales';
 
   // Data queries
-  const { data: suppliers } = useSuppliers({
+  const {
+    data: suppliers,
+    isFetching: isFetchingSuppliers,
+    refetch: refetchSuppliers,
+  } = useSuppliers({
     company_id: companyId ?? undefined,
     sort_order: 'asc',
     enabled: !isSales && Boolean(companyId),
   });
-  const { data: customers } = useCustomers({
+  const {
+    data: customers,
+    isFetching: isFetchingCustomers,
+    refetch: refetchCustomers,
+  } = useCustomers({
     company_id: companyId ?? undefined,
     enabled: isSales && Boolean(companyId),
   });
-  const { data: spareparts } = useSpareparts(companyId ?? undefined);
+  const {
+    data: spareparts,
+    isFetching: isFetchingSpareparts,
+    refetch: refetchSpareparts,
+  } = useSpareparts(companyId ?? undefined);
 
   // Modals for SelectAdd
   const [openSupplierModal, setOpenSupplierModal] = useState(false);
@@ -182,6 +194,7 @@ export function SparepartForm({
         companyId: companyId ? Number(companyId) : undefined,
       });
       toast.success('Supplier berhasil ditambahkan');
+      await refetchSuppliers();
       const newId = (res as any)?.data?.id ?? (res as any)?.id;
       if (newId) {
         form.setValue('person_id', Number(newId), { shouldValidate: true, shouldDirty: true });
@@ -204,6 +217,7 @@ export function SparepartForm({
         companyId: companyId ? Number(companyId) : undefined,
       });
       toast.success('Customer berhasil ditambahkan');
+      await refetchCustomers();
       const newId = (res as any)?.data?.id ?? (res as any)?.id;
       if (newId) {
         form.setValue('person_id', Number(newId), { shouldValidate: true, shouldDirty: true });
@@ -219,10 +233,27 @@ export function SparepartForm({
     }
   };
 
-  const handleSparepartCreated = (newId: number) => {
-    form.setValue('sparepart_id', Number(newId), { shouldValidate: true, shouldDirty: true });
-    form.clearErrors('sparepart_id');
-    setOpenSparepartDialog(false);
+  const handleSparepartCreated = async (newId: number) => {
+    try {
+      const { data: updatedSpareparts } = await refetchSpareparts();
+      form.setValue('sparepart_id', Number(newId), { shouldValidate: true, shouldDirty: true });
+      const sp = updatedSpareparts?.data?.find((s: any) => String(s.id) === String(newId));
+      if (sp) {
+        const defaultPrice = isSales
+          ? (sp.sellingPrice ?? sp.price ?? 0)
+          : (sp.purchasePrice ?? sp.price ?? 0);
+        form.setValue('price', Number(defaultPrice), {
+          shouldValidate: true,
+          shouldDirty: true,
+        });
+      }
+      form.clearErrors('sparepart_id');
+    } catch {
+      form.setValue('sparepart_id', Number(newId), { shouldValidate: true, shouldDirty: true });
+      form.clearErrors('sparepart_id');
+    } finally {
+      setOpenSparepartDialog(false);
+    }
   };
 
   const partyOptions = useMemo<SearchableSelectOption[]>(() => {
@@ -319,6 +350,23 @@ export function SparepartForm({
                         form.clearErrors('person_id');
                       }}
                       options={partyOptions}
+                      loading={isSales ? isFetchingCustomers : isFetchingSuppliers}
+                      onTriggerClick={() => {
+                        if (isSales) {
+                          refetchCustomers();
+                        } else {
+                          refetchSuppliers();
+                        }
+                      }}
+                      onOpenChange={(isOpen) => {
+                        if (isOpen) {
+                          if (isSales) {
+                            refetchCustomers();
+                          } else {
+                            refetchSuppliers();
+                          }
+                        }
+                      }}
                       placeholder={isSales ? 'Pilih Customer' : 'Pilih Supplier'}
                       searchPlaceholder={isSales ? 'Cari Customer...' : 'Cari Supplier...'}
                       emptyText={isSales ? 'Customer tidak ditemukan.' : 'Supplier tidak ditemukan.'}
@@ -363,6 +411,15 @@ export function SparepartForm({
                         form.clearErrors('sparepart_id');
                       }}
                       options={sparepartOptions}
+                      loading={isFetchingSpareparts}
+                      onTriggerClick={() => {
+                        refetchSpareparts();
+                      }}
+                      onOpenChange={(isOpen) => {
+                        if (isOpen) {
+                          refetchSpareparts();
+                        }
+                      }}
                       placeholder="Pilih Sparepart"
                       searchPlaceholder="Cari Sparepart..."
                       emptyText="Sparepart tidak ditemukan."

@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { Check, ChevronsUpDown, Search, Plus } from 'lucide-react';
+import { Check, ChevronsUpDown, Search, Plus, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Command, CommandEmpty, CommandGroup, CommandItem, CommandList } from '@/components/ui/command';
@@ -31,6 +31,9 @@ export interface SearchableSelectProps {
   disabledLabel?: string;
   allowClear?: boolean;
   clearLabel?: string;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
+  onTriggerClick?: () => void;
 }
 
 export function SearchableSelect({
@@ -52,8 +55,27 @@ export function SearchableSelect({
   disabledLabel = 'Sudah ditambahkan',
   allowClear,
   clearLabel = '-- Hapus Pilihan --',
+  open: controlledOpen,
+  onOpenChange,
+  onTriggerClick,
 }: SearchableSelectProps) {
-  const [open, setOpen] = React.useState(false);
+  const [uncontrolledOpen, setUncontrolledOpen] = React.useState(false);
+  const isControlled = controlledOpen !== undefined;
+  const open = isControlled ? controlledOpen : uncontrolledOpen;
+
+  const handleOpenChange = React.useCallback(
+    (nextOpen: boolean) => {
+      if (!isControlled) {
+        setUncontrolledOpen(nextOpen);
+      }
+      onOpenChange?.(nextOpen);
+      if (nextOpen) {
+        onTriggerClick?.();
+      }
+    },
+    [isControlled, onOpenChange, onTriggerClick]
+  );
+
   const [query, setQuery] = React.useState('');
   const [persistedSelectedOption, setPersistedSelectedOption] = React.useState<SearchableSelectOption | null>(null);
 
@@ -96,13 +118,16 @@ export function SearchableSelect({
     (option: SearchableSelectOption) => {
       setPersistedSelectedOption(option);
       onChange(option.value);
-      setOpen(false);
+      if (!isControlled) {
+        setUncontrolledOpen(false);
+      }
+      onOpenChange?.(false);
     },
-    [onChange]
+    [onChange, isControlled, onOpenChange]
   );
 
   return (
-    <Popover open={open} onOpenChange={setOpen} modal={true}>
+    <Popover open={open} onOpenChange={handleOpenChange} modal={true}>
       <PopoverTrigger asChild>
         <button
           type="button"
@@ -110,6 +135,9 @@ export function SearchableSelect({
           aria-expanded={open}
           aria-controls="searchable-select-list"
           disabled={disabled}
+          onClick={() => {
+            onTriggerClick?.();
+          }}
           className={cn(
             'flex h-10 w-full items-center justify-between rounded-md border border-input bg-transparent px-3 py-2 text-sm ring-offset-background disabled:cursor-not-allowed disabled:opacity-50 min-w-0 font-normal',
             !selectedOption && 'text-muted-foreground',
@@ -119,7 +147,11 @@ export function SearchableSelect({
           <span className="truncate text-left">
             {selectedOption ? selectedOption.label : placeholder}
           </span>
-          <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+          {loading ? (
+            <Loader2 className="ml-2 h-4 w-4 shrink-0 animate-spin opacity-50" />
+          ) : (
+            <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+          )}
         </button>
       </PopoverTrigger>
       <PopoverContent
@@ -159,6 +191,12 @@ export function SearchableSelect({
               }
             }}
           >
+            {loading && !hasMore && (
+              <div className="p-1.5 flex items-center justify-center text-xs text-muted-foreground gap-1.5 border-b bg-slate-50/50">
+                <Loader2 className="h-3 w-3 animate-spin text-primary" />
+                <span>Memuat data...</span>
+              </div>
+            )}
             {allowClear && stringValue && (
               <div className="border-b p-1">
                 <button
@@ -166,7 +204,10 @@ export function SearchableSelect({
                   onClick={() => {
                     onChange('');
                     setPersistedSelectedOption(null);
-                    setOpen(false);
+                    if (!isControlled) {
+                      setUncontrolledOpen(false);
+                    }
+                    onOpenChange?.(false);
                   }}
                   className="w-full text-left px-2 py-1.5 text-xs text-muted-foreground hover:bg-slate-100 rounded italic"
                 >
@@ -217,7 +258,10 @@ export function SearchableSelect({
               onClick={(e) => {
                 e.stopPropagation();
                 onActionClick();
-                setOpen(false);
+                if (!isControlled) {
+                  setUncontrolledOpen(false);
+                }
+                onOpenChange?.(false);
               }}
             >
               <Plus className="h-3.5 w-3.5" />

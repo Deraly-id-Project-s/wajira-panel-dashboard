@@ -40,7 +40,9 @@ export function useCreateSparepart(companyId?: string | number) {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (payload: SparepartPayload) => createSparepart(payload),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['spareparts', companyId] }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['spareparts'] });
+    },
   });
 }
 
@@ -48,7 +50,9 @@ export function useUpdateSparepart(companyId?: string | number) {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: ({ id, payload }: { id: number | string; payload: SparepartPayload }) => updateSparepart(id, payload),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['spareparts', companyId] }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['spareparts'] });
+    },
   });
 }
 
@@ -56,7 +60,9 @@ export function useDeleteSparepart(companyId?: string | number) {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (id: number | string) => deleteSparepart(id, companyId),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['spareparts', companyId] }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['spareparts'] });
+    },
   });
 }
 
@@ -64,6 +70,8 @@ export function useImportSparepart(companyId?: string | number) {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: ({ file }: { file: File }) => importSparepart(file, companyId),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['spareparts', companyId] }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['spareparts'] });
+    },
   });
 }
