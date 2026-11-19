@@ -7,7 +7,7 @@ import { getObjectStorageUrl } from '@/components/ui/storage-image';
 import { cn } from '@/lib/utils';
 
 export interface ProfitLossPrintSection {
-  key: 'revenue' | 'cogs' | 'opex' | 'non_opex' | 'noix';
+  key: 'revenue' | 'cogs' | 'opex' | 'non_operational_revenue' | 'non_opex' | 'noix';
   title: string;
   rows: ProfitLossReportLine[];
   total: number;
@@ -23,6 +23,8 @@ interface LaporanLabaRugiPrintDocumentProps {
   sections: ProfitLossPrintSection[];
   grossProfit: number;
   grossProfitUsd: number;
+  operatingProfit?: number;
+  operatingProfitUsd?: number;
   netIncome?: number;
   netIncomeUsd?: number;
   profitBeforeTax: number;
@@ -97,6 +99,8 @@ export function LaporanLabaRugiPrintDocument({
   sections,
   grossProfit,
   grossProfitUsd,
+  operatingProfit,
+  operatingProfitUsd,
   profitBeforeTax,
   profitBeforeTaxUsd,
   taxPercentage,
@@ -175,6 +179,14 @@ export function LaporanLabaRugiPrintDocument({
                         <td className="border border-slate-400 px-2 py-2 uppercase tracking-wide">Laba Kotor</td>
                         <td className="border border-slate-400 px-2 py-2 text-right tabular-nums">{formatAccountingAmount(grossProfit, 'idr')}</td>
                         <td className="border border-slate-400 px-2 py-2 text-right tabular-nums">{formatAccountingAmount(grossProfitUsd, 'usd')}</td>
+                      </tr>
+                    )}
+                    {section.key === 'opex' && operatingProfit !== undefined && (
+                      <tr className="font-bold" style={{ backgroundColor: `${tableColor}10` }}>
+                        <td className="border-x border-slate-300 px-2 py-2" />
+                        <td className="border border-slate-400 px-2 py-2 uppercase tracking-wide">Laba Operasional</td>
+                        <td className="border border-slate-400 px-2 py-2 text-right tabular-nums">{formatAccountingAmount(operatingProfit, 'idr')}</td>
+                        <td className="border border-slate-400 px-2 py-2 text-right tabular-nums">{formatAccountingAmount(operatingProfitUsd ?? 0, 'usd')}</td>
                       </tr>
                     )}
                   </Fragment>

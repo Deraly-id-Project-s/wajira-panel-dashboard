@@ -179,10 +179,17 @@ export default function LaporanNeracaTemplatePage() {
     page: 1,
     perPage: 1000,
     search: '',
+    pos_code: 'NRC',
     company_id: resolvedCompanyId ?? undefined,
     enabled: Boolean(resolvedCompanyId),
   });
-  const accounts = useMemo(() => accountQuery.data?.data ?? [], [accountQuery.data?.data]);
+  const accounts = useMemo(() => {
+    const all = accountQuery.data?.data ?? [];
+    return all.filter((account) => {
+      const pos = (account.pos_code || account.posCode || (account as any).pos_type || '').toUpperCase();
+      return pos === 'NRC';
+    });
+  }, [accountQuery.data?.data]);
 
   // Mutations
   const createYearMutation = useCreateBalanceYearConfig(resolvedCompanyId);

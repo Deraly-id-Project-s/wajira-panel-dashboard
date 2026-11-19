@@ -91,13 +91,13 @@ const toNumber = (value: unknown): number => {
 };
 
 const getLineIdrAmount = (line: BalanceAccountItem): number => {
-  const isUsd = String(line.type ?? 'IDR').toUpperCase() === 'USD';
-  return isUsd ? 0 : toNumber(line.amount ?? line.value ?? line.total);
+  const isUsd = String(line.type ?? 'IDR').toUpperCase() === 'USD' || String((line as any).currency ?? '').toUpperCase() === 'USD';
+  return isUsd ? 0 : toNumber(line.balance ?? line.amount ?? line.value ?? line.total);
 };
 
 const getLineUsdAmount = (line: BalanceAccountItem): number => {
-  const isUsd = String(line.type ?? 'IDR').toUpperCase() === 'USD';
-  return isUsd ? toNumber(line.amount ?? line.value ?? line.total) : 0;
+  const isUsd = String(line.type ?? 'IDR').toUpperCase() === 'USD' || String((line as any).currency ?? '').toUpperCase() === 'USD';
+  return isUsd ? toNumber(line.balance ?? line.amount ?? line.value ?? line.total) : 0;
 };
 
 const getAccountTypeLabel = (
@@ -180,34 +180,38 @@ const normalizeCategory = (cat?: BalanceCategoryCalc | null): NormalizedCategory
   };
 };
 
-function BalanceSheetSection({
+function StandardBalanceSection({
   title,
   subtotalLabel,
-  category,
+  accounts,
+  subtotalIdr,
+  subtotalUsd,
   searchKeyword,
   accountMap,
 }: {
   title: string;
   subtotalLabel: string;
-  category: NormalizedCategory;
+  accounts: BalanceAccountItem[];
+  subtotalIdr: number;
+  subtotalUsd: number;
   searchKeyword: string;
   accountMap?: Map<number, Account>;
 }) {
   const filteredAccounts = useMemo(() => {
-    if (!searchKeyword) return category.accounts;
-    return category.accounts.filter((acc) => {
+    if (!searchKeyword) return accounts;
+    return accounts.filter((acc) => {
       const code = (acc.account_code ?? acc.code ?? '').toLowerCase();
       const name = (acc.account_name ?? acc.name ?? '').toLowerCase();
       return code.includes(searchKeyword) || name.includes(searchKeyword);
     });
-  }, [category.accounts, searchKeyword]);
+  }, [accounts, searchKeyword]);
 
   return (
     <section className="border-t border-slate-200 px-4 py-3.5 first:border-t-0">
       <div className="mb-2.5 flex items-center justify-between">
         <div>
           <h3 className="text-sm font-bold text-slate-900">{title}</h3>
-          <p className="text-xs text-slate-500">{category.accounts.length} akun terdaftar</p>
+          <p className="text-xs text-slate-500">{accounts.length} akun terdaftar</p>
         </div>
       </div>
 
@@ -257,10 +261,365 @@ function BalanceSheetSection({
                 {subtotalLabel}
               </TableCell>
               <TableCell className="text-right text-xs font-bold text-slate-900 tabular-nums py-2.5">
-                {currenciesFormat('idr', category.totalIdr)}
+                {currenciesFormat('idr', subtotalIdr)}
               </TableCell>
               <TableCell className="text-right text-xs font-bold text-sky-700 tabular-nums py-2.5">
-                {currenciesFormat('usd', category.totalUsd)}
+                {currenciesFormat('usd', subtotalUsd)}
+              </TableCell>
+            </TableRow>
+          </TableBody>
+        </Table>
+      </div>
+    </section>
+  );
+}
+
+function FixedAssetsBalanceSection({
+  title,
+  subtotalLabel,
+  accounts,
+  contraAccounts,
+  grossTotalIdr,
+  grossTotalUsd,
+  subtotalIdr,
+  subtotalUsd,
+  searchKeyword,
+  accountMap,
+}: {
+  title: string;
+  subtotalLabel: string;
+  accounts: BalanceAccountItem[];
+  contraAccounts: BalanceAccountItem[];
+  grossTotalIdr?: number;
+  grossTotalUsd?: number;
+  subtotalIdr: number;
+  subtotalUsd: number;
+  searchKeyword: string;
+  accountMap?: Map<number, Account>;
+}) {
+  const filteredAccounts = useMemo(() => {
+    if (!searchKeyword) return accounts;
+    return accounts.filter((acc) => {
+      const code = (acc.account_code ?? acc.code ?? '').toLowerCase();
+      const name = (acc.account_name ?? acc.name ?? '').toLowerCase();
+      return code.includes(searchKeyword) || name.includes(searchKeyword);
+    });
+  }, [accounts, searchKeyword]);
+
+  const filteredContra = useMemo(() => {
+    if (!searchKeyword) return contraAccounts;
+    return contraAccounts.filter((acc) => {
+      const code = (acc.account_code ?? acc.code ?? '').toLowerCase();
+      const name = (acc.account_name ?? acc.name ?? '').toLowerCase();
+      return code.includes(searchKeyword) || name.includes(searchKeyword);
+    });
+  }, [contraAccounts, searchKeyword]);
+
+  const totalCount = accounts.length + contraAccounts.length;
+
+  return (
+    <section className="border-t border-slate-200 px-4 py-3.5 first:border-t-0">
+      <div className="mb-2.5 flex items-center justify-between">
+        <div>
+          <h3 className="text-sm font-bold text-slate-900">{title}</h3>
+          <p className="text-xs text-slate-500">
+            {totalCount} akun terdaftar {contraAccounts.length > 0 ? `(${contraAccounts.length} akun kontra)` : ''}
+          </p>
+        </div>
+      </div>
+
+      <div className="overflow-hidden rounded-md border border-slate-200">
+        <Table>
+          <TableHeader>
+            <TableRow className="bg-slate-50/80 hover:bg-slate-50/80">
+              <TableHead className="text-xs font-semibold uppercase text-slate-600">Akun</TableHead>
+              <TableHead className="text-right text-xs font-semibold uppercase text-slate-600 w-36">IDR</TableHead>
+              <TableHead className="text-right text-xs font-semibold uppercase text-slate-600 w-32">USD</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {filteredAccounts.length === 0 && filteredContra.length === 0 ? (
+              <TableRow className="hover:bg-transparent">
+                <TableCell colSpan={3} className="py-4 text-center text-xs text-slate-400 italic">
+                  {searchKeyword ? 'Akun tidak cocok dengan pencarian.' : 'Belum ada akun aset tetap.'}
+                </TableCell>
+              </TableRow>
+            ) : (
+              <>
+                {/* 1. Akun Aset Tetap Perolehan */}
+                {filteredAccounts.map((line, index) => {
+                  const isUsd = String(line.type ?? 'IDR').toUpperCase() === 'USD';
+                  const idrAmt = getLineIdrAmount(line);
+                  const usdAmt = getLineUsdAmount(line);
+
+                  return (
+                    <TableRow key={`fa-${line.id ?? line.account_id ?? index}`} className="hover:bg-slate-50">
+                      <TableCell className="min-w-[180px] text-xs font-medium text-slate-700 py-2">
+                        <span title={getLineLabel(line, accountMap)} className="truncate block">
+                          {getLineLabel(line, accountMap)}
+                        </span>
+                      </TableCell>
+                      <TableCell className="text-right text-xs font-semibold text-slate-900 tabular-nums py-2">
+                        {isUsd ? '-' : currenciesFormat('idr', idrAmt)}
+                      </TableCell>
+                      <TableCell className="text-right text-xs font-semibold text-sky-700 tabular-nums py-2">
+                        {!isUsd && usdAmt === 0 ? '-' : currenciesFormat('usd', usdAmt)}
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
+
+                {/* Subtotal Gross jika ada akun kontra */}
+                {contraAccounts.length > 0 && grossTotalIdr !== undefined && (
+                  <TableRow className="bg-slate-50/40 text-xs font-medium text-slate-600 border-t border-slate-100 hover:bg-slate-50/60">
+                    <TableCell className="py-1.5 italic pl-6">
+                      Total Aset Tetap (Nilai Perolehan)
+                    </TableCell>
+                    <TableCell className="text-right font-medium text-slate-700 tabular-nums py-1.5">
+                      {currenciesFormat('idr', grossTotalIdr)}
+                    </TableCell>
+                    <TableCell className="text-right font-medium text-sky-700 tabular-nums py-1.5">
+                      {grossTotalUsd ? currenciesFormat('usd', grossTotalUsd) : '-'}
+                    </TableCell>
+                  </TableRow>
+                )}
+
+                {/* 2. Akun Kontra (Akumulasi Penyusutan) */}
+                {filteredContra.map((line, index) => {
+                  const isUsd = String(line.type ?? 'IDR').toUpperCase() === 'USD';
+                  const idrAmt = getLineIdrAmount(line);
+                  const usdAmt = getLineUsdAmount(line);
+
+                  return (
+                    <TableRow key={`contra-${line.id ?? line.account_id ?? index}`} className="bg-rose-50/30 hover:bg-rose-50/50">
+                      <TableCell className="min-w-[180px] text-xs font-medium text-rose-700 py-2">
+                        <div className="flex items-center gap-1.5 truncate">
+                          <span title={getLineLabel(line, accountMap)} className="truncate">
+                            {getLineLabel(line, accountMap)}
+                          </span>
+                          <span className="shrink-0 text-[10px] font-semibold uppercase px-1.5 py-0.5 rounded bg-rose-100 text-rose-800">
+                            Akun Kontra
+                          </span>
+                        </div>
+                      </TableCell>
+                      <TableCell className="text-right text-xs font-semibold text-rose-700 tabular-nums py-2">
+                        {isUsd ? '-' : `(${currenciesFormat('idr', Math.abs(idrAmt))})`}
+                      </TableCell>
+                      <TableCell className="text-right text-xs font-semibold text-rose-600 tabular-nums py-2">
+                        {!isUsd && usdAmt === 0 ? '-' : `(${currenciesFormat('usd', Math.abs(usdAmt))})`}
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
+              </>
+            )}
+
+            {/* Subtotal Nilai Buku Row */}
+            <TableRow className="bg-slate-50 font-bold border-t-2 border-slate-200 hover:bg-slate-50">
+              <TableCell className="text-xs font-bold uppercase text-slate-700 py-2.5">
+                {subtotalLabel}
+              </TableCell>
+              <TableCell className="text-right text-xs font-bold text-slate-900 tabular-nums py-2.5">
+                {currenciesFormat('idr', subtotalIdr)}
+              </TableCell>
+              <TableCell className="text-right text-xs font-bold text-sky-700 tabular-nums py-2.5">
+                {currenciesFormat('usd', subtotalUsd)}
+              </TableCell>
+            </TableRow>
+          </TableBody>
+        </Table>
+      </div>
+    </section>
+  );
+}
+
+function EquityBalanceSection({
+  title,
+  subtotalLabel,
+  modalAwalAccounts,
+  labaDitahan,
+  labaPeriodeBerjalan,
+  subtotalIdr,
+  subtotalUsd,
+  searchKeyword,
+  accountMap,
+  legacyAccounts,
+}: {
+  title: string;
+  subtotalLabel: string;
+  modalAwalAccounts: BalanceAccountItem[];
+  labaDitahan?: { amount: number; amountUsd?: number; note?: string };
+  labaPeriodeBerjalan?: { amount: number; amountUsd?: number; note?: string };
+  subtotalIdr: number;
+  subtotalUsd: number;
+  searchKeyword: string;
+  accountMap?: Map<number, Account>;
+  legacyAccounts?: BalanceAccountItem[];
+}) {
+  const isStructuredEquity = modalAwalAccounts.length > 0 || labaDitahan !== undefined || labaPeriodeBerjalan !== undefined;
+
+  const filteredModalAwal = useMemo(() => {
+    if (!searchKeyword) return modalAwalAccounts;
+    return modalAwalAccounts.filter((acc) => {
+      const code = (acc.account_code ?? acc.code ?? '').toLowerCase();
+      const name = (acc.account_name ?? acc.name ?? '').toLowerCase();
+      return code.includes(searchKeyword) || name.includes(searchKeyword);
+    });
+  }, [modalAwalAccounts, searchKeyword]);
+
+  const filteredLegacy = useMemo(() => {
+    if (!searchKeyword || !legacyAccounts) return legacyAccounts ?? [];
+    return legacyAccounts.filter((acc) => {
+      const code = (acc.account_code ?? acc.code ?? '').toLowerCase();
+      const name = (acc.account_name ?? acc.name ?? '').toLowerCase();
+      return code.includes(searchKeyword) || name.includes(searchKeyword);
+    });
+  }, [legacyAccounts, searchKeyword]);
+
+  return (
+    <section className="border-t border-slate-200 px-4 py-3.5 first:border-t-0">
+      <div className="mb-2.5 flex items-center justify-between">
+        <div>
+          <h3 className="text-sm font-bold text-slate-900">{title}</h3>
+          <p className="text-xs text-slate-500">
+            {isStructuredEquity
+              ? `${modalAwalAccounts.length} akun modal awal + laba ditahan & laba periode berjalan`
+              : `${legacyAccounts?.length ?? 0} akun terdaftar`}
+          </p>
+        </div>
+      </div>
+
+      <div className="overflow-hidden rounded-md border border-slate-200">
+        <Table>
+          <TableHeader>
+            <TableRow className="bg-slate-50/80 hover:bg-slate-50/80">
+              <TableHead className="text-xs font-semibold uppercase text-slate-600">Akun / Komponen</TableHead>
+              <TableHead className="text-right text-xs font-semibold uppercase text-slate-600 w-36">IDR</TableHead>
+              <TableHead className="text-right text-xs font-semibold uppercase text-slate-600 w-32">USD</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {isStructuredEquity ? (
+              <>
+                {/* 1. Modal Awal Accounts */}
+                {filteredModalAwal.map((line, index) => {
+                  const isUsd = String(line.type ?? 'IDR').toUpperCase() === 'USD';
+                  const idrAmt = getLineIdrAmount(line);
+                  const usdAmt = getLineUsdAmount(line);
+
+                  return (
+                    <TableRow key={`ma-${line.id ?? line.account_id ?? index}`} className="hover:bg-slate-50">
+                      <TableCell className="min-w-[180px] text-xs font-medium text-slate-700 py-2">
+                        <div className="flex items-center gap-1.5 truncate">
+                          <span title={getLineLabel(line, accountMap)} className="truncate">
+                            {getLineLabel(line, accountMap)}
+                          </span>
+                          <span className="shrink-0 text-[10px] font-semibold uppercase px-1.5 py-0.5 rounded bg-blue-50 text-blue-700">
+                            Modal Awal
+                          </span>
+                        </div>
+                      </TableCell>
+                      <TableCell className="text-right text-xs font-semibold text-slate-900 tabular-nums py-2">
+                        {isUsd ? '-' : currenciesFormat('idr', idrAmt)}
+                      </TableCell>
+                      <TableCell className="text-right text-xs font-semibold text-sky-700 tabular-nums py-2">
+                        {!isUsd && usdAmt === 0 ? '-' : currenciesFormat('usd', usdAmt)}
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
+
+                {/* 2. Laba Ditahan */}
+                {labaDitahan && (
+                  <TableRow className="hover:bg-slate-50">
+                    <TableCell className="min-w-[180px] text-xs font-medium text-slate-700 py-2">
+                      <div>
+                        <span className="font-semibold text-slate-800">Laba Ditahan</span>
+                        {labaDitahan.note && (
+                          <p className="text-[10px] text-slate-400 mt-0.5">{labaDitahan.note}</p>
+                        )}
+                      </div>
+                    </TableCell>
+                    <TableCell className="text-right text-xs font-semibold text-slate-900 tabular-nums py-2">
+                      {currenciesFormat('idr', labaDitahan.amount)}
+                    </TableCell>
+                    <TableCell className="text-right text-xs font-semibold text-sky-700 tabular-nums py-2">
+                      {labaDitahan.amountUsd ? currenciesFormat('usd', labaDitahan.amountUsd) : '-'}
+                    </TableCell>
+                  </TableRow>
+                )}
+
+                {/* 3. Laba Periode Berjalan */}
+                {labaPeriodeBerjalan && (
+                  <TableRow className="bg-indigo-50/30 hover:bg-indigo-50/50">
+                    <TableCell className="min-w-[180px] text-xs font-medium text-indigo-900 py-2">
+                      <div className="flex items-center gap-1.5 truncate">
+                        <div>
+                          <span className="font-semibold text-indigo-950">Laba Periode Berjalan</span>
+                          {labaPeriodeBerjalan.note && (
+                            <p className="text-[10px] text-indigo-600 mt-0.5">{labaPeriodeBerjalan.note}</p>
+                          )}
+                        </div>
+                        <span className="shrink-0 text-[10px] font-semibold uppercase px-1.5 py-0.5 rounded bg-indigo-100 text-indigo-800 ml-auto mr-2">
+                          Dari Laba Rugi
+                        </span>
+                      </div>
+                    </TableCell>
+                    <TableCell className={cn(
+                      'text-right text-xs font-bold tabular-nums py-2',
+                      labaPeriodeBerjalan.amount >= 0 ? 'text-indigo-900' : 'text-rose-700',
+                    )}>
+                      {currenciesFormat('idr', labaPeriodeBerjalan.amount)}
+                    </TableCell>
+                    <TableCell className="text-right text-xs font-semibold text-sky-700 tabular-nums py-2">
+                      {labaPeriodeBerjalan.amountUsd ? currenciesFormat('usd', labaPeriodeBerjalan.amountUsd) : '-'}
+                    </TableCell>
+                  </TableRow>
+                )}
+              </>
+            ) : (
+              /* Legacy Fallback */
+              filteredLegacy.length === 0 ? (
+                <TableRow className="hover:bg-transparent">
+                  <TableCell colSpan={3} className="py-4 text-center text-xs text-slate-400 italic">
+                    {searchKeyword ? 'Akun tidak cocok dengan pencarian.' : 'Belum ada akun pada grup modal.'}
+                  </TableCell>
+                </TableRow>
+              ) : (
+                filteredLegacy.map((line, index) => {
+                  const isUsd = String(line.type ?? 'IDR').toUpperCase() === 'USD';
+                  const idrAmt = getLineIdrAmount(line);
+                  const usdAmt = getLineUsdAmount(line);
+
+                  return (
+                    <TableRow key={`leg-eq-${line.id ?? line.account_id ?? index}`} className="hover:bg-slate-50">
+                      <TableCell className="min-w-[180px] text-xs font-medium text-slate-700 py-2">
+                        <span title={getLineLabel(line, accountMap)} className="truncate block">
+                          {getLineLabel(line, accountMap)}
+                        </span>
+                      </TableCell>
+                      <TableCell className="text-right text-xs font-semibold text-slate-900 tabular-nums py-2">
+                        {isUsd ? '-' : currenciesFormat('idr', idrAmt)}
+                      </TableCell>
+                      <TableCell className="text-right text-xs font-semibold text-sky-700 tabular-nums py-2">
+                        {!isUsd && usdAmt === 0 ? '-' : currenciesFormat('usd', usdAmt)}
+                      </TableCell>
+                    </TableRow>
+                  );
+                })
+              )
+            )}
+
+            {/* Subtotal Row */}
+            <TableRow className="bg-slate-50 font-bold border-t-2 border-slate-200 hover:bg-slate-50">
+              <TableCell className="text-xs font-bold uppercase text-slate-700 py-2.5">
+                {subtotalLabel}
+              </TableCell>
+              <TableCell className="text-right text-xs font-bold text-slate-900 tabular-nums py-2.5">
+                {currenciesFormat('idr', subtotalIdr)}
+              </TableCell>
+              <TableCell className="text-right text-xs font-bold text-sky-700 tabular-nums py-2.5">
+                {currenciesFormat('usd', subtotalUsd)}
               </TableCell>
             </TableRow>
           </TableBody>
@@ -280,6 +639,7 @@ export default function LaporanNeracaPage() {
   const [searchInput, setSearchInput] = useState('');
   const [selectedMonth, setSelectedMonth] = useState<string>('all');
   const [selectedYear, setSelectedYear] = useState<string>('all');
+  const [transactionFilter, setTransactionFilter] = useState<'accounts' | 'account_with_transactions'>('accounts');
   const [isExporting, setIsExporting] = useState(false);
 
   // Template query for available configured years
@@ -320,7 +680,9 @@ export default function LaporanNeracaPage() {
 
   // Filters for Report Query
   const reportFilters = useMemo<BalanceReportFilters>(() => {
-    const filters: BalanceReportFilters = {};
+    const filters: BalanceReportFilters = {
+      transaction_filter: transactionFilter,
+    };
     if (selectedYear !== 'all' && selectedYear) {
       filters.year = Number(selectedYear);
     }
@@ -328,7 +690,7 @@ export default function LaporanNeracaPage() {
       filters.month = selectedMonth;
     }
     return filters;
-  }, [selectedMonth, selectedYear]);
+  }, [selectedMonth, selectedYear, transactionFilter]);
 
   const reportQuery = useBalanceReport(
     resolvedCompanyId,
@@ -339,7 +701,7 @@ export default function LaporanNeracaPage() {
   const reportData = reportQuery.data?.data;
   const searchKeyword = searchInput.trim().toLowerCase();
 
-  // Normalize 4 main categories
+  // Normalize legacy categories as robust fallbacks
   const currentAssetCat = useMemo(
     () => normalizeCategory(reportData?.current_asset_calc),
     [reportData?.current_asset_calc],
@@ -360,43 +722,219 @@ export default function LaporanNeracaPage() {
     [reportData?.equity_calc],
   );
 
-  // Calculations:
-  // 1. Jumlah Aset Lancar = sum all dari Aset Lancar
-  const jumlahAsetLancar = currentAssetCat.totalIdr;
-  const jumlahAsetLancarUsd = currentAssetCat.totalUsd;
+  // 1. Current Assets
+  const currentAssetsAccounts = useMemo(() => {
+    if (reportData?.sections?.current_assets?.accounts) {
+      return reportData.sections.current_assets.accounts;
+    }
+    return currentAssetCat.accounts;
+  }, [reportData?.sections?.current_assets?.accounts, currentAssetCat.accounts]);
 
-  // 2. Jumlah Aset Tetap = sum all dari Aset Tetap
-  const jumlahAsetTetap = fixedAssetCat.totalIdr;
-  const jumlahAsetTetapUsd = fixedAssetCat.totalUsd;
+  const jumlahAsetLancar = useMemo(() => {
+    if (reportData?.subtotals?.jumlah_aset_lancar !== undefined && reportData?.subtotals?.jumlah_aset_lancar !== null) {
+      return toNumber(reportData.subtotals.jumlah_aset_lancar);
+    }
+    if (reportData?.sections?.current_assets?.subtotal !== undefined && reportData?.sections?.current_assets?.subtotal !== null) {
+      return toNumber(reportData.sections.current_assets.subtotal);
+    }
+    return currentAssetCat.totalIdr;
+  }, [reportData?.subtotals?.jumlah_aset_lancar, reportData?.sections?.current_assets?.subtotal, currentAssetCat.totalIdr]);
 
-  // 3. Total Aktiva = Jumlah Aset Lancar + Jumlah Aset Tetap
-  const totalAktiva = reportData?.total_assets !== undefined && reportData?.total_assets !== null
-    ? toNumber(reportData.total_assets)
-    : jumlahAsetLancar + jumlahAsetTetap;
-  const totalAktivaUsd = reportData?.total_assets_usd !== undefined && reportData?.total_assets_usd !== null
-    ? toNumber(reportData.total_assets_usd)
-    : jumlahAsetLancarUsd + jumlahAsetTetapUsd;
+  const jumlahAsetLancarUsd = useMemo(() => {
+    if (reportData?.subtotals?.jumlah_aset_lancar_usd !== undefined && reportData?.subtotals?.jumlah_aset_lancar_usd !== null) {
+      return toNumber(reportData.subtotals.jumlah_aset_lancar_usd);
+    }
+    return currentAssetCat.totalUsd;
+  }, [reportData?.subtotals?.jumlah_aset_lancar_usd, currentAssetCat.totalUsd]);
 
-  // 4. Jumlah Kewajiban = sum all dari Kewajiban
-  const jumlahKewajiban = liabilityCat.totalIdr;
-  const jumlahKewajibanUsd = liabilityCat.totalUsd;
+  // 2. Fixed Assets
+  const fixedAssetsAccounts = useMemo(() => {
+    if (reportData?.sections?.fixed_assets?.accounts) {
+      return reportData.sections.fixed_assets.accounts;
+    }
+    return fixedAssetCat.accounts;
+  }, [reportData?.sections?.fixed_assets?.accounts, fixedAssetCat.accounts]);
 
-  // 5. Jumlah Modal = sum all dari Modal
-  const jumlahModal = equityCat.totalIdr;
-  const jumlahModalUsd = equityCat.totalUsd;
+  const accumulatedDepreciationAccounts = useMemo(() => {
+    if (reportData?.sections?.fixed_assets?.accumulated_depreciation_accounts) {
+      return reportData.sections.fixed_assets.accumulated_depreciation_accounts;
+    }
+    return [];
+  }, [reportData?.sections?.fixed_assets?.accumulated_depreciation_accounts]);
 
-  // 6. Total Pasiva = Jumlah Kewajiban + Jumlah Modal
-  const totalPasiva = reportData?.total_passiva !== undefined && reportData?.total_passiva !== null
-    ? toNumber(reportData.total_passiva)
-    : jumlahKewajiban + jumlahModal;
-  const totalPasivaUsd = reportData?.total_passiva_usd !== undefined && reportData?.total_passiva_usd !== null
-    ? toNumber(reportData.total_passiva_usd)
-    : jumlahKewajibanUsd + jumlahModalUsd;
+  const fixedAssetsGrossTotalIdr = useMemo(() => {
+    if (reportData?.sections?.fixed_assets?.gross_total !== undefined && reportData?.sections?.fixed_assets?.gross_total !== null) {
+      return toNumber(reportData.sections.fixed_assets.gross_total);
+    }
+    return undefined;
+  }, [reportData?.sections?.fixed_assets?.gross_total]);
 
-  // Balance Check
-  const isBalanced = totalAktiva === totalPasiva;
-  const difference = Math.abs(totalAktiva - totalPasiva);
-  const differenceUsd = Math.abs(totalAktivaUsd - totalPasivaUsd);
+  const fixedAssetsGrossTotalUsd = useMemo(() => {
+    if (reportData?.sections?.fixed_assets?.gross_total_usd !== undefined && reportData?.sections?.fixed_assets?.gross_total_usd !== null) {
+      return toNumber(reportData.sections.fixed_assets.gross_total_usd);
+    }
+    return undefined;
+  }, [reportData?.sections?.fixed_assets?.gross_total_usd]);
+
+  const jumlahAsetTetap = useMemo(() => {
+    if (reportData?.subtotals?.jumlah_aset_tetap !== undefined && reportData?.subtotals?.jumlah_aset_tetap !== null) {
+      return toNumber(reportData.subtotals.jumlah_aset_tetap);
+    }
+    if (reportData?.sections?.fixed_assets?.subtotal !== undefined && reportData?.sections?.fixed_assets?.subtotal !== null) {
+      return toNumber(reportData.sections.fixed_assets.subtotal);
+    }
+    return fixedAssetCat.totalIdr;
+  }, [reportData?.subtotals?.jumlah_aset_tetap, reportData?.sections?.fixed_assets?.subtotal, fixedAssetCat.totalIdr]);
+
+  const jumlahAsetTetapUsd = useMemo(() => {
+    if (reportData?.subtotals?.jumlah_aset_tetap_usd !== undefined && reportData?.subtotals?.jumlah_aset_tetap_usd !== null) {
+      return toNumber(reportData.subtotals.jumlah_aset_tetap_usd);
+    }
+    return fixedAssetCat.totalUsd;
+  }, [reportData?.subtotals?.jumlah_aset_tetap_usd, fixedAssetCat.totalUsd]);
+
+  // 3. Total Aktiva
+  const totalAktiva = useMemo(() => {
+    if (reportData?.subtotals?.total_aktiva !== undefined && reportData?.subtotals?.total_aktiva !== null) {
+      return toNumber(reportData.subtotals.total_aktiva);
+    }
+    if (reportData?.total_assets !== undefined && reportData?.total_assets !== null) {
+      return toNumber(reportData.total_assets);
+    }
+    return jumlahAsetLancar + jumlahAsetTetap;
+  }, [reportData?.subtotals?.total_aktiva, reportData?.total_assets, jumlahAsetLancar, jumlahAsetTetap]);
+
+  const totalAktivaUsd = useMemo(() => {
+    if (reportData?.subtotals?.total_aktiva_usd !== undefined && reportData?.subtotals?.total_aktiva_usd !== null) {
+      return toNumber(reportData.subtotals.total_aktiva_usd);
+    }
+    if (reportData?.total_assets_usd !== undefined && reportData?.total_assets_usd !== null) {
+      return toNumber(reportData.total_assets_usd);
+    }
+    return jumlahAsetLancarUsd + jumlahAsetTetapUsd;
+  }, [reportData?.subtotals?.total_aktiva_usd, reportData?.total_assets_usd, jumlahAsetLancarUsd, jumlahAsetTetapUsd]);
+
+  // 4. Liabilities
+  const liabilitiesAccounts = useMemo(() => {
+    if (reportData?.sections?.liabilities?.accounts) {
+      return reportData.sections.liabilities.accounts;
+    }
+    return liabilityCat.accounts;
+  }, [reportData?.sections?.liabilities?.accounts, liabilityCat.accounts]);
+
+  const jumlahKewajiban = useMemo(() => {
+    if (reportData?.subtotals?.jumlah_kewajiban !== undefined && reportData?.subtotals?.jumlah_kewajiban !== null) {
+      return toNumber(reportData.subtotals.jumlah_kewajiban);
+    }
+    if (reportData?.sections?.liabilities?.subtotal !== undefined && reportData?.sections?.liabilities?.subtotal !== null) {
+      return toNumber(reportData.sections.liabilities.subtotal);
+    }
+    return liabilityCat.totalIdr;
+  }, [reportData?.subtotals?.jumlah_kewajiban, reportData?.sections?.liabilities?.subtotal, liabilityCat.totalIdr]);
+
+  const jumlahKewajibanUsd = useMemo(() => {
+    if (reportData?.subtotals?.jumlah_kewajiban_usd !== undefined && reportData?.subtotals?.jumlah_kewajiban_usd !== null) {
+      return toNumber(reportData.subtotals.jumlah_kewajiban_usd);
+    }
+    return liabilityCat.totalUsd;
+  }, [reportData?.subtotals?.jumlah_kewajiban_usd, liabilityCat.totalUsd]);
+
+  // 5. Equity
+  const equityModalAwalAccounts = useMemo(() => {
+    if (reportData?.sections?.equity?.modal_awal?.accounts) {
+      return reportData.sections.equity.modal_awal.accounts;
+    }
+    return [];
+  }, [reportData?.sections?.equity?.modal_awal?.accounts]);
+
+  const equityLabaDitahan = useMemo(() => {
+    if (reportData?.sections?.equity?.laba_ditahan) {
+      return {
+        amount: toNumber(reportData.sections.equity.laba_ditahan.amount),
+        amountUsd: reportData.sections.equity.laba_ditahan.amount_usd !== undefined ? toNumber(reportData.sections.equity.laba_ditahan.amount_usd) : undefined,
+        note: reportData.sections.equity.laba_ditahan.note || 'Akumulasi hasil tutup buku periode-periode sebelumnya',
+      };
+    }
+    return undefined;
+  }, [reportData?.sections?.equity?.laba_ditahan]);
+
+  const equityLabaPeriodeBerjalan = useMemo(() => {
+    if (reportData?.sections?.equity?.laba_periode_berjalan) {
+      return {
+        amount: toNumber(reportData.sections.equity.laba_periode_berjalan.amount),
+        amountUsd: reportData.sections.equity.laba_periode_berjalan.amount_usd !== undefined ? toNumber(reportData.sections.equity.laba_periode_berjalan.amount_usd) : undefined,
+        note: reportData.sections.equity.laba_periode_berjalan.note || 'Hasil perhitungan Laporan Laba Rugi periode berjalan',
+      };
+    }
+    return undefined;
+  }, [reportData?.sections?.equity?.laba_periode_berjalan]);
+
+  const jumlahModal = useMemo(() => {
+    if (reportData?.subtotals?.jumlah_modal !== undefined && reportData?.subtotals?.jumlah_modal !== null) {
+      return toNumber(reportData.subtotals.jumlah_modal);
+    }
+    if (reportData?.sections?.equity?.subtotal !== undefined && reportData?.sections?.equity?.subtotal !== null) {
+      return toNumber(reportData.sections.equity.subtotal);
+    }
+    return equityCat.totalIdr;
+  }, [reportData?.subtotals?.jumlah_modal, reportData?.sections?.equity?.subtotal, equityCat.totalIdr]);
+
+  const jumlahModalUsd = useMemo(() => {
+    if (reportData?.subtotals?.jumlah_modal_usd !== undefined && reportData?.subtotals?.jumlah_modal_usd !== null) {
+      return toNumber(reportData.subtotals.jumlah_modal_usd);
+    }
+    return equityCat.totalUsd;
+  }, [reportData?.subtotals?.jumlah_modal_usd, equityCat.totalUsd]);
+
+  // 6. Total Pasiva
+  const totalPasiva = useMemo(() => {
+    if (reportData?.subtotals?.total_pasiva !== undefined && reportData?.subtotals?.total_pasiva !== null) {
+      return toNumber(reportData.subtotals.total_pasiva);
+    }
+    if (reportData?.total_passiva !== undefined && reportData?.total_passiva !== null) {
+      return toNumber(reportData.total_passiva);
+    }
+    return jumlahKewajiban + jumlahModal;
+  }, [reportData?.subtotals?.total_pasiva, reportData?.total_passiva, jumlahKewajiban, jumlahModal]);
+
+  const totalPasivaUsd = useMemo(() => {
+    if (reportData?.subtotals?.total_pasiva_usd !== undefined && reportData?.subtotals?.total_pasiva_usd !== null) {
+      return toNumber(reportData.subtotals.total_pasiva_usd);
+    }
+    if (reportData?.total_passiva_usd !== undefined && reportData?.total_passiva_usd !== null) {
+      return toNumber(reportData.total_passiva_usd);
+    }
+    return jumlahKewajibanUsd + jumlahModalUsd;
+  }, [reportData?.subtotals?.total_pasiva_usd, reportData?.total_passiva_usd, jumlahKewajibanUsd, jumlahModalUsd]);
+
+  // 7. Balance Check
+  const isBalanced = useMemo(() => {
+    if (reportData?.subtotals?.is_balance !== undefined && reportData?.subtotals?.is_balance !== null) {
+      return Boolean(reportData.subtotals.is_balance);
+    }
+    return totalAktiva === totalPasiva;
+  }, [reportData?.subtotals?.is_balance, totalAktiva, totalPasiva]);
+
+  const statusBalanceText = useMemo(() => {
+    if (reportData?.subtotals?.status_balance) {
+      return String(reportData.subtotals.status_balance).toUpperCase();
+    }
+    return isBalanced ? 'BALANCE' : 'TIDAK BALANCE';
+  }, [reportData?.subtotals?.status_balance, isBalanced]);
+
+  const difference = useMemo(() => {
+    if (reportData?.subtotals?.difference !== undefined && reportData?.subtotals?.difference !== null) {
+      return Math.abs(toNumber(reportData.subtotals.difference));
+    }
+    return Math.abs(totalAktiva - totalPasiva);
+  }, [reportData?.subtotals?.difference, totalAktiva, totalPasiva]);
+
+  const differenceUsd = useMemo(() => {
+    if (reportData?.subtotals?.difference_usd !== undefined && reportData?.subtotals?.difference_usd !== null) {
+      return Math.abs(toNumber(reportData.subtotals.difference_usd));
+    }
+    return Math.abs(totalAktivaUsd - totalPasivaUsd);
+  }, [reportData?.subtotals?.difference_usd, totalAktivaUsd, totalPasivaUsd]);
 
   // Active Period Label
   const activeMonthLabel = useMemo(() => {
@@ -446,65 +984,239 @@ export default function LaporanNeracaPage() {
   const printCurrentAssets: BalancePrintCategory = useMemo(() => ({
     title: 'Aset Lancar',
     subtotalLabel: 'Jumlah Aset Lancar',
-    accounts: currentAssetCat.accounts,
+    accounts: currentAssetsAccounts,
     totalIdr: jumlahAsetLancar,
     totalUsd: jumlahAsetLancarUsd,
-  }), [currentAssetCat.accounts, jumlahAsetLancar, jumlahAsetLancarUsd]);
+  }), [currentAssetsAccounts, jumlahAsetLancar, jumlahAsetLancarUsd]);
 
   const printFixedAssets: BalancePrintCategory = useMemo(() => ({
     title: 'Aset Tetap',
-    subtotalLabel: 'Jumlah Aset Tetap',
-    accounts: fixedAssetCat.accounts,
+    subtotalLabel: 'Jumlah Aset Tetap (Nilai Buku)',
+    accounts: [
+      ...fixedAssetsAccounts,
+      ...accumulatedDepreciationAccounts.map((a) => ({ ...a, is_contra: true })),
+    ],
     totalIdr: jumlahAsetTetap,
     totalUsd: jumlahAsetTetapUsd,
-  }), [fixedAssetCat.accounts, jumlahAsetTetap, jumlahAsetTetapUsd]);
+  }), [fixedAssetsAccounts, accumulatedDepreciationAccounts, jumlahAsetTetap, jumlahAsetTetapUsd]);
 
   const printLiabilities: BalancePrintCategory = useMemo(() => ({
     title: 'Kewajiban',
     subtotalLabel: 'Jumlah Kewajiban',
-    accounts: liabilityCat.accounts,
+    accounts: liabilitiesAccounts,
     totalIdr: jumlahKewajiban,
     totalUsd: jumlahKewajibanUsd,
-  }), [liabilityCat.accounts, jumlahKewajiban, jumlahKewajibanUsd]);
+  }), [liabilitiesAccounts, jumlahKewajiban, jumlahKewajibanUsd]);
 
-  const printEquity: BalancePrintCategory = useMemo(() => ({
-    title: 'Modal',
-    subtotalLabel: 'Jumlah Modal',
-    accounts: equityCat.accounts,
-    totalIdr: jumlahModal,
-    totalUsd: jumlahModalUsd,
-  }), [equityCat.accounts, jumlahModal, jumlahModalUsd]);
+  const printEquity: BalancePrintCategory = useMemo(() => {
+    if (equityModalAwalAccounts.length > 0 || equityLabaDitahan || equityLabaPeriodeBerjalan) {
+      const items: BalanceAccountItem[] = [
+        ...equityModalAwalAccounts.map((acc) => ({
+          ...acc,
+          account_name: `${acc.account_name ?? acc.name ?? 'Modal'} (Modal Awal)`,
+          name: `${acc.name ?? acc.account_name ?? 'Modal'} (Modal Awal)`,
+        })),
+      ];
+      if (equityLabaDitahan) {
+        items.push({
+          id: 'laba_ditahan',
+          code: '-',
+          name: 'Laba Ditahan',
+          account_name: 'Laba Ditahan',
+          amount: equityLabaDitahan.amount,
+          balance: equityLabaDitahan.amount,
+          type: 'IDR',
+        });
+      }
+      if (equityLabaPeriodeBerjalan) {
+        items.push({
+          id: 'laba_periode_berjalan',
+          code: '-',
+          name: 'Laba Periode Berjalan (dari Laba Rugi)',
+          account_name: 'Laba Periode Berjalan (dari Laba Rugi)',
+          amount: equityLabaPeriodeBerjalan.amount,
+          balance: equityLabaPeriodeBerjalan.amount,
+          type: 'IDR',
+        });
+      }
+      return {
+        title: 'Modal',
+        subtotalLabel: 'Jumlah Modal',
+        accounts: items,
+        totalIdr: jumlahModal,
+        totalUsd: jumlahModalUsd,
+      };
+    }
+    return {
+      title: 'Modal',
+      subtotalLabel: 'Jumlah Modal',
+      accounts: equityCat.accounts,
+      totalIdr: jumlahModal,
+      totalUsd: jumlahModalUsd,
+    };
+  }, [equityModalAwalAccounts, equityLabaDitahan, equityLabaPeriodeBerjalan, equityCat.accounts, jumlahModal, jumlahModalUsd]);
 
   const archiveColumns: ReportArchiveColumn[] = [
-    { key: 'kategori', label: 'Kategori', width: 18 },
-    { key: 'akun', label: 'Akun', width: 34 },
+    { key: 'kategori', label: 'Kategori', width: 22 },
+    { key: 'akun', label: 'Akun / Komponen', width: 34 },
     { key: 'idr', label: 'IDR', align: 'right', width: 24 },
     { key: 'usd', label: 'USD', align: 'right', width: 18 },
   ];
 
   const archiveRows = useMemo(() => {
-    const categories: Array<{ label: string; subtotalLabel: string; category: NormalizedCategory }> = [
-      { label: 'Aset Lancar', subtotalLabel: 'Jumlah Aset Lancar', category: currentAssetCat },
-      { label: 'Aset Tetap', subtotalLabel: 'Jumlah Aset Tetap', category: fixedAssetCat },
-      { label: 'Kewajiban', subtotalLabel: 'Jumlah Kewajiban', category: liabilityCat },
-      { label: 'Modal', subtotalLabel: 'Jumlah Modal', category: equityCat },
-    ];
+    const rows: Array<{ kategori: string; akun: string; idr: string; usd: string }> = [];
 
-    return categories.flatMap(({ label, subtotalLabel, category }) => [
-      ...category.accounts.map((line) => ({
-        kategori: label,
+    // 1. Aset Lancar
+    currentAssetsAccounts.forEach((line) => {
+      rows.push({
+        kategori: 'Aset Lancar',
         akun: getLineLabel(line, accountMap),
         idr: currenciesFormat('idr', getLineIdrAmount(line)),
         usd: currenciesFormat('usd', getLineUsdAmount(line)),
-      })),
+      });
+    });
+    rows.push({
+      kategori: 'Aset Lancar',
+      akun: 'Jumlah Aset Lancar',
+      idr: currenciesFormat('idr', jumlahAsetLancar),
+      usd: currenciesFormat('usd', jumlahAsetLancarUsd),
+    });
+
+    // 2. Aset Tetap
+    fixedAssetsAccounts.forEach((line) => {
+      rows.push({
+        kategori: 'Aset Tetap',
+        akun: getLineLabel(line, accountMap),
+        idr: currenciesFormat('idr', getLineIdrAmount(line)),
+        usd: currenciesFormat('usd', getLineUsdAmount(line)),
+      });
+    });
+    accumulatedDepreciationAccounts.forEach((line) => {
+      const amt = getLineIdrAmount(line);
+      const amtUsd = getLineUsdAmount(line);
+      rows.push({
+        kategori: 'Aset Tetap',
+        akun: `${getLineLabel(line, accountMap)} (Akun Kontra)`,
+        idr: `(${currenciesFormat('idr', Math.abs(amt))})`,
+        usd: amtUsd > 0 ? `(${currenciesFormat('usd', Math.abs(amtUsd))})` : '-',
+      });
+    });
+    rows.push({
+      kategori: 'Aset Tetap',
+      akun: 'Jumlah Aset Tetap (Nilai Buku)',
+      idr: currenciesFormat('idr', jumlahAsetTetap),
+      usd: currenciesFormat('usd', jumlahAsetTetapUsd),
+    });
+
+    // 3. Kewajiban
+    liabilitiesAccounts.forEach((line) => {
+      rows.push({
+        kategori: 'Kewajiban',
+        akun: getLineLabel(line, accountMap),
+        idr: currenciesFormat('idr', getLineIdrAmount(line)),
+        usd: currenciesFormat('usd', getLineUsdAmount(line)),
+      });
+    });
+    rows.push({
+      kategori: 'Kewajiban',
+      akun: 'Jumlah Kewajiban',
+      idr: currenciesFormat('idr', jumlahKewajiban),
+      usd: currenciesFormat('usd', jumlahKewajibanUsd),
+    });
+
+    // 4. Modal
+    if (equityModalAwalAccounts.length > 0 || equityLabaDitahan || equityLabaPeriodeBerjalan) {
+      equityModalAwalAccounts.forEach((line) => {
+        rows.push({
+          kategori: 'Modal',
+          akun: `${getLineLabel(line, accountMap)} (Modal Awal)`,
+          idr: currenciesFormat('idr', getLineIdrAmount(line)),
+          usd: currenciesFormat('usd', getLineUsdAmount(line)),
+        });
+      });
+      if (equityLabaDitahan) {
+        rows.push({
+          kategori: 'Modal',
+          akun: 'Laba Ditahan (Akumulasi Tutup Buku)',
+          idr: currenciesFormat('idr', equityLabaDitahan.amount),
+          usd: equityLabaDitahan.amountUsd ? currenciesFormat('usd', equityLabaDitahan.amountUsd) : '-',
+        });
+      }
+      if (equityLabaPeriodeBerjalan) {
+        rows.push({
+          kategori: 'Modal',
+          akun: 'Laba Periode Berjalan (dari Laba Rugi)',
+          idr: currenciesFormat('idr', equityLabaPeriodeBerjalan.amount),
+          usd: equityLabaPeriodeBerjalan.amountUsd ? currenciesFormat('usd', equityLabaPeriodeBerjalan.amountUsd) : '-',
+        });
+      }
+    } else {
+      equityCat.accounts.forEach((line) => {
+        rows.push({
+          kategori: 'Modal',
+          akun: getLineLabel(line, accountMap),
+          idr: currenciesFormat('idr', getLineIdrAmount(line)),
+          usd: currenciesFormat('usd', getLineUsdAmount(line)),
+        });
+      });
+    }
+    rows.push({
+      kategori: 'Modal',
+      akun: 'Jumlah Modal',
+      idr: currenciesFormat('idr', jumlahModal),
+      usd: currenciesFormat('usd', jumlahModalUsd),
+    });
+
+    // Ringkasan Neraca
+    rows.push(
       {
-        kategori: label,
-        akun: subtotalLabel,
-        idr: currenciesFormat('idr', category.totalIdr),
-        usd: currenciesFormat('usd', category.totalUsd),
+        kategori: 'Ringkasan',
+        akun: 'Total Aktiva',
+        idr: currenciesFormat('idr', totalAktiva),
+        usd: currenciesFormat('usd', totalAktivaUsd),
       },
-    ]);
-  }, [accountMap, currentAssetCat, equityCat, fixedAssetCat, liabilityCat]);
+      {
+        kategori: 'Ringkasan',
+        akun: 'Total Pasiva',
+        idr: currenciesFormat('idr', totalPasiva),
+        usd: currenciesFormat('usd', totalPasivaUsd),
+      },
+      {
+        kategori: 'Ringkasan',
+        akun: `Status Neraca (${statusBalanceText})`,
+        idr: isBalanced ? 'SEIMBANG' : `Selisih: ${currenciesFormat('idr', difference)}`,
+        usd: isBalanced ? '-' : (differenceUsd > 0 ? `Selisih: ${currenciesFormat('usd', differenceUsd)}` : '-'),
+      },
+    );
+
+    return rows;
+  }, [
+    currentAssetsAccounts,
+    fixedAssetsAccounts,
+    accumulatedDepreciationAccounts,
+    liabilitiesAccounts,
+    equityModalAwalAccounts,
+    equityLabaDitahan,
+    equityLabaPeriodeBerjalan,
+    equityCat.accounts,
+    jumlahAsetLancar,
+    jumlahAsetLancarUsd,
+    jumlahAsetTetap,
+    jumlahAsetTetapUsd,
+    jumlahKewajiban,
+    jumlahKewajibanUsd,
+    jumlahModal,
+    jumlahModalUsd,
+    totalAktiva,
+    totalAktivaUsd,
+    totalPasiva,
+    totalPasivaUsd,
+    isBalanced,
+    statusBalanceText,
+    difference,
+    differenceUsd,
+    accountMap,
+  ]);
 
   const isLoading = reportQuery.isLoading || accountQuery.isLoading;
 
@@ -566,9 +1278,9 @@ export default function LaporanNeracaPage() {
           }
         />
 
-        {/* Filter Bar (Bulan, Tahun, Search, Reset) */}
+        {/* Filter Bar (Bulan, Tahun, Filter Transaksi, Search, Reset) */}
         <div className="flex flex-wrap items-center gap-3 no-print">
-          <div className="w-full sm:w-[200px]">
+          <div className="w-full sm:w-[180px]">
             <Select value={selectedMonth} onValueChange={setSelectedMonth}>
               <SelectTrigger className="h-9 w-full bg-white">
                 <SelectValue placeholder="Pilih Bulan" />
@@ -584,7 +1296,7 @@ export default function LaporanNeracaPage() {
             </Select>
           </div>
 
-          <div className="w-full sm:w-[180px]">
+          <div className="w-full sm:w-[160px]">
             <Select value={selectedYear} onValueChange={setSelectedYear}>
               <SelectTrigger className="h-9 w-full bg-white">
                 <SelectValue placeholder="Pilih Tahun" />
@@ -600,12 +1312,24 @@ export default function LaporanNeracaPage() {
             </Select>
           </div>
 
+          <div className="w-full sm:w-[210px]">
+            <Select value={transactionFilter} onValueChange={(val) => setTransactionFilter(val as any)}>
+              <SelectTrigger className="h-9 w-full bg-white">
+                <SelectValue placeholder="Filter Transaksi" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="accounts">Semua Akun (Default)</SelectItem>
+                <SelectItem value="account_with_transactions">Hanya Akun Bertransaksi</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
           <SearchInput
             searchValue={searchInput}
             onSearchChange={setSearchInput}
             placeholder="Cari akun pada laporan..."
             aria-label="Cari akun pada Laporan Neraca"
-            wrapperClassName="w-full sm:w-[280px]"
+            wrapperClassName="w-full sm:w-[240px]"
           />
 
           <Button
@@ -615,9 +1339,10 @@ export default function LaporanNeracaPage() {
             onClick={() => {
               setSelectedMonth('all');
               setSelectedYear('all');
+              setTransactionFilter('accounts');
               setSearchInput('');
             }}
-            disabled={selectedMonth === 'all' && selectedYear === 'all' && !searchInput}
+            disabled={selectedMonth === 'all' && selectedYear === 'all' && transactionFilter === 'accounts' && !searchInput}
           >
             <RotateCcw className="mr-2 h-4 w-4" />
             Reset
@@ -665,7 +1390,7 @@ export default function LaporanNeracaPage() {
                   <Building2 className="h-3.5 w-3.5" />
                 </span>
               </div>
-              <p className="text-[11px] text-slate-500">Sum all Aset Tetap</p>
+              <p className="text-[11px] text-slate-500">Nilai buku aset tetap</p>
             </div>
             <AmountSummary
               idrValue={jumlahAsetTetap}
@@ -725,7 +1450,7 @@ export default function LaporanNeracaPage() {
                   <Wallet className="h-3.5 w-3.5" />
                 </span>
               </div>
-              <p className="text-[11px] text-slate-500">Sum all Modal</p>
+              <p className="text-[11px] text-slate-500">Modal + Laba Ditahan + Laba Berjalan</p>
             </div>
             <AmountSummary
               idrValue={jumlahModal}
@@ -758,40 +1483,38 @@ export default function LaporanNeracaPage() {
         {/* Status Keseimbangan Neraca (Balance Check Bar) */}
         <div
           className={cn(
-            'flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 p-4 rounded-lg border',
+            'flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 p-4 rounded-xl border',
             isBalanced
-              ? 'bg-emerald-50/80 border-emerald-200'
-              : 'bg-rose-50/80 border-rose-200',
+              ? 'bg-emerald-50 border-emerald-200 text-emerald-800'
+              : 'bg-rose-50 border-rose-200 text-rose-800',
           )}
         >
-          <div className="flex items-start gap-3">
-            {isBalanced ? (
-              <CheckCircle2 className="h-5 w-5 text-emerald-600 shrink-0 mt-0.5" />
-            ) : (
-              <AlertCircle className="h-5 w-5 text-rose-600 shrink-0 mt-0.5" />
-            )}
+          <div className="flex items-center gap-3">
+            <span
+              className={cn(
+                'px-2.5 py-1 rounded text-xs font-bold uppercase tracking-wider',
+                isBalanced ? 'bg-emerald-600 text-white' : 'bg-rose-600 text-white',
+              )}
+            >
+              {statusBalanceText}
+            </span>
             <div>
-              <p className={cn('text-sm font-bold', isBalanced ? 'text-emerald-900' : 'text-rose-900')}>
-                Status Neraca: {isBalanced ? 'SEIMBANG (BALANCED)' : 'TIDAK SEIMBANG (UNBALANCED)'}
+              <p className="text-sm font-semibold">
+                {isBalanced
+                  ? 'Total Aktiva seimbang sempurna dengan Total Pasiva.'
+                  : `Terdapat selisih balance sebesar ${currenciesFormat('idr', difference)}.`}
               </p>
-              <p className="text-xs text-slate-600 mt-0.5">
-                Total Aktiva: <strong>{currenciesFormat('idr', totalAktiva)}</strong> | Total Pasiva: <strong>{currenciesFormat('idr', totalPasiva)}</strong>
-              </p>
+              {differenceUsd > 0 && !isBalanced && (
+                <p className="text-xs text-rose-600 font-medium">
+                  Selisih USD: {currenciesFormat('usd', differenceUsd)}
+                </p>
+              )}
             </div>
           </div>
 
-          {!isBalanced && (
-            <div className="text-left sm:text-right">
-              <span className="text-rose-700 font-extrabold text-sm block">
-                Selisih: {currenciesFormat('idr', difference)}
-              </span>
-              {differenceUsd > 0 && (
-                <span className="text-rose-600 font-semibold text-xs block">
-                  Selisih USD: {currenciesFormat('usd', differenceUsd)}
-                </span>
-              )}
-            </div>
-          )}
+          <div className="text-sm font-mono font-semibold">
+            Aktiva: {currenciesFormat('idr', totalAktiva)} | Pasiva: {currenciesFormat('idr', totalPasiva)}
+          </div>
         </div>
 
         {/* Main Content Area */}
@@ -827,19 +1550,26 @@ export default function LaporanNeracaPage() {
               </div>
 
               {/* 1. ASET LANCAR */}
-              <BalanceSheetSection
-                title="Aset Lancar"
+              <StandardBalanceSection
+                title="1. Aset Lancar"
                 subtotalLabel="Jumlah Aset Lancar"
-                category={currentAssetCat}
+                accounts={currentAssetsAccounts}
+                subtotalIdr={jumlahAsetLancar}
+                subtotalUsd={jumlahAsetLancarUsd}
                 searchKeyword={searchKeyword}
                 accountMap={accountMap}
               />
 
               {/* 2. ASET TETAP */}
-              <BalanceSheetSection
-                title="Aset Tetap"
-                subtotalLabel="Jumlah Aset Tetap"
-                category={fixedAssetCat}
+              <FixedAssetsBalanceSection
+                title="2. Aset Tetap"
+                subtotalLabel="Jumlah Aset Tetap (Nilai Buku)"
+                accounts={fixedAssetsAccounts}
+                contraAccounts={accumulatedDepreciationAccounts}
+                grossTotalIdr={fixedAssetsGrossTotalIdr}
+                grossTotalUsd={fixedAssetsGrossTotalUsd}
+                subtotalIdr={jumlahAsetTetap}
+                subtotalUsd={jumlahAsetTetapUsd}
                 searchKeyword={searchKeyword}
                 accountMap={accountMap}
               />
@@ -875,22 +1605,29 @@ export default function LaporanNeracaPage() {
                 </div>
               </div>
 
-              {/* 1. KEWAJIBAN */}
-              <BalanceSheetSection
-                title="Kewajiban"
+              {/* 3. KEWAJIBAN */}
+              <StandardBalanceSection
+                title="3. Kewajiban"
                 subtotalLabel="Jumlah Kewajiban"
-                category={liabilityCat}
+                accounts={liabilitiesAccounts}
+                subtotalIdr={jumlahKewajiban}
+                subtotalUsd={jumlahKewajibanUsd}
                 searchKeyword={searchKeyword}
                 accountMap={accountMap}
               />
 
-              {/* 2. MODAL */}
-              <BalanceSheetSection
-                title="Modal"
+              {/* 4. MODAL */}
+              <EquityBalanceSection
+                title="4. Modal"
                 subtotalLabel="Jumlah Modal"
-                category={equityCat}
+                modalAwalAccounts={equityModalAwalAccounts}
+                labaDitahan={equityLabaDitahan}
+                labaPeriodeBerjalan={equityLabaPeriodeBerjalan}
+                subtotalIdr={jumlahModal}
+                subtotalUsd={jumlahModalUsd}
                 searchKeyword={searchKeyword}
                 accountMap={accountMap}
+                legacyAccounts={equityCat.accounts}
               />
 
               {/* Footer Total Pasiva */}

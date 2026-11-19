@@ -67,8 +67,11 @@ const formatCompactDate = (date: Date) =>
     minute: '2-digit',
   }).format(date);
 
-const formatAmount = (value: number, currency: 'idr' | 'usd') =>
-  value === 0 ? '-' : currenciesFormat(currency, value);
+const formatAmount = (value: number, currency: 'idr' | 'usd', isContra = false) => {
+  if (value === 0) return '-';
+  const formatted = currenciesFormat(currency, Math.abs(value));
+  return isContra ? `(${formatted})` : formatted;
+};
 
 const htmlToPlainText = (value?: string | null) =>
   (value ?? '')
@@ -285,15 +288,18 @@ export function LaporanNeracaPrintDocument({
                           const identity = getLineIdentity(line);
                           const amount = getLineAmount(line);
                           const currency = getCurrency(line.type);
+                          const isContra = Boolean(line.is_contra);
                           return (
                             <tr key={`fix-${line.id ?? index}`} className={index % 2 === 1 ? 'bg-slate-50/60' : 'bg-white'}>
                               <td className="border border-slate-300 px-1 py-1 font-mono">{identity.code}</td>
-                              <td className="border border-slate-300 px-1 py-1 truncate">{identity.name}</td>
-                              <td className="border border-slate-300 px-1 py-1 text-right tabular-nums">
-                                {formatAmount(currency === 'idr' ? amount : 0, 'idr')}
+                              <td className={cn("border border-slate-300 px-1 py-1 truncate", isContra && "text-rose-600 font-medium")}>
+                                {identity.name} {isContra ? '(Akun Kontra)' : ''}
                               </td>
-                              <td className="border border-slate-300 px-1 py-1 text-right tabular-nums">
-                                {formatAmount(currency === 'usd' ? amount : 0, 'usd')}
+                              <td className={cn("border border-slate-300 px-1 py-1 text-right tabular-nums", isContra && "text-rose-600 font-semibold")}>
+                                {formatAmount(currency === 'idr' ? amount : 0, 'idr', isContra)}
+                              </td>
+                              <td className={cn("border border-slate-300 px-1 py-1 text-right tabular-nums", isContra && "text-rose-600 font-semibold")}>
+                                {formatAmount(currency === 'usd' ? amount : 0, 'usd', isContra)}
                               </td>
                             </tr>
                           );

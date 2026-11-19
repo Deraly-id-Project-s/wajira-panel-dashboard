@@ -34,6 +34,7 @@ export const getBalanceReport = async (
       account_name: filters.account_name || undefined,
       account_code: filters.account_code || undefined,
       search: filters.search || undefined,
+      transaction_filter: filters.transaction_filter || undefined,
     },
   });
   return response.data;
@@ -143,6 +144,7 @@ export const exportBalanceReport = async (
       account_name: filters.account_name || undefined,
       account_code: filters.account_code || undefined,
       search: filters.search || undefined,
+      transaction_filter: filters.transaction_filter || undefined,
     },
     responseType: 'blob',
   });

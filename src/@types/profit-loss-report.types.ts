@@ -2,6 +2,7 @@ export type ProfitLossTemplateKey =
   | 'revenue_account_ids'
   | 'cogs_account_ids'
   | 'opex_account_ids'
+  | 'non_operational_revenue_account_ids'
   | 'non_opex_account_ids';
 
 export type MonthKey =
@@ -24,6 +25,7 @@ export interface ProfitLossYearConfig {
   revenue_account_ids: MonthlyAccounts;
   cogs_account_ids: MonthlyAccounts;
   opex_account_ids: MonthlyAccounts;
+  non_operational_revenue_account_ids?: MonthlyAccounts;
   non_opex_account_ids?: MonthlyAccounts;
   gross_profit_account_ids?: MonthlyAccounts;
   noix_account_ids?: MonthlyAccounts;
@@ -71,6 +73,7 @@ export interface SaveProfitLossTemplateYearPayload {
   cogs_account_ids?: Partial<MonthlyAccounts>;
   gross_profit_account_ids?: Partial<MonthlyAccounts>;
   opex_account_ids?: Partial<MonthlyAccounts>;
+  non_operational_revenue_account_ids?: Partial<MonthlyAccounts>;
   non_opex_account_ids?: Partial<MonthlyAccounts>;
   noix_account_ids?: Partial<MonthlyAccounts>;
   config?: Partial<ProfitLossYearConfig>;
@@ -81,6 +84,7 @@ export interface ProfitLossTemplatePayload {
   cogs_account_ids: number[];
   gross_profit_account_ids?: number[];
   opex_account_ids: number[];
+  non_operational_revenue_account_ids?: number[];
   non_opex_account_ids?: number[];
   noix_account_ids?: number[];
   tax?: number | string | null;
@@ -137,6 +141,9 @@ export interface ProfitLossReportData {
   cogs?: ProfitLossReportSection | ProfitLossReportLine[];
   gross_profit?: ProfitLossReportSection | ProfitLossReportLine[] | number | string | null;
   opex?: ProfitLossReportSection | ProfitLossReportLine[];
+  operating_profit?: number | string | null;
+  operating_profit_usd?: number | string | null;
+  non_operational_revenue?: ProfitLossReportSection | ProfitLossReportLine[];
   non_opex?: ProfitLossReportSection | ProfitLossReportLine[];
   noix?: ProfitLossReportSection | ProfitLossReportLine[];
   tax?: number | string | null;
@@ -147,6 +154,7 @@ export interface ProfitLossReportData {
   cogs_calc?: ProfitLossReportSection;
   gross_calc?: ProfitLossReportSection;
   opex_calc?: ProfitLossReportSection;
+  non_operational_revenue_calc?: ProfitLossReportSection;
   non_opex_calc?: ProfitLossReportSection;
   noix_calc?: ProfitLossReportSection;
   summary?: {
@@ -159,6 +167,7 @@ export interface ProfitLossReportData {
   cogs_account_ids?: number[];
   gross_profit_account_ids?: number[];
   opex_account_ids?: number[];
+  non_operational_revenue_account_ids?: number[];
   non_opex_account_ids?: number[];
   noix_account_ids?: number[];
   profit_loss_before_tax?: number | string | null;

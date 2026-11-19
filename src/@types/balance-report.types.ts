@@ -92,19 +92,110 @@ export type SaveBalanceTemplateYearPayload = CreateBalanceYearPayload;
 // ==========================================
 export interface BalanceAccountItem {
   id: number | string;
-  account_id: number;
+  account_id?: number | string;
   account_code?: string | null;
-  account_name: string;
-  account_type?: 'debit' | 'credit' | 'debet' | null;
-  amount: number;
-  type: 'IDR' | 'USD' | string;
   code?: string | null;
+  account_name?: string | null;
   name?: string | null;
+  account_type?: 'debit' | 'credit' | 'debet' | string | null;
+  type?: 'debit' | 'credit' | 'debet' | 'IDR' | 'USD' | string | null;
+  debit?: number | string | null;
+  credit?: number | string | null;
+  balance?: number | string | null;
+  amount?: number | string | null;
   value?: number | string | null;
   total?: number | string | null;
+  is_contra?: boolean;
 }
 
 export type BalanceReportLine = BalanceAccountItem;
+
+export interface CurrentAssetsSection {
+  title: string;
+  accounts: BalanceAccountItem[];
+  subtotal: number;
+  subtotal_usd?: number;
+}
+
+export interface FixedAssetsSection {
+  title: string;
+  accounts: BalanceAccountItem[];
+  gross_total: number;
+  gross_total_usd?: number;
+  accumulated_depreciation_accounts: BalanceAccountItem[];
+  accumulated_depreciation_total: number;
+  accumulated_depreciation_total_usd?: number;
+  subtotal: number;
+  subtotal_usd?: number;
+}
+
+export interface LiabilitiesSection {
+  title: string;
+  accounts: BalanceAccountItem[];
+  subtotal: number;
+  subtotal_usd?: number;
+}
+
+export interface EquityModalAwal {
+  title: string;
+  source?: string;
+  accounts: BalanceAccountItem[];
+  total: number;
+  total_usd?: number;
+}
+
+export interface EquitySpecialItem {
+  title: string;
+  source?: string;
+  amount: number;
+  amount_usd?: number;
+  note?: string;
+}
+
+export interface EquitySection {
+  title: string;
+  modal_awal: EquityModalAwal;
+  laba_ditahan: EquitySpecialItem;
+  laba_periode_berjalan: EquitySpecialItem;
+  subtotal: number;
+  subtotal_usd?: number;
+  accounts?: BalanceAccountItem[];
+}
+
+export interface BalanceSheetSections {
+  current_assets: CurrentAssetsSection;
+  fixed_assets: FixedAssetsSection;
+  liabilities: LiabilitiesSection;
+  equity: EquitySection;
+}
+
+export interface BalanceSheetSubtotals {
+  jumlah_aset_lancar: number;
+  jumlah_aset_tetap: number;
+  total_aktiva: number;
+  jumlah_kewajiban: number;
+  jumlah_modal: number;
+  total_pasiva: number;
+  difference: number;
+  is_balance: boolean;
+  status_balance: 'BALANCE' | 'TIDAK BALANCE' | string;
+  jumlah_aset_lancar_usd?: number;
+  jumlah_aset_tetap_usd?: number;
+  total_aktiva_usd?: number;
+  jumlah_kewajiban_usd?: number;
+  jumlah_modal_usd?: number;
+  total_pasiva_usd?: number;
+  difference_usd?: number;
+}
+
+export interface BalanceReportMeta {
+  company_id?: number;
+  period_start?: string;
+  period_end?: string;
+  year?: number;
+  month?: string | null;
+  generated_at?: string;
+}
 
 export interface BalanceCategoryCalc {
   total: number;
@@ -115,12 +206,32 @@ export interface BalanceCategoryCalc {
 export interface BalanceReportSummary {
   opening_balance?: number | string | null;
   ending_balance?: number | string | null;
+  total_current_assets?: number;
+  total_fixed_assets_gross?: number;
+  total_accumulated_depreciation?: number;
+  total_fixed_assets?: number;
+  total_aktiva?: number;
+  total_liabilities?: number;
+  total_modal_awal?: number;
+  total_laba_ditahan?: number;
+  laba_periode_berjalan?: number;
+  total_modal?: number;
+  total_pasiva?: number;
+  difference?: number;
+  is_balance?: boolean;
+  status_balance?: string;
+  [key: string]: unknown;
 }
 
 export interface BalanceReportData {
   year?: number;
   month?: string | null;
+  period_start?: string;
+  period_end?: string;
+  sections?: BalanceSheetSections;
+  subtotals?: BalanceSheetSubtotals;
   summary?: BalanceReportSummary;
+  meta?: BalanceReportMeta;
 
   // Registered account IDs
   current_asset_account_ids?: number[];
@@ -128,7 +239,7 @@ export interface BalanceReportData {
   liability_account_ids?: number[];
   equity_account_ids?: number[];
 
-  // Calculation details per category
+  // Calculation details per category (legacy/backward compatibility)
   current_asset_calc?: BalanceCategoryCalc;
   fixed_asset_calc?: BalanceCategoryCalc;
   liability_calc?: BalanceCategoryCalc;
@@ -167,6 +278,7 @@ export interface BalanceReportFilterParams {
   account_name?: string | null;
   account_code?: string | null;
   search?: string | null;
+  transaction_filter?: 'accounts' | 'account_with_transactions' | string | null;
 }
 
 export type BalanceReportFilters = BalanceReportFilterParams;

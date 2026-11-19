@@ -58,7 +58,7 @@ import {
   type ProfitLossPrintSection,
 } from '@/components/features/laporan-laba-rugi/LaporanLabaRugiPrintDocument';
 
-type SectionKey = 'revenue' | 'cogs' | 'opex' | 'non_opex';
+type SectionKey = 'revenue' | 'cogs' | 'opex' | 'non_operational_revenue' | 'non_opex';
 
 interface ReportSectionConfig {
   key: SectionKey;
@@ -79,6 +79,7 @@ const DEFAULT_TEMPLATE: ProfitLossTemplatePayload = {
   revenue_account_ids: [80, 183, 186, 181, 180],
   cogs_account_ids: [194, 191],
   opex_account_ids: [],
+  non_operational_revenue_account_ids: [],
   non_opex_account_ids: [],
   tax: 0,
 };
@@ -110,16 +111,16 @@ const getCompanyName = (companyId?: number | null) => {
 const REPORT_SECTIONS: ReportSectionConfig[] = [
   {
     key: 'revenue',
-    title: 'Pendapatan',
-    description: 'Akun penjualan dan pendapatan utama.',
+    title: 'Pendapatan Operasional',
+    description: 'Akun penjualan dan pendapatan operasional utama.',
     templateKey: 'revenue_account_ids',
     dataKey: 'revenue_calc',
     tone: 'positive',
   },
   {
     key: 'cogs',
-    title: 'Biaya Atas Pendapatan',
-    description: 'Akun biaya atas pendapatan / beban pokok usaha.',
+    title: 'Biaya Atas Pendapatan (HPP)',
+    description: 'Akun biaya atas pendapatan / harga pokok penjualan.',
     templateKey: 'cogs_account_ids',
     dataKey: 'cogs_calc',
     tone: 'negative',
@@ -133,9 +134,17 @@ const REPORT_SECTIONS: ReportSectionConfig[] = [
     tone: 'negative',
   },
   {
+    key: 'non_operational_revenue',
+    title: 'Pendapatan Non Operasional',
+    description: 'Akun pendapatan di luar kegiatan operasional utama (pendapatan bunga bank, dsb).',
+    templateKey: 'non_operational_revenue_account_ids',
+    dataKey: 'non_operational_revenue_calc',
+    tone: 'positive',
+  },
+  {
     key: 'non_opex',
     title: 'Beban Non-Operasional',
-    description: 'Akun beban non-operasional (bunga pinjaman, dsb).',
+    description: 'Akun beban non-operasional (administrasi bank, bunga pinjaman, dsb).',
     templateKey: 'non_opex_account_ids',
     dataKey: 'non_opex_calc',
     tone: 'negative',
@@ -273,6 +282,7 @@ const buildTemplateState = (): Record<ProfitLossTemplateKey, number[]> => ({
   revenue_account_ids: [...DEFAULT_TEMPLATE.revenue_account_ids],
   cogs_account_ids: [...DEFAULT_TEMPLATE.cogs_account_ids],
   opex_account_ids: [...DEFAULT_TEMPLATE.opex_account_ids],
+  non_operational_revenue_account_ids: [...(DEFAULT_TEMPLATE.non_operational_revenue_account_ids ?? [])],
   non_opex_account_ids: [...(DEFAULT_TEMPLATE.non_opex_account_ids ?? [])],
 });
 
@@ -280,6 +290,7 @@ const buildTemplateStateFromReport = (reportData: ProfitLossReportData): Record<
   revenue_account_ids: uniqueNumbers(reportData.revenue_account_ids ?? DEFAULT_TEMPLATE.revenue_account_ids),
   cogs_account_ids: uniqueNumbers(reportData.cogs_account_ids ?? DEFAULT_TEMPLATE.cogs_account_ids),
   opex_account_ids: uniqueNumbers(reportData.opex_account_ids ?? DEFAULT_TEMPLATE.opex_account_ids),
+  non_operational_revenue_account_ids: uniqueNumbers(reportData.non_operational_revenue_account_ids ?? DEFAULT_TEMPLATE.non_operational_revenue_account_ids ?? []),
   non_opex_account_ids: uniqueNumbers(reportData.non_opex_account_ids ?? DEFAULT_TEMPLATE.non_opex_account_ids ?? []),
 });
 
@@ -453,31 +464,43 @@ export default function LaporanLabaRugiPage() {
     }, {} as Record<SectionKey, NormalizedSection>);
   }, [reportData, accountMap]);
 
-  // 1. TOTAL PENDAPATAN = sum(dari kategori laporan pendapatan)
+  // 1. TOTAL PENDAPATAN OPERASIONAL = sum(dari kategori laporan pendapatan)
   const totalPendapatan = normalizedSections.revenue.total;
   const totalPendapatanUsd = normalizedSections.revenue.totalUsd;
 
-  // 2. TOTAL BIAYA ATAS PENDAPATAN = sum(dari kategori laporan BIAYA ATAS PENDAPATAN)
+  // 2. TOTAL BIAYA ATAS PENDAPATAN (HPP) = sum(dari kategori laporan BIAYA ATAS PENDAPATAN)
   const totalBiayaAtasPendapatan = normalizedSections.cogs.total;
   const totalBiayaAtasPendapatanUsd = normalizedSections.cogs.totalUsd;
 
   // 3. LABA KOTOR = TOTAL PENDAPATAN - TOTAL BIAYA ATAS PENDAPATAN
-  const labaKotor = totalPendapatan - totalBiayaAtasPendapatan;
+  const labaKotor = reportData.gross_profit !== undefined && reportData.gross_profit !== null
+    ? toNumber(reportData.gross_profit)
+    : (totalPendapatan - totalBiayaAtasPendapatan);
   const labaKotorUsd = totalPendapatanUsd - totalBiayaAtasPendapatanUsd;
 
   // 4. TOTAL BIAYA OPERASIONAL = sum(dari kategori laporan BIAYA OPERASIONAL)
   const totalBiayaOperasional = normalizedSections.opex.total;
   const totalBiayaOperasionalUsd = normalizedSections.opex.totalUsd;
 
-  // 5. TOTAL BEBAN NON-OPERASIONAL = sum(dari kategori laporan BEBAN NON-OPERASIONAL)
+  // 5. LABA OPERASIONAL = LABA KOTOR - TOTAL BIAYA OPERASIONAL
+  const labaOperasional = reportData.operating_profit !== undefined && reportData.operating_profit !== null
+    ? toNumber(reportData.operating_profit)
+    : (labaKotor - totalBiayaOperasional);
+  const labaOperasionalUsd = labaKotorUsd - totalBiayaOperasionalUsd;
+
+  // 6. TOTAL PENDAPATAN NON OPERASIONAL = sum(dari kategori laporan PENDAPATAN NON OPERASIONAL)
+  const totalPendapatanNonOps = normalizedSections.non_operational_revenue.total;
+  const totalPendapatanNonOpsUsd = normalizedSections.non_operational_revenue.totalUsd;
+
+  // 7. TOTAL BEBAN NON-OPERASIONAL = sum(dari kategori laporan BEBAN NON-OPERASIONAL)
   const totalBebanNonOperasional = normalizedSections.non_opex.total;
   const totalBebanNonOperasionalUsd = normalizedSections.non_opex.totalUsd;
 
-  // 6. LABA PERIODE BERJALAN = LABA KOTOR - TOTAL BIAYA OPERASIONAL - TOTAL BEBAN NON-OPERASIONAL
+  // 8. LABA PERIODE BERJALAN = LABA OPERASIONAL + TOTAL PENDAPATAN NON OPS - TOTAL BEBAN NON-OPERASIONAL
   const labaPeriodeBerjalan = reportData.profit_loss_before_tax !== undefined && reportData.profit_loss_before_tax !== null
     ? toNumber(reportData.profit_loss_before_tax)
-    : (labaKotor - totalBiayaOperasional - totalBebanNonOperasional);
-  const labaPeriodeBerjalanUsd = labaKotorUsd - totalBiayaOperasionalUsd - totalBebanNonOperasionalUsd;
+    : (labaOperasional + totalPendapatanNonOps - totalBebanNonOperasional);
+  const labaPeriodeBerjalanUsd = labaOperasionalUsd + totalPendapatanNonOpsUsd - totalBebanNonOperasionalUsd;
 
   const taxPercentage = toNumber(taxInput);
   const taxAmount = reportData.tax_amount !== undefined && reportData.tax_amount !== null
@@ -495,14 +518,14 @@ export default function LaporanLabaRugiPage() {
   const printSections = useMemo<ProfitLossPrintSection[]>(() => [
     {
       key: 'revenue',
-      title: 'Pendapatan',
+      title: 'Pendapatan Operasional',
       rows: normalizedSections.revenue.rows,
       total: normalizedSections.revenue.total,
       totalUsd: normalizedSections.revenue.totalUsd,
     },
     {
       key: 'cogs',
-      title: 'Biaya Atas Pendapatan',
+      title: 'Biaya Atas Pendapatan (HPP)',
       rows: normalizedSections.cogs.rows,
       total: normalizedSections.cogs.total,
       totalUsd: normalizedSections.cogs.totalUsd,
@@ -515,6 +538,14 @@ export default function LaporanLabaRugiPage() {
       total: normalizedSections.opex.total,
       totalUsd: normalizedSections.opex.totalUsd,
       deduction: true,
+    },
+    {
+      key: 'non_operational_revenue',
+      title: 'Pendapatan Non Operasional',
+      rows: normalizedSections.non_operational_revenue.rows,
+      total: normalizedSections.non_operational_revenue.total,
+      totalUsd: normalizedSections.non_operational_revenue.totalUsd,
+      deduction: false,
     },
     {
       key: 'non_opex',
@@ -586,6 +617,12 @@ export default function LaporanLabaRugiPage() {
       },
       {
         kategori: 'Ringkasan',
+        akun: 'Laba Operasional',
+        idr: currenciesFormat('idr', labaOperasional),
+        usd: currenciesFormat('usd', labaOperasionalUsd),
+      },
+      {
+        kategori: 'Ringkasan',
         akun: 'Laba Periode Berjalan (Sebelum Pajak)',
         idr: currenciesFormat('idr', labaPeriodeBerjalan),
         usd: currenciesFormat('usd', labaPeriodeBerjalanUsd),
@@ -609,6 +646,8 @@ export default function LaporanLabaRugiPage() {
     accountMap,
     labaKotor,
     labaKotorUsd,
+    labaOperasional,
+    labaOperasionalUsd,
     labaPeriodeBerjalan,
     labaPeriodeBerjalanUsd,
     normalizedSections,
@@ -750,8 +789,8 @@ export default function LaporanLabaRugiPage() {
           </div>
         </div>
 
-        {/* Information Cards Ringkasan Keuangan Utama */}
-        <div className="grid gap-3.5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
+        {/* Information Cards Ringkasan Keuangan Utama (8 Section Akuntansi) */}
+        <div className="grid gap-3.5 sm:grid-cols-2 lg:grid-cols-4">
           {/* 1. TOTAL PENDAPATAN */}
           <div className="flex flex-col justify-between rounded-lg border border-emerald-200/90 bg-linear-to-b from-emerald-50/50 to-white p-4 shadow-2xs transition-shadow hover:shadow-xs">
             <div className="space-y-1">
@@ -764,7 +803,7 @@ export default function LaporanLabaRugiPage() {
                 </span>
               </div>
               <p className="text-[11px] text-slate-500">
-                Sum kategori pendapatan
+                Sum pendapatan operasional utama
               </p>
             </div>
             <AmountSummary
@@ -774,19 +813,19 @@ export default function LaporanLabaRugiPage() {
             />
           </div>
 
-          {/* 2. TOTAL BIAYA ATAS PENDAPATAN */}
+          {/* 2. TOTAL BIAYA ATAS PENDAPATAN (HPP) */}
           <div className="flex flex-col justify-between rounded-lg border border-rose-200/90 bg-linear-to-b from-rose-50/40 to-white p-4 shadow-2xs transition-shadow hover:shadow-xs">
             <div className="space-y-1">
               <div className="flex items-center justify-between gap-2">
                 <span className="text-[11px] font-bold tracking-wider uppercase text-rose-800">
-                  TOTAL BIAYA ATAS PENDAPATAN
+                  TOTAL BIAYA PENDAPATAN
                 </span>
                 <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-rose-100 text-rose-700">
                   <TrendingDown className="h-3.5 w-3.5" />
                 </span>
               </div>
               <p className="text-[11px] text-slate-500">
-                Sum biaya atas pendapatan (HPP)
+                Harga pokok penjualan (HPP)
               </p>
             </div>
             <AmountSummary
@@ -833,7 +872,7 @@ export default function LaporanLabaRugiPage() {
                 </span>
               </div>
               <p className="text-[11px] text-slate-500">
-                Sum biaya operasional
+                Sum biaya operasional usaha
               </p>
             </div>
             <AmountSummary
@@ -843,7 +882,54 @@ export default function LaporanLabaRugiPage() {
             />
           </div>
 
-          {/* 5. TOTAL BEBAN NON-OPERASIONAL */}
+          {/* 5. LABA OPERASIONAL */}
+          <div className="flex flex-col justify-between rounded-lg border border-indigo-200/90 bg-linear-to-b from-indigo-50/40 to-white p-4 shadow-2xs transition-shadow hover:shadow-xs">
+            <div className="space-y-1">
+              <div className="flex items-center justify-between gap-2">
+                <span className="text-[11px] font-bold tracking-wider uppercase text-indigo-900">
+                  LABA OPERASIONAL
+                </span>
+                <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-indigo-100 text-indigo-700">
+                  <Scale className="h-3.5 w-3.5" />
+                </span>
+              </div>
+              <p className="text-[11px] text-slate-500">
+                Laba Kotor − Biaya Operasional
+              </p>
+            </div>
+            <AmountSummary
+              idrValue={labaOperasional}
+              usdValue={labaOperasionalUsd}
+              className={cn(
+                'mt-3 [&>p:first-child]:text-xl [&>p:first-child]:font-extrabold',
+                labaOperasional < 0 ? 'text-rose-700' : 'text-slate-900',
+              )}
+            />
+          </div>
+
+          {/* 6. PENDAPATAN NON OPERASIONAL */}
+          <div className="flex flex-col justify-between rounded-lg border border-teal-200/90 bg-linear-to-b from-teal-50/40 to-white p-4 shadow-2xs transition-shadow hover:shadow-xs">
+            <div className="space-y-1">
+              <div className="flex items-center justify-between gap-2">
+                <span className="text-[11px] font-bold tracking-wider uppercase text-teal-900">
+                  PENDAPATAN NON OPERASIONAL
+                </span>
+                <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-teal-100 text-teal-700">
+                  <TrendingUp className="h-3.5 w-3.5" />
+                </span>
+              </div>
+              <p className="text-[11px] text-slate-500">
+                Sum pendapatan di luar usaha
+              </p>
+            </div>
+            <AmountSummary
+              idrValue={totalPendapatanNonOps}
+              usdValue={totalPendapatanNonOpsUsd}
+              className="mt-3 text-teal-700 [&>p:first-child]:text-xl [&>p:first-child]:font-extrabold"
+            />
+          </div>
+
+          {/* 7. BEBAN NON-OPERASIONAL */}
           <div className="flex flex-col justify-between rounded-lg border border-purple-200/90 bg-linear-to-b from-purple-50/40 to-white p-4 shadow-2xs transition-shadow hover:shadow-xs">
             <div className="space-y-1">
               <div className="flex items-center justify-between gap-2">
@@ -855,7 +941,7 @@ export default function LaporanLabaRugiPage() {
                 </span>
               </div>
               <p className="text-[11px] text-slate-500">
-                Sum beban non-operasional
+                Sum beban di luar usaha
               </p>
             </div>
             <AmountSummary
@@ -865,7 +951,7 @@ export default function LaporanLabaRugiPage() {
             />
           </div>
 
-          {/* 6. LABA PERIODE BERJALAN */}
+          {/* 8. LABA PERIODE BERJALAN */}
           <div
             className={cn(
               'flex flex-col justify-between rounded-lg p-4 shadow-xs transition-shadow hover:shadow-md border-2',
@@ -896,7 +982,7 @@ export default function LaporanLabaRugiPage() {
                 </span>
               </div>
               <p className="text-[11px] text-slate-500">
-                Laba Kotor − Beban Usaha & Non-Operasional
+                Laba Ops + Pendapatan Non Ops − Beban Non Ops
               </p>
             </div>
             <AmountSummary
@@ -1007,6 +1093,8 @@ export default function LaporanLabaRugiPage() {
           sections={printSections}
           grossProfit={labaKotor}
           grossProfitUsd={labaKotorUsd}
+          operatingProfit={labaOperasional}
+          operatingProfitUsd={labaOperasionalUsd}
           profitBeforeTax={labaPeriodeBerjalan}
           profitBeforeTaxUsd={labaPeriodeBerjalanUsd}
           taxPercentage={taxPercentage}
