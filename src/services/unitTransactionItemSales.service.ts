@@ -69,18 +69,19 @@ export const unitTransactionItemSalesService = {
     search?: string;
     page?: number;
     perPage?: number;
-    is_reserved?: boolean | string;
-    isReserved?: boolean | string;
+    is_reserved?: boolean | string | number;
+    isReserved?: boolean | string | number;
   }) {
     const isReservedVal = params.is_reserved ?? params.isReserved;
     let isReservedQuery: string | undefined = undefined;
     if (isReservedVal !== undefined && isReservedVal !== 'all' && isReservedVal !== null && isReservedVal !== '') {
-      if (isReservedVal === true || isReservedVal === 'true' || isReservedVal === 1 || isReservedVal === '1') {
+      const normalized = String(isReservedVal).trim().toLowerCase();
+      if (normalized === 'true' || normalized === '1') {
         isReservedQuery = 'true';
-      } else if (isReservedVal === false || isReservedVal === 'false' || isReservedVal === 0 || isReservedVal === '0') {
+      } else if (normalized === 'false' || normalized === '0') {
         isReservedQuery = 'false';
       } else {
-        isReservedQuery = String(isReservedVal);
+        isReservedQuery = normalized;
       }
     }
 

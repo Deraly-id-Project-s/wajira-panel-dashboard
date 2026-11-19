@@ -83,8 +83,8 @@ export const useUnassignedStockUnits = (params: {
   companyId?: string | number;
   unitTransactionItemId?: string | number;
   search?: string;
-  is_reserved?: boolean | string;
-  isReserved?: boolean | string;
+  is_reserved?: boolean | string | number;
+  isReserved?: boolean | string | number;
   page?: number;
   perPage?: number;
   enabled?: boolean;
