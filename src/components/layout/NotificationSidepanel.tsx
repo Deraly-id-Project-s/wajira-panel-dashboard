@@ -112,15 +112,8 @@ export function NotificationSidepanel({ open, onClose }: NotificationSidepanelPr
     };
   }, [open, onClose]);
 
-  // Fetch notifications with automatic background polling every 30 seconds
-  const { data, isLoading, isFetching, refetch } = useAppNotifications(
-    {
-      per_page: 50,
-      sort_by: 'created_at',
-      sort_order: 'desc',
-    },
-    { enabled: open },
-  );
+  // Shared query with Topbar (cached, single fetch on mount, manual sync available)
+  const { data, isLoading, isFetching, refetch } = useAppNotifications();
 
   const syncMutation = useSyncAppNotifications();
 

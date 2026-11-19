@@ -3,6 +3,7 @@ import { salesService, SalesPayload } from '@/services/sales.service';
 import { useCompany } from '@/contexts/CompanyContext';
 import { companyQueryKeys } from '@/lib/query/company-key';
 import { mapSalesDetailToUI } from '@/services/sales.mapper';
+import { isValidParamId } from '@/lib/utils';
 
 const salesKeys = {
   all: (companyId: string) => companyQueryKeys.list(companyId, 'sales-transactions'),
@@ -41,7 +42,7 @@ export const useSalesDetail = (id?: string) => {
         ui: mapSalesDetailToUI(detail as any),
       };
     },
-    enabled: !!id && Boolean(companyId),
+    enabled: isValidParamId(id) && Boolean(companyId),
     staleTime: 1000 * 60 * 5,
   });
 };
@@ -52,7 +53,7 @@ export const useSalesById = (id?: string) => {
   return useQuery({
     queryKey: companyId ? ['sales-by-id', companyId, id ?? ''] : ['sales-by-id', 'unscoped', id],
     queryFn: () => salesService.getSalesDetail(id as string, companyId ?? undefined),
-    enabled: !!id && Boolean(companyId),
+    enabled: isValidParamId(id) && Boolean(companyId),
     refetchOnWindowFocus: false,
     refetchOnReconnect: false,
     refetchInterval: false,

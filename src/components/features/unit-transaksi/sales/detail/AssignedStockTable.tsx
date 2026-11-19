@@ -8,10 +8,15 @@ import { cn } from '@/lib/utils';
 import { Plus, Trash2, ArrowRightLeft } from 'lucide-react';
 
 export interface AssignedSaleItem {
-  id: number; // unit_transaction_item_sales.id
+  id: number; // unit_transaction_item_sales.id or detail.id
   uuid?: string;
   unit_transaction_item_id: number;
   unit_transaction_item_detail_id: number;
+  warehouse_sub_block?: {
+    id?: number;
+    uuid?: string;
+    name?: string;
+  } | null;
   unit_transaction_item_detail?: {
     id: number;
     color?: string;
@@ -23,6 +28,7 @@ export interface AssignedSaleItem {
     is_reserved?: boolean;
     warehouse_sub_block?: {
       id?: number;
+      uuid?: string;
       name?: string;
     } | null;
     source_transaction_before?: {
@@ -65,6 +71,31 @@ const stockStateConfig: Record<string, { label: string; className: string }> = {
   receipt: { label: 'Diterima', className: 'border-emerald-200 bg-emerald-50 text-emerald-700' },
 };
 
+export const resolveSubBlockName = (item: AssignedSaleItem): string | null => {
+  const candidates = [
+    item?.warehouse_sub_block,
+    item?.unit_transaction_item_detail?.warehouse_sub_block,
+    (item as any)?.sub_block,
+    (item as any)?.unit_transaction_item_detail?.sub_block,
+  ];
+
+  for (const c of candidates) {
+    if (!c) continue;
+    if (typeof c === 'string' && c.trim()) return c.trim();
+    if (typeof c === 'object') {
+      const name = c.name ?? c.sub_block_name ?? c.block_name ?? c.label;
+      if (typeof name === 'string' && name.trim()) return name.trim();
+    }
+  }
+
+  const directName =
+    (item as any)?.warehouse_sub_block_name ||
+    (item as any)?.unit_transaction_item_detail?.warehouse_sub_block_name;
+  if (typeof directName === 'string' && directName.trim()) return directName.trim();
+
+  return null;
+};
+
 export function AssignedStockTable({
   assignedSales,
   selectedSalesIds,
@@ -88,11 +119,13 @@ export function AssignedStockTable({
 
     return assignedSales.filter((item) => {
       const detail = item.unit_transaction_item_detail;
+      const subBlockName = resolveSubBlockName(item);
       const searchableFields = [
         detail?.color,
         detail?.machine_number,
         detail?.chassis_number,
         detail?.source_transaction_before?.code,
+        subBlockName,
       ];
       return searchableFields.some((f) => String(f ?? '').toLowerCase().includes(query));
     });
@@ -172,14 +205,18 @@ export function AssignedStockTable({
         alignment: 'center',
         sortable: true,
         tooltip: 'Lokasi sub-blok penyimpanan unit di dalam gudang',
-        cell: (item) =>
-          item.unit_transaction_item_detail?.warehouse_sub_block?.name ? (
-            item.unit_transaction_item_detail.warehouse_sub_block.name
+        cell: (item) => {
+          const subBlockName = resolveSubBlockName(item);
+          return subBlockName ? (
+            <Badge variant="outline" className="font-semibold border-slate-200 bg-slate-50 text-slate-700">
+              {subBlockName}
+            </Badge>
           ) : (
-            <Badge variant="outline" className="font-semibold bg-white text-slate-500">
+            <Badge variant="outline" className="font-semibold bg-white text-slate-400">
               Belum Ditambahkan
             </Badge>
-          ),
+          );
+        },
       },
       {
         header: 'Status Stok',
@@ -299,7 +336,7 @@ export function AssignedStockTable({
         columns={columns}
         headerRowClassName="bg-[#f8f9fa] border-b border-gray-200"
         loading={isLoading}
-        searchPlaceholder="Cari warna, nomor mesin, atau nomor rangka..."
+        searchPlaceholder="Cari warna, nomor mesin, nomor rangka, atau sub blok..."
         search={search}
         onSearchChange={(val) => {
           setSearch(val);

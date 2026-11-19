@@ -171,21 +171,21 @@ export default function PurchaseSparepartTable({
       },
       {
         header: 'Bruto Total',
-        alignment: 'center',
+        alignment: 'right',
         accessorKey: 'transaction_bruto_total',
         sortable: true,
         cell: (item) => currenciesFormat('idr', item.transaction_bruto_total),
       },
       {
         header: 'Diskon',
-        alignment: 'center',
+        alignment: 'right',
         accessorKey: 'discount',
         sortable: true,
-        cell: (item) => `${item.discount || 0} %`,
+        cell: (item) => currenciesFormat('idr', item.discount || 0),
       },
       {
         header: 'Netto Total',
-        alignment: 'center',
+        alignment: 'right',
         className: 'font-semibold',
         accessorKey: 'transaction_netto_total',
         sortable: true,
@@ -193,7 +193,7 @@ export default function PurchaseSparepartTable({
       },
       {
         header: 'Sisa Pembayaran',
-        alignment: 'center',
+        alignment: 'right',
         accessorKey: 'billing_summary.remaining_payment',
         sortable: true,
         cell: (item) => {

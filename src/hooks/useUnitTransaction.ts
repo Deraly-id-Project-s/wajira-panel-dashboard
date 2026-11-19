@@ -4,6 +4,7 @@ import { unitTransactionService } from '@/services/unitTransaction.service';
 import { useCompany } from '@/contexts/CompanyContext';
 import { companyQueryKeys } from '@/lib/query/company-key';
 import { toast } from 'sonner';
+import { isValidParamId } from '@/lib/utils';
 
 const unitTransactionKeys = {
   list: (companyId: string | number, options: { page?: number; perPage?: number; search?: string; status?: string; start_date?: string | null; end_date?: string | null }) =>
@@ -50,7 +51,7 @@ export const useUnitTransactionDetail = (id?: string) => {
   return useQuery({
     queryKey: companyId ? unitTransactionKeys.detail(companyId, id ?? '') : ['unit-transaction', 'unscoped', id],
     queryFn: () => unitTransactionService.getUnitTransactionDetail(id as string, companyId ?? undefined),
-    enabled: !!id && Boolean(companyId),
+    enabled: isValidParamId(id) && Boolean(companyId),
     refetchOnWindowFocus: false,
     refetchOnReconnect: false,
     refetchInterval: false,
@@ -64,7 +65,7 @@ export const usePurchaseById = (id?: string) => {
   return useQuery({
     queryKey: companyId ? unitTransactionKeys.purchaseDetail(companyId, id ?? '') : ['purchase-by-id', 'unscoped', id],
     queryFn: () => unitTransactionService.getUnitTransactionDetail(id as string, companyId ?? undefined),
-    enabled: !!id && Boolean(companyId),
+    enabled: isValidParamId(id) && Boolean(companyId),
     refetchOnWindowFocus: false,
     refetchOnReconnect: false,
     refetchInterval: false,
@@ -101,7 +102,7 @@ export const useUnitTransactionTypeDetails = (
         status,
         in_stock,
       }),
-    enabled: Boolean(id) && Boolean(companyId),
+    enabled: isValidParamId(id) && Boolean(companyId),
     placeholderData: (previousData) => previousData,
     refetchOnWindowFocus: false,
     refetchOnReconnect: false,

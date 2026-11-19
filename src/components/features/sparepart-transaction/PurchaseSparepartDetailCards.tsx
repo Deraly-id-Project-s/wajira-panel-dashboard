@@ -17,6 +17,12 @@ export function PurchaseSparepartDetailCards({ transaction }: Props) {
   const slug = typeof router.query.slug === 'string' ? router.query.slug : '';
 
   const sparepartBilling = transaction.sparepart_transaction_billing;
+  const isUsd = Boolean(
+    sparepartBilling?.is_usd_transaction ??
+    transaction.billing_summary?.is_usd_transaction
+  );
+  const currency = isUsd ? 'usd' : 'idr';
+
   const totalTagihan = Number(
     sparepartBilling?.grand_total ??
     transaction.billing_summary?.grand_total ??
@@ -27,6 +33,24 @@ export function PurchaseSparepartDetailCards({ transaction }: Props) {
   const remainingPayment = Number(
     sparepartBilling?.is_remaining_payment ??
     transaction.billing_summary?.remaining_payment ??
+    0
+  );
+
+  const totalCashPayment = Number(
+    (sparepartBilling as any)?.total_cash_payment ??
+    transaction.billing_summary?.total_cash_payment ??
+    0
+  );
+  const totalBcaPayment = Number(
+    (sparepartBilling as any)?.total_bca_payment ??
+    (sparepartBilling as any)?.total_bca_cash_payment ??
+    transaction.billing_summary?.total_bca_payment ??
+    transaction.billing_summary?.total_bca_cash_payment ??
+    0
+  );
+  const totalUsdPayment = Number(
+    (sparepartBilling as any)?.total_usd_payment ??
+    transaction.billing_summary?.total_usd_payment ??
     0
   );
 
@@ -135,21 +159,21 @@ export function PurchaseSparepartDetailCards({ transaction }: Props) {
             <div className="flex items-center justify-between">
               <span>Harga Satuan</span>
               <span className="text-sm font-semibold text-slate-900">
-                {currenciesFormat('idr', transaction.price)}
+                {currenciesFormat(currency, transaction.price)}
               </span>
             </div>
 
             <div className="flex items-center justify-between">
               <span>Diskon</span>
               <span className="text-sm font-semibold text-slate-900">
-                {transaction.discount || 0}%
+                {currenciesFormat(currency, transaction.discount || 0)}
               </span>
             </div>
 
             <div className="flex items-center justify-between">
               <span>Total Bruto</span>
               <span className="text-sm font-semibold text-slate-900">
-                {currenciesFormat('idr', transaction.transaction_bruto_total)}
+                {currenciesFormat(currency, transaction.transaction_bruto_total)}
               </span>
             </div>
 
@@ -158,7 +182,7 @@ export function PurchaseSparepartDetailCards({ transaction }: Props) {
             <div className="flex items-center justify-between text-slate-900">
               <span className="text-sm font-bold uppercase">TOTAL PEMBELIAN</span>
               <span className="text-sm font-bold">
-                {currenciesFormat('idr', transaction.transaction_netto_total)}
+                {currenciesFormat(currency, transaction.transaction_netto_total)}
               </span>
             </div>
           </div>
@@ -179,23 +203,53 @@ export function PurchaseSparepartDetailCards({ transaction }: Props) {
             <div className="flex items-center justify-between">
               <span>Total Tagihan</span>
               <span className="text-sm font-semibold text-slate-900">
-                {currenciesFormat('idr', totalTagihan)}
+                {currenciesFormat(currency, totalTagihan)}
               </span>
             </div>
 
             <div className="flex items-center justify-between">
               <span>Total Dibayar</span>
               <span className="text-sm font-semibold text-emerald-600">
-                {currenciesFormat('idr', totalPaid)}
+                {currenciesFormat(currency, totalPaid)}
               </span>
             </div>
 
             <div className="flex items-center justify-between">
               <span>Sisa Pembayaran</span>
               <span className="text-sm font-semibold text-rose-600">
-                {currenciesFormat('idr', remainingPayment)}
+                {currenciesFormat(currency, remainingPayment)}
               </span>
             </div>
+
+            {(totalCashPayment > 0 || totalBcaPayment > 0 || totalUsdPayment > 0) && (
+              <div className="rounded-md bg-slate-50 p-2.5 border border-slate-100 space-y-1.5 text-xs">
+                <p className="font-semibold text-slate-700 mb-1">Rincian Pembayaran Kas:</p>
+                {totalCashPayment > 0 && (
+                  <div className="flex items-center justify-between">
+                    <span>Kas Tunai:</span>
+                    <span className="font-medium text-slate-800">
+                      {currenciesFormat('idr', totalCashPayment)}
+                    </span>
+                  </div>
+                )}
+                {totalBcaPayment > 0 && (
+                  <div className="flex items-center justify-between">
+                    <span>Transfer Bank (BCA):</span>
+                    <span className="font-medium text-slate-800">
+                      {currenciesFormat('idr', totalBcaPayment)}
+                    </span>
+                  </div>
+                )}
+                {totalUsdPayment > 0 && (
+                  <div className="flex items-center justify-between">
+                    <span>Pembayaran USD:</span>
+                    <span className="font-medium text-slate-800">
+                      {currenciesFormat('usd', totalUsdPayment)}
+                    </span>
+                  </div>
+                )}
+              </div>
+            )}
 
             <div className="flex items-center justify-between">
               <span>Tipe Pembayaran</span>
@@ -203,6 +257,15 @@ export function PurchaseSparepartDetailCards({ transaction }: Props) {
                 {transaction.billing_type || 'Cash'}
               </Badge>
             </div>
+
+            {isUsd && (
+              <div className="flex items-center justify-between">
+                <span>Mata Uang</span>
+                <Badge variant="outline" className="text-xs font-semibold text-blue-700 bg-blue-50 border-blue-200">
+                  USD ($)
+                </Badge>
+              </div>
+            )}
 
             {transaction.note && (
               <div className="space-y-1 pt-1">

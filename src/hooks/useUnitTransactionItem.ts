@@ -6,12 +6,13 @@ import {
 import { useCompany } from '@/contexts/CompanyContext';
 import { companyQueryKeys } from '@/lib/query/company-key';
 import { unitTransactionItemService } from '@/services/unitTransactionItem.service';
+import { isValidParamId } from '@/lib/utils';
 
 export const usePurchaseUnitItems = (purchaseId?: string) => {
   return useQuery({
     queryKey: ['purchase-unit-items', purchaseId],
     queryFn: () => unitTransactionItemService.getItems(purchaseId as string, { type: 'purchase' }),
-    enabled: !!purchaseId,
+    enabled: isValidParamId(purchaseId),
     staleTime: 1000 * 60 * 2,
   });
 };
@@ -20,7 +21,7 @@ export const useSalesUnitItems = (salesId?: string) => {
   return useQuery({
     queryKey: ['sales-unit-items', salesId],
     queryFn: () => unitTransactionItemService.getItems(salesId as string, { type: 'sales' }),
-    enabled: !!salesId,
+    enabled: isValidParamId(salesId),
     staleTime: 1000 * 60 * 2,
   });
 };

@@ -142,7 +142,7 @@ export function SalesSparepartDetailCards({ transaction }: Props) {
             <div className="flex items-center justify-between">
               <span>Diskon</span>
               <span className="text-sm font-semibold text-slate-900">
-                {transaction.discount || 0}%
+                {currenciesFormat('idr', transaction.discount || 0)}
               </span>
             </div>
 

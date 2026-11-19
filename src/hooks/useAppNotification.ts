@@ -4,18 +4,27 @@ import { getAppNotifications, syncAppNotifications } from '@/services/app-notifi
 
 export const APP_NOTIFICATIONS_QUERY_KEY = ['app-notifications'];
 
+export const DEFAULT_APP_NOTIFICATION_PARAMS: AppNotificationFilterParams = {
+  per_page: 50,
+  sort_by: 'created_at',
+  sort_order: 'desc',
+};
+
 export function useAppNotifications(
   params?: AppNotificationFilterParams,
-  options?: { enabled?: boolean; refetchInterval?: number },
+  options?: { enabled?: boolean; refetchInterval?: number | false },
 ) {
-  const { enabled = true, refetchInterval = 30000 } = options ?? {};
+  const { enabled = true, refetchInterval = false } = options ?? {};
+  const queryParams = params ?? DEFAULT_APP_NOTIFICATION_PARAMS;
 
   return useQuery({
-    queryKey: [...APP_NOTIFICATIONS_QUERY_KEY, params],
-    queryFn: () => getAppNotifications(params),
+    queryKey: [...APP_NOTIFICATIONS_QUERY_KEY, queryParams],
+    queryFn: () => getAppNotifications(queryParams),
     enabled,
     refetchInterval,
-    staleTime: 10000,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
+    staleTime: 1000 * 60 * 10,
   });
 }
 

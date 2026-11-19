@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 import { useRouter } from 'next/router';
 import { CheckCircle2, ListTodo as ListTodoIcon } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { cn, isValidParamId } from '@/lib/utils';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -72,15 +72,43 @@ export default function SalesUnitDetailPage() {
   const router = useRouter();
   const { id, unitId, slug } = router.query;
 
-  const pathParts = String(router.asPath ?? '')
-    .split('?')[0]
-    .split('/')
-    .filter(Boolean);
-  const fallbackSalesId = pathParts[3];
-  const fallbackUnitId = pathParts[5];
+  const pathParts = useMemo(
+    () =>
+      String(router.asPath ?? '')
+        .split('?')[0]
+        .split('/')
+        .filter(Boolean),
+    [router.asPath]
+  );
 
-  const salesId = (Array.isArray(id) ? id[0] : id) ?? fallbackSalesId;
-  const selectedUnitId = (Array.isArray(unitId) ? unitId[0] : unitId) ?? fallbackUnitId;
+  const fallbackSalesId = useMemo(() => {
+    const idx = pathParts.indexOf('penjualan-unit');
+    if (idx !== -1 && idx + 1 < pathParts.length) {
+      const seg = pathParts[idx + 1];
+      if (isValidParamId(seg)) return seg;
+    }
+    return undefined;
+  }, [pathParts]);
+
+  const fallbackUnitId = useMemo(() => {
+    const idx = pathParts.lastIndexOf('unit');
+    if (idx !== -1 && idx + 1 < pathParts.length) {
+      const seg = pathParts[idx + 1];
+      if (isValidParamId(seg)) return seg;
+    }
+    return undefined;
+  }, [pathParts]);
+
+  const rawQuerySalesId = Array.isArray(id) ? id[0] : id;
+  const rawQueryUnitId = Array.isArray(unitId) ? unitId[0] : unitId;
+
+  const salesId = isValidParamId(rawQuerySalesId)
+    ? rawQuerySalesId
+    : (isValidParamId(fallbackSalesId) ? fallbackSalesId : undefined);
+
+  const selectedUnitId = isValidParamId(rawQueryUnitId)
+    ? rawQueryUnitId
+    : (isValidParamId(fallbackUnitId) ? fallbackUnitId : undefined);
 
   const {
     data: salesData,
@@ -93,35 +121,105 @@ export default function SalesUnitDetailPage() {
     const hit = rows.find((item) => String(item?.id ?? '') === String(selectedUnitId ?? ''));
     if (!hit) return null;
 
+    const soldDetails = hit.unit_type_sold_details ?? [];
+    const salesDetails = hit.unit_transaction_item_sales ?? [];
+
+    let resolvedSales: any[] = [];
+    if (Array.isArray(soldDetails) && soldDetails.length > 0) {
+      resolvedSales = soldDetails.map((detail: any) => ({
+        id: Number(detail?.unit_transaction_item_sales_id ?? detail?.pivot?.id ?? detail?.id ?? 0),
+        uuid: detail?.uuid,
+        unit_transaction_item_id: Number(hit.id ?? 0),
+        unit_transaction_item_detail_id: Number(detail?.id ?? detail?.pivot?.unit_transaction_item_detail_id ?? 0),
+        warehouse_sub_block: detail?.warehouse_sub_block ?? null,
+        unit_transaction_item_detail: {
+          id: Number(detail?.id ?? 0),
+          color: detail?.color,
+          machine_number: detail?.machine_number,
+          chassis_number: detail?.chassis_number,
+          in_stock: detail?.in_stock,
+          status: detail?.status,
+          stock_state: detail?.stock_state,
+          is_reserved: detail?.is_reserved,
+          warehouse_sub_block: detail?.warehouse_sub_block ?? null,
+          source_transaction_before: detail?.source_transaction_before ?? null,
+        },
+      }));
+    } else if (Array.isArray(salesDetails) && salesDetails.length > 0) {
+      resolvedSales = salesDetails.map((item: any) => ({
+        id: Number(item?.id ?? 0),
+        uuid: item?.uuid,
+        unit_transaction_item_id: Number(hit.id ?? 0),
+        unit_transaction_item_detail_id: Number(item?.unit_transaction_item_detail_id ?? item?.unit_transaction_item_detail?.id ?? 0),
+        warehouse_sub_block: item?.warehouse_sub_block ?? item?.unit_transaction_item_detail?.warehouse_sub_block ?? null,
+        unit_transaction_item_detail: item?.unit_transaction_item_detail,
+      }));
+    }
+
     return {
       id: String(hit.id ?? ''),
       unit_transaction_id: String(salesId ?? ''),
       unit_type_id: String(hit.unit_type_id ?? ''),
       qty_total: Number(hit.qty_total ?? 0),
       unit_transaction_item_details: hit.unit_transaction_item_details ?? [],
-      unit_transaction_item_sales: (hit.unit_transaction_item_sales ?? []).map((item: any) => ({
-        id: Number(item?.id ?? 0),
-        unit_transaction_item_id: Number(hit.id ?? 0),
-        unit_transaction_item_detail_id: Number(item?.unit_transaction_item_detail_id ?? 0),
-        unit_transaction_item_detail: item?.unit_transaction_item_detail,
-      })),
+      unit_transaction_item_sales: resolvedSales,
+      unit_type_sold_details: soldDetails,
       unit_type: hit.unit_type,
     };
   }, [salesData?.raw?.unit_transaction_items, selectedUnitId, salesId]);
 
   const { companyId: sessionCompanyId } = useCompany();
   const companyId = String(sessionCompanyId || getStoredCompanyId() || (salesData?.raw as any)?.company_id || '1');
-  const fallbackUnitTypeId = String(fallbackUnitItemFromSales?.unit_type_id ?? selectedUnitId ?? '');
 
   const {
     unitItem,
     isUnitItemLoading,
     isUnitItemError,
-  } = useStockUnits(selectedUnitId, { companyId, unitTypeIdFallback: fallbackUnitTypeId });
+  } = useStockUnits(selectedUnitId, { companyId, enabledStock: false });
 
-  const effectiveUnitItem = unitItem ?? fallbackUnitItemFromSales;
+  const effectiveUnitItem = useMemo(() => {
+    if (!fallbackUnitItemFromSales && !unitItem) return null;
+    if (fallbackUnitItemFromSales && !unitItem) return fallbackUnitItemFromSales;
+    if (!fallbackUnitItemFromSales && unitItem) return unitItem;
 
-  const { data: unitTypeData } = useTypeUnit(fallbackUnitTypeId);
+    const soldDetails =
+      fallbackUnitItemFromSales?.unit_type_sold_details?.length
+        ? fallbackUnitItemFromSales.unit_type_sold_details
+        : (unitItem as any)?.unit_type_sold_details ?? [];
+
+    const salesList =
+      fallbackUnitItemFromSales?.unit_transaction_item_sales?.length
+        ? fallbackUnitItemFromSales.unit_transaction_item_sales
+        : (unitItem as any)?.unit_transaction_item_sales ?? [];
+
+    const itemDetails =
+      fallbackUnitItemFromSales?.unit_transaction_item_details?.length
+        ? fallbackUnitItemFromSales.unit_transaction_item_details
+        : (unitItem as any)?.unit_transaction_item_details ?? [];
+
+    return {
+      ...unitItem,
+      ...fallbackUnitItemFromSales,
+      unit_type_sold_details: soldDetails,
+      unit_transaction_item_sales: salesList,
+      unit_transaction_item_details: itemDetails,
+      qty_total: fallbackUnitItemFromSales?.qty_total ?? (unitItem as any)?.qty_total ?? 0,
+      unit_type_id: fallbackUnitItemFromSales?.unit_type_id ?? (unitItem as any)?.unit_type_id,
+      unit_type: fallbackUnitItemFromSales?.unit_type ?? (unitItem as any)?.unit_type,
+    };
+  }, [fallbackUnitItemFromSales, unitItem]);
+
+  // IMPORTANT: unit_type_id resolution must NEVER fallback to selectedUnitId (which is the item id)
+  const currentUnitTypeId = String(
+    effectiveUnitItem?.unit_type_id ||
+    fallbackUnitItemFromSales?.unit_type_id ||
+    ''
+  );
+
+  const { data: unitTypeData } = useTypeUnit(currentUnitTypeId, {
+    companyId,
+    enabled: Boolean(currentUnitTypeId && currentUnitTypeId !== selectedUnitId),
+  });
 
   const isPaid = useMemo(() => {
     const raw = salesData?.raw;
@@ -152,6 +250,59 @@ export default function SalesUnitDetailPage() {
   const requiredQty = Number(effectiveUnitItem?.qty_total ?? 0);
 
   const assignedSalesList = useMemo(() => {
+    // 1. If unit_type_sold_details is present (from backend update)
+    const soldDetails =
+      (effectiveUnitItem as any)?.unit_type_sold_details?.length
+        ? (effectiveUnitItem as any).unit_type_sold_details
+        : fallbackUnitItemFromSales?.unit_type_sold_details;
+
+    if (Array.isArray(soldDetails) && soldDetails.length > 0) {
+      return soldDetails.map((detail: any) => ({
+        id: Number(detail?.unit_transaction_item_sales_id ?? detail?.pivot?.id ?? detail?.id ?? 0),
+        uuid: detail?.uuid,
+        unit_transaction_item_id: Number(effectiveUnitItem?.id ?? fallbackUnitItemFromSales?.id ?? 0),
+        unit_transaction_item_detail_id: Number(detail?.id ?? detail?.pivot?.unit_transaction_item_detail_id ?? 0),
+        warehouse_sub_block: detail?.warehouse_sub_block ?? null,
+        unit_transaction_item_detail: {
+          id: Number(detail?.id ?? 0),
+          color: detail?.color,
+          machine_number: detail?.machine_number,
+          chassis_number: detail?.chassis_number,
+          in_stock: detail?.in_stock,
+          status: detail?.status,
+          stock_state: detail?.stock_state,
+          is_reserved: detail?.is_reserved,
+          warehouse_sub_block: detail?.warehouse_sub_block ?? null,
+          source_transaction_before: detail?.source_transaction_before ?? null,
+        },
+      }));
+    }
+
+    // 2. Fallback to unit_transaction_item_details if present
+    const itemDetails = (effectiveUnitItem as any)?.unit_transaction_item_details;
+    if (Array.isArray(itemDetails) && itemDetails.length > 0) {
+      return itemDetails.map((detail: any) => ({
+        id: Number(detail?.pivot?.id ?? detail?.unit_transaction_item_sales_id ?? detail?.id ?? 0),
+        uuid: detail?.uuid,
+        unit_transaction_item_id: Number(effectiveUnitItem?.id ?? 0),
+        unit_transaction_item_detail_id: Number(detail?.id ?? 0),
+        warehouse_sub_block: detail?.warehouse_sub_block ?? null,
+        unit_transaction_item_detail: {
+          id: Number(detail?.id ?? 0),
+          color: detail?.color,
+          machine_number: detail?.machine_number,
+          chassis_number: detail?.chassis_number,
+          in_stock: detail?.in_stock,
+          status: detail?.status,
+          stock_state: detail?.stock_state,
+          is_reserved: detail?.is_reserved,
+          warehouse_sub_block: detail?.warehouse_sub_block ?? null,
+          source_transaction_before: detail?.source_transaction_before ?? null,
+        },
+      }));
+    }
+
+    // 3. Fallback to unit_transaction_item_sales
     const list = effectiveUnitItem?.unit_transaction_item_sales ?? [];
     return list.map((item: any) => ({
       id: Number(item?.id ?? 0),
@@ -160,9 +311,10 @@ export default function SalesUnitDetailPage() {
       unit_transaction_item_detail_id: Number(
         item?.unit_transaction_item_detail_id ?? item?.unit_transaction_item_detail?.id ?? 0
       ),
+      warehouse_sub_block: item?.warehouse_sub_block ?? item?.unit_transaction_item_detail?.warehouse_sub_block ?? null,
       unit_transaction_item_detail: item?.unit_transaction_item_detail,
     }));
-  }, [effectiveUnitItem]);
+  }, [effectiveUnitItem, fallbackUnitItemFromSales]);
 
   const selectedDetailIds = useMemo(() => {
     return assignedSalesList
@@ -344,9 +496,9 @@ export default function SalesUnitDetailPage() {
       <AssignStockModal
         open={isAddModalOpen}
         onOpenChange={setIsAddModalOpen}
-        unitTypeId={fallbackUnitTypeId}
+        unitTypeId={currentUnitTypeId}
         unitTypeName={unitTypeData?.name ?? effectiveUnitItem?.unit_type?.name}
-        unitTransactionItemId={selectedUnitId}
+        unitTransactionItemId={selectedUnitId ?? ''}
         companyId={companyId}
         remainingQty={remainingQty}
         onSuccess={() => setSelectedSalesIds(new Set())}
@@ -376,10 +528,10 @@ export default function SalesUnitDetailPage() {
       <MoveUnitStockModal
         open={isMoveModalOpen}
         onOpenChange={setIsMoveModalOpen}
-        sourceTransactionId={salesId}
+        sourceTransactionId={salesId ?? ''}
         sourceTransactionCode={salesCode}
         transactionType="sales"
-        unitTypeId={fallbackUnitTypeId}
+        unitTypeId={currentUnitTypeId}
         unitTypeName={unitTypeData?.name}
         selectedDetailIds={selectedDetailIds}
         onSuccess={() => setSelectedSalesIds(new Set())}

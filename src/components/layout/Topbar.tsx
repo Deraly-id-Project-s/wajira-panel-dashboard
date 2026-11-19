@@ -49,7 +49,7 @@ export function Topbar() {
   const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
   const [isNotificationOpen, setIsNotificationOpen] = useState(false);
   const { data: profile, isLoading: isProfileLoading } = useAuthMe();
-  const { data: notificationData } = useAppNotifications({ per_page: 1 });
+  const { data: notificationData } = useAppNotifications();
   const unreadNotificationCount = notificationData?.total ?? 0;
   const queryClient = useQueryClient();
   const router = useRouter();

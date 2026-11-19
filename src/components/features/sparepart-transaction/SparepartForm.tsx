@@ -9,17 +9,15 @@ import { MoneyInput } from '@/components/ui/money-input';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
 import { SelectAdd } from '@/components/ui/select-add';
+import { SearchableSelect, type SearchableSelectOption } from '@/components/ui/searchable-select';
 import RequiredMark from '@/components/ui/required-mark';
 import { useSuppliers, useCreateSupplier } from '@/hooks/useSupplier';
 import { useCustomers, useCreateCustomer } from '@/hooks/useCustomer';
 import { useSpareparts } from '@/hooks/useSparepart';
 import { useCompany } from '@/contexts/CompanyContext';
 import { useEffect, useState, useMemo } from 'react';
-import { ChevronsUpDown, Check, Save } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { Save } from 'lucide-react';
 import { toast } from 'sonner';
 import { handleApiFormError } from '@/lib/validation';
 import { z } from 'zod';
@@ -86,10 +84,6 @@ export function SparepartForm({
     enabled: isSales && Boolean(companyId),
   });
   const { data: spareparts } = useSpareparts(companyId ?? undefined);
-
-  // Popover state
-  const [openParty, setOpenParty] = useState(false);
-  const [openSparepart, setOpenSparepart] = useState(false);
 
   // Modals for SelectAdd
   const [openSupplierModal, setOpenSupplierModal] = useState(false);
@@ -164,7 +158,7 @@ export function SparepartForm({
   const price = form.watch('price') || 0;
   const discount = form.watch('discount') || 0;
   const bruto = qty * price;
-  const netto = bruto - bruto * (discount / 100);
+  const netto = Math.max(0, bruto - (Number(discount) || 0));
 
   const [isSubmittingLocal, setIsSubmittingLocal] = useState(false);
 
@@ -231,22 +225,28 @@ export function SparepartForm({
     setOpenSparepartDialog(false);
   };
 
-  const personId = form.watch('person_id');
-  const sparepartId = form.watch('sparepart_id');
-
-  const selectedPartyName = useMemo(() => {
-    if (!personId) return null;
+  const partyOptions = useMemo<SearchableSelectOption[]>(() => {
     if (isSales) {
-      return customers?.data?.find((c: any) => String(c.id) === String(personId))?.name;
+      return (customers?.data ?? []).map((c: any) => ({
+        value: String(c.id),
+        label: c.name,
+        subtitle: c.phone || c.email || undefined,
+      }));
     }
-    return suppliers?.data?.find((s: any) => String(s.id) === String(personId))?.name;
-  }, [personId, isSales, customers, suppliers]);
+    return (suppliers?.data ?? []).map((s: any) => ({
+      value: String(s.id),
+      label: s.name,
+      subtitle: s.phone || s.address || undefined,
+    }));
+  }, [isSales, customers, suppliers]);
 
-  const selectedSparepartLabel = useMemo(() => {
-    if (!sparepartId) return null;
-    const sp = spareparts?.data?.find((s: any) => String(s.id) === String(sparepartId));
-    return sp ? `${sp.name} (${sp.code})` : null;
-  }, [sparepartId, spareparts]);
+  const sparepartOptions = useMemo<SearchableSelectOption[]>(() => {
+    return (spareparts?.data ?? []).map((s: any) => ({
+      value: String(s.id),
+      label: `${s.name} (${s.code})`,
+      subtitle: s.unit_type ? `Satuan: ${s.unit_type}` : undefined,
+    }));
+  }, [spareparts]);
 
   return (
     <>
@@ -312,80 +312,18 @@ export function SparepartForm({
                     addLabel={isSales ? 'Tambah Customer' : 'Tambah Supplier'}
                     addVariant="default"
                   >
-                    <Popover open={openParty} onOpenChange={setOpenParty}>
-                      <FormControl>
-                        <PopoverTrigger asChild>
-                          <Button
-                            type="button"
-                            variant="outline"
-                            role="combobox"
-                            aria-controls="party-popover"
-                            aria-expanded={openParty}
-                            disabled={readOnly}
-                            className={cn(
-                              'w-full justify-between font-normal',
-                              !field.value && 'text-muted-foreground'
-                            )}
-                          >
-                            <span className="truncate">
-                              {selectedPartyName || (isSales ? 'Pilih Customer' : 'Pilih Supplier')}
-                            </span>
-                            <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                          </Button>
-                        </PopoverTrigger>
-                      </FormControl>
-                      <PopoverContent className="w-[--radix-popover-trigger-width] p-0" align="start">
-                        <Command>
-                          <CommandInput placeholder={isSales ? 'Cari Customer...' : 'Cari Supplier...'} />
-                          <CommandList>
-                            <CommandEmpty>
-                              {isSales ? 'Customer tidak ditemukan.' : 'Supplier tidak ditemukan.'}
-                            </CommandEmpty>
-                            <CommandGroup>
-                              {isSales
-                                ? customers?.data?.map((c: any) => (
-                                    <CommandItem
-                                      key={c.id}
-                                      value={`${c.name} ${c.id}`}
-                                      onSelect={() => {
-                                        form.setValue('person_id', Number(c.id));
-                                        form.clearErrors('person_id');
-                                        setOpenParty(false);
-                                      }}
-                                    >
-                                      <Check
-                                        className={cn(
-                                          'mr-2 h-4 w-4',
-                                          String(field.value) === String(c.id) ? 'opacity-100' : 'opacity-0'
-                                        )}
-                                      />
-                                      {c.name}
-                                    </CommandItem>
-                                  ))
-                                : suppliers?.data?.map((s: any) => (
-                                    <CommandItem
-                                      key={s.id}
-                                      value={`${s.name} ${s.id}`}
-                                      onSelect={() => {
-                                        form.setValue('person_id', Number(s.id));
-                                        form.clearErrors('person_id');
-                                        setOpenParty(false);
-                                      }}
-                                    >
-                                      <Check
-                                        className={cn(
-                                          'mr-2 h-4 w-4',
-                                          String(field.value) === String(s.id) ? 'opacity-100' : 'opacity-0'
-                                        )}
-                                      />
-                                      {s.name}
-                                    </CommandItem>
-                                  ))}
-                            </CommandGroup>
-                          </CommandList>
-                        </Command>
-                      </PopoverContent>
-                    </Popover>
+                    <SearchableSelect
+                      value={field.value ? String(field.value) : ''}
+                      onChange={(val) => {
+                        form.setValue('person_id', Number(val), { shouldValidate: true, shouldDirty: true });
+                        form.clearErrors('person_id');
+                      }}
+                      options={partyOptions}
+                      placeholder={isSales ? 'Pilih Customer' : 'Pilih Supplier'}
+                      searchPlaceholder={isSales ? 'Cari Customer...' : 'Cari Supplier...'}
+                      emptyText={isSales ? 'Customer tidak ditemukan.' : 'Supplier tidak ditemukan.'}
+                      disabled={readOnly}
+                    />
                   </SelectAdd>
                   <FormMessage />
                 </FormItem>
@@ -407,63 +345,29 @@ export function SparepartForm({
                     addLabel="Tambah Sparepart"
                     addVariant="default"
                   >
-                    <Popover open={openSparepart} onOpenChange={setOpenSparepart}>
-                      <FormControl>
-                        <PopoverTrigger asChild>
-                          <Button
-                            type="button"
-                            variant="outline"
-                            role="combobox"
-                            aria-controls="sparepart-popover"
-                            aria-expanded={openSparepart}
-                            disabled={readOnly}
-                            className={cn(
-                              'w-full justify-between font-normal',
-                              !field.value && 'text-muted-foreground'
-                            )}
-                          >
-                            <span className="truncate">{selectedSparepartLabel || 'Pilih Sparepart'}</span>
-                            <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                          </Button>
-                        </PopoverTrigger>
-                      </FormControl>
-                      <PopoverContent className="w-[--radix-popover-trigger-width] p-0" align="start">
-                        <Command>
-                          <CommandInput placeholder="Cari Sparepart..." />
-                          <CommandList>
-                            <CommandEmpty>Sparepart tidak ditemukan.</CommandEmpty>
-                            <CommandGroup>
-                              {spareparts?.data?.map((s: any) => (
-                                <CommandItem
-                                  key={s.id}
-                                  value={`${s.name} ${s.code} ${s.id}`}
-                                  onSelect={() => {
-                                    form.setValue('sparepart_id', Number(s.id));
-                                    const defaultPrice = isSales
-                                      ? (s.sellingPrice ?? s.price ?? 0)
-                                      : (s.purchasePrice ?? s.price ?? 0);
-                                    form.setValue('price', Number(defaultPrice), {
-                                      shouldValidate: true,
-                                      shouldDirty: true,
-                                    });
-                                    form.clearErrors('sparepart_id');
-                                    setOpenSparepart(false);
-                                  }}
-                                >
-                                  <Check
-                                    className={cn(
-                                      'mr-2 h-4 w-4',
-                                      String(field.value) === String(s.id) ? 'opacity-100' : 'opacity-0'
-                                    )}
-                                  />
-                                  {s.name} ({s.code})
-                                </CommandItem>
-                              ))}
-                            </CommandGroup>
-                          </CommandList>
-                        </Command>
-                      </PopoverContent>
-                    </Popover>
+                    <SearchableSelect
+                      value={field.value ? String(field.value) : ''}
+                      onChange={(val) => {
+                        const newId = Number(val);
+                        form.setValue('sparepart_id', newId, { shouldValidate: true, shouldDirty: true });
+                        const sp = spareparts?.data?.find((s: any) => String(s.id) === String(newId));
+                        if (sp) {
+                          const defaultPrice = isSales
+                            ? (sp.sellingPrice ?? sp.price ?? 0)
+                            : (sp.purchasePrice ?? sp.price ?? 0);
+                          form.setValue('price', Number(defaultPrice), {
+                            shouldValidate: true,
+                            shouldDirty: true,
+                          });
+                        }
+                        form.clearErrors('sparepart_id');
+                      }}
+                      options={sparepartOptions}
+                      placeholder="Pilih Sparepart"
+                      searchPlaceholder="Cari Sparepart..."
+                      emptyText="Sparepart tidak ditemukan."
+                      disabled={readOnly}
+                    />
                   </SelectAdd>
                   <FormMessage />
                 </FormItem>
@@ -536,9 +440,14 @@ export function SparepartForm({
               name="discount"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Diskon (%)</FormLabel>
+                  <FormLabel>Diskon (Rp)</FormLabel>
                   <FormControl>
-                    <Input type="number" {...field} disabled={readOnly} />
+                    <MoneyInput
+                      name={field.name}
+                      value={field.value}
+                      onChangeValue={field.onChange}
+                      disabled={readOnly}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>

@@ -45,6 +45,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { formatDate } from '@/lib/utils/format';
 import { currenciesFormat } from '@/components/ui/currenciesFormat';
 import { cn } from '@/lib/utils';
+import { StorageImage } from '@/components/ui/storage-image';
 import { SalesSparepartDetailCards } from '@/components/features/sparepart-transaction/SalesSparepartDetailCards';
 import { PaymentModal } from '@/components/features/sparepart-transaction/PaymentModal';
 import DeletePaymentDialog from '@/components/features/sparepart-transaction/DeletePaymentDialog';
@@ -96,13 +97,14 @@ export default function DetailSalesSparepartPage() {
     try {
       if (selectedPayment) {
         await updatePaymentMutation.mutateAsync({
-          id: selectedPayment.id,
+          id: String(selectedPayment.id),
           payload: {
             sparepart_transaction_billing_id: transaction.sparepart_transaction_billing.id,
             payment_at: data.payment_at,
             cash_payment_amount: data.cash_payment_amount,
             bca_payment_amount: data.bca_payment_amount,
             bca_payment_usd_amount: data.bca_payment_usd_amount,
+            payment_proof: data.payment_proof,
             note: data.note,
           },
         });
@@ -114,6 +116,7 @@ export default function DetailSalesSparepartPage() {
           cash_payment_amount: data.cash_payment_amount,
           bca_payment_amount: data.bca_payment_amount,
           bca_payment_usd_amount: data.bca_payment_usd_amount,
+          payment_proof: data.payment_proof,
           note: data.note,
         });
         toast.success('Pembayaran berhasil ditambahkan');
@@ -193,23 +196,71 @@ export default function DetailSalesSparepartPage() {
     Boolean(sparepartBilling?.id);
   const canProcessGoods = isPaid && !transaction?.is_refunded && !isProcessed;
 
+  const isUsdTransaction = Boolean(
+    sparepartBilling?.is_usd_transaction ??
+    transaction?.billing_summary?.is_usd_transaction
+  );
+
   const historyColumns = useMemo<ColumnDef<any>[]>(
     () => [
       {
         header: 'Tanggal Pembayaran',
         accessorKey: 'payment_at',
-        alignment: 'left',
+        alignment: 'center',
         cell: (item: any) => formatDate(item.payment_at || item.created_at) || '-',
       },
       {
         header: 'Nominal Dibayar',
         accessorKey: 'grand_total',
         alignment: 'right',
-        cell: (item: any) =>
-          currenciesFormat(
-            'idr',
-            item.grand_total || item.cash_payment_amount || item.bca_payment_amount || 0
-          ),
+        cell: (item: any) => {
+          const cash = Number(item.cash_payment_amount || 0);
+          const bca = Number(item.bca_payment_amount || 0);
+          const usd = Number(item.bca_payment_usd_amount || 0);
+          if (usd > 0) {
+            return currenciesFormat('usd', usd);
+          }
+          const total = item.grand_total || (cash + bca);
+          return currenciesFormat('idr', total);
+        },
+      },
+      {
+        header: 'Metode Pembayaran',
+        alignment: 'center',
+        cell: (item: any) => {
+          const cash = Number(item.cash_payment_amount || 0);
+          const bca = Number(item.bca_payment_amount || 0);
+          const usd = Number(item.bca_payment_usd_amount || 0);
+          const methods: string[] = [];
+          if (cash > 0) methods.push(`Kas (${currenciesFormat('idr', cash)})`);
+          if (bca > 0) methods.push(`BCA (${currenciesFormat('idr', bca)})`);
+          if (usd > 0) methods.push(`BCA USD (${currenciesFormat('usd', usd)})`);
+          return methods.length > 0 ? (
+            <span className="text-xs text-slate-700">{methods.join(' + ')}</span>
+          ) : (
+            '-'
+          );
+        },
+      },
+      {
+        header: 'Bukti Bayar',
+        alignment: 'center',
+        cell: (item: any) => {
+          if (!item.payment_proof) return <span className="text-slate-400">-</span>;
+          return (
+            <div className="flex justify-center">
+              <div className="h-9 w-9 overflow-hidden rounded border border-slate-200 bg-slate-50 flex items-center justify-center">
+                <StorageImage
+                  src={item.payment_proof}
+                  alt="Bukti Bayar"
+                  lightbox
+                  lightboxTitle={`Bukti Bayar ${formatDate(item.payment_at || item.created_at)}`}
+                  className="h-full w-full object-cover"
+                />
+              </div>
+            </div>
+          );
+        },
       },
       {
         header: 'Keterangan',
@@ -435,6 +486,7 @@ export default function DetailSalesSparepartPage() {
         defaultValues={selectedPayment}
         loading={createPaymentMutation.isPending || updatePaymentMutation.isPending}
         remainingPayment={remainingPayment}
+        isUsdTransaction={isUsdTransaction}
       />
 
       {/* DIALOG HAPUS PEMBAYARAN */}

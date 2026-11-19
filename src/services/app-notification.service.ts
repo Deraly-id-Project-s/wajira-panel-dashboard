@@ -73,5 +73,5 @@ export const getAppNotifications = async (
 };
 
 export const syncAppNotifications = async (): Promise<AppNotificationListResponse> => {
-  return getAppNotifications({ sync: true, per_page: 20 });
+  return getAppNotifications({ sync: true, per_page: 50, sort_by: 'created_at', sort_order: 'desc' });
 };

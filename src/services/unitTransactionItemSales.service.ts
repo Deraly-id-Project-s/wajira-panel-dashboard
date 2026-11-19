@@ -69,7 +69,21 @@ export const unitTransactionItemSalesService = {
     search?: string;
     page?: number;
     perPage?: number;
+    is_reserved?: boolean | string;
+    isReserved?: boolean | string;
   }) {
+    const isReservedVal = params.is_reserved ?? params.isReserved;
+    let isReservedQuery: string | undefined = undefined;
+    if (isReservedVal !== undefined && isReservedVal !== 'all' && isReservedVal !== null && isReservedVal !== '') {
+      if (isReservedVal === true || isReservedVal === 'true' || isReservedVal === 1 || isReservedVal === '1') {
+        isReservedQuery = 'true';
+      } else if (isReservedVal === false || isReservedVal === 'false' || isReservedVal === 0 || isReservedVal === '0') {
+        isReservedQuery = 'false';
+      } else {
+        isReservedQuery = String(isReservedVal);
+      }
+    }
+
     const response = await apiClient.get<LaravelApiResponse<any>>(
       `/wapi/master-data/unit-type/${params.unitTypeId}`,
       {
@@ -81,6 +95,7 @@ export const unitTransactionItemSalesService = {
           search: params.search || undefined,
           page: params.page || 1,
           per_page: params.perPage || 10,
+          // is_reserved: isReservedQuery,
         },
       }
     );

@@ -1,8 +1,12 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { unitTransactionItemSalesService } from '@/services/unitTransactionItemSales.service';
+import { isValidParamId } from '@/lib/utils';
 
-export const useStockUnits = (itemId?: string, options?: { companyId?: string; unitTypeIdFallback?: string }) => {
-  const isValidId = !!itemId && itemId !== 'unit' && itemId !== 'undefined' && itemId !== 'null' && itemId.trim() !== '';
+export const useStockUnits = (
+  itemId?: string,
+  options?: { companyId?: string; unitTypeIdFallback?: string; enabledStock?: boolean }
+) => {
+  const isValidId = isValidParamId(itemId);
   const unitItemQuery = useQuery({
     queryKey: ['unit-transaction-item', itemId ?? ''],
     queryFn: () => unitTransactionItemSalesService.getUnitItemById(itemId as string),
@@ -11,11 +15,12 @@ export const useStockUnits = (itemId?: string, options?: { companyId?: string; u
   });
 
   const resolvedUnitTypeId = unitItemQuery.data?.unit_type_id || options?.unitTypeIdFallback || '';
+  const shouldFetchStock = Boolean(options?.enabledStock && itemId && resolvedUnitTypeId);
 
   const stockQuery = useQuery({
     queryKey: ['stock-units', itemId ?? '', resolvedUnitTypeId, options?.companyId ?? '1'],
     queryFn: () => unitTransactionItemSalesService.getStockByUnitType(resolvedUnitTypeId, options?.companyId ?? '1'),
-    enabled: !!itemId && !!resolvedUnitTypeId,
+    enabled: shouldFetchStock,
     staleTime: 1000 * 30,
   });
 
@@ -78,11 +83,14 @@ export const useUnassignedStockUnits = (params: {
   companyId?: string | number;
   unitTransactionItemId?: string | number;
   search?: string;
+  is_reserved?: boolean | string;
+  isReserved?: boolean | string;
   page?: number;
   perPage?: number;
   enabled?: boolean;
 }) => {
   const isEnabled = (params.enabled ?? true) && Boolean(params.unitTypeId) && Boolean(params.unitTransactionItemId);
+  const isReservedParam = params.is_reserved ?? params.isReserved;
 
   return useQuery({
     queryKey: [
@@ -91,6 +99,7 @@ export const useUnassignedStockUnits = (params: {
       String(params.companyId ?? '1'),
       String(params.unitTransactionItemId ?? ''),
       params.search ?? '',
+      isReservedParam !== undefined ? String(isReservedParam) : 'all',
       params.page ?? 1,
       params.perPage ?? 10,
     ],
@@ -100,6 +109,7 @@ export const useUnassignedStockUnits = (params: {
         companyId: params.companyId ?? '1',
         unitTransactionItemId: params.unitTransactionItemId!,
         search: params.search,
+        is_reserved: isReservedParam,
         page: params.page ?? 1,
         perPage: params.perPage ?? 10,
       });

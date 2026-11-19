@@ -1,16 +1,9 @@
 'use client';
 
 import { useMemo } from 'react';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
 import { useWarehouseSubBlocks } from '@/hooks/useUnitItemDetail';
 import type { WarehouseSubBlock } from '@/services/warehouseBlock.service';
-import { cn } from '@/lib/utils';
+import { SearchableSelect, type SearchableSelectOption } from '@/components/ui/searchable-select';
 
 export interface WarehouseSubBlockSelectProps {
   companyId?: string | number | null;
@@ -41,7 +34,7 @@ export function WarehouseSubBlockSelect({
   searchPlaceholder = 'Cari sub blok gudang...',
   allowClear = true,
   clearLabel = '-- Tanpa Sub Blok (Default) --',
-  maxLength = 40,
+  maxLength,
   className,
   perPage = 100,
 }: WarehouseSubBlockSelectProps) {
@@ -87,62 +80,56 @@ export function WarehouseSubBlockSelect({
     ];
   }, [subBlocks, currentId, selectedName]);
 
-  const selectedItem = useMemo(() => {
-    if (!currentId || currentId === 'none') return null;
-    return subBlockOptions.find((item) => String(item.id) === String(currentId)) ?? null;
-  }, [subBlockOptions, currentId]);
+  const options = useMemo<SearchableSelectOption[]>(() => {
+    const items: SearchableSelectOption[] = [];
+    if (allowClear) {
+      items.push({
+        value: 'none',
+        label: clearLabel,
+      });
+    }
+    subBlockOptions.forEach((sb) => {
+      items.push({
+        value: String(sb.id),
+        label: sb.name,
+        subtitle: sb.description || undefined,
+      });
+    });
+    return items;
+  }, [allowClear, clearLabel, subBlockOptions]);
 
-  const activeLabel = selectedName || selectedItem?.name;
+  const handleChange = (val: string) => {
+    if (!val || val === 'none') {
+      onChange?.(null);
+      onSelect?.(null);
+      return;
+    }
+    const item = subBlockOptions.find((sb) => String(sb.id) === val);
+    if (item) {
+      onChange?.(Number(item.id));
+      onSelect?.(item);
+    }
+  };
+
+  const selectedValue =
+    currentId && currentId !== 'none'
+      ? String(currentId)
+      : allowClear
+        ? 'none'
+        : '';
 
   return (
-    <Select
-      value={currentId && currentId !== 'none' ? String(currentId) : undefined}
-      onValueChange={(val) => {
-        if (val === 'none') {
-          onChange?.(null);
-          onSelect?.(null);
-          return;
-        }
-        const item = subBlockOptions.find((sb) => String(sb.id) === val);
-        if (item) {
-          onChange?.(Number(item.id));
-          onSelect?.(item);
-        }
-      }}
+    <SearchableSelect
+      value={selectedValue}
+      onChange={handleChange}
+      options={options}
+      placeholder={isLoading ? 'Memuat sub blok...' : (selectedName || placeholder)}
+      searchPlaceholder={searchPlaceholder}
+      emptyText={isError ? 'Gagal memuat sub blok.' : 'Sub blok tidak ditemukan.'}
       disabled={disabled || isLoading}
-    >
-      <SelectTrigger
-        className={cn(
-          'h-10 w-full min-w-0 overflow-hidden bg-transparent font-normal border-slate-200 rounded-md',
-          className,
-        )}
-      >
-        <SelectValue
-          maxLength={maxLength}
-          placeholder={isLoading ? 'Memuat sub blok...' : activeLabel || placeholder}
-        />
-      </SelectTrigger>
-      <SelectContent showSearch searchPlaceholder={searchPlaceholder}>
-        {allowClear && (
-          <SelectItem value="none" maxLength={maxLength}>
-            <span className="italic text-slate-500">{clearLabel}</span>
-          </SelectItem>
-        )}
-        {subBlockOptions.map((sb) => (
-          <SelectItem key={String(sb.id)} value={String(sb.id)} maxLength={maxLength}>
-            {sb.name}
-          </SelectItem>
-        ))}
-        {isError && (
-          <div className="px-3 py-2 text-xs text-destructive">
-            Gagal memuat sub blok.{' '}
-            <button type="button" className="underline" onClick={() => refetch()}>
-              Coba lagi
-            </button>
-          </div>
-        )}
-      </SelectContent>
-    </Select>
+      loading={isLoading}
+      className={className}
+    />
   );
 }
 

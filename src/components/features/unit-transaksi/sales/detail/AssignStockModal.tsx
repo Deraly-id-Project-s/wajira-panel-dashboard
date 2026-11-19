@@ -36,6 +36,7 @@ interface UnassignedStockRow {
   status: string;
   warehouse_sub_block: any;
   stock_state: string;
+  is_reserved: boolean;
 }
 
 const statusConfig: Record<string, { label: string; className: string }> = {
@@ -128,6 +129,12 @@ export function AssignStockModal({
       status: String(detail?.status ?? 'normal'),
       warehouse_sub_block: detail?.warehouse_sub_block,
       stock_state: detail?.stock_state ?? 'receipt',
+      is_reserved: Boolean(
+        detail?.is_reserved === true ||
+        detail?.is_reserved === 1 ||
+        detail?.is_reserved === '1' ||
+        detail?.is_reserved === 'true'
+      ),
     }));
   }, [detailsContainer?.data]);
 
@@ -142,6 +149,9 @@ export function AssignStockModal({
 
   const isCheckboxDisabled = useCallback(
     (item: UnassignedStockRow) => {
+      if (item.is_reserved) {
+        return true;
+      }
       if (isLimitReached && !selectedDetailIds.has(item.id)) {
         return true;
       }
@@ -155,7 +165,11 @@ export function AssignStockModal({
       const newNumIds = new Set<number>(Array.from(newStringIds).map(Number));
       const allCurrentPageIds = new Set<number>(rows.map((r) => r.id));
 
-      const added = Array.from(newNumIds).filter((id: number) => !selectedDetailIds.has(id));
+      const added = Array.from(newNumIds).filter((id: number) => {
+        if (selectedDetailIds.has(id)) return false;
+        const rowItem = rows.find((r) => r.id === id);
+        return !rowItem?.is_reserved;
+      });
       const removed = Array.from(allCurrentPageIds).filter(
         (id: number) => selectedDetailIds.has(id) && !newNumIds.has(id)
       );
@@ -277,6 +291,25 @@ export function AssignStockModal({
           );
         },
       },
+      {
+        header: 'Status Reserved',
+        accessorKey: 'is_reserved',
+        sortable: false,
+        alignment: 'center',
+        cell: (item) => (
+          <Badge
+            variant="outline"
+            className={cn(
+              'font-semibold text-xs',
+              item.is_reserved
+                ? 'border-rose-200 bg-rose-50 text-rose-700'
+                : 'border-emerald-200 bg-emerald-50 text-emerald-700'
+            )}
+          >
+            {item.is_reserved ? 'Reserved (Terkunci)' : 'Tersedia'}
+          </Badge>
+        ),
+      },
     ],
     []
   );
@@ -324,6 +357,7 @@ export function AssignStockModal({
               setPerPage(val);
               setCurrentPage(1);
             }}
+            rowClassName={(item) => (item.is_reserved ? 'bg-slate-50/70 opacity-70' : '')}
             showCheckbox
             selectedIds={stringSelectedIds}
             onSelectedIdsChange={handleSelectedIdsChange}

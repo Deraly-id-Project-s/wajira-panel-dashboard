@@ -108,7 +108,10 @@ export function UnitTypeDetailTable({
       {
         header: 'Sub Blok Warehouse',
         accessorKey: 'warehouse_sub_block.name',
-        cell: (item) => item.warehouse_sub_block?.name ? <CopyBox text={item.warehouse_sub_block?.name} /> : '-',
+        cell: (item) => {
+          const name = item.warehouse_sub_block?.name || (typeof item.warehouse_sub_block === 'string' ? item.warehouse_sub_block : null);
+          return name ? <CopyBox text={name} /> : '-';
+        },
       },
       {
         header: 'Stok',

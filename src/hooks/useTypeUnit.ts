@@ -18,11 +18,13 @@ export function useTypeUnits(params?: {
   });
 }
 
-export function useTypeUnit(id: string | number, options?: { companyId?: number | string }) {
+export function useTypeUnit(id: string | number, options?: { companyId?: number | string; enabled?: boolean }) {
+  const isEnabled = (options?.enabled ?? true) && !!id;
   return useQuery({
     queryKey: [TYPE_UNIT_ITEM_KEY, id, options?.companyId ?? ''],
     queryFn: () => getTypeUnitById(id, options),
-    enabled: !!id,
+    enabled: isEnabled,
+    staleTime: 1000 * 60 * 5,
   });
 }
 

@@ -39,7 +39,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { CopyBox } from '@/components/ui/copy-box';
 import { currenciesFormat } from '@/components/ui/currenciesFormat';
-import { cn } from '@/lib/utils';
+import { cn, isValidParamId } from '@/lib/utils';
 import { useRefundList } from '@/hooks/useRefundAdministrasi';
 import type { UnitTransactionRefund } from '@/@types/refund.type';
 import { UnitTypeDetailTable } from '@/components/features/unit-transaksi/UnitTypeDetailTable';
@@ -64,7 +64,26 @@ export default function SalesDetailPage() {
   const canCreate = hasPermission('transaction:create');
 
   const { slug, id } = router.query;
-  const { data: sales, isLoading, isError, refetch: refetchSales } = useSalesById(id as string);
+  const rawId = Array.isArray(id) ? id[0] : id;
+  const pathParts = useMemo(
+    () =>
+      String(router.asPath ?? '')
+        .split('?')[0]
+        .split('/')
+        .filter(Boolean),
+    [router.asPath]
+  );
+  const fallbackSalesId = useMemo(() => {
+    const idx = pathParts.indexOf('penjualan-unit');
+    if (idx !== -1 && idx + 1 < pathParts.length) {
+      const seg = pathParts[idx + 1];
+      if (isValidParamId(seg)) return seg;
+    }
+    return undefined;
+  }, [pathParts]);
+
+  const salesId = isValidParamId(rawId) ? rawId : fallbackSalesId;
+  const { data: sales, isLoading, isError, refetch: refetchSales } = useSalesById(salesId);
   const { data: documentTemplate } = useDocumentTemplate(sales?.documentTemplateId ?? null);
   const { data: billings = [] } = useUnitBillings(sales?.id);
   const { data: currentBilling, isLoading: billingLoading } = useCurrentBilling(String(sales?.id ?? ''));
@@ -72,7 +91,7 @@ export default function SalesDetailPage() {
   const { data: billingHistories = [], isLoading: historyLoading } = useBillingHistory(billingId || undefined, String(sales?.id ?? ''));
   const updateBillingIsPaid = useUpdateBillingIsPaid();
   const { data: refundResponse, isLoading: refundLoading } = useRefundList({
-    unit_transaction_id: String(sales?.id ?? id ?? ''),
+    unit_transaction_id: String(sales?.id ?? salesId ?? ''),
     perPage: 50,
   });
   const refundList = useMemo(() => {
@@ -149,7 +168,7 @@ export default function SalesDetailPage() {
     return found?.name ? found.name.toUpperCase() : getCompanyName(resolvedCompanyId);
   }, [companies, resolvedCompanyId, slug]);
 
-  const detailsQuery = useUnitTransactionTypeDetails(sales?.id ? String(sales.id) : (id ? String(id) : undefined), { page: 1, perPage: 1000 });
+  const detailsQuery = useUnitTransactionTypeDetails(sales?.id ? String(sales.id) : (salesId ? String(salesId) : undefined), { page: 1, perPage: 1000 });
   const detailsList = useMemo(() => {
     const list = detailsQuery.data?.data ?? [];
     return list.map((item) => ({

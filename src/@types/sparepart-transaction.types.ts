@@ -22,6 +22,13 @@ export interface SparepartTransactionBilling {
   last_payment_at: string | null;
   is_paid: boolean;
   is_remaining_payment?: number | string | null;
+  is_usd_transaction?: boolean;
+  total_cash_payment?: number;
+  total_bca_payment?: number;
+  total_bca_cash_payment?: number;
+  total_usd_payment?: number;
+  total_paid?: number;
+  remaining_payment?: number;
   created_at: string;
   updated_at: string;
   sparepart_transaction_billing_histories?: SparepartTransactionBillingHistory[];
@@ -32,6 +39,11 @@ export interface SparepartTransactionBillingSummary {
   total_paid: number;
   remaining_payment: number;
   is_paid: boolean;
+  is_usd_transaction?: boolean;
+  total_cash_payment?: number;
+  total_bca_payment?: number;
+  total_bca_cash_payment?: number;
+  total_usd_payment?: number;
 }
 
 export interface SparepartTransaction {

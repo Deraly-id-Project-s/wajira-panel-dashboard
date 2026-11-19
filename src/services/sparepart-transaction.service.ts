@@ -176,7 +176,7 @@ export const sparepartTransactionService = {
     if (payload.cash_payment_amount !== undefined) form.append('cash_payment_amount', String(payload.cash_payment_amount));
     
     if (payload.note) form.append('note', payload.note);
-    if (payload.payment_proof) form.append('payment_proof', payload.payment_proof);
+    if (payload.payment_proof instanceof File) form.append('payment_proof', payload.payment_proof);
 
     const response = await apiClient.post<LaravelApiResponse<SparepartTransactionBillingHistory>>(billingPath, form, {
       headers: {
@@ -197,7 +197,7 @@ export const sparepartTransactionService = {
     if (payload.cash_payment_amount !== undefined) form.append('cash_payment_amount', String(payload.cash_payment_amount));
     
     if (payload.note) form.append('note', payload.note);
-    if (payload.payment_proof) form.append('payment_proof', payload.payment_proof);
+    if (payload.payment_proof instanceof File) form.append('payment_proof', payload.payment_proof);
 
     const response = await apiClient.post<LaravelApiResponse<SparepartTransactionBillingHistory>>(`${billingPath}/${id}`, form, {
       headers: {
