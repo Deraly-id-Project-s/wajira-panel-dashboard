@@ -1,5 +1,20 @@
 import { PaginationMeta } from '@/@types/pagination.types';
 
+export interface SparepartTransactionBillingHistoryCash {
+  id: number;
+  code?: string;
+  name?: string;
+  cash_name?: string;
+  description?: string;
+  pivot: {
+    sparepart_transaction_billing_history_id?: number;
+    cash_id?: number;
+    amount: number | string;
+    original_amount?: number | string;
+    exchange_amount?: number | string;
+  };
+}
+
 export interface SparepartTransactionBillingHistory {
   id: number;
   uuid: string;
@@ -8,6 +23,10 @@ export interface SparepartTransactionBillingHistory {
   bca_payment_amount?: number;
   cash_payment_amount?: number;
   bca_payment_usd_amount?: number;
+  grand_total?: number;
+  cash_name?: string;
+  cash?: any;
+  cashes?: SparepartTransactionBillingHistoryCash[];
   payment_at?: string;
   note?: string;
   created_at?: string;

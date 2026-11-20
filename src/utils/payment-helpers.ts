@@ -1,5 +1,6 @@
 import { formatCurrency as formatCurrencyBase } from '@/lib/utils/currency';
 import { UnitBillingHistory } from '@/@types/unit-billing.types';
+import { currenciesFormat } from '@/components/ui/currenciesFormat';
 
 export function calculateTotalAfterDiscount(total: number, discount: number): number {
   return Math.max(0, Number(total || 0) - Number(discount || 0));
@@ -510,5 +511,101 @@ export function isKasDisabledForTransaction(
   if (isDetail) return true;
   const isUsdKas = String(kasCurrencyType || '').toLowerCase() === 'usd';
   return Boolean(isUsdTransaction ? !isUsdKas : isUsdKas);
+}
+
+export interface SparepartPaymentBreakdown {
+  cashPayment: number;
+  bcaPayment: number;
+  usdPayment: number;
+  totalPaid: number;
+  totalIdr: number;
+  methods: string[];
+  methodsString: string;
+}
+
+export function getSparepartHistoryPayments(history: any): SparepartPaymentBreakdown {
+  const cashes: any[] = Array.isArray(history?.cashes) ? history.cashes : [];
+
+  let cashPayment = Number(history?.cash_payment_amount || 0);
+  let bcaPayment = Number(history?.bca_payment_amount || 0);
+  let usdPayment = Number(history?.bca_payment_usd_amount || 0);
+
+  const methods: string[] = [];
+
+  if (cashes.length > 0) {
+    let cashesCash = 0;
+    let cashesBca = 0;
+    let cashesUsd = 0;
+    let cashesOther = 0;
+
+    cashes.forEach((cash: any) => {
+      const code = String(cash?.code ?? '').toLowerCase();
+      const cashName = String(
+        cash?.cash_name ||
+        cash?.name ||
+        cash?.description ||
+        (code.includes('usd') ? 'BCA USD' : code.includes('bca') ? 'BCA' : code.includes('cash') || code.includes('kas') ? 'Kas' : cash?.code || '')
+      ).trim();
+      const amount = Number(cash?.pivot?.amount ?? cash?.amount ?? 0);
+      const isUsd = code.includes('usd') || cashName.toLowerCase().includes('usd');
+
+      if (isUsd) {
+        const usdVal = Number(cash?.pivot?.original_amount ?? amount);
+        cashesUsd += usdVal;
+      } else if (code.includes('bca') || cashName.toLowerCase().includes('bca')) {
+        cashesBca += amount;
+      } else if (code.includes('cash') || code.includes('kas') || cashName.toLowerCase().includes('kas')) {
+        cashesCash += amount;
+      } else {
+        cashesOther += amount;
+      }
+
+      if (cashName && !methods.includes(cashName)) {
+        methods.push(cashName);
+      }
+    });
+
+    cashPayment = Math.max(cashPayment, cashesCash);
+    bcaPayment = Math.max(bcaPayment, cashesBca + cashesOther);
+    usdPayment = Math.max(usdPayment, cashesUsd);
+  } else {
+    const directCashName = String(
+      history?.cash_name ||
+      history?.cash?.cash_name ||
+      history?.cash?.name ||
+      ''
+    ).trim();
+
+    if (directCashName) {
+      methods.push(directCashName);
+    } else {
+      if (cashPayment > 0) methods.push('Kas');
+      if (bcaPayment > 0) methods.push('BCA');
+      if (usdPayment > 0) methods.push('BCA USD');
+    }
+  }
+
+  const grandTotalFromCashes = cashes.reduce(
+    (sum, c) => sum + Number(c?.pivot?.amount ?? c?.amount ?? 0),
+    0
+  );
+
+  const totalIdr = Math.max(
+    Number(history?.grand_total || 0),
+    cashPayment + bcaPayment,
+    grandTotalFromCashes
+  );
+
+  const totalPaid = usdPayment > 0 ? usdPayment : totalIdr;
+
+  return {
+    cashPayment,
+    bcaPayment,
+    usdPayment,
+    totalPaid,
+    totalIdr,
+    methods,
+    methodsString: methods.length > 0 ? methods.join(', ') : '-',
+  };
 }
 

@@ -29,18 +29,21 @@ interface StockSparepartApiModel {
   } | null;
 }
 
-const mapStockSparepart = (payload: StockSparepartApiModel): StockSparepart => ({
-  id: payload.id.toString(),
-  sparepartId: payload.sparepart?.id ?? payload.sparepart_id ?? 0,
-  sparepartCode: payload.sparepart?.code ?? payload.code ?? '-',
-  sparepartName: payload.sparepart?.name ?? payload.name ?? '-',
-  price: Number(payload.sparepart?.price ?? payload.price ?? 0),
-  qty: Number(payload.qty ?? payload.stock_available ?? 0),
-  status: (payload.status ?? 'normal') as Status,
-  stockStatus: (payload.stock_state ?? 'draft') as StockStatus,
-  warehouseSubBlock: payload.warehouse_sub_block,
-  inStock: payload.stock_available === true || Number(payload.qty ?? payload.stock_available ?? 0) > 0,
-});
+const mapStockSparepart = (payload: StockSparepartApiModel): StockSparepart => {
+  const qtyInt = Math.round(Number(payload.qty ?? payload.stock_available ?? 0));
+  return {
+    id: payload.id.toString(),
+    sparepartId: payload.sparepart?.id ?? payload.sparepart_id ?? 0,
+    sparepartCode: payload.sparepart?.code ?? payload.code ?? '-',
+    sparepartName: payload.sparepart?.name ?? payload.name ?? '-',
+    price: Number(payload.sparepart?.price ?? payload.price ?? 0),
+    qty: qtyInt,
+    status: (payload.status ?? 'normal') as Status,
+    stockStatus: (payload.stock_state ?? 'draft') as StockStatus,
+    warehouseSubBlock: payload.warehouse_sub_block,
+    inStock: payload.stock_available === true || qtyInt > 0,
+  };
+};
 
 type PaginatedStockSparepartResponse = LaravelApiResponse<{
   data: StockSparepartApiModel[];

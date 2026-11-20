@@ -49,6 +49,7 @@ import { StorageImage } from '@/components/ui/storage-image';
 import { SalesSparepartDetailCards } from '@/components/features/sparepart-transaction/SalesSparepartDetailCards';
 import { PaymentModal } from '@/components/features/sparepart-transaction/PaymentModal';
 import DeletePaymentDialog from '@/components/features/sparepart-transaction/DeletePaymentDialog';
+import { getSparepartHistoryPayments } from '@/utils/payment-helpers';
 
 export default function DetailSalesSparepartPage() {
   const router = useRouter();
@@ -84,7 +85,13 @@ export default function DetailSalesSparepartPage() {
   };
 
   const openEditPayment = (payment: any) => {
-    setSelectedPayment(payment);
+    const { cashPayment, bcaPayment, usdPayment } = getSparepartHistoryPayments(payment);
+    setSelectedPayment({
+      ...payment,
+      cash_payment_amount: cashPayment,
+      bca_payment_amount: bcaPayment,
+      bca_payment_usd_amount: usdPayment,
+    });
     setPaymentModalOpen(true);
   };
 
@@ -184,6 +191,7 @@ export default function DetailSalesSparepartPage() {
   const sparepartBilling = transaction?.sparepart_transaction_billing;
   const histories = sparepartBilling?.sparepart_transaction_billing_histories || [];
   const remainingPayment = Number(
+    sparepartBilling?.remaining_payment ??
     sparepartBilling?.is_remaining_payment ??
     transaction?.billing_summary?.remaining_payment ??
     0
@@ -214,29 +222,20 @@ export default function DetailSalesSparepartPage() {
         accessorKey: 'grand_total',
         alignment: 'right',
         cell: (item: any) => {
-          const cash = Number(item.cash_payment_amount || 0);
-          const bca = Number(item.bca_payment_amount || 0);
-          const usd = Number(item.bca_payment_usd_amount || 0);
-          if (usd > 0) {
-            return currenciesFormat('usd', usd);
+          const { usdPayment, totalIdr } = getSparepartHistoryPayments(item);
+          if (usdPayment > 0) {
+            return currenciesFormat('usd', usdPayment);
           }
-          const total = item.grand_total || (cash + bca);
-          return currenciesFormat('idr', total);
+          return currenciesFormat('idr', totalIdr);
         },
       },
       {
         header: 'Metode Pembayaran',
         alignment: 'center',
         cell: (item: any) => {
-          const cash = Number(item.cash_payment_amount || 0);
-          const bca = Number(item.bca_payment_amount || 0);
-          const usd = Number(item.bca_payment_usd_amount || 0);
-          const methods: string[] = [];
-          if (cash > 0) methods.push(`Kas (${currenciesFormat('idr', cash)})`);
-          if (bca > 0) methods.push(`BCA (${currenciesFormat('idr', bca)})`);
-          if (usd > 0) methods.push(`BCA USD (${currenciesFormat('usd', usd)})`);
-          return methods.length > 0 ? (
-            <span className="text-xs text-slate-700">{methods.join(' + ')}</span>
+          const { methodsString } = getSparepartHistoryPayments(item);
+          return methodsString !== '-' ? (
+            <span className="text-xs text-slate-700">{methodsString}</span>
           ) : (
             '-'
           );

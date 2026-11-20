@@ -29,8 +29,13 @@ export function PurchaseSparepartDetailCards({ transaction }: Props) {
     transaction.transaction_netto_total ??
     0
   );
-  const totalPaid = Number(transaction.billing_summary?.total_paid ?? 0);
+  const totalPaid = Number(
+    sparepartBilling?.total_paid ??
+    transaction.billing_summary?.total_paid ??
+    0
+  );
   const remainingPayment = Number(
+    sparepartBilling?.remaining_payment ??
     sparepartBilling?.is_remaining_payment ??
     transaction.billing_summary?.remaining_payment ??
     0

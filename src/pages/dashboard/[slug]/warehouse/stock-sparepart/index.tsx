@@ -88,7 +88,7 @@ export default function StockSparepartPage() {
   const pageHeader = (
     <PageHeader
       title="Stok Sparepart"
-      subtitle="Pantau ketersediaan, kondisi, dan lokasi seluruh sparepart gudang."
+      subtitle="Pantau ketersediaan dan kondisi seluruh stok sparepart gudang."
     />
   );
 
