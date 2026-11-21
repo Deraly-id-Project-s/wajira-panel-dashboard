@@ -34,6 +34,7 @@ export interface SearchableSelectProps {
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
   onTriggerClick?: () => void;
+  modal?: boolean;
 }
 
 export function SearchableSelect({
@@ -58,6 +59,7 @@ export function SearchableSelect({
   open: controlledOpen,
   onOpenChange,
   onTriggerClick,
+  modal = false,
 }: SearchableSelectProps) {
   const [uncontrolledOpen, setUncontrolledOpen] = React.useState(false);
   const isControlled = controlledOpen !== undefined;
@@ -127,7 +129,7 @@ export function SearchableSelect({
   );
 
   return (
-    <Popover open={open} onOpenChange={handleOpenChange} modal={true}>
+    <Popover open={open} onOpenChange={handleOpenChange} modal={modal}>
       <PopoverTrigger asChild>
         <button
           type="button"
@@ -155,7 +157,7 @@ export function SearchableSelect({
         </button>
       </PopoverTrigger>
       <PopoverContent
-        className="w-[--radix-popover-trigger-width] min-w-[220px] p-0 pointer-events-auto flex flex-col z-[100]"
+        className="w-[--radix-popover-trigger-width] min-w-[220px] p-0 pointer-events-auto flex flex-col z-[10050]"
         align="start"
       >
         <Command shouldFilter={false} className="flex-1 min-h-0">

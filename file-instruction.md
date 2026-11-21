@@ -47,7 +47,8 @@ Dokumen ini wajib dibaca terlebih dahulu oleh AI MVC sebelum menerapkan fitur ba
 | Alert dialog | `src/components/ui/alert-dialog.tsx` | Gunakan untuk konfirmasi aksi penting seperti hapus atau destructive action. |
 | Button | `src/components/ui/button.tsx` | Gunakan untuk semua action button. Ikuti variant dan size yang tersedia. |
 | Badge/status | `src/components/ui/badge.tsx` | Gunakan untuk status, label kecil, atau kategori. |
-| Select | `src/components/ui/select.tsx` | Gunakan untuk single option selection. |
+| Select statis | `src/components/ui/select.tsx` | Gunakan HANYA untuk single option selection dengan opsi statis/tetap (hardcoded). DILARANG menggunakan komponen ini untuk data dinamis dari API. |
+| Searchable select (Select API) | `src/components/ui/searchable-select.tsx` | WAJIB digunakan untuk semua form select atau dropdown yang memerlukan konsumsi data dinamis dari API backend (seperti Brand/Merk, Customer, Supplier, Sub Blok Gudang, Kas/Bank, dsb). Mendukung pencarian teks cepat, server/client search, infinite scroll pagination, loading state, tombol aksi tambah baru, dan reset/clearable selection. |
 | Multi select | `src/components/ui/multi-select.tsx` | Gunakan untuk pemilihan lebih dari satu opsi. |
 | Checkbox | `src/components/ui/checkbox.tsx` | Gunakan untuk boolean atau multi-row selection. |
 | Switch | `src/components/ui/switch.tsx` | Gunakan untuk toggle boolean. |
@@ -108,6 +109,75 @@ Dokumen ini wajib dibaca terlebih dahulu oleh AI MVC sebelum menerapkan fitur ba
 9. Untuk header setiap halaman (daftar, form, atau detail), gunakan `PageHeader` dari `src/components/ui/page-header.tsx` mengikuti panduan pada bagian [Panduan Komponen PageHeader (Header Halaman)](#panduan-komponen-pageheader-header-halaman).
 10. Untuk fitur cetak laporan atau dokumen transaksi, wajib mengikuti panduan arsitektur print terstandarisasi pada bagian [Panduan Fitur Print Laporan & Dokumen](#panduan-fitur-print-laporan--dokumen).
 11. Untuk field lokasi customer/driver, simpan koordinat pada request key `map_coordinat` (nullable), terpisah dari `map_link`. Gunakan `LeafletCoordinateInput`; jangan membuat ulang parsing atau instance Leaflet di form fitur.
+12. Untuk semua dropdown/select yang mengonsumsi data dari API backend (dinamis), WAJIB menggunakan `SearchableSelect` (`src/components/ui/searchable-select.tsx`). DILARANG menggunakan `Select` biasa (`src/components/ui/select.tsx`) untuk data API karena tidak ramah pencarian pada dataset besar, tidak memiliki loading state / infinite scroll, dan tidak fleksibel.
+
+## Panduan Komponen SearchableSelect (Select Berbasis Konsumsi API)
+
+Komponen `SearchableSelect` (`src/components/ui/searchable-select.tsx`) adalah standar tunggal untuk seluruh kontrol dropdown/select yang mengonsumsi data dari API backend (misalnya: Merk/Brand, Customer, Supplier, Akun/Kas, Sub Blok Gudang, dsb).
+
+### 1. Aturan Penggunaan
+- **Wajib untuk API**: Setiap pemilihan opsi yang datanya berasal dari query/mutasi backend (misal via React Query, Axios, atau Service) **harus** memakai `SearchableSelect`.
+- **Select Biasa Hanya untuk Data Statis**: Komponen `Select` (`src/components/ui/select.tsx`) hanya boleh digunakan untuk opsi tetap/hardcoded yang jumlahnya sedikit dan tidak berubah (misal: per_page `[10, 25, 50]`, filter boolean `[Semua, Ya, Tidak]`, atau enum status statis).
+- **Hindari Boilerplate Code**: Mapping data dari service/hook API ke bentuk option `[{ value: string, label: string, subtitle?: string }]` cukup menggunakan `useMemo`.
+
+### 2. Spesifikasi Props Kunci (`SearchableSelectProps`)
+
+| Prop | Tipe | Penjelasan & Panduan |
+| --- | --- | --- |
+| `options` | `SearchableSelectOption[]` | Array opsi `{ value: string; label: string; subtitle?: string }`. |
+| `value` | `string \| number \| null` | Value yang terpilih (biasanya ID item). |
+| `onChange` | `(value: string) => void` | Callback saat opsi dipilih atau di-clear. |
+| `placeholder` | `string` | Teks placeholder saat belum ada yang dipilih (misal: `"Pilih merk unit"`). |
+| `searchPlaceholder?` | `string` | Teks placeholder kolom pencarian (default: `"Cari data..."`). |
+| `emptyText?` | `string` | Teks jika hasil pencarian kosong (misal: `"Merk tidak ditemukan"`). |
+| `loading?` | `boolean` | State loading saat request API sedang berjalan (`isLoading`). |
+| `allowClear?` | `boolean` | Menampilkan opsi untuk mereset/menghapus pilihan kembali ke kosong. |
+| `clearLabel?` | `string` | Label tombol hapus pilihan (misal: `"-- Semua Merk --"`). |
+| `onSearchChange?` | `(val: string) => void` | Opsional: Untuk server-side search jika dataset sangat besar. |
+| `onLoadMore?` | `() => void` | Opsional: Handler saat user scroll ke bagian bawah list (infinite scroll). |
+| `hasMore?` | `boolean` | Menandakan apakah masih ada halaman data berikutnya di server. |
+
+### 3. Contoh Implementasi Standar
+
+```tsx
+import { useMemo } from 'react';
+import { SearchableSelect, type SearchableSelectOption } from '@/components/ui/searchable-select';
+import { useBrands } from '@/hooks/useBrand';
+
+export function ExampleFilter() {
+  const [selectedBrandId, setSelectedBrandId] = useState<string>('');
+
+  // 1. Konsumsi data dari service / hook API
+  const { data: brandsData, isLoading } = useBrands({ perPage: 100 });
+
+  // 2. Format options secara efisien dengan useMemo (hindari boilerplate)
+  const brandOptions = useMemo<SearchableSelectOption[]>(() => {
+    const list = brandsData?.data || [];
+    return list.map((item) => ({
+      value: String(item.id),
+      label: item.name,
+    }));
+  }, [brandsData]);
+
+  return (
+    <div className="space-y-1.5">
+      <label className="text-xs font-semibold text-slate-700">Merk Unit</label>
+      <SearchableSelect
+        value={selectedBrandId}
+        onChange={(val) => setSelectedBrandId(val)}
+        options={brandOptions}
+        placeholder="Pilih merk unit"
+        searchPlaceholder="Cari merk unit..."
+        emptyText="Merk tidak ditemukan"
+        allowClear={true}
+        clearLabel="-- Semua Merk --"
+        loading={isLoading}
+        className="h-10 border-gray-300 bg-white text-gray-900 rounded-md"
+      />
+    </div>
+  );
+}
+```
 
 ## Panduan Komponen Koordinat Leaflet
 
