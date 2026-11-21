@@ -170,6 +170,7 @@ const normalizeCashFlow = (payload: Partial<KasHarian>): KasHarian => ({
   credit_usd_original: toNumber(payload.credit_usd_original),
   payment_proof: payload.payment_proof ?? null,
   is_paid: toBoolean(payload.is_paid),
+  is_posted: payload.is_posted !== undefined ? toBoolean(payload.is_posted) : undefined,
   is_valid: payload.is_valid !== undefined ? toBoolean(payload.is_valid) : undefined,
   created_at: payload.created_at ?? '',
   updated_at: payload.updated_at ?? '',
@@ -378,6 +379,10 @@ const buildCashFlowFormData = (payload: CashFlowPayload) => {
     const isPaidBool = payload.is_paid === true || String(payload.is_paid).toLowerCase() === 'true' || String(payload.is_paid) === '1';
     formData.append('is_paid', isPaidBool ? 'true' : 'false');
   }
+  if (payload.is_posted !== undefined && payload.is_posted !== null) {
+    const isPostedBool = payload.is_posted === true || String(payload.is_posted).toLowerCase() === 'true' || String(payload.is_posted) === '1';
+    formData.append('is_posted', isPostedBool ? 'true' : 'false');
+  }
 
   if (payload.cash_flow_cashes && payload.cash_flow_cashes.length > 0) {
     payload.cash_flow_cashes.forEach((item, index) => {
@@ -406,6 +411,7 @@ export async function fetchCashFlow(params: CashFlowFilterParams = {}): Promise<
       code: params.code || params.search || undefined,
       start_date: params.start_date || undefined,
       end_date: params.end_date || undefined,
+      is_posted: params.is_posted !== undefined ? params.is_posted : undefined,
     },
   });
 
@@ -445,6 +451,14 @@ export async function deleteCashFlow(id: number | string) {
 export async function toggleCashFlowPaymentStatus(id: number | string, isPaid: boolean) {
   const response = await apiClient.put<CashFlowItemResponse>(`${BASE_PATH}/${id}/paid-status`, {
     is_paid: isPaid ? 'true' : 'false',
+  });
+  const item = ensureSuccess(toSuccessPayload(response.data));
+  return normalizeCashFlow(item);
+}
+
+export async function toggleCashFlowPostedStatus(id: number | string, isPosted: boolean) {
+  const response = await apiClient.put<CashFlowItemResponse>(`${BASE_PATH}/${id}/posted-status`, {
+    is_posted: isPosted,
   });
   const item = ensureSuccess(toSuccessPayload(response.data));
   return normalizeCashFlow(item);

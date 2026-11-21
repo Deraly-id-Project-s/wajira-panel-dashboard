@@ -32,11 +32,13 @@ export default function TogglePaymentStatusDialog({ open, onOpenChange, data, ta
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-sm rounded-md">
         <DialogHeader>
-          <DialogTitle className="text-xl font-semibold text-slate-955">
+          <DialogTitle className="text-xl font-semibold text-slate-900">
             {targetStatus ? 'Tandai Sebagai Lunas?' : 'Tandai Sebagai Belum Lunas?'}
           </DialogTitle>
           <DialogDescription className="text-sm text-slate-500 mt-2">
-            Apakah Anda yakin ingin menandai transaksi <strong>{data?.code}</strong> ini sebagai {targetStatus ? 'Lunas' : 'Belum Lunas'}?
+            {targetStatus
+              ? <>Apakah Anda yakin ingin menandai transaksi <strong>{data?.code}</strong> ini sebagai <strong>Lunas</strong>? Status pembayaran kas akan diperbarui menjadi lunas.</>
+              : <>Apakah Anda yakin ingin menandai transaksi <strong>{data?.code}</strong> ini sebagai <strong>Belum Lunas</strong>? Status pembayaran kas akan dikembalikan menjadi belum lunas.</>}
           </DialogDescription>
         </DialogHeader>
 
@@ -56,7 +58,7 @@ export default function TogglePaymentStatusDialog({ open, onOpenChange, data, ta
             onClick={() => void handleToggle()}
             loading={isPending}
           >
-            Ya, Ubah
+            {targetStatus ? 'Ya, Tandai Lunas' : 'Ya, Belum Lunas'}
           </Button>
         </div>
       </DialogContent>

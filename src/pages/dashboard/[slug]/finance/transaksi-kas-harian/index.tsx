@@ -49,6 +49,7 @@ const mapManualCashFlow = (item: KasHarian): KasHarianListItem => ({
   unitTransactionBillingId: item.unit_transaction_billing_id ?? undefined,
   isValid: item.is_valid ?? undefined,
   is_paid: item.is_paid === true || item.is_paid === '1' ? true : item.is_paid === false || item.is_paid === '0' ? false : undefined,
+  is_posted: item.is_posted === true || item.is_posted === '1' ? true : item.is_posted === false || item.is_posted === '0' ? false : undefined,
 });
 
 export default function KasHarianPage() {

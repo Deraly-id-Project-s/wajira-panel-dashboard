@@ -195,6 +195,7 @@ export interface KasHarian {
   credit_usd_original?: number;
   payment_proof?: string | null;
   is_paid?: boolean | string | null;
+  is_posted?: boolean | string | null;
   is_valid?: boolean;
   created_at?: string;
   updated_at?: string;
@@ -241,6 +242,7 @@ export interface CashFlowPayload {
   cash_flow_cashes?: CashFlowCashPayloadItem[];
   payment_proof?: File | null;
   is_paid?: boolean;
+  is_posted?: boolean;
   is_valid?: boolean;
 }
 
@@ -252,11 +254,13 @@ export interface CashFlowFilterParams {
   company_id?: number;
   start_date?: string;
   end_date?: string;
+  is_posted?: boolean;
 }
 
 export interface CashFlowExportParams {
   company_id?: number;
   is_paid?: boolean;
+  is_posted?: boolean;
   is_valid?: boolean;
   search?: string;
   date?: string;
@@ -315,4 +319,5 @@ export interface KasHarianListItem {
   unitTransactionBillingId?: number;
   isValid?: boolean;
   is_paid?: boolean;
+  is_posted?: boolean;
 }

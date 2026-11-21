@@ -27,6 +27,7 @@ import {
 import { toast } from 'sonner';
 import FinanceBillingTable from '@/components/features/kas-harian/FinanceBillingTable';
 import TogglePaymentStatusDialog from '@/components/features/kas-harian/TogglePaymentStatusDialog';
+import TogglePostedStatusDialog from '@/components/features/kas-harian/TogglePostedStatusDialog';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -159,8 +160,10 @@ export default function KasHarianDetailPage() {
     ? `/dashboard/${slug}/finance/transaksi-kas-harian`
     : '/dashboard';
 
-  const [isToggleOpen, setIsToggleOpen] = useState(false);
-  const [targetStatus, setTargetStatus] = useState(false);
+  const [isPaymentToggleOpen, setIsPaymentToggleOpen] = useState(false);
+  const [targetPaymentStatus, setTargetPaymentStatus] = useState(false);
+  const [isPostedToggleOpen, setIsPostedToggleOpen] = useState(false);
+  const [targetPostedStatus, setTargetPostedStatus] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [selectedFilePreviewUrl, setSelectedFilePreviewUrl] = useState<string | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
@@ -171,8 +174,9 @@ export default function KasHarianDetailPage() {
     enabled: typeof cashFlowId === 'number' && Number.isFinite(cashFlowId),
     refetchInterval: false,
   });
-  const isTogglingStatus = useIsMutating({ mutationKey: ['toggle-cash-flow-payment-status'] }) > 0;
-  const isStatusUpdating = isTogglingStatus || (cashFlowQuery.isFetching && !cashFlowQuery.isLoading);
+  const isTogglingPaymentStatus = useIsMutating({ mutationKey: ['toggle-cash-flow-payment-status'] }) > 0;
+  const isTogglingPostedStatus = useIsMutating({ mutationKey: ['toggle-cash-flow-posted-status'] }) > 0;
+  const isStatusUpdating = isTogglingPaymentStatus || isTogglingPostedStatus || (cashFlowQuery.isFetching && !cashFlowQuery.isLoading);
   const updateMutation = useUpdateKasHarian();
   const cashFlowDetail = cashFlowQuery.data;
   const companyId = cashFlowDetail?.company_id ?? 0;
@@ -377,6 +381,10 @@ export default function KasHarianDetailPage() {
   const isMarkedPaid = cashFlowDetail?.is_paid === true
     || cashFlowDetail?.is_paid === '1'
     || cashFlowDetail?.is_paid === 'true';
+
+  const isPosted = cashFlowDetail?.is_posted === true
+    || cashFlowDetail?.is_posted === '1'
+    || cashFlowDetail?.is_posted === 'true';
 
   const remainingPayment = remainingOriginalIdr + remainingOriginalUsd;
   const proofUrl = buildProofUrl(cashFlowDetail?.payment_proof);
@@ -623,6 +631,17 @@ export default function KasHarianDetailPage() {
                 {isMarkedPaid ? <CheckCircle2 className="mr-1 h-3.5 w-3.5" /> : null}
                 {isMarkedPaid ? 'Lunas' : 'Belum Lunas'}
               </Badge>
+              <Badge
+                variant="outline"
+                className={cn(
+                  isPosted
+                    ? 'border-emerald-200 bg-emerald-50 text-emerald-700'
+                    : 'border-slate-200 bg-slate-100 text-slate-700',
+                )}
+              >
+                {isPosted ? <ShieldCheck className="mr-1 h-3.5 w-3.5" /> : null}
+                {isPosted ? 'Sudah Diposting' : 'Belum Diposting'}
+              </Badge>
               {transactionOfConfig && (
                 <Badge variant="outline" className={transactionOfConfig.tone}>
                   {transactionOfConfig.icon}
@@ -639,15 +658,39 @@ export default function KasHarianDetailPage() {
               </Button>
               <Button
                 type="button"
-                variant="default"
+                variant="outline"
+                className={cn(
+                  isMarkedPaid
+                    ? 'border-amber-600 text-amber-700 hover:bg-amber-50'
+                    : 'border-emerald-600 text-emerald-700 hover:bg-emerald-50',
+                )}
                 onClick={() => {
-                  setTargetStatus(!isMarkedPaid);
-                  setIsToggleOpen(true);
+                  setTargetPaymentStatus(!isMarkedPaid);
+                  setIsPaymentToggleOpen(true);
                 }}
                 disabled={(!isMarkedPaid && remainingPayment !== 0 && !cashFlowDetail.is_valid) || isStatusUpdating}
-                loading={isStatusUpdating}
+                loading={isTogglingPaymentStatus}
               >
-                {cashFlowDetail.is_paid ? 'Batal Posting Jurnal' : 'Posting Jurnal'}
+                <CheckCircle2 className="mr-2 h-4 w-4" />
+                {isMarkedPaid ? 'Batal Lunas' : 'Tandai Lunas'}
+              </Button>
+              <Button
+                type="button"
+                variant={isPosted ? 'outline' : 'default'}
+                className={cn(
+                  isPosted
+                    ? 'border-rose-600 text-rose-700 hover:bg-rose-50'
+                    : 'btn-primary',
+                )}
+                onClick={() => {
+                  setTargetPostedStatus(!isPosted);
+                  setIsPostedToggleOpen(true);
+                }}
+                disabled={isStatusUpdating}
+                loading={isTogglingPostedStatus}
+              >
+                <ShieldCheck className="mr-2 h-4 w-4" />
+                {isPosted ? 'Batal Posting Jurnal' : 'Posting Jurnal'}
               </Button>
             </>
           }
@@ -937,7 +980,7 @@ export default function KasHarianDetailPage() {
           </Card>
         ) : null}
 
-        <FinanceBillingTable financeBillings={financeBillings} cashFlowDetail={cashFlowDetail} companyId={companyId} disabled={isCompletelySettled && isMarkedPaid} />
+        <FinanceBillingTable financeBillings={financeBillings} cashFlowDetail={cashFlowDetail} companyId={companyId} disabled={(isCompletelySettled && isMarkedPaid) || isPosted} />
 
         <div className="grid gap-6 lg:grid-cols-2">
           <Card className="rounded-md border-slate-200 shadow-sm">
@@ -999,7 +1042,18 @@ export default function KasHarianDetailPage() {
           </Card>
         </div>
 
-        <TogglePaymentStatusDialog open={isToggleOpen} onOpenChange={setIsToggleOpen} data={cashFlowDetail} targetStatus={targetStatus} />
+        <TogglePaymentStatusDialog
+          open={isPaymentToggleOpen}
+          onOpenChange={setIsPaymentToggleOpen}
+          data={cashFlowDetail}
+          targetStatus={targetPaymentStatus}
+        />
+        <TogglePostedStatusDialog
+          open={isPostedToggleOpen}
+          onOpenChange={setIsPostedToggleOpen}
+          data={cashFlowDetail}
+          targetStatus={targetPostedStatus}
+        />
         <ImagePreview open={previewUrl !== null} onClose={() => setPreviewUrl(null)} src={previewUrl} />
       </div>
     </DashboardLayout>

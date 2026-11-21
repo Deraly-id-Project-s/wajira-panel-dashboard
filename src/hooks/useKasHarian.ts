@@ -1,6 +1,16 @@
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type { CashFlowExportParams, CashFlowFilterParams, CashFlowPayload } from '@/@types/kas-harian.types';
-import { createCashFlow, deleteCashFlow, exportCashFlow, fetchCashFlow, fetchCashFlowDetail, updateCashFlow, toggleCashFlowPaymentStatus, syncCashFlowPpnData } from '@/services/cashFlowService';
+import {
+  createCashFlow,
+  deleteCashFlow,
+  exportCashFlow,
+  fetchCashFlow,
+  fetchCashFlowDetail,
+  syncCashFlowPpnData,
+  toggleCashFlowPaymentStatus,
+  toggleCashFlowPostedStatus,
+  updateCashFlow,
+} from '@/services/cashFlowService';
 
 const CASH_FLOW_KEY = 'cash-flow';
 
@@ -85,6 +95,19 @@ export function useToggleKasHarianPaymentStatus() {
   return useMutation({
     mutationKey: ['toggle-cash-flow-payment-status'],
     mutationFn: ({ id, isPaid }: { id: number | string; isPaid: boolean }) => toggleCashFlowPaymentStatus(id, isPaid),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: cashFlowKeys.all });
+      queryClient.invalidateQueries({ queryKey: cashFlowKeys.detail(variables.id) });
+    },
+  });
+}
+
+export function useToggleKasHarianPostedStatus() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationKey: ['toggle-cash-flow-posted-status'],
+    mutationFn: ({ id, isPosted }: { id: number | string; isPosted: boolean }) => toggleCashFlowPostedStatus(id, isPosted),
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: cashFlowKeys.all });
       queryClient.invalidateQueries({ queryKey: cashFlowKeys.detail(variables.id) });
