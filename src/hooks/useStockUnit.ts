@@ -16,6 +16,7 @@ export const useStockUnits = (
     specified?: string;
     activity_type?: string;
     unit_transaction_item_id?: number | string;
+    unit_type_brand_id?: number | string;
   },
 ) =>
   useQuery({

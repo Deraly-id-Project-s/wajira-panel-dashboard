@@ -17,6 +17,9 @@ import { useQueryParamsTable } from '@/hooks/useQueryParamsTable';
 import { exportStockUnits } from '@/services/stock-unit.service';
 import { toast } from 'sonner';
 import { InitStockImportDialog } from '@/components/features/stock-unit/InitStockImportDialog';
+import { SearchableSelect, type SearchableSelectOption } from '@/components/ui/searchable-select';
+import { useBrands } from '@/hooks/useBrand';
+import type { Brand } from '@/@types/brand.types';
 
 export default function StockUnitPage() {
   const { companyId } = useCompany();
@@ -53,6 +56,7 @@ export default function StockUnitPage() {
   const [chassisNumber, setChassisNumber] = useState<string | undefined>(undefined);
   const [color, setColor] = useState<string | undefined>(undefined);
   const [specified, setSpecified] = useState<string | undefined>(undefined);
+  const [unitTypeBrandId, setUnitTypeBrandId] = useState<string | undefined>(undefined);
 
   // Modal Dialog states
   const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
@@ -65,6 +69,16 @@ export default function StockUnitPage() {
   const [tempChassisNumber, setTempChassisNumber] = useState('');
   const [tempColor, setTempColor] = useState('');
   const [tempSpecified, setTempSpecified] = useState<string>('all');
+  const [tempUnitTypeBrandId, setTempUnitTypeBrandId] = useState<string>('');
+
+  const { data: brandsData, isLoading: isBrandsLoading } = useBrands({ perPage: 100 });
+  const brandOptions = useMemo<SearchableSelectOption[]>(() => {
+    const rawList = Array.isArray(brandsData) ? brandsData : ((brandsData as { data?: Brand[] })?.data ?? []);
+    return rawList.map((b) => ({
+      value: String(b.id),
+      label: b.name,
+    }));
+  }, [brandsData]);
 
   // Sync temp states when modal opens
   useEffect(() => {
@@ -78,8 +92,9 @@ export default function StockUnitPage() {
       setTempChassisNumber(chassisNumber || '');
       setTempColor(color || '');
       setTempSpecified(specified || 'all');
+      setTempUnitTypeBrandId(unitTypeBrandId || '');
     }
-  }, [isFilterModalOpen, perPage, stockState, activityType, inStock, unitTransactionItemId, machineNumber, chassisNumber, color, specified]);
+  }, [isFilterModalOpen, perPage, stockState, activityType, inStock, unitTransactionItemId, machineNumber, chassisNumber, color, specified, unitTypeBrandId]);
 
   const handleApplyFilters = () => {
     setPerPage(Number(tempPerPage));
@@ -91,6 +106,7 @@ export default function StockUnitPage() {
     setChassisNumber(tempChassisNumber || undefined);
     setColor(tempColor || undefined);
     setSpecified(tempSpecified === 'all' ? undefined : tempSpecified);
+    setUnitTypeBrandId(tempUnitTypeBrandId && tempUnitTypeBrandId !== 'all' ? tempUnitTypeBrandId : undefined);
     setPage(1);
     setIsFilterModalOpen(false);
   };
@@ -105,6 +121,7 @@ export default function StockUnitPage() {
     setTempChassisNumber('');
     setTempColor('');
     setTempSpecified('all');
+    setTempUnitTypeBrandId('');
 
     // Clear primary state
     setPerPage(25);
@@ -116,6 +133,7 @@ export default function StockUnitPage() {
     setChassisNumber(undefined);
     setColor(undefined);
     setSpecified(undefined);
+    setUnitTypeBrandId(undefined);
     setPage(1);
     setIsFilterModalOpen(false);
   };
@@ -132,7 +150,8 @@ export default function StockUnitPage() {
     chassis_number: chassisNumber,
     color: color,
     specified: specified,
-  }), [page, perPage, search, stockState, inStock, activityType, unitTransactionItemId, machineNumber, chassisNumber, color, specified]);
+    unit_type_brand_id: unitTypeBrandId,
+  }), [page, perPage, search, stockState, inStock, activityType, unitTransactionItemId, machineNumber, chassisNumber, color, specified, unitTypeBrandId]);
 
   const { data, isLoading, isError, isFetching, refetch } = useStockUnits(companyId, params);
 
@@ -157,6 +176,7 @@ export default function StockUnitPage() {
         chassis_number: chassisNumber,
         color: color,
         specified: specified,
+        unit_type_brand_id: unitTypeBrandId,
       });
       toast.success('Data stok unit berhasil diexport');
     } catch (err: any) {
@@ -335,6 +355,22 @@ export default function StockUnitPage() {
                   </SelectContent>
                 </Select>
               </div>
+            </div>
+
+            <div className="space-y-1.5">
+              <label className="text-xs font-semibold text-slate-700">Merk Unit</label>
+              <SearchableSelect
+                value={tempUnitTypeBrandId}
+                onChange={(val) => setTempUnitTypeBrandId(val)}
+                options={brandOptions}
+                placeholder="Pilih merk unit"
+                searchPlaceholder="Cari merk unit..."
+                emptyText="Merk unit tidak ditemukan"
+                allowClear={true}
+                clearLabel="-- Semua Merk --"
+                loading={isBrandsLoading}
+                className="h-10 border-gray-300 bg-white text-gray-900 rounded-md"
+              />
             </div>
 
             <div className="space-y-1.5">

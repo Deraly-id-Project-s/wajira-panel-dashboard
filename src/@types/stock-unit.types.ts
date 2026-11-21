@@ -59,6 +59,21 @@ export interface StockUnit {
     name?: string;
     unit_type?: string;
     unit_model?: string;
+    brand_id?: number;
+    brand?: {
+      id?: number;
+      uuid?: string;
+      name?: string;
+    } | null;
+  } | null;
+  brand?: {
+    id?: number;
+    uuid?: string;
+    name?: string;
+  } | null;
+  branch?: {
+    id?: number;
+    name?: string;
   } | null;
   warehouseSubBlock?: {
     id: number;

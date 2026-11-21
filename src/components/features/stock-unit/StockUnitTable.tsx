@@ -70,6 +70,13 @@ export default function StockUnitTable({
       ),
     },
     {
+      header: 'Merk Unit',
+      accessorKey: 'branch.name',
+      sortable: true,
+      alignment: 'left',
+      cell: (item) => item?.branch?.name ?? item?.brand?.name ?? item?.unitType?.brand?.name ?? '-',
+    },
+    {
       header: 'Warna',
       accessorKey: 'warna',
       sortable: true,
@@ -135,7 +142,7 @@ export default function StockUnitTable({
     },
     {
       header: 'Status Stok',
-      accessorKey: 'status',
+      accessorKey: 'inStock',
       sortable: true,
       alignment: 'left',
       tooltip: 'Status ketersediaan unit fisik di gudang',

@@ -14,6 +14,12 @@ interface StockUnitApiModel {
     name: string;
     unit_type: string;
     unit_model: string;
+    brand_id?: number;
+    brand?: {
+      id: number;
+      uuid?: string;
+      name: string;
+    } | null;
   };
   color: string;
   machine_number: string;
@@ -39,22 +45,27 @@ interface StockUnitApiModel {
   } | null;
 }
 
-const mapStockUnit = (payload: StockUnitApiModel): StockUnit => ({
-  id: payload.id.toString(),
-  namaUnit: payload.unit_type?.name ?? payload.type_unit_name ?? payload.unit_type?.unit_model ?? payload.unit_type?.unit_type ?? '-',
-  warna: payload.color,
-  noMesin: payload.machine_number,
-  noRangka: payload.chassis_number,
-  status: (payload.status) as Status,
-  inStock: (payload.stock_available),
-  stockStatus: (payload.stock_state) as StockStatus,
-  unitType: payload.unit_type ?? null,
-  warehouseSubBlock: payload.warehouse_sub_block,
-  customer: payload.customer ?? null,
-  supplier: payload.supplier ?? null,
-  isForecast: payload?.is_forecast === true || payload?.is_forecast === 1 || payload?.is_forecast === '1',
-  isSoldUnit: payload?.is_sold_unit === true || payload?.is_sold_unit === 1 || payload?.is_sold_unit === '1',
-});
+const mapStockUnit = (payload: StockUnitApiModel): StockUnit => {
+  const brandData = payload.unit_type?.brand ?? null;
+  return {
+    id: payload.id.toString(),
+    namaUnit: payload.unit_type?.name ?? payload.type_unit_name ?? payload.unit_type?.unit_model ?? payload.unit_type?.unit_type ?? '-',
+    warna: payload.color,
+    noMesin: payload.machine_number,
+    noRangka: payload.chassis_number,
+    status: (payload.status) as Status,
+    inStock: (payload.stock_available),
+    stockStatus: (payload.stock_state) as StockStatus,
+    unitType: payload.unit_type ?? null,
+    brand: brandData ? { id: brandData.id, uuid: brandData.uuid, name: brandData.name } : null,
+    branch: brandData ? { id: brandData.id, name: brandData.name } : null,
+    warehouseSubBlock: payload.warehouse_sub_block,
+    customer: payload.customer ?? null,
+    supplier: payload.supplier ?? null,
+    isForecast: payload?.is_forecast === true || payload?.is_forecast === 1 || payload?.is_forecast === '1',
+    isSoldUnit: payload?.is_sold_unit === true || payload?.is_sold_unit === 1 || payload?.is_sold_unit === '1',
+  };
+};
 
 type PaginatedStockUnitResponse = LaravelApiResponse<{
   data: StockUnitApiModel[];
@@ -78,6 +89,7 @@ export const getStockUnits = async (
     specified?: string;
     activity_type?: string;
     unit_transaction_item_id?: number | string;
+    unit_type_brand_id?: number | string;
   },
 ) => {
   const queryParams: Record<string, unknown> = {
@@ -92,6 +104,7 @@ export const getStockUnits = async (
     specified: params.specified,
     activity_type: params.activity_type,
     unit_transaction_item_id: params.unit_transaction_item_id,
+    unit_type_brand_id: params.unit_type_brand_id,
   };
 
   if (params.in_stock !== undefined) {
@@ -134,6 +147,7 @@ export interface ExportStockUnitParams {
   chassis_number?: string;
   unit_transaction_item_id?: number | string;
   unit_transaction_id?: number | string;
+  unit_type_brand_id?: number | string;
   specified?: string;
   activity_type?: string;
   sort_by?: string;
@@ -158,6 +172,7 @@ export const exportStockUnits = async (
     chassis_number: params.chassis_number,
     unit_transaction_item_id: params.unit_transaction_item_id,
     unit_transaction_id: params.unit_transaction_id,
+    unit_type_brand_id: params.unit_type_brand_id,
     specified: params.specified,
     activity_type: params.activity_type,
     sort_by: params.sort_by,
