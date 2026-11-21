@@ -223,6 +223,7 @@ const normalizeFinanceBilling = (item: any): FinanceBilling => ({
   cash_flow_id: toNumber(item?.cash_flow_id),
   cash_id: toNumber(item?.cash_id),
   account_id: toNumber(item?.account_id),
+  type: item?.type ?? undefined,
   amount: toNumber(item?.amount),
   amount_original: toNumber(item?.amount_original),
   payment_proof: item?.payment_proof ?? null,
@@ -249,6 +250,9 @@ export async function createFinanceBilling(payload: FinanceBillingPayload): Prom
   }
   formData.append('cash_id', String(payload.cash_id));
   formData.append('account_id', String(payload.account_id));
+  if (payload.type) {
+    formData.append('type', payload.type);
+  }
   formData.append('amount', String(payload.amount));
   if (payload.amount_original != null) {
     formData.append('amount_original', String(payload.amount_original));
@@ -279,6 +283,9 @@ export async function updateFinanceBilling(id: number | string, payload: Finance
   }
   formData.append('cash_id', String(payload.cash_id));
   formData.append('account_id', String(payload.account_id));
+  if (payload.type) {
+    formData.append('type', payload.type);
+  }
   formData.append('amount', String(payload.amount));
   if (payload.amount_original != null) {
     formData.append('amount_original', String(payload.amount_original));

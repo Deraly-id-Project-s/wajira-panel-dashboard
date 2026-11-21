@@ -252,6 +252,7 @@ const normalizeCashFlow = (payload: Partial<KasHarian>): KasHarian => ({
     cash_flow_id: toNumber(fb.cash_flow_id),
     cash_id: toNumber(fb.cash_id),
     account_id: toNumber(fb.account_id),
+    type: fb.type ? String(fb.type).toLowerCase() : (fb.account?.type ? String(fb.account.type).toLowerCase() : undefined),
     amount: toNumber(fb.amount),
     amount_original: toNumber(fb.amount_original),
     payment_proof: fb.payment_proof ?? null,

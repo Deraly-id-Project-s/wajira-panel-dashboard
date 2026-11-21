@@ -14,6 +14,7 @@ export interface FinanceBilling {
   cash_flow_id: number;
   cash_id: number;
   account_id: number;
+  type?: string;
   amount: number;
   amount_original: number;
   payment_proof: string | null;
@@ -40,6 +41,7 @@ export interface FinanceBillingPayload {
   finance_refund_id?: number;
   cash_id: number;
   account_id: number;
+  type?: string;
   amount: number;
   amount_original?: number;
   payment_at: string;
