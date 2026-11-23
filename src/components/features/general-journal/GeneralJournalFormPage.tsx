@@ -22,6 +22,11 @@ import {
   type GeneralJournalFormValues,
 } from '@/scheme/general-journal.schema';
 import { fetchUserCompanies } from '@/services/company.service';
+import {
+  createGeneralJournalBillingPayment,
+  fetchGeneralJournalDetail,
+  updateGeneralJournalBillingPayment,
+} from '@/services/generalJournal.service';
 import { getApiErrorMessage } from '@/utils/apiErrorHandler';
 import GeneralJournalForm from './GeneralJournalForm';
 import type { GeneralJournalPayload } from '@/@types/general-journal.types';
@@ -51,6 +56,7 @@ const emptyValues = (companyId: number): GeneralJournalFormInput => ({
       ],
     },
   ],
+  payments: [],
 });
 
 export default function GeneralJournalFormPage({ mode }: Props) {
@@ -131,6 +137,15 @@ export default function GeneralJournalFormPage({ mode }: Props) {
         ]
       : [{ note: '', cashes: [{ cash_id: 0, amount: 0, type: existingType }] }];
 
+    const initialPayments = (firstBilling?.payments || []).map((p) => ({
+      id: p.id,
+      account_id: Number(p.account_id),
+      type: (p.type === 'credit' ? 'credit' : 'debit') as 'debit' | 'credit',
+      amount: Number(p.amount || 0),
+      amount_original: Number(p.amount_original || 0),
+      note: p.note ?? '',
+    }));
+
     form.reset({
       company_id: journalDetail.company_id,
       date: journalDetail.date ? new Date(journalDetail.date) : new Date(),
@@ -141,6 +156,7 @@ export default function GeneralJournalFormPage({ mode }: Props) {
       amount: journalDetail.amount !== null && journalDetail.amount !== undefined ? Number(journalDetail.amount) : undefined,
       amount_original: journalDetail.amount_original !== null && journalDetail.amount_original !== undefined ? Number(journalDetail.amount_original) : undefined,
       billings: initialBillings,
+      payments: initialPayments,
     });
   }, [journalDetail, kasOptions, form, mode]);
 
@@ -203,15 +219,55 @@ export default function GeneralJournalFormPage({ mode }: Props) {
 
     try {
       let targetId: number | string | undefined = journalId;
+      let targetBillingId: number | undefined;
+
       if (mode === 'edit') {
         if (!journalId) return;
         const result = await updateMutation.mutateAsync({ id: journalId, payload });
         targetId = result?.id ?? journalId;
+        targetBillingId = result?.billings?.[0]?.id ?? journalDetail?.billings?.[0]?.id;
         toast.success('Jurnal umum berhasil diperbarui');
       } else {
         const result = await createMutation.mutateAsync(payload);
         targetId = result?.id;
+        targetBillingId = result?.billings?.[0]?.id;
         toast.success('Jurnal umum berhasil ditambahkan');
+      }
+
+      // Handle direct general journal payments created/updated via the form
+      if (targetId && values.payments && values.payments.length > 0) {
+        if (!targetBillingId) {
+          try {
+            const detail = await fetchGeneralJournalDetail(targetId);
+            targetBillingId = detail.billings?.[0]?.id;
+          } catch {
+            // ignore
+          }
+        }
+
+        if (targetBillingId) {
+          for (const p of values.payments) {
+            if (Number(p.account_id) > 0 && Number(p.amount) > 0) {
+              if (p.id) {
+                await updateGeneralJournalBillingPayment(p.id, {
+                  account_id: Number(p.account_id),
+                  type: p.type === 'credit' ? 'credit' : 'debit',
+                  amount: Number(p.amount),
+                  note: p.note || null,
+                });
+              } else {
+                await createGeneralJournalBillingPayment({
+                  general_journal_billing_id: targetBillingId,
+                  account_id: Number(p.account_id),
+                  type: p.type === 'credit' ? 'credit' : 'debit',
+                  amount: Number(p.amount),
+                  amount_original: isUsd ? Number(p.amount) : 0,
+                  note: p.note || null,
+                });
+              }
+            }
+          }
+        }
       }
 
       const companySlug = typeof slug === 'string' && slug.trim() ? slug : 'wajira-morindo';

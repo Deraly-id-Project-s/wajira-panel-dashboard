@@ -18,6 +18,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip
 import { currenciesFormat } from '@/components/ui/currenciesFormat';
 import GeneralJournalDetailCards from '@/components/features/general-journal/GeneralJournalDetailCards';
 import GeneralJournalEntriesTable from '@/components/features/general-journal/GeneralJournalEntriesTable';
+import BillingPaymentForm from '@/components/features/general-journal/BillingPaymentForm';
 import BillingPaymentCreateDialog from '@/components/features/general-journal/BillingPaymentCreateDialog';
 import BillingPaymentEditDialog from '@/components/features/general-journal/BillingPaymentEditDialog';
 import BillingPaymentDeleteDialog from '@/components/features/general-journal/BillingPaymentDeleteDialog';
@@ -418,6 +419,24 @@ export default function GeneralJournalDetailView({ journalId }: Props) {
           proofUrl={proofUrl}
           onPreviewProof={(url) => setPreviewUrl(url)}
         />
+
+        {/* Form Tambah Pembayaran Langsung pada Halaman Detail (Referensi Penuh Kas Harian) */}
+        {canEdit && primaryBilling?.id && !(isPaid && isBalanced) ? (
+          <BillingPaymentForm
+            billingId={primaryBilling.id}
+            journalId={journal.id}
+            totalAmount={totalAmount}
+            remainingDebit={remainingDebit}
+            remainingCredit={remainingCredit}
+            isDebitSettled={isDebitSettled}
+            isCreditSettled={isCreditSettled}
+            accounts={accountOptions}
+            isAccountsLoading={accountQuery.isLoading}
+            isUsd={isUsd}
+            defaultType={isDebitSettled ? 'credit' : 'debit'}
+            disabled={!canEdit || (isPaid && isBalanced)}
+          />
+        ) : null}
 
         {/* Section 2: Tabel Pembayaran Jurnal Umum */}
         <GeneralJournalEntriesTable

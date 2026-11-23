@@ -31,6 +31,15 @@ export const generalJournalBillingItemSchema = z.object({
   cashes: z.array(generalJournalCashSchema).min(1, 'Minimal harus terdapat 1 alokasi kas'),
 });
 
+export const generalJournalPaymentDirectSchema = z.object({
+  id: z.number().optional(),
+  account_id: z.number().min(0).default(0),
+  type: z.enum(['debit', 'credit', 'debet', 'kredit']).default('debit'),
+  amount: z.number().min(0).default(0),
+  amount_original: z.number().min(0).optional().nullable(),
+  note: z.string().optional().nullable(),
+});
+
 export const generalJournalSchema = z
   .object({
     company_id: z.number({ required_error: 'Perusahaan wajib dipilih' }).min(1, 'Perusahaan wajib dipilih'),
@@ -42,6 +51,7 @@ export const generalJournalSchema = z
     amount: z.number().min(0).optional().nullable(),
     amount_original: z.number().min(0).optional().nullable(),
     billings: z.array(generalJournalBillingItemSchema).min(1, 'Minimal harus terdapat 1 item billing'),
+    payments: z.array(generalJournalPaymentDirectSchema).optional().default([]),
   })
   .superRefine((value, ctx) => {
     if (!value.billings || value.billings.length === 0) {
@@ -102,6 +112,25 @@ export const generalJournalSchema = z
         path: ['billings'],
       });
     }
+
+    (value.payments || []).forEach((p, pIndex) => {
+      const accId = Number(p.account_id);
+      const amt = Number(p.amount);
+      if (accId > 0 && amt <= 0) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: 'Nominal pembayaran harus lebih dari 0 jika akun dipilih',
+          path: ['payments', pIndex, 'amount'],
+        });
+      }
+      if (amt > 0 && accId <= 0) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: 'Akun lawan (COA) wajib dipilih jika nominal diisi',
+          path: ['payments', pIndex, 'account_id'],
+        });
+      }
+    });
   });
 
 export const generalJournalBillingPaymentSchema = z.object({

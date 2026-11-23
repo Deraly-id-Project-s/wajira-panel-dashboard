@@ -8,6 +8,7 @@ import {
   Wallet,
   AlertCircle,
   Coins,
+  CreditCard,
 } from 'lucide-react';
 import type { Company } from '@/services/company.service';
 import type { Kas } from '@/@types/kas.types';
@@ -17,13 +18,16 @@ import { Button } from '@/components/ui/button';
 import { DatePicker } from '@/components/ui/date-picker';
 import { FileInput } from '@/components/ui/file-input';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import { Input } from '@/components/ui/input';
 import { LoadingState } from '@/components/ui/loading-state';
 import { MoneyInput } from '@/components/ui/money-input';
+import { SearchableSelect, type SearchableSelectOption } from '@/components/ui/searchable-select';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { CollapsibleBox } from '@/components/ui/collapsible-box';
 import RequiredMark from '@/components/ui/required-mark';
 import { currenciesFormat } from '@/components/ui/currenciesFormat';
+import { useAccounts } from '@/hooks/useAccount';
 import { cn } from '@/lib/utils';
 
 interface Props {
@@ -68,6 +72,55 @@ export default function GeneralJournalForm({
     control: form.control,
     name: 'billings',
   });
+
+  const selectedCompanyId = form.watch('company_id');
+  const accountQuery = useAccounts({
+    page: 1,
+    perPage: 1000,
+    search: '',
+    company_id: selectedCompanyId ? Number(selectedCompanyId) : undefined,
+    enabled: Boolean(selectedCompanyId),
+  });
+  const accountOptions = useMemo<SearchableSelectOption[]>(() => {
+    const list = accountQuery.data?.data ?? [];
+    return list.map((a) => {
+      const rawType = a.type || '';
+      const typeLabel = rawType.toLowerCase() === 'credit' ? 'Kredit' : 'Debet';
+      return {
+        value: String(a.id),
+        label: `[${typeLabel}] ${a.code} - ${a.name}`,
+      };
+    });
+  }, [accountQuery.data?.data]);
+
+  const {
+    fields: paymentFields,
+    append: appendPayment,
+    remove: removePayment,
+  } = useFieldArray({
+    control: form.control,
+    name: 'payments',
+  });
+  const watchedPayments = useWatch({
+    control: form.control,
+    name: 'payments',
+    defaultValue: form.getValues('payments') || [],
+  });
+
+  const paymentTotals = useMemo(() => {
+    let debitTotal = 0;
+    let creditTotal = 0;
+    (watchedPayments || []).forEach((p) => {
+      const amt = Number(p?.amount || 0);
+      const pType = String(p?.type || 'debit').toLowerCase();
+      if (pType === 'debit' || pType === 'debet') {
+        debitTotal += amt;
+      } else {
+        creditTotal += amt;
+      }
+    });
+    return { debitTotal, creditTotal };
+  }, [watchedPayments]);
 
   // Collect all selected cash IDs across all billings to enforce uniqueness
   const selectedCashIds = useMemo(() => {
@@ -154,6 +207,11 @@ export default function GeneralJournalForm({
     };
   }, [billings]);
 
+  const targetTotal = summary.grandTotalCash;
+  const isDebitFull = targetTotal > 0 && paymentTotals.debitTotal === targetTotal;
+  const isCreditFull = targetTotal > 0 && paymentTotals.creditTotal === targetTotal;
+  const isBalanced = targetTotal > 0 && isDebitFull && isCreditFull;
+
   // Filter kasOptions to only matching currency when currency is locked
   const availableMatchingKas = useMemo(() => {
     if (!activeLockedCurrency) return kasOptions;
@@ -188,7 +246,7 @@ export default function GeneralJournalForm({
               render={({ field }) => (
                 <FormItem className="flex flex-col">
                   <FormLabel className="text-sm font-semibold text-slate-700">
-                    Tanggal Jurnal <RequiredMark />
+                    Tanggal Jurnal Umum <RequiredMark />
                   </FormLabel>
                   <FormControl>
                     <DatePicker
@@ -208,7 +266,7 @@ export default function GeneralJournalForm({
               render={({ field }) => (
                 <FormItem className="flex flex-col">
                   <FormLabel className="text-sm font-semibold text-slate-700">
-                    Jenis Transaksi Umum <RequiredMark />
+                    Jenis Transaksi Jurnal Umum <RequiredMark />
                   </FormLabel>
                   <Select
                     value={field.value === 'credit' || field.value === 'kredit' ? 'credit' : 'debit'}
@@ -593,6 +651,239 @@ export default function GeneralJournalForm({
               </FormItem>
             )}
           />
+        </div>
+      </CollapsibleBox>
+
+      {/* Section 3: Rincian Pembayaran Jurnal Umum (General Journal Payment) */}
+      <CollapsibleBox
+        title="Rincian Pembayaran Jurnal (Akun Lawan / COA)"
+        description="Alokasikan akun lawan transaksi jurnal untuk memenuhi kewajiban Debet dan keseimbangan Kredit."
+        icon={CreditCard}
+        defaultExpanded={true}
+      >
+        <div className="space-y-6">
+          <div className="flex flex-wrap items-center justify-between gap-4 border-b border-slate-100 pb-4">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">
+                Daftar Pembayaran Jurnal (Dual Payment)
+              </p>
+              <p className="text-xs text-slate-500 mt-0.5">
+                Alokasi pembayaran akun lawan: Debet (wajib untuk lunas) dan Kredit (opsional untuk seimbang).
+              </p>
+            </div>
+            <Button
+              type="button"
+              variant="default"
+              onClick={() => {
+                appendPayment({
+                  account_id: 0,
+                  type: isCredit ? 'debit' : 'credit',
+                  amount: 0,
+                  amount_original: 0,
+                  note: '',
+                });
+              }}
+              disabled={isBusy || accountOptions.length === 0}
+            >
+              <Plus className="mr-1.5 h-4 w-4" />
+              Tambah Rincian Pembayaran
+            </Button>
+          </div>
+
+          {paymentFields.length === 0 ? (
+            <div className="rounded-lg border border-dashed border-slate-200 p-6 text-center text-slate-400">
+              <CreditCard className="mx-auto h-8 w-8 text-slate-300 mb-2" />
+              <p className="text-sm font-medium text-slate-600">Belum ada rincian pembayaran jurnal</p>
+              <p className="text-xs text-slate-400 mt-1">
+                Klik tombol &quot;Tambah Rincian Pembayaran&quot; di atas untuk menambahkan akun lawan pembayaran secara langsung.
+              </p>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {paymentFields.map((fieldItem, pIndex) => {
+                return (
+                  <div
+                    key={fieldItem.id}
+                    className="relative rounded-lg border border-slate-200 bg-slate-50/40 p-4 transition-colors hover:border-slate-300"
+                  >
+                    <div className="grid grid-cols-1 md:grid-cols-12 gap-4 items-start">
+                      {/* Akun Lawan (COA) - SearchableSelect */}
+                      <div className="md:col-span-4">
+                        <FormField
+                          control={form.control}
+                          name={`payments.${pIndex}.account_id`}
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel className="text-xs font-medium text-slate-700">
+                                Akun Lawan (COA) <RequiredMark />
+                              </FormLabel>
+                              <FormControl>
+                                <SearchableSelect
+                                  value={field.value ? String(field.value) : ''}
+                                  onChange={(val) => field.onChange(val ? Number(val) : 0)}
+                                  options={accountOptions}
+                                  placeholder="Pilih Akun Lawan (COA)..."
+                                  searchPlaceholder="Cari kode atau nama akun..."
+                                  emptyText="Akun tidak ditemukan"
+                                  loading={accountQuery.isLoading}
+                                  disabled={isBusy}
+                                  className="h-10 bg-white"
+                                />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      </div>
+
+                      {/* Tipe Pembayaran (Debit / Kredit) */}
+                      <div className="md:col-span-2">
+                        <FormField
+                          control={form.control}
+                          name={`payments.${pIndex}.type`}
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel className="text-xs font-medium text-slate-700">
+                                Tipe <RequiredMark />
+                              </FormLabel>
+                              <Select
+                                value={field.value === 'credit' || field.value === 'kredit' ? 'credit' : 'debit'}
+                                onValueChange={(val: 'debit' | 'credit') => field.onChange(val)}
+                                disabled={isBusy}
+                              >
+                                <FormControl>
+                                  <SelectTrigger className="h-10 bg-white">
+                                    <SelectValue placeholder="Pilih Tipe" />
+                                  </SelectTrigger>
+                                </FormControl>
+                                <SelectContent>
+                                  <SelectItem value="debit">
+                                    <span className="font-semibold text-emerald-700">Debet</span>
+                                  </SelectItem>
+                                  <SelectItem value="credit">
+                                    <span className="font-semibold text-rose-700">Kredit</span>
+                                  </SelectItem>
+                                </SelectContent>
+                              </Select>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      </div>
+
+                      {/* Nominal Pembayaran */}
+                      <div className="md:col-span-3">
+                        <FormField
+                          control={form.control}
+                          name={`payments.${pIndex}.amount`}
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel className="text-xs font-medium text-slate-700">
+                                Nominal ({hasUsdCash ? 'USD' : 'IDR'}) <RequiredMark />
+                              </FormLabel>
+                              <FormControl>
+                                <MoneyInput
+                                  currency={hasUsdCash ? 'USD' : 'IDR'}
+                                  value={field.value}
+                                  onChangeValue={(val) => field.onChange(val)}
+                                  disabled={isBusy}
+                                  placeholder="0"
+                                  className="h-10 bg-white"
+                                />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      </div>
+
+                      {/* Catatan Pembayaran */}
+                      <div className="md:col-span-2">
+                        <FormField
+                          control={form.control}
+                          name={`payments.${pIndex}.note`}
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel className="text-xs font-medium text-slate-700">
+                                Catatan
+                              </FormLabel>
+                              <FormControl>
+                                <Input
+                                  placeholder="Keterangan..."
+                                  className="h-10 bg-white text-xs"
+                                  disabled={isBusy}
+                                  value={field.value || ''}
+                                  onChange={field.onChange}
+                                />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      </div>
+
+                      {/* Tombol Hapus Baris */}
+                      <div className="flex md:h-10 items-end justify-end md:col-span-1">
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => removePayment(pIndex)}
+                          disabled={isBusy}
+                          className="h-10 w-10 text-slate-400 hover:bg-rose-50 hover:text-rose-600"
+                          title="Hapus pembayaran ini"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+
+          {/* Live Summary Box - Exact Kas Harian Pattern */}
+          <div className="rounded-lg border border-slate-200 bg-slate-50 p-4">
+            <div className="flex flex-wrap items-center justify-between gap-4 text-xs">
+              <div className="flex flex-wrap items-center gap-4">
+                <div className="flex items-center gap-1.5">
+                  <span className="font-semibold text-slate-700">Total Kas Jurnal:</span>
+                  <Badge variant="outline" className="bg-white border-slate-300 text-slate-900 font-bold">
+                    {currenciesFormat(hasUsdCash ? 'usd' : 'idr', summary.grandTotalCash)}
+                  </Badge>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <span className="font-semibold text-emerald-800">Total Debet:</span>
+                  <Badge variant="outline" className="bg-emerald-50 border-emerald-300 text-emerald-800 font-bold">
+                    {currenciesFormat(hasUsdCash ? 'usd' : 'idr', paymentTotals.debitTotal)}
+                  </Badge>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <span className="font-semibold text-rose-800">Total Kredit:</span>
+                  <Badge variant="outline" className="bg-rose-50 border-rose-300 text-rose-800 font-bold">
+                    {currenciesFormat(hasUsdCash ? 'usd' : 'idr', paymentTotals.creditTotal)}
+                  </Badge>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2">
+                {isBalanced ? (
+                  <Badge variant="outline" className="border-emerald-300 bg-emerald-100 text-emerald-800 font-bold px-2.5 py-1">
+                    Seimbang (Balance)
+                  </Badge>
+                ) : isDebitFull && paymentTotals.creditTotal === 0 ? (
+                  <Badge variant="outline" className="border-blue-300 bg-blue-100 text-blue-800 font-bold px-2.5 py-1">
+                    Debet Terpenuhi (Kredit Opsional)
+                  </Badge>
+                ) : (
+                  <Badge variant="outline" className="border-amber-300 bg-amber-100 text-amber-800 font-bold px-2.5 py-1">
+                    Belum Seimbang
+                  </Badge>
+                )}
+              </div>
+            </div>
+          </div>
         </div>
       </CollapsibleBox>
 

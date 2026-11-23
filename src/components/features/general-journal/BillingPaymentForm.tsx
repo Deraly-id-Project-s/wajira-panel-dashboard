@@ -1,11 +1,13 @@
-import { useState } from 'react';
-import { Plus, CreditCard } from 'lucide-react';
+import { useEffect, useMemo, useState } from 'react';
+import { Plus, CreditCard, CheckCircle2, AlertCircle } from 'lucide-react';
 import { toast } from 'sonner';
 import type { Account } from '@/@types/account.types';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { CollapsibleBox } from '@/components/ui/collapsible-box';
 import { Input } from '@/components/ui/input';
 import { MoneyInput } from '@/components/ui/money-input';
-import { LedgerAccountSelect } from '@/components/features/laporan-buku-besar/LedgerAccountSelect';
+import { SearchableSelect, type SearchableSelectOption } from '@/components/ui/searchable-select';
 import { LoadingState } from '@/components/ui/loading-state';
 import RequiredMark from '@/components/ui/required-mark';
 import { currenciesFormat } from '@/components/ui/currenciesFormat';
@@ -18,6 +20,10 @@ interface Props {
   journalId: number;
   totalAmount?: number;
   remainingAmount?: number;
+  remainingDebit?: number;
+  remainingCredit?: number;
+  isDebitSettled?: boolean;
+  isCreditSettled?: boolean;
   accounts: Account[];
   isAccountsLoading?: boolean;
   disabled?: boolean;
@@ -30,6 +36,10 @@ export default function BillingPaymentForm({
   journalId,
   totalAmount,
   remainingAmount = 0,
+  remainingDebit = 0,
+  remainingCredit = 0,
+  isDebitSettled = false,
+  isCreditSettled = false,
   accounts,
   isAccountsLoading = false,
   disabled = false,
@@ -44,22 +54,43 @@ export default function BillingPaymentForm({
   const createPaymentMutation = useCreateGeneralJournalBillingPayment(journalId);
   const isBusy = createPaymentMutation.isPending;
 
-  const maxAllowedAmount = totalAmount !== undefined && totalAmount > 0 ? totalAmount : undefined;
+  const currency = isUsd ? 'usd' : 'idr';
+  const effectiveRemainingDebit = remainingDebit > 0 ? remainingDebit : remainingAmount;
+  const activeRemaining = type === 'debit' ? effectiveRemainingDebit : remainingCredit;
 
-  const handleFillRemaining = () => {
-    if (remainingAmount > 0) {
-      const fillVal = maxAllowedAmount !== undefined
-        ? Math.min(remainingAmount, maxAllowedAmount)
-        : remainingAmount;
-      setAmount(fillVal);
+  // Initialize default type and amount based on settlement state
+  useEffect(() => {
+    let nextType: 'debit' | 'credit' = defaultType;
+    if (isDebitSettled && !isCreditSettled) {
+      nextType = 'credit';
+    } else if (!isDebitSettled) {
+      nextType = 'debit';
     }
+    setType(nextType);
+    const initialRemaining = nextType === 'debit' ? effectiveRemainingDebit : remainingCredit;
+    setAmount(initialRemaining > 0 ? initialRemaining : 0);
+  }, [defaultType, isDebitSettled, isCreditSettled, effectiveRemainingDebit, remainingCredit]);
+
+  const accountOptions = useMemo<SearchableSelectOption[]>(() => {
+    return (accounts || []).map((acc) => {
+      const rawType = (acc.type || '').toLowerCase();
+      const typeLabel = rawType === 'credit' || rawType === 'kredit' ? 'Kredit' : 'Debet';
+      return {
+        value: String(acc.id),
+        label: `[${typeLabel}] ${acc.code} - ${acc.name}`,
+      };
+    });
+  }, [accounts]);
+
+  const handleTypeChange = (nextType: 'debit' | 'credit') => {
+    setType(nextType);
+    const rem = nextType === 'debit' ? effectiveRemainingDebit : remainingCredit;
+    setAmount(rem > 0 ? rem : 0);
   };
 
-  const handleAmountChange = (val: number) => {
-    if (maxAllowedAmount !== undefined && val > maxAllowedAmount) {
-      setAmount(maxAllowedAmount);
-    } else {
-      setAmount(val);
+  const handleFillRemaining = () => {
+    if (activeRemaining > 0) {
+      setAmount(activeRemaining);
     }
   };
 
@@ -76,9 +107,9 @@ export default function BillingPaymentForm({
       return;
     }
 
-    if (maxAllowedAmount !== undefined && amount > maxAllowedAmount) {
+    if (activeRemaining > 0 && amount > activeRemaining) {
       toast.error(
-        `Nominal pembayaran tidak boleh melebihi total amount (${currenciesFormat(isUsd ? 'usd' : 'idr', maxAllowedAmount)})`
+        `Nominal pembayaran (${currenciesFormat(currency, amount)}) melebihi sisa ${type === 'debit' ? 'debet' : 'kredit'} (${currenciesFormat(currency, activeRemaining)})`
       );
       return;
     }
@@ -95,8 +126,8 @@ export default function BillingPaymentForm({
 
       toast.success(
         type === 'debit'
-          ? 'Pembayaran debet berhasil ditambahkan'
-          : 'Pembayaran kredit berhasil ditambahkan'
+          ? 'Pembayaran debet berhasil ditambahkan. Jurnal siap ditandai lunas.'
+          : 'Pembayaran kredit berhasil ditambahkan.'
       );
       setSelectedAccountId(null);
       setAmount(0);
@@ -107,84 +138,93 @@ export default function BillingPaymentForm({
   };
 
   return (
-    <div className="rounded-lg border border-slate-200 bg-slate-50/70 p-4 transition-all">
-      <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-200/80 pb-3 mb-4">
-        <div className="flex items-center gap-2">
-          <div className="flex h-7 w-7 items-center justify-center rounded-md bg-emerald-100 text-emerald-700">
-            <CreditCard className="h-4 w-4" />
+    <CollapsibleBox
+      title="Tambah Pembayaran Jurnal (Akun Lawan / COA)"
+      description="Input alokasi pembayaran dual: Debet (wajib untuk lunas) dan Kredit (opsional untuk seimbang)."
+      icon={CreditCard}
+      defaultExpanded={true}
+    >
+      <form onSubmit={handleSubmit} className="space-y-4">
+        {/* Header & Quick Action */}
+        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 pb-3">
+          <div className="flex items-center gap-2">
+            <span className="text-xs font-semibold text-slate-700">Arah Pembayaran:</span>
+            <div className="inline-flex rounded-md border border-slate-200 bg-white p-0.5">
+              <button
+                type="button"
+                disabled={disabled || isBusy}
+                onClick={() => handleTypeChange('debit')}
+                className={cn(
+                  'flex items-center gap-1.5 rounded px-3 py-1.5 text-xs font-semibold transition-colors',
+                  type === 'debit'
+                    ? 'bg-emerald-600 text-white shadow-xs'
+                    : 'text-slate-600 hover:text-slate-900',
+                )}
+              >
+                <span>Debet</span>
+                {effectiveRemainingDebit > 0 ? (
+                  <span className={cn('text-[10px] px-1.5 py-0.2 rounded-full', type === 'debit' ? 'bg-emerald-700 text-emerald-100' : 'bg-slate-100 text-slate-600')}>
+                    Sisa: {currenciesFormat(currency, effectiveRemainingDebit)}
+                  </span>
+                ) : (
+                  <CheckCircle2 className="h-3 w-3" />
+                )}
+              </button>
+
+              <button
+                type="button"
+                disabled={disabled || isBusy}
+                onClick={() => handleTypeChange('credit')}
+                className={cn(
+                  'flex items-center gap-1.5 rounded px-3 py-1.5 text-xs font-semibold transition-colors',
+                  type === 'credit'
+                    ? 'bg-rose-600 text-white shadow-xs'
+                    : 'text-slate-600 hover:text-slate-900',
+                )}
+              >
+                <span>Kredit</span>
+                {remainingCredit > 0 ? (
+                  <span className={cn('text-[10px] px-1.5 py-0.2 rounded-full', type === 'credit' ? 'bg-rose-700 text-rose-100' : 'bg-slate-100 text-slate-600')}>
+                    Sisa: {currenciesFormat(currency, remainingCredit)}
+                  </span>
+                ) : (
+                  <CheckCircle2 className="h-3 w-3" />
+                )}
+              </button>
+            </div>
           </div>
-          <div>
-            <h4 className="text-sm font-semibold text-slate-900">
-              Tambah Pembayaran Billing ({type === 'debit' ? 'Debet' : 'Kredit'})
-            </h4>
-            <p className="text-xs text-slate-500">
-              {type === 'debit'
-                ? 'Input alokasi pembayaran debet untuk memenuhi syarat lunas'
-                : 'Input alokasi akun lawan kredit untuk menyeimbangkan neraca'}
-            </p>
-          </div>
+
+          {activeRemaining > 0 && !disabled && (
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={handleFillRemaining}
+              disabled={isBusy}
+              className="h-8 gap-1.5 text-xs border-emerald-300 text-emerald-700 hover:bg-emerald-50 bg-white"
+            >
+              Gunakan Sisa {type === 'debit' ? 'Debet' : 'Kredit'} ({currenciesFormat(currency, activeRemaining)})
+            </Button>
+          )}
         </div>
 
-        {remainingAmount > 0 && !disabled ? (
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={handleFillRemaining}
-            disabled={isBusy}
-            className="h-8 gap-1.5 text-xs border-emerald-300 text-emerald-700 hover:bg-emerald-50 bg-white"
-          >
-            Gunakan Sisa ({currenciesFormat(isUsd ? 'usd' : 'idr', remainingAmount)})
-          </Button>
-        ) : null}
-      </div>
-
-      <form onSubmit={handleSubmit} className="space-y-3">
-        {/* Pilihan Arah Pembayaran (Debet vs Kredit) */}
-        <div className="flex items-center gap-2">
-          <span className="text-xs font-semibold text-slate-700">Arah Pembayaran:</span>
-          <div className="inline-flex rounded-md border border-slate-200 bg-white p-0.5">
-            <button
-              type="button"
-              onClick={() => setType('debit')}
-              className={cn(
-                'rounded px-2.5 py-1 text-xs font-semibold transition-colors',
-                type === 'debit'
-                  ? 'bg-emerald-600 text-white shadow-xs'
-                  : 'text-slate-600 hover:text-slate-900',
-              )}
-            >
-              Debet (Wajib)
-            </button>
-            <button
-              type="button"
-              onClick={() => setType('credit')}
-              className={cn(
-                'rounded px-2.5 py-1 text-xs font-semibold transition-colors',
-                type === 'credit'
-                  ? 'bg-rose-600 text-white shadow-xs'
-                  : 'text-slate-600 hover:text-slate-900',
-              )}
-            >
-              Kredit (Seimbang)
-            </button>
-          </div>
-        </div>
-
-        <div className="grid gap-3 sm:grid-cols-12 items-end">
-          {/* Akun COA */}
+        {/* Inputs Grid matching Kas Harian Card style */}
+        <div className="grid gap-4 sm:grid-cols-12 items-end">
+          {/* Akun Lawan (COA) - SearchableSelect */}
           <div className="sm:col-span-4 space-y-1.5 min-w-0">
             <label className="text-xs font-semibold text-slate-700">
               Akun Lawan (COA) <RequiredMark />
             </label>
-            <LedgerAccountSelect
-              value={selectedAccountId}
-              onValueChange={setSelectedAccountId}
-              options={accounts}
+            <SearchableSelect
+              value={selectedAccountId ? String(selectedAccountId) : ''}
+              onChange={(val) => setSelectedAccountId(val ? Number(val) : null)}
+              options={accountOptions}
               disabled={disabled || isBusy || isAccountsLoading}
               placeholder="Pilih akun lawan (COA)..."
-              showAllOption={false}
-              className="w-full"
+              searchPlaceholder="Cari kode atau nama akun..."
+              emptyText="Akun tidak ditemukan"
+              loading={isAccountsLoading}
+              className="h-10 bg-white"
             />
           </div>
 
@@ -194,63 +234,61 @@ export default function BillingPaymentForm({
               <label className="text-xs font-semibold text-slate-700">
                 Nominal ({isUsd ? 'USD' : 'IDR'}) <RequiredMark />
               </label>
-              {maxAllowedAmount !== undefined && (
+              {activeRemaining > 0 && (
                 <span className="text-[11px] text-slate-500 font-medium">
-                  Maks: {currenciesFormat(isUsd ? 'usd' : 'idr', maxAllowedAmount)}
+                  Sisa: {currenciesFormat(currency, activeRemaining)}
                 </span>
               )}
             </div>
             <MoneyInput
               currency={isUsd ? 'USD' : 'IDR'}
               value={amount}
-              max={maxAllowedAmount}
-              onChangeValue={handleAmountChange}
+              onChangeValue={(val) => setAmount(val)}
               placeholder="0"
               disabled={disabled || isBusy}
-              className="bg-white h-9"
+              className="bg-white h-10"
             />
           </div>
 
           {/* Keterangan Pembayaran */}
           <div className="sm:col-span-4 space-y-1.5">
-            <label className="text-xs font-medium text-slate-600">
-              Keterangan Pembayaran (Opsional)
+            <label className="text-xs font-semibold text-slate-700">
+              Catatan Pembayaran (Opsional)
             </label>
             <Input
               type="text"
               value={note}
               onChange={(e) => setNote(e.target.value)}
-              placeholder="Biaya operasional / beban..."
+              placeholder="Contoh: Pembayaran operasional / beban..."
               disabled={disabled || isBusy}
-              className="bg-white h-9 text-sm"
+              className="bg-white h-10 text-xs"
             />
           </div>
         </div>
 
+        {/* Action Button */}
         <div className="flex justify-end pt-2">
           <Button
             type="submit"
-            size="sm"
             disabled={
               disabled ||
               isBusy ||
               !selectedAccountId ||
-              amount <= 0 ||
-              (maxAllowedAmount !== undefined && amount > maxAllowedAmount)
+              amount <= 0
             }
-            className="btn-primary h-9 gap-1.5 text-xs px-4"
+            className="btn-primary h-10 gap-1.5 text-xs px-5"
           >
             {isBusy ? (
               <LoadingState variant="inline" text="Menyimpan..." iconClassName="text-white" />
             ) : (
               <>
-                <Plus className="h-3.5 w-3.5" />
-                Simpan Pembayaran
+                <Plus className="h-4 w-4" />
+                Simpan Pembayaran {type === 'debit' ? 'Debet' : 'Kredit'}
               </>
             )}
           </Button>
         </div>
       </form>
-    </div>
+    </CollapsibleBox>
   );
 }

@@ -12,7 +12,6 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { MoneyInput } from '@/components/ui/money-input';
-import { InputDate } from '@/components/ui/input-date';
 import { Table, TableBody, TableCell, TableFooter, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { ReferenceLink } from '@/components/ui/reference-link';
 import { useCreateFinanceBilling, useDeleteFinanceBilling } from '@/hooks/useFinanceBilling';
@@ -41,7 +40,6 @@ const isUsdKas = (kas?: { currency_type?: string | null; code?: string | null } 
 
 interface DraftBillingRow {
   tempId: string;
-  payment_at: string;
   account_id: number;
   cash_id: number;
   debit: number;
@@ -249,7 +247,6 @@ export default function FinanceBillingTable({ financeBillings, cashFlowDetail, c
 
     return {
       tempId: `draft-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
-      payment_at: format(getTodayWIB(), 'yyyy-MM-dd'),
       account_id: 0,
       cash_id: defaultCashId,
       debit: 0,
@@ -490,7 +487,7 @@ export default function FinanceBillingTable({ financeBillings, cashFlowDetail, c
     );
   };
 
-  const handleDraftFieldChange = (tempId: string, field: 'payment_at' | 'note' | 'amount_original', value: any) => {
+  const handleDraftFieldChange = (tempId: string, field: 'note' | 'amount_original', value: any) => {
     setDraftRows((prev) =>
       prev.map((row) => (row.tempId === tempId ? { ...row, [field]: value } : row))
     );
@@ -524,10 +521,6 @@ export default function FinanceBillingTable({ financeBillings, cashFlowDetail, c
       const kas = kasOptions.find((k) => Number(k.id) === Number(row.cash_id));
       if (isUsdKas(kas) && Number(row.amount_original || 0) <= 0) {
         toast.error(`Nominal konversi IDR (kurs) wajib ditentukan manual untuk kas USD pada baris ke-${rowNum}`);
-        return;
-      }
-      if (!row.payment_at) {
-        toast.error(`Tanggal bayar wajib diisi pada baris ke-${rowNum}`);
         return;
       }
     }
@@ -564,6 +557,19 @@ export default function FinanceBillingTable({ financeBillings, cashFlowDetail, c
       }
     }
 
+    const defaultPaymentDate = (() => {
+      const dateVal = cashFlowDetail.date;
+      if (!dateVal) return format(getTodayWIB(), 'yyyy-MM-dd');
+      if (/^\d{4}-\d{2}-\d{2}$/.test(dateVal)) return dateVal;
+      const part = dateVal.split('T')[0];
+      if (/^\d{4}-\d{2}-\d{2}$/.test(part)) return part;
+      try {
+        return format(new Date(dateVal), 'yyyy-MM-dd');
+      } catch {
+        return format(getTodayWIB(), 'yyyy-MM-dd');
+      }
+    })();
+
     setIsSubmittingMass(true);
     try {
       for (const row of filledRows) {
@@ -581,7 +587,7 @@ export default function FinanceBillingTable({ financeBillings, cashFlowDetail, c
           type,
           amount,
           amount_original: amountOriginal,
-          payment_at: row.payment_at,
+          payment_at: defaultPaymentDate,
           note: row.note || '',
         };
 
@@ -697,7 +703,6 @@ export default function FinanceBillingTable({ financeBillings, cashFlowDetail, c
           <TableHeader className="bg-slate-50/90 border-b border-slate-200 text-slate-700">
             <TableRow className="hover:bg-transparent">
               <TableHead className="w-12 text-center font-bold">No</TableHead>
-              <TableHead className="w-40 sm:w-44 font-bold">Tanggal Bayar</TableHead>
               <TableHead className="min-w-[220px] font-bold">Akun</TableHead>
               <TableHead className="min-w-[180px] font-bold">Kas</TableHead>
               <TableHead className="min-w-[180px] text-right font-bold">Debit (Nominal)</TableHead>
@@ -717,7 +722,6 @@ export default function FinanceBillingTable({ financeBillings, cashFlowDetail, c
               return (
                 <TableRow key={fb.id} className="hover:bg-slate-50/70">
                   <TableCell className="text-center font-medium text-slate-400">{idx + 1}</TableCell>
-                  <TableCell className="font-medium text-slate-800">{formatDate(fb.payment_at)}</TableCell>
                   <TableCell>
                     <div className="flex flex-col gap-0.5">
                       <ReferenceLink href={`/dashboard/${slugStr}/master/account?search=${encodeURIComponent(fb.account?.name || '')}`}>
@@ -806,15 +810,6 @@ export default function FinanceBillingTable({ financeBillings, cashFlowDetail, c
                     <span className="inline-flex items-center justify-center px-1.5 py-0.5 rounded-full bg-blue-100 text-[10px]">
                       +{financeBillings.length + draftIdx + 1}
                     </span>
-                  </TableCell>
-                  <TableCell>
-                    <InputDate
-                      value={row.payment_at}
-                      onChange={(e) => handleDraftFieldChange(row.tempId, 'payment_at', e.target.value)}
-                      isEdit={true}
-                      defaultToday={true}
-                      className="h-9 text-xs bg-white"
-                    />
                   </TableCell>
                   <TableCell>
                     <Select
@@ -950,7 +945,7 @@ export default function FinanceBillingTable({ financeBillings, cashFlowDetail, c
           <TableFooter className="bg-slate-50/90 border-t-2 border-slate-300 font-semibold text-xs">
             {/* IDR Totals */}
             <TableRow className="hover:bg-transparent">
-              <TableCell colSpan={4} className="py-2.5 px-4 text-right uppercase tracking-wider text-slate-700 font-bold">
+              <TableCell colSpan={3} className="py-2.5 px-4 text-right uppercase tracking-wider text-slate-700 font-bold">
                 Total Jurnal IDR
               </TableCell>
               <TableCell className="py-2.5 px-4 text-right font-bold text-emerald-800 tabular-nums">
@@ -969,7 +964,7 @@ export default function FinanceBillingTable({ financeBillings, cashFlowDetail, c
             {/* USD Totals (if transaction has USD or USD rows exist) */}
             {(targetTotalUsd > 0 || totalDebitUsdCombined > 0 || totalCreditUsdCombined > 0) && (
               <TableRow className="hover:bg-transparent bg-slate-100/70 border-t border-slate-200">
-                <TableCell colSpan={4} className="py-2.5 px-4 text-right uppercase tracking-wider text-blue-900 font-bold">
+                <TableCell colSpan={3} className="py-2.5 px-4 text-right uppercase tracking-wider text-blue-900 font-bold">
                   Total Jurnal USD
                 </TableCell>
                 <TableCell className="py-2.5 px-4 text-right font-bold text-emerald-800 tabular-nums">
