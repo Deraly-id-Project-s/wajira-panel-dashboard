@@ -1,11 +1,12 @@
 import { useMemo, useState } from 'react';
 import type { KasHarianListItem } from '@/@types/kas-harian.types';
 import type { PaginationMeta } from '@/@types/pagination.types';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { currenciesFormat } from '@/components/ui/currenciesFormat';
-import { MoreVertical, Info, CheckCircle } from 'lucide-react';
+import { MoreVertical, Info, CheckCircle, CheckCircle2, ShieldCheck, ShieldAlert, Clock } from 'lucide-react';
 import { formatDate } from '@/components/ui/format-date';
 import { CopyBox } from '@/components/ui/copy-box';
 import { TextTruncate } from '@/components/ui/text-truncate';
@@ -154,39 +155,66 @@ export default function KasHarianTable({
         sortable: true,
         alignment: 'left',
         cell: (item) => (
-          <div className="flex flex-col sm:flex-row items-center gap-2 w-full sm:w-auto">
-            {(item.unitTransactionBillingId || item.goodsTransactionBillingId) ? (
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <button type="button" className="cursor-help text-[#18385b] hover:text-[#102843] transition-colors flex items-center shrink-0">
-                      <Info className="h-4 w-4" />
-                    </button>
-                  </TooltipTrigger>
-                  <TooltipContent side="top" align="center" className="max-w-xs bg-slate-900 text-white rounded-md p-2 text-xs shadow-md">
-                    Data Arus Transaksi Kas Harian ini terhubung dengan data Administrasi
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
-            ) : null}
-            <CopyBox text={`${item.code || '-'}`} />
+          <div className="flex flex-col items-start gap-1.5 py-0.5">
+            <div className="flex items-center gap-1.5">
+              {(item.unitTransactionBillingId || item.goodsTransactionBillingId) ? (
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <button
+                        type="button"
+                        className="cursor-help text-[#18385b] hover:text-[#102843] transition-colors flex items-center shrink-0"
+                      >
+                        <Info className="h-3.5 w-3.5" />
+                      </button>
+                    </TooltipTrigger>
+                    <TooltipContent side="top" align="center" className="max-w-xs bg-slate-900 text-white rounded-md p-2 text-xs shadow-md">
+                      Data Arus Transaksi Kas Harian ini terhubung dengan data Administrasi
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              ) : null}
+              <CopyBox text={`${item.code || '-'}`} />
+            </div>
+
+            <div className="flex flex-wrap items-center gap-1.5">
+              {/* Badge Status Lunas */}
+              <Badge
+                variant="outline"
+                className={cn(
+                  'rounded-full px-2 py-0.5 text-[10px] font-semibold tracking-wide inline-flex items-center gap-1',
+                  item.is_paid
+                    ? 'border-emerald-200 bg-emerald-50 text-emerald-700'
+                    : 'border-amber-200 bg-amber-50 text-amber-700',
+                )}
+              >
+                {item.is_paid ? (
+                  <CheckCircle2 className="h-3 w-3" />
+                ) : (
+                  <Clock className="h-3 w-3" />
+                )}
+                <span>{item.is_paid ? 'Lunas' : 'Belum Lunas'}</span>
+              </Badge>
+
+              {/* Badge Status Posting */}
+              <Badge
+                variant="outline"
+                className={cn(
+                  'rounded-full px-2 py-0.5 text-[10px] font-semibold tracking-wide inline-flex items-center gap-1',
+                  item.is_posted
+                    ? 'border-emerald-200 bg-emerald-50 text-emerald-700'
+                    : 'border-slate-200 bg-slate-100 text-slate-600',
+                )}
+              >
+                {item.is_posted ? (
+                  <ShieldCheck className="h-3 w-3" />
+                ) : (
+                  <ShieldAlert className="h-3 w-3 text-slate-400" />
+                )}
+                <span>{item.is_posted ? 'Diposting' : 'Belum Diposting'}</span>
+              </Badge>
+            </div>
           </div>
-        ),
-      },
-      {
-        header: 'STATUS',
-        accessorKey: 'is_paid',
-        sortable: true,
-        alignment: 'center',
-        cell: (item) => (
-          <span className={cn(
-            "px-2.5 py-0.5 rounded-full text-xs font-semibold uppercase tracking-wider",
-            item.is_paid
-              ? "bg-green-50 text-green-700 border border-green-200"
-              : "bg-amber-50 text-amber-700 border border-amber-200"
-          )}>
-            {item.is_paid ? 'Lunas' : 'Belum Lunas'}
-          </span>
         ),
       },
       {
@@ -200,7 +228,7 @@ export default function KasHarianTable({
         header: 'TANGGAL',
         accessorKey: 'date',
         sortable: true,
-        alignment: 'center',
+        alignment: 'left',
         cell: (item) => formatDate(item.last_payment_at || item.date),
       },
       {
@@ -214,7 +242,7 @@ export default function KasHarianTable({
         header: 'DEBET IDR',
         accessorKey: 'debet',
         sortable: true,
-        alignment: 'center',
+        alignment: 'left',
         cell: (item) => {
           const debetVal = item.cash_position?.debet_idr_total ?? item.debet;
           return (
@@ -242,7 +270,7 @@ export default function KasHarianTable({
         header: 'KREDIT IDR',
         accessorKey: 'credit',
         sortable: true,
-        alignment: 'center',
+        alignment: 'left',
         cell: (item) => {
           const creditVal = item.cash_position?.credit_idr_total ?? item.credit;
           return (
@@ -270,7 +298,7 @@ export default function KasHarianTable({
         header: 'DEBET USD',
         accessorKey: 'debet_usd',
         sortable: true,
-        alignment: 'center',
+        alignment: 'left',
         cell: (item) => {
           const debetUsdVal = item.cash_position?.debet_usd_total ?? item.debet_usd;
           return <span className="font-medium text-green-600">{currenciesFormat('usd', debetUsdVal)}</span>;
@@ -280,7 +308,7 @@ export default function KasHarianTable({
         header: 'KREDIT USD',
         accessorKey: 'credit_usd',
         sortable: true,
-        alignment: 'center',
+        alignment: 'left',
         cell: (item) => {
           const creditUsdVal = item.cash_position?.credit_usd_total ?? item.credit_usd;
           return <span className="font-medium text-red-600">{currenciesFormat('usd', creditUsdVal)}</span>;
@@ -290,7 +318,7 @@ export default function KasHarianTable({
         header: 'KURANG BAYAR IDR',
         accessorKey: 'remaining_payment',
         sortable: true,
-        alignment: 'center',
+        alignment: 'left',
         cell: (item) => (
           <span className="font-medium text-amber-700">{currenciesFormat('idr', item.remaining_payment ?? 0)}</span>
         ),
@@ -299,7 +327,7 @@ export default function KasHarianTable({
         header: 'KURANG BAYAR USD',
         accessorKey: 'remaining_payment_usd',
         sortable: true,
-        alignment: 'center',
+        alignment: 'left',
         cell: (item) => (
           <span className="font-medium text-amber-700">{currenciesFormat('usd', item.remaining_payment_usd ?? 0)}</span>
         ),
@@ -316,15 +344,9 @@ export default function KasHarianTable({
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="min-w-[150px] rounded-md border-slate-200 p-1.5 shadow-lg">
-              {item.source === 'billing' ? (
-                <DropdownMenuItem onClick={() => onPay(item)} className="rounded-md px-3 py-2 text-sm text-slate-900 focus:bg-slate-50 cursor-pointer">
-                  Bayar
-                </DropdownMenuItem>
-              ) : (
-                <DropdownMenuItem onClick={() => onView(item)} className="rounded-md px-3 py-2 text-sm text-slate-900 focus:bg-slate-50 cursor-pointer">
-                  Detail
-                </DropdownMenuItem>
-              )}
+              <DropdownMenuItem onClick={() => item.source === 'billing' ? onPay(item) : onView(item)} className="rounded-md px-3 py-2 text-sm text-slate-900 focus:bg-slate-50 cursor-pointer">
+                Detail
+              </DropdownMenuItem>
               {item.cashFlowId && canEdit ? (
                 <DropdownMenuItem onClick={() => onEdit(item)} className="rounded-md px-3 py-2 text-sm text-slate-900 focus:bg-slate-50 cursor-pointer">
                   Edit
