@@ -41,6 +41,10 @@ const buildJournalFormData = (payload: GeneralJournalPayload, isUpdate = false):
     formData.append('is_usd_transaction', payload.is_usd_transaction ? '1' : '0');
   }
 
+  if (payload.is_paid !== undefined) {
+    formData.append('is_paid', payload.is_paid ? 'true' : 'false');
+  }
+
   if (payload.payment_proof instanceof File) {
     formData.append('payment_proof', payload.payment_proof);
   }
@@ -59,6 +63,19 @@ const buildJournalFormData = (payload: GeneralJournalPayload, isUpdate = false):
           if (cash.type) formData.append(`billings[${bIndex}][cashes][${cIndex}][type]`, cash.type);
         });
       }
+    });
+  }
+
+  if (payload.payments && payload.payments.length > 0) {
+    payload.payments.forEach((payment, pIndex) => {
+      if (payment.id) formData.append(`payments[${pIndex}][id]`, String(payment.id));
+      formData.append(`payments[${pIndex}][account_id]`, String(payment.account_id));
+      if (payment.type) formData.append(`payments[${pIndex}][type]`, payment.type);
+      formData.append(`payments[${pIndex}][amount]`, String(payment.amount));
+      if (payment.amount_original !== undefined) {
+        formData.append(`payments[${pIndex}][amount_original]`, String(payment.amount_original));
+      }
+      if (payment.note) formData.append(`payments[${pIndex}][note]`, payment.note);
     });
   }
 
@@ -107,9 +124,11 @@ export const createGeneralJournal = async (payload: GeneralJournalPayload): Prom
     ...(payload.type ? { type: payload.type } : {}),
     note: payload.note || null,
     is_usd_transaction: payload.is_usd_transaction,
+    ...(payload.is_paid !== undefined ? { is_paid: payload.is_paid } : {}),
     amount: payload.amount,
     amount_original: payload.amount_original,
     billings: payload.billings,
+    ...(payload.payments ? { payments: payload.payments } : {}),
   };
 
   const response = await apiClient.post<LaravelApiResponse<GeneralJournal>>(BASE_PATH, jsonBody);
@@ -134,9 +153,11 @@ export const updateGeneralJournal = async (
     ...(payload.type ? { type: payload.type } : {}),
     note: payload.note || null,
     is_usd_transaction: payload.is_usd_transaction,
+    ...(payload.is_paid !== undefined ? { is_paid: payload.is_paid } : {}),
     amount: payload.amount,
     amount_original: payload.amount_original,
     billings: payload.billings,
+    ...(payload.payments ? { payments: payload.payments } : {}),
   };
 
   const response = await apiClient.put<LaravelApiResponse<GeneralJournal>>(`${BASE_PATH}/${id}`, jsonBody);

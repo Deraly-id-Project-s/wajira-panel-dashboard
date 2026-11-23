@@ -15,7 +15,6 @@ import {
   useGeneralJournalDetail,
   useUpdateGeneralJournal,
 } from '@/hooks/useGeneralJournal';
-import { useKas } from '@/hooks/useKas';
 import {
   generalJournalSchema,
   type GeneralJournalFormInput,
@@ -25,6 +24,7 @@ import { fetchUserCompanies } from '@/services/company.service';
 import {
   createGeneralJournalBillingPayment,
   fetchGeneralJournalDetail,
+  toggleGeneralJournalPaidStatus,
   updateGeneralJournalBillingPayment,
 } from '@/services/generalJournal.service';
 import { getApiErrorMessage } from '@/utils/apiErrorHandler';
@@ -42,21 +42,18 @@ const emptyValues = (companyId: number): GeneralJournalFormInput => ({
   note: '',
   payment_proof: null,
   is_usd_transaction: false,
+  is_paid: false,
   amount: 0,
   amount_original: 0,
-  billings: [
+  billings: [],
+  payments: [
     {
+      account_id: 0,
+      debit: 0,
+      credit: 0,
       note: '',
-      cashes: [
-        {
-          cash_id: 0,
-          amount: 0,
-          type: 'debit',
-        },
-      ],
     },
   ],
-  payments: [],
 });
 
 export default function GeneralJournalFormPage({ mode }: Props) {
@@ -85,10 +82,6 @@ export default function GeneralJournalFormPage({ mode }: Props) {
     refetchInterval: false,
   });
 
-  // Fetch Kas / Bank accounts for the selected company
-  const kasQuery = useKas(selectedCompanyId);
-  const kasOptions = useMemo(() => kasQuery.data?.data ?? [], [kasQuery.data?.data]);
-
   const createMutation = useCreateGeneralJournal();
   const updateMutation = useUpdateGeneralJournal();
   const journalDetail = detailQuery.data;
@@ -112,39 +105,22 @@ export default function GeneralJournalFormPage({ mode }: Props) {
     ).toLowerCase();
     const existingType: 'credit' | 'debit' = rawType === 'credit' || rawType === 'kredit' ? 'credit' : 'debit';
 
-    const hasUsdInDetail = (firstBilling?.cashes || []).some((c) => {
-      const k = kasOptions.find((opt) => Number(opt.id) === Number(c.cash_id));
-      return String(k?.currency_type || c.cash?.currency_type || '').toLowerCase() === 'usd';
-    });
-    const isUsd = hasUsdInDetail;
-
-    const initialBillings: GeneralJournalFormValues['billings'] = firstBilling
-      ? [
-          {
-            id: firstBilling.id,
-            date: firstBilling.date ? new Date(firstBilling.date) : new Date(journalDetail.date),
-            note: firstBilling.note ?? '',
-            cashes:
-              firstBilling.cashes && firstBilling.cashes.length > 0
-                ? firstBilling.cashes.map((c) => ({
-                    id: c.id,
-                    cash_id: Number(c.cash_id),
-                    amount: Number(c.amount || 0),
-                    type: existingType,
-                  }))
-                : [{ cash_id: 0, amount: 0, type: existingType }],
-          },
-        ]
-      : [{ note: '', cashes: [{ cash_id: 0, amount: 0, type: existingType }] }];
-
-    const initialPayments = (firstBilling?.payments || []).map((p) => ({
-      id: p.id,
-      account_id: Number(p.account_id),
-      type: (p.type === 'credit' ? 'credit' : 'debit') as 'debit' | 'credit',
-      amount: Number(p.amount || 0),
-      amount_original: Number(p.amount_original || 0),
-      note: p.note ?? '',
-    }));
+    const initialPayments = (firstBilling?.payments && firstBilling.payments.length > 0)
+      ? firstBilling.payments.map((p) => {
+          const amt = Number(p.amount || 0);
+          const isDeb = p.type === 'debit';
+          return {
+            id: p.id,
+            account_id: Number(p.account_id),
+            debit: isDeb ? amt : 0,
+            credit: !isDeb ? amt : 0,
+            type: (p.type === 'credit' ? 'credit' : 'debit') as 'debit' | 'credit',
+            amount: amt,
+            amount_original: Number(p.amount_original || 0),
+            note: p.note ?? '',
+          };
+        })
+      : [{ account_id: 0, debit: 0, credit: 0, note: '' }];
 
     form.reset({
       company_id: journalDetail.company_id,
@@ -152,69 +128,58 @@ export default function GeneralJournalFormPage({ mode }: Props) {
       type: existingType,
       note: journalDetail.note ?? '',
       payment_proof: null,
-      is_usd_transaction: isUsd,
+      is_usd_transaction: false,
+      is_paid: Boolean(journalDetail.is_paid),
       amount: journalDetail.amount !== null && journalDetail.amount !== undefined ? Number(journalDetail.amount) : undefined,
       amount_original: journalDetail.amount_original !== null && journalDetail.amount_original !== undefined ? Number(journalDetail.amount_original) : undefined,
-      billings: initialBillings,
+      billings: firstBilling
+        ? [
+            {
+              id: firstBilling.id,
+              date: firstBilling.date ? new Date(firstBilling.date) : new Date(journalDetail.date),
+              note: firstBilling.note ?? '',
+              cashes: [],
+            },
+          ]
+        : [],
       payments: initialPayments,
     });
-  }, [journalDetail, kasOptions, form, mode]);
+  }, [journalDetail, form, mode]);
 
   const handleSubmit = async (values: GeneralJournalFormValues) => {
-    // Prohibit mixed currency types across allocated cashes
-    const selectedCurrencies = new Set<string>();
-    values.billings.forEach((b) => {
-      (b.cashes || []).forEach((c) => {
-        const cid = Number(c.cash_id);
-        if (cid && cid > 0) {
-          const k = kasOptions.find((opt) => Number(opt.id) === cid);
-          selectedCurrencies.add(String(k?.currency_type || 'idr').toLowerCase());
-        }
-      });
-    });
-
-    if (selectedCurrencies.size > 1) {
-      toast.error('Semua alokasi kas harus memiliki mata uang yang sama (hanya IDR atau hanya USD)');
-      return;
-    }
-
-    const hasUsdCash = values.billings.some((b) =>
-      (b.cashes || []).some((c) => {
-        const k = kasOptions.find((opt) => Number(opt.id) === Number(c.cash_id));
-        return String(k?.currency_type || '').toLowerCase() === 'usd';
-      }),
-    );
-    const isUsd = hasUsdCash;
-    const grandTotalCash = values.billings.reduce(
-      (bAcc, b) => bAcc + (b.cashes || []).reduce((cAcc, c) => cAcc + Number(c.amount || 0), 0),
-      0,
-    );
-
-    const transactionType: 'credit' | 'debit' =
+    const grandAmount = Number(values.amount || 0);
+    const primaryType: 'debit' | 'credit' =
       String(values.type).toLowerCase() === 'credit' || String(values.type).toLowerCase() === 'kredit'
         ? 'credit'
         : 'debit';
 
+    // Format payments untuk Single Form Format 5
+    const paymentsPayload = (values.payments || [])
+      .filter((p) => Number(p.account_id) > 0 && (Number(p.debit || 0) > 0 || Number(p.credit || 0) > 0))
+      .map((p) => {
+        const isDeb = Number(p.debit || 0) > 0;
+        const amt = isDeb ? Number(p.debit) : Number(p.credit);
+        return {
+          id: p.id,
+          account_id: Number(p.account_id),
+          type: (isDeb ? 'debit' : 'credit') as 'debit' | 'credit',
+          amount: amt,
+          amount_original: amt,
+          note: p.note || null,
+        };
+      });
+
     const payload: GeneralJournalPayload = {
       company_id: values.company_id,
       date: format(values.date, 'yyyy-MM-dd'),
-      type: transactionType,
+      type: primaryType,
       note: values.note,
       payment_proof: values.payment_proof,
-      is_usd_transaction: isUsd,
-      amount: grandTotalCash,
-      amount_original: isUsd ? (values.amount_original || grandTotalCash) : grandTotalCash,
-      billings: values.billings.slice(0, 1).map((b) => ({
-        id: b.id,
-        date: b.date ? format(b.date, 'yyyy-MM-dd') : format(values.date, 'yyyy-MM-dd'),
-        note: b.note || values.note,
-        cashes: b.cashes.map((c) => ({
-          id: c.id,
-          cash_id: Number(c.cash_id),
-          amount: Number(c.amount),
-          type: transactionType,
-        })),
-      })),
+      is_usd_transaction: false,
+      is_paid: Boolean(values.is_paid),
+      amount: grandAmount,
+      amount_original: grandAmount,
+      payments: paymentsPayload,
     };
 
     try {
@@ -226,15 +191,13 @@ export default function GeneralJournalFormPage({ mode }: Props) {
         const result = await updateMutation.mutateAsync({ id: journalId, payload });
         targetId = result?.id ?? journalId;
         targetBillingId = result?.billings?.[0]?.id ?? journalDetail?.billings?.[0]?.id;
-        toast.success('Jurnal umum berhasil diperbarui');
       } else {
         const result = await createMutation.mutateAsync(payload);
         targetId = result?.id;
         targetBillingId = result?.billings?.[0]?.id;
-        toast.success('Jurnal umum berhasil ditambahkan');
       }
 
-      // Handle direct general journal payments created/updated via the form
+      // Pastikan setiap rincian pembayaran tersimpan dan tersinkronisasi
       if (targetId && values.payments && values.payments.length > 0) {
         if (!targetBillingId) {
           try {
@@ -247,21 +210,25 @@ export default function GeneralJournalFormPage({ mode }: Props) {
 
         if (targetBillingId) {
           for (const p of values.payments) {
-            if (Number(p.account_id) > 0 && Number(p.amount) > 0) {
+            const isDeb = Number(p.debit || 0) > 0;
+            const amt = isDeb ? Number(p.debit) : Number(p.credit);
+            const pType = isDeb ? 'debit' : 'credit';
+
+            if (Number(p.account_id) > 0 && amt > 0) {
               if (p.id) {
                 await updateGeneralJournalBillingPayment(p.id, {
                   account_id: Number(p.account_id),
-                  type: p.type === 'credit' ? 'credit' : 'debit',
-                  amount: Number(p.amount),
+                  type: pType,
+                  amount: amt,
                   note: p.note || null,
                 });
               } else {
                 await createGeneralJournalBillingPayment({
                   general_journal_billing_id: targetBillingId,
                   account_id: Number(p.account_id),
-                  type: p.type === 'credit' ? 'credit' : 'debit',
-                  amount: Number(p.amount),
-                  amount_original: isUsd ? Number(p.amount) : 0,
+                  type: pType,
+                  amount: amt,
+                  amount_original: amt,
                   note: p.note || null,
                 });
               }
@@ -269,6 +236,21 @@ export default function GeneralJournalFormPage({ mode }: Props) {
           }
         }
       }
+
+      // Jika user memilih "Tandai Lunas"
+      if (targetId && values.is_paid) {
+        try {
+          await toggleGeneralJournalPaidStatus({ id: targetId, isPaid: true });
+        } catch {
+          // Abaikan jika sudah ditandai true oleh backend saat pembuatan/pembaruan
+        }
+      }
+
+      toast.success(
+        values.is_paid
+          ? `Jurnal umum berhasil ${mode === 'edit' ? 'diperbarui' : 'disimpan'} dan ditandai lunas`
+          : `Jurnal umum berhasil ${mode === 'edit' ? 'diperbarui' : 'disimpan'}`
+      );
 
       const companySlug = typeof slug === 'string' && slug.trim() ? slug : 'wajira-morindo';
       const detailPath = targetId
@@ -344,8 +326,6 @@ export default function GeneralJournalFormPage({ mode }: Props) {
           form={form}
           onSubmit={handleSubmit}
           companies={companyQuery.data ?? []}
-          kasOptions={kasOptions}
-          isKasLoading={kasQuery.isLoading}
           isBusy={isBusy}
           onCancel={() => void router.push(basePath)}
           submitLabel={isEdit ? 'Perbarui Jurnal' : 'Simpan Jurnal'}

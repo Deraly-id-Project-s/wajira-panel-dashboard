@@ -1,17 +1,16 @@
 import { useEffect, useMemo } from 'react';
 import { useFieldArray, useWatch, type UseFormReturn } from 'react-hook-form';
 import {
-  CalendarDays,
   FileText,
   Plus,
   Trash2,
-  Wallet,
-  AlertCircle,
-  Coins,
+  Copy,
+  CheckCircle2,
   CreditCard,
+  AlertCircle,
 } from 'lucide-react';
+import { toast } from 'sonner';
 import type { Company } from '@/services/company.service';
-import type { Kas } from '@/@types/kas.types';
 import type { GeneralJournalFormValues } from '@/scheme/general-journal.schema';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -21,10 +20,11 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { Input } from '@/components/ui/input';
 import { LoadingState } from '@/components/ui/loading-state';
 import { MoneyInput } from '@/components/ui/money-input';
-import { SearchableSelect, type SearchableSelectOption } from '@/components/ui/searchable-select';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { CollapsibleBox } from '@/components/ui/collapsible-box';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { Table, TableBody, TableCell, TableFooter, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import RequiredMark from '@/components/ui/required-mark';
 import { currenciesFormat } from '@/components/ui/currenciesFormat';
 import { useAccounts } from '@/hooks/useAccount';
@@ -34,21 +34,19 @@ interface Props {
   form: UseFormReturn<GeneralJournalFormValues, any, any>;
   onSubmit: (data: GeneralJournalFormValues) => void | Promise<void>;
   companies?: Company[];
-  kasOptions: Kas[];
-  isKasLoading?: boolean;
   isBusy?: boolean;
   onCancel?: () => void;
   submitLabel?: string;
   existingPaymentProof?: string | null;
   wrapWithForm?: boolean;
+  // Optional backward compatibility props
+  kasOptions?: any[];
+  isKasLoading?: boolean;
 }
 
 export default function GeneralJournalForm({
   form,
   onSubmit,
-  companies = [],
-  kasOptions,
-  isKasLoading = false,
   isBusy = false,
   onCancel,
   submitLabel = 'Simpan Jurnal',
@@ -56,24 +54,17 @@ export default function GeneralJournalForm({
   wrapWithForm = true,
 }: Props) {
   const paymentProof = form.watch('payment_proof');
-  const billings = useWatch({
-    control: form.control,
-    name: 'billings',
-    defaultValue: form.getValues('billings'),
-  });
-  const transactionType = useWatch({
-    control: form.control,
-    name: 'type',
-    defaultValue: form.getValues('type') || 'debit',
-  });
-  const isCredit = transactionType === 'credit' || transactionType === 'kredit';
-
-  const { fields: billingFields } = useFieldArray({
-    control: form.control,
-    name: 'billings',
-  });
-
   const selectedCompanyId = form.watch('company_id');
+  const watchedAmount = useWatch({ control: form.control, name: 'amount' });
+  const watchedType = useWatch({ control: form.control, name: 'type' });
+
+  const targetAmount = Number(watchedAmount || 0);
+  const journalType: 'debit' | 'credit' =
+    String(watchedType || 'debit').toLowerCase() === 'credit' || String(watchedType || '').toLowerCase() === 'kredit'
+      ? 'credit'
+      : 'debit';
+
+  // Query akun/COA milik perusahaan yang dipilih
   const accountQuery = useAccounts({
     page: 1,
     perPage: 1000,
@@ -81,18 +72,9 @@ export default function GeneralJournalForm({
     company_id: selectedCompanyId ? Number(selectedCompanyId) : undefined,
     enabled: Boolean(selectedCompanyId),
   });
-  const accountOptions = useMemo<SearchableSelectOption[]>(() => {
-    const list = accountQuery.data?.data ?? [];
-    return list.map((a) => {
-      const rawType = a.type || '';
-      const typeLabel = rawType.toLowerCase() === 'credit' ? 'Kredit' : 'Debet';
-      return {
-        value: String(a.id),
-        label: `[${typeLabel}] ${a.code} - ${a.name}`,
-      };
-    });
-  }, [accountQuery.data?.data]);
+  const akunOptions = useMemo(() => accountQuery.data?.data ?? [], [accountQuery.data?.data]);
 
+  // Field Array untuk rincian pembayaran jurnal
   const {
     fields: paymentFields,
     append: appendPayment,
@@ -101,124 +83,238 @@ export default function GeneralJournalForm({
     control: form.control,
     name: 'payments',
   });
+
   const watchedPayments = useWatch({
     control: form.control,
     name: 'payments',
     defaultValue: form.getValues('payments') || [],
   });
 
-  const paymentTotals = useMemo(() => {
-    let debitTotal = 0;
-    let creditTotal = 0;
-    (watchedPayments || []).forEach((p) => {
-      const amt = Number(p?.amount || 0);
-      const pType = String(p?.type || 'debit').toLowerCase();
-      if (pType === 'debit' || pType === 'debet') {
-        debitTotal += amt;
-      } else {
-        creditTotal += amt;
-      }
-    });
-    return { debitTotal, creditTotal };
-  }, [watchedPayments]);
-
-  // Collect all selected cash IDs across all billings to enforce uniqueness
-  const selectedCashIds = useMemo(() => {
-    const ids = new Set<number>();
-    (billings || []).forEach((b) => {
-      (b?.cashes || []).forEach((c) => {
-        const id = Number(c?.cash_id);
-        if (id && id > 0) {
-          ids.add(id);
-        }
+  // Pastikan selalu ada default dan minimum 1 baris
+  useEffect(() => {
+    if (!paymentFields || paymentFields.length === 0) {
+      appendPayment({
+        account_id: 0,
+        debit: 0,
+        credit: 0,
+        note: '',
       });
+    }
+  }, [paymentFields, appendPayment]);
+
+  // Set ID akun yang sudah dipilih untuk mencegah pemilihan berulang
+  const selectedAccountIds = useMemo(() => {
+    const ids = new Set<number>();
+    (watchedPayments || []).forEach((p) => {
+      const id = Number(p?.account_id);
+      if (id && id > 0) {
+        ids.add(id);
+      }
     });
     return ids;
-  }, [billings]);
+  }, [watchedPayments]);
 
-  // Auto-detect if any selected cash is USD
-  const hasUsdCash = useMemo(() => {
-    return (billings || []).some((b) =>
-      (b?.cashes || []).some((c) => {
-        const k = kasOptions.find((opt) => Number(opt.id) === Number(c?.cash_id));
-        return String(k?.currency_type || '').toLowerCase() === 'usd';
-      }),
-    );
-  }, [billings, kasOptions]);
+  // Perhitungan total debit dan kredit
+  const { totalDebit, totalCredit } = useMemo(() => {
+    let debit = 0;
+    let credit = 0;
+    (watchedPayments || []).forEach((p) => {
+      debit += Number(p?.debit || 0);
+      credit += Number(p?.credit || 0);
+    });
+    return { totalDebit: debit, totalCredit: credit };
+  }, [watchedPayments]);
 
-  // Active locked currency across the entire form based on selected cashes
-  const activeLockedCurrency = useMemo<'idr' | 'usd' | null>(() => {
-    for (const b of billings || []) {
-      for (const c of b?.cashes || []) {
-        const cid = Number(c?.cash_id);
-        if (cid && cid > 0) {
-          const k = kasOptions.find((opt) => Number(opt.id) === cid);
-          const curr = String(k?.currency_type || 'idr').toLowerCase();
-          return curr === 'usd' ? 'usd' : 'idr';
-        }
-      }
-    }
-    return null;
-  }, [billings, kasOptions]);
+  // Sisa kewajiban pembayaran terhadap batas nominal jurnal
+  const remainingDebit = Math.max(0, targetAmount - totalDebit);
+  const remainingCredit = Math.max(0, targetAmount - totalCredit);
 
-  // Helper to determine the locked currency for a specific row based on all OTHER rows
-  const getOtherRowsLockedCurrency = (currentBIndex: number, currentCIndex: number): 'idr' | 'usd' | null => {
-    for (let b = 0; b < (billings?.length || 0); b++) {
-      const cashes = billings?.[b]?.cashes || [];
-      for (let c = 0; c < cashes.length; c++) {
-        if (b === currentBIndex && c === currentCIndex) continue;
-        const cid = Number(cashes[c]?.cash_id);
-        if (cid && cid > 0) {
-          const k = kasOptions.find((opt) => Number(opt.id) === cid);
-          const curr = String(k?.currency_type || 'idr').toLowerCase();
-          return curr === 'usd' ? 'usd' : 'idr';
-        }
-      }
-    }
-    return null;
+  // Status penyelesaian sisi
+  const isDebitSettled = targetAmount > 0 && totalDebit === targetAmount;
+  const isCreditSettled = targetAmount > 0 && totalCredit === targetAmount;
+
+  // Sisi yang sama dengan tipe jurnal WAJIB LUNAS
+  const isPrimarySettled = journalType === 'debit' ? isDebitSettled : isCreditSettled;
+
+  // Jurnal seimbang jika kedua sisi (debit dan kredit) terpenuhi penuh
+  const isBalanced = targetAmount > 0 && isDebitSettled && isCreditSettled;
+
+  // Indikator kedua sisi telah mencapai batas maksimal
+  const isBothFull = targetAmount > 0 && totalDebit >= targetAmount && totalCredit >= targetAmount;
+
+  // Helper batas maksimal per baris
+  const getMaxDebitForRow = (index: number) => {
+    if (targetAmount <= 0) return 0;
+    const currentVal = Number(watchedPayments?.[index]?.debit || 0);
+    const otherRowsDebit = totalDebit - currentVal;
+    return Math.max(0, targetAmount - otherRowsDebit);
   };
 
-  // Keep is_usd_transaction synchronized with whether any selected cash is USD
-  useEffect(() => {
-    form.setValue('is_usd_transaction', hasUsdCash, { shouldValidate: true, shouldDirty: true });
-  }, [hasUsdCash, form]);
+  const getMaxCreditForRow = (index: number) => {
+    if (targetAmount <= 0) return 0;
+    const currentVal = Number(watchedPayments?.[index]?.credit || 0);
+    const otherRowsCredit = totalCredit - currentVal;
+    return Math.max(0, targetAmount - otherRowsCredit);
+  };
 
-  // Calculate grand total cash across all billings
-  const summary = useMemo(() => {
-    let grandTotalCash = 0;
-    let totalCashEntries = 0;
+  // Cek apakah seluruh baris pembayaran sudah terisi lengkap dan valid
+  const isPaymentDataValid = useMemo(() => {
+    if (targetAmount <= 0) return false;
+    if (!watchedPayments || watchedPayments.length === 0) return false;
+    for (const p of watchedPayments) {
+      const accId = Number(p?.account_id || 0);
+      const deb = Number(p?.debit || 0);
+      const cred = Number(p?.credit || 0);
+      if (accId <= 0) return false;
+      if (deb <= 0 && cred <= 0) return false;
+      if (deb > 0 && cred > 0) return false;
+    }
+    if (totalDebit > targetAmount || totalCredit > targetAmount) return false;
+    return isPrimarySettled;
+  }, [targetAmount, watchedPayments, totalDebit, totalCredit, isPrimarySettled]);
 
-    (billings || []).forEach((b) => {
-      (b?.cashes || []).forEach((c) => {
-        const amt = Number(c?.amount || 0);
-        grandTotalCash += amt;
-        if (c?.cash_id && amt > 0) {
-          totalCashEntries += 1;
-        }
-      });
+  // Salin baris data (copy nominal dan catatan saja, dibatasi kapasitas tersisa)
+  const handleCopyRow = (index: number) => {
+    const currentRow = form.getValues(`payments.${index}`);
+    const deb = Number(currentRow?.debit || 0);
+    const cred = Number(currentRow?.credit || 0);
+
+    const availableDebit = targetAmount > 0 ? Math.max(0, targetAmount - totalDebit) : deb;
+    const availableCredit = targetAmount > 0 ? Math.max(0, targetAmount - totalCredit) : cred;
+
+    appendPayment({
+      account_id: 0,
+      debit: deb > 0 ? Math.min(deb, availableDebit) : 0,
+      credit: cred > 0 ? Math.min(cred, availableCredit) : 0,
+      note: currentRow?.note || '',
     });
+    toast.info('Baris pembayaran berhasil disalin. Silakan pilih akun COA untuk baris baru.');
+  };
 
-    const isValid = grandTotalCash > 0 && totalCashEntries > 0;
+  // Hapus atau reset baris (jika baris sisa 1, kosongkan baris tersebut)
+  const handleDeleteRow = (index: number) => {
+    if (paymentFields.length <= 1) {
+      form.setValue('payments.0', {
+        account_id: 0,
+        debit: 0,
+        credit: 0,
+        note: '',
+      }, { shouldValidate: true, shouldDirty: true });
+      toast.info('Baris pembayaran telah dikosongkan');
+    } else {
+      removePayment(index);
+    }
+  };
 
-    return {
-      grandTotalCash,
-      totalCashEntries,
-      isValid,
-    };
-  }, [billings]);
+  // Validasi mendalam sebelum pengiriman form
+  const validateBeforeSubmit = (values: GeneralJournalFormValues, isMarkPaidAction: boolean): boolean => {
+    const currentTargetAmount = Number(values.amount || 0);
+    if (!currentTargetAmount || currentTargetAmount <= 0) {
+      toast.error('Nominal jurnal umum wajib diisi dan harus lebih dari 0');
+      return false;
+    }
 
-  const targetTotal = summary.grandTotalCash;
-  const isDebitFull = targetTotal > 0 && paymentTotals.debitTotal === targetTotal;
-  const isCreditFull = targetTotal > 0 && paymentTotals.creditTotal === targetTotal;
-  const isBalanced = targetTotal > 0 && isDebitFull && isCreditFull;
+    if (!values.note || !values.note.trim()) {
+      toast.error('Keterangan jurnal wajib diisi');
+      return false;
+    }
 
-  // Filter kasOptions to only matching currency when currency is locked
-  const availableMatchingKas = useMemo(() => {
-    if (!activeLockedCurrency) return kasOptions;
-    return kasOptions.filter(
-      (k) => String(k.currency_type || 'idr').toLowerCase() === activeLockedCurrency,
-    );
-  }, [kasOptions, activeLockedCurrency]);
+    if (!values.payments || values.payments.length === 0) {
+      toast.error('Minimal harus terdapat 1 baris rincian pembayaran jurnal');
+      return false;
+    }
+
+    let calculatedDebit = 0;
+    let calculatedCredit = 0;
+
+    for (let i = 0; i < values.payments.length; i++) {
+      const row = values.payments[i];
+      const rowNum = i + 1;
+      const accId = Number(row.account_id);
+      const deb = Number(row.debit || 0);
+      const cred = Number(row.credit || 0);
+
+      calculatedDebit += deb;
+      calculatedCredit += cred;
+
+      if (!accId || accId <= 0) {
+        toast.error(`Akun belum dipilih pada baris ke-${rowNum}`);
+        return false;
+      }
+      if (deb <= 0 && cred <= 0) {
+        toast.error(`Nominal debit atau kredit harus lebih dari 0 pada baris ke-${rowNum}`);
+        return false;
+      }
+      if (deb > 0 && cred > 0) {
+        toast.error(`Wajib memilih salah satu antara debit atau kredit pada baris ke-${rowNum}`);
+        return false;
+      }
+    }
+
+    // Validasi batas maksimal nominal jurnal
+    if (calculatedDebit > currentTargetAmount) {
+      toast.error(
+        `Total pembayaran debit (${currenciesFormat('idr', calculatedDebit)}) melebihi batas nominal jurnal (${currenciesFormat('idr', currentTargetAmount)})`,
+      );
+      return false;
+    }
+
+    if (calculatedCredit > currentTargetAmount) {
+      toast.error(
+        `Total pembayaran kredit (${currenciesFormat('idr', calculatedCredit)}) melebihi batas nominal jurnal (${currenciesFormat('idr', currentTargetAmount)})`,
+      );
+      return false;
+    }
+
+    // Validasi pembayaran WAJIB LUNAS untuk tipe yang sama dengan general journalnya
+    const currentJournalType =
+      String(values.type).toLowerCase() === 'credit' || String(values.type).toLowerCase() === 'kredit'
+        ? 'credit'
+        : 'debit';
+
+    if (currentJournalType === 'debit' && calculatedDebit !== currentTargetAmount) {
+      toast.error(
+        `Pembayaran debit wajib lunas sesuai nominal jurnal umum (${currenciesFormat('idr', currentTargetAmount)}). Saat ini: ${currenciesFormat('idr', calculatedDebit)}.`,
+      );
+      return false;
+    }
+
+    if (currentJournalType === 'credit' && calculatedCredit !== currentTargetAmount) {
+      toast.error(
+        `Pembayaran kredit wajib lunas sesuai nominal jurnal umum (${currenciesFormat('idr', currentTargetAmount)}). Saat ini: ${currenciesFormat('idr', calculatedCredit)}.`,
+      );
+      return false;
+    }
+
+    if (isMarkPaidAction) {
+      if (currentJournalType === 'debit' && calculatedDebit < currentTargetAmount) {
+        toast.error('Pembayaran debit belum lunas untuk menandai jurnal sebagai lunas.');
+        return false;
+      }
+      if (currentJournalType === 'credit' && calculatedCredit < currentTargetAmount) {
+        toast.error('Pembayaran kredit belum lunas untuk menandai jurnal sebagai lunas.');
+        return false;
+      }
+    }
+
+    return true;
+  };
+
+  // Handler Submit Biasa (Draft: is_paid = false)
+  const handleSaveDraft = () => {
+    const currentValues = form.getValues();
+    if (!validateBeforeSubmit(currentValues, false)) return;
+    form.setValue('is_paid', false);
+    form.handleSubmit(onSubmit)();
+  };
+
+  // Handler Submit Tandai Lunas (is_paid = true)
+  const handleMarkPaid = () => {
+    const currentValues = form.getValues();
+    if (!validateBeforeSubmit(currentValues, true)) return;
+    form.setValue('is_paid', true);
+    form.handleSubmit(onSubmit)();
+  };
 
   const formContent = (
     <div className="space-y-6">
@@ -230,16 +326,16 @@ export default function GeneralJournalForm({
         )}
       />
 
-      {/* Section Utama: Rincian Transaksi Jurnal Umum dan alokasi Kas */}
+      {/* Section 1: Informasi Jurnal Umum (Type & Amount Utama) */}
       <CollapsibleBox
-        title="Rincian Transaksi Jurnal Umum dan alokasi Kas"
-        description="Tentukan tanggal transaksi jurnal dan alokasi sumber kas/bank pengeluaran atau penerimaan."
-        icon={CalendarDays}
+        title="Informasi Jurnal Umum"
+        description="Tentukan tanggal transaksi, tipe jurnal, nominal utama, keterangan transaksi, dan lampiran dokumen pendukung."
+        icon={FileText}
         defaultExpanded={true}
       >
-        <div className="space-y-5">
-          {/* Tanggal Transaksi Jurnal & Jenis Transaksi Umum */}
-          <div className="grid gap-4 sm:grid-cols-2 rounded-lg border border-slate-100 bg-slate-50/70 p-4">
+        <div className="grid gap-5 lg:grid-cols-2 items-start">
+          {/* Kolom Kiri: Tanggal, Tipe Jurnal & Nominal Jurnal */}
+          <div className="space-y-4">
             <FormField
               control={form.control}
               name="date"
@@ -260,375 +356,100 @@ export default function GeneralJournalForm({
               )}
             />
 
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {/* Tipe Transaksi Jurnal Umum (Debet / Kredit) */}
+              <FormField
+                control={form.control}
+                name="type"
+                render={({ field }) => (
+                  <FormItem className="flex flex-col">
+                    <FormLabel className="text-sm font-semibold text-slate-700">
+                      Tipe Jurnal Umum <RequiredMark />
+                    </FormLabel>
+                    <Select
+                      value={field.value === 'credit' || field.value === 'kredit' ? 'credit' : 'debit'}
+                      onValueChange={(val: 'debit' | 'credit') => field.onChange(val)}
+                      disabled={isBusy}
+                    >
+                      <FormControl>
+                        <SelectTrigger className="h-9 bg-white text-xs">
+                          <SelectValue placeholder="Pilih Tipe Jurnal..." />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="debit">
+                          <span className="font-semibold text-emerald-700">Debet</span>
+                        </SelectItem>
+                        <SelectItem value="credit">
+                          <span className="font-semibold text-rose-700">Kredit</span>
+                        </SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              {/* Nominal Transaksi Jurnal Umum (Wajib > 0) */}
+              <FormField
+                control={form.control}
+                name="amount"
+                render={({ field }) => (
+                  <FormItem className="flex flex-col">
+                    <FormLabel className="text-sm font-semibold text-slate-700">
+                      Nominal Jurnal (IDR) <RequiredMark />
+                    </FormLabel>
+                    <FormControl>
+                      <MoneyInput
+                        currency="IDR"
+                        value={field.value || 0}
+                        onChangeValue={(val) => field.onChange(val)}
+                        placeholder="0"
+                        disabled={isBusy}
+                        className="h-9 bg-white text-xs font-semibold"
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+
             <FormField
               control={form.control}
-              name="type"
+              name="note"
               render={({ field }) => (
                 <FormItem className="flex flex-col">
                   <FormLabel className="text-sm font-semibold text-slate-700">
-                    Jenis Transaksi Jurnal Umum <RequiredMark />
+                    Keterangan Jurnal <RequiredMark />
                   </FormLabel>
-                  <Select
-                    value={field.value === 'credit' || field.value === 'kredit' ? 'credit' : 'debit'}
-                    onValueChange={(val: 'debit' | 'credit') => {
-                      field.onChange(val);
-                      // Update all cashes type across billing to match this transaction type
-                      const currentBillings = form.getValues('billings') || [];
-                      const updated = currentBillings.map((b) => ({
-                        ...b,
-                        cashes: (b.cashes || []).map((c) => ({
-                          ...c,
-                          type: val,
-                        })),
-                      }));
-                      form.setValue('billings', updated, {
-                        shouldValidate: true,
-                        shouldDirty: true,
-                      });
-                    }}
-                    disabled={isBusy}
-                  >
-                    <FormControl>
-                      <SelectTrigger className="h-9 bg-white text-sm">
-                        <SelectValue placeholder="Pilih Jenis Transaksi Umum..." />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      <SelectItem value="debit">
-                        <span className="font-medium text-emerald-700">Debet</span>
-                      </SelectItem>
-                      <SelectItem value="credit">
-                        <span className="font-medium text-rose-700">Kredit</span>
-                      </SelectItem>
-                    </SelectContent>
-                  </Select>
+                  <FormControl>
+                    <Textarea
+                      placeholder="Contoh: Pengeluaran operasional logistik cabang..."
+                      className="min-h-24 resize-none bg-white text-xs"
+                      disabled={isBusy}
+                      {...field}
+                    />
+                  </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
             />
           </div>
 
-          {/* Billings & Cashes List */}
-          {billingFields.map((billingField, bIndex) => {
-            const currentBillingCashes = billings?.[bIndex]?.cashes || [];
-            const isMaxKasReached =
-              availableMatchingKas.length > 0 && currentBillingCashes.length >= availableMatchingKas.length;
-
-            return (
-              <div
-                key={billingField.id}
-                className="rounded-lg border border-slate-200 bg-white p-4 shadow-xs space-y-4"
-              >
-                {/* Multiple Cash Rows */}
-                <div className="space-y-3">
-                  <div className="flex flex-wrap items-center justify-between gap-2">
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <p className="font-semibold text-slate-800 flex items-center gap-1.5">
-                          <Coins className="h-3.5 w-3.5 text-emerald-600" />
-                          Daftar Alokasi Kas / Bank
-                        </p>
-                        {activeLockedCurrency && (
-                          <Badge
-                            variant="outline"
-                            className={cn(
-                              'text-[10px] font-semibold px-2 py-0.5 rounded-full',
-                              activeLockedCurrency === 'usd'
-                                ? 'border-blue-200 bg-blue-50 text-blue-700'
-                                : 'border-emerald-200 bg-emerald-50 text-emerald-700',
-                            )}
-                          >
-                            Mata Uang: {activeLockedCurrency.toUpperCase()}
-                          </Badge>
-                        )}
-                      </div>
-                      <p className="text-slate-400 text-xs mt-0.5">
-                        {activeLockedCurrency
-                          ? `Hanya kas bermata uang ${activeLockedCurrency.toUpperCase()} yang dapat dialokasikan (Posisi: ${isCredit ? 'Kredit' : 'Debet'})`
-                          : `Pilih kas/bank dan masukkan nominal transaksi (Posisi: ${isCredit ? 'Kredit' : 'Debet'})`}
-                      </p>
-                    </div>
-
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      onClick={() => {
-                        const existingCashes = form.getValues(`billings.${bIndex}.cashes`) || [];
-                        if (availableMatchingKas.length > 0 && existingCashes.length >= availableMatchingKas.length) {
-                          return;
-                        }
-                        const rawType = form.getValues('type');
-                        const currentType: 'credit' | 'debit' =
-                          rawType === 'credit' || rawType === 'kredit' ? 'credit' : 'debit';
-                        form.setValue(
-                          `billings.${bIndex}.cashes`,
-                          [
-                            ...existingCashes,
-                            { cash_id: 0, amount: 0, type: currentType },
-                          ],
-                          { shouldValidate: true, shouldDirty: true },
-                        );
-                      }}
-                      disabled={
-                        isBusy ||
-                        isKasLoading ||
-                        kasOptions.length === 0 ||
-                        isMaxKasReached
-                      }
-                      title={
-                        isMaxKasReached
-                          ? activeLockedCurrency
-                            ? `Maksimal ${availableMatchingKas.length} kas ${activeLockedCurrency.toUpperCase()} telah dipilih`
-                            : `Maksimal ${kasOptions.length} kas telah dipilih`
-                          : 'Tambah alokasi kas'
-                      }
-                      className="h-7 text-xs gap-1 border-dashed border-emerald-400 text-emerald-700 hover:bg-emerald-50 disabled:cursor-not-allowed disabled:opacity-50"
-                    >
-                      <Plus className="h-3.5 w-3.5" />
-                      Tambah Kas
-                    </Button>
-                  </div>
-
-                  {/* Cash Inputs List */}
-                  <div className="space-y-2.5">
-                    {currentBillingCashes.map((cashItem, cIndex) => {
-                      const selectedCashId = cashItem?.cash_id;
-                      const currentAmount = cashItem?.amount;
-
-                      const selectedCash = kasOptions.find((k) => Number(k.id) === Number(selectedCashId));
-                      const rowCurrency: 'IDR' | 'USD' =
-                        String(selectedCash?.currency_type || 'idr').toLowerCase() === 'usd' ? 'USD' : 'IDR';
-
-                      // Check locked currency from other rows
-                      const otherRowsCurrency = getOtherRowsLockedCurrency(bIndex, cIndex);
-
-                      return (
-                        <div
-                          key={cIndex}
-                          className="grid gap-3 sm:grid-cols-12 items-center rounded-md border border-slate-100 bg-slate-50/60 p-3 transition-colors hover:border-slate-200"
-                        >
-                          {/* 1. Kas Selector (Unique across journal & matching currency_type) */}
-                          <div className="sm:col-span-6 space-y-1">
-                            <label className="text-xs font-semibold text-slate-700 flex items-center justify-between">
-                              <span>
-                                Kas #{cIndex + 1} <RequiredMark />
-                              </span>
-                            </label>
-                            <Select
-                              value={selectedCashId ? String(selectedCashId) : ''}
-                              onValueChange={(val) => {
-                                form.setValue(
-                                  `billings.${bIndex}.cashes.${cIndex}.cash_id`,
-                                  Number(val),
-                                  { shouldValidate: true, shouldDirty: true },
-                                );
-                              }}
-                              disabled={isBusy || isKasLoading}
-                            >
-                              <SelectTrigger className="h-9 bg-white">
-                                <SelectValue placeholder="Pilih Kas / Bank..." />
-                              </SelectTrigger>
-                              <SelectContent>
-                                {kasOptions.length === 0 ? (
-                                  <div className="p-2 text-slate-400 text-center text-xs">
-                                    {isKasLoading ? 'Memuat data kas...' : 'Belum ada data kas/bank'}
-                                  </div>
-                                ) : (
-                                  kasOptions.map((kas) => {
-                                    const isSelectedElsewhere =
-                                      Number(kas.id) !== Number(selectedCashId) &&
-                                      selectedCashIds.has(Number(kas.id));
-
-                                    const kasCurrency = String(kas.currency_type || 'idr').toLowerCase();
-                                    const isCurrencyMismatched =
-                                      otherRowsCurrency !== null && kasCurrency !== otherRowsCurrency;
-                                    const isDisabled = isSelectedElsewhere || isCurrencyMismatched;
-
-                                    const kasCurrencyLabel = kasCurrency.toUpperCase();
-
-                                    return (
-                                      <SelectItem
-                                        key={kas.id}
-                                        value={String(kas.id)}
-                                        disabled={isDisabled}
-                                        className={cn(
-                                          isDisabled && 'opacity-50 cursor-not-allowed bg-slate-50',
-                                        )}
-                                      >
-                                        <div className="flex items-center justify-between w-full gap-2">
-                                          <div className="flex items-center gap-2 truncate">
-                                            <span
-                                              className={cn(
-                                                'font-medium',
-                                                isDisabled ? 'text-slate-400' : 'text-slate-900',
-                                              )}
-                                            >
-                                              {kas.cash_name || kas.code}
-                                            </span>
-                                            <span className="text-[10px] text-slate-400">
-                                              ({kas.type === 'bank' ? 'Bank' : 'Kas'} - {kas.code} - {kasCurrencyLabel})
-                                            </span>
-                                          </div>
-                                          {isSelectedElsewhere ? (
-                                            <span className="text-[10px] text-amber-700 font-medium whitespace-nowrap bg-amber-50 px-1.5 py-0.5 rounded border border-amber-200">
-                                              Sudah dipilih
-                                            </span>
-                                          ) : isCurrencyMismatched ? (
-                                            <span className="text-[10px] text-rose-700 font-medium whitespace-nowrap bg-rose-50 px-1.5 py-0.5 rounded border border-rose-200">
-                                              Hanya {otherRowsCurrency.toUpperCase()}
-                                            </span>
-                                          ) : null}
-                                        </div>
-                                      </SelectItem>
-                                    );
-                                  })
-                                )}
-                              </SelectContent>
-                            </Select>
-                          </div>
-
-                          {/* 2. Nominal Kas (Otomatis mengikuti currency_type kas) */}
-                          <div className="sm:col-span-5 space-y-1">
-                            <label className="text-xs font-semibold text-slate-700">
-                              Nominal ({rowCurrency}) <RequiredMark />
-                            </label>
-                            <MoneyInput
-                              currency={rowCurrency}
-                              value={currentAmount || 0}
-                              onChangeValue={(val) => {
-                                form.setValue(
-                                  `billings.${bIndex}.cashes.${cIndex}.amount`,
-                                  val,
-                                  { shouldValidate: true, shouldDirty: true },
-                                );
-                              }}
-                              placeholder="0"
-                              disabled={isBusy}
-                              className="bg-white h-9"
-                            />
-                          </div>
-
-                          {/* 3. Tombol Hapus Baris Kas */}
-                          <div className="sm:col-span-1 flex justify-start pt-4 sm:pt-4">
-                            <Button
-                              type="button"
-                              variant="ghost"
-                              size="icon"
-                              className="h-9 w-9 text-slate-400 hover:text-rose-600 hover:bg-rose-50"
-                              onClick={() => {
-                                const updatedCashes = currentBillingCashes.filter(
-                                  (_, idx) => idx !== cIndex,
-                                );
-                                form.setValue(
-                                  `billings.${bIndex}.cashes`,
-                                  updatedCashes,
-                                  { shouldValidate: true, shouldDirty: true },
-                                );
-                              }}
-                              disabled={isBusy || currentBillingCashes.length <= 1}
-                              title={
-                                currentBillingCashes.length <= 1
-                                  ? 'Minimal 1 alokasi kas'
-                                  : 'Hapus alokasi kas'
-                              }
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-              </div>
-            );
-          })}
-
-          {/* Live Total Kas (Debet / Kredit) Indicator */}
-          <div
-            className={cn(
-              'rounded-lg border p-4 transition-all',
-              summary.isValid
-                ? 'border-emerald-200 bg-emerald-50/50'
-                : 'border-amber-200 bg-amber-50/40',
-            )}
-          >
-            <div className="flex flex-wrap items-center justify-between gap-3 ">
-              <div className="flex flex-wrap items-center gap-4">
-                <div>
-                  <span className="text-slate-500 font-medium">
-                    Total Kas ({isCredit ? 'Kredit' : 'Debet'}):{' '}
-                  </span>
-                  <span
-                    className={cn(
-                      'text-base font-bold ml-1',
-                      isCredit ? 'text-rose-700' : 'text-emerald-700',
-                    )}
-                  >
-                    {currenciesFormat(hasUsdCash ? 'usd' : 'idr', summary.grandTotalCash)}
-                  </span>
-                </div>
-              </div>
-
-              <div>
-                {summary.isValid ? (
-                  <span className="inline-flex items-center gap-1 text-emerald-700 font-semibold bg-emerald-100/70 px-2.5 py-1 rounded-full ">
-                    {summary.totalCashEntries} kas teralokasi ({isCredit ? 'Kredit' : 'Debet'})
-                  </span>
-                ) : (
-                  <span className="inline-flex items-center gap-1 text-amber-800 font-semibold bg-amber-100/70 px-2.5 py-1 rounded-full ">
-                    <AlertCircle className="h-3.5 w-3.5" />
-                    Tentukan minimal 1 kas dengan nominal &gt; 0
-                  </span>
-                )}
-              </div>
-            </div>
-          </div>
-        </div>
-      </CollapsibleBox>
-
-      {/* Section 2: Keterangan & Bukti Dokumen */}
-      <CollapsibleBox
-        title="Keterangan & Bukti Dokumen"
-        description="Tambahkan catatan jurnal dan lampiran dokumen bila ada."
-        icon={FileText}
-        defaultExpanded={true}
-      >
-        <div className="grid gap-5 lg:grid-cols-2 items-stretch">
-          <FormField
-            control={form.control}
-            name="note"
-            render={({ field }) => (
-              <FormItem className="flex flex-col">
-                <FormLabel className="text-sm font-medium">
-                  Keterangan Jurnal <RequiredMark />
-                </FormLabel>
-                <FormControl className="flex-1 flex flex-col">
-                  <Textarea
-                    placeholder="Contoh: Pengeluaran operasional logistik cabang..."
-                    className="flex-1 min-h-32 resize-none bg-white"
-                    disabled={isBusy}
-                    {...field}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
+          {/* Kolom Kanan: Bukti Dokumen Pendukung */}
           <FormField
             control={form.control}
             name="payment_proof"
             render={() => (
               <FormItem className="flex flex-col">
-                <FormLabel className="text-sm font-medium">
+                <FormLabel className="text-sm font-semibold text-slate-700">
                   Bukti Dokumen Pendukung (Opsional)
                 </FormLabel>
-                <FormControl className="flex-1 flex flex-col">
+                <FormControl>
                   <FileInput
-                    className="flex-1 flex flex-col"
-                    triggerClassName="flex-1 min-h-32"
+                    className="flex flex-col"
+                    triggerClassName="min-h-52"
                     value={paymentProof}
                     onFileChange={(file) =>
                       form.setValue('payment_proof', file, {
@@ -643,7 +464,7 @@ export default function GeneralJournalForm({
                   />
                 </FormControl>
                 {existingPaymentProof && !paymentProof ? (
-                  <p className=" text-slate-500 mt-1">
+                  <p className="text-xs text-slate-500 mt-1">
                     Bukti dokumen tersimpan tetap digunakan jika tidak diganti.
                   </p>
                 ) : null}
@@ -654,257 +475,426 @@ export default function GeneralJournalForm({
         </div>
       </CollapsibleBox>
 
-      {/* Section 3: Rincian Pembayaran Jurnal Umum (General Journal Payment) */}
+      {/* Section 2: Rincian Pembayaran Jurnal (Tabel Entri Terbatas Nominal Jurnal) */}
       <CollapsibleBox
-        title="Rincian Pembayaran Jurnal (Akun Lawan / COA)"
-        description="Alokasikan akun lawan transaksi jurnal untuk memenuhi kewajiban Debet dan keseimbangan Kredit."
+        title="Rincian Pembayaran Jurnal"
+        description="Entri pembayaran debit dan kredit jurnal umum (maksimal dibatasi nominal jurnal, posisi utama wajib lunas)."
         icon={CreditCard}
         defaultExpanded={true}
       >
-        <div className="space-y-6">
-          <div className="flex flex-wrap items-center justify-between gap-4 border-b border-slate-100 pb-4">
+        <div className="space-y-4">
+          {/* Header Info / Status Keseimbangan */}
+          <div className="flex flex-col items-stretch gap-3 pb-2 sm:flex-row sm:items-center sm:justify-between">
             <div>
-              <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">
-                Daftar Pembayaran Jurnal (Dual Payment)
+              <p className="text-xs text-slate-600 font-medium">
+                Target Nominal: <span className="font-bold text-slate-900">{currenciesFormat('idr', targetAmount)}</span>
+                {' '}&bull; Posisi Utama:{' '}
+                <span className={cn('font-bold', journalType === 'debit' ? 'text-emerald-700' : 'text-rose-700')}>
+                  {journalType === 'debit' ? 'Debet (Wajib Lunas)' : 'Kredit (Wajib Lunas)'}
+                </span>
               </p>
-              <p className="text-xs text-slate-500 mt-0.5">
-                Alokasi pembayaran akun lawan: Debet (wajib untuk lunas) dan Kredit (opsional untuk seimbang).
+              <p className="text-[11px] text-slate-400 mt-0.5">
+                Pilih akun COA, lalu tentukan nominal pada kolom Debit atau Kredit (maksimal tidak boleh melebihi target jurnal).
               </p>
             </div>
-            <Button
-              type="button"
-              variant="default"
-              onClick={() => {
-                appendPayment({
-                  account_id: 0,
-                  type: isCredit ? 'debit' : 'credit',
-                  amount: 0,
-                  amount_original: 0,
-                  note: '',
-                });
-              }}
-              disabled={isBusy || accountOptions.length === 0}
-            >
-              <Plus className="mr-1.5 h-4 w-4" />
-              Tambah Rincian Pembayaran
-            </Button>
+
+            {/* Balancing & Settlement Status Badge */}
+            <div className="flex items-center gap-2">
+              {isBalanced ? (
+                <Badge variant="outline" className="border-emerald-300 bg-emerald-50 text-emerald-700 font-semibold px-3 py-1 text-xs">
+                  Seimbang (Balance)
+                </Badge>
+              ) : isPrimarySettled ? (
+                <Badge variant="outline" className="border-blue-300 bg-blue-50 text-blue-700 font-semibold px-3 py-1 text-xs">
+                  {journalType === 'debit' ? 'Debet Terpenuhi (Kredit Belum Seimbang)' : 'Kredit Terpenuhi (Debet Belum Seimbang)'}
+                </Badge>
+              ) : (
+                <Badge variant="outline" className="border-amber-300 bg-amber-50 text-amber-700 font-semibold px-3 py-1 text-xs">
+                  {journalType === 'debit' ? 'Debet Belum Lunas' : 'Kredit Belum Lunas'}
+                </Badge>
+              )}
+            </div>
           </div>
 
-          {paymentFields.length === 0 ? (
-            <div className="rounded-lg border border-dashed border-slate-200 p-6 text-center text-slate-400">
-              <CreditCard className="mx-auto h-8 w-8 text-slate-300 mb-2" />
-              <p className="text-sm font-medium text-slate-600">Belum ada rincian pembayaran jurnal</p>
-              <p className="text-xs text-slate-400 mt-1">
-                Klik tombol &quot;Tambah Rincian Pembayaran&quot; di atas untuk menambahkan akun lawan pembayaran secara langsung.
-              </p>
-            </div>
-          ) : (
-            <div className="space-y-4">
-              {paymentFields.map((fieldItem, pIndex) => {
-                return (
-                  <div
-                    key={fieldItem.id}
-                    className="relative rounded-lg border border-slate-200 bg-slate-50/40 p-4 transition-colors hover:border-slate-300"
-                  >
-                    <div className="grid grid-cols-1 md:grid-cols-12 gap-4 items-start">
-                      {/* Akun Lawan (COA) - SearchableSelect */}
-                      <div className="md:col-span-4">
+          {/* Tabel Entri Data Pembayaran */}
+          <div className="overflow-x-auto rounded-md border border-slate-200">
+            <Table className="w-full text-xs">
+              <TableHeader className="bg-slate-50/90 border-b border-slate-200 text-slate-700">
+                <TableRow className="hover:bg-transparent">
+                  <TableHead className="w-12 text-center font-bold">No</TableHead>
+                  <TableHead className="min-w-[240px] font-bold">
+                    Akun <RequiredMark />
+                  </TableHead>
+                  <TableHead className="min-w-[180px] text-right font-bold">
+                    Debit (Nominal) {journalType === 'debit' && <span className="text-emerald-700 font-bold">*Wajib</span>}
+                  </TableHead>
+                  <TableHead className="min-w-[180px] text-right font-bold">
+                    Kredit (Nominal) {journalType === 'credit' && <span className="text-rose-700 font-bold">*Wajib</span>}
+                  </TableHead>
+                  <TableHead className="min-w-[180px] font-bold">Catatan</TableHead>
+                  <TableHead className="w-24 text-center font-bold sticky right-0 bg-slate-50">
+                    Aksi
+                  </TableHead>
+                </TableRow>
+              </TableHeader>
+
+              <TableBody>
+                {paymentFields.map((fieldItem, pIndex) => {
+                  const currentDebit = Number(watchedPayments?.[pIndex]?.debit || 0);
+                  const currentCredit = Number(watchedPayments?.[pIndex]?.credit || 0);
+                  const isDebitFilled = currentDebit > 0;
+                  const isCreditFilled = currentCredit > 0;
+                  const currentAccountId = Number(watchedPayments?.[pIndex]?.account_id || 0);
+
+                  const maxDebit = getMaxDebitForRow(pIndex);
+                  const maxCredit = getMaxCreditForRow(pIndex);
+
+                  const isDebitDisabled =
+                    isCreditFilled || isBusy || (targetAmount > 0 && maxDebit <= 0 && currentDebit <= 0);
+                  const isCreditDisabled =
+                    isDebitFilled || isBusy || (targetAmount > 0 && maxCredit <= 0 && currentCredit <= 0);
+
+                  return (
+                    <TableRow
+                      key={fieldItem.id}
+                      className="hover:bg-slate-50/70 border-b border-slate-100 transition-colors"
+                    >
+                      {/* 1. Nomor Baris */}
+                      <TableCell className="text-center font-medium text-slate-400">
+                        {pIndex + 1}
+                      </TableCell>
+
+                      {/* 2. Pemilihan Akun (Searchable / Filtered & Disable Duplikat) */}
+                      <TableCell>
                         <FormField
                           control={form.control}
                           name={`payments.${pIndex}.account_id`}
                           render={({ field }) => (
-                            <FormItem>
-                              <FormLabel className="text-xs font-medium text-slate-700">
-                                Akun Lawan (COA) <RequiredMark />
-                              </FormLabel>
-                              <FormControl>
-                                <SearchableSelect
-                                  value={field.value ? String(field.value) : ''}
-                                  onChange={(val) => field.onChange(val ? Number(val) : 0)}
-                                  options={accountOptions}
-                                  placeholder="Pilih Akun Lawan (COA)..."
-                                  searchPlaceholder="Cari kode atau nama akun..."
-                                  emptyText="Akun tidak ditemukan"
-                                  loading={accountQuery.isLoading}
-                                  disabled={isBusy}
-                                  className="h-10 bg-white"
-                                />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
+                            <Select
+                              value={field.value ? String(field.value) : undefined}
+                              onValueChange={(val) => field.onChange(Number(val))}
+                              disabled={isBusy}
+                            >
+                              <SelectTrigger className="h-9 w-full bg-white text-xs border-slate-200">
+                                <SelectValue placeholder="Pilih akun..." />
+                              </SelectTrigger>
+                              <SelectContent className="max-h-60" showSearch searchPlaceholder="Cari akun...">
+                                {akunOptions.map((a) => {
+                                  const isAlreadySelected =
+                                    selectedAccountIds.has(Number(a.id)) && Number(a.id) !== currentAccountId;
+                                  const rawType = a.type || '';
+                                  const typeLabel =
+                                    rawType.toLowerCase() === 'credit'
+                                      ? 'Credit'
+                                      : rawType.toLowerCase() === 'debet' || rawType.toLowerCase() === 'debit'
+                                      ? 'Debit'
+                                      : rawType || 'Debit';
+
+                                  return (
+                                    <SelectItem key={a.id} value={String(a.id)} disabled={isAlreadySelected}>
+                                      <div className="flex items-center justify-between gap-2 w-full">
+                                        <span className={cn(isAlreadySelected && 'text-slate-400 line-through')}>
+                                          <span
+                                            className={cn(
+                                              'font-bold mr-1',
+                                              typeLabel === 'Debit' ? 'text-blue-600' : 'text-purple-600',
+                                            )}
+                                          >
+                                            [{typeLabel}]
+                                          </span>
+                                          {a.code} - {a.name}
+                                        </span>
+                                        {isAlreadySelected && (
+                                          <span className="text-[10px] text-amber-600 font-medium">
+                                            (Sudah dipilih)
+                                          </span>
+                                        )}
+                                      </div>
+                                    </SelectItem>
+                                  );
+                                })}
+                              </SelectContent>
+                            </Select>
                           )}
                         />
-                      </div>
+                      </TableCell>
 
-                      {/* Tipe Pembayaran (Debit / Kredit) */}
-                      <div className="md:col-span-2">
+                      {/* 3. Debit (Nominal) - Terkunci jika Kredit terisi atau kuota debit habis */}
+                      <TableCell className="text-right align-top">
                         <FormField
                           control={form.control}
-                          name={`payments.${pIndex}.type`}
+                          name={`payments.${pIndex}.debit`}
                           render={({ field }) => (
-                            <FormItem>
-                              <FormLabel className="text-xs font-medium text-slate-700">
-                                Tipe <RequiredMark />
-                              </FormLabel>
-                              <Select
-                                value={field.value === 'credit' || field.value === 'kredit' ? 'credit' : 'debit'}
-                                onValueChange={(val: 'debit' | 'credit') => field.onChange(val)}
-                                disabled={isBusy}
-                              >
-                                <FormControl>
-                                  <SelectTrigger className="h-10 bg-white">
-                                    <SelectValue placeholder="Pilih Tipe" />
-                                  </SelectTrigger>
-                                </FormControl>
-                                <SelectContent>
-                                  <SelectItem value="debit">
-                                    <span className="font-semibold text-emerald-700">Debet</span>
-                                  </SelectItem>
-                                  <SelectItem value="credit">
-                                    <span className="font-semibold text-rose-700">Kredit</span>
-                                  </SelectItem>
-                                </SelectContent>
-                              </Select>
-                              <FormMessage />
-                            </FormItem>
+                            <div className="flex flex-col items-end gap-1">
+                              <MoneyInput
+                                value={field.value || 0}
+                                onChangeValue={(val) => {
+                                  const clampedVal = targetAmount > 0 ? Math.min(val, maxDebit) : val;
+                                  field.onChange(clampedVal);
+                                  if (clampedVal > 0) {
+                                    form.setValue(`payments.${pIndex}.credit`, 0, {
+                                      shouldValidate: true,
+                                      shouldDirty: true,
+                                    });
+                                  }
+                                }}
+                                currency="IDR"
+                                disabled={isDebitDisabled}
+                                placeholder={
+                                  isCreditFilled
+                                    ? 'Kredit aktif'
+                                    : targetAmount > 0 && maxDebit <= 0
+                                    ? 'Maksimal'
+                                    : '0'
+                                }
+                                className={cn(
+                                  'h-9 text-xs text-right font-semibold bg-white',
+                                  isDebitDisabled
+                                    ? 'text-slate-400 bg-slate-100 opacity-60 cursor-not-allowed'
+                                    : 'text-emerald-700',
+                                )}
+                              />
+                              {targetAmount > 0 && !isCreditFilled && maxDebit > 0 && maxDebit < targetAmount && (
+                                <span className="text-[9px] text-slate-400">
+                                  Maks: {currenciesFormat('idr', maxDebit)}
+                                </span>
+                              )}
+                            </div>
                           )}
                         />
-                      </div>
+                      </TableCell>
 
-                      {/* Nominal Pembayaran */}
-                      <div className="md:col-span-3">
+                      {/* 4. Kredit (Nominal) - Terkunci jika Debit terisi atau kuota kredit habis */}
+                      <TableCell className="text-right align-top">
                         <FormField
                           control={form.control}
-                          name={`payments.${pIndex}.amount`}
+                          name={`payments.${pIndex}.credit`}
                           render={({ field }) => (
-                            <FormItem>
-                              <FormLabel className="text-xs font-medium text-slate-700">
-                                Nominal ({hasUsdCash ? 'USD' : 'IDR'}) <RequiredMark />
-                              </FormLabel>
-                              <FormControl>
-                                <MoneyInput
-                                  currency={hasUsdCash ? 'USD' : 'IDR'}
-                                  value={field.value}
-                                  onChangeValue={(val) => field.onChange(val)}
-                                  disabled={isBusy}
-                                  placeholder="0"
-                                  className="h-10 bg-white"
-                                />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
+                            <div className="flex flex-col items-end gap-1">
+                              <MoneyInput
+                                value={field.value || 0}
+                                onChangeValue={(val) => {
+                                  const clampedVal = targetAmount > 0 ? Math.min(val, maxCredit) : val;
+                                  field.onChange(clampedVal);
+                                  if (clampedVal > 0) {
+                                    form.setValue(`payments.${pIndex}.debit`, 0, {
+                                      shouldValidate: true,
+                                      shouldDirty: true,
+                                    });
+                                  }
+                                }}
+                                currency="IDR"
+                                disabled={isCreditDisabled}
+                                placeholder={
+                                  isDebitFilled
+                                    ? 'Debit aktif'
+                                    : targetAmount > 0 && maxCredit <= 0
+                                    ? 'Maksimal'
+                                    : '0'
+                                }
+                                className={cn(
+                                  'h-9 text-xs text-right font-semibold bg-white',
+                                  isCreditDisabled
+                                    ? 'text-slate-400 bg-slate-100 opacity-60 cursor-not-allowed'
+                                    : 'text-rose-700',
+                                )}
+                              />
+                              {targetAmount > 0 && !isDebitFilled && maxCredit > 0 && maxCredit < targetAmount && (
+                                <span className="text-[9px] text-slate-400">
+                                  Maks: {currenciesFormat('idr', maxCredit)}
+                                </span>
+                              )}
+                            </div>
                           )}
                         />
-                      </div>
+                      </TableCell>
 
-                      {/* Catatan Pembayaran */}
-                      <div className="md:col-span-2">
+                      {/* 5. Catatan */}
+                      <TableCell>
                         <FormField
                           control={form.control}
                           name={`payments.${pIndex}.note`}
                           render={({ field }) => (
-                            <FormItem>
-                              <FormLabel className="text-xs font-medium text-slate-700">
-                                Catatan
-                              </FormLabel>
-                              <FormControl>
-                                <Input
-                                  placeholder="Keterangan..."
-                                  className="h-10 bg-white text-xs"
-                                  disabled={isBusy}
-                                  value={field.value || ''}
-                                  onChange={field.onChange}
-                                />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
+                            <Input
+                              value={field.value || ''}
+                              onChange={field.onChange}
+                              placeholder="Catatan..."
+                              className="h-9 text-xs bg-white"
+                              disabled={isBusy}
+                            />
                           )}
                         />
+                      </TableCell>
+
+                      {/* 6. Aksi: Copy Icon & Hapus Icon */}
+                      <TableCell className="text-center sticky right-0 bg-white">
+                        <div className="flex items-center justify-center gap-1">
+                          {/* Tombol Copy (Salin baris) */}
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            className="h-8 w-8 p-0 text-slate-500 hover:text-blue-600 hover:bg-blue-50 rounded-md"
+                            title="Salin baris ini (nominal dan catatan)"
+                            disabled={isBusy || (journalType === 'debit' ? remainingDebit <= 0 : remainingCredit <= 0)}
+                            onClick={() => handleCopyRow(pIndex)}
+                          >
+                            <Copy className="h-3.5 w-3.5" />
+                          </Button>
+
+                          {/* Tombol Hapus */}
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            className="h-8 w-8 p-0 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-md"
+                            title={paymentFields.length <= 1 ? 'Kosongkan baris' : 'Hapus baris'}
+                            disabled={isBusy}
+                            onClick={() => handleDeleteRow(pIndex)}
+                          >
+                            <Trash2 className="h-3.5 w-3.5" />
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
+              </TableBody>
+
+              {/* Table Footer: Totals & Balance indicator */}
+              <TableFooter className="bg-slate-50/90 border-t-2 border-slate-300 font-semibold text-xs">
+                <TableRow className="hover:bg-transparent">
+                  <TableCell colSpan={2} className="py-2.5 px-4 text-right uppercase tracking-wider text-slate-700 font-bold">
+                    Total Jurnal IDR
+                  </TableCell>
+                  <TableCell className="py-2.5 px-4 text-right font-bold text-emerald-800 tabular-nums">
+                    <div>{currenciesFormat('idr', totalDebit)}</div>
+                    {targetAmount > 0 && totalDebit < targetAmount && (
+                      <div className="text-[10px] text-amber-700 font-normal">
+                        Sisa: {currenciesFormat('idr', remainingDebit)}
                       </div>
-
-                      {/* Tombol Hapus Baris */}
-                      <div className="flex md:h-10 items-end justify-end md:col-span-1">
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => removePayment(pIndex)}
-                          disabled={isBusy}
-                          className="h-10 w-10 text-slate-400 hover:bg-rose-50 hover:text-rose-600"
-                          title="Hapus pembayaran ini"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
+                    )}
+                  </TableCell>
+                  <TableCell className="py-2.5 px-4 text-right font-bold text-rose-800 tabular-nums">
+                    <div>{currenciesFormat('idr', totalCredit)}</div>
+                    {targetAmount > 0 && totalCredit < targetAmount && (
+                      <div className="text-[10px] text-amber-700 font-normal">
+                        Sisa: {currenciesFormat('idr', remainingCredit)}
                       </div>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          )}
+                    )}
+                  </TableCell>
+                  <TableCell colSpan={2} className="py-2.5 px-4 text-center">
+                    <span className="text-[11px] text-slate-600 font-medium">
+                      Selisih: {currenciesFormat('idr', Math.abs(totalDebit - totalCredit))}
+                    </span>
+                  </TableCell>
+                </TableRow>
+              </TableFooter>
+            </Table>
+          </div>
 
-          {/* Live Summary Box - Exact Kas Harian Pattern */}
-          <div className="rounded-lg border border-slate-200 bg-slate-50 p-4">
-            <div className="flex flex-wrap items-center justify-between gap-4 text-xs">
-              <div className="flex flex-wrap items-center gap-4">
-                <div className="flex items-center gap-1.5">
-                  <span className="font-semibold text-slate-700">Total Kas Jurnal:</span>
-                  <Badge variant="outline" className="bg-white border-slate-300 text-slate-900 font-bold">
-                    {currenciesFormat(hasUsdCash ? 'usd' : 'idr', summary.grandTotalCash)}
-                  </Badge>
-                </div>
-                <div className="flex items-center gap-1.5">
-                  <span className="font-semibold text-emerald-800">Total Debet:</span>
-                  <Badge variant="outline" className="bg-emerald-50 border-emerald-300 text-emerald-800 font-bold">
-                    {currenciesFormat(hasUsdCash ? 'usd' : 'idr', paymentTotals.debitTotal)}
-                  </Badge>
-                </div>
-                <div className="flex items-center gap-1.5">
-                  <span className="font-semibold text-rose-800">Total Kredit:</span>
-                  <Badge variant="outline" className="bg-rose-50 border-rose-300 text-rose-800 font-bold">
-                    {currenciesFormat(hasUsdCash ? 'usd' : 'idr', paymentTotals.creditTotal)}
-                  </Badge>
-                </div>
-              </div>
-
-              <div className="flex items-center gap-2">
-                {isBalanced ? (
-                  <Badge variant="outline" className="border-emerald-300 bg-emerald-100 text-emerald-800 font-bold px-2.5 py-1">
-                    Seimbang (Balance)
-                  </Badge>
-                ) : isDebitFull && paymentTotals.creditTotal === 0 ? (
-                  <Badge variant="outline" className="border-blue-300 bg-blue-100 text-blue-800 font-bold px-2.5 py-1">
-                    Debet Terpenuhi (Kredit Opsional)
-                  </Badge>
-                ) : (
-                  <Badge variant="outline" className="border-amber-300 bg-amber-100 text-amber-800 font-bold px-2.5 py-1">
-                    Belum Seimbang
-                  </Badge>
-                )}
-              </div>
-            </div>
+          {/* Action Button Tambah Jurnal di Bawah Tabel (Disable jika Debit & Credit Full) */}
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-2">
+            {isBothFull ? (
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <span className="inline-block w-full sm:w-auto">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        disabled
+                        className="w-full sm:w-auto text-slate-400 border-dashed border-slate-200 cursor-not-allowed text-xs"
+                      >
+                        <Plus className="mr-1.5 h-4 w-4" />
+                        Tambah Jurnal
+                      </Button>
+                    </span>
+                  </TooltipTrigger>
+                  <TooltipContent side="top" className="text-xs">
+                    Nominal debit dan kredit sudah penuh (maksimal tercapai).
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            ) : (
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => {
+                  appendPayment({
+                    account_id: 0,
+                    debit: 0,
+                    credit: 0,
+                    note: '',
+                  });
+                }}
+                disabled={isBusy}
+                className="w-full sm:w-auto text-slate-700 hover:text-slate-900 border-dashed border-slate-300 hover:border-slate-400 text-xs"
+              >
+                <Plus className="mr-1.5 h-4 w-4" />
+                Tambah Jurnal
+              </Button>
+            )}
           </div>
         </div>
       </CollapsibleBox>
 
-      {/* Footer Action Buttons */}
+      {/* Footer Form Action Buttons */}
       <div className="flex flex-col-reverse gap-3 border-t border-slate-200 pt-6 sm:flex-row sm:justify-end">
         {onCancel ? (
           <Button type="button" variant="outline" onClick={onCancel} disabled={isBusy}>
             Batal
           </Button>
         ) : null}
+
+        {/* Tombol Simpan Jurnal (Draft: is_paid = false) */}
         <Button
-          type="submit"
-          className="btn-primary"
-          disabled={isBusy || !summary.isValid}
+          type="button"
+          variant="outline"
+          onClick={handleSaveDraft}
+          disabled={isBusy}
+          className="border-slate-300 text-slate-700 hover:bg-slate-50"
         >
           {isBusy ? (
-            <LoadingState variant="inline" text="Menyimpan..." iconClassName="text-white" />
+            <LoadingState variant="inline" text="Menyimpan..." />
           ) : (
             submitLabel
           )}
         </Button>
+
+        {/* Tombol Tandai Lunas (Posting Lunas: is_paid = true) */}
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <span className="inline-block">
+                <Button
+                  type="button"
+                  onClick={handleMarkPaid}
+                  disabled={isBusy || !isPaymentDataValid}
+                  className="bg-emerald-600 hover:bg-emerald-700 text-white"
+                >
+                  {isBusy ? (
+                    <LoadingState variant="inline" text="Menandai Lunas..." iconClassName="text-white" />
+                  ) : (
+                    <>
+                      <CheckCircle2 className="mr-1.5 h-4 w-4" />
+                      Tandai Lunas
+                    </>
+                  )}
+                </Button>
+              </span>
+            </TooltipTrigger>
+            {!isPaymentDataValid && (
+              <TooltipContent side="top" className="text-xs max-w-xs text-center">
+                {targetAmount <= 0
+                  ? 'Tentukan nominal jurnal umum terlebih dahulu.'
+                  : !isPrimarySettled
+                  ? `Pembayaran ${journalType === 'debit' ? 'debit' : 'kredit'} wajib lunas (${currenciesFormat('idr', targetAmount)}).`
+                  : 'Lengkapi seluruh data akun dan nominal pada rincian pembayaran.'}
+              </TooltipContent>
+            )}
+          </Tooltip>
+        </TooltipProvider>
       </div>
     </div>
   );
@@ -915,7 +905,7 @@ export default function GeneralJournalForm({
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+      <form onSubmit={(e) => e.preventDefault()} className="space-y-6">
         {formContent}
       </form>
     </Form>

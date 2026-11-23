@@ -33,8 +33,10 @@ export const generalJournalBillingItemSchema = z.object({
 
 export const generalJournalPaymentDirectSchema = z.object({
   id: z.number().optional(),
-  account_id: z.number().min(0).default(0),
-  type: z.enum(['debit', 'credit', 'debet', 'kredit']).default('debit'),
+  account_id: z.number({ required_error: 'Akun (COA) wajib dipilih' }).min(1, 'Akun (COA) wajib dipilih'),
+  debit: z.number().min(0).default(0),
+  credit: z.number().min(0).default(0),
+  type: z.enum(['debit', 'credit', 'debet', 'kredit']).optional(),
   amount: z.number().min(0).default(0),
   amount_original: z.number().min(0).optional().nullable(),
   note: z.string().optional().nullable(),
@@ -48,89 +50,99 @@ export const generalJournalSchema = z
     note: z.string().trim().min(3, 'Keterangan minimal 3 karakter'),
     payment_proof: fileField,
     is_usd_transaction: z.boolean().default(false),
-    amount: z.number().min(0).optional().nullable(),
+    is_paid: z.boolean().default(false),
+    amount: z.number({ required_error: 'Nominal jurnal wajib diisi' }).min(1, 'Nominal jurnal harus lebih dari 0'),
     amount_original: z.number().min(0).optional().nullable(),
-    billings: z.array(generalJournalBillingItemSchema).min(1, 'Minimal harus terdapat 1 item billing'),
-    payments: z.array(generalJournalPaymentDirectSchema).optional().default([]),
+    billings: z.array(generalJournalBillingItemSchema).optional().default([]),
+    payments: z.array(generalJournalPaymentDirectSchema).min(1, 'Minimal harus terdapat 1 baris rincian pembayaran jurnal'),
   })
   .superRefine((value, ctx) => {
-    if (!value.billings || value.billings.length === 0) {
+    const targetAmount = Number(value.amount || 0);
+    if (!targetAmount || targetAmount <= 0) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
-        message: 'Minimal harus terdapat 1 item billing',
-        path: ['billings'],
+        message: 'Nominal jurnal umum wajib diisi dan harus lebih dari 0',
+        path: ['amount'],
+      });
+    }
+
+    if (!value.payments || value.payments.length === 0) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'Minimal harus terdapat 1 baris rincian pembayaran jurnal',
+        path: ['payments'],
       });
       return;
     }
 
-    const seenCashIds = new Set<number>();
-    let grandTotalCash = 0;
-
-    value.billings.forEach((billing, bIndex) => {
-      if (!billing.cashes || billing.cashes.length === 0) {
-        ctx.addIssue({
-          code: z.ZodIssueCode.custom,
-          message: 'Minimal harus terdapat 1 alokasi kas pada billing ini',
-          path: ['billings', bIndex, 'cashes'],
-        });
-        return;
-      }
-
-      billing.cashes.forEach((cash, cIndex) => {
-        const cid = Number(cash.cash_id);
-        if (!cid || cid <= 0) {
-          ctx.addIssue({
-            code: z.ZodIssueCode.custom,
-            message: 'Kas / Bank wajib dipilih',
-            path: ['billings', bIndex, 'cashes', cIndex, 'cash_id'],
-          });
-        } else if (seenCashIds.has(cid)) {
-          ctx.addIssue({
-            code: z.ZodIssueCode.custom,
-            message: 'Kas / Bank ini sudah dipilih di baris lain. Setiap data kas harus bersifat unik per jurnal.',
-            path: ['billings', bIndex, 'cashes', cIndex, 'cash_id'],
-          });
-        } else {
-          seenCashIds.add(cid);
-        }
-
-        if (!cash.amount || cash.amount <= 0) {
-          ctx.addIssue({
-            code: z.ZodIssueCode.custom,
-            message: 'Nominal kas harus lebih dari 0',
-            path: ['billings', bIndex, 'cashes', cIndex, 'amount'],
-          });
-        }
-        grandTotalCash += Number(cash.amount || 0);
-      });
-    });
-
-    if (grandTotalCash <= 0) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        message: 'Total nominal kas tidak boleh 0',
-        path: ['billings'],
-      });
-    }
+    let totalDebit = 0;
+    let totalCredit = 0;
 
     (value.payments || []).forEach((p, pIndex) => {
       const accId = Number(p.account_id);
-      const amt = Number(p.amount);
-      if (accId > 0 && amt <= 0) {
+      const deb = Number(p.debit || 0);
+      const cred = Number(p.credit || 0);
+
+      totalDebit += deb;
+      totalCredit += cred;
+
+      if (!accId || accId <= 0) {
         ctx.addIssue({
           code: z.ZodIssueCode.custom,
-          message: 'Nominal pembayaran harus lebih dari 0 jika akun dipilih',
-          path: ['payments', pIndex, 'amount'],
-        });
-      }
-      if (amt > 0 && accId <= 0) {
-        ctx.addIssue({
-          code: z.ZodIssueCode.custom,
-          message: 'Akun lawan (COA) wajib dipilih jika nominal diisi',
+          message: 'Akun (COA) wajib dipilih',
           path: ['payments', pIndex, 'account_id'],
         });
       }
+
+      if (deb <= 0 && cred <= 0) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: 'Salah satu nominal (Debit atau Kredit) wajib diisi',
+          path: ['payments', pIndex, 'debit'],
+        });
+      }
+
+      if (deb > 0 && cred > 0) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: 'Wajib memilih salah satu antara Debit atau Kredit, tidak boleh keduanya',
+          path: ['payments', pIndex, 'credit'],
+        });
+      }
     });
+
+    if (targetAmount > 0) {
+      if (totalDebit > targetAmount) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: `Total pembayaran debit tidak boleh melebihi nominal jurnal umum`,
+          path: ['amount'],
+        });
+      }
+
+      if (totalCredit > targetAmount) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: `Total pembayaran kredit tidak boleh melebihi nominal jurnal umum`,
+          path: ['amount'],
+        });
+      }
+
+      const journalType = value.type === 'credit' || value.type === 'kredit' ? 'credit' : 'debit';
+      if (journalType === 'debit' && totalDebit < targetAmount) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: `Pembayaran debit wajib lunas sesuai nominal jurnal umum`,
+          path: ['amount'],
+        });
+      } else if (journalType === 'credit' && totalCredit < targetAmount) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: `Pembayaran kredit wajib lunas sesuai nominal jurnal umum`,
+          path: ['amount'],
+        });
+      }
+    }
   });
 
 export const generalJournalBillingPaymentSchema = z.object({

@@ -173,7 +173,16 @@ export interface GeneralJournalPayload {
   amount?: number | null;
   amount_original?: number | null;
   is_usd_transaction?: boolean;
+  is_paid?: boolean;
   billings?: GeneralJournalBillingPayload[];
+  payments?: Array<{
+    id?: number;
+    account_id: number;
+    type?: 'debit' | 'credit';
+    amount: number;
+    amount_original?: number;
+    note?: string | null;
+  }>;
 }
 
 export interface GeneralJournalBillingPaymentPayload {

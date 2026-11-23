@@ -105,8 +105,23 @@ export default function GeneralJournalDetailView({ journalId }: Props) {
     return list;
   }, [billings]);
 
-  // Debet Kas Jurnal
-  const totalDebit = Number(journal?.total_debit ?? journal?.total_amount ?? journal?.amount ?? 0);
+  // Tipe Jurnal dan Nominal Utama Transaksi
+  const journalType = String(
+    journal?.type ||
+    (Number(journal?.total_credit || 0) > 0 && Number(journal?.total_debit || 0) === 0 ? 'credit' : '') ||
+    'debit'
+  ).toLowerCase();
+  const isJournalCredit = journalType === 'credit' || journalType === 'kredit';
+
+  const journalTargetAmount = Number(
+    journal?.amount ??
+    journal?.total_amount ??
+    (isJournalCredit ? journal?.total_credit : journal?.total_debit) ??
+    0
+  );
+
+  const totalDebit = isJournalCredit ? (Number(journal?.total_debit || 0) || journalTargetAmount) : journalTargetAmount;
+  const totalCredit = isJournalCredit ? journalTargetAmount : (Number(journal?.total_credit || 0) || journalTargetAmount);
   const hasBillings = billings.length > 0;
 
   // Akumulasi Pembayaran Dual: Debet & Kredit
@@ -126,35 +141,28 @@ export default function GeneralJournalDetailView({ journalId }: Props) {
       .reduce((sum, p) => sum + Number(p.amount || 0), 0);
   }, [primaryBilling?.paid_credit, journal?.paid_credit, allPayments]);
 
-  const totalCredit = paidCredit;
-
-  // Sisa kewajiban dual payment:
-  // Sisa debit (Langkah 2: wajib lunas)
+  // Sisa kewajiban dual payment
   const remainingDebit = useMemo(() => {
-    if (primaryBilling?.remaining_payment !== undefined) return Number(primaryBilling.remaining_payment);
-    if (primaryBilling?.remaining_debit !== undefined) return Number(primaryBilling.remaining_debit);
-    if (journal?.remaining_payment !== undefined) return Number(journal.remaining_payment);
+    if (!isJournalCredit && primaryBilling?.remaining_payment !== undefined) return Number(primaryBilling.remaining_payment);
     return Math.max(0, totalDebit - paidDebit);
-  }, [primaryBilling?.remaining_payment, primaryBilling?.remaining_debit, journal?.remaining_payment, totalDebit, paidDebit]);
+  }, [isJournalCredit, primaryBilling?.remaining_payment, totalDebit, paidDebit]);
 
-  // Sisa kredit (Langkah 3: opsional seimbang)
   const remainingCredit = useMemo(() => {
-    if (primaryBilling?.dual_remaining_payment !== undefined) return Number(primaryBilling.dual_remaining_payment);
-    if (primaryBilling?.remaining_credit !== undefined) return Number(primaryBilling.remaining_credit);
-    if (journal?.dual_remaining_payment !== undefined) return Number(journal.dual_remaining_payment);
-    return Math.max(0, totalDebit - paidCredit);
-  }, [primaryBilling?.dual_remaining_payment, primaryBilling?.remaining_credit, journal?.dual_remaining_payment, totalDebit, paidCredit]);
+    if (isJournalCredit && primaryBilling?.remaining_payment !== undefined) return Number(primaryBilling.remaining_payment);
+    return Math.max(0, totalCredit - paidCredit);
+  }, [isJournalCredit, primaryBilling?.remaining_payment, totalCredit, paidCredit]);
 
   // Status settled
   const isDebitSettled = useMemo(() => {
-    if (primaryBilling?.is_original_settled !== undefined) return Boolean(primaryBilling.is_original_settled);
+    if (!isJournalCredit && primaryBilling?.is_original_settled !== undefined) return Boolean(primaryBilling.is_original_settled);
     return remainingDebit <= 0 && totalDebit > 0;
-  }, [primaryBilling?.is_original_settled, remainingDebit, totalDebit]);
+  }, [isJournalCredit, primaryBilling?.is_original_settled, remainingDebit, totalDebit]);
 
   const isCreditSettled = useMemo(() => {
+    if (isJournalCredit && primaryBilling?.is_original_settled !== undefined) return Boolean(primaryBilling.is_original_settled);
     if (primaryBilling?.is_dual_settled !== undefined) return Boolean(primaryBilling.is_dual_settled);
-    return remainingCredit <= 0 && totalDebit > 0;
-  }, [primaryBilling?.is_dual_settled, remainingCredit, totalDebit]);
+    return remainingCredit <= 0 && totalCredit > 0;
+  }, [isJournalCredit, primaryBilling?.is_original_settled, primaryBilling?.is_dual_settled, remainingCredit, totalCredit]);
 
   // Keseimbangan Jurnal: True jika kedua sisi (debit & kredit) telah lunas
   const isBalanced = useMemo(() => {
@@ -163,10 +171,9 @@ export default function GeneralJournalDetailView({ journalId }: Props) {
     return isDebitSettled && isCreditSettled;
   }, [journal?.is_balanced, primaryBilling?.is_balanced, isDebitSettled, isCreditSettled]);
 
-  // Syarat Tandai Lunas:
-  // Berdasarkan alur 3 langkah dan dokumentasi API:
-  // Cukup pembayaran debet lunas (isDebitSettled). Sisi kredit bersifat opsional dan tidak memblokir posting status lunas.
-  const canMarkPaid = canEdit && !isPaid && isDebitSettled && hasBillings;
+  // Syarat Tandai Lunas: Tipe yang sama dengan jurnal WAJIB LUNAS
+  const isPrimarySettled = isJournalCredit ? isCreditSettled : isDebitSettled;
+  const canMarkPaid = canEdit && !isPaid && isPrimarySettled && hasBillings;
 
   const totalAmount = useMemo(() => {
     const rawBillingTotal = Number(primaryBilling?.total_amount ?? 0);
@@ -178,18 +185,21 @@ export default function GeneralJournalDetailView({ journalId }: Props) {
     );
     if (cashesTotal > 0) return cashesTotal;
 
-    return totalDebit;
-  }, [primaryBilling?.total_amount, primaryBilling?.cashes, totalDebit]);
+    return journalTargetAmount;
+  }, [primaryBilling?.total_amount, primaryBilling?.cashes, journalTargetAmount]);
 
   const markPaidDisabledReason = useMemo(() => {
     if (!canEdit) return 'Anda tidak memiliki hak akses untuk mengubah status jurnal.';
     if (isPaid) return 'Jurnal ini sudah ditandai lunas.';
     if (!hasBillings) return 'Jurnal tidak dapat ditandai lunas tanpa item billing.';
-    if (!isDebitSettled) {
-      return `Pembayaran debet sebesar ${currenciesFormat(isUsd ? 'usd' : 'idr', totalDebit)} wajib dilunasi terlebih dahulu (Sisa debet: ${currenciesFormat(isUsd ? 'usd' : 'idr', remainingDebit)}).`;
+    if (!isPrimarySettled) {
+      const neededSide = isJournalCredit ? 'kredit' : 'debet';
+      const neededAmount = isJournalCredit ? totalCredit : totalDebit;
+      const neededRemaining = isJournalCredit ? remainingCredit : remainingDebit;
+      return `Pembayaran ${neededSide} sebesar ${currenciesFormat(isUsd ? 'usd' : 'idr', neededAmount)} wajib dilunasi terlebih dahulu (Sisa ${neededSide}: ${currenciesFormat(isUsd ? 'usd' : 'idr', neededRemaining)}).`;
     }
     return '';
-  }, [canEdit, hasBillings, isDebitSettled, isPaid, isUsd, remainingDebit, totalDebit]);
+  }, [canEdit, hasBillings, isPrimarySettled, isPaid, isJournalCredit, totalCredit, totalDebit, remainingCredit, remainingDebit, isUsd]);
 
   const backToList = () => void router.push(basePath);
 
@@ -258,7 +268,7 @@ export default function GeneralJournalDetailView({ journalId }: Props) {
                     ? isBalanced
                       ? 'border-emerald-200 bg-emerald-50 text-emerald-700'
                       : 'border-amber-200 bg-amber-50 text-amber-700'
-                    : isDebitSettled
+                    : isPrimarySettled
                       ? 'border-blue-200 bg-blue-50 text-blue-700'
                       : 'border-slate-200 bg-slate-100 text-slate-700',
                 )}
@@ -268,9 +278,22 @@ export default function GeneralJournalDetailView({ journalId }: Props) {
                   ? isBalanced
                     ? 'Lunas & Seimbang'
                     : 'Lunas (Belum Seimbang)'
-                  : isDebitSettled
-                    ? 'Debet Lunas (Siap Posting)'
+                  : isPrimarySettled
+                    ? `${isJournalCredit ? 'Kredit' : 'Debet'} Lunas (Siap Posting)`
                     : 'Draft (Belum Lunas)'}
+              </Badge>
+
+              {/* Tipe Jurnal Badge */}
+              <Badge
+                variant="outline"
+                className={cn(
+                  'rounded-full px-2.5 py-0.5 font-semibold text-xs',
+                  isJournalCredit
+                    ? 'border-rose-200 bg-rose-50 text-rose-700'
+                    : 'border-emerald-200 bg-emerald-50 text-emerald-700',
+                )}
+              >
+                Tipe: {isJournalCredit ? 'Kredit' : 'Debet'}
               </Badge>
 
               {/* Status Keseimbangan (Balanced) Badge */}
@@ -326,30 +349,60 @@ export default function GeneralJournalDetailView({ journalId }: Props) {
                 </Button>
               ) : null}
 
-              {/* Tombol Cepat: Bayar Debet (Wajib Lunas) */}
-              {canEdit && !isPaid && !isDebitSettled && primaryBilling?.id ? (
-                <Button
-                  type="button"
-                  onClick={() => handleOpenAddPayment('debit')}
-                  className="h-9 gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white"
-                >
-                  <Plus className="h-4 w-4" />
-                  Bayar Debet (Wajib)
-                </Button>
-              ) : null}
+              {/* Tombol Cepat: Bayar Sisi Wajib / Seimbang */}
+              {canEdit && !isPaid && primaryBilling?.id && (
+                isJournalCredit ? (
+                  <>
+                    {!isCreditSettled ? (
+                      <Button
+                        type="button"
+                        onClick={() => handleOpenAddPayment('credit')}
+                        className="h-9 gap-1.5 bg-rose-600 hover:bg-rose-700 text-white"
+                      >
+                        <Plus className="h-4 w-4" />
+                        Bayar Kredit (Wajib)
+                      </Button>
+                    ) : null}
 
-              {/* Tombol Cepat: Bayar Kredit (Opsional Seimbang) */}
-              {canEdit && !(isPaid && isBalanced) && primaryBilling?.id && !isCreditSettled ? (
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => handleOpenAddPayment('credit')}
-                  className="h-9 gap-1.5 border-rose-300 text-rose-700 hover:bg-rose-50 bg-white"
-                >
-                  <Plus className="h-4 w-4" />
-                  Bayar Kredit (Seimbang)
-                </Button>
-              ) : null}
+                    {!(isPaid && isBalanced) && !isDebitSettled ? (
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={() => handleOpenAddPayment('debit')}
+                        className="h-9 gap-1.5 border-emerald-300 text-emerald-700 hover:bg-emerald-50 bg-white"
+                      >
+                        <Plus className="h-4 w-4" />
+                        Bayar Debet (Seimbang)
+                      </Button>
+                    ) : null}
+                  </>
+                ) : (
+                  <>
+                    {!isDebitSettled ? (
+                      <Button
+                        type="button"
+                        onClick={() => handleOpenAddPayment('debit')}
+                        className="h-9 gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white"
+                      >
+                        <Plus className="h-4 w-4" />
+                        Bayar Debet (Wajib)
+                      </Button>
+                    ) : null}
+
+                    {!(isPaid && isBalanced) && !isCreditSettled ? (
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={() => handleOpenAddPayment('credit')}
+                        className="h-9 gap-1.5 border-rose-300 text-rose-700 hover:bg-rose-50 bg-white"
+                      >
+                        <Plus className="h-4 w-4" />
+                        Bayar Kredit (Seimbang)
+                      </Button>
+                    ) : null}
+                  </>
+                )
+              )}
 
               {/* Tombol Tandai Lunas / Batal Tandai Lunas */}
               {canEdit ? (

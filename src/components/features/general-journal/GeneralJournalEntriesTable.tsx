@@ -236,64 +236,20 @@ export default function GeneralJournalEntriesTable({
   return (
     <Card className="rounded-md border-slate-200 shadow-xs">
       <CardHeader className="border-b border-slate-100 py-4 px-5">
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <div className="flex items-center gap-2">
-              <CreditCard className="h-4 w-4 text-slate-700" />
-              <CardTitle className="text-base font-semibold text-slate-950">
-                Pembayaran Jurnal Umum
-              </CardTitle>
-            </div>
-            <CardDescription className="text-xs text-slate-500 mt-0.5">
-              Daftar alokasi pembayaran debet dan kredit jurnal umum
-            </CardDescription>
+        <div>
+          <div className="flex items-center gap-2">
+            <CreditCard className="h-4 w-4 text-slate-700" />
+            <CardTitle className="text-base font-semibold text-slate-950">
+              Pembayaran Jurnal Umum
+            </CardTitle>
           </div>
-
-          {/* Action buttons: Tambah Pembayaran Debet / Kredit */}
-          <div className="flex flex-wrap items-center gap-2">
-            {canAddMorePayments ? (
-              <>
-                {!isDebitSettled && !isPaid ? (
-                  <Button
-                    type="button"
-                    size="sm"
-                    onClick={() => onAddPayment('debit')}
-                    className="h-8 gap-1.5 text-xs bg-emerald-600 hover:bg-emerald-700 text-white shadow-xs"
-                  >
-                    <Plus className="h-3.5 w-3.5" />
-                    Bayar Debet
-                  </Button>
-                ) : null}
-
-                {!isCreditSettled ? (
-                  <Button
-                    type="button"
-                    size="sm"
-                    variant="outline"
-                    onClick={() => onAddPayment('credit')}
-                    className="h-8 gap-1.5 text-xs border-rose-300 text-rose-700 hover:bg-rose-50 bg-white shadow-xs"
-                  >
-                    <Plus className="h-3.5 w-3.5" />
-                    Bayar Kredit
-                  </Button>
-                ) : null}
-
-                <Button
-                  type="button"
-                  size="sm"
-                  onClick={() => onAddPayment(isDebitSettled ? 'credit' : 'debit')}
-                  className="btn-primary h-8 gap-1.5 text-xs shadow-xs"
-                >
-                  <Plus className="h-3.5 w-3.5" />
-                  Tambah Pembayaran
-                </Button>
-              </>
-            ) : null}
-          </div>
+          <CardDescription className="text-xs text-slate-500 mt-0.5">
+            Daftar alokasi pembayaran debet dan kredit jurnal umum
+          </CardDescription>
         </div>
       </CardHeader>
 
-      <CardContent className="p-4 sm:p-5">
+      <CardContent className="p-4 sm:p-5 space-y-4">
         <BaseTable
           data={payments}
           columns={columns}
@@ -301,6 +257,20 @@ export default function GeneralJournalEntriesTable({
           loading={false}
           emptyText="Belum ada data pembayaran. Silakan klik Tambah Pembayaran untuk mencatat pembayaran."
         />
+
+        {canAddMorePayments ? (
+          <div className="flex flex-wrap items-center justify-between gap-3 pt-2 border-t border-slate-100">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => onAddPayment(isDebitSettled ? 'credit' : 'debit')}
+              className="w-full sm:w-auto text-slate-700 hover:text-slate-900 border-dashed border-slate-300 hover:border-slate-400 text-xs"
+            >
+              <Plus className="mr-1.5 h-4 w-4" />
+              Tambah Pembayaran
+            </Button>
+          </div>
+        ) : null}
       </CardContent>
     </Card>
   );
