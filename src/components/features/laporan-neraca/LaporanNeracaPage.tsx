@@ -39,6 +39,7 @@ import { SearchInput } from '@/components/ui/search-input';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { currenciesFormat } from '@/components/ui/currenciesFormat';
+import { ReferenceLink } from '@/components/ui/reference-link';
 import { ReportTemplatePrintDialog } from '@/components/ui/report-template-print-dialog';
 import { ReportArchiveAction } from '@/components/features/report-archive/ReportArchiveAction';
 import type { ReportArchiveColumn } from '@/lib/report-archive';
@@ -139,6 +140,26 @@ const getLineLabel = (
   return `[${typeLabel}] ${name}${codeStr}`.trim();
 };
 
+const getLedgerHref = (
+  slug: string,
+  line: BalanceAccountItem,
+) => {
+  const accountId = line.account_id ?? line.id;
+  const accountCode = line.account_code ?? line.code ?? '';
+  const queryParams = new URLSearchParams();
+  if (accountId && !Number.isNaN(Number(accountId)) && Number(accountId) > 0) {
+    queryParams.set('account_id', String(accountId));
+  }
+  if (accountCode) {
+    queryParams.set('account_code', String(accountCode));
+  }
+  const queryString = queryParams.toString() ? `?${queryParams.toString()}` : '';
+
+  return slug
+    ? `/dashboard/${slug}/laporan/laporan-buku-besar${queryString}`
+    : `/dashboard/laporan/laporan-buku-besar${queryString}`;
+};
+
 function AmountSummary({
   idrValue,
   usdValue,
@@ -188,6 +209,7 @@ function StandardBalanceSection({
   subtotalUsd,
   searchKeyword,
   accountMap,
+  slug,
 }: {
   title: string;
   subtotalLabel: string;
@@ -196,6 +218,7 @@ function StandardBalanceSection({
   subtotalUsd: number;
   searchKeyword: string;
   accountMap?: Map<number, Account>;
+  slug: string;
 }) {
   const filteredAccounts = useMemo(() => {
     if (!searchKeyword) return accounts;
@@ -240,9 +263,13 @@ function StandardBalanceSection({
                 return (
                   <TableRow key={`${line.id ?? line.account_id ?? index}`} className="hover:bg-slate-50">
                     <TableCell className="min-w-[180px] text-xs font-medium text-slate-700 py-2">
-                      <span title={getLineLabel(line, accountMap)} className="truncate block">
+                      <ReferenceLink
+                        href={getLedgerHref(slug, line)}
+                        title={getLineLabel(line, accountMap)}
+                        className="truncate block"
+                      >
                         {getLineLabel(line, accountMap)}
-                      </span>
+                      </ReferenceLink>
                     </TableCell>
                     <TableCell className="text-right text-xs font-semibold text-slate-900 tabular-nums py-2">
                       {isUsd ? '-' : currenciesFormat('idr', idrAmt)}
@@ -285,6 +312,7 @@ function FixedAssetsBalanceSection({
   subtotalUsd,
   searchKeyword,
   accountMap,
+  slug,
 }: {
   title: string;
   subtotalLabel: string;
@@ -296,6 +324,7 @@ function FixedAssetsBalanceSection({
   subtotalUsd: number;
   searchKeyword: string;
   accountMap?: Map<number, Account>;
+  slug: string;
 }) {
   const filteredAccounts = useMemo(() => {
     if (!searchKeyword) return accounts;
@@ -355,9 +384,13 @@ function FixedAssetsBalanceSection({
                   return (
                     <TableRow key={`fa-${line.id ?? line.account_id ?? index}`} className="hover:bg-slate-50">
                       <TableCell className="min-w-[180px] text-xs font-medium text-slate-700 py-2">
-                        <span title={getLineLabel(line, accountMap)} className="truncate block">
+                        <ReferenceLink
+                          href={getLedgerHref(slug, line)}
+                          title={getLineLabel(line, accountMap)}
+                          className="truncate block"
+                        >
                           {getLineLabel(line, accountMap)}
-                        </span>
+                        </ReferenceLink>
                       </TableCell>
                       <TableCell className="text-right text-xs font-semibold text-slate-900 tabular-nums py-2">
                         {isUsd ? '-' : currenciesFormat('idr', idrAmt)}
@@ -394,9 +427,13 @@ function FixedAssetsBalanceSection({
                     <TableRow key={`contra-${line.id ?? line.account_id ?? index}`} className="bg-rose-50/30 hover:bg-rose-50/50">
                       <TableCell className="min-w-[180px] text-xs font-medium text-rose-700 py-2">
                         <div className="flex items-center gap-1.5 truncate">
-                          <span title={getLineLabel(line, accountMap)} className="truncate">
+                          <ReferenceLink
+                            href={getLedgerHref(slug, line)}
+                            title={getLineLabel(line, accountMap)}
+                            className="truncate text-rose-700 hover:text-rose-900"
+                          >
                             {getLineLabel(line, accountMap)}
-                          </span>
+                          </ReferenceLink>
                           <span className="shrink-0 text-[10px] font-semibold uppercase px-1.5 py-0.5 rounded bg-rose-100 text-rose-800">
                             Akun Kontra
                           </span>
@@ -444,6 +481,7 @@ function EquityBalanceSection({
   searchKeyword,
   accountMap,
   legacyAccounts,
+  slug,
 }: {
   title: string;
   subtotalLabel: string;
@@ -455,6 +493,7 @@ function EquityBalanceSection({
   searchKeyword: string;
   accountMap?: Map<number, Account>;
   legacyAccounts?: BalanceAccountItem[];
+  slug: string;
 }) {
   const isStructuredEquity = modalAwalAccounts.length > 0 || labaDitahan !== undefined || labaPeriodeBerjalan !== undefined;
 
@@ -511,9 +550,13 @@ function EquityBalanceSection({
                     <TableRow key={`ma-${line.id ?? line.account_id ?? index}`} className="hover:bg-slate-50">
                       <TableCell className="min-w-[180px] text-xs font-medium text-slate-700 py-2">
                         <div className="flex items-center gap-1.5 truncate">
-                          <span title={getLineLabel(line, accountMap)} className="truncate">
+                          <ReferenceLink
+                            href={getLedgerHref(slug, line)}
+                            title={getLineLabel(line, accountMap)}
+                            className="truncate"
+                          >
                             {getLineLabel(line, accountMap)}
-                          </span>
+                          </ReferenceLink>
                           <span className="shrink-0 text-[10px] font-semibold uppercase px-1.5 py-0.5 rounded bg-blue-50 text-blue-700">
                             Modal Awal
                           </span>
@@ -594,9 +637,13 @@ function EquityBalanceSection({
                   return (
                     <TableRow key={`leg-eq-${line.id ?? line.account_id ?? index}`} className="hover:bg-slate-50">
                       <TableCell className="min-w-[180px] text-xs font-medium text-slate-700 py-2">
-                        <span title={getLineLabel(line, accountMap)} className="truncate block">
+                        <ReferenceLink
+                          href={getLedgerHref(slug, line)}
+                          title={getLineLabel(line, accountMap)}
+                          className="truncate block"
+                        >
                           {getLineLabel(line, accountMap)}
-                        </span>
+                        </ReferenceLink>
                       </TableCell>
                       <TableCell className="text-right text-xs font-semibold text-slate-900 tabular-nums py-2">
                         {isUsd ? '-' : currenciesFormat('idr', idrAmt)}
@@ -631,6 +678,7 @@ function EquityBalanceSection({
 
 export default function LaporanNeracaPage() {
   const router = useRouter();
+  const slug = typeof router.query.slug === 'string' ? router.query.slug : '';
   const { companyId } = useCompany();
   const resolvedCompanyId = resolveCompanyId(router.query.slug, companyId);
   const selectedPrintBackground = getLetterheadByCompanyId(resolvedCompanyId);
@@ -1558,6 +1606,7 @@ export default function LaporanNeracaPage() {
                 subtotalUsd={jumlahAsetLancarUsd}
                 searchKeyword={searchKeyword}
                 accountMap={accountMap}
+                slug={slug}
               />
 
               {/* 2. ASET TETAP */}
@@ -1572,6 +1621,7 @@ export default function LaporanNeracaPage() {
                 subtotalUsd={jumlahAsetTetapUsd}
                 searchKeyword={searchKeyword}
                 accountMap={accountMap}
+                slug={slug}
               />
 
               {/* Footer Total Aktiva */}
@@ -1614,6 +1664,7 @@ export default function LaporanNeracaPage() {
                 subtotalUsd={jumlahKewajibanUsd}
                 searchKeyword={searchKeyword}
                 accountMap={accountMap}
+                slug={slug}
               />
 
               {/* 4. MODAL */}
@@ -1628,6 +1679,7 @@ export default function LaporanNeracaPage() {
                 searchKeyword={searchKeyword}
                 accountMap={accountMap}
                 legacyAccounts={equityCat.accounts}
+                slug={slug}
               />
 
               {/* Footer Total Pasiva */}

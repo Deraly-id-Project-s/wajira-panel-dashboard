@@ -137,13 +137,23 @@ export function LaporanNeracaLajurTable({
       cell: (item) => {
         const name = item.nama_akun || item.account_name;
         if (!name) return '-';
-        const searchParam = item.kode_akun || item.account_code || name;
+        const accountId = (item as any).account_id || item.id;
+        const accountCode = item.kode_akun || item.account_code || '';
+        const queryParams = new URLSearchParams();
+        if (accountId && !Number.isNaN(Number(accountId)) && Number(accountId) > 0) {
+          queryParams.set('account_id', String(accountId));
+        }
+        if (accountCode) {
+          queryParams.set('account_code', accountCode);
+        }
+        const queryString = queryParams.toString() ? `?${queryParams.toString()}` : '';
+
         const href = slug
-          ? `/dashboard/${slug}/master/account?search=${encodeURIComponent(searchParam)}`
-          : `/master/account?search=${encodeURIComponent(searchParam)}`;
+          ? `/dashboard/${slug}/laporan/laporan-buku-besar${queryString}`
+          : `/dashboard/laporan/laporan-buku-besar${queryString}`;
 
         return (
-          <ReferenceLink target="_blank" href={href}>
+          <ReferenceLink href={href} title={name}>
             {name}
           </ReferenceLink>
         );
