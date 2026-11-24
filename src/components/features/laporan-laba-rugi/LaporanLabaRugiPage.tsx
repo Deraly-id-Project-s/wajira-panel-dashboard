@@ -274,6 +274,26 @@ const getLineLabel = (
   return `[${typeLabel}] ${name}${codeStr}`.trim();
 };
 
+const getLedgerHref = (
+  slug: string,
+  line: ProfitLossReportLine,
+) => {
+  const accountId = line.account_id ?? line.id;
+  const accountCode = line.account_code ?? line.code ?? '';
+  const queryParams = new URLSearchParams();
+  if (accountId && !Number.isNaN(Number(accountId)) && Number(accountId) > 0) {
+    queryParams.set('account_id', String(accountId));
+  }
+  if (accountCode) {
+    queryParams.set('account_code', String(accountCode));
+  }
+  const queryString = queryParams.toString() ? `?${queryParams.toString()}` : '';
+
+  return slug
+    ? `/dashboard/${slug}/laporan/laporan-buku-besar${queryString}`
+    : `/dashboard/laporan/laporan-buku-besar${queryString}`;
+};
+
 const uniqueNumbers = (values?: Array<number | string | null | undefined>) =>
   (values ?? [])
     .map((value) => Number(value))
@@ -316,10 +336,12 @@ function SectionViewer({
   config,
   reportSection,
   accountMap,
+  slug,
 }: {
   config: ReportSectionConfig;
   reportSection: NormalizedSection;
   accountMap?: Map<number, Account>;
+  slug: string;
 }) {
   return (
     <section className="rounded-md border border-slate-200 bg-white">
@@ -358,12 +380,13 @@ function SectionViewer({
                 key={`${line.id ?? line.account_id ?? index}`}
                 className="grid grid-cols-[1fr_150px_130px] gap-3 border-t border-slate-100 px-3 py-2 text-sm"
               >
-                <span
-                  className="min-w-0 truncate text-slate-700"
+                <ReferenceLink
+                  href={getLedgerHref(slug, line)}
                   title={getLineLabel(line, accountMap)}
+                  className="min-w-0 truncate text-slate-700 hover:text-blue-800"
                 >
                   {getLineLabel(line, accountMap)}
-                </span>
+                </ReferenceLink>
                 <span className="text-right font-medium text-slate-900">
                   {currenciesFormat('idr', getLineIdrAmount(line))}
                 </span>
@@ -381,6 +404,7 @@ function SectionViewer({
 
 export default function LaporanLabaRugiPage() {
   const router = useRouter();
+  const slug = typeof router.query.slug === 'string' ? router.query.slug : '';
   const { companyId } = useCompany();
   const resolvedCompanyId = resolveCompanyId(router.query.slug, companyId);
   const selectedPrintBackground = getLetterheadByCompanyId(resolvedCompanyId);
@@ -1015,6 +1039,7 @@ export default function LaporanLabaRugiPage() {
                 config={section}
                 reportSection={normalizedSections[section.key]}
                 accountMap={accountMap}
+                slug={slug}
               />
             ))}
           </div>
