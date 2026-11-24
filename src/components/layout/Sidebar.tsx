@@ -233,16 +233,29 @@ const ensureReportFallbackSidebarMenus = (menus: MenuItem[], slug: string): Menu
   });
 };
 
-function CompanySelector({ companies, companyId }: { companies: Company[], companyId: string | null }) {
+function CompanySelector({
+  companies,
+  companyId,
+  onOpenChange,
+}: {
+  companies: Company[];
+  companyId: string | null;
+  onOpenChange?: (open: boolean) => void;
+}) {
   const [isOpen, setIsOpen] = useState(false);
   const router = useRouter();
   const queryClient = useQueryClient();
   const { setCompanyId } = useCompany();
   const selectedCompany = companies.find((c) => String(c.id) === String(companyId));
 
+  const handleOpenChange = (open: boolean) => {
+    setIsOpen(open);
+    onOpenChange?.(open);
+  };
+
   const handleSelectCompany = (company: Company) => {
     if (String(company.id) === String(companyId)) {
-      setIsOpen(false);
+      handleOpenChange(false);
       return;
     }
 
@@ -251,13 +264,13 @@ function CompanySelector({ companies, companyId }: { companies: Company[], compa
     queryClient.removeQueries({ queryKey: ['auth', 'sidebar'] });
     clearCompanyScopedQueries(queryClient);
     setCompanyId(String(company.id));
-    setIsOpen(false);
+    handleOpenChange(false);
     const targetSlug = company.slug || company.id;
     router.push(`/dashboard/${targetSlug}`);
   };
 
   return (
-    <Popover open={isOpen} onOpenChange={setIsOpen}>
+    <Popover open={isOpen} onOpenChange={handleOpenChange}>
       <PopoverTrigger asChild>
         <button className="flex w-full items-center justify-between rounded-md border cursor-pointer border-gray-300 bg-white px-3 py-1.5 text-left shadow-xs hover:bg-gray-50 transition-colors">
           <div className="flex flex-col overflow-hidden text-left">
@@ -307,6 +320,48 @@ export function Sidebar({
     return readStoredSidebarCollapsed();
   });
   const isDesktopCollapsed = controlledDesktopCollapsed ?? internalDesktopCollapsed;
+  const [isHovered, setIsHovered] = useState(false);
+  const [isCompanySelectorOpen, setIsCompanySelectorOpen] = useState(false);
+  const hoverTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  const isExpanded = !isDesktopCollapsed || isHovered || isMobileOpen;
+
+  const handleMouseEnter = () => {
+    if (!isDesktopCollapsed) return;
+    if (hoverTimeoutRef.current) {
+      clearTimeout(hoverTimeoutRef.current);
+      hoverTimeoutRef.current = null;
+    }
+    setIsHovered(true);
+  };
+
+  const handleMouseLeave = () => {
+    if (!isDesktopCollapsed || isCompanySelectorOpen) return;
+    if (hoverTimeoutRef.current) {
+      clearTimeout(hoverTimeoutRef.current);
+    }
+    hoverTimeoutRef.current = setTimeout(() => {
+      setIsHovered(false);
+    }, 150);
+  };
+
+  useEffect(() => {
+    return () => {
+      if (hoverTimeoutRef.current) {
+        clearTimeout(hoverTimeoutRef.current);
+      }
+    };
+  }, []);
+
+  useEffect(() => {
+    setIsHovered(false);
+  }, [router.asPath]);
+
+  useEffect(() => {
+    if (!isDesktopCollapsed) {
+      setIsHovered(false);
+    }
+  }, [isDesktopCollapsed]);
 
   const [internalSidebarWidth, setInternalSidebarWidth] = useState(() => readStoredSidebarWidth());
   const sidebarWidth = controlledSidebarWidth ?? internalSidebarWidth;
@@ -424,9 +479,9 @@ export function Sidebar({
 
   const sidebarContent = (
     <aside className="flex h-full w-full flex-col border-r border-gray-200 bg-[#F9FAFB] text-left">
-      <div className={cn("flex h-16 shrink-0 items-center border-b border-gray-200", isDesktopCollapsed ? "px-0 justify-center" : "px-4")}>
+      <div className={cn("flex h-16 shrink-0 items-center border-b border-gray-200", !isExpanded ? "px-0 justify-center" : "px-4")}>
         <div className="flex w-full items-center gap-2">
-          {isDesktopCollapsed ? (
+          {!isExpanded ? (
             <div className="flex items-center justify-center w-full">
               <button
                 onClick={() => setIsDesktopCollapsed(false)}
@@ -441,6 +496,7 @@ export function Sidebar({
               <CompanySelector
                 companies={companies}
                 companyId={companyId}
+                onOpenChange={setIsCompanySelectorOpen}
               />
 
               <button
@@ -455,13 +511,17 @@ export function Sidebar({
         </div>
       </div>
 
-      <div className={cn("flex-1 overflow-y-auto py-6", isDesktopCollapsed ? "px-2" : "px-4")}>
+      <div className={cn("flex-1 overflow-y-auto py-6", !isExpanded ? "px-2" : "px-4")}>
         <div className="mb-4 flex items-center justify-between text-sm font-semibold text-gray-500">
-          {!isDesktopCollapsed && <span className="uppercase text-xs tracking-wider text-left">Menu Utama</span>}
+          {isExpanded && <span className="uppercase text-xs tracking-wider text-left">Menu Utama</span>}
           <button
-            onClick={() => setIsDesktopCollapsed(!isDesktopCollapsed)}
-            className={cn("hidden md:block p-1.5 rounded-md hover:bg-gray-200 text-gray-400 hover:text-gray-600 transition-colors cursor-pointer", isDesktopCollapsed && "mx-auto")}
+            onClick={() => {
+              setIsDesktopCollapsed(!isDesktopCollapsed);
+              setIsHovered(false);
+            }}
+            className={cn("hidden md:block p-1.5 rounded-md hover:bg-gray-200 text-gray-400 hover:text-gray-600 transition-colors cursor-pointer", !isExpanded && "mx-auto")}
             aria-label="Toggle Sidebar"
+            title={isDesktopCollapsed ? "Sematkan Sidebar (Buka Tetap)" : "Kecilkan Sidebar"}
           >
             {isDesktopCollapsed ? <PanelLeftOpen className="w-[18px] h-[18px]" /> : <PanelLeftClose className="w-[18px] h-[18px]" />}
           </button>
@@ -477,7 +537,7 @@ export function Sidebar({
               </div>
             ) : (
               visibleMenus.map((item, index) => (
-                <SidebarNavItem key={index} item={item} isCollapsed={isDesktopCollapsed} />
+                <SidebarNavItem key={index} item={item} isCollapsed={!isExpanded} />
               ))
             )}
           </nav>
@@ -497,10 +557,17 @@ export function Sidebar({
       </button>
 
       <div
-        className="hidden md:flex h-full relative"
-        style={{ width: isDesktopCollapsed ? 72 : sidebarWidth }}
+        className={cn(
+          "hidden md:flex h-full transition-[width] duration-300 ease-in-out",
+          isDesktopCollapsed && isHovered
+            ? "absolute left-0 top-0 bottom-0 z-30 shadow-xl"
+            : "relative"
+        )}
+        style={{ width: isExpanded ? sidebarWidth : 72 }}
+        onMouseEnter={handleMouseEnter}
+        onMouseLeave={handleMouseLeave}
       >
-        <div className="flex-1 overflow-hidden">
+        <div className="flex-1 overflow-hidden h-full">
           {sidebarContent}
         </div>
 
@@ -677,7 +744,7 @@ function SidebarNavItem({ item, isCollapsed }: { item: MenuItem; isCollapsed?: b
 
     return (
       <div className={cn("w-full text-left", isCollapsed && "flex justify-center mb-1")}>
-        <Tooltip>
+        <Tooltip open={isCollapsed ? undefined : false}>
           <TooltipTrigger asChild>
             <span className={cn("inline-block text-left", isCollapsed ? "w-auto" : "w-full")}>
               {linkElement}
@@ -700,7 +767,7 @@ function SidebarNavItem({ item, isCollapsed }: { item: MenuItem; isCollapsed?: b
         isChildActive ? 'text-orange-600 bg-orange-50/80 font-semibold' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900',
       )}
     >
-      <div className="flex items-center gap-3 min-w-0 flex-1 text-center justify-center">
+      <div className={cn("flex items-center gap-3 min-w-0 flex-1", isCollapsed ? "text-center justify-center" : "text-left justify-start")}>
         {item.icon && <item.icon className={cn("w-[18px] h-[18px] shrink-0", isChildActive ? "text-orange-600" : "text-slate-500")} />}
         {!isCollapsed && <SidebarMenuLabel label={item.label} />}
       </div>
@@ -712,7 +779,7 @@ function SidebarNavItem({ item, isCollapsed }: { item: MenuItem; isCollapsed?: b
 
   return (
     <div className={cn("w-full text-left", isCollapsed && "flex justify-center mb-1")}>
-      <Tooltip>
+      <Tooltip open={isCollapsed ? undefined : false}>
         <TooltipTrigger asChild>
           <span className={cn("inline-block text-left", isCollapsed ? "w-auto" : "w-full")}>
             {buttonElement}

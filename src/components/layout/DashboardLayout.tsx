@@ -236,7 +236,8 @@ export function DashboardLayout({ children, minimal = false }: DashboardLayoutPr
             {/* ── Desktop Sidebar (hidden on mobile) ── */}
             <div
                 className={cn(
-                    "print:hidden hidden md:flex shrink-0 h-full overflow-hidden transition-[width] duration-300 ease-in-out",
+                    "print:hidden hidden md:flex shrink-0 h-full transition-[width] duration-300 ease-in-out",
+                    isDesktopSidebarCollapsed ? "relative z-30 overflow-visible" : "overflow-hidden"
                 )}
                 style={{ width: isDesktopSidebarCollapsed ? 72 : sidebarWidth }}
             >
