@@ -246,6 +246,7 @@ export interface CashFlowPayload {
   payment_proof?: File | null;
   is_paid?: boolean;
   is_posted?: boolean;
+  is_usd_transaction?: boolean | number | string | null;
   is_valid?: boolean;
 }
 
