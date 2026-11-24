@@ -21,12 +21,7 @@ import {
   type GeneralJournalFormValues,
 } from '@/scheme/general-journal.schema';
 import { fetchUserCompanies } from '@/services/company.service';
-import {
-  createGeneralJournalBillingPayment,
-  fetchGeneralJournalDetail,
-  toggleGeneralJournalPaidStatus,
-  updateGeneralJournalBillingPayment,
-} from '@/services/generalJournal.service';
+import { toggleGeneralJournalPaidStatus } from '@/services/generalJournal.service';
 import { getApiErrorMessage } from '@/utils/apiErrorHandler';
 import GeneralJournalForm from './GeneralJournalForm';
 import type { GeneralJournalPayload } from '@/@types/general-journal.types';
@@ -51,6 +46,7 @@ const emptyValues = (companyId: number): GeneralJournalFormInput => ({
       account_id: 0,
       debit: 0,
       credit: 0,
+      amount: 0,
       note: '',
     },
   ],
@@ -120,7 +116,7 @@ export default function GeneralJournalFormPage({ mode }: Props) {
             note: p.note ?? '',
           };
         })
-      : [{ account_id: 0, debit: 0, credit: 0, note: '' }];
+      : [{ account_id: 0, debit: 0, credit: 0, amount: 0, note: '' }];
 
     form.reset({
       company_id: journalDetail.company_id,
@@ -184,57 +180,14 @@ export default function GeneralJournalFormPage({ mode }: Props) {
 
     try {
       let targetId: number | string | undefined = journalId;
-      let targetBillingId: number | undefined;
 
       if (mode === 'edit') {
         if (!journalId) return;
         const result = await updateMutation.mutateAsync({ id: journalId, payload });
         targetId = result?.id ?? journalId;
-        targetBillingId = result?.billings?.[0]?.id ?? journalDetail?.billings?.[0]?.id;
       } else {
         const result = await createMutation.mutateAsync(payload);
         targetId = result?.id;
-        targetBillingId = result?.billings?.[0]?.id;
-      }
-
-      // Pastikan setiap rincian pembayaran tersimpan dan tersinkronisasi
-      if (targetId && values.payments && values.payments.length > 0) {
-        if (!targetBillingId) {
-          try {
-            const detail = await fetchGeneralJournalDetail(targetId);
-            targetBillingId = detail.billings?.[0]?.id;
-          } catch {
-            // ignore
-          }
-        }
-
-        if (targetBillingId) {
-          for (const p of values.payments) {
-            const isDeb = Number(p.debit || 0) > 0;
-            const amt = isDeb ? Number(p.debit) : Number(p.credit);
-            const pType = isDeb ? 'debit' : 'credit';
-
-            if (Number(p.account_id) > 0 && amt > 0) {
-              if (p.id) {
-                await updateGeneralJournalBillingPayment(p.id, {
-                  account_id: Number(p.account_id),
-                  type: pType,
-                  amount: amt,
-                  note: p.note || null,
-                });
-              } else {
-                await createGeneralJournalBillingPayment({
-                  general_journal_billing_id: targetBillingId,
-                  account_id: Number(p.account_id),
-                  type: pType,
-                  amount: amt,
-                  amount_original: amt,
-                  note: p.note || null,
-                });
-              }
-            }
-          }
-        }
       }
 
       // Jika user memilih "Tandai Lunas"

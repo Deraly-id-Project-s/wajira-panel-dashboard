@@ -97,6 +97,7 @@ export default function GeneralJournalForm({
         account_id: 0,
         debit: 0,
         credit: 0,
+        amount: 0,
         note: '',
       });
     }
@@ -186,6 +187,7 @@ export default function GeneralJournalForm({
       account_id: 0,
       debit: deb > 0 ? Math.min(deb, availableDebit) : 0,
       credit: cred > 0 ? Math.min(cred, availableCredit) : 0,
+      amount: 0,
       note: currentRow?.note || '',
     });
     toast.info('Baris pembayaran berhasil disalin. Silakan pilih akun COA untuk baris baru.');
@@ -198,6 +200,7 @@ export default function GeneralJournalForm({
         account_id: 0,
         debit: 0,
         credit: 0,
+        amount: 0,
         note: '',
       }, { shouldValidate: true, shouldDirty: true });
       toast.info('Baris pembayaran telah dikosongkan');
@@ -825,6 +828,7 @@ export default function GeneralJournalForm({
                     account_id: 0,
                     debit: 0,
                     credit: 0,
+                    amount: 0,
                     note: '',
                   });
                 }}

@@ -473,28 +473,13 @@ export default function GeneralJournalDetailView({ journalId }: Props) {
           onPreviewProof={(url) => setPreviewUrl(url)}
         />
 
-        {/* Form Tambah Pembayaran Langsung pada Halaman Detail (Referensi Penuh Kas Harian) */}
-        {canEdit && primaryBilling?.id && !(isPaid && isBalanced) ? (
-          <BillingPaymentForm
-            billingId={primaryBilling.id}
-            journalId={journal.id}
-            totalAmount={totalAmount}
-            remainingDebit={remainingDebit}
-            remainingCredit={remainingCredit}
-            isDebitSettled={isDebitSettled}
-            isCreditSettled={isCreditSettled}
-            accounts={accountOptions}
-            isAccountsLoading={accountQuery.isLoading}
-            isUsd={isUsd}
-            defaultType={isDebitSettled ? 'credit' : 'debit'}
-            disabled={!canEdit || (isPaid && isBalanced)}
-          />
-        ) : null}
-
         {/* Section 2: Tabel Pembayaran Jurnal Umum */}
         <GeneralJournalEntriesTable
           journal={journal}
           payments={allPayments}
+          billingId={primaryBilling?.id}
+          accounts={accountOptions}
+          isAccountsLoading={accountQuery.isLoading}
           isPaid={isPaid}
           canEdit={canEdit}
           isUsd={isUsd}
@@ -502,6 +487,8 @@ export default function GeneralJournalDetailView({ journalId }: Props) {
           totalCredit={totalCredit}
           paidDebit={paidDebit}
           paidCredit={paidCredit}
+          remainingDebit={remainingDebit}
+          remainingCredit={remainingCredit}
           isDebitSettled={isDebitSettled}
           isCreditSettled={isCreditSettled}
           onAddPayment={(type) => handleOpenAddPayment(type || (isDebitSettled ? 'credit' : 'debit'))}

@@ -167,7 +167,7 @@ export default function LaporanJurnalUmumPage() {
           />
         </div>
 
-        <SearchPagination
+        {/* <SearchPagination
           searchValue={searchInput}
           onSearchChange={setSearchInput}
           searchPlaceholder="Cari kode jurnal atau keterangan..."
@@ -229,7 +229,7 @@ export default function LaporanJurnalUmumPage() {
             }}
             onPageChange={setPage}
           />
-        </SearchPagination>
+        </SearchPagination> */}
 
         <LaporanJurnalUmumPrintDocument
           data={data}
