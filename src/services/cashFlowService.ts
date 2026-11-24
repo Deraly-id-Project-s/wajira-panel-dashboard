@@ -171,6 +171,17 @@ const normalizeCashFlow = (payload: Partial<KasHarian>): KasHarian => ({
   payment_proof: payload.payment_proof ?? null,
   is_paid: toBoolean(payload.is_paid),
   is_posted: payload.is_posted !== undefined ? toBoolean(payload.is_posted) : undefined,
+  is_usd_transaction: payload.is_usd_transaction !== undefined && payload.is_usd_transaction !== null
+    ? toBoolean(payload.is_usd_transaction)
+    : Boolean(
+        toNumber(payload.debet_usd_total) > 0 ||
+        toNumber(payload.credit_usd_total) > 0 ||
+        toNumber(payload.grand_total_usd) > 0 ||
+        toNumber(payload.remaining_payment_usd) > 0 ||
+        toNumber(payload.debet_usd) > 0 ||
+        toNumber(payload.credit_usd) > 0 ||
+        (payload.cash_flow_cashes ?? []).some((c) => (c.cash?.currency_type || '').toLowerCase() === 'usd')
+      ),
   is_ballanced: (payload as any).is_ballanced !== undefined
     ? toBoolean((payload as any).is_ballanced)
     : (payload.is_balanced !== undefined ? toBoolean(payload.is_balanced) : undefined),
@@ -388,6 +399,10 @@ const buildCashFlowFormData = (payload: CashFlowPayload) => {
   if (payload.is_posted !== undefined && payload.is_posted !== null) {
     const isPostedBool = payload.is_posted === true || String(payload.is_posted).toLowerCase() === 'true' || String(payload.is_posted) === '1';
     formData.append('is_posted', isPostedBool ? 'true' : 'false');
+  }
+  if (payload.is_usd_transaction !== undefined && payload.is_usd_transaction !== null) {
+    const isUsdBool = payload.is_usd_transaction === true || String(payload.is_usd_transaction).toLowerCase() === 'true' || String(payload.is_usd_transaction) === '1';
+    formData.append('is_usd_transaction', isUsdBool ? 'true' : 'false');
   }
 
   if (payload.cash_flow_cashes && payload.cash_flow_cashes.length > 0) {

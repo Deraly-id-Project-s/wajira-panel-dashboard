@@ -85,13 +85,33 @@ export default function FinanceBillingTable({
 
   // Task 1: Check whether cash flow is a USD transaction
   const isUsdTransaction = useMemo(() => {
+    if (cashFlowDetail.is_usd_transaction !== undefined && cashFlowDetail.is_usd_transaction !== null) {
+      return Boolean(
+        cashFlowDetail.is_usd_transaction === true ||
+        cashFlowDetail.is_usd_transaction === 1 ||
+        cashFlowDetail.is_usd_transaction === '1' ||
+        cashFlowDetail.is_usd_transaction === 'true'
+      );
+    }
     return Boolean(
-      cashFlowDetail.is_usd_transaction === true ||
-      cashFlowDetail.is_usd_transaction === 1 ||
-      cashFlowDetail.is_usd_transaction === '1' ||
-      cashFlowDetail.is_usd_transaction === 'true'
+      Number(cashFlowDetail.debet_usd_total || 0) > 0 ||
+      Number(cashFlowDetail.credit_usd_total || 0) > 0 ||
+      Number(cashFlowDetail.grand_total_usd || 0) > 0 ||
+      Number(cashFlowDetail.remaining_payment_usd || 0) > 0 ||
+      Number(cashFlowDetail.debet_usd || 0) > 0 ||
+      Number(cashFlowDetail.credit_usd || 0) > 0 ||
+      (cashFlowDetail.cash_flow_cashes ?? []).some((c) => (c.cash?.currency_type || '').toLowerCase() === 'usd')
     );
-  }, [cashFlowDetail.is_usd_transaction]);
+  }, [
+    cashFlowDetail.is_usd_transaction,
+    cashFlowDetail.debet_usd_total,
+    cashFlowDetail.credit_usd_total,
+    cashFlowDetail.grand_total_usd,
+    cashFlowDetail.remaining_payment_usd,
+    cashFlowDetail.debet_usd,
+    cashFlowDetail.credit_usd,
+    cashFlowDetail.cash_flow_cashes,
+  ]);
 
   // Direction of the Cash Flow: debet (uang masuk) vs credit (uang keluar)
   const cashFlowDirection = useMemo<'debet' | 'credit'>(() => {
