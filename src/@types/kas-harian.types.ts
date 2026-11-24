@@ -196,6 +196,8 @@ export interface KasHarian {
   payment_proof?: string | null;
   is_paid?: boolean | string | null;
   is_posted?: boolean | string | null;
+  is_ballanced?: boolean | string | null;
+  is_balanced?: boolean | string | null;
   is_valid?: boolean;
   created_at?: string;
   updated_at?: string;
@@ -320,4 +322,6 @@ export interface KasHarianListItem {
   isValid?: boolean;
   is_paid?: boolean;
   is_posted?: boolean;
+  is_ballanced?: boolean;
+  is_balanced?: boolean;
 }

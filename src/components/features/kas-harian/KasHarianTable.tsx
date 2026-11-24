@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { currenciesFormat } from '@/components/ui/currenciesFormat';
-import { MoreVertical, Info, CheckCircle, CheckCircle2, ShieldCheck, ShieldAlert, Clock } from 'lucide-react';
+import { MoreVertical, Info, CheckCircle, CheckCircle2, ShieldCheck, ShieldAlert, Clock, Scale } from 'lucide-react';
 import { formatDate } from '@/components/ui/format-date';
 import { CopyBox } from '@/components/ui/copy-box';
 import { TextTruncate } from '@/components/ui/text-truncate';
@@ -212,6 +212,20 @@ export default function KasHarianTable({
                   <ShieldAlert className="h-3 w-3 text-slate-400" />
                 )}
                 <span>{item.is_posted ? 'Diposting' : 'Belum Diposting'}</span>
+              </Badge>
+
+              {/* Badge Status Seimbang (is_ballanced) */}
+              <Badge
+                variant="outline"
+                className={cn(
+                  'rounded-full px-2 py-0.5 text-[10px] font-semibold tracking-wide inline-flex items-center gap-1',
+                  (item.is_ballanced ?? item.is_balanced)
+                    ? 'border-emerald-200 bg-emerald-50 text-emerald-700'
+                    : 'border-amber-200 bg-amber-50 text-amber-700',
+                )}
+              >
+                <Scale className="h-3 w-3" />
+                <span>{(item.is_ballanced ?? item.is_balanced) ? 'Seimbang' : 'Belum Seimbang'}</span>
               </Badge>
             </div>
           </div>

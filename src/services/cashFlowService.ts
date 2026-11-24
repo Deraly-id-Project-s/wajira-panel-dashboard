@@ -171,6 +171,12 @@ const normalizeCashFlow = (payload: Partial<KasHarian>): KasHarian => ({
   payment_proof: payload.payment_proof ?? null,
   is_paid: toBoolean(payload.is_paid),
   is_posted: payload.is_posted !== undefined ? toBoolean(payload.is_posted) : undefined,
+  is_ballanced: (payload as any).is_ballanced !== undefined
+    ? toBoolean((payload as any).is_ballanced)
+    : (payload.is_balanced !== undefined ? toBoolean(payload.is_balanced) : undefined),
+  is_balanced: payload.is_balanced !== undefined
+    ? toBoolean(payload.is_balanced)
+    : ((payload as any).is_ballanced !== undefined ? toBoolean((payload as any).is_ballanced) : undefined),
   is_valid: payload.is_valid !== undefined ? toBoolean(payload.is_valid) : undefined,
   created_at: payload.created_at ?? '',
   updated_at: payload.updated_at ?? '',
