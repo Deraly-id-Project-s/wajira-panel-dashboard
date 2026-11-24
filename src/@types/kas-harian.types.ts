@@ -196,6 +196,7 @@ export interface KasHarian {
   payment_proof?: string | null;
   is_paid?: boolean | string | null;
   is_posted?: boolean | string | null;
+  is_usd_transaction?: boolean | number | string | null;
   is_ballanced?: boolean | string | null;
   is_balanced?: boolean | string | null;
   is_valid?: boolean;

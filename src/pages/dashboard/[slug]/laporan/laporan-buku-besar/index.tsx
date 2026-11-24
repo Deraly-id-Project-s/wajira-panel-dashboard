@@ -63,6 +63,34 @@ export default function LaporanBukuBesarPage() {
     [accountOptions, selectedAccountId],
   );
 
+  // Sync selected account from URL query params (e.g. from Neraca, Neraca Lajur, or Laba Rugi)
+  useEffect(() => {
+    if (!router.isReady) return;
+
+    const queryAccountId = router.query.account_id;
+    const queryAccountCode = router.query.account_code;
+
+    if (queryAccountId) {
+      const parsedId = Number(queryAccountId);
+      if (!Number.isNaN(parsedId) && parsedId > 0) {
+        setSelectedAccountId(parsedId);
+        setPage(1);
+        return;
+      }
+    }
+
+    if (queryAccountCode && accountOptions.length > 0) {
+      const codeStr = String(queryAccountCode).trim().toLowerCase();
+      const matched = accountOptions.find(
+        (a) => (a.code || '').trim().toLowerCase() === codeStr,
+      );
+      if (matched) {
+        setSelectedAccountId(Number(matched.id));
+        setPage(1);
+      }
+    }
+  }, [router.isReady, router.query.account_id, router.query.account_code, accountOptions]);
+
   useEffect(() => {
     const timer = setTimeout(() => {
       setSearch(searchInput.trim());
@@ -90,7 +118,7 @@ export default function LaporanBukuBesarPage() {
       end_date: endDate,
       opening_balance_type: openingBalanceType,
       account_id: selectedAccountId,
-      account_code: selectedAccount?.code ?? null,
+      account_code: selectedAccount?.code ?? (typeof router.query.account_code === 'string' ? router.query.account_code : null),
       account_name: selectedAccount?.name ?? null,
       search: search || null,
       sort_by: sortBy,
@@ -106,6 +134,7 @@ export default function LaporanBukuBesarPage() {
       selectedAccountId,
       selectedAccount?.code,
       selectedAccount?.name,
+      router.query.account_code,
       search,
       sortBy,
       sortOrder,
@@ -130,6 +159,10 @@ export default function LaporanBukuBesarPage() {
     setDateRange(undefined);
     setDateMode('month');
     setPage(1);
+    if (router.query.account_id || router.query.account_code) {
+      const { account_id, account_code, ...restQuery } = router.query;
+      void router.replace({ pathname: router.pathname, query: restQuery }, undefined, { shallow: true });
+    }
   };
 
   const handleDateRangeChange = (range: DateRange | undefined) => {
@@ -202,6 +235,10 @@ export default function LaporanBukuBesarPage() {
                   onValueChange={(value) => {
                     setSelectedAccountId(value);
                     setPage(1);
+                    if (router.query.account_id || router.query.account_code) {
+                      const { account_id, account_code, ...restQuery } = router.query;
+                      void router.replace({ pathname: router.pathname, query: restQuery }, undefined, { shallow: true });
+                    }
                   }}
                   options={accountOptions}
                   disabled={accountQuery.isLoading}
