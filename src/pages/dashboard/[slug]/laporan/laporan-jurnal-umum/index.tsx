@@ -167,7 +167,7 @@ export default function LaporanJurnalUmumPage() {
           />
         </div>
 
-        {/* <SearchPagination
+        <SearchPagination
           searchValue={searchInput}
           onSearchChange={setSearchInput}
           searchPlaceholder="Cari kode jurnal atau keterangan..."
@@ -221,15 +221,8 @@ export default function LaporanJurnalUmumPage() {
             sortBy={sortBy}
             sortOrder={sortOrder}
             onSortChange={handleSortChange}
-            meta={{
-              currentPage: page,
-              perPage,
-              lastPage: pagination.lastPage,
-              total: pagination.total,
-            }}
-            onPageChange={setPage}
           />
-        </SearchPagination> */}
+        </SearchPagination>
 
         <LaporanJurnalUmumPrintDocument
           data={data}

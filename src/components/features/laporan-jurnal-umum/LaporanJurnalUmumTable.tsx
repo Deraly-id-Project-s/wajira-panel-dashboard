@@ -189,8 +189,6 @@ export function LaporanJurnalUmumTable({
       sortBy={sortBy}
       sortDirection={sortOrder}
       onSortChange={onSortChange}
-      meta={meta}
-      onPageChange={onPageChange}
     />
   );
 }
