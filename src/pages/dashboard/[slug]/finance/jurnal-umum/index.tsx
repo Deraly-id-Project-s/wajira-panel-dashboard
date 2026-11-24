@@ -26,6 +26,7 @@ const mapJournalToListItem = (item: GeneralJournal): GeneralJournalListItem => (
   id: item.id,
   uuid: item.uuid,
   code: item.code,
+  type: item.type,
   date: item.date,
   note: item.note || 'Pencatatan jurnal umum memorial',
   is_paid: Boolean(item.is_paid),
@@ -60,7 +61,7 @@ export default function GeneralJournalPage() {
   const [perPage, setPerPage] = useState(25);
   const [date, setDate] = useState<DateRange | undefined>();
   const [statusFilter, setStatusFilter] = useState<'all' | 'posted' | 'draft'>('all');
-  const [currencyFilter, setCurrencyFilter] = useState<'all' | 'idr' | 'usd'>('all');
+  const [typeFilter, setTypeFilter] = useState<'all' | 'debet' | 'credit'>('all');
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
   const [isToggleOpen, setIsToggleOpen] = useState(false);
   const [targetStatus, setTargetStatus] = useState(false);
@@ -97,11 +98,10 @@ export default function GeneralJournalPage() {
 
     if (statusFilter === 'posted') params.is_paid = true;
     if (statusFilter === 'draft') params.is_paid = false;
-    if (currencyFilter === 'usd') params.is_usd_transaction = true;
-    if (currencyFilter === 'idr') params.is_usd_transaction = false;
+    if (typeFilter !== 'all') params.type = typeFilter;
 
     return params;
-  }, [page, perPage, searchValue, companyNumber, startDate, endDate, statusFilter, currencyFilter]);
+  }, [page, perPage, searchValue, companyNumber, startDate, endDate, statusFilter, typeFilter]);
 
   const { data: response, isLoading, isFetching } = useGeneralJournals(queryParams, {
     enabled: !isCompanyLoading && companyNumber > 0,
@@ -182,19 +182,19 @@ export default function GeneralJournalPage() {
 
               <div className="w-full sm:w-44">
                 <Select
-                  value={currencyFilter}
-                  onValueChange={(val: 'all' | 'idr' | 'usd') => {
-                    setCurrencyFilter(val);
+                  value={typeFilter}
+                  onValueChange={(val: 'all' | 'debet' | 'credit') => {
+                    setTypeFilter(val);
                     setPage(1);
                   }}
                 >
                   <SelectTrigger className="h-9 bg-white">
-                    <SelectValue placeholder="Mata Uang" />
+                    <SelectValue placeholder="Tipe Transaksi" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="all">Semua Mata Uang</SelectItem>
-                    <SelectItem value="idr">IDR (Rupiah)</SelectItem>
-                    <SelectItem value="usd">USD (Dollar)</SelectItem>
+                    <SelectItem value="all">Semua Tipe</SelectItem>
+                    <SelectItem value="debet">Debit</SelectItem>
+                    <SelectItem value="credit">Kredit</SelectItem>
                   </SelectContent>
                 </Select>
               </div>

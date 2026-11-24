@@ -87,6 +87,7 @@ export interface GeneralJournal {
   payment_proof: string | null;
   amount: number | string;
   amount_original?: number | string | null;
+  type?: string;
   is_usd_transaction?: boolean;
   is_paid: boolean;
   is_valid: boolean;
@@ -120,6 +121,7 @@ export interface GeneralJournalListItem {
   is_paid: boolean;
   is_valid: boolean;
   is_balanced: boolean;
+  type?: string;
   amount?: number;
   amount_original?: number;
   is_usd_transaction?: boolean;
@@ -141,6 +143,7 @@ export interface GeneralJournalFilterParams {
   is_paid?: boolean | string;
   is_valid?: boolean | string;
   is_usd_transaction?: boolean | string;
+  type?: string;
   min_amount?: number | string;
   max_amount?: number | string;
   date?: string;

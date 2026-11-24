@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { MoreVertical, CheckCircle2, AlertCircle } from 'lucide-react';
+import { MoreVertical, CheckCircle2, Clock, Scale } from 'lucide-react';
 import { formatDate } from '@/components/ui/format-date';
 import type { GeneralJournalListItem } from '@/@types/general-journal.types';
 import type { PaginationMeta } from '@/@types/pagination.types';
@@ -63,8 +63,44 @@ export default function GeneralJournalTable({
         sortable: true,
         alignment: 'left',
         cell: (item) => (
-          <div className="flex items-center gap-1.5">
-            <CopyBox text={item.code || '-'} />
+          <div className="flex flex-col items-start gap-1.5 py-0.5">
+            <div className="flex items-center gap-1.5">
+              <CopyBox text={item.code || '-'} />
+            </div>
+
+            <div className="flex flex-wrap items-center gap-1.5">
+              {/* Badge Status Lunas */}
+              <Badge
+                variant="outline"
+                className={cn(
+                  'rounded-full px-2 py-0.5 text-[10px] font-semibold tracking-wide inline-flex items-center gap-1',
+                  item.is_paid
+                    ? 'border-emerald-200 bg-emerald-50 text-emerald-700'
+                    : 'border-amber-200 bg-amber-50 text-amber-700',
+                )}
+              >
+                {item.is_paid ? (
+                  <CheckCircle2 className="h-3 w-3" />
+                ) : (
+                  <Clock className="h-3 w-3" />
+                )}
+                <span>{item.is_paid ? 'Lunas' : 'Belum Lunas'}</span>
+              </Badge>
+
+              {/* Badge Status Seimbang */}
+              <Badge
+                variant="outline"
+                className={cn(
+                  'rounded-full px-2 py-0.5 text-[10px] font-semibold tracking-wide inline-flex items-center gap-1',
+                  item.is_balanced
+                    ? 'border-emerald-200 bg-emerald-50 text-emerald-700'
+                    : 'border-amber-200 bg-amber-50 text-amber-700',
+                )}
+              >
+                <Scale className="h-3 w-3" />
+                <span>{item.is_balanced ? 'Seimbang' : 'Belum Seimbang'}</span>
+              </Badge>
+            </div>
           </div>
         ),
       },
@@ -80,39 +116,28 @@ export default function GeneralJournalTable({
         accessorKey: 'total_debit',
         sortable: true,
         alignment: 'left',
-        cell: (item) => currenciesFormat(item.is_usd_transaction ? 'usd' : 'idr', item.total_debit),
+        cell: (item) => {
+          const itemType = String(item.type || '').toLowerCase();
+          const isDebit = itemType === 'debit' || itemType === 'debet' || (!itemType && Number(item.total_credit || 0) === 0);
+          const currency = item.is_usd_transaction ? 'usd' : 'idr';
+          const nominal = Number(item.total_debit || item.total_amount || item.amount || 0);
+
+          return currenciesFormat(currency, isDebit ? nominal : 0);
+        },
       },
       {
         header: 'KREDIT',
         accessorKey: 'total_credit',
         sortable: true,
         alignment: 'left',
-        cell: (item) => currenciesFormat(item.is_usd_transaction ? 'usd' : 'idr', item.total_credit),
-      },
-      {
-        header: 'STATUS',
-        accessorKey: 'is_paid',
-        sortable: true,
-        alignment: 'left',
-        cell: (item) => (
-          <Badge
-            variant="outline"
-            className={cn(
-              'rounded-full px-2.5 py-0.5 font-semibold text-xs whitespace-nowrap',
-              item.is_paid
-                ? item.is_balanced
-                  ? 'border-emerald-200 bg-emerald-50 text-emerald-700'
-                  : 'border-amber-200 bg-amber-50 text-amber-700'
-                : 'border-rose-200 bg-rose-50 text-rose-700',
-            )}
-          >
-            {item.is_paid
-              ? item.is_balanced
-                ? 'LUNAS & SEIMBANG'
-                : 'LUNAS (BELUM SEIMBANG)'
-              : 'BELUM LUNAS'}
-          </Badge>
-        ),
+        cell: (item) => {
+          const itemType = String(item.type || '').toLowerCase();
+          const isCredit = itemType === 'credit' || itemType === 'kredit' || (!itemType && Number(item.total_credit || 0) > 0 && Number(item.total_debit || 0) === 0);
+          const currency = item.is_usd_transaction ? 'usd' : 'idr';
+          const nominal = Number(item.total_credit || item.total_amount || item.amount || 0);
+
+          return currenciesFormat(currency, isCredit ? nominal : 0);
+        },
       },
       {
         header: 'KETERANGAN',
